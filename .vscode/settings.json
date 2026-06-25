@@ -1,0 +1,8 @@
+{
+  "files.exclude": {
+    "**/node_modules/fast-uri/tsconfig.json": true
+  },
+  "search.exclude": {
+    "**/node_modules/fast-uri/tsconfig.json": true
+  }
+}
