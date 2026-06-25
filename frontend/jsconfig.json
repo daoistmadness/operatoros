@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "checkJs": false,
+    "noEmit": true,
+    "moduleResolution": "node",
+    "jsx": "react-jsx"
+  },
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}
