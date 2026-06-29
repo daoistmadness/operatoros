@@ -1141,6 +1141,10 @@ start_portless_backend() {
       exit 1
     fi
     echo "[backend] Assigned PORT=$PORT"
+    if [[ -z "${DATABASE_URL:-}" && -z "${POSTGRES_HOST:-}" && -z "${POSTGRES_DB:-}" ]]; then
+      export DATABASE_URL="sqlite:///$PWD/attendance.db"
+      echo "[backend] DATABASE_URL not set; using local SQLite database at $PWD/attendance.db"
+    fi
     source .venv/bin/activate
     export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
     exec uvicorn src.main:app \
@@ -1442,7 +1446,7 @@ start_legacy_mode() {
       env HOST="$DEV_BACKEND_HOST" \
           PORT="$DEV_BACKEND_PORT" \
           ALLOWED_ORIGINS="http://localhost:$DEV_FRONTEND_PORT,http://127.0.0.1:$DEV_FRONTEND_PORT" \
-      bash -lc "cd \"$BACKEND_DIR\" && exec uvicorn src.main:app --reload --host \"\${HOST:-0.0.0.0}\" --port \"\${PORT:?}\""
+      bash -lc "cd \"$BACKEND_DIR\" && if [[ -z \"\${DATABASE_URL:-}\" && -z \"\${POSTGRES_HOST:-}\" && -z \"\${POSTGRES_DB:-}\" ]]; then export DATABASE_URL=\"sqlite:///\$PWD/attendance.db\"; echo \"[backend] DATABASE_URL not set; using local SQLite database at \$PWD/attendance.db\"; fi && exec uvicorn src.main:app --reload --host \"\${HOST:-0.0.0.0}\" --port \"\${PORT:?}\""
   )"
 
   BACKEND_URL="http://127.0.0.1:$DEV_BACKEND_PORT"
