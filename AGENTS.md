@@ -38,6 +38,8 @@ To ensure strict quality and architecture control, developers and AI agents must
   * Enforces the cross-jenjang block logic within candidate queues to safeguard `_student_year_uc` validation thresholds dynamically.
   * Monopolizes execution safety for POST /api/grades/academic-years transactions, ensuring the transactional sequence enforces a strict single-default update block before saving new rows.
   * Identifies and restricts the master jenjangs dataset to a strictly seeded, read-only status layer across all administration management channels.
+  * Enforces calculation safety over the analytical query pipelines, ensuring no average aggregation scripts introduce mathematical fragmentation when handling missing or explicit null grid inputs.
+  * Monitors backend test regression boundaries, keeping the suite baseline strictly at or above the 37 verified functional test thresholds.
 * **Strict Boundaries:**
   * Never drop triggers without re-establishing them.
   * Never introduce raw SQL migrations that lack dual-support for SQLite and PostgreSQL.
@@ -60,6 +62,7 @@ To ensure strict quality and architecture control, developers and AI agents must
     * **Izin:** `amber` (Amber)
     * **Alfa:** `rose`/`red` (Red)
   * Owns and maintains the unified tabbed state layout within AcademicManagement.tsx and the shared infrastructure of EnrollmentPanel.tsx, preserving structural scannability under high-density rendering states.
+  * Owns and maintains the Chart.js metric visualizations within ManagementAnalytics.tsx, ensuring semantic clarity and layout precision under dynamic filter modifications.
 * **Strict Boundaries:**
   * Never alter styling colors to violate the status-to-color mapping standard.
   * Never use inline styles on React nodes (use Tailwind CSS classes or styled configuration properties).
@@ -80,6 +83,7 @@ To ensure strict quality and architecture control, developers and AI agents must
   * Owns and maintains the spreadsheet parsing logic in `backend/src/services/grade_pipeline.py`, enforcing rigorous schema validation for grade sheets.
   * Guards the data boundary rules (`0.0 <= score <= 100.0`) and ensures that duplicate compound keys inside a single file are caught prior to database transaction phase.
   * Assures that all failed or successful import sessions reliably compile logs into the `UploadLog` registry for auditing compliance.
+  * Oversees the structural performance of GET /api/analytics/management-summary query times, preventing performance degradation when generating aggregate summary reports from large transaction histories.
 * **Strict Boundaries:**
   * Never drop columns or fail to validate required headers (`No. ID`, `Nama`, `Tanggal`, `Scan Masuk`, `Scan Pulang`, `Terlambat`) during Excel ingestion.
   * Never bypass the exception-retaining upsert contract (subsequent imports must not erase existing administrative manual overrides).
@@ -159,3 +163,22 @@ See [ERRORS.md](ERRORS.md) for recurring bugs, fragile areas, and debugging note
 - Required environment variables, data files, or credentials are missing.
 - A test fails in a way that appears unrelated to the requested change.
 - A request would conflict with existing documented behavior.
+
+## API Routing Guardrail
+
+All new backend feature routers must expose public routes under `/api/<domain>/...`.
+
+Examples:
+
+- `/api/grades/...`
+- `/api/analytics/...`
+
+Frontend API wrappers must use the existing `apiRequest` abstraction and must not hardcode domains.
+
+In local Portless/proxy mode, browser-visible requests may appear as `/api/api/<domain>/...`. This is expected only when proxy/client normalization forwards the request to backend `/api/<domain>/...`.
+
+Do not modify `frontend/src/lib/api/client.js` for feature-level route fixes unless the task explicitly targets the shared API client.
+
+Before completing API work, inspect the FastAPI route table and verify the final browser-visible request path under Portless.
+
+Legacy aliases such as `/analytics/...` may exist for backward compatibility, but new feature work must use `/api/<domain>/...`.
