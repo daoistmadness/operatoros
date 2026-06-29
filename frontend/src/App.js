@@ -13,6 +13,9 @@ import Settings from './pages/Settings';
 import TardinessReport from './pages/TardinessReport';
 import RekapAbsensi from './pages/RekapAbsensi';
 import StudentProfile from './pages/StudentProfile';
+import GradeLedger from './pages/GradeLedger.tsx';
+import Enrollment from './pages/Enrollment.tsx';
+import AcademicManagement from './pages/AcademicManagement.tsx';
 import SidebarNav from './components/SidebarNav';
 
 function App() {
@@ -31,6 +34,9 @@ function App() {
               <Route path="/reports/tardiness" element={<TardinessReport />} />
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
               <Route path="/attendance-review" element={<AttendanceReview />} />
+              <Route path="/academic-management" element={<AcademicManagement />} />
+              <Route path="/enrollment" element={<Enrollment />} />
+              <Route path="/grades" element={<GradeLedger />} />
               <Route path="/config/jenjang" element={<JenjangConfig />} />
               <Route path="/config/heb" element={<HebConfig />} />
               <Route path="/config/absence-reasons" element={<AbsenceReasons />} />

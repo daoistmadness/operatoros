@@ -40,19 +40,37 @@ _AUDIT_TRIGGERS_SQL = [
 
 
 class ClearDataRequest(BaseModel):
-    mode: Literal["attendance", "full"] = Field(default="attendance")
+    mode: Literal["attendance", "attendance_keep_exceptions", "full"] = Field(default="attendance")
     confirmation: str | None = Field(default=None)
 
 
-def _delete_reset_scope(db: Session, mode: Literal["attendance", "full"]) -> dict[str, int]:
-    deleted_counts = {
-        "attendance_override_history": db.query(AttendanceOverrideHistory).delete(synchronize_session=False),
-        "attendance_overrides": db.query(AttendanceOverride).delete(synchronize_session=False),
-        "attendance": db.query(Attendance).delete(synchronize_session=False),
-        "upload_logs": db.query(UploadLog).delete(synchronize_session=False),
-        "absence_reasons": db.query(AbsenceReason).delete(synchronize_session=False),
-        "absence_reason_class_entries": db.query(AbsenceReasonClassEntry).delete(synchronize_session=False),
-    }
+def _delete_reset_scope(db: Session, mode: Literal["attendance", "attendance_keep_exceptions", "full"]) -> dict[str, int]:
+    deleted_counts = {}
+    
+    if mode == "attendance_keep_exceptions":
+        exceptions = ["sakit", "izin", "alfa"]
+        
+        # Keep overrides that are in exceptions
+        overrides_to_keep = db.query(AttendanceOverride.id).filter(AttendanceOverride.override_status.in_(exceptions)).subquery()
+        
+        # Keep attendances that are in exceptions OR are referenced by an override we are keeping
+        attendances_to_keep = db.query(Attendance.id).filter(
+            Attendance.status.in_(exceptions) | Attendance.id.in_(db.query(AttendanceOverride.attendance_id).filter(AttendanceOverride.override_status.in_(exceptions)))
+        ).subquery()
+        
+        deleted_counts["attendance_override_history"] = db.query(AttendanceOverrideHistory).filter(AttendanceOverrideHistory.override_id.notin_(overrides_to_keep)).delete(synchronize_session=False)
+        deleted_counts["attendance_overrides"] = db.query(AttendanceOverride).filter(AttendanceOverride.override_status.notin_(exceptions)).delete(synchronize_session=False)
+        deleted_counts["attendance"] = db.query(Attendance).filter(Attendance.id.notin_(attendances_to_keep)).delete(synchronize_session=False)
+        deleted_counts["upload_logs"] = db.query(UploadLog).delete(synchronize_session=False)
+        deleted_counts["absence_reasons"] = 0
+        deleted_counts["absence_reason_class_entries"] = 0
+    else:
+        deleted_counts["attendance_override_history"] = db.query(AttendanceOverrideHistory).delete(synchronize_session=False)
+        deleted_counts["attendance_overrides"] = db.query(AttendanceOverride).delete(synchronize_session=False)
+        deleted_counts["attendance"] = db.query(Attendance).delete(synchronize_session=False)
+        deleted_counts["upload_logs"] = db.query(UploadLog).delete(synchronize_session=False)
+        deleted_counts["absence_reasons"] = db.query(AbsenceReason).delete(synchronize_session=False)
+        deleted_counts["absence_reason_class_entries"] = db.query(AbsenceReasonClassEntry).delete(synchronize_session=False)
 
     if mode == "full":
         deleted_counts["students"] = db.query(Student).delete(synchronize_session=False)

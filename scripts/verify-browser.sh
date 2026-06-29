@@ -24,6 +24,39 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+find_portless_binary() {
+  if command -v portless >/dev/null 2>&1; then
+    command -v portless
+    return 0
+  fi
+  local nvm_bin
+  nvm_bin="$(find "$HOME/.nvm/versions/node" -maxdepth 3 -name portless 2>/dev/null | sort -V | tail -n 1 || true)"
+  if [[ -x "$nvm_bin" ]]; then
+    echo "$nvm_bin"
+    return 0
+  fi
+  if [[ -x "$HOME/.bun/bin/portless" ]]; then
+    echo "$HOME/.bun/bin/portless"
+    return 0
+  fi
+  local npm_g_bin
+  npm_g_bin="$(npm config get prefix 2>/dev/null || true)"
+  if [[ -x "$npm_g_bin/bin/portless" ]]; then
+    echo "$npm_g_bin/bin/portless"
+    return 0
+  fi
+  echo "portless"
+}
+
+PORTLESS_BIN="$(find_portless_binary)"
+if [[ "$PORTLESS_BIN" != "portless" && -x "$PORTLESS_BIN" ]]; then
+  export PATH="$(dirname "$PORTLESS_BIN"):$PATH"
+fi
+
+portless() {
+  "$PORTLESS_BIN" "$@"
+}
+
 ab() {
   agent-browser --session "$SESSION_NAME" "$@"
 }

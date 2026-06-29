@@ -7,11 +7,14 @@ import {
   Edit3,
   FileClock,
   FileText,
+  GraduationCap,
   History,
   LayoutDashboard,
+  Layers3,
   Server,
   Settings as SettingsIcon,
   UploadCloud,
+  UserCheck,
   Users as UsersIcon,
 } from 'lucide-react';
 
@@ -27,6 +30,9 @@ const NAV_GROUPS = [
       { name: 'Upload History', path: '/upload-history', icon: History },
       { name: 'Class Mapping', path: '/mapping', icon: UsersIcon },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
+      { name: 'Academic & Student Management', path: '/academic-management', icon: Layers3 },
+      { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck },
+      { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
     ],
   },
   {

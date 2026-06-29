@@ -119,17 +119,40 @@ function Settings() {
 
           {resetControlsVisible ? (
             <div className="space-y-4">
+              <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-emerald-200 transition-colors">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900">Reset Attendance (Keep Sakit/Izin/Alfa)</h3>
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-100 uppercase tracking-tighter">
+                        Smart Mode
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed max-w-md">
+                      Wipes standard attendance (Hadir, Late) but preserves your manual edits for Sakit, Izin, and Alfa. Ideal when re-uploading Excel data.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setResetMode("attendance_keep_exceptions"); setShowResetModal(true); setConfirmText(""); }}
+                    className="px-6 py-3 bg-white text-emerald-600 border-2 border-emerald-100 font-bold rounded-xl hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-2 flex-shrink-0"
+                  >
+                    <Trash2 size={18} />
+                    Clear Standard Attendance
+                  </button>
+                </div>
+              </div>
+
               <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-amber-200 transition-colors">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900">Reset Attendance Only</h3>
+                      <h3 className="font-bold text-slate-900">Reset All Attendance</h3>
                       <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded border border-amber-100 uppercase tracking-tighter">
                         Safe Mode
                       </span>
                     </div>
                     <p className="text-sm text-slate-500 leading-relaxed max-w-md">
-                      Wipes all attendance logs and upload history, but preserves student master data and class mappings. Ideal for starting a new period.
+                      Wipes ALL attendance logs including Sakit/Izin/Alfa and upload history, but preserves student master data. Ideal for starting a new period.
                     </p>
                   </div>
                   <button
@@ -137,7 +160,7 @@ function Settings() {
                     className="px-6 py-3 bg-white text-amber-600 border-2 border-amber-100 font-bold rounded-xl hover:bg-amber-50 hover:border-amber-200 transition-all flex items-center gap-2 flex-shrink-0"
                   >
                     <Trash2 size={18} />
-                    Clear Attendance
+                    Clear All Attendance
                   </button>
                 </div>
               </div>
