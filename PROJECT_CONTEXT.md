@@ -36,7 +36,7 @@ graph TD
    * Built with Create React App (CRA) configurations. Uses React Router v6.
    * Utilizes Chart.js for data-dense dashboards, Framer Motion for transitions, and Tailwind CSS 4 for styling.
 3. **Database Environments:**
-   * **Local Development:** SQLite database ([attendance.db](backend/attendance.db)) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
+   * **Local Development:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
    * **Docker / Production:** PostgreSQL 16 database.
 4. **DevOps & Orchestration:**
    * **Docker Compose:** Defined in [docker-compose.yml](docker-compose.yml), it orchestrates the DB (`attendance_db` service), Backend, Frontend, and Nginx reverse proxy.
@@ -54,6 +54,13 @@ graph TD
 * **Cell Control & State Management:** Each grid cell is managed as a controlled input component with strict constraints ($0.0 \le \text{score} \le 100.0$) and automatic coercion of empty strings to `null`. Locally modified data cells are highlighted in yellow (amber highlighting).
 * **Batch Operation:** The UI module aggregates all modified data cells into a unified payload object of type `GradeGridSaveRequest` to be sent atomically via the main save button.
 * **Page Lifecycle & Metadata Consumption:** The main `GradeLedger.tsx` page utilizes `AcademicYear[]` to determine the active academic year using the `is_default === true` flag. All legacy Excel import workflows and outdated analytical charts have been completely removed from the visual components.
+
+### Executive Management Analytics Engine (Phase 10 Implemented)
+* **Unified Analytics API:** Modul `backend/src/api/analytics.py` menyediakan mesin komputasi analitik terpadu yang memproses data kehadiran historis dan data nilai matriks dinamis secara efisien:
+  * `GET /api/analytics/filters` — Menyediakan opsi dropdown kontekstual dinamis (Tahun Ajaran, Jenjang, Nama Kelas, Mata Pelajaran) langsung dari rekam jejak basis data aktif.
+  * `GET /api/analytics/management-summary` — Mengembalikan agregasi metrik kehadiran bulanan, kontribusi menit keterlambatan per kelas dengan format waktu (`HH:MM`), serta rata-rata nilai akademik Sumatif/Formatif secara terpisah dengan mengabaikan entri `null`.
+* **Academic Threshold Auditing:** Pipeline analitik secara otomatis mengevaluasi performa siswa terhadap target standar KKM (85.0) dan menyuntikkan bendera peringatan (*below-threshold flags*) pada kombinasi subjek/siswa yang membutuhkan intervensi akademik.
+* **Data-Dense Performance Visualization:** Modul frontend `frontend/src/pages/ManagementAnalytics.tsx` merender visualisasi berdensitas tinggi memanfaatkan Chart.js, ikon Lucide, dan Tailwind CSS 4 yang terikat langsung pada menu navigasi utama *Sidebar*.
 
 ---
 
@@ -163,3 +170,24 @@ The visual aesthetic of the project uses Tailwind CSS 4 utility classes for a cl
 | **Alfa** | `rose` / `red` (Red) | Unexcused absence. |
 
 * **Interactive Polish:** Buttons, cards, and modal components should incorporate Framer Motion triggers, smooth focus ring transitions, and `isLoading` loading animations to preserve user accessibility.
+
+---
+
+## API Route Convention
+
+Backend public application APIs are exposed under `/api/<domain>/...`.
+
+Canonical examples:
+
+- `/api/grades/academic-years`
+- `/api/grades/save`
+- `/api/analytics/filters`
+- `/api/analytics/management-summary`
+
+Frontend wrappers call APIs through `apiRequest`.
+
+In local Portless/proxy mode, browser network logs may show `/api/api/<domain>/...`. This is expected when the frontend proxy configuration normalizes the path to backend `/api/<domain>/...`.
+
+The backend route contract remains `/api/<domain>/...`.
+
+Management Analytics currently also preserves `/analytics/...` as a legacy compatibility alias. New code should not use that alias.
