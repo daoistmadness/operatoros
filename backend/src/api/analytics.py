@@ -252,7 +252,7 @@ def _get_student_absence_reason_map_for_range(db: Session, start_date: date, end
             continue
         if row.student_id not in grouped:
             grouped[row.student_id] = {"sakit": 0, "izin": 0, "alfa": 0}
-        
+
         grouped[row.student_id]["sakit"] += int(row.sakit or 0)
         grouped[row.student_id]["izin"] += int(row.izin or 0)
         grouped[row.student_id]["alfa"] += int(row.alfa or 0)
@@ -398,7 +398,7 @@ def _normalize_percentage_row(hadir_pct: float | None, sakit_pct: float | None, 
     if abs(total_pct - 100.0) > 0.001:
         adjustment = 100.0 - total_pct
         hadir_pct = max(0.0, hadir_pct + adjustment)
-    
+
     total_pct = 100.0
 
     return {
@@ -555,7 +555,7 @@ def _collect_rekap_absensi_report_data(db: Session, period: dict):
         alfa = int(absence_values["alfa"])
         denominator = student_count * heb_total
         lain2 = max(denominator - hadir_days - sakit - izin - alfa, 0)
-        
+
         # Asumsikan data kosong (lain2) sebagai HADIR
         if lain2 > 0:
             hadir_days += lain2
@@ -1420,7 +1420,7 @@ def export_tardiness_report_excel(
     term: int | None = Query(None, ge=1, le=4),
     jenjang: str | None = Query(None),
     db: Session = Depends(get_db),
-): 
+):
     period = _resolve_tardiness_period(month, year, date_from, date_to, term)
     report_data = _collect_tardiness_report_data(db, period, jenjang, include_student_detail=True)
     jenjang_summary_payload = _collect_tardiness_summary_by_jenjang(db, period, jenjang)
@@ -1448,7 +1448,7 @@ def export_tardiness_management_excel(
     term: int | None = Query(None, ge=1, le=4),
     jenjang: str | None = Query(None),
     db: Session = Depends(get_db),
-): 
+):
     period = _resolve_tardiness_period(month, year, date_from, date_to, term)
     report_data = _collect_tardiness_report_data(db, period, jenjang, include_student_detail=False)
     jenjang_summary_payload = _collect_tardiness_summary_by_jenjang(db, period, jenjang)
@@ -1471,13 +1471,13 @@ def export_tardiness_management_excel(
 def _normalize_v2_percentage_dict(pcts: dict[str, float | None]) -> dict[str, float | None]:
     if any(v is None for v in pcts.values()):
         return {k: None for k in pcts}
-    
+
     total_pct = sum(pcts.values())
     if abs(total_pct - 100) > 0.001:
         diff = 100.0 - total_pct
         max_key = max(pcts, key=pcts.get)
         pcts[max_key] = max(0.0, pcts[max_key] + diff)
-    
+
     pcts["total_pct"] = 100.0
     return pcts
 
@@ -1500,7 +1500,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
         .group_by(jenjang_expr, raw_jenjang_expr, class_expr)
     )
     student_count_rows = db.execute(student_count_stmt).mappings().all()
-    
+
     classes_data = {}
     jenjang_source_map = {}
     for row in student_count_rows:
@@ -1509,7 +1509,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
             continue
         jenjang = row["jenjang"]
         cls_name = row["class_name"]
-        
+
         if jenjang not in classes_data:
             classes_data[jenjang] = {}
         classes_data[jenjang][cls_name] = {"student_count": count}
@@ -1567,7 +1567,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
     affected_classes = 0
 
     jenjang_results = []
-    
+
     for jenjang in sorted(classes_data.keys()):
         raw_jenjang = jenjang_source_map[jenjang]
         heb_total = 0
@@ -1576,31 +1576,31 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
             if cache_key not in heb_cache:
                 heb_cache[cache_key] = int(calculate_heb(db, raw_jenjang, pair_month, pair_year)["heb"] or 0)
             heb_total += heb_cache[cache_key]
-        
+
         if heb_total == 0:
             heb_zero_jenjangs.add(jenjang)
 
         jenjang_classes = []
-        
+
         sum_h = sum_s = sum_i = sum_a = sum_lain2 = sum_total = 0
 
         for cls_name in sorted(classes_data[jenjang].keys()):
             student_count = classes_data[jenjang][cls_name]["student_count"]
             hadir = classes_data[jenjang][cls_name].get("hadir_days", 0)
-            
+
             sia = sia_map.get(cls_name, {"sakit": 0, "izin": 0, "alfa": 0})
             sakit = sia["sakit"]
             izin = sia["izin"]
             alfa = sia["alfa"]
-            
+
             valid_total = hadir + sakit + izin + alfa
             expected_total = student_count * heb_total
-            
+
             lain2 = 0
             flags = {}
             if heb_total > 0:
                 lain2 = max(0, expected_total - valid_total)
-                
+
                 # Asumsikan data kosong (lain2) sebagai HADIR
                 if lain2 > 0:
                     hadir += lain2
@@ -1608,7 +1608,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
                     lain2 = 0
             else:
                 flags["expected_total_missing"] = True
-                
+
             if valid_total == 0:
                 flags["no_valid_data"] = True
                 flags["data_quality_issue"] = True
@@ -1620,18 +1620,18 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
                     "izin_pct": _round_percentage_int(izin, valid_total),
                     "alfa_pct": _round_percentage_int(alfa, valid_total),
                 })
-                
+
             if lain2 > 0:
                 flags["excluded_unclassified"] = True
                 flags["lain2_count"] = lain2
                 ratio = lain2 / (valid_total + lain2)
                 if ratio > 0.1:
                     flags["data_quality_issue"] = True
-            
+
             if flags.get("data_quality_issue"):
                 has_data_quality_issue = True
                 affected_classes += 1
-                
+
             sum_h += hadir
             sum_s += sakit
             sum_i += izin
@@ -1651,7 +1651,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
                 "percentages": pcts,
                 "warning_flags": flags,
             })
-            
+
         j_pcts = {"hadir_pct": None, "sakit_pct": None, "izin_pct": None, "alfa_pct": None, "total_pct": None}
         if sum_total > 0:
             j_pcts = _normalize_v2_percentage_dict({
@@ -1660,7 +1660,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
                 "izin_pct": _round_percentage_int(sum_i, sum_total),
                 "alfa_pct": _round_percentage_int(sum_a, sum_total),
             })
-            
+
         jenjang_results.append({
             "name": jenjang,
             "classes": jenjang_classes,
@@ -1675,14 +1675,14 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
                 "percentages": j_pcts,
             }
         })
-        
+
     global_h = sum(j["summary"]["hadir"] for j in jenjang_results)
     global_s = sum(j["summary"]["sakit"] for j in jenjang_results)
     global_i = sum(j["summary"]["izin"] for j in jenjang_results)
     global_a = sum(j["summary"]["alfa"] for j in jenjang_results)
     global_lain2 = sum(j["summary"]["lain2"] for j in jenjang_results)
     global_total = sum(j["summary"]["total"] for j in jenjang_results)
-    
+
     global_pcts = {"hadir_pct": None, "sakit_pct": None, "izin_pct": None, "alfa_pct": None, "total_pct": None}
     if global_total > 0:
         global_pcts = _normalize_v2_percentage_dict({
@@ -1691,7 +1691,7 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
             "izin_pct": _round_percentage_int(global_i, global_total),
             "alfa_pct": _round_percentage_int(global_a, global_total),
         })
-        
+
     global_summary = {
         "hadir": global_h,
         "sakit": global_s,
@@ -1764,7 +1764,7 @@ def _build_v2_rekap_absensi_workbook(report_data: dict):
 
     current_row = 6
     alternating_fills = ["FFFFFF", "E8F5E9"]
-    
+
     for jenjang_idx, jenjang in enumerate(report_data["jenjang"]):
         for cls in jenjang["classes"]:
             pcts = cls["percentages"]
@@ -1817,13 +1817,13 @@ def _build_v2_rekap_absensi_workbook(report_data: dict):
     )
     rata2_row = summary_sheet.max_row
     _style_rekap_row(summary_sheet, rata2_row, total_columns, fill_color="1B5E20", bold=True)
-    
+
     # Footnote
     summary_sheet.append([])
     summary_sheet.append(["*Data tidak terklasifikasi (LAIN2) tidak dimasukkan dalam perhitungan"])
     f_cell = summary_sheet.cell(row=summary_sheet.max_row, column=1)
     f_cell.font = Font(italic=True, size=10, color="64748b")
-    
+
     summary_sheet.freeze_panes = "A6"
     _auto_size_worksheet_columns(summary_sheet)
 
@@ -2166,7 +2166,7 @@ def get_incomplete_summary(db: Session = Depends(get_db)):
 
     total_incomplete = len(rows)
     affected_students = len({row.student_id for row in rows})
-    
+
     dates = [row.date for row in rows]
     earliest_date = min(dates).isoformat() if dates else None
     latest_date = max(dates).isoformat() if dates else None
@@ -2290,7 +2290,7 @@ def get_attendance_report(
 
     elapsed = time.perf_counter() - start
     print(f"[PERF] /analytics/attendance-report: {elapsed:.3f}s")
-    
+
     month_pairs = _month_pairs_in_range(start_date, end_date)
     total_heb_for_period = 0
     if jenjang and jenjang.strip().lower() != "all":
@@ -2300,9 +2300,9 @@ def get_attendance_report(
             .filter(_report_jenjang_expression(db) == norm_target)
             .limit(1)
         ).mappings().first()
-        
+
         target_j = orig_row["original"] if orig_row else jenjang.strip()
-        
+
         for pair_year, pair_month in month_pairs:
             total_heb_for_period += int(calculate_heb(db, target_j, pair_month, pair_year)["heb"] or 0)
     else:
@@ -2584,3 +2584,409 @@ def get_attendance_rate_per_jenjang(db: Session = Depends(get_db)):
     elapsed = time.perf_counter() - start
     print(f"[PERF] /analytics/attendance-rate/jenjang: {elapsed:.3f}s")
     return sorted(response, key=lambda item: item["jenjang"])
+
+
+def _format_late_duration_label(minutes: int) -> str:
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours}:{mins:02d}"
+
+
+@router.get("/filters")
+def get_analytics_filters(
+    academic_year_id: int | None = Query(None),
+    jenjang_id: int | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.subject import Subject
+    from models.student_enrollment import StudentEnrollment
+
+    academic_years = db.query(AcademicYear).order_by(AcademicYear.start_date.asc()).all()
+    jenjangs = db.query(Jenjang).order_by(Jenjang.name.asc()).all()
+
+    classes_q = db.query(StudentEnrollment.class_name).filter(StudentEnrollment.class_name.isnot(None)).distinct()
+    if academic_year_id:
+        classes_q = classes_q.filter(StudentEnrollment.academic_year_id == academic_year_id)
+    if jenjang_id:
+        classes_q = classes_q.filter(StudentEnrollment.jenjang_id == jenjang_id)
+
+    class_names = [r[0] for r in classes_q.order_by(StudentEnrollment.class_name.asc()).all() if r[0] and r[0].strip()]
+
+    subjects_q = db.query(Subject).order_by(Subject.name.asc())
+    if jenjang_id:
+        subjects_q = subjects_q.filter(Subject.jenjang_id == jenjang_id)
+    subjects = subjects_q.all()
+
+    return {
+        "academic_years": [{"id": ay.id, "label": ay.label, "is_default": ay.is_default} for ay in academic_years],
+        "jenjangs": [{"id": j.id, "name": j.name} for j in jenjangs],
+        "class_names": class_names,
+        "subjects": [{"id": s.id, "name": s.name, "jenjang_id": s.jenjang_id} for s in subjects]
+    }
+
+
+@router.get("/management-summary")
+def get_management_summary(
+    academic_year_id: int = Query(...),
+    jenjang_id: int | None = Query(None),
+    class_name: str | None = Query(None),
+    term: str | None = Query(None),
+    subject_id: int | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.subject import Subject
+    from models.student_enrollment import StudentEnrollment
+    from models.student_subject_grade import StudentSubjectGrade
+    from models.assessment_component import AssessmentComponent
+
+    ay = db.query(AcademicYear).filter(AcademicYear.id == academic_year_id).first()
+    if not ay:
+        raise HTTPException(status_code=404, detail="Academic year not found")
+
+    start_date = ay.start_date
+    end_date = ay.end_date
+
+    warnings = []
+
+    jenjang_name = None
+    if jenjang_id is not None:
+        jenjang = db.query(Jenjang).filter(Jenjang.id == jenjang_id).first()
+        if not jenjang:
+            raise HTTPException(status_code=404, detail="Jenjang not found")
+        jenjang_name = jenjang.name
+
+    if subject_id is not None:
+        sub = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not sub:
+            raise HTTPException(status_code=404, detail="Subject not found")
+
+    if term:
+        try:
+            term_num = int(term.split("_")[1])
+            if term_num == 1:
+                t_start = date(ay.start_date.year, 7, 1)
+                t_end = date(ay.start_date.year, 9, 30)
+            elif term_num == 2:
+                t_start = date(ay.start_date.year, 10, 1)
+                t_end = date(ay.start_date.year, 12, 31)
+            elif term_num == 3:
+                t_start = date(ay.end_date.year, 1, 1)
+                t_end = date(ay.end_date.year, 3, 31)
+            elif term_num == 4:
+                t_start = date(ay.end_date.year, 4, 1)
+                t_end = date(ay.end_date.year, 6, 30)
+            else:
+                raise ValueError("Invalid term number")
+
+            start_date = max(start_date, t_start)
+            end_date = min(end_date, t_end)
+        except Exception:
+            warnings.append(f"Term format '{term}' is invalid. Calculating for the whole academic year.")
+            start_date = ay.start_date
+            end_date = ay.end_date
+    else:
+        warnings.append("Term date mapping is not configured; analytics are calculated across the selected academic year.")
+
+    month_pairs = _month_pairs_in_range(start_date, end_date)
+
+    effective_status = func.coalesce(AttendanceOverride.override_status, Attendance.status)
+    q_attendance = (
+        db.query(
+            effective_status.label("status"),
+            func.count(Attendance.id).label("count")
+        )
+        .join(Student, Student.id == Attendance.student_id)
+        .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
+        .filter(Attendance.date >= start_date, Attendance.date <= end_date)
+    )
+    if jenjang_name:
+        q_attendance = q_attendance.filter(Student.jenjang == jenjang_name)
+    if class_name:
+        q_attendance = q_attendance.filter(Student.class_name == class_name)
+
+    attendance_counts = q_attendance.group_by(effective_status).all()
+
+    hadir_count = 0
+    for status, count in attendance_counts:
+        if status in ("on-time", "late"):
+            hadir_count += count
+
+    q_absence = (
+        db.query(
+            func.sum(AbsenceReason.sakit).label("sakit"),
+            func.sum(AbsenceReason.izin).label("izin"),
+            func.sum(AbsenceReason.alfa).label("alfa")
+        )
+        .join(Student, Student.id == AbsenceReason.student_id)
+    )
+    if month_pairs:
+        or_conds = [
+            and_(AbsenceReason.year == y, AbsenceReason.month == m)
+            for y, m in month_pairs
+        ]
+        q_absence = q_absence.filter(or_(*or_conds))
+    else:
+        q_absence = q_absence.filter(False)
+
+    if jenjang_name:
+        q_absence = q_absence.filter(Student.jenjang == jenjang_name)
+    if class_name:
+        q_absence = q_absence.filter(Student.class_name == class_name)
+
+    absence_res = q_absence.first()
+    sakit_count = int(absence_res.sakit or 0) if absence_res else 0
+    izin_count = int(absence_res.izin or 0) if absence_res else 0
+    alfa_count = int(absence_res.alfa or 0) if absence_res else 0
+
+    total_records = hadir_count + sakit_count + izin_count + alfa_count
+    if total_records > 0:
+        status_percentages = {
+            "hadir": round((hadir_count / total_records) * 100, 1),
+            "sakit": round((sakit_count / total_records) * 100, 1),
+            "izin": round((izin_count / total_records) * 100, 1),
+            "alfa": round((alfa_count / total_records) * 100, 1),
+        }
+    else:
+        status_percentages = {
+            "hadir": 0.0,
+            "sakit": 0.0,
+            "izin": 0.0,
+            "alfa": 0.0,
+        }
+
+    attendance_summary = {
+        "total_records": total_records,
+        "status_counts": {
+            "hadir": hadir_count,
+            "sakit": sakit_count,
+            "izin": izin_count,
+            "alfa": alfa_count
+        },
+        "status_percentages": status_percentages
+    }
+
+    q_lateness = (
+        db.query(
+            Student.class_name.label("class_name"),
+            func.count(Attendance.id).label("late_days"),
+            func.sum(Attendance.late_duration).label("late_minutes")
+        )
+        .join(Student, Student.id == Attendance.student_id)
+        .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
+        .filter(Attendance.date >= start_date, Attendance.date <= end_date)
+        .filter(effective_status == "late")
+    )
+    if jenjang_name:
+        q_lateness = q_lateness.filter(Student.jenjang == jenjang_name)
+    if class_name:
+        q_lateness = q_lateness.filter(Student.class_name == class_name)
+
+    lateness_rows = q_lateness.group_by(Student.class_name).all()
+
+    total_late_days = sum(int(r.late_days or 0) for r in lateness_rows)
+    total_late_minutes = sum(int(r.late_minutes or 0) for r in lateness_rows)
+
+    lateness_by_class = []
+    for r in lateness_rows:
+        c_name = r.class_name or "Unknown"
+        ld = int(r.late_days or 0)
+        lm = int(r.late_minutes or 0)
+
+        lateness_by_class.append({
+            "class_name": c_name,
+            "late_days": ld,
+            "late_minutes": lm,
+            "late_duration_label": _format_late_duration_label(lm),
+            "late_day_percentage": round((ld / total_late_days) * 100, 1) if total_late_days > 0 else 0.0,
+            "late_duration_percentage": round((lm / total_late_minutes) * 100, 1) if total_late_minutes > 0 else 0.0
+        })
+    lateness_by_class.sort(key=lambda x: x["class_name"])
+
+    q_students_by_class = (
+        db.query(
+            StudentEnrollment.class_name.label("class_name"),
+            func.count(func.distinct(StudentEnrollment.student_id)).label("student_count")
+        )
+        .filter(StudentEnrollment.academic_year_id == academic_year_id)
+    )
+    if jenjang_id:
+        q_students_by_class = q_students_by_class.filter(StudentEnrollment.jenjang_id == jenjang_id)
+    if class_name:
+        q_students_by_class = q_students_by_class.filter(StudentEnrollment.class_name == class_name)
+
+    student_counts = {
+        r.class_name: int(r.student_count or 0)
+        for r in q_students_by_class.group_by(StudentEnrollment.class_name).all()
+    }
+
+    q_grades_by_class = (
+        db.query(
+            StudentEnrollment.class_name.label("class_name"),
+            AssessmentComponent.assessment_type.label("assessment_type"),
+            func.avg(StudentSubjectGrade.score).label("average_score")
+        )
+        .join(StudentSubjectGrade, StudentSubjectGrade.enrollment_id == StudentEnrollment.id)
+        .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
+        .filter(StudentEnrollment.academic_year_id == academic_year_id)
+        .filter(StudentSubjectGrade.score.isnot(None))
+    )
+    if jenjang_id:
+        q_grades_by_class = q_grades_by_class.filter(StudentEnrollment.jenjang_id == jenjang_id)
+    if class_name:
+        q_grades_by_class = q_grades_by_class.filter(StudentEnrollment.class_name == class_name)
+    if subject_id:
+        q_grades_by_class = q_grades_by_class.filter(StudentSubjectGrade.subject_id == subject_id)
+
+    grade_class_rows = q_grades_by_class.group_by(StudentEnrollment.class_name, AssessmentComponent.assessment_type).all()
+
+    grade_class_map = {}
+    for r in grade_class_rows:
+        c_name = r.class_name or "Unknown"
+        if c_name not in grade_class_map:
+            grade_class_map[c_name] = {"sumatif": None, "formatif": None}
+        if r.assessment_type == "sumatif":
+            grade_class_map[c_name]["sumatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+        elif r.assessment_type == "formatif":
+            grade_class_map[c_name]["formatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+
+    grade_by_class = [
+        {
+            "class_name": c_name,
+            "sumatif_average": vals["sumatif"],
+            "formatif_average": vals["formatif"],
+            "student_count": student_counts.get(c_name, 0)
+        }
+        for c_name, vals in grade_class_map.items()
+    ]
+    grade_by_class.sort(key=lambda x: x["class_name"])
+
+    q_grades_by_subject = (
+        db.query(
+            Subject.id.label("subject_id"),
+            Subject.name.label("subject_name"),
+            AssessmentComponent.assessment_type.label("assessment_type"),
+            func.avg(StudentSubjectGrade.score).label("average_score")
+        )
+        .join(StudentSubjectGrade, StudentSubjectGrade.subject_id == Subject.id)
+        .join(StudentEnrollment, StudentEnrollment.id == StudentSubjectGrade.enrollment_id)
+        .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
+        .filter(StudentEnrollment.academic_year_id == academic_year_id)
+        .filter(StudentSubjectGrade.score.isnot(None))
+    )
+    if jenjang_id:
+        q_grades_by_subject = q_grades_by_subject.filter(StudentEnrollment.jenjang_id == jenjang_id)
+    if class_name:
+        q_grades_by_subject = q_grades_by_subject.filter(StudentEnrollment.class_name == class_name)
+    if subject_id:
+        q_grades_by_subject = q_grades_by_subject.filter(Subject.id == subject_id)
+
+    grade_subject_rows = q_grades_by_subject.group_by(Subject.id, Subject.name, AssessmentComponent.assessment_type).all()
+
+    grade_subject_map = {}
+    for r in grade_subject_rows:
+        s_id = r.subject_id
+        s_name = r.subject_name
+        if s_id not in grade_subject_map:
+            grade_subject_map[s_id] = {"name": s_name, "sumatif": None, "formatif": None}
+        if r.assessment_type == "sumatif":
+            grade_subject_map[s_id]["sumatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+        elif r.assessment_type == "formatif":
+            grade_subject_map[s_id]["formatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+
+    grade_by_subject = [
+        {
+            "subject_id": s_id,
+            "subject_name": vals["name"],
+            "sumatif_average": vals["sumatif"],
+            "formatif_average": vals["formatif"]
+        }
+        for s_id, vals in grade_subject_map.items()
+    ]
+    grade_by_subject.sort(key=lambda x: x["subject_name"])
+
+    q_grades_by_student = (
+        db.query(
+            Student.id.label("student_id"),
+            Student.name.label("student_name"),
+            StudentEnrollment.class_name.label("class_name"),
+            AssessmentComponent.assessment_type.label("assessment_type"),
+            func.avg(StudentSubjectGrade.score).label("average_score")
+        )
+        .join(StudentEnrollment, StudentEnrollment.student_id == Student.id)
+        .join(StudentSubjectGrade, StudentSubjectGrade.enrollment_id == StudentEnrollment.id)
+        .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
+        .filter(StudentEnrollment.academic_year_id == academic_year_id)
+        .filter(StudentSubjectGrade.score.isnot(None))
+    )
+    if jenjang_id:
+        q_grades_by_student = q_grades_by_student.filter(StudentEnrollment.jenjang_id == jenjang_id)
+    if class_name:
+        q_grades_by_student = q_grades_by_student.filter(StudentEnrollment.class_name == class_name)
+    if subject_id:
+        q_grades_by_student = q_grades_by_student.filter(StudentSubjectGrade.subject_id == subject_id)
+
+    grade_student_rows = q_grades_by_student.group_by(
+        Student.id, Student.name, StudentEnrollment.class_name, AssessmentComponent.assessment_type
+    ).all()
+
+    grade_student_map = {}
+    threshold_edelweiss = 85.0
+    threshold_national = 75.0
+
+    for r in grade_student_rows:
+        s_id = r.student_id
+        s_name = r.student_name
+        c_name = r.class_name or "Unknown"
+        key = (s_id, s_name, c_name)
+        if key not in grade_student_map:
+            grade_student_map[key] = {"sumatif": None, "formatif": None}
+        if r.assessment_type == "sumatif":
+            grade_student_map[key]["sumatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+        elif r.assessment_type == "formatif":
+            grade_student_map[key]["formatif"] = round(float(r.average_score), 1) if r.average_score is not None else None
+
+    grade_by_student = []
+    for key, vals in grade_student_map.items():
+        s_id, s_name, c_name = key
+        sum_avg = vals["sumatif"]
+        for_avg = vals["formatif"]
+
+        below = False
+        if sum_avg is not None and sum_avg < threshold_edelweiss:
+            below = True
+        if for_avg is not None and for_avg < threshold_edelweiss:
+            below = True
+
+        grade_by_student.append({
+            "student_id": s_id,
+            "student_name": s_name,
+            "class_name": c_name,
+            "sumatif_average": sum_avg,
+            "formatif_average": for_avg,
+            "below_threshold": below
+        })
+    grade_by_student.sort(key=lambda x: x["student_name"])
+
+    return {
+        "filters": {
+            "academic_year_id": academic_year_id,
+            "jenjang_id": jenjang_id,
+            "class_name": class_name,
+            "term": term,
+            "subject_id": subject_id
+        },
+        "attendance_summary": attendance_summary,
+        "lateness_by_class": lateness_by_class,
+        "grade_by_class": grade_by_class,
+        "grade_by_subject": grade_by_subject,
+        "grade_by_student": grade_by_student,
+        "thresholds": {
+            "kkm_edelweiss": threshold_edelweiss,
+            "kkm_national": threshold_national
+        },
+        "warnings": warnings
+    }
