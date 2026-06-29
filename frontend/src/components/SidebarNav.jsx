@@ -13,6 +13,7 @@ import {
   Layers3,
   Server,
   Settings as SettingsIcon,
+  TrendingUp,
   UploadCloud,
   UserCheck,
   Users as UsersIcon,
@@ -33,6 +34,7 @@ const NAV_GROUPS = [
       { name: 'Academic & Student Management', path: '/academic-management', icon: Layers3 },
       { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck },
       { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
+      { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
     ],
   },
   {

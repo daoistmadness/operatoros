@@ -16,6 +16,7 @@ import StudentProfile from './pages/StudentProfile';
 import GradeLedger from './pages/GradeLedger.tsx';
 import Enrollment from './pages/Enrollment.tsx';
 import AcademicManagement from './pages/AcademicManagement.tsx';
+import ManagementAnalytics from './pages/ManagementAnalytics';
 import SidebarNav from './components/SidebarNav';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
               <Route path="/upload" element={<Upload />} />
               <Route path="/upload-history" element={<UploadHistory />} />
               <Route path="/mapping" element={<ClassMapping />} />
+              <Route path="/analytics" element={<ManagementAnalytics />} />
               <Route path="/reports" element={<AttendanceReport />} />
               <Route path="/reports/tardiness" element={<TardinessReport />} />
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
