@@ -28,6 +28,7 @@ fix_*.py
 patch_docs.py
 refactor_start_dev.py
 pyrightconfig.json
+backend/test_reset.py
 
 # Local Databases (Root fallback)
 *.db
