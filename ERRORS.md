@@ -8,6 +8,7 @@ This file records recurring failures, fragile areas, and debugging notes.
 - Portless development depends on first-time certificate trust. If `./start-dev.sh` cannot reach an HTTPS Portless URL, the next check is `portless trust`, not a TLS bypass.
 - If `portless get` returns no URL or a stale route, inspect `portless list` and prune manually with `portless prune`.
 - If the browser smoke test fails to start, run `agent-browser doctor --offline --quick` and then install binaries with `agent-browser install` or `agent-browser install --with-deps` on Linux/WSL2.
+- **Premature silent exit during startup**: The `start-dev.sh` script previously exited without warning if port assignment detection (`extract_assigned_port`) timed out. This was caused by an unhandled exit code from command substitution inside a global variable assignment under `set -e`. Fixed by adding `|| echo 'unknown'` and using explicit child failure loops.
 - **Portless startup failure (proxy TCP refused & route 404)**: 
   - `portless doctor` does not exist in Portless v0.14.0 — use `portless service status` for diagnosis.
   - Proxy TCP probe was previously hardcoded to port 9999 and referenced `PORTLESS_PROXY_PORT` — actual proxy defaults to port 443 (HTTPS) and uses `PORTLESS_PORT` env var. Fixed by dynamically parsing proxy port and status from `portless service status` and falling back to 443.

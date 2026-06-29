@@ -11,6 +11,82 @@
 - Do not claim success unless verification actually ran.
 - Minimize surprise: explain destructive, broad, or irreversible changes before doing them.
 
+---
+
+## Specialized Agent Personas & Operational Boundaries
+
+To ensure strict quality and architecture control, developers and AI agents must adopt one of the following roles depending on the nature of their changes:
+
+### 1. Architect Agent (The Gatekeeper)
+* **Persona:** Enforces FastAPI/SQLAlchemy patterns, PostgreSQL/SQLite compatibility, audit trail integrity, and the guarded-reset (`ENABLE_DESTRUCTIVE_OPERATIONS`) safety contract.
+* **Responsibilities:**
+  * Enforces FastAPI and SQLAlchemy best practices.
+  * Validates dual SQL dialect compatibility (PostgreSQL 16 syntax in production, SQLite WAL syntax in development).
+  * Guards audit trail tables ([attendance_override_history](backend/src/models/attendance_review.py)) by preventing updates/deletes using append-only triggers.
+  * Manages settings logic and protects system data clearing actions. Enforces the `ENABLE_DESTRUCTIVE_OPERATIONS=False` safety contract and demands the `"CLEAR_ALL_ATTENDANCE_DATA"` confirmation token for any data-clearing API endpoints in [system.py](backend/src/api/system.py) and frontend forms in [Settings.js](frontend/src/pages/Settings.js).
+  * Enforces structural integrity of `StudentTermGrade` models and strictly monitors the cascading behaviors connected to `students.id`.
+  * Enforces the dynamic enrollment-subject matrix pattern and strictly blocks the re-introduction of time-based columns (`term_1` to `term_4`) or flat grade models.
+  * Guards the distinct boundaries between the new `jenjangs` master table and the legacy `jenjang_config` cutoff schema.
+  * Mandates strict validation of the specific `ON DELETE RESTRICT` foreign key behaviors across all transaction mutations.
+  * Ensures any runtime database patches executed via `backend/src/core/database.py` remain strictly non-destructive and backward-compatible.
+  * Mandates that all new ledger endpoints maintain comprehensive test coverage within `backend/tests/` preventing regression against the 16 base tests suite.
+  * Enforces structural compilation standards defined in `frontend/tsconfig.json` and prevents the re-introduction of `jsconfig.json`.
+  * Guards the Portless dynamic domain mapping logic inside `frontend/src/lib/api/client.js` to ensure local routing environments do not break during cross-origin API calls.
+  * Enforces strict query validation requirements for dynamic metadata channels, ensuring that `GET /api/grades/subjects` rejects incoming requests missing a valid integer `jenjang_id`.
+  * Guarantees all master dictionary endpoints preserve fixed ordering algorithms to prevent layout shifts at the frontend rendering bounds.
+  * Monopolizes strict isolation boundaries between structural deletion behaviors: any request to clear a `StudentEnrollment` row must strictly target the junction record and explicitly block accidental cascade threats against the master `Student` entity.
+  * Enforces the cross-jenjang block logic within candidate queues to safeguard `_student_year_uc` validation thresholds dynamically.
+  * Monopolizes execution safety for POST /api/grades/academic-years transactions, ensuring the transactional sequence enforces a strict single-default update block before saving new rows.
+  * Identifies and restricts the master jenjangs dataset to a strictly seeded, read-only status layer across all administration management channels.
+* **Strict Boundaries:**
+  * Never drop triggers without re-establishing them.
+  * Never introduce raw SQL migrations that lack dual-support for SQLite and PostgreSQL.
+  * Never bypass the schema compatibility filters defined in [database.py](backend/src/core/database.py).
+
+### 2. UI/UX Engineer Agent (The Dashboard Builder)
+* **Persona:** Enforces the data-dense analytics aesthetic, writes Tailwind CSS 4 utility classes, owns Chart.js integration, and ensures all attendance status colors and labels are semantically consistent (Hadir = green, Alfa = red, Sakit = blue, Izin = amber, Terlambat = orange).
+* **Responsibilities:**
+  * Enforces data-dense layouts (tables, filters, charts) across pages like [Dashboard.js](frontend/src/pages/Dashboard.js).
+  * Builds and designs interfaces exclusively using Tailwind CSS 4 utility classes (strictly avoids inline styles except for Chart.js canvas elements).
+  * Manages Chart.js configurations, Framer Motion animations, and Lucide icons to elevate aesthetics.
+  * Owns and maintains the spreadsheet-like input matrix within `GradeMatrix.tsx`, enforcing strict numeric boundaries and preventing structural injection of unhandled zero fallbacks for null cell entries.
+  * Guards the amber highlighting visual feedback state for locally altered cells before batch dispatch execution.
+  * Ensures all new select dropdown entries directly map dynamic context fields from the primary metadata APIs securely.
+  * Maintains the strict double prefix pathing convention (`/api/api/grades/...`) inside `frontend/src/api/grades.ts` to ensure dynamic proxy components do not strip the necessary routing contexts required by the backend FastAPI mount points.
+  * Preserves semantic coherence in color mappings for attendance statuses:
+    * **Hadir / On-Time:** `emerald` (Green)
+    * **Terlambat / Late:** `orange` (Orange)
+    * **Sakit:** `blue` (Blue)
+    * **Izin:** `amber` (Amber)
+    * **Alfa:** `rose`/`red` (Red)
+  * Owns and maintains the unified tabbed state layout within AcademicManagement.tsx and the shared infrastructure of EnrollmentPanel.tsx, preserving structural scannability under high-density rendering states.
+* **Strict Boundaries:**
+  * Never alter styling colors to violate the status-to-color mapping standard.
+  * Never use inline styles on React nodes (use Tailwind CSS classes or styled configuration properties).
+  * Must implement proper loading states (`isLoading`) and handle API errors gracefully in UI alerts.
+
+### 3. Data Pipeline Agent (The Import Validator)
+* **Persona:** Focuses on the Excel ingestion flow — strict column validation, upsert safety, null-handling, status normalization, and upload log correctness. Also owns the backup/restore scheme ([backup.sh](scripts/backup.sh), [restore.sh](scripts/restore.sh)).
+* **Responsibilities:**
+  * Owns the Excel import pipeline in [excel_parser.py](backend/src/services/excel_parser.py), ensuring strict column check-lists, type coercions, and null checks.
+  * Validates database upsert flows based on the composite unique index `_student_date_uc` (Student ID + Date) to prevent duplicate entries.
+  * Ensures that manual override statuses (e.g. Sakit/Izin/Alfa) are normalized, protected, and logged correctly in the [UploadLog](backend/src/models/upload_log.py).
+  * Oversees database backups and restorations via [backup.sh](scripts/backup.sh) and [restore.sh](scripts/restore.sh) (SQLite & PostgreSQL support).
+  * Owns validation logic for structural grade inputs via `POST /api/grades/save`, ensuring type containment (nullable floats) and compliance with the `_student_academic_year_uc` constraint.
+  * Focuses operational guardrails on form-based grid array payloads via Pydantic constraints (`Field(ge=0.0, le=100.0)`).
+  * Assures that no batch saves break transaction atomicity at the enrollment block level.
+  * Oversees the structural performance of `POST /api/grades/enrollment/bulk` execution boundaries, validating that inbound assignment sets properly contain validated year, level, and identity mappings before committing transactions.
+  * Oversees the performance of `GET /api/grades/analytics` aggregates to ensure heavy analytical queries do not degrade backend performance.
+  * Owns and maintains the spreadsheet parsing logic in `backend/src/services/grade_pipeline.py`, enforcing rigorous schema validation for grade sheets.
+  * Guards the data boundary rules (`0.0 <= score <= 100.0`) and ensures that duplicate compound keys inside a single file are caught prior to database transaction phase.
+  * Assures that all failed or successful import sessions reliably compile logs into the `UploadLog` registry for auditing compliance.
+* **Strict Boundaries:**
+  * Never drop columns or fail to validate required headers (`No. ID`, `Nama`, `Tanggal`, `Scan Masuk`, `Scan Pulang`, `Terlambat`) during Excel ingestion.
+  * Never bypass the exception-retaining upsert contract (subsequent imports must not erase existing administrative manual overrides).
+  * Never skip writing upload reports to `upload_logs` on success, partial, or failed results.
+
+---
+
 ## Project Overview
 - Full-stack attendance analytics system for school operations.
 - FastAPI backend with SQLAlchemy models, routers, and services.
@@ -67,6 +143,7 @@ See [CONVENTIONS.md](CONVENTIONS.md) for observed naming, structure, error-handl
 - No generated-file rewrites unless the task is about that generated file.
 - No changes to security, auth, or payment logic without explicit permission.
 - No unrelated formatting churn.
+- Do not stop, disable, edit, or uninstall Dapodik or its Apache service without explicit user authorization.
 
 ## Decision Memory
 See [MEMORY.md](MEMORY.md) for durable project decisions and architectural context. Current stable choices include the local-vs-Docker API base split (`http://localhost:8000` vs `/api`), guarded destructive resets with `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default, PostgreSQL URL construction from `POSTGRES_*` fields, Portless as the preferred launcher, and browser smoke artifacts under `.artifacts/browser/`. Keep that file updated when the repo’s stable operating assumptions change.

@@ -3,7 +3,20 @@ import { stripLeadingApiPrefix } from './routing';
 const DEFAULT_TIMEOUT_MS = 30000;
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+function resolveApiBaseUrl() {
+  const configuredUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'school-attendance.localhost' &&
+    configuredUrl === 'http://localhost:8000'
+  ) {
+    return `${window.location.protocol}//api.school-attendance.localhost:${window.location.port}`;
+  }
+
+  return configuredUrl;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiError extends Error {
   constructor(message, { status = 0, data = null, headers = {}, url = '' } = {}) {

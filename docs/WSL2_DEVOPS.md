@@ -36,6 +36,9 @@ cd ~/projects/absensi/school-attendance-analytics
 ```
 
 `start-dev.sh`:
+- A successful startup prints a green `✅ SCHOOL ATTENDANCE ANALYTICS IS READY` banner and remains active. If it exits to the prompt before printing this banner, startup has failed.
+- You can add `--open` to automatically open the frontend URL (safely invokes `powershell.exe Start-Process` on WSL2).
+- You can add `--status` to view health status of routes and services without starting anything.
 - prepares `backend/.venv` when needed
 - installs frontend dependencies if `node_modules/` is missing
 - runs Tailwind watch mode against `frontend/src/index.css`

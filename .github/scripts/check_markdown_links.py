@@ -11,6 +11,7 @@ IMAGE_LINK_RE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 TARGET_PATHS = [
     ROOT / "README.md",
     ROOT / "AGENTS.md",
+    ROOT / "PROJECT_CONTEXT.md",
     ROOT / "COMMANDS.md",
     ROOT / "CONVENTIONS.md",
     ROOT / "MEMORY.md",

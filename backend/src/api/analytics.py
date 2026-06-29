@@ -372,13 +372,14 @@ def _round_half_up(value: float | int | Decimal) -> int:
     return int(Decimal(str(value)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
-def _round_percentage_int(numerator: int | float, denominator: int | float) -> int | None:
+def _round_percentage_int(numerator: int | float, denominator: int | float) -> float | None:
     if not denominator:
         return None
-    return _round_half_up((Decimal(str(numerator)) * Decimal("100")) / Decimal(str(denominator)))
+    val = (Decimal(str(numerator)) * Decimal("100")) / Decimal(str(denominator))
+    return float(val.quantize(Decimal("0.01"), rounding="ROUND_HALF_UP"))
 
 
-def _normalize_percentage_row(hadir_pct, sakit_pct, izin_pct, alfa_pct, lain2_pct):
+def _normalize_percentage_row(hadir_pct: float | None, sakit_pct: float | None, izin_pct: float | None, alfa_pct: float | None, lain2_pct: float | None):
     values = [hadir_pct, sakit_pct, izin_pct, alfa_pct, lain2_pct]
     if any(value is None for value in values):
         return {
@@ -391,15 +392,14 @@ def _normalize_percentage_row(hadir_pct, sakit_pct, izin_pct, alfa_pct, lain2_pc
         }
 
     total_pct = sum(values)
-    # Absorb the integer-rounding remainder into hadir, which is expected to be
+    # Absorb the rounding remainder into hadir, which is expected to be
     # the largest bucket in normal attendance data. Guard against going negative
     # if a future dataset violates that assumption.
-    adjustment = 100 - total_pct
-    hadir_pct = max(0, hadir_pct + adjustment)
-    total_pct = hadir_pct + sakit_pct + izin_pct + alfa_pct + lain2_pct
-
-    if total_pct != 100:
-        logger.warning("Rekap absensi row total is not 100 after adjustment: %s", total_pct)
+    if abs(total_pct - 100.0) > 0.001:
+        adjustment = 100.0 - total_pct
+        hadir_pct = max(0.0, hadir_pct + adjustment)
+    
+    total_pct = 100.0
 
     return {
         "hadir_pct": hadir_pct,
@@ -427,8 +427,8 @@ def _valid_student_class_filter():
     return func.length(normalized) > 0
 
 
-def _format_rekap_excel_pct(value: int | None) -> str:
-    return "-" if value is None else f"{value}%"
+def _format_rekap_excel_pct(value: int | float | None) -> str:
+    return "-" if value is None else f"{value:.2f}%"
 
 
 def _collect_rekap_absensi_report_data(db: Session, period: dict):
@@ -555,6 +555,11 @@ def _collect_rekap_absensi_report_data(db: Session, period: dict):
         alfa = int(absence_values["alfa"])
         denominator = student_count * heb_total
         lain2 = max(denominator - hadir_days - sakit - izin - alfa, 0)
+        
+        # Asumsikan data kosong (lain2) sebagai HADIR
+        if lain2 > 0:
+            hadir_days += lain2
+            lain2 = 0
 
         if heb_total == 0 or denominator == 0:
             heb_zero_jenjangs.append(jenjang)
@@ -1463,17 +1468,17 @@ def export_tardiness_management_excel(
 
 
 
-def _normalize_v2_percentage_dict(pcts: dict[str, int | None]) -> dict[str, int | None]:
+def _normalize_v2_percentage_dict(pcts: dict[str, float | None]) -> dict[str, float | None]:
     if any(v is None for v in pcts.values()):
         return {k: None for k in pcts}
     
     total_pct = sum(pcts.values())
-    if total_pct != 100:
-        diff = 100 - total_pct
+    if abs(total_pct - 100) > 0.001:
+        diff = 100.0 - total_pct
         max_key = max(pcts, key=pcts.get)
-        pcts[max_key] = max(0, pcts[max_key] + diff)
+        pcts[max_key] = max(0.0, pcts[max_key] + diff)
     
-    pcts["total_pct"] = 100
+    pcts["total_pct"] = 100.0
     return pcts
 
 def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
@@ -1595,6 +1600,12 @@ def _collect_v2_rekap_absensi_report_data(db: Session, period: dict):
             flags = {}
             if heb_total > 0:
                 lain2 = max(0, expected_total - valid_total)
+                
+                # Asumsikan data kosong (lain2) sebagai HADIR
+                if lain2 > 0:
+                    hadir += lain2
+                    valid_total += lain2
+                    lain2 = 0
             else:
                 flags["expected_total_missing"] = True
                 

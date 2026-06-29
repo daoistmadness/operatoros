@@ -4,5 +4,9 @@
   },
   "search.exclude": {
     "**/node_modules/fast-uri/tsconfig.json": true
-  }
+  },
+  "python.defaultInterpreterPath": "backend/.venv/bin/python",
+  "python.analysis.extraPaths": [
+    "backend/src"
+  ]
 }

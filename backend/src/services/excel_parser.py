@@ -224,8 +224,8 @@ def _normalize_chunk(chunk: pd.DataFrame, stats: dict, warned_values: set) -> tu
     return chunk, skipped_empty, failed_ident
 
 
-def _iter_excel_chunks(file_obj, chunk_size: int):
-    workbook = pd.ExcelFile(file_obj, engine="openpyxl")
+def _iter_excel_chunks(file_obj, chunk_size: int, engine: str = "openpyxl"):
+    workbook = pd.ExcelFile(file_obj, engine=engine)
     header = pd.read_excel(workbook, sheet_name=0, nrows=0)
     header.columns = header.columns.str.strip()
 
@@ -515,7 +515,10 @@ async def parse_excel(file, db: Session):
         cutoff_map = _load_cutoff_map(db)
         file.file.seek(0)
 
-        for chunk in _iter_excel_chunks(file.file, CHUNK_SIZE):
+        filename = (file.filename or "").lower()
+        engine = "xlrd" if filename.endswith(".xls") else "openpyxl"
+
+        for chunk in _iter_excel_chunks(file.file, CHUNK_SIZE, engine=engine):
             entries = _build_chunk_entries(chunk, stats, warned_values, cutoff_map)
             _process_chunk_with_fallback(entries, db, stats, cutoff_map)
 

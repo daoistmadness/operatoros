@@ -39,7 +39,7 @@ def create_app_context(monkeypatch, tmp_path, destructive_enabled: bool):
     if destructive_enabled:
         monkeypatch.setenv("ENABLE_DESTRUCTIVE_OPERATIONS", "true")
     else:
-        monkeypatch.delenv("ENABLE_DESTRUCTIVE_OPERATIONS", raising=False)
+        monkeypatch.setenv("ENABLE_DESTRUCTIVE_OPERATIONS", "false")
     unload_app_modules()
 
     main_module = importlib.import_module("src.main")

@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 
 from sqlalchemy import create_engine, inspect, text, event
 from sqlalchemy.engine import Engine
@@ -21,6 +22,11 @@ engine = create_engine(settings.database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+
+GRADE_BOOTSTRAP_JENJANG = "Primary"
+GRADE_BOOTSTRAP_ACADEMIC_YEAR = "2025/2026"
+GRADE_BOOTSTRAP_SUBJECT = "Language"
 
 
 def _ensure_students_schema_compatibility() -> None:
@@ -91,6 +97,98 @@ def _ensure_attendance_schema_compatibility() -> None:
             connection.execute(text("ALTER TABLE attendance ADD COLUMN late_source VARCHAR DEFAULT 'none'"))
 
 
+def run_grade_ledger_patches(engine_arg) -> None:
+    """Apply non-destructive patches for the dynamic Grade Ledger architecture."""
+    inspector = inspect(engine_arg)
+    table_names = set(inspector.get_table_names())
+
+    with engine_arg.begin() as connection:
+        if "student_term_grades" in table_names and "student_term_grades_legacy" not in table_names:
+            connection.execute(text("ALTER TABLE student_term_grades RENAME TO student_term_grades_legacy"))
+
+        refreshed_tables = set(inspect(connection).get_table_names())
+        if "assessment_components" not in refreshed_tables:
+            return
+
+        component_count = connection.execute(text("SELECT COUNT(*) FROM assessment_components")).scalar() or 0
+        if component_count == 0:
+            connection.execute(
+                text(
+                    "INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES "
+                    "(:kuis_name, :sumatif_type, NULL), "
+                    "(:tes_name, :sumatif_type, NULL), "
+                    "(:total_name, :sumatif_type, NULL), "
+                    "(:total_name, :formatif_type, NULL)"
+                ),
+                {
+                    "kuis_name": "kuis",
+                    "tes_name": "tes",
+                    "total_name": "total",
+                    "sumatif_type": "sumatif",
+                    "formatif_type": "formatif",
+                },
+            )
+
+
+def _seed_grade_ledger_minimum(engine_arg) -> None:
+    """Create minimal Grade Ledger master data without overwriting existing rows."""
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.subject import Subject
+
+    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine_arg)
+    session = session_factory()
+    try:
+        jenjang = session.query(Jenjang).filter(Jenjang.name == GRADE_BOOTSTRAP_JENJANG).first()
+        if jenjang is None:
+            jenjang = Jenjang(name=GRADE_BOOTSTRAP_JENJANG)
+            session.add(jenjang)
+            session.flush()
+
+        default_year_exists = session.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first() is not None
+        academic_year = (
+            session.query(AcademicYear)
+            .filter(AcademicYear.label == GRADE_BOOTSTRAP_ACADEMIC_YEAR)
+            .first()
+        )
+        if academic_year is None:
+            academic_year = AcademicYear(
+                label=GRADE_BOOTSTRAP_ACADEMIC_YEAR,
+                start_date=date(2025, 7, 1),
+                end_date=date(2026, 6, 30),
+                status="active",
+                is_default=not default_year_exists,
+            )
+            session.add(academic_year)
+        elif not default_year_exists:
+            academic_year.is_default = True
+
+        subject = (
+            session.query(Subject)
+            .filter(
+                Subject.name == GRADE_BOOTSTRAP_SUBJECT,
+                Subject.jenjang_id == jenjang.id,
+            )
+            .first()
+        )
+        if subject is None:
+            session.add(
+                Subject(
+                    name=GRADE_BOOTSTRAP_SUBJECT,
+                    jenjang_id=jenjang.id,
+                    supports_sumatif=True,
+                    supports_formatif=True,
+                )
+            )
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 
 def get_db():
     db = SessionLocal()
@@ -109,7 +207,15 @@ def init_db():
     from models.heb_override import HebOverride
     from models.upload_log import UploadLog
     from models.attendance_review import AttendanceOverride, AttendanceOverrideHistory
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.subject import Subject
+    from models.assessment_component import AssessmentComponent
+    from models.student_enrollment import StudentEnrollment
+    from models.student_subject_grade import StudentSubjectGrade
     Base.metadata.create_all(bind=engine)
+    run_grade_ledger_patches(engine)
+    _seed_grade_ledger_minimum(engine)
     _ensure_students_schema_compatibility()
     _ensure_upload_logs_schema_compatibility()
     _ensure_attendance_schema_compatibility()
