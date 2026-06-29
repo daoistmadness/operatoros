@@ -36,6 +36,7 @@ init_db()
 
 # Routers
 app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(config_router, prefix="/config", tags=["config"])
 app.include_router(students_router, prefix="/students", tags=["students"])
 app.include_router(uploads_router, prefix="/uploads", tags=["uploads"])
