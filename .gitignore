@@ -15,3 +15,21 @@ frontend/build/
 
 # Local Backups
 backups/
+
+# Python & Environment
+__pycache__/
+*.py[cod]
+.venv/
+backend/.venv/
+
+# Scratch & Temporary Tools
+scratch/
+fix_*.py
+patch_docs.py
+refactor_start_dev.py
+pyrightconfig.json
+
+# Local Databases (Root fallback)
+*.db
+*.db-shm
+*.db-wal
