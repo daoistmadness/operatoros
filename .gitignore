@@ -12,3 +12,6 @@ frontend/build/
 .artifacts/
 
 *.log
+
+# Local Backups
+backups/

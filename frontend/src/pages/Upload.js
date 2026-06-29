@@ -113,12 +113,12 @@ function Upload() {
             <p className="text-xl font-bold text-slate-800">
               {file ? file.name : "Select or drag Excel file"}
             </p>
-            <p className="text-slate-400 text-sm italic">Supports .xlsx (Attendance Machine Export)</p>
+            <p className="text-slate-400 text-sm italic">Supports .xlsx and .xls (Attendance Machine Export)</p>
           </div>
 
           <label className="btn-primary cursor-pointer group-hover:scale-105 transition-transform">
             Browse Files
-            <input type="file" className="hidden" accept=".xlsx" onChange={handleFileChange} />
+            <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleFileChange} />
           </label>
         </div>
       </div>
@@ -282,7 +282,7 @@ function Upload() {
                 <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-3">Common causes</p>
                 <ul className="space-y-2">
                   {[
-                    "File is not .xlsx (CSV or .xls not supported)",
+                    "File is not .xlsx or .xls (CSV not supported)",
                     "Required column is missing or misspelled (No. ID, Nama, Tanggal, Scan Masuk, Terlambat)",
                     "'Tanggal' column contains text, not a real date",
                     "File is password-protected or corrupted",

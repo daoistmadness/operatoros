@@ -19,6 +19,7 @@ This file records durable project decisions and stable context for future agent 
 - `POST /system/clear-data` is guarded by `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default and requires the `CLEAR_ALL_ATTENDANCE_DATA` confirmation token.
 - The backend can construct a PostgreSQL SQLAlchemy URL from `POSTGRES_*` fields; Compose supplies `db` as the service host.
 - Backend behavioral tests now live under `backend/tests/` and are run with `pytest`.
+- On developer machines where Windows Dapodik Apache owns port 443, the WSL Portless proxy uses a documented non-conflicting public port. The project never stops or reconfigures Dapodik automatically.
 
 ## Operational Notes
 - Keep SQLite database files and generated Excel outputs out of version control unless a task explicitly requires them.

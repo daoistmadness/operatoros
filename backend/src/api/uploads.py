@@ -16,7 +16,8 @@ from services.attendance_metrics import calculate_heb, derive_jenjang_from_class
 router = APIRouter()
 
 _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-_ACCEPTED_MIMES = {_XLSX_MIME, "application/octet-stream", "application/zip"}
+_XLS_MIME = "application/vnd.ms-excel"
+_ACCEPTED_MIMES = {_XLSX_MIME, _XLS_MIME, "application/octet-stream", "application/zip"}
 
 
 def _write_upload_log(
@@ -63,15 +64,15 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
 
     # Accept by MIME or by extension — browsers sometimes send octet-stream
     # for files with spaces or parentheses in the name.
-    is_xlsx_mime = file.content_type in _ACCEPTED_MIMES
-    is_xlsx_ext = (file.filename or "").lower().endswith(".xlsx")
-    if not (is_xlsx_mime or is_xlsx_ext):
+    is_excel_mime = file.content_type in _ACCEPTED_MIMES
+    is_excel_ext = (file.filename or "").lower().endswith((".xlsx", ".xls"))
+    if not (is_excel_mime or is_excel_ext):
         _write_upload_log(db, filename, uploaded_by, {
             "total_records": 0, "new_students": 0, "late_entries": 0, "failed_rows": 0,
         }, "failed")
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type '{file.content_type}'. Please upload a .xlsx file.",
+            detail=f"Invalid file type '{file.content_type}'. Please upload a .xlsx or .xls file.",
         )
     
     base_report = {
