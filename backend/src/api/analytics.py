@@ -30,8 +30,9 @@ from services.attendance_metrics import (
     month_year_filters,
     month_bucket_string_expression,
 )
+from services.analytics_trends import build_historical_trends
+from services.intervention_impact import build_intervention_impact
 from services.management_analytics import build_management_summary
-
 from services.management_report_export import (
     PDF_MIME,
     XLSX_MIME,
@@ -3075,8 +3076,24 @@ def export_management_summary_pdf(
         term=term,
         subject_id=subject_id,
     )
+    summary["historical_trends"] = build_historical_trends(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        subject_id=subject_id,
+        term=term,
+        include_forecast=True,
+    )
+    summary["intervention_impact"] = build_intervention_impact(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        subject_id=subject_id,
+        term=term,
+    )
     filename = build_management_report_filename(summary, "pdf")
-
     return StreamingResponse(
         BytesIO(build_management_summary_pdf(summary)),
         media_type=PDF_MIME,
@@ -3102,10 +3119,84 @@ def export_management_summary_excel(
         term=term,
         subject_id=subject_id,
     )
+    summary["historical_trends"] = build_historical_trends(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        subject_id=subject_id,
+        term=term,
+        include_forecast=True,
+    )
+    summary["intervention_impact"] = build_intervention_impact(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        subject_id=subject_id,
+        term=term,
+    )
     filename = build_management_report_filename(summary, "xlsx")
-
     return StreamingResponse(
         BytesIO(build_management_summary_excel(summary, {"mode": mode})),
         media_type=XLSX_MIME,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/historical-trends")
+def get_historical_trends(
+    academic_year_id: int | None = Query(None),
+    jenjang_id: int | None = Query(None),
+    class_name: str | None = Query(None),
+    subject_id: int | None = Query(None),
+    term: str | None = Query(None),
+    from_academic_year_id: int | None = Query(None),
+    to_academic_year_id: int | None = Query(None),
+    granularity: str = Query("term"),
+    include_forecast: bool = Query(True),
+    forecast_method: str = Query("linear_trend"),
+    db: Session = Depends(get_db),
+):
+    return build_historical_trends(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        subject_id=subject_id,
+        term=term,
+        from_academic_year_id=from_academic_year_id,
+        to_academic_year_id=to_academic_year_id,
+        granularity=granularity,
+        include_forecast=include_forecast,
+        forecast_method=forecast_method,
+    )
+
+
+@router.get("/intervention-impact")
+def get_intervention_impact(
+    academic_year_id: int | None = Query(None),
+    jenjang_id: int | None = Query(None),
+    class_name: str | None = Query(None),
+    student_id: int | None = Query(None),
+    subject_id: int | None = Query(None),
+    term: str | None = Query(None),
+    status: str | None = Query(None),
+    priority: str | None = Query(None),
+    owner_name: str | None = Query(None),
+    risk_level: str | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return build_intervention_impact(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        student_id=student_id,
+        subject_id=subject_id,
+        term=term,
+        status=status,
+        priority=priority,
+        owner_name=owner_name,
+        risk_level=risk_level,
     )
