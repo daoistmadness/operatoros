@@ -31,6 +31,7 @@ from services.attendance_metrics import (
     month_bucket_string_expression,
 )
 from services.management_analytics import build_management_summary
+
 from services.management_report_export import (
     PDF_MIME,
     XLSX_MIME,
@@ -3075,6 +3076,7 @@ def export_management_summary_pdf(
         subject_id=subject_id,
     )
     filename = build_management_report_filename(summary, "pdf")
+
     return StreamingResponse(
         BytesIO(build_management_summary_pdf(summary)),
         media_type=PDF_MIME,
@@ -3089,6 +3091,7 @@ def export_management_summary_excel(
     class_name: str | None = Query(None),
     term: str | None = Query(None),
     subject_id: int | None = Query(None),
+    mode: str | None = Query("summary"),
     db: Session = Depends(get_db),
 ):
     summary = build_management_summary(
@@ -3100,8 +3103,9 @@ def export_management_summary_excel(
         subject_id=subject_id,
     )
     filename = build_management_report_filename(summary, "xlsx")
+
     return StreamingResponse(
-        BytesIO(build_management_summary_excel(summary)),
+        BytesIO(build_management_summary_excel(summary, {"mode": mode})),
         media_type=XLSX_MIME,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

@@ -11,4 +11,6 @@ pydantic-settings==2.7.1
 pytest==8.3.4
 httpx==0.28.1
 xlrd==2.0.1
+xlsxwriter==3.2.9
+reportlab==5.0.0
 
