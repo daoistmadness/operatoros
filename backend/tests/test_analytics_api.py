@@ -2,10 +2,12 @@ import importlib
 import sqlite3
 import sys
 from datetime import date, time
+from io import BytesIO
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from openpyxl import load_workbook
 
 MODULE_PREFIXES = ("src", "api", "core", "models", "services")
 SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
@@ -61,6 +63,7 @@ def app_context(monkeypatch, tmp_path):
     component_module = importlib.import_module("models.assessment_component")
     enrollment_module = importlib.import_module("models.student_enrollment")
     grade_module = importlib.import_module("models.student_subject_grade")
+    upload_log_module = importlib.import_module("models.upload_log")
 
     return {
         "app": main_module.app,
@@ -74,6 +77,7 @@ def app_context(monkeypatch, tmp_path):
         "AssessmentComponent": component_module.AssessmentComponent,
         "StudentEnrollment": enrollment_module.StudentEnrollment,
         "StudentSubjectGrade": grade_module.StudentSubjectGrade,
+        "UploadLog": upload_log_module.UploadLog,
     }
 
 
@@ -108,6 +112,100 @@ def test_management_summary_invalid_id(app_context):
     response = client.get("/api/analytics/management-summary?academic_year_id=99999")
     assert response.status_code == 404
     assert "Academic year not found" in response.json()["detail"]
+
+
+def seed_management_export_dataset(app_context):
+    db_module = app_context["db_module"]
+    Student = app_context["Student"]
+    Attendance = app_context["Attendance"]
+    AbsenceReason = app_context["AbsenceReason"]
+    AcademicYear = app_context["AcademicYear"]
+    Jenjang = app_context["Jenjang"]
+    Subject = app_context["Subject"]
+    AssessmentComponent = app_context["AssessmentComponent"]
+    StudentEnrollment = app_context["StudentEnrollment"]
+    StudentSubjectGrade = app_context["StudentSubjectGrade"]
+
+    db = db_module.SessionLocal()
+    ay = db.query(AcademicYear).filter(AcademicYear.label == "2025/2026").first()
+    jen = db.query(Jenjang).filter(Jenjang.name == "Primary").first()
+    ay_id = ay.id
+    jen_id = jen.id
+
+    student = Student(name="Export Student", jenjang="Primary", class_name="P3A")
+    db.add(student)
+    db.flush()
+
+    enrollment = StudentEnrollment(
+        student_id=student.id,
+        academic_year_id=ay_id,
+        jenjang_id=jen_id,
+        class_name="P3A",
+        class_assigned=True,
+    )
+    db.add(enrollment)
+    db.flush()
+
+    db.add_all(
+        [
+            Attendance(
+                student_id=student.id,
+                date=date(2025, 10, 7),
+                check_in=time(7, 45),
+                check_out=time(14, 0),
+                status="late",
+                late_duration=30,
+            ),
+            Attendance(
+                student_id=student.id,
+                date=date(2026, 2, 7),
+                check_in=time(7, 30),
+                check_out=time(14, 0),
+                status="late",
+                late_duration=20,
+            ),
+            AbsenceReason(
+                student_id=student.id,
+                class_name="P3A",
+                month=10,
+                year=2025,
+                sakit=1,
+                izin=0,
+                alfa=0,
+                entered_by="operator",
+            ),
+        ]
+    )
+
+    subject = Subject(name="Export Math", jenjang_id=jen_id, supports_sumatif=True, supports_formatif=True)
+    db.add(subject)
+    db.flush()
+
+    comp_sum = AssessmentComponent(name="Export Sumatif", assessment_type="sumatif", subject_id=subject.id)
+    comp_for = AssessmentComponent(name="Export Formatif", assessment_type="formatif", subject_id=subject.id)
+    db.add_all([comp_sum, comp_for])
+    db.flush()
+
+    db.add_all(
+        [
+            StudentSubjectGrade(
+                enrollment_id=enrollment.id,
+                subject_id=subject.id,
+                component_id=comp_sum.id,
+                score=74.0,
+            ),
+            StudentSubjectGrade(
+                enrollment_id=enrollment.id,
+                subject_id=subject.id,
+                component_id=comp_for.id,
+                score=None,
+            ),
+        ]
+    )
+    db.commit()
+    subject_id = subject.id
+    db.close()
+    return ay_id, jen_id, subject_id
 
 
 def test_management_summary_calculations(app_context):
@@ -232,6 +330,77 @@ def test_management_summary_calculations(app_context):
     assert s2_entry["below_threshold"] is True
 
 
+def test_management_summary_pdf_export_returns_file_and_warning(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    response = client.get(
+        f"/api/analytics/management-summary/export/pdf?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "management-analytics-report-2025-2026-all-terms" in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF-1.4")
+    assert b"No Term filter selected. This report aggregates the full academic year." in response.content
+    assert b"Export Student" in response.content
+    assert b"Below-KKM Alerts" in response.content
+
+
+def test_management_summary_pdf_export_respects_term_filter(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, _subject_id = seed_management_export_dataset(app_context)
+
+    response = client.get(
+        f"/api/analytics/management-summary/export/pdf?academic_year_id={ay_id}&jenjang_id={jen_id}&term=term_2"
+    )
+
+    assert response.status_code == 200
+    assert b"Late days: 1" in response.content
+    assert b"No Term filter selected" not in response.content
+    assert "management-analytics-report-2025-2026-term-2" in response.headers["content-disposition"]
+
+
+def test_management_summary_excel_export_returns_workbook(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    response = client.get(
+        f"/api/analytics/management-summary/export/excel?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    workbook = load_workbook(filename=BytesIO(response.content), read_only=True)
+    assert "Summary" in workbook.sheetnames
+    assert "Below-KKM Alerts" in workbook.sheetnames
+    alert_sheet = workbook["Below-KKM Alerts"]
+    values = [cell for row in alert_sheet.iter_rows(values_only=True) for cell in row if cell is not None]
+    assert "Export Student" in values
+    assert "Export Math" in values
+
+
+def test_management_summary_export_is_read_only(app_context):
+    client = TestClient(app_context["app"])
+    db_module = app_context["db_module"]
+    StudentEnrollment = app_context["StudentEnrollment"]
+    UploadLog = app_context["UploadLog"]
+    ay_id, jen_id, _subject_id = seed_management_export_dataset(app_context)
+
+    db = db_module.SessionLocal()
+    before_upload_logs = db.query(UploadLog).count()
+    before_enrollments = db.query(StudentEnrollment).count()
+    db.close()
+
+    response = client.get(f"/api/analytics/management-summary/export/pdf?academic_year_id={ay_id}&jenjang_id={jen_id}")
+    assert response.status_code == 200
+
+    db = db_module.SessionLocal()
+    assert db.query(UploadLog).count() == before_upload_logs
+    assert db.query(StudentEnrollment).count() == before_enrollments
+    db.close()
+
+
 def test_analytics_filters(app_context):
     client = TestClient(app_context["app"])
     db_module = app_context["db_module"]
@@ -283,4 +452,3 @@ def test_legacy_analytics_filters_route_is_preserved_temporarily(app_context):
     
     response = client.get(f"/analytics/filters?academic_year_id={ay_id}")
     assert response.status_code == 200
-
