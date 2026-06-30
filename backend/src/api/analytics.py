@@ -1145,6 +1145,53 @@ def _append_jenjang_summary_notes(ws):
             cell.alignment = Alignment(vertical="top", wrap_text=True)
 
 
+def _append_class_summary_notes(ws):
+    ws.append([])
+    ws.append(["How to Read This Table", "Formula / Explanation"])
+    notes_start_row = ws.max_row
+    ws.cell(row=notes_start_row, column=1).font = Font(bold=True)
+    ws.cell(row=notes_start_row, column=2).font = Font(bold=True)
+    ws.cell(row=notes_start_row, column=1).fill = PatternFill(fill_type="solid", fgColor="DCEAFE")
+    ws.cell(row=notes_start_row, column=2).fill = PatternFill(fill_type="solid", fgColor="DCEAFE")
+
+    note_rows = [
+        [
+            "HEB (Hari Efektif Belajar)",
+            "The total number of school/learning days in the selected reporting period (45 days in Term 4).",
+        ],
+        [
+            "Total Late Duration",
+            "The accumulated amount of late time (in hours and minutes, HH:MM) for all students in that class during the term.",
+        ],
+        [
+            "% Duration",
+            "(Class Total Late Duration in minutes / Grand Total Late Duration in minutes) x 100",
+        ],
+        [
+            "Unique Late Days",
+            "The number of unique calendar dates on which at least one student from that class arrived late.",
+        ],
+        [
+            "% Late Days",
+            "(Class Unique Late Days / Sum of Unique Late Days across all individual classes) x 100",
+        ],
+        [
+            "Late Students",
+            "The number of distinct (unique) students in that class who were late at least once during the term.",
+        ],
+        [
+            "TOTAL - Unique Late Days",
+            "The count of unique dates on which at least one student in the entire school was late. Note: This is not a sum of the individual class columns, as multiple classes can have late students on the same calendar days.",
+        ],
+    ]
+    for row in note_rows:
+        ws.append(row)
+
+    for row in ws.iter_rows(min_row=notes_start_row + 1, max_row=ws.max_row, min_col=1, max_col=2):
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+
 def _build_tardiness_management_workbook(report_data: dict, jenjang_summary_rows: list[dict]):
     workbook = Workbook()
 
@@ -1340,6 +1387,7 @@ def _build_tardiness_report_workbook(report_data: dict, jenjang_summary_rows: li
             total_students,
         ],
     )
+    _append_class_summary_notes(class_sheet)
     _auto_size_worksheet_columns(class_sheet)
 
     detail_sheet = workbook.create_sheet("Student Details")
