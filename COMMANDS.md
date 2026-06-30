@@ -24,7 +24,7 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `docker compose up --build`
 
 ## Test / Validation
-- `cd backend && python3 -m pytest -q`
+- `cd backend && python3 -m pytest -q` (or with venv-backed execution: `DATABASE_URL=sqlite:///./attendance.db PYTHONPATH=backend backend/.venv/bin/pytest backend/tests/ -q`)
 - `cd backend && python3 -c "from src.main import app; assert app is not None"`
 - `cd frontend && npm test`  # CRA test runner for frontend unit tests
 - `./scripts/verify-browser.sh https://school-attendance.localhost`

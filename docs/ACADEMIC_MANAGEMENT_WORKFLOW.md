@@ -15,7 +15,9 @@ If the setup is incomplete, the Grade Matrix may show missing dropdowns or empty
 | `/mapping` | Student identity and scanner mapping | `students` |
 | `/academic-management` → `Calendar & Subjects` | Academic years and subjects | `academic_years`, `subjects`, `jenjangs` |
 | `/academic-management` → `Class Allocation` | Student enrollment into academic context | `student_enrollments` |
+| `/academic-management` → `KKM & Term Settings` | Academic thresholds and effective term ranges | `kkm_thresholds`, `academic_term_configs` |
 | `/grades` | Score entry and Grade Matrix | `student_enrollments`, `student_subject_grades` |
+| `/analytics` → `Below-KKM Alerts & Academic Interventions` | Follow-up workflow for students below KKM | `academic_interventions` |
 
 Related operator docs:
 
@@ -30,12 +32,15 @@ Use this order:
 2. Open `/academic-management`
 3. Create or confirm the active academic year
 4. Create or confirm subjects for the selected jenjang
-5. Use Class Allocation to enroll students into a target class
-6. Open `/grades`
-7. Select academic year, jenjang, and subject
-8. Enter scores in `GradeMatrix`
-9. Click `Save Ledger Matrix`
-10. Refresh and confirm saved scores reload
+5. Configure KKM thresholds and term ranges if the defaults are not sufficient
+6. Use Class Allocation to enroll students into a target class
+7. Open `/grades`
+8. Select academic year, jenjang, and subject
+9. Enter scores in `GradeMatrix`
+10. Click `Save Ledger Matrix`
+11. Refresh and confirm saved scores reload
+12. Review Below-KKM alerts in `/analytics`
+13. Create or update academic interventions for students requiring follow-up
 
 ## 4. Step-by-Step Workflow
 
@@ -62,6 +67,7 @@ This page has two tabs:
 
 - `Calendar & Subjects`
 - `Class Allocation`
+- `KKM & Term Settings`
 
 Use `Calendar & Subjects` first if the academic setup is incomplete.
 
@@ -87,7 +93,32 @@ If the subject is missing:
 - create the subject for the selected jenjang
 - keep `supports_sumatif` and `supports_formatif` aligned with the school’s needs
 
-### Step 5: Allocate students into a class
+### Step 5: Configure KKM thresholds and term ranges
+
+Open `KKM & Term Settings` inside `/academic-management`.
+
+This tab owns two configuration areas:
+
+- **KKM thresholds:** database-backed thresholds for academic year, optional jenjang, optional subject, and assessment type.
+- **Effective term mapping:** custom Term 1-4 date ranges for the selected academic year.
+
+If no custom KKM threshold matches a student/subject/assessment context, Management Analytics uses the legacy fallback threshold `85.0`. If no custom term exists, the system uses the default academic-year mapping:
+
+- Term 1: July 1 to September 30
+- Term 2: October 1 to December 31
+- Term 3: January 1 to March 31
+- Term 4: April 1 to June 30
+
+Rules:
+
+- KKM thresholds must be between `0.0` and `100.0`.
+- Assessment type must be `sumatif`, `formatif`, or `overall`.
+- Term numbers must be 1-4.
+- Term start date must be on or before end date.
+- Custom term ranges must stay within the academic year and must not overlap another effective term range.
+- Restoring a term default deletes the custom term row only; it does not modify grades, attendance, students, or enrollments.
+
+### Step 6: Allocate students into a class
 
 Open `Class Allocation` inside `/academic-management`.
 
@@ -103,7 +134,7 @@ Then:
 
 This creates `student_enrollments` rows for the selected academic context.
 
-### Step 6: Open Grade Ledger
+### Step 7: Open Grade Ledger
 
 Go to `/grades`.
 
@@ -115,7 +146,7 @@ Select:
 
 When the setup is complete, the Grade Matrix will show enrolled students and assessment columns.
 
-### Step 7: Enter and save scores
+### Step 8: Enter and save scores
 
 Type grades directly into the editable matrix cells.
 
@@ -130,6 +161,40 @@ After editing:
 1. Click `Save Ledger Matrix`
 2. Refresh the page or reload the ledger data
 3. Confirm the saved values come back correctly
+
+### Step 9: Create academic interventions from Below-KKM alerts
+
+Go to `/analytics` and review `Below-KKM Alerts & Academic Interventions`.
+
+Each alert is still calculated by Management Analytics from Grade Ledger averages and effective KKM configuration. The intervention workflow adds an action record on top of that alert. It does not change the score, threshold, attendance, student, or enrollment record.
+
+For each alert:
+
+1. Click `Create Intervention` when no active intervention exists
+2. Set status and priority
+3. Assign an owner if known
+4. Enter the planned action
+5. Add notes and a follow-up date if needed
+6. Save the intervention
+
+When an active intervention already exists, click `View / Update Intervention` to update progress.
+
+Supported statuses:
+
+- `open`
+- `in_progress`
+- `monitoring`
+- `resolved`
+- `closed`
+
+Supported priorities:
+
+- `low`
+- `medium`
+- `high`
+- `urgent`
+
+The system prevents duplicate active interventions for the same student, academic year, subject, assessment type, and term while an existing row is `open`, `in_progress`, or `monitoring`. A new intervention is allowed after the previous row is `resolved` or `closed`.
 
 ## 5. Understanding Source Class vs Target Class
 
@@ -205,9 +270,15 @@ If the save button is disabled, check whether a valid row, year, jenjang, and su
 
 - `/mapping` owns the master student identity pool
 - `/academic-management` owns Grade Ledger setup and allocation
+- `/academic-management` -> `KKM & Term Settings` owns KKM and term configuration only
 - `/grades` owns score entry
+- `/analytics` owns intervention creation and progress updates for Below-KKM follow-up
 - `students.class_name` is legacy mapping data, not the Grade Ledger class source of truth
 - Grade Ledger class assignment comes from `student_enrollments`
+- KKM configuration does not create, update, or delete grade records
+- term configuration does not create, update, or delete attendance records
+- intervention workflow creates or updates only `academic_interventions`
+- intervention records snapshot student, class, subject, threshold, and average values for audit readability
 - the normal app UI does not expose a student hard-delete route
 - full system reset is guarded and destructive
 
@@ -217,6 +288,15 @@ If the save button is disabled, check whether a valid row, year, jenjang, and su
 |---|---|---|
 | Academic Year dropdown is empty | No academic year exists | Create one in Academic Management |
 | Subject dropdown is empty | No subject for selected jenjang | Create subject for that jenjang |
+| Management Analytics uses fallback KKM | No matching KKM threshold exists | Add a threshold in KKM & Term Settings |
+| Term dropdown shows default dates | No custom term exists for that academic year | Add or edit the term in KKM & Term Settings |
+| Historical Trends forecast is missing | Fewer than 2 populated historical periods exist | Add/import more period data or treat the warning as expected |
+| Historical Trends confidence is low | Only 2 historical periods are available | Use the estimate conservatively and collect more term history |
+| Intervention Impact score delta is blank | Baseline or latest score is missing | Confirm the intervention was created from a Below-KKM alert and current Grade Ledger score exists |
+| Intervention Impact risk is critical | Multiple deterministic risk factors are present | Review risk reasons, prioritize overdue follow-up, and update the intervention plan |
+| Term save fails with overlap warning | Date range conflicts with another effective term | Adjust start/end dates so ranges do not overlap |
+| Create Intervention is blocked as duplicate | Active intervention already exists for the same Below-KKM context | Update the existing intervention or resolve/close it first |
+| Below-KKM alert shows no intervention | No active intervention exists for that alert context | Create an intervention from the alert row |
 | Candidate Pool is empty | Students already enrolled or source filter too narrow | Change source filter or check current enrollment |
 | Grade Matrix has no rows | No students enrolled for selected context | Use Class Allocation |
 | Saved score disappears after refresh | Save failed or wrong context selected | Check the alert and selected year, jenjang, and subject |
@@ -226,10 +306,18 @@ If the save button is disabled, check whether a valid row, year, jenjang, and su
 
 - Grade Ledger rows come from `student_enrollments`
 - scores are stored in `student_subject_grades`
+- KKM thresholds are stored in `kkm_thresholds`
+- custom term ranges are stored in `academic_term_configs`
+- intervention workflow rows are stored in `academic_interventions`
 - `null` scores are valid and must not become `0`
 - duplicate saves should update existing grade rows
 - source class filtering must not be confused with target enrollment class
 - Portless Grade Ledger API paths may use the existing `/api/api/grades/...` convention in frontend wrappers
+- Academic config API paths are canonical under `/api/academic-config/...`
+- Academic intervention API paths are canonical under `/api/academic-interventions/...`
+- **Phase 17 Parity QA Test Coverage:** Always verify changes by running backend pytest regression tests in [test_report_parity.py](../backend/tests/test_report_parity.py). These assertions guarantee exact numerical alignment between backend JSON summary payloads, ReportLab vector PDFs, and editable Excel files.
+- **Phase 18 Historical Trend Coverage:** Historical trends are served from `/api/analytics/historical-trends` and rendered in Management Analytics under `Historical Trends`. Forecasts are deterministic estimates only and must expose method, history point count, confidence, and data sufficiency. Editable Excel exports include `Trend_Attendance_Data`, `Trend_Lateness_Data`, `Trend_Grades_Data`, `Trend_Interventions_Data`, `Forecast_Data`, and `Trend_Insights`.
+- **Phase 19 Intervention Impact Coverage:** Intervention impact drilldowns are served from `/api/analytics/intervention-impact` and rendered in Management Analytics under `Intervention Impact`. Baseline score comes from `academic_interventions.current_average`; latest score comes from the current Grade Ledger average; score delta is latest minus baseline. Risk levels are deterministic and must expose risk reasons. Editable Excel exports include `Intervention_Impact_Data`, `Intervention_Impact_Summary`, `Risk_Students_Data`, and `Owner_Workload_Data`.
 
 ## Workflow Diagram
 
@@ -239,7 +327,10 @@ flowchart LR
     Students --> AcademicManagement["/academic-management<br/>Class Allocation"]
     AcademicManagement --> Enrollments["student_enrollments"]
     AcademicManagement --> MasterData["academic_years / subjects / jenjangs"]
+    AcademicManagement --> Config["kkm_thresholds / academic_term_configs"]
     Enrollments --> Grades["/grades<br/>GradeMatrix"]
     MasterData --> Grades
     Grades --> Scores["student_subject_grades"]
+    Config --> Analytics["/analytics<br/>Management Analytics"]
+    Analytics --> Interventions["academic_interventions"]
 ```
