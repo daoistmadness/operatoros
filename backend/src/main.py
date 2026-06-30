@@ -5,8 +5,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.academic_config import router as academic_config_router
+from api.academic_interventions import router as academic_interventions_router
 from api.analytics import get_tardiness_summary_by_jenjang, router as analytics_router
-
 from api.config import router as config_router
 from api.grades import router as grades_router
 from api.students import router as students_router
@@ -47,7 +47,7 @@ app.include_router(system_router, prefix="/system", tags=["system"])
 app.include_router(review_router, prefix="/review", tags=["review"])
 app.include_router(grades_router, prefix="/api/grades", tags=["grades"])
 app.include_router(academic_config_router, prefix="/api/academic-config", tags=["academic-config"])
-
+app.include_router(academic_interventions_router, prefix="/api/academic-interventions", tags=["academic-interventions"])
 app.add_api_route(
     "/api/tardiness/summary-by-jenjang",
     get_tardiness_summary_by_jenjang,
