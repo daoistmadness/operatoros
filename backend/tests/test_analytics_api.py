@@ -64,6 +64,8 @@ def app_context(monkeypatch, tmp_path):
     enrollment_module = importlib.import_module("models.student_enrollment")
     grade_module = importlib.import_module("models.student_subject_grade")
     upload_log_module = importlib.import_module("models.upload_log")
+    academic_config_module = importlib.import_module("models.academic_config")
+    intervention_module = importlib.import_module("models.academic_intervention")
 
     return {
         "app": main_module.app,
@@ -78,6 +80,9 @@ def app_context(monkeypatch, tmp_path):
         "StudentEnrollment": enrollment_module.StudentEnrollment,
         "StudentSubjectGrade": grade_module.StudentSubjectGrade,
         "UploadLog": upload_log_module.UploadLog,
+        "KkmThreshold": academic_config_module.KkmThreshold,
+        "AcademicTermConfig": academic_config_module.AcademicTermConfig,
+        "AcademicIntervention": intervention_module.AcademicIntervention,
     }
 
 
@@ -96,7 +101,7 @@ def test_management_summary_empty_state(app_context):
     response = client.get(f"/api/analytics/management-summary?academic_year_id={ay_id}")
     assert response.status_code == 200
     data = response.json()
-    
+
     assert data["filters"]["academic_year_id"] == ay_id
     assert data["attendance_summary"]["total_records"] == 0
     assert data["attendance_summary"]["status_counts"]["hadir"] == 0
@@ -284,7 +289,7 @@ def test_management_summary_calculations(app_context):
     assert att_sum["status_counts"]["sakit"] == 2
     assert att_sum["status_counts"]["izin"] == 1
     assert att_sum["status_counts"]["alfa"] == 1
-    
+
     assert att_sum["status_percentages"]["hadir"] == 33.3
     assert att_sum["status_percentages"]["sakit"] == 33.3
     assert att_sum["status_percentages"]["izin"] == 16.7
@@ -320,7 +325,7 @@ def test_management_summary_calculations(app_context):
     assert len(gr_stu) == 2
     s1_entry = next(x for x in gr_stu if x["student_name"] == "Student One")
     s2_entry = next(x for x in gr_stu if x["student_name"] == "Student Two")
-    
+
     assert s1_entry["sumatif_average"] == 90.0
     assert s1_entry["formatif_average"] == 80.0
     assert s1_entry["below_threshold"] is True
@@ -401,6 +406,400 @@ def test_management_summary_export_is_read_only(app_context):
     db.close()
 
 
+def test_kkm_threshold_crud_validation_and_effective_resolution(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    create_response = client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+            "threshold": 80.0,
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()
+    assert created["threshold"] == 80.0
+
+    low_response = client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "assessment_type": "overall",
+            "threshold": -1.0,
+        },
+    )
+    assert low_response.status_code == 422
+
+    high_response = client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "assessment_type": "overall",
+            "threshold": 101.0,
+        },
+    )
+    assert high_response.status_code == 422
+
+    duplicate_response = client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+            "threshold": 82.0,
+        },
+    )
+    assert duplicate_response.status_code == 409
+
+    effective_response = client.get(
+        "/api/academic-config/kkm-effective",
+        params={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+        },
+    )
+    assert effective_response.status_code == 200
+    effective = effective_response.json()
+    assert effective["threshold"] == 80.0
+    assert effective["threshold_source"] == "subject-specific"
+
+    fallback_response = client.get(
+        "/api/academic-config/kkm-effective",
+        params={"academic_year_id": ay_id, "assessment_type": "formatif"},
+    )
+    assert fallback_response.status_code == 200
+    assert fallback_response.json()["threshold"] == 85.0
+    assert fallback_response.json()["threshold_source"] == "legacy-fallback"
+
+    update_response = client.put(
+        f"/api/academic-config/kkm-thresholds/{created['id']}",
+        json={"threshold": 78.0},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["threshold"] == 78.0
+
+    delete_response = client.delete(f"/api/academic-config/kkm-thresholds/{created['id']}")
+    assert delete_response.status_code == 200
+    assert delete_response.json()["deleted"] == 1
+
+
+def test_term_config_crud_validation_and_effective_terms(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, _jen_id, _subject_id = seed_management_export_dataset(app_context)
+
+    default_response = client.get(f"/api/academic-config/terms/effective?academic_year_id={ay_id}")
+    assert default_response.status_code == 200
+    default_terms = default_response.json()
+    assert default_terms[1]["source"] == "default"
+    assert default_terms[1]["start_date"] == "2025-10-01"
+
+    create_response = client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 2,
+            "label": "Custom Intervention Term",
+            "start_date": "2025-12-01",
+            "end_date": "2025-12-31",
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()
+    assert created["source"] == "custom"
+
+    invalid_number = client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 5,
+            "label": "Bad Term",
+            "start_date": "2025-10-01",
+            "end_date": "2025-10-31",
+        },
+    )
+    assert invalid_number.status_code == 422
+
+    invalid_order = client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 1,
+            "label": "Bad Dates",
+            "start_date": "2025-09-30",
+            "end_date": "2025-07-01",
+        },
+    )
+    assert invalid_order.status_code == 400
+
+    overlap_response = client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 1,
+            "label": "Overlapping Term",
+            "start_date": "2025-09-15",
+            "end_date": "2025-12-15",
+        },
+    )
+    assert overlap_response.status_code == 400
+
+    effective_response = client.get(f"/api/academic-config/terms/effective?academic_year_id={ay_id}")
+    assert effective_response.status_code == 200
+    effective_term_2 = next(row for row in effective_response.json() if row["term_number"] == 2)
+    assert effective_term_2["source"] == "custom"
+    assert effective_term_2["start_date"] == "2025-12-01"
+
+    update_response = client.put(
+        f"/api/academic-config/terms/{created['id']}",
+        json={"label": "Updated Intervention Term", "start_date": "2025-11-01", "end_date": "2025-11-30"},
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["label"] == "Updated Intervention Term"
+
+    delete_response = client.delete(f"/api/academic-config/terms/{created['id']}")
+    assert delete_response.status_code == 200
+    assert delete_response.json()["deleted"] == 1
+
+
+def test_management_summary_uses_configured_kkm_and_term_config(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+            "threshold": 70.0,
+        },
+    )
+    client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 2,
+            "label": "No October Term",
+            "start_date": "2025-12-01",
+            "end_date": "2025-12-31",
+        },
+    )
+
+    summary_response = client.get(
+        f"/api/analytics/management-summary?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert summary_response.status_code == 200
+    summary = summary_response.json()
+    assert summary["filters"]["date_start"] == "2025-12-01"
+    assert summary["filters"]["term_source"] == "custom"
+    assert summary["lateness_by_class"] == []
+    student = summary["grade_by_student"][0]
+    assert student["sumatif_kkm_threshold"] == 70.0
+    assert student["sumatif_threshold_source"] == "subject-specific"
+    assert student["below_threshold"] is False
+
+
+def test_management_exports_include_configured_kkm_and_term_metadata(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+            "threshold": 80.0,
+        },
+    )
+    client.post(
+        "/api/academic-config/terms",
+        json={
+            "academic_year_id": ay_id,
+            "term_number": 2,
+            "label": "Configured Term 2",
+            "start_date": "2025-12-01",
+            "end_date": "2025-12-31",
+        },
+    )
+
+    pdf_response = client.get(
+        f"/api/analytics/management-summary/export/pdf?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert pdf_response.status_code == 200
+    assert b"Configured Term 2" in pdf_response.content
+    assert b"source subject-specific" in pdf_response.content
+
+    excel_response = client.get(
+        f"/api/analytics/management-summary/export/excel?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert excel_response.status_code == 200
+    workbook = load_workbook(filename=BytesIO(excel_response.content), read_only=True)
+    summary_values = [cell for row in workbook["Summary"].iter_rows(values_only=True) for cell in row if cell is not None]
+    alert_values = [cell for row in workbook["Below-KKM Alerts"].iter_rows(values_only=True) for cell in row if cell is not None]
+    assert "Configured Term 2" in summary_values
+    assert 80.0 in alert_values
+    assert "subject-specific" in alert_values
+
+
+def test_academic_config_operations_are_read_only_for_operational_tables(app_context):
+    client = TestClient(app_context["app"])
+    db_module = app_context["db_module"]
+    StudentEnrollment = app_context["StudentEnrollment"]
+    UploadLog = app_context["UploadLog"]
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+
+    db = db_module.SessionLocal()
+    before_upload_logs = db.query(UploadLog).count()
+    before_enrollments = db.query(StudentEnrollment).count()
+    db.close()
+
+    response = client.post(
+        "/api/academic-config/kkm-thresholds",
+        json={
+            "academic_year_id": ay_id,
+            "jenjang_id": jen_id,
+            "subject_id": subject_id,
+            "assessment_type": "sumatif",
+            "threshold": 80.0,
+        },
+    )
+    assert response.status_code == 200
+
+    db = db_module.SessionLocal()
+    assert db.query(UploadLog).count() == before_upload_logs
+    assert db.query(StudentEnrollment).count() == before_enrollments
+    db.close()
+
+
+def _intervention_payload(app_context, ay_id, jen_id, subject_id, status="open"):
+    db_module = app_context["db_module"]
+    Student = app_context["Student"]
+    StudentEnrollment = app_context["StudentEnrollment"]
+
+    db = db_module.SessionLocal()
+    student = db.query(Student).filter(Student.name == "Export Student").first()
+    enrollment = db.query(StudentEnrollment).filter(StudentEnrollment.student_id == student.id).first()
+    payload = {
+        "student_id": student.id,
+        "enrollment_id": enrollment.id,
+        "academic_year_id": ay_id,
+        "jenjang_id": jen_id,
+        "subject_id": subject_id,
+        "assessment_type": "sumatif",
+        "term": "term_2",
+        "class_name": "P3A",
+        "student_name": "Export Student",
+        "subject_name": "Export Math",
+        "effective_threshold": 85.0,
+        "threshold_source": "legacy-fallback",
+        "current_average": 74.0,
+        "status": status,
+        "priority": "high",
+        "owner_name": "Academic Lead",
+        "planned_action": "Schedule remedial review",
+        "notes": "Initial intervention plan",
+        "follow_up_date": "2025-11-15",
+    }
+    db.close()
+    return payload
+
+
+def test_academic_intervention_crud_duplicate_and_filtering(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+    payload = _intervention_payload(app_context, ay_id, jen_id, subject_id)
+
+    create_response = client.post("/api/academic-interventions/from-alert", json=payload)
+    assert create_response.status_code == 200
+    created = create_response.json()
+    assert created["status"] == "open"
+    assert created["priority"] == "high"
+
+    duplicate_response = client.post("/api/academic-interventions", json=payload)
+    assert duplicate_response.status_code == 409
+
+    invalid_status = client.post("/api/academic-interventions", json={**payload, "status": "waiting"})
+    assert invalid_status.status_code == 422
+
+    invalid_threshold = client.post("/api/academic-interventions", json={**payload, "effective_threshold": 101.0})
+    assert invalid_threshold.status_code == 422
+
+    update_response = client.patch(
+        f"/api/academic-interventions/{created['id']}",
+        json={
+            "status": "resolved",
+            "priority": "medium",
+            "owner_name": "Counselor",
+            "outcome": "Student completed remediation",
+        },
+    )
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["status"] == "resolved"
+    assert updated["resolved_at"] is not None
+    assert updated["owner_name"] == "Counselor"
+
+    second_response = client.post("/api/academic-interventions", json={**payload, "priority": "urgent"})
+    assert second_response.status_code == 200
+    assert second_response.json()["priority"] == "urgent"
+
+    list_response = client.get(
+        "/api/academic-interventions",
+        params={"academic_year_id": ay_id, "subject_id": subject_id, "status": "open", "priority": "urgent"},
+    )
+    assert list_response.status_code == 200
+    rows = list_response.json()
+    assert len(rows) == 1
+    assert rows[0]["student_name"] == "Export Student"
+
+
+def test_management_summary_and_exports_include_intervention_metadata(app_context):
+    client = TestClient(app_context["app"])
+    ay_id, jen_id, subject_id = seed_management_export_dataset(app_context)
+    payload = _intervention_payload(app_context, ay_id, jen_id, subject_id)
+    create_response = client.post("/api/academic-interventions/from-alert", json=payload)
+    assert create_response.status_code == 200
+    intervention_id = create_response.json()["id"]
+
+    summary_response = client.get(
+        f"/api/analytics/management-summary?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert summary_response.status_code == 200
+    alerts = summary_response.json()["below_kkm_alerts"]
+    assert alerts[0]["intervention_id"] == intervention_id
+    assert alerts[0]["intervention_status"] == "open"
+    assert alerts[0]["intervention_priority"] == "high"
+    assert alerts[0]["intervention_owner"] == "Academic Lead"
+    assert alerts[0]["follow_up_date"] == "2025-11-15"
+
+    pdf_response = client.get(
+        f"/api/analytics/management-summary/export/pdf?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert pdf_response.status_code == 200
+    assert b"intervention open" in pdf_response.content
+    assert b"Academic Lead" in pdf_response.content
+
+    excel_response = client.get(
+        f"/api/analytics/management-summary/export/excel?academic_year_id={ay_id}&jenjang_id={jen_id}&subject_id={subject_id}&term=term_2"
+    )
+    assert excel_response.status_code == 200
+    workbook = load_workbook(filename=BytesIO(excel_response.content), read_only=True)
+    values = [cell for row in workbook["Below-KKM Alerts"].iter_rows(values_only=True) for cell in row if cell is not None]
+    assert "Intervention status" in values
+    assert "Academic Lead" in values
+    assert intervention_id in values
+
+
 def test_analytics_filters(app_context):
     client = TestClient(app_context["app"])
     db_module = app_context["db_module"]
@@ -424,14 +823,14 @@ def test_analytics_filters(app_context):
     # Seed an enrollment to generate class names
     e = StudentEnrollment(student_id=99, academic_year_id=ay_id, jenjang_id=jen_id, class_name="P2B", class_assigned=True)
     db.add(e)
-    
+
     db.commit()
     db.close()
 
     response = client.get(f"/api/analytics/filters?academic_year_id={ay_id}&jenjang_id={jen_id}")
     assert response.status_code == 200
     data = response.json()
-    
+
     assert len(data["academic_years"]) == 1
     assert data["academic_years"][0]["label"] == "2025/2026"
     assert len(data["jenjangs"]) == 1
@@ -449,6 +848,27 @@ def test_legacy_analytics_filters_route_is_preserved_temporarily(app_context):
     ay = db.query(AcademicYear).filter(AcademicYear.label == "2025/2026").first()
     ay_id = ay.id
     db.close()
-    
+
     response = client.get(f"/analytics/filters?academic_year_id={ay_id}")
     assert response.status_code == 200
+
+
+def test_management_summary_export_excel_editable(app_context):
+    client = TestClient(app_context["app"])
+    db_module = app_context["db_module"]
+    AcademicYear = app_context["AcademicYear"]
+    db = db_module.SessionLocal()
+    ay = db.query(AcademicYear).filter(AcademicYear.label == "2025/2026").first()
+    ay_id = ay.id
+    db.close()
+
+    response = client.get(
+        f"/api/analytics/management-summary/export/excel?academic_year_id={ay_id}&mode=editable"
+    )
+    assert response.status_code == 200
+    workbook = load_workbook(filename=BytesIO(response.content), read_only=True)
+    sheet_names = workbook.sheetnames
+    assert "README" in sheet_names
+    assert "Config" in sheet_names
+    assert "Attendance_Data" in sheet_names
+    assert "Charts" in sheet_names
