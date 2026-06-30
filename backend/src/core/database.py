@@ -213,7 +213,9 @@ def init_db():
     from models.assessment_component import AssessmentComponent
     from models.student_enrollment import StudentEnrollment
     from models.student_subject_grade import StudentSubjectGrade
+    from models.academic_config import AcademicTermConfig, KkmThreshold
     Base.metadata.create_all(bind=engine)
+
     run_grade_ledger_patches(engine)
     _seed_grade_ledger_minimum(engine)
     _ensure_students_schema_compatibility()

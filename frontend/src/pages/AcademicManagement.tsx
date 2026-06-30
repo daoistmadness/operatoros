@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, UserCheck } from "lucide-react";
+import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, Settings, UserCheck } from "lucide-react";
 import {
   createAcademicYear,
   createSubject,
@@ -9,10 +9,11 @@ import {
   type CreateSubjectPayload,
 } from "../api/grades";
 import { fetchJenjangs, type JenjangOption } from "../api/enrollment";
+import { AcademicConfigPanel } from "../components/academic/AcademicConfigPanel";
 import { EnrollmentPanel } from "../components/enrollment/EnrollmentPanel";
 import type { AcademicYear, Subject } from "../types/grade";
 
-type ManagementTab = "calendar" | "allocation";
+type ManagementTab = "calendar" | "allocation" | "settings";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -247,6 +248,7 @@ export default function AcademicManagement() {
         {[
           { id: "calendar" as const, label: "Calendar & Subjects", icon: CalendarDays },
           { id: "allocation" as const, label: "Class Allocation", icon: UserCheck },
+          { id: "settings" as const, label: "KKM & Term Settings", icon: Settings },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -531,7 +533,7 @@ export default function AcademicManagement() {
             </form>
           </div>
         </div>
-      ) : (
+      ) : activeTab === "allocation" ? (
         <div className="space-y-5">
           <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
             <p className="text-sm font-black">Source-of-truth note</p>
@@ -542,6 +544,8 @@ export default function AcademicManagement() {
           </div>
           <EnrollmentPanel showHero={false} />
         </div>
+      ) : (
+        <AcademicConfigPanel />
       )}
     </div>
   );
