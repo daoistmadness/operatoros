@@ -30,6 +30,14 @@ from services.attendance_metrics import (
     month_year_filters,
     month_bucket_string_expression,
 )
+from services.management_analytics import build_management_summary
+from services.management_report_export import (
+    PDF_MIME,
+    XLSX_MIME,
+    build_management_report_filename,
+    build_management_summary_excel,
+    build_management_summary_pdf,
+)
 
 router = APIRouter()
 
@@ -2684,6 +2692,15 @@ def get_management_summary(
     subject_id: int | None = Query(None),
     db: Session = Depends(get_db)
 ):
+    return build_management_summary(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        term=term,
+        subject_id=subject_id,
+    )
+
     from models.academic_year import AcademicYear
     from models.jenjang import Jenjang
     from models.subject import Subject
@@ -3038,3 +3055,53 @@ def get_management_summary(
         },
         "warnings": warnings
     }
+
+
+@router.get("/management-summary/export/pdf")
+def export_management_summary_pdf(
+    academic_year_id: int = Query(...),
+    jenjang_id: int | None = Query(None),
+    class_name: str | None = Query(None),
+    term: str | None = Query(None),
+    subject_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    summary = build_management_summary(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        term=term,
+        subject_id=subject_id,
+    )
+    filename = build_management_report_filename(summary, "pdf")
+    return StreamingResponse(
+        BytesIO(build_management_summary_pdf(summary)),
+        media_type=PDF_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/management-summary/export/excel")
+def export_management_summary_excel(
+    academic_year_id: int = Query(...),
+    jenjang_id: int | None = Query(None),
+    class_name: str | None = Query(None),
+    term: str | None = Query(None),
+    subject_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    summary = build_management_summary(
+        db=db,
+        academic_year_id=academic_year_id,
+        jenjang_id=jenjang_id,
+        class_name=class_name,
+        term=term,
+        subject_id=subject_id,
+    )
+    filename = build_management_report_filename(summary, "xlsx")
+    return StreamingResponse(
+        BytesIO(build_management_summary_excel(summary)),
+        media_type=XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
