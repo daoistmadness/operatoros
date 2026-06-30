@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   X,
+  UserPlus,
 } from "lucide-react";
 
 
@@ -39,6 +40,15 @@ function ClassMapping() {
   const [selectedStudents, setSelectedStudents] = useState({});
   const [bulkJenjang, setBulkJenjang] = useState("");
   const [bulkClassName, setBulkClassName] = useState("");
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [studentId, setStudentId] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [studentJenjang, setStudentJenjang] = useState("");
+  const [studentClassName, setStudentClassName] = useState("");
+  const [addStudentError, setAddStudentError] = useState("");
+  const [addStudentSuccess, setAddStudentSuccess] = useState("");
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const fetchClasses = useCallback(async () => {
     try {
@@ -82,6 +92,54 @@ function ClassMapping() {
       setLoading(false);
     }
   }, [page, pageSize, search, jenjangFilter, classFilter]);
+
+  const handleCreateStudent = async (e) => {
+    e.preventDefault();
+    if (!studentName.trim()) {
+      setAddStudentError("Student name is required.");
+      return;
+    }
+
+    setAddingStudent(true);
+    setAddStudentError("");
+    setAddStudentSuccess("");
+
+    try {
+      const payload = {
+        name: studentName.trim(),
+        jenjang: studentJenjang ? studentJenjang : null,
+        class_name: studentClassName.trim() ? studentClassName.trim() : null,
+      };
+
+      if (studentId.trim()) {
+        const idInt = parseInt(studentId.trim(), 10);
+        if (isNaN(idInt) || idInt <= 0) {
+          setAddStudentError("Student ID must be a positive integer.");
+          setAddingStudent(false);
+          return;
+        }
+        payload.id = idInt;
+      }
+
+      await api.post("/students", payload);
+      setAddStudentSuccess("Student created successfully!");
+      setStudentId("");
+      setStudentName("");
+      setStudentJenjang("");
+      setStudentClassName("");
+      setPage(1);
+      setTimeout(() => {
+        setShowAddModal(false);
+        setAddStudentSuccess("");
+        fetchStudents();
+        fetchClasses();
+      }, 1000);
+    } catch (saveError) {
+      setAddStudentError(saveError.response?.data?.detail || "Failed to create student.");
+    } finally {
+      setAddingStudent(false);
+    }
+  };
 
   useEffect(() => {
     fetchClasses();
@@ -204,9 +262,27 @@ function ClassMapping() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Class Mapping</h1>
-        <p className="text-slate-500 mt-1">Bulk assign jenjang and class to imported students.</p>
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Class Mapping</h1>
+          <p className="text-slate-500 mt-1">Bulk assign jenjang and class to imported students.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setAddStudentError("");
+            setAddStudentSuccess("");
+            setStudentId("");
+            setStudentName("");
+            setStudentJenjang("");
+            setStudentClassName("");
+            setShowAddModal(true);
+          }}
+          className="px-4 py-2.5 rounded-xl bg-brand text-white font-bold hover:bg-brand-hover transition-colors inline-flex items-center gap-2 self-start sm:self-auto shadow-sm"
+        >
+          <UserPlus size={16} />
+          Add Manual Student
+        </button>
       </header>
 
       {successMessage && (
@@ -469,6 +545,120 @@ function ClassMapping() {
           </button>
         </div>
       </div>
+
+      {showAddModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus size={20} className="text-brand" />
+                  Add Manual Student
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Create a student in the master student pool</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleCreateStudent} className="p-6 space-y-4">
+              {addStudentError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl flex items-center gap-2">
+                  <AlertTriangle size={14} className="flex-shrink-0" />
+                  <p className="font-semibold">{addStudentError}</p>
+                </div>
+              )}
+
+              {addStudentSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
+                  <CheckCircle2 size={14} className="flex-shrink-0" />
+                  <p className="font-semibold">{addStudentSuccess}</p>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Student ID / No. ID (Optional)</label>
+                <input
+                  type="number"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  placeholder="e.g. 900001 (auto-generated if empty)"
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="e.g. Manual Student Name"
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Jenjang</label>
+                <select
+                  value={studentJenjang}
+                  onChange={(e) => setStudentJenjang(e.target.value)}
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
+                >
+                  <option value="">Select Jenjang</option>
+                  {JENJANG_OPTIONS.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Source Class / Class Name</label>
+                <input
+                  type="text"
+                  value={studentClassName}
+                  onChange={(e) => setStudentClassName(e.target.value)}
+                  placeholder="e.g. P1A"
+                  className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/30 text-sm"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  disabled={addingStudent}
+                  className="px-4 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 font-bold rounded-xl text-sm transition-colors disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingStudent || !studentName.trim()}
+                  className="px-4 py-2 bg-brand text-white hover:bg-brand-hover font-bold rounded-xl text-sm transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {addingStudent ? "Saving..." : "Save Student"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

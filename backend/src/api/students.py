@@ -371,3 +371,49 @@ def get_student_monthly_history(
         "jenjang": jenjang,
         "history": history,
     }
+
+
+class CreateStudentBody(BaseModel):
+    id: int | None = Field(default=None, description="Optional custom Student ID (No. ID)")
+    name: str = Field(..., min_length=1, description="Student name")
+    jenjang: str | None = Field(default=None, description="Student school level (e.g. Primary)")
+    class_name: str | None = Field(default=None, description="Class name (e.g. P1A)")
+
+
+@router.post("")
+def create_student(body: CreateStudentBody, db: Session = Depends(get_db)):
+    """
+    Manually creates a student in the master student pool.
+    """
+    name_stripped = body.name.strip()
+    if not name_stripped:
+        raise HTTPException(status_code=400, detail="Student name cannot be empty")
+
+    if body.id is not None:
+        if body.id <= 0:
+            raise HTTPException(status_code=400, detail="Student ID must be a positive integer")
+        existing_by_id = db.query(Student).filter(Student.id == body.id).first()
+        if existing_by_id:
+            raise HTTPException(status_code=400, detail=f"Student ID {body.id} is already taken")
+
+    existing_by_name = db.query(Student).filter(func.lower(Student.name) == name_stripped.lower()).first()
+    if existing_by_name:
+        raise HTTPException(status_code=409, detail=f"Student with name '{name_stripped}' already exists")
+
+    student = Student(
+        id=body.id,
+        name=name_stripped,
+        jenjang=body.jenjang.strip() if body.jenjang else None,
+        class_name=body.class_name.strip() if body.class_name else None,
+    )
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    return {
+        "id": student.id,
+        "name": student.name,
+        "jenjang": student.jenjang,
+        "class_name": student.class_name,
+    }
+
