@@ -55,12 +55,26 @@ graph TD
 * **Batch Operation:** The UI module aggregates all modified data cells into a unified payload object of type `GradeGridSaveRequest` to be sent atomically via the main save button.
 * **Page Lifecycle & Metadata Consumption:** The main `GradeLedger.tsx` page utilizes `AcademicYear[]` to determine the active academic year using the `is_default === true` flag. All legacy Excel import workflows and outdated analytical charts have been completely removed from the visual components.
 
-### Executive Management Analytics Engine (Phase 10 Implemented)
-* **Unified Analytics API:** Modul `backend/src/api/analytics.py` menyediakan mesin komputasi analitik terpadu yang memproses data kehadiran historis dan data nilai matriks dinamis secara efisien:
-  * `GET /api/analytics/filters` — Menyediakan opsi dropdown kontekstual dinamis (Tahun Ajaran, Jenjang, Nama Kelas, Mata Pelajaran) langsung dari rekam jejak basis data aktif.
-  * `GET /api/analytics/management-summary` — Mengembalikan agregasi metrik kehadiran bulanan, kontribusi menit keterlambatan per kelas dengan format waktu (`HH:MM`), serta rata-rata nilai akademik Sumatif/Formatif secara terpisah dengan mengabaikan entri `null`.
-* **Academic Threshold Auditing:** Pipeline analitik secara otomatis mengevaluasi performa siswa terhadap target standar KKM (85.0) dan menyuntikkan bendera peringatan (*below-threshold flags*) pada kombinasi subjek/siswa yang membutuhkan intervensi akademik.
-* **Data-Dense Performance Visualization:** Modul frontend `frontend/src/pages/ManagementAnalytics.tsx` merender visualisasi berdensitas tinggi memanfaatkan Chart.js, ikon Lucide, dan Tailwind CSS 4 yang terikat langsung pada menu navigasi utama *Sidebar*.
+### Executive Management Analytics Engine (Phases 10-17 Implemented)
+* **Unified Analytics API:** The `backend/src/services/management_analytics.py` module provides a unified analytical engine that processes historical attendance records, grade matrix values, and active configurations efficiently:
+  * `GET /api/analytics/filters` — Provides context-driven dropdown options (Academic Year, Jenjang, Class Name, Subject) populated dynamically from active database records.
+  * `GET /api/analytics/management-summary` — Calculates monthly attendance percentages, tardiness minutes per class, separate Formatif/Sumatif academic averages (ignoring `null` grades), and Below-KKM alerts.
+  * `GET /api/analytics/historical-trends` — Builds canonical historical trend series for attendance, lateness, academic performance, Below-KKM alerts, and interventions, with deterministic transparent forecasts and data sufficiency diagnostics.
+  * `GET /api/analytics/intervention-impact` — Measures Academic Intervention effectiveness using captured intervention baseline averages against current Grade Ledger averages, with deterministic risk scoring and drilldown summaries by class, subject, owner, and student.
+* **Management Report Export (Phase 11 & 15 & 16):**
+  * `GET /api/analytics/management-summary/export/pdf` and `GET /api/analytics/management-summary/export/excel` generate report downloads powered by the same shared analytics computation.
+  * PDF reports utilize ReportLab to construct a professional, searchable landscape document containing KPI cards, custom vector charts, Below-KKM listings, and Executive Insights.
+  * Excel reports generate an advanced editable workbook using Pandas and XlsxWriter. Data cells are editable, and Excel-native charts update dynamically in real time.
+  * Both export endpoints operate with zero disk footprint, building and writing data directly into in-memory `io.BytesIO` streams to support concurrent server environments safely.
+* **Dynamic Academic Configuration (Phase 12 & 13):** The academic config endpoints under `/api/academic-config/...` manage database-backed configurations for KKM thresholds (`KkmThreshold`) and academic term mappings (`AcademicTermConfig`) without destructive schema migrations.
+* **Academic Threshold Auditing:** Resolves effective KKM thresholds by specificity (academic year, jenjang, subject, assessment type) and alerts on students scoring below KKM. Falls back to a legacy target of `85.0` if no matching configuration is found.
+* **Dynamic Term Resolution:** Matches term filter parameters to `AcademicTermConfig` date ranges, falling back to default monthly academic calendar ranges (July-Sept, Oct-Dec, Jan-Mar, Apr-Jun) when no override is stored.
+* **Academic Intervention Workflow (Phase 14):** Keeps track of actionable intervention rows (`AcademicIntervention`) created from Below-KKM alerts under `/api/academic-interventions/...`. Active duplicate prevention blocks duplicate active entries for the same context.
+* **Executive Insights Engine (Phase 16):** Performs rule-based check functions evaluating dashboard thresholds (attendance targets, lateness concentration, Sumatif-Formatif score gaps, overdue interventions) to generate high-value Analisis & Rekomendasi Manajemen summaries printed on the JSON dashboard, frontend dashboard panel, PDF page 1, and Excel `Insights` worksheet.
+* **Data-Dense Performance Visualization:** The frontend module `frontend/src/pages/ManagementAnalytics.tsx` renders data-dense visualizations using Chart.js, Lucide icons, and Tailwind CSS 4 utility classes directly bound to the main sidebar layout.
+* **Parity QA Framework (Phase 17):** Implements a comprehensive golden fixture dataset and report parity tests inside [test_report_parity.py](backend/tests/test_report_parity.py). The test suite guarantees numerical accuracy (attendance rates, lateness durations, null score exclusion) and structural formatting consistency between JSON dashboard endpoints, ReportLab PDF generation, and Excel worksheets.
+* **Historical Trend Analytics & Transparent Forecasting (Phase 18):** Adds [analytics_trends.py](backend/src/services/analytics_trends.py) and [analytics_forecast.py](backend/src/services/analytics_forecast.py) for rule-based historical analytics. Forecasts use moving average, weighted moving average, or simple linear trend only; they expose method, history point count, confidence, and sufficiency warnings. Management Analytics renders a Historical Trends section, PDF exports include trend/forecast pages, and editable Excel exports include trend/forecast sheets with native linked charts.
+* **Intervention Impact Analysis & Drilldown Analytics (Phase 19):** Adds [intervention_impact.py](backend/src/services/intervention_impact.py) for deterministic intervention impact rows, summary metrics, risk scoring, owner workload, student risk lists, and `intervention_impact` Executive Insights. Management Analytics renders an Intervention Impact section, PDF exports include an impact page, and editable Excel exports include impact source sheets with native linked charts.
 
 ---
 
@@ -76,6 +90,9 @@ The database contains the following models, configured inside [backend/src/model
 * **[AbsenceReason](backend/src/models/absence_reason.py) & [AbsenceReasonClassEntry](backend/src/models/absence_reason_class_entry.py):** Mapping detailed reasons to specific classes.
 * **[JenjangConfig](backend/src/models/jenjang_config.py):** Configures late cut-off schedules.
 * **[HebOverride](backend/src/models/heb_override.py):** Calendar entries defining non-effective school days (Hari Efektif Bersama).
+* **[KkmThreshold](backend/src/models/academic_config.py):** Database-backed academic thresholds by academic year, optional jenjang, optional subject, and assessment type.
+* **[AcademicTermConfig](backend/src/models/academic_config.py):** Custom Term 1-4 date ranges by academic year.
+* **[AcademicIntervention](backend/src/models/academic_intervention.py):** Auditable academic follow-up rows created from Below-KKM alerts or manual intervention payloads. Active duplicate prevention is enforced in the API for the same student, academic year, subject, assessment type, and term context while status is `open`, `in_progress`, or `monitoring`.
 
 ### Migration Discipline
 Database migrations are kept under [backend/migrations/](backend/migrations) as date-stamped `.sql` files. Instead of using Alembic:
@@ -106,12 +123,13 @@ Database migrations are kept under [backend/migrations/](backend/migrations) as 
   * `DELETE /api/grades/enrollment/{id}` — Deletes a student enrollment row without deleting the student's master record from the database.
 
 ### Unified Academic & Enrollment Management (Phase 9 Implemented)
-* **Unified Control Hub:** The `/academic-management` page acts as a control center for setting up master data with an isolated tab-based architecture: *Calendar & Subjects* and *Class Allocation*.
+* **Unified Control Hub:** The `/academic-management` page acts as a control center for setting up master data with an isolated tab-based architecture: *Calendar & Subjects*, *Class Allocation*, and *KKM & Term Settings*.
 * **Dynamic Content Creation:** Provides new mutation modules to register academic calendars and jenjang-bound subjects securely via the following endpoints:
   * `POST /api/grades/academic-years` — Adds a new academic year. The backend logic automatically unsets the `is_default` flag of the old default academic year before setting the new entity as default to maintain database partial index validity.
   * `POST /api/grades/subjects` — Dynamically adds a new subject bound to a master `jenjang_id`.
 * **Component Optimization & Component Reuse:** Student allocation logic is extracted into a modular component `frontend/src/components/enrollment/EnrollmentPanel.tsx`. This component is shared between the `/enrollment` page and the class allocation tab to maintain UI state consistency.
 * **Mitigation of Denormalization Drift:** The allocation panel explicitly enforces that `/mapping` retains sole authority as the *master student identity pool*. Class allocation to the `student_enrollments` table is purely temporal-akademik (temporal-academic) and does not compromise the physical student identity records.
+* **Academic Configuration Controls (Phase 12):** The `frontend/src/components/academic/AcademicConfigPanel.tsx` panel lets admins create, edit, delete, and restore KKM/term configuration. These operations are scoped to `kkm_thresholds` and `academic_term_configs` only and do not modify upload logs, attendance rows, students, enrollments, or grades.
 
 ### Audit & Append-Only Triggers
 To enforce absolute traceability:
@@ -183,6 +201,16 @@ Canonical examples:
 - `/api/grades/save`
 - `/api/analytics/filters`
 - `/api/analytics/management-summary`
+- `/api/analytics/historical-trends`
+- `/api/analytics/intervention-impact`
+- `/api/analytics/management-summary/export/pdf`
+- `/api/analytics/management-summary/export/excel`
+- `/api/academic-config/kkm-thresholds`
+- `/api/academic-config/kkm-effective`
+- `/api/academic-config/terms`
+- `/api/academic-config/terms/effective`
+- `/api/academic-interventions`
+- `/api/academic-interventions/{id}`
 
 Frontend wrappers call APIs through `apiRequest`.
 
