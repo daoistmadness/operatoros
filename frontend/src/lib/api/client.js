@@ -2,6 +2,7 @@ import { stripLeadingApiPrefix } from './routing';
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const PDF_MIME = 'application/pdf';
 
 function resolveApiBaseUrl() {
   const configuredUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -160,7 +161,7 @@ export async function apiRequest({
   const token = getAuthToken();
 
   const requestHeaders = new Headers({
-    Accept: responseType === 'blob' ? EXCEL_MIME : 'application/json',
+    Accept: responseType === 'blob' ? `${EXCEL_MIME}, ${PDF_MIME}` : 'application/json',
     ...headers,
   });
 
@@ -244,4 +245,5 @@ export function revokeDownloadUrl(url) {
 
 export const API_BLOB_TYPES = {
   excel: [EXCEL_MIME, 'application/octet-stream'],
+  pdf: [PDF_MIME, 'application/octet-stream'],
 };

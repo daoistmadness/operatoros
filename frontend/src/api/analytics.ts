@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../lib/api/client";
+import { API_BASE_URL, API_BLOB_TYPES, apiRequest } from "../lib/api/client";
 import type {
   AnalyticsFiltersResponse,
   ManagementSummaryResponse,
@@ -43,6 +43,40 @@ export async function fetchManagementSummary(
       term: params.term ?? undefined,
       subject_id: params.subject_id ?? undefined,
     },
+  });
+
+  return response.data;
+}
+
+function exportParams(params: FetchSummaryParams) {
+  return {
+    academic_year_id: params.academic_year_id,
+    jenjang_id: params.jenjang_id ?? undefined,
+    class_name: params.class_name ?? undefined,
+    term: params.term ?? undefined,
+    subject_id: params.subject_id ?? undefined,
+  };
+}
+
+export async function downloadManagementSummaryPdf(params: FetchSummaryParams): Promise<Blob> {
+  const response = await apiRequest<Blob>({
+    path: analyticsApiPath("/management-summary/export/pdf"),
+    method: "GET",
+    params: exportParams(params),
+    responseType: "blob",
+    expectedBlobTypes: API_BLOB_TYPES.pdf,
+  });
+
+  return response.data;
+}
+
+export async function downloadManagementSummaryExcel(params: FetchSummaryParams): Promise<Blob> {
+  const response = await apiRequest<Blob>({
+    path: analyticsApiPath("/management-summary/export/excel"),
+    method: "GET",
+    params: exportParams(params),
+    responseType: "blob",
+    expectedBlobTypes: API_BLOB_TYPES.excel,
   });
 
   return response.data;

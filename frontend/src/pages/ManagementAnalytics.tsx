@@ -29,8 +29,11 @@ import {
 import {
   fetchAnalyticsFilters,
   fetchManagementSummary,
+  downloadManagementSummaryExcel,
+  downloadManagementSummaryPdf,
   type FetchSummaryParams,
 } from "../api/analytics";
+import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import type {
   AnalyticsFiltersResponse,
   ManagementSummaryResponse,
@@ -73,7 +76,21 @@ export default function ManagementAnalytics() {
   const [summaryData, setSummaryData] = useState<ManagementSummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingFilters, setIsUpdatingFilters] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<"pdf" | "excel" | null>(null);
   const [error, setError] = useState<string>("");
+
+  const currentParams = useMemo<FetchSummaryParams | null>(() => {
+    if (academicYearId === null) {
+      return null;
+    }
+    return {
+      academic_year_id: academicYearId,
+      jenjang_id: jenjangId,
+      class_name: className,
+      term,
+      subject_id: subjectId,
+    };
+  }, [academicYearId, jenjangId, className, term, subjectId]);
 
   // Load initial filter parameters
   useEffect(() => {
@@ -136,18 +153,12 @@ export default function ManagementAnalytics() {
 
   // Load summary data
   const loadSummaryData = async () => {
-    if (academicYearId === null) return;
+    if (currentParams === null) return;
     setIsLoading(true);
     setError("");
 
     try {
-      const summary = await fetchManagementSummary({
-        academic_year_id: academicYearId,
-        jenjang_id: jenjangId,
-        class_name: className,
-        term: term,
-        subject_id: subjectId,
-      });
+      const summary = await fetchManagementSummary(currentParams);
       setSummaryData(summary);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -158,7 +169,40 @@ export default function ManagementAnalytics() {
 
   useEffect(() => {
     loadSummaryData();
-  }, [academicYearId, jenjangId, className, subjectId, term]);
+  }, [currentParams]);
+
+  const buildDownloadFilename = (format: "pdf" | "excel") => {
+    const yearLabel =
+      filterOptions?.academic_years.find((year) => year.id === academicYearId)?.label.replace("/", "-") ||
+      "all-years";
+    const termLabel = term ? term.replace("_", "-") : "all-terms";
+    const extension = format === "pdf" ? "pdf" : "xlsx";
+    const today = new Date().toISOString().slice(0, 10);
+    return `management-analytics-report-${yearLabel}-${termLabel}-${today}.${extension}`;
+  };
+
+  const handleExport = async (format: "pdf" | "excel") => {
+    if (currentParams === null) return;
+
+    setExportingFormat(format);
+    setError("");
+    try {
+      const blob =
+        format === "pdf"
+          ? await downloadManagementSummaryPdf(currentParams)
+          : await downloadManagementSummaryExcel(currentParams);
+      const url = createDownloadUrl(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = buildDownloadFilename(format);
+      link.click();
+      revokeDownloadUrl(url);
+    } catch (err) {
+      setError(getErrorMessage(err) || "Gagal mengunduh laporan analisis manajemen.");
+    } finally {
+      setExportingFormat(null);
+    }
+  };
 
   // Charts config
   const attendanceChartData = useMemo(() => {
@@ -278,14 +322,32 @@ export default function ManagementAnalytics() {
             Tinjauan Kinerja Tata Kelola Akademik dan Rekapitulasi Laporan Efektivitas
           </p>
         </div>
-        <button
-          onClick={loadSummaryData}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
-        >
-          <RefreshCw className={`h-5 w-5 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleExport("pdf")}
+            disabled={isLoading || exportingFormat !== null || currentParams === null}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
+          >
+            <Download className="h-4 w-4" />
+            {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF"}
+          </button>
+          <button
+            onClick={() => handleExport("excel")}
+            disabled={isLoading || exportingFormat !== null || currentParams === null}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
+          >
+            <Download className="h-4 w-4" />
+            {exportingFormat === "excel" ? "Exporting Excel..." : "Export Excel"}
+          </button>
+          <button
+            onClick={loadSummaryData}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}

@@ -36,3 +36,7 @@ export function buildApiUrl(
 ): string;
 export function createDownloadUrl(blob: Blob): string;
 export function revokeDownloadUrl(url: string): void;
+export const API_BLOB_TYPES: {
+  excel: string[];
+  pdf: string[];
+};
