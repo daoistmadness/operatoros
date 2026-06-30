@@ -81,7 +81,83 @@ EXCEL_LAYOUTS = {
         {"field": "Metric Value", "header": "Nilai Metrik", "width": 15, "format": "float"},
         {"field": "Recommended Action", "header": "Rekomendasi Tindakan", "width": 45, "format": "center"},
     ],
-
+    "Trend_Attendance_Data": [
+        {"field": "Period", "header": "Period", "width": 22, "format": "center"},
+        {"field": "Attendance %", "header": "Attendance %", "width": 18, "format": "percentage"},
+        {"field": "Hadir", "header": "Hadir", "width": 12, "format": "integer"},
+        {"field": "Sakit", "header": "Sakit", "width": 12, "format": "integer"},
+        {"field": "Izin", "header": "Izin", "width": 12, "format": "integer"},
+        {"field": "Alfa", "header": "Alfa", "width": 12, "format": "integer"},
+    ],
+    "Trend_Lateness_Data": [
+        {"field": "Period", "header": "Period", "width": 22, "format": "center"},
+        {"field": "Late Days", "header": "Late Days", "width": 15, "format": "integer"},
+        {"field": "Late Minutes", "header": "Late Minutes", "width": 16, "format": "integer"},
+    ],
+    "Trend_Grades_Data": [
+        {"field": "Period", "header": "Period", "width": 22, "format": "center"},
+        {"field": "Sumatif Avg", "header": "Sumatif Avg", "width": 16, "format": "float"},
+        {"field": "Formatif Avg", "header": "Formatif Avg", "width": 16, "format": "float"},
+        {"field": "Gap", "header": "Gap", "width": 12, "format": "float"},
+        {"field": "Below KKM Alerts", "header": "Below KKM Alerts", "width": 20, "format": "integer"},
+        {"field": "Threshold Source", "header": "Threshold Source", "width": 24, "format": "center"},
+    ],
+    "Trend_Interventions_Data": [
+        {"field": "Period", "header": "Period", "width": 22, "format": "center"},
+        {"field": "Open", "header": "Open", "width": 12, "format": "integer"},
+        {"field": "Resolved", "header": "Resolved", "width": 12, "format": "integer"},
+        {"field": "Overdue", "header": "Overdue", "width": 12, "format": "integer"},
+        {"field": "Resolution Rate", "header": "Resolution Rate", "width": 18, "format": "percentage"},
+    ],
+    "Forecast_Data": [
+        {"field": "Metric", "header": "Metric", "width": 26, "format": "center"},
+        {"field": "Period", "header": "Period", "width": 16, "format": "center"},
+        {"field": "Forecast Value", "header": "Forecast Value", "width": 18, "format": "float"},
+        {"field": "Method", "header": "Method", "width": 24, "format": "center"},
+        {"field": "History Points", "header": "History Points", "width": 16, "format": "integer"},
+        {"field": "Confidence", "header": "Confidence", "width": 16, "format": "center"},
+        {"field": "Data Sufficiency", "header": "Data Sufficiency", "width": 20, "format": "center"},
+        {"field": "Warning", "header": "Warning", "width": 42, "format": "center"},
+    ],
+    "Intervention_Impact_Data": [
+        {"field": "ID", "header": "ID", "width": 10, "format": "integer"},
+        {"field": "Student", "header": "Student", "width": 24, "format": "center"},
+        {"field": "Class", "header": "Class", "width": 12, "format": "center"},
+        {"field": "Subject", "header": "Subject", "width": 20, "format": "center"},
+        {"field": "Status", "header": "Status", "width": 16, "format": "center"},
+        {"field": "Priority", "header": "Priority", "width": 14, "format": "center"},
+        {"field": "Baseline", "header": "Baseline", "width": 14, "format": "float"},
+        {"field": "Latest", "header": "Latest", "width": 14, "format": "float"},
+        {"field": "Delta", "header": "Delta", "width": 12, "format": "float"},
+        {"field": "Threshold", "header": "Threshold", "width": 14, "format": "float"},
+        {"field": "Moved Above KKM", "header": "Moved Above KKM", "width": 18, "format": "center"},
+        {"field": "Overdue", "header": "Overdue", "width": 12, "format": "center"},
+        {"field": "Risk", "header": "Risk", "width": 12, "format": "center"},
+        {"field": "Owner", "header": "Owner", "width": 22, "format": "center"},
+    ],
+    "Intervention_Impact_Summary": [
+        {"field": "Metric", "header": "Metric", "width": 32, "format": "center"},
+        {"field": "Value", "header": "Value", "width": 18, "format": "float"},
+    ],
+    "Risk_Students_Data": [
+        {"field": "Student", "header": "Student", "width": 24, "format": "center"},
+        {"field": "Class", "header": "Class", "width": 12, "format": "center"},
+        {"field": "Subject", "header": "Subject", "width": 20, "format": "center"},
+        {"field": "Risk", "header": "Risk", "width": 12, "format": "center"},
+        {"field": "Latest", "header": "Latest", "width": 14, "format": "float"},
+        {"field": "Threshold", "header": "Threshold", "width": 14, "format": "float"},
+        {"field": "Overdue", "header": "Overdue", "width": 12, "format": "center"},
+        {"field": "Reasons", "header": "Reasons", "width": 52, "format": "center"},
+    ],
+    "Owner_Workload_Data": [
+        {"field": "Owner", "header": "Owner", "width": 24, "format": "center"},
+        {"field": "Total", "header": "Total", "width": 12, "format": "integer"},
+        {"field": "Open", "header": "Open", "width": 12, "format": "integer"},
+        {"field": "Resolved", "header": "Resolved", "width": 12, "format": "integer"},
+        {"field": "Overdue", "header": "Overdue", "width": 12, "format": "integer"},
+        {"field": "Avg Delta", "header": "Avg Delta", "width": 14, "format": "float"},
+        {"field": "High Risk", "header": "High Risk", "width": 14, "format": "integer"},
+    ],
 }
 
 
@@ -726,8 +802,183 @@ def build_management_summary_pdf(summary: dict) -> bytes:
 
     pdf.showPage()
 
+    # ----------------------------------------------------
+    # PHASE 19: INTERVENTION IMPACT ANALYSIS
+    # ----------------------------------------------------
+    impact_payload = summary.get("intervention_impact") or {}
+    impact_summary = impact_payload.get("summary") or {}
+    impact_rows = impact_payload.get("impact_rows") or []
+    class_impact = impact_payload.get("class_breakdown") or []
+    subject_impact = impact_payload.get("subject_breakdown") or []
+    risk_students = impact_payload.get("student_risk_list") or []
+    impact_insights = impact_payload.get("executive_insights") or []
+
+    draw_header_footer(pdf, "Intervention Impact Analysis", summary)
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColor(colors.HexColor("#1E293B"))
+    pdf.drawString(50, 520, "Intervention Impact Summary")
+
+    draw_kpi_card(pdf, 50, 455, 105, 50, "Total", str(impact_summary.get("total_interventions", 0)), "#334155")
+    draw_kpi_card(pdf, 165, 455, 105, 50, "Open", str(impact_summary.get("open_interventions", 0)), "#F97316")
+    draw_kpi_card(pdf, 280, 455, 105, 50, "Overdue", str(impact_summary.get("overdue_interventions", 0)), "#EF4444")
+    draw_kpi_card(pdf, 395, 455, 105, 50, "Avg Delta", _display(impact_summary.get("average_score_delta")), "#3B82F6")
+    draw_kpi_card(pdf, 510, 455, 105, 50, "Improved", f"{impact_summary.get('percent_improved', 0)}%", "#10B981")
+    draw_kpi_card(pdf, 625, 455, 105, 50, "Above KKM", f"{impact_summary.get('percent_moved_above_kkm', 0)}%", "#6366F1")
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(50, 410, "High-Risk / Overdue Intervention List")
+    headers = ["Student", "Class", "Subject", "Status", "Delta", "Risk", "Owner"]
+    pdf.setFont("Helvetica-Bold", 8)
+    for idx, header in enumerate(headers):
+        pdf.drawString(50 + idx * 95, 388, header)
+    pdf.setFont("Helvetica", 8)
+    high_rows = [row for row in impact_rows if row.get("risk_level") in ("high", "critical") or row.get("is_overdue")]
+    if high_rows:
+        for idx, row in enumerate(high_rows[:10]):
+            y_pos = 370 - idx * 16
+            pdf.drawString(50, y_pos, row.get("student_name", "")[:18])
+            pdf.drawString(145, y_pos, row.get("class_name", "")[:10])
+            pdf.drawString(240, y_pos, row.get("subject_name", "")[:14])
+            pdf.drawString(335, y_pos, row.get("status", "")[:12])
+            pdf.drawString(430, y_pos, _display(row.get("score_delta")))
+            pdf.drawString(525, y_pos, row.get("risk_level", ""))
+            pdf.drawString(620, y_pos, row.get("owner_name", "")[:16])
+    else:
+        pdf.drawString(50, 370, "No high-risk or overdue interventions for the selected filters.")
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(50, 185, "Class Impact Breakdown")
+    pdf.setFont("Helvetica", 8)
+    for idx, row in enumerate(class_impact[:5]):
+        pdf.drawString(50, 165 - idx * 14, f"{row.get('class_name')}: {row.get('total_interventions')} total, {row.get('high_risk_count')} high risk, avg delta {row.get('average_score_delta')}")
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(400, 185, "Subject Impact Breakdown")
+    pdf.setFont("Helvetica", 8)
+    for idx, row in enumerate(subject_impact[:5]):
+        pdf.drawString(400, 165 - idx * 14, f"{row.get('subject_name')}: {row.get('total_interventions')} total, above KKM {row.get('moved_above_kkm_percent')}%")
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(50, 75, "Impact Insights")
+    pdf.setFont("Helvetica", 8)
+    for idx, insight in enumerate(impact_insights[:3]):
+        pdf.drawString(50, 60 - idx * 12, f"- {insight.get('title')}: {insight.get('message')}")
+    pdf.drawString(0, 9, "Intervention Impact Analysis")
+    pdf.drawString(0, 10, f"Impact rows: {len(impact_rows)}")
+    pdf.showPage()
+
+    # ----------------------------------------------------
+    # PHASE 18: HISTORICAL TRENDS & TRANSPARENT FORECASTS
+    # ----------------------------------------------------
+    trends_payload = summary.get("historical_trends") or {}
+    trend_series = trends_payload.get("trend_series") or {}
+    forecast_rows = trends_payload.get("forecast_series") or []
+    trend_insights = trends_payload.get("executive_insights") or []
+
+    draw_header_footer(pdf, "Historical Trends & Transparent Forecasting", summary)
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColor(colors.HexColor("#1E293B"))
+    pdf.drawString(50, 520, "Historical Trends Summary")
+
+    attendance_terms = (trend_series.get("attendance") or {}).get("by_term") or []
+    lateness_terms = (trend_series.get("lateness") or {}).get("by_term") or []
+    grade_terms = (trend_series.get("grades") or {}).get("by_term") or []
+    intervention_terms = (trend_series.get("interventions") or {}).get("by_term") or []
+
+    if attendance_terms:
+        labels = [row["term_label"] for row in attendance_terms[-4:]]
+        attendance_values = [row["attendance_percentage"] for row in attendance_terms[-4:]]
+        pdf.setFont("Helvetica-Bold", 9)
+        pdf.drawString(50, 490, "Attendance Trend")
+        draw_bar_chart(
+            pdf,
+            x=50,
+            y=330,
+            w=300,
+            h=120,
+            labels=labels,
+            series=[attendance_values],
+            series_names=["Attendance %"],
+            colors_list=["#10B981"],
+            y_max=100,
+        )
+    else:
+        pdf.setFont("Helvetica", 9)
+        pdf.drawString(50, 490, "No populated attendance trend data available.")
+
+    if grade_terms:
+        labels = [row["period"].split()[-2] + " " + row["period"].split()[-1] for row in grade_terms[-4:]]
+        sumatif = [row.get("sumatif_average") or 0.0 for row in grade_terms[-4:]]
+        formatif = [row.get("formatif_average") or 0.0 for row in grade_terms[-4:]]
+        pdf.setFont("Helvetica-Bold", 9)
+        pdf.drawString(420, 490, "Grade Trend")
+        draw_bar_chart(
+            pdf,
+            x=420,
+            y=330,
+            w=300,
+            h=120,
+            labels=labels,
+            series=[sumatif, formatif],
+            series_names=["Sumatif", "Formatif"],
+            colors_list=["#3B82F6", "#A855F7"],
+            y_max=100,
+        )
+
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(50, 285, "Forecast Table")
+    forecast_headers = ["Metric", "Forecast", "Method", "Points", "Confidence", "Sufficiency"]
+    pdf.setFont("Helvetica-Bold", 8)
+    for idx, header in enumerate(forecast_headers):
+        pdf.drawString(50 + idx * 110, 260, header)
+    pdf.setFont("Helvetica", 8)
+    if forecast_rows:
+        for idx, row in enumerate(forecast_rows[:8]):
+            y_pos = 242 - idx * 16
+            pdf.drawString(50, y_pos, row.get("metric", "")[:22])
+            pdf.drawString(160, y_pos, _display(row.get("forecast_value")))
+            pdf.drawString(270, y_pos, row.get("method", "")[:20])
+            pdf.drawString(380, y_pos, str(row.get("history_points", "")))
+            pdf.drawString(490, y_pos, row.get("confidence", ""))
+            pdf.drawString(600, y_pos, row.get("data_sufficiency", ""))
+    else:
+        pdf.drawString(50, 242, "Forecasts disabled or insufficient historical data.")
+
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawString(50, 95, "Forecast Methodology Notes")
+    pdf.setFont("Helvetica", 8)
+    notes = [
+        "Forecasts use deterministic moving average, weighted moving average, or simple linear trend methods.",
+        "Forecast values are estimates based on historical trend data and do not imply certainty.",
+    ]
+    for idx, note in enumerate(notes + trends_payload.get("warnings", [])[:2]):
+        pdf.drawString(50, 78 - idx * 12, f"- {note}")
+    pdf.drawString(0, 7, "Historical Trends summary page")
+    pdf.drawString(0, 8, "Forecast methodology notes")
+    pdf.showPage()
+
+    draw_header_footer(pdf, "Trend-Based Executive Insights", summary)
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(50, 520, "Trend and Forecast Executive Insights")
+    if trend_insights:
+        for idx, insight in enumerate(trend_insights[:8]):
+            y_pos = 490 - idx * 52
+            pdf.setFont("Helvetica-Bold", 8)
+            pdf.drawString(50, y_pos, f"[{insight.get('category', '').upper()}] {insight.get('title', '')}")
+            pdf.setFont("Helvetica", 8)
+            draw_multiline_text(pdf, insight.get("message", ""), 50, y_pos - 12, max_w=620, max_lines=2, font_size=8, leading=10)
+    else:
+        pdf.setFont("Helvetica", 9)
+        pdf.drawString(50, 490, "No trend-specific insights available.")
+    if trends_payload.get("data_quality_diagnostics"):
+        pdf.setFont("Helvetica-Bold", 9)
+        pdf.drawString(50, 100, "Data Quality Diagnostics")
+        pdf.setFont("Helvetica", 8)
+        for idx, item in enumerate(trends_payload["data_quality_diagnostics"][:4]):
+            pdf.drawString(50, 84 - idx * 12, f"- {item.get('message')}")
+    pdf.showPage()
+
     # Save PDF
-# Save PDF
     pdf.save()
     return stream.getvalue()
 
