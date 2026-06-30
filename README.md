@@ -6,6 +6,9 @@ School Attendance Analytics is a full-stack system for importing school attendan
 - Imports `.xlsx` attendance exports into a backend database.
 - Tracks students, class mappings, HEB calculations, absence reasons, upload history, and attendance overrides.
 - Generates dashboard, attendance, rekap absensi, and tardiness reports.
+- Provides Management Analytics with PDF/Excel export for attendance, lateness, grade, and Below-KKM review.
+- Supports database-backed KKM thresholds and custom academic term date ranges.
+- Tracks academic interventions created from Below-KKM alerts.
 - Runs locally with SQLite or PostgreSQL and also through Docker Compose.
 - Supports a Portless-first WSL2 workflow plus a safe direct-port fallback.
 
@@ -142,6 +145,19 @@ The containerized frontend bundle uses `/api` as its browser API base. Nginx str
 - SQLite connections enable foreign keys, WAL mode, and related pragmas in `backend/src/core/database.py`.
 - Historical schema changes live in `backend/migrations/` as raw SQL for SQLite and PostgreSQL.
 - When PostgreSQL fields are set, the backend builds a SQLAlchemy URL from the separate connection parts instead of string-concatenating credentials.
+
+## Management Analytics and Academic Config
+- Management Analytics is available at `/analytics`.
+- Dashboard data comes from `GET /api/analytics/management-summary`.
+- Filtered management reports can be downloaded from:
+  - `GET /api/analytics/management-summary/export/pdf`
+  - `GET /api/analytics/management-summary/export/excel`
+- KKM thresholds and term date ranges are configured in `/academic-management` under `KKM & Term Settings`.
+- Academic config APIs are canonical under `/api/academic-config/...`.
+- Academic interventions can be created and updated from Below-KKM alerts in Management Analytics.
+- Intervention APIs are canonical under `/api/academic-interventions/...`.
+- If no custom KKM threshold applies, analytics preserves the legacy fallback threshold `85.0`.
+- If no custom term range exists, analytics preserves the default Term 1-4 date mapping.
 
 ## Excel Import Workflow
 ```mermaid
