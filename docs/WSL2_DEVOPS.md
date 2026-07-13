@@ -1,33 +1,19 @@
 # WSL2 DevOps Guide
 
-This guide covers the WSL2 development workflow for this repository. It keeps development instructions separate from production advice.
+This guide covers the WSL2 development workflow for this repository.
 
 ## Prerequisites
 - WSL2 with a Linux distribution installed
 - Docker Desktop with WSL integration enabled
 - Python 3.12+
-- Node.js 24+ for Portless mode
+- Node.js 20+
 - npm
-- Portless on the PATH
-- Agent Browser on the PATH if you want browser verification
+- Agent Browser on the PATH if you want browser smoke testing
 
 ## Repository Location
 - Keep the repo on the Linux filesystem, for example `~/projects/absensi/school-attendance-analytics`.
 - Avoid working from `/mnt/c/...` if you want reliable file watching and faster I/O.
 - Keep browser artifacts, logs, and other generated files out of the repo root except for ignored paths such as `.artifacts/`.
-
-## Portless Setup
-Portless is the preferred local workflow because it avoids port conflicts and gives each worktree stable URLs.
-
-```bash
-portless trust
-```
-
-- Run `portless trust` once so the local TLS certificate is trusted.
-- Use `portless list` to inspect active routes and `portless get <name>` to retrieve a URL.
-- In linked worktrees, Portless prefixes the route automatically.
-- Use `portless prune` manually if you need to remove stale local routes.
-- Do not use `portless clean` as part of normal project startup or cleanup.
 
 ## Start the Local Dev Stack
 ```bash
@@ -35,37 +21,46 @@ cd ~/projects/absensi/school-attendance-analytics
 ./start-dev.sh
 ```
 
-`start-dev.sh`:
-- A successful startup prints a green `✅ SCHOOL ATTENDANCE ANALYTICS IS READY` banner and remains active. If it exits to the prompt before printing this banner, startup has failed.
-- You can add `--open` to automatically open the frontend URL (safely invokes `powershell.exe Start-Process` on WSL2).
-- You can add `--status` to view health status of routes and services without starting anything.
-- prepares `backend/.venv` when needed
-- installs frontend dependencies if `node_modules/` is missing
-- runs Tailwind watch mode against `frontend/src/index.css`
-- starts the backend and frontend through Portless by default
-- prints stable URLs such as `https://school-attendance.localhost`
-- can run `./scripts/verify-browser.sh` when invoked with `--verify-browser`
-- never kills a process just because it owns a desired port
+`start-dev.sh` starts both the FastAPI backend and the Vite frontend concurrently:
 
-For the direct-port fallback:
+| Service | URL |
+| :--- | :--- |
+| Frontend | `http://127.0.0.1:5173` |
+| Backend | `http://127.0.0.1:8000` |
+| API docs | `http://127.0.0.1:8000/docs` |
+| Health | `http://127.0.0.1:8000/health` |
+
+Press `Ctrl+C` to stop both processes.
+
+Optional port overrides:
 ```bash
-./start-dev.sh --no-portless
+BACKEND_PORT=9000 FRONTEND_PORT=5174 ./start-dev.sh
+FRONTEND_HOST=0.0.0.0 ./start-dev.sh   # expose frontend to LAN
 ```
 
-This mode respects `DEV_BACKEND_PORT` and `DEV_FRONTEND_PORT` and fails if either port is already in use.
+You can also start services individually:
+```bash
+./scripts/start-backend.sh
+./scripts/start-frontend.sh
+```
+
+## How the API Proxy Works
+
+In development, the Vite dev server at `http://127.0.0.1:5173` proxies all `/api/*` requests to `http://127.0.0.1:8000`. This means:
+
+- The browser always calls `http://127.0.0.1:5173/api/...`
+- The Vite proxy forwards them to `http://127.0.0.1:8000/api/...`
+- No CORS, no TLS, no Portless needed
+
+All backend canonical routes begin with `/api/<domain>/...`. Do not use bare paths like `/analytics/...` in new frontend code.
 
 ## Browser Verification
 ```bash
-./start-dev.sh --verify-browser
+./scripts/verify-browser.sh
+# or with explicit URL:
+./scripts/verify-browser.sh http://127.0.0.1:5173
 ```
 
-or:
-
-```bash
-./scripts/verify-browser.sh https://school-attendance.localhost
-```
-
-- Browser smoke testing is local-only in this repository.
 - Install Agent Browser with `npm install -g agent-browser`.
 - Install browser binaries with `agent-browser install`, or `agent-browser install --with-deps` on Linux/WSL2.
 - Browser artifacts are written under `.artifacts/browser/`.
@@ -93,9 +88,8 @@ docker compose build backend
 docker compose build frontend
 ```
 
-- Local launcher logs are written under `.artifacts/dev-logs/`.
-- Backend health is available at `GET /system/health`.
-- Frontend Docker builds must use `/api` in the browser-facing bundle.
+- Backend health is available at `GET /health` and `GET /api/system/health`.
+- Frontend Docker builds use empty `VITE_API_BASE_URL`; the Nginx proxy handles `/api/` forwarding.
 
 ## Resetting State
 > Warning: the following commands can destroy data.
@@ -107,13 +101,12 @@ docker compose down -v
 
 - `down` stops containers but keeps the volume.
 - `down -v` also removes the PostgreSQL volume and erases database contents.
-- The app also exposes a destructive reset action at `POST /system/clear-data`, but it stays disabled unless `ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
+- The app also exposes a destructive reset action at `POST /api/system/clear-data`, but it stays disabled unless `ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
 
 ## Networking Notes
-- In direct local development, the React client uses `http://localhost:8000`.
-- In Portless and Docker workflows, the browser uses same-origin `/api` requests and the proxy layer forwards them to the backend.
-- The frontend Docker image includes an Nginx config that strips `/api/` before forwarding to the backend container.
-- On Windows host browsers, `localhost` forwarding usually works through WSL2, but Portless `.localhost` URLs are the preferred workflow.
+- In direct local development, the Vite proxy forwards `/api/*` to `http://127.0.0.1:8000`. No separate CORS configuration is needed.
+- In Docker, the browser uses same-origin `/api` requests and Nginx forwards them to the backend container.
+- The frontend Docker image includes an Nginx config that proxies `/api/` to the backend.
 
 ## File Permission and Line Ending Issues
 - Use LF line endings for shell scripts and config files.
@@ -130,25 +123,11 @@ docker compose down -v
 - Do not use the destructive reset endpoint in production.
 - Prefer a managed PostgreSQL instance over local SQLite for multi-user or long-lived deployments.
 - Confirm CORS origins and frontend API URLs before exposing the app externally.
-- Keep the `/api` proxy as a development and container routing convention; do not embed the backend service hostname in browser code.
+- Set `VITE_API_BASE_URL` to the public backend URL if the frontend is served separately from the backend.
 
 ## Troubleshooting
-- If Portless URLs do not resolve, run `portless trust`, then check `portless list`.
-- If the browser cannot validate TLS, confirm the local Portless certificate trust is installed before reaching for insecure workarounds. The development launcher automatically injects the certificate via `NODE_EXTRA_CA_CERTS`.
+- If the Vite dev server fails to start, confirm `frontend/node_modules/` exists. Run `cd frontend && npm install` if needed.
 - If file watching is unreliable, confirm the repo is not mounted from the Windows filesystem.
 - If Docker port bindings conflict, stop the offending process before relaunching the stack.
-- If a stale Portless route appears, prune it manually rather than deleting other worktree routes.
-
-### Portless API Path Note
-
-In local Portless/proxy mode, browser-visible requests may include a double API prefix such as `/api/api/grades/...` or `/api/api/analytics/...`.
-
-This can be valid when the frontend API client/proxy normalizes the request to backend `/api/<domain>/...`.
-
-The backend canonical contract remains `/api/<domain>/...`.
-
-A `404` on `/api/api/<domain>/...` usually means one of:
-
-- the backend router is not mounted under `/api/<domain>`
-- the frontend wrapper is not following the shared API path convention
-- the dev server is serving a stale frontend bundle
+- If a frontend request returns a 404, verify the backend route is registered under `/api/<domain>/...` in `backend/src/main.py`.
+- If `VITE_API_BASE_URL` is set, confirm it points to the running backend and does not end with a trailing slash.

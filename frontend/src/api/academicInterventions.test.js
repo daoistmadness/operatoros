@@ -5,9 +5,9 @@ import {
 } from "./academicInterventions";
 import { apiRequest } from "../lib/api/client";
 
-jest.mock("../lib/api/client", () => ({
+vi.mock("../lib/api/client", () => ({
   API_BASE_URL: "http://localhost:8000",
-  apiRequest: jest.fn(),
+  apiRequest: vi.fn(),
 }));
 
 describe("academic interventions API", () => {

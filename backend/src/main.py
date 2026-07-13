@@ -6,7 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.academic_config import router as academic_config_router
 from api.academic_interventions import router as academic_interventions_router
-from api.analytics import get_tardiness_summary_by_jenjang, router as analytics_router
+from api.analytics import router as analytics_router
+from api.report_builder import router as report_builder_router
 from api.config import router as config_router
 from api.grades import router as grades_router
 from api.students import router as students_router
@@ -24,7 +25,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS — configured for React dev server and any WSL IP added to ALLOWED_ORIGINS
+# CORS — configured for Vite dev server, Docker, and any custom origins via ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -36,25 +37,29 @@ app.add_middleware(
 # Initialize database tables on startup
 init_db()
 
-# Routers
-app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+# Canonical /api/* routers — all frontend requests use these paths.
+# The Vite dev proxy forwards /api/* to http://127.0.0.1:8000/api/*.
 app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
-app.include_router(config_router, prefix="/config", tags=["config"])
-app.include_router(students_router, prefix="/students", tags=["students"])
+app.include_router(config_router, prefix="/api/config", tags=["config"])
 app.include_router(students_router, prefix="/api/students", tags=["students"])
-app.include_router(uploads_router, prefix="/uploads", tags=["uploads"])
-app.include_router(system_router, prefix="/system", tags=["system"])
-app.include_router(review_router, prefix="/review", tags=["review"])
+app.include_router(uploads_router, prefix="/api/uploads", tags=["uploads"])
+app.include_router(system_router, prefix="/api/system", tags=["system"])
+app.include_router(review_router, prefix="/api/review", tags=["review"])
 app.include_router(grades_router, prefix="/api/grades", tags=["grades"])
 app.include_router(academic_config_router, prefix="/api/academic-config", tags=["academic-config"])
 app.include_router(academic_interventions_router, prefix="/api/academic-interventions", tags=["academic-interventions"])
-app.add_api_route(
-    "/api/tardiness/summary-by-jenjang",
-    get_tardiness_summary_by_jenjang,
-    methods=["GET"],
-    tags=["analytics"],
-)
+app.include_router(report_builder_router, prefix="/api/report-builder", tags=["report-builder"])
 
+# Legacy bare-path aliases — retained for backward compatibility with direct curl/Swagger usage.
+# New frontend code must use the /api/* canonical routes above.
+app.include_router(analytics_router, prefix="/analytics", tags=["analytics-legacy"])
+app.include_router(students_router, prefix="/students", tags=["students-legacy"])
+
+
+@app.get("/health", tags=["health"])
+def health_check() -> dict:
+    """Health check endpoint used by the desktop launcher and monitoring."""
+    return {"status": "ok"}
 
 
 @app.get("/", tags=["health"])

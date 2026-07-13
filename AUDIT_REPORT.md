@@ -78,10 +78,10 @@ The `student_subject_grades` table stores the actual numeric scores (0.0 to 100.
    * Writes to `student_enrollments`.
 
 ### Grade Matrix Flow
-1. `GET /api/api/grades/...` (Frontend `/grades` using double-prefix proxy bypass)
+1. `GET /api/grades/...` (Frontend `/grades` using Vite proxy)
    * Reads `student_enrollments` to construct rows.
    * Reads `student_subject_grades` to populate grid cells.
-2. `POST /api/api/grades/save`
+2. `POST /api/grades/save`
    * Upserts into `student_subject_grades` checking boundaries (0-100 float).
 
 ### Bootstrap

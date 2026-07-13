@@ -51,13 +51,13 @@ function ensureTardinessSummaryByJenjangShape(data) {
 }
 
 export async function getRekapAbsensiReport(params) {
-  const response = await apiRequest({ path: '/analytics/v2/rekap-absensi', params });
+  const response = await apiRequest({ path: '/api/analytics/v2/rekap-absensi', params });
   return ensureRekapReportShape(response.data);
 }
 
 export async function downloadRekapAbsensiExcel(params) {
   const response = await apiRequest({
-    path: '/analytics/v2/rekap-absensi/export-excel',
+    path: '/api/analytics/v2/rekap-absensi/export-excel',
     params,
     responseType: 'blob',
     timeout: 60000,
@@ -67,18 +67,18 @@ export async function downloadRekapAbsensiExcel(params) {
 }
 
 export async function getTardinessReport(params) {
-  const response = await apiRequest({ path: '/analytics/tardiness-report', params });
+  const response = await apiRequest({ path: '/api/analytics/tardiness-report', params });
   return ensureTardinessReportShape(response.data);
 }
 
 export async function getTardinessSummaryByJenjang(params) {
-  const response = await apiRequest({ path: '/analytics/tardiness-report/summary-by-jenjang', params });
+  const response = await apiRequest({ path: '/api/analytics/tardiness-report/summary-by-jenjang', params });
   return ensureTardinessSummaryByJenjangShape(response.data);
 }
 
 export async function downloadTardinessExcel(params) {
   const response = await apiRequest({
-    path: '/analytics/tardiness-report/export-excel',
+    path: '/api/analytics/tardiness-report/export-excel',
     params,
     responseType: 'blob',
     timeout: 60000,
@@ -89,7 +89,7 @@ export async function downloadTardinessExcel(params) {
 
 export async function downloadTardinessManagementExcel(params) {
   const response = await apiRequest({
-    path: '/analytics/tardiness-report/export-management-excel',
+    path: '/api/analytics/tardiness-report/export-management-excel',
     params,
     responseType: 'blob',
     timeout: 60000,
@@ -99,17 +99,17 @@ export async function downloadTardinessManagementExcel(params) {
 }
 
 export async function getServerStatus() {
-  await apiRequest({ path: '/' });
+  await apiRequest({ path: '/health' });
   return 'online';
 }
 
 export async function getSystemHealth() {
-  const response = await apiRequest({ path: '/system/health' });
+  const response = await apiRequest({ path: '/api/system/health' });
   return response.data;
 }
 
 export async function getJenjangs() {
-  const response = await apiRequest({ path: '/analytics/jenjangs' });
+  const response = await apiRequest({ path: '/api/analytics/jenjangs' });
   return ensureArray(response.data);
 }
 
@@ -118,15 +118,15 @@ export async function getDashboardSnapshot(currentDate) {
   const year = currentDate.getFullYear();
 
   const requests = await Promise.allSettled([
-    apiRequest({ path: '/analytics/monthly' }),
-    apiRequest({ path: '/analytics/class-leaderboard' }),
-    apiRequest({ path: '/analytics/frequent-offenders' }),
-    apiRequest({ path: '/analytics/pending-categorization' }),
-    apiRequest({ path: '/analytics/summary' }),
-    apiRequest({ path: '/students/classes' }),
-    apiRequest({ path: '/analytics/incomplete-summary' }),
-    apiRequest({ path: '/config/absence-reasons/summary', params: { month, year } }),
-    apiRequest({ path: '/analytics/v2/rekap-absensi', params: { month, year } }),
+    apiRequest({ path: '/api/analytics/monthly' }),
+    apiRequest({ path: '/api/analytics/class-leaderboard' }),
+    apiRequest({ path: '/api/analytics/frequent-offenders' }),
+    apiRequest({ path: '/api/analytics/pending-categorization' }),
+    apiRequest({ path: '/api/analytics/summary' }),
+    apiRequest({ path: '/api/students/classes' }),
+    apiRequest({ path: '/api/analytics/incomplete-summary' }),
+    apiRequest({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
+    apiRequest({ path: '/api/analytics/v2/rekap-absensi', params: { month, year } }),
   ]);
 
   const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm, rekapSumm] = requests;
@@ -150,13 +150,13 @@ export async function getDashboardSnapshot(currentDate) {
 }
 
 export async function getHebOverview(month, year) {
-  const response = await apiRequest({ path: '/analytics/heb', params: { month, year } });
+  const response = await apiRequest({ path: '/api/analytics/heb', params: { month, year } });
   return ensureArray(response.data?.heb_by_jenjang);
 }
 
 export async function saveHebOverride(jenjang, year, month, payload) {
   return apiRequest({
-    path: `/config/heb/${encodeURIComponent(jenjang)}/${year}/${month}`,
+    path: `/api/config/heb/${encodeURIComponent(jenjang)}/${year}/${month}`,
     method: 'PUT',
     body: payload,
   });
@@ -164,14 +164,14 @@ export async function saveHebOverride(jenjang, year, month, payload) {
 
 export async function deleteHebOverride(jenjang, year, month) {
   return apiRequest({
-    path: `/config/heb/${encodeURIComponent(jenjang)}/${year}/${month}`,
+    path: `/api/config/heb/${encodeURIComponent(jenjang)}/${year}/${month}`,
     method: 'DELETE',
   });
 }
 
 export async function assignStudentClass(payload) {
   return apiRequest({
-    path: '/students/set-class',
+    path: '/api/students/set-class',
     method: 'POST',
     body: payload,
   });

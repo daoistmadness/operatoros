@@ -16,6 +16,7 @@ If the setup is incomplete, the Grade Matrix may show missing dropdowns or empty
 | `/academic-management` → `Calendar & Subjects` | Academic years and subjects | `academic_years`, `subjects`, `jenjangs` |
 | `/academic-management` → `Class Allocation` | Student enrollment into academic context | `student_enrollments` |
 | `/academic-management` → `KKM & Term Settings` | Academic thresholds and effective term ranges | `kkm_thresholds`, `academic_term_configs` |
+| `/academic-management` → `Report Builder` | Reusable report templates, branding, and export presets | `report_templates`, `report_branding_configs` |
 | `/grades` | Score entry and Grade Matrix | `student_enrollments`, `student_subject_grades` |
 | `/analytics` → `Below-KKM Alerts & Academic Interventions` | Follow-up workflow for students below KKM | `academic_interventions` |
 
@@ -68,6 +69,7 @@ This page has two tabs:
 - `Calendar & Subjects`
 - `Class Allocation`
 - `KKM & Term Settings`
+- `Report Builder`
 
 Use `Calendar & Subjects` first if the academic setup is incomplete.
 
@@ -117,6 +119,21 @@ Rules:
 - Term start date must be on or before end date.
 - Custom term ranges must stay within the academic year and must not overlap another effective term range.
 - Restoring a term default deletes the custom term row only; it does not modify grades, attendance, students, or enrollments.
+
+### Step 5b: Configure report templates
+
+Open `Report Builder` inside `/academic-management`.
+
+Use this tab to:
+
+- create or edit reusable report templates
+- toggle section visibility
+- reorder report sections
+- configure branding colors and text
+- define default filters and export options
+- preview the resolved export plan before using it in Management Analytics
+
+Report Builder only changes export presentation. It does not modify attendance, grades, interventions, or academic configuration data.
 
 ### Step 6: Allocate students into a class
 
@@ -312,7 +329,7 @@ If the save button is disabled, check whether a valid row, year, jenjang, and su
 - `null` scores are valid and must not become `0`
 - duplicate saves should update existing grade rows
 - source class filtering must not be confused with target enrollment class
-- Portless Grade Ledger API paths may use the existing `/api/api/grades/...` convention in frontend wrappers
+- Grade Ledger API paths are canonical under `/api/grades/...` in frontend wrappers
 - Academic config API paths are canonical under `/api/academic-config/...`
 - Academic intervention API paths are canonical under `/api/academic-interventions/...`
 - **Phase 17 Parity QA Test Coverage:** Always verify changes by running backend pytest regression tests in [test_report_parity.py](../backend/tests/test_report_parity.py). These assertions guarantee exact numerical alignment between backend JSON summary payloads, ReportLab vector PDFs, and editable Excel files.

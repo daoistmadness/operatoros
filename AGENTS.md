@@ -31,7 +31,7 @@ To ensure strict quality and architecture control, developers and AI agents must
   * Ensures any runtime database patches executed via `backend/src/core/database.py` remain strictly non-destructive and backward-compatible.
   * Mandates that all new ledger endpoints maintain comprehensive test coverage within `backend/tests/` preventing regression against the 16 base tests suite.
   * Enforces structural compilation standards defined in `frontend/tsconfig.json` and prevents the re-introduction of `jsconfig.json`.
-  * Guards the Portless dynamic domain mapping logic inside `frontend/src/lib/api/client.js` to ensure local routing environments do not break during cross-origin API calls.
+  * Guards the canonical `/api/<domain>/...` path contract in `frontend/src/lib/api/client.js` to ensure no feature work introduces double-prefix paths or hardcoded backend domains.
   * Enforces strict query validation requirements for dynamic metadata channels, ensuring that `GET /api/grades/subjects` rejects incoming requests missing a valid integer `jenjang_id`.
   * Guarantees all master dictionary endpoints preserve fixed ordering algorithms to prevent layout shifts at the frontend rendering bounds.
   * Monopolizes strict isolation boundaries between structural deletion behaviors: any request to clear a `StudentEnrollment` row must strictly target the junction record and explicitly block accidental cascade threats against the master `Student` entity.
@@ -54,7 +54,7 @@ To ensure strict quality and architecture control, developers and AI agents must
   * Owns and maintains the spreadsheet-like input matrix within `GradeMatrix.tsx`, enforcing strict numeric boundaries and preventing structural injection of unhandled zero fallbacks for null cell entries.
   * Guards the amber highlighting visual feedback state for locally altered cells before batch dispatch execution.
   * Ensures all new select dropdown entries directly map dynamic context fields from the primary metadata APIs securely.
-  * Maintains the strict double prefix pathing convention (`/api/api/grades/...`) inside `frontend/src/api/grades.ts` to ensure dynamic proxy components do not strip the necessary routing contexts required by the backend FastAPI mount points.
+  * Maintains the canonical API pathing convention (`/api/grades/...`) inside `frontend/src/api/grades.ts` to ensure dynamic routing contexts remain aligned with backend mount points.
   * Preserves semantic coherence in color mappings for attendance statuses:
     * **Hadir / On-Time:** `emerald` (Green)
     * **Terlambat / Late:** `orange` (Orange)
@@ -100,20 +100,19 @@ To ensure strict quality and architecture control, developers and AI agents must
 - Manual review features for attendance overrides and absence reasons.
 - Configuration screens for jenjang cutoffs, HEB overrides, and system settings.
 - Report generation for attendance, rekap absensi, tardiness, and dashboard views.
-- WSL2-oriented development launcher and operational docs.
-- Portless-first launcher plus a safe direct-port fallback for local worktrees.
+- Vite-based development launcher with `/api` proxy to FastAPI.
 - Repository-owned Agent Browser smoke testing for frontend verification.
 - Utility scripts for dashboard generation, repair, and diagnostics.
 
 ## Tech Stack
 - Languages: Python, JavaScript
 - Backend: FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
-- Frontend: React 19, react-scripts, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
+- Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Package managers: pip, npm
 - Databases: SQLite, PostgreSQL 16
 - Infrastructure: Docker, Docker Compose, Nginx
 - Tooling: `start-dev.sh`, shell scripts, Excel utilities
-- Testing: backend `pytest` tests, frontend CRA test script, and docs-link validation
+- Testing: backend `pytest` tests, frontend Jest test suite
 
 ## Repository Structure
 - `backend/`: API source, ORM models, services, and raw SQL migration files
@@ -150,7 +149,7 @@ See [CONVENTIONS.md](CONVENTIONS.md) for observed naming, structure, error-handl
 - Do not stop, disable, edit, or uninstall Dapodik or its Apache service without explicit user authorization.
 
 ## Decision Memory
-See [MEMORY.md](MEMORY.md) for durable project decisions and architectural context. Current stable choices include the local-vs-Docker API base split (`http://localhost:8000` vs `/api`), guarded destructive resets with `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default, PostgreSQL URL construction from `POSTGRES_*` fields, Portless as the preferred launcher, and browser smoke artifacts under `.artifacts/browser/`. Keep that file updated when the repo’s stable operating assumptions change.
+See [MEMORY.md](MEMORY.md) for durable project decisions and architectural context. Current stable choices include the Vite dev proxy for local development, guarded destructive resets with `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default, PostgreSQL URL construction from `POSTGRES_*` fields, and browser smoke artifacts under `.artifacts/browser/`. Keep that file updated when the repo's stable operating assumptions change.
 
 ## Known Issues and Error Patterns
 See [ERRORS.md](ERRORS.md) for recurring bugs, fragile areas, and debugging notes. It also records resolved issues such as the Tailwind `infinity * 1px` build warning.
@@ -175,10 +174,10 @@ Examples:
 
 Frontend API wrappers must use the existing `apiRequest` abstraction and must not hardcode domains.
 
-In local Portless/proxy mode, browser-visible requests may appear as `/api/api/<domain>/...`. This is expected only when proxy/client normalization forwards the request to backend `/api/<domain>/...`.
+All browser-visible requests use canonical `/api/<domain>/...` paths. The Vite dev proxy forwards these transparently to FastAPI. No double-prefix paths (`/api/api/...`) exist or are expected.
 
 Do not modify `frontend/src/lib/api/client.js` for feature-level route fixes unless the task explicitly targets the shared API client.
 
-Before completing API work, inspect the FastAPI route table and verify the final browser-visible request path under Portless.
+Before completing API work, verify the canonical backend route is registered in `backend/src/main.py` under the `/api/<domain>` prefix.
 
-Legacy aliases such as `/analytics/...` may exist for backward compatibility, but new feature work must use `/api/<domain>/...`.
+Legacy bare aliases such as `/analytics/...` may exist for backward compatibility (curl/Swagger), but all new frontend code must use `/api/<domain>/...`.

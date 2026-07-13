@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str | None = Field(default=None, env="POSTGRES_DB")
     POSTGRES_HOST: str | None = Field(default=None, env="POSTGRES_HOST")
     POSTGRES_PORT: int | None = Field(default=None, env="POSTGRES_PORT")
-    ALLOWED_ORIGINS: str = Field("http://localhost:3000", env="ALLOWED_ORIGINS")
+    ALLOWED_ORIGINS: str = Field("http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173", env="ALLOWED_ORIGINS")
     HOST: str = Field("0.0.0.0", env="HOST")
     PORT: int = Field(8000, env="PORT")
     ENABLE_DESTRUCTIVE_OPERATIONS: bool = Field(False, env="ENABLE_DESTRUCTIVE_OPERATIONS")

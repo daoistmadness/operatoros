@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../lib/api/client";
+import { apiRequest } from "../lib/api/client";
 
 export type AssessmentType = "sumatif" | "formatif" | "overall";
 export type ConfigSource = "custom" | "default" | "full-year";
@@ -43,8 +43,7 @@ export interface AcademicTermPayload {
 }
 
 export function academicConfigApiPath(path: string): string {
-  const apiBaseOwnsPrefix = /(?:^|\/)api\/?$/.test(API_BASE_URL);
-  return apiBaseOwnsPrefix ? `/api/api/academic-config${path}` : `/api/academic-config${path}`;
+  return `/api/academic-config${path}`;
 }
 
 export async function fetchKkmThresholds(params?: {
