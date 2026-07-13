@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
+# scripts/verify-browser.sh
+# Agent Browser smoke test for the school-attendance-analytics frontend.
+# Pass the frontend URL as $1, or rely on the default http://127.0.0.1:5173.
+#
+# Usage:
+#   ./scripts/verify-browser.sh
+#   ./scripts/verify-browser.sh http://127.0.0.1:5173
+
 set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."; pwd)"
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
 ARTIFACT_DIR="${DEV_BROWSER_ARTIFACT_DIR:-$ROOT_DIR/.artifacts/browser}"
 SESSION_NAME="${AGENT_BROWSER_SESSION_NAME:-school-attendance-smoke-$RUN_ID}"
-PORTLESS_FRONTEND_NAME="${PORTLESS_FRONTEND_NAME:-school-attendance}"
-TARGET_URL="${1:-}"
+TARGET_URL="${1:-http://127.0.0.1:5173}"
 SCREENSHOT_PATH="$ARTIFACT_DIR/$RUN_ID-dashboard.png"
 
 mkdir -p "$ARTIFACT_DIR"
@@ -24,61 +31,8 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-find_portless_binary() {
-  if command -v portless >/dev/null 2>&1; then
-    command -v portless
-    return 0
-  fi
-  local nvm_bin
-  nvm_bin="$(find "$HOME/.nvm/versions/node" -maxdepth 3 -name portless 2>/dev/null | sort -V | tail -n 1 || true)"
-  if [[ -x "$nvm_bin" ]]; then
-    echo "$nvm_bin"
-    return 0
-  fi
-  if [[ -x "$HOME/.bun/bin/portless" ]]; then
-    echo "$HOME/.bun/bin/portless"
-    return 0
-  fi
-  local npm_g_bin
-  npm_g_bin="$(npm config get prefix 2>/dev/null || true)"
-  if [[ -x "$npm_g_bin/bin/portless" ]]; then
-    echo "$npm_g_bin/bin/portless"
-    return 0
-  fi
-  echo "portless"
-}
-
-PORTLESS_BIN="$(find_portless_binary)"
-if [[ "$PORTLESS_BIN" != "portless" && -x "$PORTLESS_BIN" ]]; then
-  export PATH="$(dirname "$PORTLESS_BIN"):$PATH"
-fi
-
-portless() {
-  "$PORTLESS_BIN" "$@"
-}
-
 ab() {
   agent-browser --session "$SESSION_NAME" "$@"
-}
-
-resolve_url() {
-  if [[ -n "$TARGET_URL" ]]; then
-    printf '%s' "$TARGET_URL"
-    return 0
-  fi
-
-  if ! command_exists portless; then
-    return 1
-  fi
-
-  local url=""
-  url="$(portless get "$PORTLESS_FRONTEND_NAME" 2>/dev/null | tail -n 1 || true)"
-  if [[ "$url" == http* ]]; then
-    printf '%s' "${url%$'\r'}"
-    return 0
-  fi
-
-  return 1
 }
 
 check_agent_browser() {
@@ -104,16 +58,13 @@ run_eval() {
 }
 
 main() {
-  local url
-  url="$(resolve_url)" || die "Pass the frontend URL explicitly or start the stack with Portless so the script can resolve it."
-
   check_agent_browser
-  log "Using frontend URL: $url"
+  log "Using frontend URL: $TARGET_URL"
   log "Session: $SESSION_NAME"
 
   trap 'ab close >/dev/null 2>&1 || true' EXIT
 
-  ab open "$url"
+  ab open "$TARGET_URL"
   ab wait 2000
 
   local title

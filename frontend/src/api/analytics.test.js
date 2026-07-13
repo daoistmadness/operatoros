@@ -4,13 +4,13 @@ import {
 } from "./analytics";
 import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
 
-jest.mock("../lib/api/client", () => ({
+vi.mock("../lib/api/client", () => ({
   API_BASE_URL: "http://localhost:8000",
   API_BLOB_TYPES: {
     excel: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
     pdf: ["application/pdf"],
   },
-  apiRequest: jest.fn(),
+  apiRequest: vi.fn(),
 }));
 
 describe("management analytics exports", () => {

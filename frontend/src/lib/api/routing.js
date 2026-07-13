@@ -1,17 +1,4 @@
-export function stripLeadingApiPrefix(pathname) {
-  if (!pathname) {
-    return '/';
-  }
-
-  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
-
-  if (normalizedPath === '/api') {
-    return '/';
-  }
-
-  if (normalizedPath.startsWith('/api/')) {
-    return normalizedPath.slice(4) || '/';
-  }
-
-  return normalizedPath;
-}
+// routing.js
+// Retained as an empty module for backward compatibility.
+// The stripLeadingApiPrefix function was removed as part of Portless removal.
+// All API paths are now canonical /api/... and forwarded verbatim.

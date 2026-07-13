@@ -215,6 +215,7 @@ def init_db():
     from models.student_subject_grade import StudentSubjectGrade
     from models.academic_config import AcademicTermConfig, KkmThreshold
     from models.academic_intervention import AcademicIntervention
+    from models.report_builder import ReportTemplate, ReportBrandingConfig
     Base.metadata.create_all(bind=engine)
     run_grade_ledger_patches(engine)
     _seed_grade_ledger_minimum(engine)
@@ -222,3 +223,6 @@ def init_db():
     _ensure_upload_logs_schema_compatibility()
     _ensure_attendance_schema_compatibility()
     _ensure_attendance_index_compatibility()
+    from services.report_builder import seed_report_builder_defaults
+
+    seed_report_builder_defaults()

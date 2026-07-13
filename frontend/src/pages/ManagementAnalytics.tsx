@@ -38,6 +38,14 @@ import {
   type FetchSummaryParams,
   type FetchHistoricalTrendsParams,
 } from "../api/analytics";
+import {
+  downloadReportBuilderExcel,
+  downloadReportBuilderPdf,
+  fetchReportTemplates,
+  previewReportBuilder,
+  type ReportPreviewResponse,
+  type ReportTemplate,
+} from "../api/reportBuilder";
 import { fetchEffectiveTerms, type AcademicTermConfig } from "../api/academicConfig";
 import {
   createAcademicInterventionFromAlert,
@@ -124,6 +132,11 @@ export default function ManagementAnalytics() {
   const [isUpdatingFilters, setIsUpdatingFilters] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "excel" | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [reportTemplates, setReportTemplates] = useState<ReportTemplate[]>([]);
+  const [selectedReportTemplateId, setSelectedReportTemplateId] = useState<number | null>(null);
+  const [reportPreview, setReportPreview] = useState<ReportPreviewResponse | null>(null);
+  const [isPreviewingTemplate, setIsPreviewingTemplate] = useState(false);
+  const [reportBuilderError, setReportBuilderError] = useState("");
   const [exportSettings, setExportSettings] = useState({
     format: "excel" as "pdf" | "excel",
     mode: "editable" as "summary" | "editable",
@@ -270,6 +283,19 @@ export default function ManagementAnalytics() {
     loadSummaryData();
   }, [currentParams]);
 
+  useEffect(() => {
+    async function loadReportTemplatesList() {
+      try {
+        const templates = await fetchReportTemplates();
+        setReportTemplates(templates);
+        setSelectedReportTemplateId((current) => current ?? templates.find((template) => template.is_default)?.id ?? templates[0]?.id ?? null);
+      } catch (err) {
+        console.error("Failed to load report templates", err);
+      }
+    }
+    loadReportTemplatesList();
+  }, []);
+
   const loadTrendData = async () => {
     if (currentParams === null) return;
     setIsTrendLoading(true);
@@ -333,10 +359,23 @@ export default function ManagementAnalytics() {
     setError("");
     try {
       const mode = modeOverride || (format === "excel" ? "summary" : undefined);
+      const reportBuilderPayload = {
+        template_id: selectedReportTemplateId,
+        filters: currentParams,
+        include_trends: true,
+        include_forecast: true,
+        forecast_method: forecastMethod,
+        granularity: trendGranularity,
+        mode,
+      };
       const blob =
-        format === "pdf"
-          ? await downloadManagementSummaryPdf({ ...currentParams, mode })
-          : await downloadManagementSummaryExcel({ ...currentParams, mode });
+        selectedReportTemplateId !== null
+          ? format === "pdf"
+            ? await downloadReportBuilderPdf(reportBuilderPayload)
+            : await downloadReportBuilderExcel(reportBuilderPayload)
+          : format === "pdf"
+            ? await downloadManagementSummaryPdf({ ...currentParams, mode })
+            : await downloadManagementSummaryExcel({ ...currentParams, mode });
       const url = createDownloadUrl(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -347,6 +386,27 @@ export default function ManagementAnalytics() {
       setError(getErrorMessage(err) || "Gagal mengunduh laporan analisis manajemen.");
     } finally {
       setExportingFormat(null);
+    }
+  };
+
+  const handlePreviewReportTemplate = async () => {
+    if (currentParams === null) return;
+    setIsPreviewingTemplate(true);
+    setReportBuilderError("");
+    try {
+      const preview = await previewReportBuilder({
+        template_id: selectedReportTemplateId,
+        filters: currentParams,
+        include_trends: true,
+        include_forecast: true,
+        forecast_method: forecastMethod,
+        granularity: trendGranularity,
+      });
+      setReportPreview(preview);
+    } catch (err) {
+      setReportBuilderError(getErrorMessage(err));
+    } finally {
+      setIsPreviewingTemplate(false);
     }
   };
 
@@ -1736,6 +1796,26 @@ export default function ManagementAnalytics() {
 
             <div className="mt-5 space-y-4">
               <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500">Report Template</label>
+                <select
+                  value={selectedReportTemplateId ?? ""}
+                  onChange={(event) => setSelectedReportTemplateId(Number(event.target.value) || null)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-2 focus:ring-brand/10"
+                >
+                  <option value="">Default behavior</option>
+                  {reportTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                      {template.is_default ? " (Default)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs font-semibold text-slate-500">
+                  {selectedReportTemplateId !== null ? "Selected template overrides section visibility and export ordering." : "Legacy export behavior remains unchanged."}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500">Format</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -1888,6 +1968,32 @@ export default function ManagementAnalytics() {
                     Include Interventions Data
                   </label>
                 </div>
+              </div>
+
+              <div className="space-y-1.5 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={handlePreviewReportTemplate}
+                  disabled={isPreviewingTemplate || currentParams === null}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Info className="h-4 w-4" />
+                  {isPreviewingTemplate ? "Previewing..." : "Preview Selected Template"}
+                </button>
+                {reportBuilderError ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-800">
+                    {reportBuilderError}
+                  </div>
+                ) : null}
+                {reportPreview ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
+                    <p className="font-black text-slate-800">Resolved preview</p>
+                    <p className="mt-1">Sections: {reportPreview.resolved_sections.join(", ") || "none"}</p>
+                    <p>Estimated pages: {reportPreview.estimated_pdf_pages}</p>
+                    <p>Excel sheets: {reportPreview.excel_sheets.join(", ") || "none"}</p>
+                    <p>Warnings: {reportPreview.warnings.length > 0 ? reportPreview.warnings.join(" | ") : "none"}</p>
+                  </div>
+                ) : null}
               </div>
             </div>
 

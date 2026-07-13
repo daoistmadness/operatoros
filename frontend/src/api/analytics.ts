@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_BLOB_TYPES, apiRequest } from "../lib/api/client";
+import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
 import type {
   AnalyticsFiltersResponse,
   HistoricalTrendsResponse,
@@ -7,8 +7,7 @@ import type {
 } from "../types/analytics";
 
 export function analyticsApiPath(path: string): string {
-  const apiBaseOwnsPrefix = /(?:^|\/)api\/?$/.test(API_BASE_URL);
-  return apiBaseOwnsPrefix ? `/api/api/analytics${path}` : `/api/analytics${path}`;
+  return `/api/analytics${path}`;
 }
 
 export interface FetchSummaryParams {

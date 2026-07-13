@@ -33,21 +33,19 @@ graph TD
    * Manages data access through SQLAlchemy ORM.
 2. **Frontend (React 19 & JavaScript):**
    * Located in [frontend/](frontend).
-   * Built with Create React App (CRA) configurations. Uses React Router v6.
+   * Built with Vite configuration. Uses React Router v6.
    * Utilizes Chart.js for data-dense dashboards, Framer Motion for transitions, and Tailwind CSS 4 for styling.
 3. **Database Environments:**
    * **Local Development:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
    * **Docker / Production:** PostgreSQL 16 database.
 4. **DevOps & Orchestration:**
    * **Docker Compose:** Defined in [docker-compose.yml](docker-compose.yml), it orchestrates the DB (`attendance_db` service), Backend, Frontend, and Nginx reverse proxy.
-   * **Portless:** A WSL2-friendly local launcher providing local domain mappings (`school-attendance.localhost` and `api.school-attendance.localhost`). It routes browser queries through local HTTPS proxying.
-   * **Dev Launcher:** Configured inside [start-dev.sh](start-dev.sh), supporting `--no-portless` for direct port binding (e.g. FastAPI on `:8000`, React on `:3000`).
+   * **Dev Launcher:** Configured inside [start-dev.sh](start-dev.sh), starting Vite dev server (port 5173) and FastAPI (port 8000). Runs a proxy forwarding `/api/*` to the backend.
 
-### Frontend Infrastructure & Portless Integration (Phase 2 Implemented)
+### Frontend Infrastructure & API Integration
 * **TypeScript Transition:** The codebase is configured using `frontend/tsconfig.json` (replacing `jsconfig.json`) with minimal types `@types/react` and `@types/react-dom` to support strict type-based development on critical modules.
-* **Portless Domain Mapping:** The `frontend/src/lib/api/client.js` module automatically maps local domain relations from `school-attendance.localhost:8443` to `api.school-attendance.localhost:8443` dynamically, overriding the `localhost:8000` fallback in the `.env` configuration.
 * **Routing & Navigation:** The Grade Ledger feature is bound to the `/grades` route in `frontend/src/App.js` and integrated directly into the `frontend/src/components/SidebarNav.jsx` navigation menu component.
-* **API Path Interceptor Bypass:** It was found that the `client.js` infrastructure strips a single leading `/api` token when `API_BASE_URL` is configured as `/api`. To maintain the original FastAPI backend routes (`/api/grades/...`), the `frontend/src/api/grades.ts` module was adapted to send a double prefix (`/api/api/grades/...`). This step ensures that after proxy stripping, the path forwarded to FastAPI remains intact and valid.
+* **Vite API Proxying:** The Vite development server runs an integrated proxy forwarding `/api/*` requests directly to `http://127.0.0.1:8000/api/...`. No double-prefix URL normalization or path stripping is required. All client requests are sent as canonical `/api/...` paths.
 
 ### Matrix-Based Grade Ledger UI (Phase 5 Implemented - Frontend Overhaul)
 * **Dynamic Grid UI Engine:** The `frontend/src/components/grades/GradeMatrix.tsx` module provides a high-density (data-dense) spreadsheet-style interface. Rows display enrolled students, and columns map the `AssessmentComponent` dynamically based on the selected academic context.
@@ -130,6 +128,7 @@ Database migrations are kept under [backend/migrations/](backend/migrations) as 
 * **Component Optimization & Component Reuse:** Student allocation logic is extracted into a modular component `frontend/src/components/enrollment/EnrollmentPanel.tsx`. This component is shared between the `/enrollment` page and the class allocation tab to maintain UI state consistency.
 * **Mitigation of Denormalization Drift:** The allocation panel explicitly enforces that `/mapping` retains sole authority as the *master student identity pool*. Class allocation to the `student_enrollments` table is purely temporal-akademik (temporal-academic) and does not compromise the physical student identity records.
 * **Academic Configuration Controls (Phase 12):** The `frontend/src/components/academic/AcademicConfigPanel.tsx` panel lets admins create, edit, delete, and restore KKM/term configuration. These operations are scoped to `kkm_thresholds` and `academic_term_configs` only and do not modify upload logs, attendance rows, students, enrollments, or grades.
+* **Executive Report Builder (Phase 20):** The `/academic-management` page now includes a `Report Builder` tab for reusable report templates, branding, section ordering, and preview/export presets. The canonical API lives under `/api/report-builder/...`, default templates and branding are seeded idempotently on startup, and user-customized templates are not overwritten by startup seeding.
 
 ### Audit & Append-Only Triggers
 To enforce absolute traceability:
@@ -212,10 +211,6 @@ Canonical examples:
 - `/api/academic-interventions`
 - `/api/academic-interventions/{id}`
 
-Frontend wrappers call APIs through `apiRequest`.
-
-In local Portless/proxy mode, browser network logs may show `/api/api/<domain>/...`. This is expected when the frontend proxy configuration normalizes the path to backend `/api/<domain>/...`.
-
-The backend route contract remains `/api/<domain>/...`.
+Frontend wrappers call APIs through `apiRequest` using these exact canonical paths. In local development, the Vite dev proxy forwards these to the backend transparently.
 
 Management Analytics currently also preserves `/analytics/...` as a legacy compatibility alias. New code should not use that alias.

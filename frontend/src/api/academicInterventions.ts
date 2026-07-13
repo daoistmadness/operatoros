@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../lib/api/client";
+import { apiRequest } from "../lib/api/client";
 
 export type InterventionStatus = "open" | "in_progress" | "monitoring" | "resolved" | "closed";
 export type InterventionPriority = "low" | "medium" | "high" | "urgent";
@@ -65,8 +65,7 @@ export interface AcademicInterventionUpdatePayload {
 }
 
 export function academicInterventionsApiPath(path: string): string {
-  const apiBaseOwnsPrefix = /(?:^|\/)api\/?$/.test(API_BASE_URL);
-  return apiBaseOwnsPrefix ? `/api/api/academic-interventions${path}` : `/api/academic-interventions${path}`;
+  return `/api/academic-interventions${path}`;
 }
 
 export async function fetchAcademicInterventions(params?: {
