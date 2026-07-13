@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../lib/api/client";
+import { apiRequest } from "../lib/api/client";
 import type {
   AcademicYear,
   AssessmentComponent,
@@ -23,8 +23,7 @@ export interface CreateSubjectPayload {
 }
 
 export function gradeApiPath(path: string): string {
-  const apiBaseOwnsPrefix = /(?:^|\/)api\/?$/.test(API_BASE_URL);
-  return apiBaseOwnsPrefix ? `/api/api/grades${path}` : `/api/grades${path}`;
+  return `/api/grades${path}`;
 }
 
 export async function fetchAcademicYears(): Promise<AcademicYear[]> {

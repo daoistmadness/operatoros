@@ -363,5 +363,6 @@ def test_clear_data_deletes_full_scope_when_enabled(monkeypatch, tmp_path):
 def test_system_routes_registered(app_context):
     route_paths = {route.path for route in app_context["app"].routes}
 
-    assert "/system/clear-data" in route_paths
-    assert "/system/health" in route_paths
+    assert "/api/system/clear-data" in route_paths
+    assert "/api/system/health" in route_paths
+    assert "/health" in route_paths

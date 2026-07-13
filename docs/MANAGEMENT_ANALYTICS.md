@@ -11,6 +11,7 @@ The **Management Analytics** page provides school administrators with a comprehe
 5. **KKM Threshold Alerts:** Detect students falling below the effective configured KKM threshold.
 6. **Academic Intervention Workflow:** Create and update intervention records directly from Below-KKM alerts.
 7. **Management Report Export:** Download the filtered dashboard as a PDF or Excel management report.
+8. **Report Builder:** Configure reusable report templates, branding, section ordering, and export presets without code changes.
 
 ---
 
@@ -138,6 +139,50 @@ Both exports include:
 - academic intervention tracking status on alert rows
 - dynamic Executive Insights block and a dedicated tab
 
+### 3. Executive Report Builder
+
+The Report Builder adds operator-configurable templates for both PDF and Excel exports.
+
+Supported routes:
+
+- `GET /api/report-builder/templates`
+- `POST /api/report-builder/templates`
+- `PATCH /api/report-builder/templates/{template_id}`
+- `DELETE /api/report-builder/templates/{template_id}`
+- `GET /api/report-builder/branding`
+- `POST /api/report-builder/branding`
+- `PATCH /api/report-builder/branding/{branding_id}`
+- `POST /api/report-builder/preview`
+- `POST /api/report-builder/export/pdf`
+- `POST /api/report-builder/export/excel`
+
+Template controls:
+
+- section visibility
+- section ordering
+- chart visibility
+- Excel sheet visibility
+- default filters
+- export options
+
+Branding controls:
+
+- school name
+- foundation name
+- report title and subtitle
+- footer text
+- prepared by field
+- safe hex color values
+
+Default presets are seeded idempotently and include:
+
+- Full Management Review
+- Attendance & Lateness Review
+- Academic Risk Review
+- Editable Excel Workbook
+
+The preview endpoint returns the resolved section plan, estimated PDF pages, Excel sheet list, and data quality warnings without building the final report artifact.
+
 ---
 
 ## Configuration Data
@@ -182,6 +227,17 @@ Management Analytics uses the canonical API routes:
 - `GET /api/analytics/management-summary`
 - `GET /api/analytics/historical-trends`
 - `GET /api/analytics/intervention-impact`
+- `GET /api/report-builder/sections`
+- `GET /api/report-builder/templates`
+- `POST /api/report-builder/templates`
+- `PATCH /api/report-builder/templates/{template_id}`
+- `DELETE /api/report-builder/templates/{template_id}`
+- `GET /api/report-builder/branding`
+- `POST /api/report-builder/branding`
+- `PATCH /api/report-builder/branding/{branding_id}`
+- `POST /api/report-builder/preview`
+- `POST /api/report-builder/export/pdf`
+- `POST /api/report-builder/export/excel`
 - `POST /api/analytics/management-summary/export/pdf`
 - `POST /api/analytics/management-summary/export/excel`
 - `GET /api/academic-config/kkm-thresholds`
@@ -195,18 +251,7 @@ Management Analytics uses the canonical API routes:
 - `PATCH /api/academic-interventions/{id}`
 - `DELETE /api/academic-interventions/{id}`
 
-In local Portless development, frontend network logs may show:
-
-- `/api/api/analytics/filters`
-- `/api/api/analytics/management-summary`
-- `/api/api/analytics/historical-trends`
-- `/api/api/analytics/intervention-impact`
-- `/api/api/analytics/management-summary/export/pdf`
-- `/api/api/analytics/management-summary/export/excel`
-- `/api/api/academic-config/...`
-- `/api/api/academic-interventions/...`
-
-This is expected when the request resolves successfully to backend `/api/analytics/...`.
+All frontend wrappers call these exact canonical paths. In local development, the Vite dev proxy forwards these to the backend seamlessly.
 
 Legacy compatibility routes may also exist:
 

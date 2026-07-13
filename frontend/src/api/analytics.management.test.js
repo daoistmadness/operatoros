@@ -3,23 +3,24 @@
 // Validates: fetch summary params, export filters, Executive Insights shape, Below-KKM shape, intervention metadata
 
 import { fetchInterventionImpact, fetchManagementSummary, downloadManagementSummaryExcel, downloadManagementSummaryPdf } from "./analytics";
-import { API_BASE_URL, API_BLOB_TYPES, apiRequest } from "../lib/api/client";
+import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
 
-jest.mock("../lib/api/client", () => ({
-  // Portless local mode: base ends with /api -> analyticsApiPath prepends /api/api/
-  API_BASE_URL: "http://localhost:3000/api",
+vi.mock("../lib/api/client", () => ({
+  // Non-proxy mode: API_BASE_URL is a plain backend URL, not ending with /api.
+  // analyticsApiPath() always returns canonical /api/analytics/... paths.
+  API_BASE_URL: "http://localhost:8000",
   API_BLOB_TYPES: {
     excel: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
     pdf: ["application/pdf"],
   },
-  apiRequest: jest.fn(),
+  apiRequest: vi.fn(),
 }));
 
-// In portless mode: analyticsApiPath("/management-summary") => "/api/api/analytics/management-summary"
-const SUMMARY_PATH = "/api/api/analytics/management-summary";
-const IMPACT_PATH = "/api/api/analytics/intervention-impact";
-const EXCEL_PATH = "/api/api/analytics/management-summary/export/excel";
-const PDF_PATH = "/api/api/analytics/management-summary/export/pdf";
+// Canonical paths — no /api/api/ double-prefix.
+const SUMMARY_PATH = "/api/analytics/management-summary";
+const IMPACT_PATH = "/api/analytics/intervention-impact";
+const EXCEL_PATH = "/api/analytics/management-summary/export/excel";
+const PDF_PATH = "/api/analytics/management-summary/export/pdf";
 
 describe("fetchManagementSummary", () => {
   afterEach(() => jest.clearAllMocks());

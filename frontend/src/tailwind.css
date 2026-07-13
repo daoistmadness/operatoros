@@ -571,6 +571,9 @@
   .max-h-\[34rem\] {
     max-height: 34rem;
   }
+  .max-h-\[38rem\] {
+    max-height: 38rem;
+  }
   .max-h-\[220px\] {
     max-height: 220px;
   }
@@ -1108,6 +1111,9 @@
   }
   .border-slate-800 {
     border-color: var(--color-slate-800);
+  }
+  .border-slate-950 {
+    border-color: var(--color-slate-950);
   }
   .border-white\/10 {
     border-color: color-mix(in srgb, #fff 10%, transparent);
@@ -2999,6 +3005,11 @@
       grid-template-columns: repeat(6, minmax(0, 1fr));
     }
   }
+  .lg\:grid-cols-\[1fr_20rem\] {
+    @media (width >= 64rem) {
+      grid-template-columns: 1fr 20rem;
+    }
+  }
   .lg\:grid-cols-\[1fr_28rem\] {
     @media (width >= 64rem) {
       grid-template-columns: 1fr 28rem;
@@ -3099,6 +3110,11 @@
   .xl\:grid-cols-\[1fr_24rem\] {
     @media (width >= 80rem) {
       grid-template-columns: 1fr 24rem;
+    }
+  }
+  .xl\:grid-cols-\[18rem_1fr\] {
+    @media (width >= 80rem) {
+      grid-template-columns: 18rem 1fr;
     }
   }
   .xl\:grid-cols-\[minmax\(0\,1\.5fr\)_minmax\(340px\,1fr\)\] {

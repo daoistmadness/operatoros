@@ -10,7 +10,6 @@ School Attendance Analytics is a full-stack system for importing school attendan
 - Supports database-backed KKM thresholds and custom academic term date ranges.
 - Tracks academic interventions created from Below-KKM alerts.
 - Runs locally with SQLite or PostgreSQL and also through Docker Compose.
-- Supports a Portless-first WSL2 workflow plus a safe direct-port fallback.
 
 ## Architecture
 ```mermaid
@@ -29,74 +28,61 @@ flowchart LR
 
 ## Stack
 - Backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
-- Frontend: React 19, react-scripts 5, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
+- Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Database: SQLite for local files, PostgreSQL 16 in `docker-compose.yml`
-- Infrastructure: Docker, Docker Compose, Nginx, Portless, Agent Browser, WSL2-friendly shell scripts
+- Infrastructure: Docker, Docker Compose, Nginx, Agent Browser, WSL2-friendly shell scripts
 
 ## Repository Layout
 - [`backend/`](backend/): API routers, settings, ORM models, services, and raw SQL migrations
-- [`frontend/`](frontend/): React pages, shared components, API client, proxy hook, and Nginx config
+- [`frontend/`](frontend/): React pages, shared components, API client, and Nginx config
 - [`docs/`](docs/): WSL2 guidance, utility script notes, and operational references
 - [`scratch/`](scratch/): one-off diagnostics and experiments
 - Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
-- [`start-dev.sh`](start-dev.sh): preferred local launcher
+- [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and FastAPI backend
 - [`scripts/verify-browser.sh`](scripts/verify-browser.sh): Agent Browser smoke test
 
 ## Prerequisites
 - Python 3.12
-- Node.js 24+ for Portless mode
+- Node.js 20+
 - npm
-- Portless on the PATH for the default launcher mode
 - Agent Browser on the PATH if you want browser verification
 - Docker and Docker Compose for containerized development
 
 ## Quick Start
-### Portless-first local development
+### Local Development Launcher
 ```bash
 ./start-dev.sh
 ```
 
-This starts the backend and frontend through Portless, prints stable `.localhost` URLs, and keeps worktree prefixes automatic.
-
-If this is your first Portless session, run:
-```bash
-portless trust
-```
+This starts the backend (FastAPI, port 8000) and the frontend (Vite, port 5173) concurrently. Press `Ctrl+C` to stop both.
 
 ### Browser smoke test
 ```bash
-./start-dev.sh --verify-browser
+./scripts/verify-browser.sh
 ```
 
-This launches the app and then runs [`scripts/verify-browser.sh`](scripts/verify-browser.sh) against the live frontend URL.
+This launches the app and then runs [`scripts/verify-browser.sh`](scripts/verify-browser.sh) against the live frontend URL (`http://127.0.0.1:5173`).
 
-### Legacy direct-port fallback
-```bash
-./start-dev.sh --no-portless
-```
-
-Use this only when you deliberately want localhost ports. The script will fail instead of killing an occupied port.
-
-## Local Development Without Docker
+## Local Development Without start-dev.sh
 ```bash
 cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ```bash
 cd frontend
-npm ci
-REACT_APP_API_URL=http://localhost:8000 npm start
+npm install
+npm run dev
 ```
 
 Open:
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8000`
-- OpenAPI docs: `http://localhost:8000/docs`
-- Redoc: `http://localhost:8000/redoc`
+- Frontend: `http://127.0.0.1:5173`
+- Backend API: `http://127.0.0.1:8000`
+- OpenAPI docs: `http://127.0.0.1:8000/docs`
+- Redoc: `http://127.0.0.1:8000/redoc`
 
 ## Docker Compose
 ```bash
@@ -108,13 +94,7 @@ Compose starts:
 - Frontend on `http://localhost`
 - PostgreSQL on the internal `db` service
 
-The containerized frontend bundle uses `/api` as its browser API base. Nginx strips `/api/` before forwarding requests to the backend container.
-
-## Portless URLs
-- Frontend: `https://school-attendance.localhost`
-- Backend: `https://api.school-attendance.localhost`
-- Worktree prefixes are added automatically by Portless for linked worktrees.
-- Use `portless get <name>` to retrieve the current URL and `portless list` to inspect active routes.
+The containerized frontend bundle uses `/api` as its browser API base. Nginx proxies `/api/` requests to the backend container.
 
 ## Environment Variables
 | Variable | Service | Required | Default | Description | Example |
@@ -125,20 +105,11 @@ The containerized frontend bundle uses `/api` as its browser API base. Nginx str
 | `POSTGRES_DB` | Backend / Compose | No | `absensi` | PostgreSQL database name for Compose. | `absensi` |
 | `POSTGRES_HOST` | Backend / Compose | No | `db` | Compose hostname for the PostgreSQL service. | `db` |
 | `POSTGRES_PORT` | Backend / Compose | No | `5432` | PostgreSQL port used by the backend container. | `5432` |
-| `ENABLE_DESTRUCTIVE_OPERATIONS` | Backend | No | `false` | Enables guarded reset actions such as `POST /system/clear-data`. | `true` |
-| `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000` | Comma-separated CORS origins for direct-port development. | `http://localhost:3000,http://127.0.0.1:3000` |
+| `ENABLE_DESTRUCTIVE_OPERATIONS` | Backend | No | `false` | Enables guarded reset actions such as `POST /api/system/clear-data`. | `true` |
+| `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS origins for development. | `http://localhost:5173,http://127.0.0.1:5173` |
 | `HOST` | Backend | No | `0.0.0.0` | Bind host used by the backend runtime. | `0.0.0.0` |
 | `PORT` | Backend | No | `8000` | Bind port used by the backend runtime. | `8000` |
-| `REACT_APP_API_URL` | Frontend | No | `http://localhost:8000` locally, `/api` in Docker and Portless mode | Build-time API base URL used by the React client. | `/api` |
-| `DEV_USE_PORTLESS` | `start-dev.sh` | No | `true` | Chooses Portless as the default launcher mode. | `true` |
-| `PORTLESS_FRONTEND_NAME` | `start-dev.sh` | No | `school-attendance` | Logical Portless route name for the frontend. | `school-attendance` |
-| `PORTLESS_BACKEND_NAME` | `start-dev.sh` | No | `api.school-attendance` | Logical Portless route name for the backend. | `api.school-attendance` |
-| `DEV_API_PROXY_TARGET` | `start-dev.sh` / CRA proxy | No | `http://localhost:8000` | Backend target used by `frontend/src/setupProxy.js`. | `https://api.school-attendance.localhost` |
-| `DEV_VERIFY_BROWSER` | `start-dev.sh` | No | `false` | Runs the Agent Browser smoke test after startup. | `true` |
-| `DEV_BROWSER_ARTIFACT_DIR` | `start-dev.sh` / browser smoke | No | `.artifacts/browser` | Stores screenshots and browser diagnostics. | `.artifacts/browser` |
-| `DEV_BACKEND_HOST` | `start-dev.sh` fallback | No | `0.0.0.0` | Bind host used when Portless is disabled. | `0.0.0.0` |
-| `DEV_BACKEND_PORT` | `start-dev.sh` fallback | No | `8000` | Backend port used when Portless is disabled. | `8000` |
-| `DEV_FRONTEND_PORT` | `start-dev.sh` fallback | No | `3000` | Frontend port used when Portless is disabled. | `3000` |
+| `VITE_API_BASE_URL` | Frontend | No | unset | Build-time API base URL used by the Vite client. If empty, uses same-origin with Vite proxy. | `http://localhost:8000` |
 
 ## Database and Migrations
 - The backend creates tables on startup with SQLAlchemy metadata.
@@ -162,7 +133,7 @@ The containerized frontend bundle uses `/api` as its browser API base. Nginx str
 ## Excel Import Workflow
 ```mermaid
 flowchart TD
-  A[Upload .xlsx file] --> B[POST /uploads/upload]
+  A[Upload .xlsx file] --> B[POST /api/uploads/upload]
   B --> C[Validate required columns]
   C --> D[Parse rows in chunks]
   D --> E[Create or update students]
@@ -173,35 +144,31 @@ flowchart TD
 
 - The import expects the first worksheet to contain the required attendance columns.
 - Only `.xlsx` files are accepted by the upload endpoint.
-- A sample template is available at `GET /uploads/sample-template`.
+- A sample template is available at `GET /api/uploads/sample-template`.
 
-## URLs
-| Surface | Direct local dev | Portless dev | Docker |
-| --- | --- | --- | --- |
-| Frontend | `http://localhost:3000` | `https://school-attendance.localhost` | `http://localhost` |
-| Backend API | `http://localhost:8000` | `https://api.school-attendance.localhost` | `http://localhost:8000` |
-| Browser API base | `http://localhost:8000` | `/api` | `/api` |
-| OpenAPI docs | `http://localhost:8000/docs` | `https://api.school-attendance.localhost/docs` | `http://localhost:8000/docs` |
-| Redoc | `http://localhost:8000/redoc` | `https://api.school-attendance.localhost/redoc` | `http://localhost:8000/redoc` |
+## Surface URLs
+| Surface | Local development | Docker |
+| --- | --- | --- |
+| Frontend | `http://127.0.0.1:5173` | `http://localhost` |
+| Backend API | `http://127.0.0.1:8000` | `http://localhost:8000` |
+| OpenAPI docs | `http://127.0.0.1:8000/docs` | `http://localhost:8000/docs` |
+| Redoc | `http://127.0.0.1:8000/redoc` | `http://localhost:8000/redoc` |
 
 ## Validation and Testing
 - Backend smoke check: `cd backend && python3 -c "from src.main import app; assert app is not None"`
-- Backend tests: `cd backend && python3 -m pytest -q`
+- Backend tests: `cd backend && pytest`
 - Frontend build: `cd frontend && npm run build`
 - Browser smoke: `./scripts/verify-browser.sh`
 - Compose config validation: `docker compose config`
-- Markdown link validation: `python3 .github/scripts/check_markdown_links.py`
 
 ## Troubleshooting
-- If Portless URLs do not resolve, run `portless trust`, then check `portless list` and `portless get <name>`.
-- If Portless reports stale routes, prune them manually with `portless prune`; do not use `portless clean` as normal cleanup.
-- If the frontend cannot reach the API in Portless mode, verify `DEV_API_PROXY_TARGET` and that `/api` is being proxied once.
+- If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && npm install` if needed.
 - If uploads fail, confirm the workbook is `.xlsx` and that the required columns exist on the first sheet.
 - If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
 
 ## Security and Data Handling
 - The app does not include a backend authentication layer in server code.
-- `POST /system/clear-data` is disabled by default and requires explicit confirmation even when enabled.
+- `POST /api/system/clear-data` is disabled by default and requires explicit confirmation even when enabled.
 - Treat imported spreadsheets, SQLite databases, browser artifacts, and generated Excel outputs as sensitive operational data.
 - Keep development PostgreSQL credentials out of real deployments.
 

@@ -44,18 +44,4 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `docker compose logs -f db`
 - `docker compose down`
 - `docker compose down -v`  # destructive: removes the PostgreSQL volume
-- `portless prune`  # manual cleanup for stale local routes only
 
-### Portless API Path Note
-
-In local Portless/proxy mode, browser-visible requests may include a double API prefix such as `/api/api/grades/...` or `/api/api/analytics/...`.
-
-This can be valid when the frontend API client/proxy normalizes the request to backend `/api/<domain>/...`.
-
-The backend canonical contract remains `/api/<domain>/...`.
-
-A `404` on `/api/api/<domain>/...` usually means one of:
-
-- the backend router is not mounted under `/api/<domain>`
-- the frontend wrapper is not following the shared API path convention
-- the dev server is serving a stale frontend bundle

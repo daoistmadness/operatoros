@@ -1,23 +1,44 @@
-import { stripLeadingApiPrefix } from './routing';
+// client.js
+// HTTP API client — configurable base URL, no Portless domain mapping.
+// Tech Stack: Vite / React 19
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const PDF_MIME = 'application/pdf';
 
-function resolveApiBaseUrl() {
-  const configuredUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  if (
+/**
+ * Resolve the API base URL using the following priority order:
+ * 1. window.__APP_CONFIG__.apiBaseUrl  — injected at runtime by the desktop launcher (Tauri)
+ * 2. import.meta.env.VITE_API_BASE_URL — build-time environment variable
+ * 3. Empty string                      — same-origin; Vite dev proxy forwards /api/* to FastAPI
+ */
+function getApiBaseUrl() {
+  const desktopUrl =
     typeof window !== 'undefined' &&
-    window.location.hostname === 'school-attendance.localhost' &&
-    configuredUrl === 'http://localhost:8000'
-  ) {
-    return `${window.location.protocol}//api.school-attendance.localhost:${window.location.port}`;
+    window.__APP_CONFIG__ &&
+    typeof window.__APP_CONFIG__.apiBaseUrl === 'string'
+      ? window.__APP_CONFIG__.apiBaseUrl
+      : '';
+
+  if (desktopUrl) {
+    return desktopUrl.replace(/\/$/, '');
   }
 
-  return configuredUrl;
+  const envUrl =
+    typeof import.meta !== 'undefined' && import.meta && import.meta.env
+      ? import.meta.env.VITE_API_BASE_URL
+      : '';
+
+  if (envUrl) {
+    return envUrl.replace(/\/$/, '');
+  }
+
+  // Empty string: requests use same-origin paths (/api/...)
+  // The Vite dev server proxy forwards these to http://127.0.0.1:8000.
+  return '';
 }
 
-export const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 export class ApiError extends Error {
   constructor(message, { status = 0, data = null, headers = {}, url = '' } = {}) {
@@ -43,15 +64,21 @@ function getAuthToken() {
 }
 
 function buildUrl(path, params = {}) {
-  const normalizedBase = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+  const base = API_BASE_URL;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const baseUrl = /^https?:\/\//i.test(normalizedBase)
-    ? new URL(normalizedBase)
-    : new URL(normalizedBase, window.location.origin);
-  const requestPath = /^https?:\/\//i.test(normalizedBase)
-    ? normalizedPath
-    : stripLeadingApiPrefix(normalizedPath);
-  const url = new URL(requestPath.startsWith('/') ? requestPath.slice(1) : requestPath, baseUrl);
+
+  let url;
+  if (/^https?:\/\//i.test(base)) {
+    // Absolute base URL (standalone deployment or desktop runtime)
+    const baseUrl = new URL(base.endsWith('/') ? base : `${base}/`);
+    url = new URL(
+      normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath,
+      baseUrl
+    );
+  } else {
+    // Relative base (empty string for Vite proxy, or relative path)
+    url = new URL(normalizedPath, window.location.origin);
+  }
 
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') {
@@ -137,9 +164,14 @@ function validateBlobResponse(blob, headers, expectedBlobTypes) {
 
   const contentType = headers['content-type'] || blob.type || '';
   if (expectedBlobTypes.length > 0) {
-    const matchesExpectedType = expectedBlobTypes.some((expectedType) => contentType.includes(expectedType));
+    const matchesExpectedType = expectedBlobTypes.some((expectedType) =>
+      contentType.includes(expectedType)
+    );
     if (!matchesExpectedType) {
-      throw new ApiError('Format file dari server tidak sesuai.', { headers, data: { detail: contentType } });
+      throw new ApiError('Format file dari server tidak sesuai.', {
+        headers,
+        data: { detail: contentType },
+      });
     }
   }
 
