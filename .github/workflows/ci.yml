@@ -18,6 +18,7 @@ jobs:
     env:
       PYTHONPATH: src
       DATABASE_URL: sqlite:///./ci-test.db
+      AUTH_COOKIE_SECRET: ci-backend-test-secret-at-least-32-characters
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +28,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: python -m pip install -r requirements.txt
-      - run: python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/system/clear-data' in routes; assert '/system/health' in routes"
+      - run: python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/api/system/clear-data' in routes; assert '/api/system/health' in routes"
       - run: python -m pytest -q
 
   frontend:
@@ -50,14 +51,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Docker/application configuration contract
+        run: python .github/scripts/check_docker_contract.py
       - name: Validate Compose configuration
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: development-only-change-me
+          POSTGRES_PASSWORD: ci-compose-validation-only
           POSTGRES_DB: absensi
           POSTGRES_HOST: db
           POSTGRES_PORT: "5432"
-          REACT_APP_API_URL: /api
+          AUTH_COOKIE_SECRET: ci-compose-validation-secret-not-used-at-runtime
+          ASTRYX_SETUP_TOKEN: ci-compose-setup-token-not-used-at-runtime
+          VITE_API_BASE_URL: ""
         run: docker compose config
 
   docs:
