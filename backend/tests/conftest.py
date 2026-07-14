@@ -1,0 +1,6 @@
+import os
+
+
+# Explicit test configuration only; production has no generated or fallback secret.
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("AUTH_COOKIE_SECRET", "astryx-test-only-cookie-secret-32-chars")
