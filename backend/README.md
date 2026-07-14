@@ -1,7 +1,7 @@
 # School Attendance Analytics Backend
 
 ## Responsibilities
-This backend exposes the attendance API, imports Excel files, stores students and attendance records, maintains lateness/HEB configuration, and generates report payloads and Excel exports.
+This backend exposes authenticated attendance, reporting, backup, and administration APIs for the offline-first Astryx deployment profile.
 
 ## Structure
 ```text
@@ -22,7 +22,9 @@ backend/
 - `backend/src/core/config.py` loads environment variables from `backend/.env` when present.
 - `DATABASE_URL` is optional when the `POSTGRES_*` fields are provided.
 - `ENABLE_DESTRUCTIVE_OPERATIONS` defaults to `false` and keeps guarded reset routes disabled.
-- Optional variables: `ALLOWED_ORIGINS`, `HOST`, `PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT`.
+- Identity startup requires one persistent `AUTH_COOKIE_SECRET` of at least 32 characters. Never print, commit, or regenerate it on each reload.
+- Restore defaults to the fail-closed single-worker policy defined by `BACKEND_WORKERS=1` and `RESTORE_SINGLE_WORKER_REQUIRED=true`.
+- Optional variables include `ALLOWED_ORIGINS`, `HOST`, `PORT`, `POSTGRES_*`, cookie/session limits, backup settings, and account-lock settings.
 - Example values:
   - `DATABASE_URL=sqlite:///./attendance.db`
   - `ALLOWED_ORIGINS=http://localhost:3000`
@@ -49,6 +51,8 @@ The app exposes:
 - Redoc: `GET /redoc`
 
 ## Router Layout
+- `POST /api/auth/login`, `POST /api/auth/logout`, and `GET /api/auth/me` implement the cookie-session boundary.
+- `/api/admin/backups/*` requires an authenticated administrator.
 - `GET /analytics/*` for reports, dashboards, HEB, and attendance statistics
 - `GET /uploads/*` and `POST /uploads/upload` for imports and upload history
 - `GET /students/*` and `POST /students/set-class` for student management
@@ -106,12 +110,14 @@ curl -F "file=@sample_attendance.xlsx" http://localhost:8000/uploads/upload
 ```
 
 ## Production and Container Notes
-- `backend/Dockerfile` runs `uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 2`.
+- `backend/Dockerfile` runs `uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 1`.
+- Compose intentionally uses one worker so the in-process scheduler and guarded restore policy remain valid. PostgreSQL data and application backup/audit artifacts use separate named volumes.
 - `docker-compose.yml` connects the backend to PostgreSQL through `POSTGRES_*` variables.
 - The backend container should connect to the database service as `db`, not `localhost`.
 - `frontend/nginx.conf` is separate from backend deployment; it only matters when the frontend is containerized.
 
 ## Known Limitations
-- No backend authentication or authorization layer is implemented.
+- Authentication includes one-time first-admin web setup and an interactive recovery/headless CLI. It still has no MFA, SSO, OAuth, LDAP, general user-management UI, password-change UI, or multi-user provisioning CLI.
 - Historical SQL migrations are manual; there is no automated migration CLI in the repo.
 - The `system/clear-data` endpoint is still high-risk even with the guard in place.
+- Backups are not encrypted, and restore has no distributed cross-process lock.
