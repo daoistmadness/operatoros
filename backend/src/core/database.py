@@ -216,7 +216,13 @@ def init_db():
     from models.academic_config import AcademicTermConfig, KkmThreshold
     from models.academic_intervention import AcademicIntervention
     from models.report_builder import ReportTemplate, ReportBrandingConfig
-    Base.metadata.create_all(bind=engine)
+    from models.backup_operation import BackupExecutionHistory, BackupSchedulerConfig
+    from models.first_admin_setup import FirstAdminSetupState
+    # Identity tables are migration-owned even when their ORM models were imported.
+    startup_tables = [
+        table for table in Base.metadata.sorted_tables if table.name not in {"users", "sessions"}
+    ]
+    Base.metadata.create_all(bind=engine, tables=startup_tables)
     run_grade_ledger_patches(engine)
     _seed_grade_ledger_minimum(engine)
     _ensure_students_schema_compatibility()

@@ -7,6 +7,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from core.database import get_db
+from models.user import User
+from security.dependencies import get_current_user
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride, AttendanceOverrideHistory
 from models.student import Student
@@ -313,6 +315,7 @@ def get_override_history(attendance_id: int, db: Session = Depends(get_db)):
 def mass_override_incomplete(
     body: MassOverrideRequest,
     db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
 ):
     override_status = body.override_status.strip()
     if override_status not in {"on-time", "late"}:
@@ -323,10 +326,9 @@ def mass_override_incomplete(
 
     note = body.note.strip()
     reviewed_by = body.reviewed_by.strip()
-    role = body.role.strip().lower()
-
-    if role not in {"admin", "teacher"}:
-        raise HTTPException(status_code=403, detail="Not authorized for mass override")
+    # Retained only as backward-compatible metadata. Authorization comes from the
+    # validated session user above, never from this client-supplied value.
+    _legacy_role_metadata = body.role.strip()
 
     now = datetime.utcnow()
 
