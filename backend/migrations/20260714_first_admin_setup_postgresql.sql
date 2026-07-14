@@ -1,0 +1,13 @@
+BEGIN;
+CREATE TABLE IF NOT EXISTS first_admin_setup_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_at TIMESTAMPTZ NULL,
+  created_user_id BIGINT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  normalized_username VARCHAR(255) NULL,
+  provisioning_source VARCHAR(32) NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO first_admin_setup_state(id, completed) VALUES (1, FALSE) ON CONFLICT (id) DO NOTHING;
+COMMIT;
