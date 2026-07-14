@@ -52,16 +52,7 @@ export class ApiError extends Error {
   }
 }
 
-function getAuthToken() {
-  const keys = ['access_token', 'token', 'authToken'];
-  for (const key of keys) {
-    const value = window.localStorage.getItem(key);
-    if (value) {
-      return value;
-    }
-  }
-  return '';
-}
+export const AUTH_UNAUTHORIZED_EVENT = 'astryx:auth-unauthorized';
 
 function buildUrl(path, params = {}) {
   const base = API_BASE_URL;
@@ -190,16 +181,10 @@ export async function apiRequest({
 }) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeout);
-  const token = getAuthToken();
-
   const requestHeaders = new Headers({
     Accept: responseType === 'blob' ? `${EXCEL_MIME}, ${PDF_MIME}` : 'application/json',
     ...headers,
   });
-
-  if (token && !requestHeaders.has('Authorization')) {
-    requestHeaders.set('Authorization', `Bearer ${token}`);
-  }
 
   const init = {
     method,
@@ -230,6 +215,9 @@ export async function apiRequest({
 
     if (!response.ok) {
       const errorData = await parseErrorResponse(response, responseType);
+      if (response.status === 401) {
+        window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+      }
       throw new ApiError(getErrorMessage(response.status, errorData), {
         status: response.status,
         data: errorData,

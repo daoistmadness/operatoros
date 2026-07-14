@@ -16,11 +16,13 @@ import {
   TrendingUp,
   UploadCloud,
   UserCheck,
+  LogOut,
   Users as UsersIcon,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { getServerStatus } from '../lib/api/endpoints';
+import { useAuth } from '../context/AuthContext';
 
 const NAV_GROUPS = [
   {
@@ -48,7 +50,8 @@ const NAV_GROUPS = [
   {
     title: 'Reports',
     items: [
-      { name: 'Attendance Report', path: '/reports', icon: FileText },
+      { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, match: (pathname) => pathname === '/reports/monthly' || pathname === '/reports/annual' },
+      { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },
       { name: 'Rekap Absensi', path: '/reports/rekap-absensi', icon: BarChart3 },
       { name: 'Laporan Keterlambatan', path: '/reports/tardiness', icon: FileClock },
     ],
@@ -58,6 +61,18 @@ const NAV_GROUPS = [
 function SidebarNav() {
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState('checking');
+  const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -124,6 +139,14 @@ function SidebarNav() {
       </div>
 
       <div className="pt-6 border-t border-slate-100 space-y-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Logged in as</p>
+          <p className="mt-1 truncate text-sm font-black text-slate-800">{user?.username}</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-brand">{user?.role}</p>
+          <button type="button" onClick={handleLogout} disabled={loggingOut} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-60">
+            <LogOut size={14} />{loggingOut ? 'Signing out…' : 'Logout'}
+          </button>
+        </div>
         <div className="flex items-center justify-between px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2">
             <Server size={14} className="text-slate-400" />
