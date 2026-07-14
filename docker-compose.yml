@@ -8,16 +8,29 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-only-change-me}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-absensi}
       POSTGRES_HOST: ${POSTGRES_HOST:-db}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      AUTH_COOKIE_SECRET: ${AUTH_COOKIE_SECRET:?AUTH_COOKIE_SECRET is required}
+      ASTRYX_SETUP_TOKEN: ${ASTRYX_SETUP_TOKEN:?ASTRYX_SETUP_TOKEN is required for first-run server setup}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      BACKEND_WORKERS: "1"
+      BACKUP_DIR: /app/data/backups
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost,http://frontend}
+    volumes:
+      - backend_data:/app/data
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
   frontend:
     build:
@@ -29,7 +42,14 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
 
   db:
     image: postgres:16-alpine
@@ -37,15 +57,19 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-only-change-me}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-absensi}
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./backend/migrations/20260713_identity_schema_postgresql.sql:/docker-entrypoint-initdb.d/10-identity-schema.sql:ro
+      - ./backend/migrations/20260714_backup_scheduler_postgresql.sql:/docker-entrypoint-initdb.d/20-backup-scheduler.sql:ro
+      - ./backend/migrations/20260714_first_admin_setup_postgresql.sql:/docker-entrypoint-initdb.d/30-first-admin-setup.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
   db_data:
+  backend_data:
