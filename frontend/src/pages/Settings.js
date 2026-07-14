@@ -12,10 +12,13 @@ import { Link } from "react-router-dom";
 import api from "../api";
 import { cn } from "../lib/cn";
 import { getSystemHealth } from "../lib/api/endpoints";
+import { useAuth } from "../context/AuthContext";
 
 const RESET_CONFIRMATION = "CLEAR_ALL_ATTENDANCE_DATA";
 
 function Settings() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetMode, setResetMode] = useState("attendance");
   const [confirmText, setConfirmText] = useState("");
@@ -75,7 +78,7 @@ function Settings() {
     }
   };
 
-  const resetControlsVisible = healthLoaded && destructiveOperationsEnabled;
+  const resetControlsVisible = isAdmin && healthLoaded && destructiveOperationsEnabled;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -105,6 +108,9 @@ function Settings() {
               </div>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded-[9999px]">Active</span>
             </div>
+            {isAdmin && <Link to="/settings/backups" className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 font-bold text-slate-800 transition hover:border-brand hover:text-brand">
+              <span>Backup Management</span><span aria-hidden="true">→</span>
+            </Link>}
           </div>
         </div>
 

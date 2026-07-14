@@ -14,6 +14,9 @@ from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride, AttendanceOverrideHistory
 from models.student import Student
 from models.upload_log import UploadLog
+from models.user import User
+from security.dependencies import require_role
+from services.backup_service import BACKUP_OPERATION_LOCK, DESTRUCTIVE_OPERATION_LOCK
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -79,7 +82,11 @@ def _delete_reset_scope(db: Session, mode: Literal["attendance", "attendance_kee
 
 
 @router.post("/clear-data")
-def clear_all_data(body: ClearDataRequest, db: Session = Depends(get_db)):
+def clear_all_data(
+    body: ClearDataRequest,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     """
     Clears attendance data.
 
@@ -101,7 +108,10 @@ def clear_all_data(body: ClearDataRequest, db: Session = Depends(get_db)):
             detail="Invalid confirmation token. Use CLEAR_ALL_ATTENDANCE_DATA.",
         )
 
+    if not DESTRUCTIVE_OPERATION_LOCK.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Another destructive operation is already active.")
     try:
+      with BACKUP_OPERATION_LOCK:
         db.execute(text("DROP TRIGGER IF EXISTS trg_history_no_delete"))
         db.execute(text("DROP TRIGGER IF EXISTS trg_history_no_update"))
 
@@ -128,6 +138,8 @@ def clear_all_data(body: ClearDataRequest, db: Session = Depends(get_db)):
         db.rollback()
         logger.error("Failed to clear data: %s", exc.__class__.__name__)
         raise HTTPException(status_code=500, detail="Failed to reset database.")
+    finally:
+        DESTRUCTIVE_OPERATION_LOCK.release()
 
 
 @router.get("/health")
