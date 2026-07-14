@@ -25,6 +25,7 @@ This file records durable project decisions and stable context for future agent 
 - Phase 19 exports include an Intervention Impact PDF page and editable Excel sheets `Intervention_Impact_Data`, `Intervention_Impact_Summary`, `Risk_Students_Data`, and `Owner_Workload_Data` with native charts linked from `Charts`.
 - Phase 20 report builder templates are exposed at `/api/report-builder/...`. Report templates and branding configs seed idempotently on startup, the builder uses `threshold_source` and the Phase 18/19 analytics payloads as its data source, and user-created templates are preserved across restarts.
 - `POST /system/clear-data` is guarded by `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default and requires the `CLEAR_ALL_ATTENDANCE_DATA` confirmation token.
+- Phase 9 scheduled backups use a single-process in-application scheduler with persistent `backup_scheduler_config` and `backup_execution_history` tables, filesystem snapshot compatibility, automatic verified execution, and UTC daily/weekly/monthly retention. No external queue, cloud storage, or distributed scheduler is used.
 - The backend can construct a PostgreSQL SQLAlchemy URL from `POSTGRES_*` fields; Compose supplies `db` as the service host.
 - Backend behavioral tests now live under `backend/tests/` and are run with `pytest`.
 - The desktop (Tauri) launcher will inject `window.__APP_CONFIG__ = { apiBaseUrl: "http://127.0.0.1:<port>" }` at runtime. The API client reads this before VITE_API_BASE_URL.

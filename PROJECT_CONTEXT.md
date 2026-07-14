@@ -39,7 +39,7 @@ graph TD
    * **Local Development:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
    * **Docker / Production:** PostgreSQL 16 database.
 4. **DevOps & Orchestration:**
-   * **Docker Compose:** Defined in [docker-compose.yml](docker-compose.yml), it orchestrates the DB (`attendance_db` service), Backend, Frontend, and Nginx reverse proxy.
+   * **Docker Compose:** A supported secondary workflow defined in [docker-compose.yml](docker-compose.yml). It orchestrates the DB (`attendance_db` container), Backend, Frontend, and Nginx reverse proxy; direct Vite/FastAPI processes remain the primary local workflow.
    * **Dev Launcher:** Configured inside [start-dev.sh](start-dev.sh), starting Vite dev server (port 5173) and FastAPI (port 8000). Runs a proxy forwarding `/api/*` to the backend.
 
 ### Frontend Infrastructure & API Integration
