@@ -5,9 +5,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-# Inject the backend URL at build time
-ARG REACT_APP_API_URL=/api
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+# Vite embeds this value at build time. Empty means same-origin browser requests;
+# Nginx preserves and proxies canonical /api/* paths to the backend service.
+ARG VITE_API_BASE_URL=
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm run build
 

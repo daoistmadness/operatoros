@@ -1,0 +1,10 @@
+.env
+.local-dev/
+.pytest_cache/
+.venv/
+__pycache__/
+*.db
+*.db-shm
+*.db-wal
+backups/
+tests/
