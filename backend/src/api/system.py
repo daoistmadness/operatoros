@@ -23,23 +23,47 @@ router = APIRouter()
 
 DESTRUCTIVE_CONFIRMATION_VALUE = "CLEAR_ALL_ATTENDANCE_DATA"
 
-# SQL to recreate the append-only audit triggers after a system reset.
-_AUDIT_TRIGGERS_SQL = [
-    """
-    CREATE TRIGGER trg_history_no_delete
-    BEFORE DELETE ON attendance_override_history
-    BEGIN
-      SELECT RAISE(ABORT, 'attendance_override_history is append-only');
-    END
-    """,
-    """
-    CREATE TRIGGER trg_history_no_update
-    BEFORE UPDATE ON attendance_override_history
-    BEGIN
-      SELECT RAISE(ABORT, 'attendance_override_history is append-only');
-    END
-    """,
-]
+_AUDIT_TRIGGER_NAMES = (
+    "trg_attendance_override_history_no_delete",
+    "trg_attendance_override_history_no_update",
+    # Pre-S2 names are removed too so reset remains compatible with older databases.
+    "trg_history_no_delete",
+    "trg_history_no_update",
+)
+
+
+def _drop_attendance_audit_triggers(db: Session) -> None:
+    dialect = db.get_bind().dialect.name
+    for trigger_name in _AUDIT_TRIGGER_NAMES:
+        if dialect == "postgresql":
+            db.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name} ON attendance_override_history"))
+        else:
+            db.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name}"))
+
+
+def _recreate_attendance_audit_triggers(db: Session) -> None:
+    dialect = db.get_bind().dialect.name
+    if dialect == "postgresql":
+        db.execute(text("""
+            CREATE OR REPLACE FUNCTION prevent_operatoros_append_only_mutation()
+            RETURNS trigger AS $$ BEGIN
+                RAISE EXCEPTION 'append-only history cannot be modified';
+            END; $$ LANGUAGE plpgsql
+        """))
+        for action in ("UPDATE", "DELETE"):
+            db.execute(text(
+                f"CREATE TRIGGER trg_attendance_override_history_no_{action.lower()} "
+                f"BEFORE {action} ON attendance_override_history FOR EACH ROW "
+                "EXECUTE FUNCTION prevent_operatoros_append_only_mutation()"
+            ))
+        return
+
+    for action in ("UPDATE", "DELETE"):
+        db.execute(text(
+            f"CREATE TRIGGER trg_attendance_override_history_no_{action.lower()} "
+            f"BEFORE {action} ON attendance_override_history BEGIN "
+            "SELECT RAISE(FAIL, 'attendance_override_history is append-only'); END"
+        ))
 
 
 class ClearDataRequest(BaseModel):
@@ -112,13 +136,11 @@ def clear_all_data(
         raise HTTPException(status_code=409, detail="Another destructive operation is already active.")
     try:
       with BACKUP_OPERATION_LOCK:
-        db.execute(text("DROP TRIGGER IF EXISTS trg_history_no_delete"))
-        db.execute(text("DROP TRIGGER IF EXISTS trg_history_no_update"))
+        _drop_attendance_audit_triggers(db)
 
         deleted_counts = _delete_reset_scope(db, body.mode)
 
-        for trigger_sql in _AUDIT_TRIGGERS_SQL:
-            db.execute(text(trigger_sql))
+        _recreate_attendance_audit_triggers(db)
 
         db.commit()
 
