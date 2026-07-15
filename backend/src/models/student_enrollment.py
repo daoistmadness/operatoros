@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, U
 from sqlalchemy.orm import relationship
 
 from core.database import Base
+from models.student_master import StudentMaster  # noqa: F401 - registers FK target metadata
 
 
 class StudentEnrollment(Base):
@@ -9,6 +10,7 @@ class StudentEnrollment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_master_id = Column(String(36), ForeignKey("student_masters.id", ondelete="RESTRICT"), nullable=True, index=True)
     academic_year_id = Column(Integer, ForeignKey("academic_years.id", ondelete="RESTRICT"), nullable=False, index=True)
     jenjang_id = Column(Integer, ForeignKey("jenjangs.id", ondelete="RESTRICT"), nullable=False, index=True)
     class_name = Column(String, nullable=True)
