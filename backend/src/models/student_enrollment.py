@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 
 from core.database import Base
@@ -15,6 +15,8 @@ class StudentEnrollment(Base):
     jenjang_id = Column(Integer, ForeignKey("jenjangs.id", ondelete="RESTRICT"), nullable=False, index=True)
     class_name = Column(String, nullable=True)
     class_assigned = Column(Boolean, nullable=False, default=False)
+    effective_from = Column(Date, nullable=True)
+    effective_to = Column(Date, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
@@ -24,4 +26,13 @@ class StudentEnrollment(Base):
 
     __table_args__ = (
         UniqueConstraint("student_id", "academic_year_id", name="_student_year_uc"),
+        Index(
+            "uq_student_master_academic_year",
+            "student_master_id",
+            "academic_year_id",
+            unique=True,
+            sqlite_where=student_master_id.isnot(None),
+            postgresql_where=student_master_id.isnot(None),
+        ),
+        CheckConstraint("effective_to IS NULL OR effective_from IS NULL OR effective_to >= effective_from", name="ck_student_enrollment_effective_dates"),
     )
