@@ -119,9 +119,22 @@ def _ensure_student_foundation_compatibility() -> None:
                     "CREATE INDEX IF NOT EXISTS idx_student_enrollments_master_id "
                     "ON student_enrollments(student_master_id)"
                 ))
+            if "effective_from" not in enrollment_columns:
+                connection.execute(text("ALTER TABLE student_enrollments ADD COLUMN effective_from DATE NULL"))
+            if "effective_to" not in enrollment_columns:
+                connection.execute(text("ALTER TABLE student_enrollments ADD COLUMN effective_to DATE NULL"))
+            connection.execute(text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_student_master_academic_year "
+                "ON student_enrollments(student_master_id, academic_year_id) "
+                "WHERE student_master_id IS NOT NULL"
+            ))
 
         protected_tables = [
-            table_name for table_name in ("attendance_override_history", "student_master_change_history")
+            table_name for table_name in (
+                "attendance_override_history",
+                "student_master_change_history",
+                "student_enrollment_class_history",
+            )
             if table_name in tables
         ]
         if engine.dialect.name == "sqlite":
@@ -269,9 +282,10 @@ def init_db():
     from models.assessment_component import AssessmentComponent
     from models.student_enrollment import StudentEnrollment
     from models.student_master import (
+        EnrollmentPopulationPreviewBatch, LegacyLinkPreviewBatch, LegacyLinkResolution,
         StudentAddress, StudentContact, StudentDeviceIdentity, StudentDocumentStatus,
-        StudentHealthProfile, StudentImportBatch, StudentImportRow, StudentMaster,
-        StudentMasterChangeHistory, StudentParentGuardian,
+        StudentEnrollmentClassHistory, StudentHealthProfile, StudentImportBatch,
+        StudentImportRow, StudentMaster, StudentMasterChangeHistory, StudentParentGuardian,
     )
     from models.student_subject_grade import StudentSubjectGrade
     from models.academic_config import AcademicTermConfig, KkmThreshold
