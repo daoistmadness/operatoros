@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OperatorOS Runtime Failure</title>
+    <link rel="stylesheet" href="/desktop-failure.css" />
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">!</div>
+      <p class="eyebrow">OperatorOS desktop runtime</p>
+      <h1>OperatorOS could not continue safely</h1>
+      <p id="summary">The local backend did not become available.</p>
+      <section aria-labelledby="state-heading">
+        <h2 id="state-heading">Runtime state</h2>
+        <p id="state">FAILED</p>
+      </section>
+      <p class="help">Close OperatorOS and review <strong>Logs\desktop-runtime.log</strong>. The application did not open the operational interface and will not restart automatically.</p>
+    </main>
+    <script src="/desktop-failure.js"></script>
+  </body>
+</html>
