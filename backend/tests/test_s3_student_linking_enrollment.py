@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 from pathlib import Path
 
 import pytest
@@ -13,6 +13,7 @@ from api.student_enrollments import router as enrollment_router
 from api.student_masters import router as master_router
 from core.database import Base, get_db
 from models.academic_year import AcademicYear
+from models.academic_mapping import StudentAcademicMappingRule
 from models.attendance import Attendance
 from models.jenjang import Jenjang
 from models.student import Student
@@ -32,6 +33,8 @@ from services.enrollment_population import (
     commit_enrollment_preview,
     create_enrollment_preview,
 )
+from services.academic_mapping import build_academic_mapping_preview, resolve_jenjang
+from services.student_normalization import normalize_name
 from services.student_linking import (
     LEGACY_LINK_CONFIRMATION,
     build_legacy_link_rows,
@@ -147,6 +150,12 @@ def test_manual_resolution_creates_mapping_and_audit(s3_context):
 
 def test_enrollment_preview_commit_idempotence_and_missing_jenjang_block(s3_context):
     db, year = s3_context["db"], s3_context["year"]
+    db.add(StudentAcademicMappingRule(
+        mapping_type="class", source_value="P1A", normalized_source_value="p1a",
+        target_value="P1A", status="approved", created_by="admin",
+        approved_by="admin", approved_at=datetime.now(),
+    ))
+    db.commit()
     link_batch = create_legacy_preview(db, "admin")
     commit_legacy_preview(db, link_batch.id, [7001, 7004], LEGACY_LINK_CONFIRMATION, "admin")
     rows = build_enrollment_rows(db, year.id, date(2026, 7, 1), [7001, 7004])
@@ -176,6 +185,11 @@ def test_cross_jenjang_conflict_is_blocked(s3_context):
     db, year, primary = s3_context["db"], s3_context["year"], s3_context["primary"]
     secondary = Jenjang(name="Secondary")
     db.add(secondary)
+    db.add(StudentAcademicMappingRule(
+        mapping_type="class", source_value="P1A", normalized_source_value="p1a",
+        target_value="P1A", status="approved", created_by="admin",
+        approved_by="admin", approved_at=datetime.now(),
+    ))
     db.flush()
     master = StudentMaster(full_name="Unique Student", normalized_name="unique student")
     db.add(master); db.flush()
@@ -217,6 +231,7 @@ def test_s3_sqlite_migration_reruns_and_postgresql_contract(tmp_path):
       CREATE TABLE students(id INTEGER PRIMARY KEY);
       CREATE TABLE student_masters(id VARCHAR(36) PRIMARY KEY);
       CREATE TABLE academic_years(id INTEGER PRIMARY KEY);
+      CREATE TABLE jenjangs(id INTEGER PRIMARY KEY);
       CREATE TABLE student_import_batches(id VARCHAR(36) PRIMARY KEY);
       CREATE TABLE student_enrollments(id INTEGER PRIMARY KEY, student_master_id VARCHAR(36), academic_year_id INTEGER);
     """)
@@ -228,4 +243,67 @@ def test_s3_sqlite_migration_reruns_and_postgresql_contract(tmp_path):
     assert "ADD COLUMN IF NOT EXISTS effective_from" in postgres_sql
     assert "WHERE student_master_id IS NOT NULL" in postgres_sql
     assert "ON DELETE RESTRICT" in postgres_sql
+    mapping_sql = (root / "20260719_s35_academic_mapping_sqlite.sql").read_text(encoding="utf-8")
+    db.executescript(mapping_sql); db.executescript(mapping_sql)
+    assert db.execute("SELECT COUNT(*) FROM student_academic_mapping_rules").fetchone()[0] == 0
+    mapping_postgres = (root / "20260719_s35_academic_mapping_postgresql.sql").read_text(encoding="utf-8")
+    assert "REFERENCES jenjangs(id) ON DELETE RESTRICT" in mapping_postgres
+    assert "approved_by IS NOT NULL" in mapping_postgres
     db.close()
+
+
+def test_mapping_preview_is_non_mutating_and_classifies_blank_values(s3_context):
+    db = s3_context["db"]
+    before = (db.query(Student).count(), db.query(StudentEnrollment).count())
+    preview = build_academic_mapping_preview(db)
+    after = (db.query(Student).count(), db.query(StudentEnrollment).count())
+    assert before == after
+    assert preview["summary"] == {
+        "total": 4,
+        "empty_jenjang": 1,
+        "unmatched_jenjang": 0,
+        "matched_jenjang": 3,
+        "empty_class": 1,
+        "unmatched_class": 3,
+        "matched_class": 0,
+    }
+
+
+def test_normalized_and_ambiguous_jenjang_are_blocked_without_approved_rule(s3_context):
+    db = s3_context["db"]
+    db.add(Jenjang(name=" primary "))
+    db.commit()
+    exact = {row.name: row for row in db.query(Jenjang).all()}
+    normalized = {}
+    for row in db.query(Jenjang).all():
+        normalized.setdefault(normalize_name(row.name), []).append(row)
+    target, state, match = resolve_jenjang("PRIMARY", exact, normalized, {})
+    assert target is None
+    assert state == "UNMATCHED_JENJANG"
+    assert match == "AMBIGUOUS"
+
+
+def test_approved_class_rule_is_used_by_mapping_preview(s3_context):
+    db = s3_context["db"]
+    db.add(StudentAcademicMappingRule(
+        mapping_type="class", source_value="P1A", normalized_source_value="p1a",
+        target_value="P1-Alpha", status="approved", created_by="admin",
+        approved_by="reviewer", approved_at=datetime.now(),
+    ))
+    db.commit()
+    assert build_academic_mapping_preview(db)["summary"]["matched_class"] == 2
+
+
+def test_mapping_preview_endpoint_requires_admin(s3_context):
+    db = s3_context["db"]
+    app = FastAPI()
+    app.include_router(enrollment_router, prefix="/api/student-enrollments")
+    app.dependency_overrides[get_db] = lambda: db
+    client = TestClient(app)
+    assert client.post("/api/student-enrollments/mapping-preview").status_code == 401
+    app.dependency_overrides[get_current_user] = lambda: User(id=2, username="staff", role="staff", is_active=True)
+    assert client.post("/api/student-enrollments/mapping-preview").status_code == 403
+    app.dependency_overrides[get_current_user] = lambda: User(id=1, username="admin", role="admin", is_active=True)
+    response = client.post("/api/student-enrollments/mapping-preview")
+    assert response.status_code == 200
+    assert response.json()["summary"]["total"] == 4
