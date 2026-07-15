@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ from services.enrollment_population import (
     enrollment_summary,
 )
 from services.academic_mapping import build_academic_mapping_preview
+from services.academic_roster import commit_roster_preview, create_roster_preview
 
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -28,6 +29,47 @@ class EnrollmentPopulationCommitRequest(BaseModel):
     preview_id: str
     selected_legacy_student_ids: list[int] = Field(min_length=1)
     confirmation: str
+
+
+class AcademicRosterCommitRequest(BaseModel):
+    preview_id: str
+    selected_row_ids: list[int] = Field(min_length=1)
+    confirmation: str
+
+
+@router.post("/roster-preview")
+async def preview_academic_roster(
+    file: UploadFile = File(...),
+    source_owner: str = Form(..., min_length=2),
+    date_received: date = Form(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    if not (file.filename or "").lower().endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Academic roster must be an .xlsx workbook")
+    try:
+        batch = create_roster_preview(
+            db, await file.read(), file.filename or "roster.xlsx",
+            source_owner.strip(), date_received, user.username,
+        )
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "preview_id": batch.id, "checksum": batch.checksum, "status": batch.status,
+        "summary": batch.summary, "rows": batch.rows,
+    }
+
+
+@router.post("/roster-commit")
+def commit_academic_roster(
+    body: AcademicRosterCommitRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    return commit_roster_preview(
+        db, body.preview_id, body.selected_row_ids, body.confirmation, user.username
+    )
 
 
 @router.post("/mapping-preview")
