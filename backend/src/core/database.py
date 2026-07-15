@@ -97,6 +97,62 @@ def _ensure_attendance_schema_compatibility() -> None:
             connection.execute(text("ALTER TABLE attendance ADD COLUMN late_source VARCHAR DEFAULT 'none'"))
 
 
+def _ensure_student_foundation_compatibility() -> None:
+    """Apply additive S2 columns and database-level append-only protections."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    with engine.begin() as connection:
+        if "student_enrollments" in tables:
+            enrollment_columns = {column["name"] for column in inspector.get_columns("student_enrollments")}
+            if "student_master_id" not in enrollment_columns:
+                if engine.dialect.name == "postgresql":
+                    connection.execute(text(
+                        "ALTER TABLE student_enrollments ADD COLUMN student_master_id VARCHAR(36) NULL "
+                        "REFERENCES student_masters(id) ON DELETE RESTRICT"
+                    ))
+                else:
+                    connection.execute(text(
+                        "ALTER TABLE student_enrollments ADD COLUMN student_master_id VARCHAR(36) NULL "
+                        "REFERENCES student_masters(id) ON DELETE RESTRICT"
+                    ))
+                connection.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_student_enrollments_master_id "
+                    "ON student_enrollments(student_master_id)"
+                ))
+
+        protected_tables = [
+            table_name for table_name in ("attendance_override_history", "student_master_change_history")
+            if table_name in tables
+        ]
+        if engine.dialect.name == "sqlite":
+            for table_name in protected_tables:
+                connection.execute(text(
+                    f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_update "
+                    f"BEFORE UPDATE ON {table_name} BEGIN "
+                    f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
+                ))
+                connection.execute(text(
+                    f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_delete "
+                    f"BEFORE DELETE ON {table_name} BEGIN "
+                    f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
+                ))
+        elif engine.dialect.name == "postgresql":
+            connection.execute(text("""
+                CREATE OR REPLACE FUNCTION prevent_operatoros_append_only_mutation()
+                RETURNS trigger AS $$ BEGIN
+                    RAISE EXCEPTION 'append-only history cannot be modified';
+                END; $$ LANGUAGE plpgsql
+            """))
+            for table_name in protected_tables:
+                for action in ("UPDATE", "DELETE"):
+                    trigger_name = f"trg_{table_name}_no_{action.lower()}"
+                    connection.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name} ON {table_name}"))
+                    connection.execute(text(
+                        f"CREATE TRIGGER {trigger_name} BEFORE {action} ON {table_name} "
+                        "FOR EACH ROW EXECUTE FUNCTION prevent_operatoros_append_only_mutation()"
+                    ))
+
+
 def run_grade_ledger_patches(engine_arg) -> None:
     """Apply non-destructive patches for the dynamic Grade Ledger architecture."""
     inspector = inspect(engine_arg)
@@ -212,6 +268,11 @@ def init_db():
     from models.subject import Subject
     from models.assessment_component import AssessmentComponent
     from models.student_enrollment import StudentEnrollment
+    from models.student_master import (
+        StudentAddress, StudentContact, StudentDeviceIdentity, StudentDocumentStatus,
+        StudentHealthProfile, StudentImportBatch, StudentImportRow, StudentMaster,
+        StudentMasterChangeHistory, StudentParentGuardian,
+    )
     from models.student_subject_grade import StudentSubjectGrade
     from models.academic_config import AcademicTermConfig, KkmThreshold
     from models.academic_intervention import AcademicIntervention
@@ -229,6 +290,7 @@ def init_db():
     _ensure_upload_logs_schema_compatibility()
     _ensure_attendance_schema_compatibility()
     _ensure_attendance_index_compatibility()
+    _ensure_student_foundation_compatibility()
     from services.report_builder import seed_report_builder_defaults
 
     seed_report_builder_defaults()
