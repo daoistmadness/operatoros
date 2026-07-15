@@ -77,8 +77,12 @@ impl SidecarManager {
         let result = self.start_inner(app);
         if let Err(error) = result {
             let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
+            if let Some(runtime) = inner.runtime.as_ref() {
+                let _ = write_lifecycle_log(runtime, "FAILED", &error);
+            } else if let Ok(root) = operatoros_root() {
+                let _ = write_root_lifecycle_log(&root, "FAILED", &error);
+            }
             inner.process = None;
-            inner.runtime = None;
             inner.instance_lock = None;
             let _ = Self::transition(&mut inner, LifecycleState::Failed);
             return Err(error);
@@ -89,6 +93,11 @@ impl SidecarManager {
     fn start_inner(&self, app: &tauri::AppHandle) -> Result<(), String> {
         let root = operatoros_root()?;
         let runtime = create_runtime(&root, app.package_info().version.to_string())?;
+        {
+            let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
+            inner.runtime = Some(runtime.clone());
+        }
+        write_lifecycle_log(&runtime, "STARTING", "sidecar startup attempt")?;
         let executable = resolve_sidecar(app)?;
         let stdout = runtime.log_dir.join("sidecar-stdout.log");
         let stderr = runtime.log_dir.join("sidecar-stderr.log");
@@ -97,7 +106,7 @@ impl SidecarManager {
             &mut process,
             runtime.port,
             &runtime.version,
-            Duration::from_secs(90),
+            health_timeout(),
         ) {
             let _ = process.graceful_stop(Duration::from_secs(10));
             return Err(error);
@@ -106,6 +115,9 @@ impl SidecarManager {
         inner.process = Some(process);
         inner.runtime = Some(runtime);
         Self::transition(&mut inner, LifecycleState::Ready)?;
+        if let Some(runtime) = inner.runtime.as_ref() {
+            let _ = write_lifecycle_log(runtime, "READY", "sidecar health check accepted");
+        }
         drop(inner);
         self.start_crash_monitor();
         Ok(())
@@ -125,9 +137,15 @@ impl SidecarManager {
             let exited = inner
                 .process
                 .as_mut()
-                .and_then(|process| process.try_wait().ok().flatten())
-                .is_some();
-            if exited {
+                .and_then(|process| process.try_wait().ok().flatten());
+            if let Some(status) = exited {
+                if let Some(runtime) = inner.runtime.as_ref() {
+                    let _ = write_lifecycle_log(
+                        runtime,
+                        "CRASHED",
+                        &format!("sidecar exited unexpectedly: {status}"),
+                    );
+                }
                 inner.process = None;
                 let _ = Self::transition(&mut inner, LifecycleState::Crashed);
                 return;
@@ -156,6 +174,51 @@ impl SidecarManager {
         Self::transition(&mut inner, LifecycleState::Stopped)?;
         result.map(|_| ())
     }
+}
+
+fn health_timeout() -> Duration {
+    let seconds = std::env::var("OPERATOROS_HEALTH_TIMEOUT_SECONDS")
+        .ok()
+        .and_then(|value| value.parse::<u64>().ok())
+        .filter(|value| (1..=90).contains(value))
+        .unwrap_or(90);
+    Duration::from_secs(seconds)
+}
+
+fn lifecycle_line(state: &str, message: &str) -> String {
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let sanitized = message.replace(['\r', '\n'], " ");
+    format!("timestamp_unix={timestamp} state={state} message={sanitized}\n")
+}
+
+fn write_root_lifecycle_log(root: &Path, state: &str, message: &str) -> Result<(), String> {
+    let log_dir = root.join("Logs");
+    fs::create_dir_all(&log_dir)
+        .map_err(|error| format!("could not create {}: {error}", log_dir.display()))?;
+    fs::write(
+        log_dir.join("desktop-runtime.log"),
+        lifecycle_line(state, message),
+    )
+    .map_err(|error| format!("could not write desktop runtime log: {error}"))
+}
+
+fn write_lifecycle_log(
+    runtime: &RuntimeConfiguration,
+    state: &str,
+    message: &str,
+) -> Result<(), String> {
+    use std::io::Write;
+    let path = runtime.log_dir.join("desktop-runtime.log");
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .map_err(|error| format!("could not open {}: {error}", path.display()))?;
+    file.write_all(lifecycle_line(state, message).as_bytes())
+        .map_err(|error| format!("could not write {}: {error}", path.display()))
 }
 
 fn operatoros_root() -> Result<PathBuf, String> {
@@ -248,5 +311,20 @@ mod tests {
         let first = allocate_port().unwrap();
         let second = allocate_port().unwrap();
         assert!(first > 0 && second > 0);
+    }
+
+    #[test]
+    fn lifecycle_log_has_timestamp_state_and_single_line_message() {
+        let line = lifecycle_line("FAILED", "missing\nsidecar");
+        assert!(line.starts_with("timestamp_unix="));
+        assert!(line.contains(" state=FAILED "));
+        assert!(line.contains("message=missing sidecar"));
+        assert_eq!(line.lines().count(), 1);
+    }
+
+    #[test]
+    fn health_timeout_defaults_to_release_contract() {
+        std::env::remove_var("OPERATOROS_HEALTH_TIMEOUT_SECONDS");
+        assert_eq!(health_timeout(), Duration::from_secs(90));
     }
 }

@@ -2,6 +2,7 @@
 
 mod sidecar;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
@@ -32,16 +33,55 @@ fn build_main_window(app: &tauri::AppHandle, manager: &SidecarManager) -> Result
     Ok(())
 }
 
+fn build_failure_window(
+    app: &tauri::AppHandle,
+    state: LifecycleState,
+    error: &str,
+) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.close();
+    }
+    if let Some(window) = app.get_webview_window("failure") {
+        let _ = window.close();
+    }
+    let payload = serde_json::json!({
+        "state": state,
+        "message": error,
+    });
+    let initialization_script = format!(
+        "Object.defineProperty(window, '__OPERATOROS_FAILURE__', {{ value: Object.freeze({payload}), writable: false, configurable: false }});"
+    );
+    WebviewWindowBuilder::new(
+        app,
+        "failure",
+        WebviewUrl::App("desktop-failure.html".into()),
+    )
+    .title("OperatorOS — Runtime Failure")
+    .inner_size(720.0, 520.0)
+    .min_inner_size(640.0, 440.0)
+    .resizable(true)
+    .initialization_script(&initialization_script)
+    .build()
+    .map_err(|build_error| format!("could not create failure window: {build_error}"))?;
+    Ok(())
+}
+
 pub fn run() {
     let manager = Arc::new(SidecarManager::new());
     let setup_manager = Arc::clone(&manager);
     let event_manager = Arc::clone(&manager);
+    let failure_presented = Arc::new(AtomicBool::new(false));
+    let event_failure_presented = Arc::clone(&failure_presented);
 
     tauri::Builder::default()
         .setup(move |app| {
-            setup_manager
-                .start(app.handle())
-                .map_err(|error| Box::<dyn std::error::Error>::from(error))?;
+            if let Err(error) = setup_manager.start(app.handle()) {
+                build_failure_window(app.handle(), LifecycleState::Failed, &error)
+                    .map_err(|window_error| Box::<dyn std::error::Error>::from(window_error))?;
+                failure_presented.store(true, Ordering::SeqCst);
+                app.manage(Arc::clone(&setup_manager));
+                return Ok(());
+            }
             build_main_window(app.handle(), &setup_manager)
                 .map_err(|error| Box::<dyn std::error::Error>::from(error))?;
             app.manage(Arc::clone(&setup_manager));
@@ -49,7 +89,16 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("failed to build OperatorOS desktop shell")
-        .run(move |_app, event| {
+        .run(move |app, event| {
+            if event_manager.state() == LifecycleState::Crashed
+                && !event_failure_presented.swap(true, Ordering::SeqCst)
+            {
+                let _ = build_failure_window(
+                    app,
+                    LifecycleState::Crashed,
+                    "The OperatorOS backend stopped unexpectedly. Close OperatorOS, then reopen it. Diagnostic details were written to Logs\\desktop-runtime.log.",
+                );
+            }
             if matches!(
                 event,
                 tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
