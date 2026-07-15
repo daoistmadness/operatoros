@@ -270,6 +270,7 @@ def get_db():
 def init_db():
     from models.student import Student
     from models.attendance import Attendance
+    from models.attendance_import import AttendanceImportBatch, AttendanceImportRow
     from models.absence_reason import AbsenceReason
     from models.absence_reason_class_entry import AbsenceReasonClassEntry
     from models.jenjang_config import JenjangConfig
