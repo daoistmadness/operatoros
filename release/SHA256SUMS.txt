@@ -1,0 +1,2 @@
+99e4299203fa2721ba3bcbc38d7e16d8ce87dac4f0a31a7b5b53d01fbab205fd *operatoros-desktop.exe
+8b1442265a21aa1d9606c0db835e618e66d1f92e318ffc2051b10286181cd5a8 *resources/operatoros-sidecar.exe
