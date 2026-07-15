@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, Copy, Loader2, Save, Wand2 } from "lucide-react";
 
 import api from "../api";
+import { getPageApiError } from "../lib/api/errors";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -91,7 +92,7 @@ function AbsenceReasons() {
     setError("");
 
     try {
-      const response = await api.get("/config/absence-reasons", {
+      const response = await api.get("/api/config/absence-reasons", {
         params: { month: targetMonth, year: targetYear },
       });
       const nextRows = (Array.isArray(response.data) ? response.data : []).map((row) => ({
@@ -118,7 +119,7 @@ function AbsenceReasons() {
     } catch (err) {
       setRows([]);
       setOriginalRows({});
-      setError(err.response?.data?.detail || "Gagal memuat data SIA.");
+      setError(getPageApiError(err, "Gagal memuat data SIA."));
     } finally {
       setLoading(false);
     }
@@ -126,7 +127,7 @@ function AbsenceReasons() {
 
   const fetchCoverage = useCallback(async () => {
     try {
-      const rangeResponse = await api.get("/analytics/attendance-date-range");
+      const rangeResponse = await api.get("/api/analytics/attendance-date-range");
       const earliestText = rangeResponse.data?.earliest_date;
       const latestText = rangeResponse.data?.latest_date;
 
@@ -143,7 +144,7 @@ function AbsenceReasons() {
 
       const results = await Promise.all(
         range.map(async (item) => {
-          const response = await api.get("/config/absence-reasons", {
+          const response = await api.get("/api/config/absence-reasons", {
             params: { month: item.month, year: item.year },
           });
           const data = Array.isArray(response.data) ? response.data : [];
@@ -228,7 +229,7 @@ function AbsenceReasons() {
 
     try {
       const savedClassNames = modifiedRows.map((row) => row.class_name);
-      const response = await api.post("/config/absence-reasons/bulk", {
+      const response = await api.post("/api/config/absence-reasons/bulk", {
         entries: modifiedRows.map((row) => ({
           class_name: row.class_name,
           month,
@@ -281,7 +282,7 @@ function AbsenceReasons() {
     setMessage("");
 
     try {
-      const response = await api.get("/config/absence-reasons", {
+      const response = await api.get("/api/config/absence-reasons", {
         params: { month: previousMonth.month, year: previousMonth.year },
       });
       const previousRows = Array.isArray(response.data) ? response.data : [];

@@ -55,7 +55,7 @@ function AttendanceReview() {
   const fetchClasses = useCallback(async () => {
     setLoadingClasses(true);
     try {
-      const response = await api.get("/review/classes");
+      const response = await api.get("/api/review/classes");
       setClasses(response.data.classes || []);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load classes.");
@@ -72,7 +72,7 @@ function AttendanceReview() {
     setLoadingRows(true);
     setError("");
     try {
-      const response = await api.get("/review/attendance", {
+      const response = await api.get("/api/review/attendance", {
         params: {
           date: selectedDate,
           class_name: selectedClass,
@@ -117,7 +117,7 @@ function AttendanceReview() {
     setSubmitting(true);
     setError("");
     try {
-      await api.post(`/review/attendance/${activeRow.attendance_id}/override`, {
+      await api.post(`/api/review/attendance/${activeRow.attendance_id}/override`, {
         override_status: overrideStatus,
         note: trimmed,
         reviewed_by: reviewer.trim() || "admin",
@@ -148,7 +148,7 @@ function AttendanceReview() {
     setMassSuccessMsg("");
 
     try {
-      const response = await api.post("/review/attendance/mass-override-incomplete", {
+      const response = await api.post("/api/review/attendance/mass-override-incomplete", {
         override_status: "on-time",
         note: trimmedNote,
         reviewed_by: trimmedReviewer,
@@ -175,7 +175,7 @@ function AttendanceReview() {
     setHistoryLoading(true);
     setError("");
     try {
-      const response = await api.get(`/review/attendance/${row.attendance_id}/history`);
+      const response = await api.get(`/api/review/attendance/${row.attendance_id}/history`);
       setHistoryItems(response.data.items || []);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load override history.");

@@ -34,7 +34,7 @@ function getApiBaseUrl() {
   }
 
   // Empty string: requests use same-origin paths (/api/...)
-  // The Vite dev server proxy forwards these to http://127.0.0.1:8000.
+  // The Vite dev server proxy forwards these to the configured backend target.
   return '';
 }
 

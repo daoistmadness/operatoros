@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../api";
+import { getPageApiError } from "../lib/api/errors";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -45,9 +46,9 @@ function HebConfig() {
 
     try {
       const requests = [
-        api.get("/config/jenjang/available"),
+        api.get("/api/config/jenjang/available"),
         ...MONTH_OPTIONS.map((month) =>
-          api.get("/analytics/heb", {
+          api.get("/api/analytics/heb", {
             params: { month: month.value, year: targetYear },
           })
         ),
@@ -95,7 +96,7 @@ function HebConfig() {
       setRows(nextRows);
     } catch (err) {
       setRows([]);
-      setError(err.response?.data?.detail || "Gagal memuat konfigurasi HEB.");
+      setError(getPageApiError(err, "Gagal memuat konfigurasi HEB."));
     } finally {
       setLoading(false);
     }
@@ -169,7 +170,7 @@ function HebConfig() {
     setError("");
 
     try {
-      await api.put(`/config/heb/${encodeURIComponent(row.jenjang)}/${row.year}/${row.month}`, {
+      await api.put(`/api/config/heb/${encodeURIComponent(row.jenjang)}/${row.year}/${row.month}`, {
         heb_value: hebValue,
         note: form.note.trim(),
         set_by: form.set_by.trim(),
@@ -190,7 +191,7 @@ function HebConfig() {
     setError("");
 
     try {
-      await api.delete(`/config/heb/${encodeURIComponent(row.jenjang)}/${row.year}/${row.month}`);
+      await api.delete(`/api/config/heb/${encodeURIComponent(row.jenjang)}/${row.year}/${row.month}`);
       await loadData(activeYear);
       setMessage(`Override ${row.jenjang} dihapus — kembali ke kalkulasi otomatis.`);
       closeForm();
