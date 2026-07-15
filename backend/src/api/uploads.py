@@ -6,14 +6,21 @@ import io
 import logging
 import pandas as pd
 from datetime import date, timedelta, time
+from pydantic import BaseModel, Field
 
 from services.excel_parser import parse_excel
 from core.database import get_db
 from models.attendance import Attendance
 from models.student import Student
 from models.upload_log import UploadLog
+from models.attendance_import import AttendanceImportRow
 from models.user import User
-from security.dependencies import get_current_user
+from security.dependencies import get_current_user, require_role
+from services.attendance_import_preview import (
+    commit_attendance_preview,
+    create_attendance_preview,
+    serialize_preview,
+)
 from services.attendance_metrics import calculate_heb, derive_jenjang_from_class_name, month_year_filters
 
 router = APIRouter()
@@ -22,6 +29,21 @@ logger = logging.getLogger(__name__)
 _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 _XLS_MIME = "application/vnd.ms-excel"
 _ACCEPTED_MIMES = {_XLSX_MIME, _XLS_MIME, "application/octet-stream", "application/zip"}
+
+
+class AttendanceImportCommitRequest(BaseModel):
+    selected_row_ids: list[int] = Field(min_length=1)
+    confirmation: str
+
+
+def _validate_excel_upload(file: UploadFile) -> None:
+    is_excel_mime = file.content_type in _ACCEPTED_MIMES
+    is_excel_ext = (file.filename or "").lower().endswith((".xlsx", ".xls"))
+    if not (is_excel_mime or is_excel_ext):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type '{file.content_type}'. Please upload a .xlsx or .xls file.",
+        )
 
 
 def _write_upload_log(
@@ -57,6 +79,56 @@ def _resolve_upload_status(report: dict) -> str:
         return "partial"
     return "success"
 
+
+@router.post("/preview")
+async def preview_attendance_import(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Parse an attendance workbook into staging without changing live records."""
+    _validate_excel_upload(file)
+    try:
+        batch = create_attendance_preview(
+            db,
+            await file.read(),
+            file.filename or "unknown.xlsx",
+            current_user.username,
+        )
+        rows = (
+            db.query(AttendanceImportRow)
+            .filter(AttendanceImportRow.batch_id == batch.id)
+            .order_by(AttendanceImportRow.id.asc())
+            .all()
+        )
+        return serialize_preview(batch, rows)
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Unexpected attendance workbook preview failure")
+        raise HTTPException(status_code=500, detail="The server could not preview the workbook.") from exc
+
+
+@router.post("/preview/{batch_id}/commit")
+def commit_previewed_attendance_import(
+    batch_id: str,
+    request: AttendanceImportCommitRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Atomically commit explicitly selected, non-conflicting preview rows."""
+    return commit_attendance_preview(
+        db,
+        batch_id,
+        request.selected_row_ids,
+        request.confirmation,
+        current_user.username,
+    )
+
 @router.post("/upload")
 async def upload_file(
     file: UploadFile = File(...),
@@ -72,16 +144,13 @@ async def upload_file(
 
     # Accept by MIME or by extension — browsers sometimes send octet-stream
     # for files with spaces or parentheses in the name.
-    is_excel_mime = file.content_type in _ACCEPTED_MIMES
-    is_excel_ext = (file.filename or "").lower().endswith((".xlsx", ".xls"))
-    if not (is_excel_mime or is_excel_ext):
+    try:
+        _validate_excel_upload(file)
+    except HTTPException:
         _write_upload_log(db, filename, uploaded_by, {
             "total_records": 0, "new_students": 0, "late_entries": 0, "failed_rows": 0,
         }, "failed")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file type '{file.content_type}'. Please upload a .xlsx or .xls file.",
-        )
+        raise
     
     base_report = {
         "total_records": 0,
