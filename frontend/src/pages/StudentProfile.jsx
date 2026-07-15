@@ -174,7 +174,7 @@ export default function StudentProfile() {
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await api.get(`/students/${id}/monthly-history`);
+      const res = await api.get(`/api/students/${id}/monthly-history`);
       const data = res.data;
       setHistory(data);
       // Default to the last/most recent month
@@ -194,7 +194,7 @@ export default function StudentProfile() {
     if (!selectedMonth) return;
     setLoadingSummary(true);
     try {
-      const res = await api.get(`/students/${id}/attendance-summary`, {
+      const res = await api.get(`/api/students/${id}/attendance-summary`, {
         params: { month: selectedMonth.month, year: selectedMonth.year },
       });
       setSummary(res.data);

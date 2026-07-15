@@ -70,7 +70,7 @@ function Settings() {
     setError("");
     
     try {
-      await api.post("/system/clear-data", {
+      await api.post("/api/system/clear-data", {
         mode: resetMode,
         confirmation: confirmText,
       });

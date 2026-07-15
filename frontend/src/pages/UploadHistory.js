@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { History, RefreshCw, FileSpreadsheet } from "lucide-react";
 
 import api from "../api";
+import { getPageApiError } from "../lib/api/errors";
 
 function formatDateTime(value) {
   if (!value) return "-";
@@ -42,10 +43,10 @@ function UploadHistory() {
 
     try {
       setError("");
-      const response = await api.get("/uploads/history");
+      const response = await api.get("/api/uploads/history");
       setHistory(Array.isArray(response.data) ? response.data : []);
     } catch (fetchError) {
-      setError(fetchError.response?.data?.detail || "Failed to load upload history.");
+      setError(getPageApiError(fetchError, "Failed to load upload history."));
     } finally {
       setLoading(false);
       setRefreshing(false);

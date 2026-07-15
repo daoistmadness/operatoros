@@ -15,6 +15,7 @@ import {
 
 
 import api from "../api";
+import { getPageApiError } from "../lib/api/errors";
 import { cn } from "../lib/cn";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
@@ -52,7 +53,7 @@ function ClassMapping() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const response = await api.get("/students/classes");
+      const response = await api.get("/api/students/classes");
       setClasses(Array.isArray(response.data) ? response.data : []);
     } catch (_error) {
       setClasses([]);
@@ -79,12 +80,12 @@ function ClassMapping() {
         params.class_name = classFilter;
       }
 
-      const response = await api.get("/students", { params });
+      const response = await api.get("/api/students", { params });
       setStudents(response.data?.students || []);
       setTotal(response.data?.total || 0);
       setTotalPages(response.data?.total_pages || 0);
     } catch (fetchError) {
-      setError(fetchError.response?.data?.detail || "Failed to load students.");
+      setError(getPageApiError(fetchError, "Failed to load students."));
       setStudents([]);
       setTotal(0);
       setTotalPages(0);
@@ -121,7 +122,7 @@ function ClassMapping() {
         payload.id = idInt;
       }
 
-      await api.post("/students", payload);
+      await api.post("/api/students", payload);
       setAddStudentSuccess("Student created successfully!");
       setStudentId("");
       setStudentName("");
@@ -240,7 +241,7 @@ function ClassMapping() {
     setSuccessMessage("");
 
     try {
-      const response = await api.patch("/students/assign-class", {
+      const response = await api.patch("/api/students/assign-class", {
         student_ids: selectedList.map((student) => student.id),
         class_name: className,
         jenjang,

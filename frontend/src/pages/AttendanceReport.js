@@ -140,7 +140,7 @@ function AttendanceReport() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const response = await api.get("/students/classes");
+      const response = await api.get("/api/students/classes");
       setClasses(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error(err);
@@ -157,7 +157,7 @@ function AttendanceReport() {
       if (jenjangFilter !== "all") params.jenjang = jenjangFilter;
       if (classFilter !== "all") params.class_name = classFilter;
 
-      const response = await api.get("/analytics/attendance-report", { params });
+      const response = await api.get("/api/analytics/attendance-report", { params });
       setReportData(response.data.results || []);
       setSummaryMetadata(response.data.summary || {});
 
