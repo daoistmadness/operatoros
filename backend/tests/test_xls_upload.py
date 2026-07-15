@@ -33,6 +33,7 @@ def app_context(monkeypatch, tmp_path):
         "db_module": db_module,
         "uploads": uploads_router,
         "excel_parser": excel_parser,
+        "User": importlib.import_module("models.user").User,
     }
 
 def test_xls_extension_validation_success(app_context):
@@ -51,12 +52,13 @@ def test_xls_extension_validation_success(app_context):
         
         # Call the endpoint handler function directly
         db_session = MagicMock()
+        user = app_context["User"](username="tester", role="admin")
         
         # Should execute without throwing 400 HTTPException
         # Note: Since the endpoint is async, we can run it using standard asyncio
         import asyncio
         response = asyncio.run(
-            uploads.upload_file(file=mock_file, db=db_session)
+            uploads.upload_file(file=mock_file, db=db_session, current_user=user)
         )
         assert response is not None
         mock_parse.assert_called_once_with(mock_file, db_session)
@@ -70,11 +72,12 @@ def test_invalid_extension_rejected(app_context):
     mock_file.content_type = "text/csv"
     
     db_session = MagicMock()
+    user = app_context["User"](username="tester", role="admin")
     import asyncio
     
     with pytest.raises(HTTPException) as exc_info:
         asyncio.run(
-            uploads.upload_file(file=mock_file, db=db_session)
+            uploads.upload_file(file=mock_file, db=db_session, current_user=user)
         )
         
     assert exc_info.value.status_code == 400
