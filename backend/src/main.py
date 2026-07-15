@@ -3,6 +3,7 @@
 # Tech Stack: FastAPI / Python 3.12
 
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.academic_config import router as academic_config_router
@@ -84,7 +85,11 @@ app.include_router(students_router, prefix="/students", tags=["students-legacy"]
 @app.get("/health", tags=["health"])
 def health_check() -> dict:
     """Health check endpoint used by the desktop launcher and monitoring."""
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "service": "operatoros-sidecar",
+        "version": os.environ.get("OPERATOROS_VERSION", app.version),
+    }
 
 
 @app.get("/", tags=["health"])

@@ -14,7 +14,7 @@ Administrators use the canonical `/api/admin/backups` API or Backup Management p
 6. publishes the database/metadata pair atomically; and
 7. applies count-based retention.
 
-Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. Backups are not encrypted by Astryx, so filesystem access controls and protected storage remain operational requirements.
+Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. Backups are not encrypted by OperatorOS, so filesystem access controls and protected storage remain operational requirements.
 
 Retention keeps the configured number of manual backups and the latest safety snapshot. A backup selected for restore is protected from retention removal while a new safety snapshot is created.
 

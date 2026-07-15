@@ -253,7 +253,7 @@ def draw_header_footer(c: canvas.Canvas, title: str, summary: dict):
 
     c.setFillColor(colors.HexColor("#64748B"))
     c.setFont("Helvetica", 8)
-    c.drawString(20, 25, f"Printed: {date.today().isoformat()}  |  School Attendance Analytics")
+    c.drawString(20, 25, f"Printed: {date.today().isoformat()}  |  OperatorOS")
     c.drawRightString(772, 25, f"Page {c._pageNumber}")
 
 
@@ -1084,7 +1084,7 @@ def build_management_summary_excel(summary: dict, options: dict | None = None) -
         readme_ws = workbook.add_worksheet("README")
         readme_ws.hide_gridlines(2)
         readme_ws.write("A1", "EDELWEISS SCHOOL MANAGEMENT REPORT", title_fmt)
-        readme_ws.write("A2", "Generated via School Attendance Analytics Stack", sub_fmt)
+        readme_ws.write("A2", "Generated via OperatorOS Stack", sub_fmt)
 
         ctx = build_report_context(summary)
         for i, (label, val) in enumerate(ctx, start=4):

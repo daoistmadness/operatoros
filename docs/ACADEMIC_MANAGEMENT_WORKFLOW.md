@@ -1,6 +1,6 @@
 # Academic Management Workflow
 
-This guide explains the operational flow for setting up and using Grade Ledger in the school-attendance-analytics app. It is written for school admins and operators who need a reliable sequence from master student data to score entry.
+This guide explains the operational flow for setting up and using Grade Ledger in the OperatorOS app. It is written for school admins and operators who need a reliable sequence from master student data to score entry.
 
 ## 1. Purpose
 

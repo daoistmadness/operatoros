@@ -23,9 +23,20 @@ import {
   Activity,
   FileText
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import api from "../api";
 import { cn } from "../lib/cn";
+import { Button, buttonVariants } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { FieldError } from "../components/ui/field-error";
+import { FieldLabel, FormField } from "../components/ui/field";
+import { Input } from "../components/ui/input";
+import { NativeSelect } from "../components/ui/native-select";
+import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableHead, DataTableHeader, DataTableRow } from "../components/common/data-table";
+import { FilterBar } from "../components/common/filter-bar";
+import { PageHeader } from "../components/common/page-header";
+import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
   assignStudentClass,
   deleteHebOverride,
@@ -59,6 +70,7 @@ const snappySpring = { type: "spring", stiffness: 400, damping: 30 };
 export default function Dashboard() {
   const today = useMemo(() => new Date(), []);
   const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
   const [monthlyData, setMonthlyData] = useState([]);
   const [classData, setClassData] = useState([]);
   const [offenders, setOffenders] = useState([]);
@@ -80,6 +92,7 @@ export default function Dashboard() {
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
+    setDashboardError("");
     try {
       const snapshot = await getDashboardSnapshot(today);
       setMonthlyData(snapshot.monthlyData);
@@ -92,6 +105,8 @@ export default function Dashboard() {
       setAbsenceSummary(snapshot.absenceSummary);
       setRekapAbsensiSummary(snapshot.rekapAbsensiSummary);
       setMappingWarning(snapshot.mappingWarning);
+    } catch (error) {
+      setDashboardError(error instanceof Error ? error.message : "Dashboard analytics could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -117,12 +132,10 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
-        <div className="animate-spin rounded-[9999px] h-12 w-12 border-b-2 border-brand"></div>
-        <p className="text-slate-500 font-medium animate-pulse">Loading analytics...</p>
-      </div>
-    );
+    return <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />;
+  }
+  if (dashboardError) {
+    return <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={dashboardError}><Button className="mt-4" onClick={() => void loadDashboardData()}>Retry</Button></ErrorState>;
   }
 
   const totalLate = monthlyData.reduce((acc, curr) => acc + curr.late_count, 0);
@@ -138,52 +151,13 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
-      {/* 1. Header Section */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-200/60">
-        <div>
-          <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">System Analytics</h1>
-          <p className="text-slate-500 mt-2 font-medium">Real-time attendance overview and behavioral metrics.</p>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl shadow-sm p-1">
-            <select 
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pl-3 pr-8 focus:ring-0 cursor-pointer"
-            >
-              {MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-            <div className="w-px h-5 bg-slate-200 mx-1"></div>
-            <select 
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pl-3 pr-8 focus:ring-0 cursor-pointer"
-            >
-              {Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl shadow-sm p-1">
-            <Filter size={16} className="text-slate-400 ml-3" />
-            <select 
-              value={selectedJenjang}
-              onChange={(e) => setSelectedJenjang(e.target.value)}
-              className="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pl-2 pr-8 focus:ring-0 cursor-pointer"
-            >
-              <option value="All Jenjang">All Jenjang</option>
-              <option value="Primary">Primary</option>
-              <option value="Secondary">Secondary</option>
-            </select>
-          </div>
-
-          <button className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm">
-            <Download size={16} /> Export
-          </button>
-        </div>
-      </header>
+      <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />
+      <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+        <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
+        <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
+        <FormField id="dashboard-level"><FieldLabel>Jenjang</FieldLabel><NativeSelect value={selectedJenjang} onChange={(e) => setSelectedJenjang(e.target.value)}><option value="All Jenjang">All Jenjang</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option></NativeSelect></FormField>
+        <Button><Download size={16} /> Export</Button>
+      </FilterBar>
 
       {/* 2. Alert Banner */}
       {mappingWarning && (
@@ -204,12 +178,13 @@ export default function Dashboard() {
               <p className="text-sm text-amber-700/80 mt-1">This may affect the absolute accuracy of class-level analytics.</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="outline"
             onClick={() => document.getElementById('pending-categorization')?.scrollIntoView({ behavior: 'smooth' })}
-            className="whitespace-nowrap shrink-0 bg-white border border-amber-300 text-amber-700 font-bold hover:bg-amber-100 px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+            className="whitespace-nowrap shrink-0 border-amber-300 text-amber-700"
           >
             Fix Mapping
-          </button>
+          </Button>
         </motion.div>
       )}
 
@@ -281,8 +256,7 @@ export default function Dashboard() {
         <motion.div 
           whileHover={{ y: -4 }} 
           transition={snappySpring}
-          className="card p-6 lg:col-span-3 flex flex-col justify-between group"
-          style={{ willChange: "transform, box-shadow" }}
+          className="rounded-2xl border border-border bg-surface p-6 shadow-sm lg:col-span-3 flex flex-col justify-between group"
         >
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -297,17 +271,16 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <div className="grid grid-cols-4 gap-4">
                   <MetricBlock label="Hadir" value={rekapAbsensiSummary.global_summary?.percentages?.hadir_pct} color="text-emerald-600" />
-                  <MetricBlock label="Sakit" value={rekapAbsensiSummary.global_summary?.percentages?.sakit_pct} color="text-amber-500" />
-                  <MetricBlock label="Izin" value={rekapAbsensiSummary.global_summary?.percentages?.izin_pct} color="text-blue-500" />
+                  <MetricBlock label="Sakit" value={rekapAbsensiSummary.global_summary?.percentages?.sakit_pct} color="text-blue-500" />
+                  <MetricBlock label="Izin" value={rekapAbsensiSummary.global_summary?.percentages?.izin_pct} color="text-amber-500" />
                   <MetricBlock label="Alfa" value={rekapAbsensiSummary.global_summary?.percentages?.alfa_pct} color="text-rose-500" />
                 </div>
                 
-                {/* Visual Bar */}
-                <div className="w-full h-4 rounded-[9999px] overflow-hidden flex bg-slate-100 mt-2">
-                  <div style={{ width: `${rekapAbsensiSummary.global_summary?.percentages?.hadir_pct || 0}%` }} className="bg-emerald-500 h-full"></div>
-                  <div style={{ width: `${rekapAbsensiSummary.global_summary?.percentages?.sakit_pct || 0}%` }} className="bg-amber-400 h-full"></div>
-                  <div style={{ width: `${rekapAbsensiSummary.global_summary?.percentages?.izin_pct || 0}%` }} className="bg-blue-400 h-full"></div>
-                  <div style={{ width: `${rekapAbsensiSummary.global_summary?.percentages?.alfa_pct || 0}%` }} className="bg-rose-400 h-full"></div>
+                <div className="grid grid-cols-2 gap-3" aria-label="Attendance percentage distribution">
+                  <progress aria-label="Hadir percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.hadir_pct || 0} className="h-2 w-full accent-emerald-500" />
+                  <progress aria-label="Sakit percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.sakit_pct || 0} className="h-2 w-full accent-blue-500" />
+                  <progress aria-label="Izin percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.izin_pct || 0} className="h-2 w-full accent-amber-500" />
+                  <progress aria-label="Alfa percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.alfa_pct || 0} className="h-2 w-full accent-rose-500" />
                 </div>
               </div>
             ) : (
@@ -326,8 +299,7 @@ export default function Dashboard() {
         <motion.div 
           whileHover={{ y: -4 }} 
           transition={snappySpring}
-          className="card p-6 lg:col-span-2 flex flex-col justify-between bg-slate-900 border-slate-800 text-white relative overflow-hidden"
-          style={{ willChange: "transform, box-shadow" }}
+          className="rounded-2xl border border-slate-800 p-6 shadow-sm lg:col-span-2 flex flex-col justify-between bg-slate-900 text-white relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-32 bg-brand/20 blur-3xl rounded-[9999px] transform translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
           
@@ -340,7 +312,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               <div>
                 <p className="text-4xl font-bold font-mono tracking-tight">{enteredClasses} <span className="text-xl text-slate-400">/ {totalClasses}</span></p>
-                <p className="text-sm font-medium text-slate-400 mt-1">Classes Coverage</p>
+                <p className="text-sm font-medium text-slate-300 mt-1">Classes Coverage</p>
               </div>
               
               {missingClasses > 0 ? (
@@ -356,7 +328,7 @@ export default function Dashboard() {
           </div>
           
           <div className="mt-8 z-10 relative">
-            <Link to="/config/absence-reasons" className="btn-primary w-full shadow-lg shadow-brand/20">
+            <Link to="/config/absence-reasons" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
               Complete Review
             </Link>
           </div>
@@ -367,7 +339,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         
         {/* Monthly Trend Chart */}
-        <div className="card p-6 md:p-8 flex flex-col">
+        <Card className="p-6 md:p-8 flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-900">Monthly Late Trend</h3>
             <span className="text-xs font-bold px-3 py-1 bg-slate-100 rounded-[9999px] text-slate-500 tracking-wider">6 MONTHS</span>
@@ -379,10 +351,10 @@ export default function Dashboard() {
               <div className="h-[300px] flex items-center justify-center"><EmptyState message="No monthly data recorded yet." /></div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Punctuality Leaderboard */}
-        <div className="card p-6 md:p-8 flex flex-col">
+        <Card className="p-6 md:p-8 flex flex-col">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-xl font-bold text-slate-900">Class Leaderboard</h3>
             <span className="text-xs font-bold px-3 py-1 bg-emerald-50 rounded-[9999px] text-emerald-600 tracking-wider">TOP 5</span>
@@ -394,46 +366,46 @@ export default function Dashboard() {
               <div className="h-[300px] flex items-center justify-center"><EmptyState message="No class data available to rank." /></div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* 7. Operational Insights (Bottom Section) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="pending-categorization">
         
         {/* Frequent Offenders List */}
-        <div className="card p-6">
+        <Card className="p-6">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <UsersIcon size={20} className="text-rose-500" /> Top Frequent Offenders
           </h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-100">
-            <table className="w-full text-left bg-white">
-              <thead className="bg-slate-50 border-b border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Student</th>
-                  <th className="px-4 py-3">Class</th>
-                  <th className="px-4 py-3 text-right">Lates</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
+          <DataTableContainer>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHead>Student</DataTableHead>
+                  <DataTableHead>Class</DataTableHead>
+                  <DataTableHead className="text-right">Lates</DataTableHead>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
                 {offenders.slice(0,5).map((p, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 text-sm font-semibold text-slate-800">{p.name}</td>
-                    <td className="px-4 py-3 text-sm text-slate-500">{p.class_name}</td>
-                    <td className="px-4 py-3 text-right">
+                  <DataTableRow key={idx}>
+                    <DataTableCell className="font-semibold text-slate-800">{p.name}</DataTableCell>
+                    <DataTableCell className="text-slate-500">{p.class_name}</DataTableCell>
+                    <DataTableCell className="text-right">
                       <span className="inline-flex items-center justify-center min-w-[2rem] px-1.5 h-6 rounded bg-rose-100 text-rose-700 font-bold text-xs">{p.late_count}</span>
-                    </td>
-                  </tr>
+                    </DataTableCell>
+                  </DataTableRow>
                 ))}
                 {offenders.length === 0 && (
-                  <tr><td colSpan="3" className="p-8 text-center text-sm font-medium text-slate-500">No late records found.</td></tr>
+                  <DataTableRow><DataTableCell colSpan="3"><SharedEmptyState title="No late records found." /></DataTableCell></DataTableRow>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </DataTableBody>
+            </DataTable>
+          </DataTableContainer>
+        </Card>
 
         {/* Pending Mapping */}
-        <div className="card p-6 bg-slate-50/50">
+        <Card className="p-6 bg-slate-50/50">
           <div className="flex items-center justify-between mb-4">
              <h3 className="text-lg font-bold flex items-center gap-2">
                <GraduationCap size={20} className="text-slate-600" /> Pending Class Mapping
@@ -443,10 +415,11 @@ export default function Dashboard() {
           
           <div className="space-y-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
             {pending.map((student, idx) => (
-              <button
+              <Button
+                variant="outline"
                 key={student.id ?? idx}
                 onClick={() => handleOpenMapping(student)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between hover:border-brand/50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand"
+                className="h-auto w-full justify-between rounded-xl p-3"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-[9999px] bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
@@ -455,7 +428,7 @@ export default function Dashboard() {
                   <span className="font-semibold text-sm text-slate-800">{student.name}</span>
                 </div>
                 <ChevronRight size={16} className="text-slate-300" />
-              </button>
+              </Button>
             ))}
             {pending.length === 0 && (
               <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-xl bg-white">
@@ -463,7 +436,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
       </div>
 
@@ -494,8 +467,7 @@ const KpiCard = ({ title, value, icon, trend, color }) => (
   <motion.div 
     whileHover={{ y: -4, scale: 1.01 }}
     transition={snappySpring}
-    className="card p-6 flex flex-col justify-between rounded-2xl border-slate-200/60 shadow-sm"
-    style={{ willChange: "transform, box-shadow" }}
+    className="rounded-2xl border border-border bg-surface p-6 flex flex-col justify-between shadow-sm"
   >
     <div className="flex items-start justify-between">
       <div className={cn("p-3 rounded-xl shadow-inner", color)}>
@@ -567,64 +539,28 @@ const MapModal = ({ student, existingClasses, onSave, onClose }) => {
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 10 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-          className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden"
-        >
-          <div className="bg-slate-900 px-6 py-5 text-white flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Assign Class</p>
-              <h3 className="font-bold text-lg">{student.name}</h3>
+    <Dialog open onOpenChange={(open) => !open && !saving && onClose()}>
+      <DialogContent className="overflow-visible p-0">
+        <DialogHeader className="rounded-t-xl bg-slate-900 px-6 py-5 text-white">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Assign Class</p>
+          <DialogTitle>{student.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 p-6">
+          <FormField id="mapping-level" required invalid={Boolean(error && !jenjang)}>
+            <FieldLabel>Jenjang</FieldLabel>
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Jenjang">
+              {jenjangOptions.map((opt) => <Button key={opt} type="button" variant={jenjang === opt ? "primary" : "outline"} onClick={() => { setJenjang(opt); setError(""); }}>{opt}</Button>)}
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-white p-1"><X size={20} /></button>
-          </div>
-
-          <div className="p-6 space-y-6">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Jenjang</label>
-              <div className="grid grid-cols-2 gap-2">
-                {jenjangOptions.map((opt) => (
-                  <button key={opt} type="button" onClick={() => setJenjang(opt)} className={cn("py-2.5 px-4 rounded-xl text-sm font-semibold border-2 transition-all", jenjang === opt ? "bg-brand/10 border-brand text-brand" : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50")}>{opt}</button>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Class Name</label>
-              <input
-                ref={inputRef}
-                value={className}
-                onChange={(e) => { setClassName(e.target.value); setShowSuggestions(true); setError(""); }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                placeholder="e.g. 7-Alpha"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-brand/30 outline-none"
-              />
-              {showSuggestions && filtered.length > 0 && (
-                <div className="absolute z-10 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-auto">
-                  {filtered.map(cls => <button key={cls} onMouseDown={() => { setClassName(cls); setShowSuggestions(false); }} className="w-full text-left px-4 py-2 hover:bg-brand/5 hover:text-brand text-sm">{cls}</button>)}
-                </div>
-              )}
-            </div>
-            {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
-          </div>
-
-          <div className="px-6 pb-6 flex gap-3">
-            <button onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
-            <button onClick={handleSave} disabled={saving || !className} className="flex-1 py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-hover flex items-center justify-center gap-2">{saving ? "Saving..." : "Save Mapping"}</button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+          </FormField>
+          <FormField id="mapping-class" required invalid={Boolean(error && !className.trim())} className="relative">
+            <FieldLabel>Class Name</FieldLabel>
+            <Input ref={inputRef} value={className} onChange={(e) => { setClassName(e.target.value); setShowSuggestions(true); setError(""); }} onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} placeholder="e.g. 7-Alpha" />
+            {showSuggestions && filtered.length > 0 && <div className="absolute z-10 top-full mt-1 max-h-40 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">{filtered.map(cls => <Button key={cls} variant="ghost" onMouseDown={() => { setClassName(cls); setShowSuggestions(false); }} className="w-full justify-start rounded-none">{cls}</Button>)}</div>}
+            <FieldError>{error}</FieldError>
+          </FormField>
+        </div>
+        <DialogFooter className="px-6 pb-6"><Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button><Button onClick={handleSave} disabled={saving || !className}>{saving ? <><Loader2 className="size-4 animate-spin"/>Saving...</> : "Save Mapping"}</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

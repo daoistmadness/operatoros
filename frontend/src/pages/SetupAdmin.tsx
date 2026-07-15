@@ -74,7 +74,7 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
       <section className="w-full max-w-lg rounded-3xl border border-white/10 bg-white p-8 shadow-2xl" aria-labelledby="setup-title">
         <div className="mb-7 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-white"><ShieldCheck className="h-7 w-7" /></div>
-          <div><p className="text-xs font-black uppercase tracking-[0.2em] text-brand">Astryx first run</p><h1 id="setup-title" className="text-2xl font-black text-slate-900">Create administrator</h1></div>
+          <div><p className="text-xs font-black uppercase tracking-[0.2em] text-brand">OperatorOS first run</p><h1 id="setup-title" className="text-2xl font-black text-slate-900">Create administrator</h1></div>
         </div>
         <p className="mb-6 text-sm text-slate-600">Create the first local administrator. Setup closes permanently afterward, and you will sign in normally.</p>
         {validationError && <div role="alert" tabIndex={-1} className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">{validationError}</div>}

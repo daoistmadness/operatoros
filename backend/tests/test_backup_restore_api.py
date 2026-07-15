@@ -223,6 +223,25 @@ def test_engine_disposal_lifecycle_is_used(restore_context, monkeypatch):
     assert calls >= 2
 
 
+def test_atomic_replace_retries_transient_windows_file_handles(monkeypatch):
+    class TransientSource:
+        def __init__(self):
+            self.calls = 0
+
+        def replace(self, destination):
+            self.calls += 1
+            if self.calls < 3:
+                raise PermissionError("transient Windows handle")
+            return destination
+
+    source = TransientSource()
+    monkeypatch.setattr(restore_service.time, "sleep", lambda _delay: None)
+
+    restore_service._replace_with_retry(source, Path("replacement"), attempts=3)
+
+    assert source.calls == 3
+
+
 def test_post_restore_failure_rolls_back_and_preserves_snapshot(restore_context, monkeypatch):
     original_live = sqlite3.connect(restore_context["live"]).execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
     monkeypatch.setattr(restore_service, "verify_restored_database", lambda *args: (_ for _ in ()).throw(RestoreError("forced post failure")))
@@ -374,3 +393,21 @@ def test_api_restore_disabled_and_boolean_confirmation_invalid(api_context):
     filename = client.post("/api/admin/backups").json()["filename"]
     assert client.post(f"/api/admin/backups/{filename}/restore", json={"confirmation": filename}).status_code == 403
     assert client.post(f"/api/admin/backups/{filename}/restore", json={"confirmation": True}).status_code == 422
+
+
+def test_api_restore_suspends_and_restarts_scheduler_on_failure(api_context, monkeypatch):
+    client, _ = api_context
+    from api import backups as backups_api
+
+    events = []
+    monkeypatch.setattr(backups_api.backup_scheduler, "stop", lambda: events.append("stop"))
+    monkeypatch.setattr(backups_api.backup_scheduler, "start", lambda: events.append("start"))
+    filename = client.post("/api/admin/backups").json()["filename"]
+
+    response = client.post(
+        f"/api/admin/backups/{filename}/restore",
+        json={"confirmation": filename},
+    )
+
+    assert response.status_code == 403
+    assert events == ["stop", "start"]

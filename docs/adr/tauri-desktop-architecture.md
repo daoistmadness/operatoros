@@ -6,7 +6,7 @@
 
 ## Context
 
-Astryx is a React/Vite application backed by FastAPI, SQLAlchemy, a single-process backup scheduler, reports, audit records, and cookie sessions. Browser and Docker deployments must remain supported. Rewriting stable backend behavior in Rust would duplicate business rules and increase migration risk.
+OperatorOS is a React/Vite application backed by FastAPI, SQLAlchemy, a single-process backup scheduler, reports, audit records, and cookie sessions. Browser and Docker deployments must remain supported. Rewriting stable backend behavior in Rust would duplicate business rules and increase migration risk.
 
 ## Decision
 

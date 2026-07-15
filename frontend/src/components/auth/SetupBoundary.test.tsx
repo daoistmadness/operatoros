@@ -20,7 +20,7 @@ function render(status?: { setup_required: boolean; setup_token_required: boolea
 describe("setup bootstrap boundary", () => {
   it("shows setup-status loading before login/auth content", () => {
     const html = render();
-    expect(html).toContain("Checking Astryx setup");
+    expect(html).toContain("Checking OperatorOS setup");
     expect(html).not.toContain("Normal authentication");
   });
 

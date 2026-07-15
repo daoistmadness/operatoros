@@ -51,7 +51,7 @@ def _page_header(pdf: canvas.Canvas, title: str, summary: dict, branding: dict |
 
     pdf.setFillColor(colors.HexColor(secondary))
     pdf.setFont("Helvetica", 8)
-    pdf.drawString(20, 25, f"Prepared by: {_brand_value(branding, 'prepared_by', 'School Attendance Analytics')}")
+    pdf.drawString(20, 25, f"Prepared by: {_brand_value(branding, 'prepared_by', 'OperatorOS')}")
     pdf.drawRightString(772, 25, f"Page {pdf._pageNumber}")
 
     pdf.setFillColor(colors.HexColor(accent))

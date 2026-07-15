@@ -36,3 +36,12 @@ backend/test_reset.py
 *.db
 *.db-shm
 *.db-wal
+# Desktop feasibility-spike build products
+desktop-spike/build/
+desktop-spike/output/
+frontend/src-tauri/target/
+frontend/src-tauri/output/
+frontend/src-tauri/gen/schemas/
+.build-sidecar/
+dist/
+frontend/src-tauri/resources/operatoros-sidecar.exe
