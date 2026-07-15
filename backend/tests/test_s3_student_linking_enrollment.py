@@ -14,6 +14,7 @@ from api.student_masters import router as master_router
 from core.database import Base, get_db
 from models.academic_year import AcademicYear
 from models.academic_mapping import StudentAcademicMappingRule
+from models.academic_master import AcademicClass, AcademicProgram
 from models.attendance import Attendance
 from models.jenjang import Jenjang
 from models.student import Student
@@ -69,6 +70,12 @@ def s3_context():
     primary = Jenjang(name="Primary")
     db.add_all([year, primary])
     db.flush()
+    program = AcademicProgram(jenjang_id=primary.id, name="Primary", active=True)
+    db.add(program); db.flush()
+    db.add(AcademicClass(
+        academic_year_id=year.id, program_id=program.id, jenjang_id=primary.id,
+        class_name="P1A", active=True,
+    ))
     students = [
         Student(id=7001, name="Unique Student", jenjang="Primary", class_name="P1A"),
         Student(id=7002, name="Duplicate Student", jenjang="Primary", class_name="P1A"),
