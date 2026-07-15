@@ -166,6 +166,35 @@ def _ensure_student_foundation_compatibility() -> None:
                     ))
 
 
+def _ensure_academic_master_compatibility() -> None:
+    """Add S3.7 governance columns without assigning academic values."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    with engine.begin() as connection:
+        if "jenjangs" in tables:
+            columns = {column["name"] for column in inspector.get_columns("jenjangs")}
+            if "code" not in columns:
+                connection.execute(text("ALTER TABLE jenjangs ADD COLUMN code VARCHAR(32) NULL"))
+            if "level" not in columns:
+                connection.execute(text("ALTER TABLE jenjangs ADD COLUMN level INTEGER NULL"))
+            if "active" not in columns:
+                default = "TRUE" if engine.dialect.name == "postgresql" else "1"
+                connection.execute(text(f"ALTER TABLE jenjangs ADD COLUMN active BOOLEAN NOT NULL DEFAULT {default}"))
+            connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_jenjangs_code ON jenjangs(code)"))
+            connection.execute(text("CREATE INDEX IF NOT EXISTS ix_jenjangs_active ON jenjangs(active)"))
+        if "student_enrollments" in tables:
+            columns = {column["name"] for column in inspector.get_columns("student_enrollments")}
+            if "academic_class_id" not in columns:
+                connection.execute(text(
+                    "ALTER TABLE student_enrollments ADD COLUMN academic_class_id INTEGER NULL "
+                    "REFERENCES academic_classes(id) ON DELETE RESTRICT"
+                ))
+            connection.execute(text(
+                "CREATE INDEX IF NOT EXISTS ix_student_enrollments_academic_class_id "
+                "ON student_enrollments(academic_class_id)"
+            ))
+
+
 def run_grade_ledger_patches(engine_arg) -> None:
     """Apply non-destructive patches for the dynamic Grade Ledger architecture."""
     inspector = inspect(engine_arg)
@@ -204,6 +233,7 @@ def _seed_grade_ledger_minimum(engine_arg) -> None:
     from models.academic_year import AcademicYear
     from models.academic_mapping import StudentAcademicMappingRule
     from models.academic_roster import AcademicRosterImportBatch
+    from models.academic_master import AcademicClass, AcademicMasterImportPreview, AcademicProgram
     from models.jenjang import Jenjang
     from models.subject import Subject
 
@@ -301,6 +331,7 @@ def init_db():
         table for table in Base.metadata.sorted_tables if table.name not in {"users", "sessions"}
     ]
     Base.metadata.create_all(bind=engine, tables=startup_tables)
+    _ensure_academic_master_compatibility()
     run_grade_ledger_patches(engine)
     _seed_grade_ledger_minimum(engine)
     _ensure_students_schema_compatibility()

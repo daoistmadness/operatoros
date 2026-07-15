@@ -7,7 +7,7 @@ import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models.academic_mapping import StudentAcademicMappingRule
+from models.academic_master import AcademicClass, AcademicProgram
 from models.academic_roster import AcademicRosterImportBatch
 from models.academic_year import AcademicYear
 from models.jenjang import Jenjang
@@ -28,13 +28,6 @@ def _text(value):
 def _date(value):
     parsed = pd.to_datetime(value, errors="coerce")
     return parsed.date().isoformat() if not pd.isna(parsed) else None
-
-
-def _approved_class_rules(db):
-    return {
-        row.normalized_source_value: row.target_value
-        for row in db.query(StudentAcademicMappingRule).filter_by(mapping_type="class", status="approved").all()
-    }
 
 
 def _match_master(db: Session, payload: dict) -> tuple[StudentMaster | None, str | None]:
@@ -84,8 +77,7 @@ def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: 
         frame["__row"] = frame.index + 2
         frames.append(frame)
     source = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    canonical_jenjang = {row.name: row for row in db.query(Jenjang).all()}
-    class_rules = _approved_class_rules(db)
+    canonical_jenjang = {row.name: row for row in db.query(Jenjang).filter(Jenjang.active.is_(True)).all()}
     rows = []
     seen_enrollment_keys = set()
     for _, raw in source.iterrows():
@@ -105,13 +97,22 @@ def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: 
             else:
                 year = db.query(AcademicYear).filter(AcademicYear.label == payload["academic_year"]).first()
                 jenjang = canonical_jenjang.get(payload["jenjang"])
-                target_class = class_rules.get(normalize_name(payload["class_name"] or ""))
+                program = db.query(AcademicProgram).filter_by(
+                    jenjang_id=jenjang.id if jenjang else None,
+                    name=payload["program"], active=True,
+                ).first() if jenjang else None
+                academic_class = db.query(AcademicClass).filter_by(
+                    academic_year_id=year.id if year else None,
+                    jenjang_id=jenjang.id if jenjang else None,
+                    program_id=program.id if program else None,
+                    class_name=payload["class_name"], active=True,
+                ).first() if year and jenjang and program else None
                 if year is None:
                     classification = "INVALID"; errors.append("Unknown academic year")
                 elif jenjang is None:
                     classification = "MISSING_JENJANG"; errors.append("Unknown canonical jenjang")
-                elif not target_class:
-                    classification = "MISSING_CLASS"; errors.append("Class lacks an approved mapping rule")
+                elif program is None or academic_class is None:
+                    classification = "MISSING_CLASS"; errors.append("Program/class is not active approved master data")
                 elif not payload["status"] or payload["status"].casefold() != "active":
                     classification = "INVALID"; errors.append("Only active roster rows are committable")
                 else:
@@ -124,7 +125,8 @@ def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: 
                         seen_enrollment_keys.add(key)
                         payload.update({
                             "academic_year_id": year.id, "academic_year_start": year.start_date.isoformat(),
-                            "jenjang_id": jenjang.id, "target_class": target_class,
+                            "jenjang_id": jenjang.id, "academic_class_id": academic_class.id,
+                            "target_class": academic_class.class_name,
                         })
         rows.append({
             "preview_row_id": len(rows) + 1,
@@ -173,6 +175,7 @@ def commit_roster_preview(db: Session, preview_id: str, selected_rows: list[int]
             enrollment = StudentEnrollment(
                 student_id=mapping.legacy_student_id, student_master_id=row["matched_student_master_id"],
                 academic_year_id=payload["academic_year_id"], jenjang_id=payload["jenjang_id"],
+                academic_class_id=payload["academic_class_id"],
                 class_name=payload["target_class"], class_assigned=True,
                 effective_from=effective_from,
             )
