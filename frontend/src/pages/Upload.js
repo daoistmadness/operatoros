@@ -100,7 +100,7 @@ function Upload() {
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h1>
-        <p className="text-slate-500 max-w-md mx-auto">Sync your biometric machine logs with the OPREDEL analytics engine.</p>
+        <p className="text-slate-500 max-w-md mx-auto">Sync your biometric machine logs with the OperatorOS analytics engine.</p>
       </header>
 
       <div className="card p-10 bg-white border-2 border-dashed border-slate-200 hover:border-brand/40 transition-all duration-200 group">

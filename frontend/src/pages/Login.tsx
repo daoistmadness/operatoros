@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { LockKeyhole, LogIn, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Alert } from "../components/ui/alert";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { FieldLabel, FormField } from "../components/ui/field";
+import { FieldError } from "../components/ui/field-error";
+import { Form } from "../components/ui/form";
+import { Input } from "../components/ui/input";
 
 export default function Login() {
   const { authenticated, loading, login } = useAuth();
@@ -11,6 +18,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
   const destination = (location.state as { from?: string } | null)?.from || "/";
   const notice = (location.state as { message?: string } | null)?.message || window.sessionStorage.getItem("astryx:login-notice");
   useEffect(() => { window.sessionStorage.removeItem("astryx:login-notice"); }, []);
@@ -20,6 +28,12 @@ export default function Login() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting) return;
+    const validationErrors = {
+      ...(!username.trim() && { username: "Username is required" }),
+      ...(!password && { password: "Password is required" }),
+    };
+    setFieldErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
     setSubmitting(true);
     setError("");
     const submittedPassword = password;
@@ -35,25 +49,21 @@ export default function Login() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-white/10 bg-white p-8 shadow-2xl" aria-labelledby="login-title">
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-2xl font-black text-white">A</div>
-          <div><p className="text-xs font-black uppercase tracking-[0.2em] text-brand">Astryx</p><h1 id="login-title" className="text-2xl font-black text-slate-900">Sign in</h1></div>
-        </div>
-        <p className="mb-6 text-sm text-slate-500">Use your local Astryx account to continue.</p>
-        {notice && <div role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">{notice}</div>}
-        {error && <div role="alert" className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <label className="block text-sm font-bold text-slate-700">Username
-            <span className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-4 focus-within:border-brand"><UserRound className="h-5 w-5 text-slate-400" /><input aria-label="Username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} className="w-full bg-transparent py-3 outline-none" required /></span>
-          </label>
-          <label className="block text-sm font-bold text-slate-700">Password
-            <span className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 px-4 focus-within:border-brand"><LockKeyhole className="h-5 w-5 text-slate-400" /><input aria-label="Password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full bg-transparent py-3 outline-none" required /></span>
-          </label>
-          <button type="submit" disabled={submitting || loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3.5 font-black text-white shadow-lg shadow-brand/20 disabled:cursor-not-allowed disabled:opacity-60"><LogIn className="h-5 w-5" />{submitting ? "Signing in…" : "Sign in"}</button>
-        </form>
-      </section>
+    <main className="flex min-h-screen items-start justify-center overflow-y-auto bg-slate-950 px-4 py-12">
+      <Card className="my-auto w-full max-w-md rounded-3xl border-white/10 shadow-2xl" aria-labelledby="login-title">
+        <CardHeader className="pb-4"><div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-2xl font-black text-white">O</div>
+          <div><p className="text-xs font-black uppercase tracking-[0.2em] text-brand">OperatorOS</p><CardTitle id="login-title" className="text-2xl">Sign in</CardTitle></div>
+        </div><CardDescription>Use your local OperatorOS account to continue.</CardDescription></CardHeader>
+        <CardContent>
+        {notice && <Alert variant="success" role="status" className="mb-5 font-bold">{notice}</Alert>}
+        {error && <Alert variant="danger" className="mb-5 font-bold">{error}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          <FormField id="username" required invalid={Boolean(fieldErrors.username)}><FieldLabel>Username</FieldLabel><div className="relative"><UserRound className="pointer-events-none absolute left-3 top-3 h-5 w-5 text-slate-400" /><Input autoComplete="username" value={username} onChange={(event) => { setUsername(event.target.value); if (fieldErrors.username) setFieldErrors((current) => ({ ...current, username: undefined })); }} className="pl-10" /></div><FieldError>{fieldErrors.username}</FieldError></FormField>
+          <FormField id="password" required invalid={Boolean(fieldErrors.password)}><FieldLabel>Password</FieldLabel><div className="relative"><LockKeyhole className="pointer-events-none absolute left-3 top-3 h-5 w-5 text-slate-400" /><Input type="password" autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); if (fieldErrors.password) setFieldErrors((current) => ({ ...current, password: undefined })); }} className="pl-10" /></div><FieldError>{fieldErrors.password}</FieldError></FormField>
+          <Button type="submit" size="lg" disabled={submitting || loading} className="w-full"><LogIn className="h-5 w-5" />{submitting ? "Signing in…" : "Sign in"}</Button>
+        </Form></CardContent>
+      </Card>
     </main>
   );
 }

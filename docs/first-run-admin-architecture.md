@@ -2,7 +2,7 @@
 
 ## Current identity flow
 
-Astryx stores local identities in migration-owned `users` and `sessions` tables. `User.username` is the canonical identity field; the current schema has no email or display-name columns. Authentication trims the submitted username, verifies passwords through the shared Argon2id helper in `security/password.py`, creates revocable server-side sessions, and writes safe JSONL authentication audit events. Roles are the constrained lowercase values `admin` and `staff`.
+OperatorOS stores local identities in migration-owned `users` and `sessions` tables. `User.username` is the canonical identity field; the current schema has no email or display-name columns. Authentication trims the submitted username, verifies passwords through the shared Argon2id helper in `security/password.py`, creates revocable server-side sessions, and writes safe JSONL authentication audit events. Roles are the constrained lowercase values `admin` and `staff`.
 
 ## Provisioning service design
 

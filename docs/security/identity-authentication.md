@@ -1,6 +1,6 @@
 # Identity and Authentication
 
-Astryx is an offline-first local application with a **Minimal Identity Boundary Layer**. It is not an IAM platform and does not implement SSO, OAuth, LDAP, cloud identity, or an external identity provider.
+OperatorOS is an offline-first local application with a **Minimal Identity Boundary Layer**. It is not an IAM platform and does not implement SSO, OAuth, LDAP, cloud identity, or an external identity provider.
 
 ## Trust architecture
 
@@ -60,4 +60,4 @@ Authentication, authorization denial, and restore lifecycle events are written t
 
 ## Current limitations
 
-Astryx does not implement MFA, SSO, OAuth, LDAP, password-reset email, cloud identity, granular permissions, or a user-management interface.
+OperatorOS does not implement MFA, SSO, OAuth, LDAP, password-reset email, cloud identity, granular permissions, or a user-management interface.

@@ -55,7 +55,7 @@ fail_preflight() {
   error_box "$1"
   shift
   printf '%s\n' "$@"
-  printf '\nNo Astryx services were started.\n'
+  printf '\nNo OperatorOS services were started.\n'
   exit 2
 }
 
@@ -142,7 +142,7 @@ PY
 }
 
 run_preflight() {
-  printf 'Astryx Development Stack\n\nChecking environment...\n'
+  printf 'OperatorOS Development Stack\n\nChecking environment...\n'
   require_command bash "Launcher" "Install Bash using your Linux or WSL distribution."
   require_command node "Frontend" "Install Node.js 22 with npm."
   require_command npm "Frontend" "Install Node.js 22 with npm."
@@ -256,7 +256,7 @@ cleanup() {
   (( CLEANUP_STARTED == 0 )) || return 0
   CLEANUP_STARTED=1
   if [[ -n "$BACKEND_PID" || -n "$FRONTEND_PID" ]]; then
-    printf '\nStopping Astryx development stack...\n'
+    printf '\nStopping OperatorOS development stack...\n'
     stop_group "Frontend" "$FRONTEND_PID"
     stop_group "Backend" "$BACKEND_PID"
     printf 'Done.\n'
@@ -268,7 +268,7 @@ handle_signal() {
   if [[ -n "$BACKEND_PID" || -n "$FRONTEND_PID" ]]; then
     cleanup
   else
-    printf '\nStartup cancelled. No Astryx services were started.\n'
+    printf '\nStartup cancelled. No OperatorOS services were started.\n'
   fi
   exit 0
 }
@@ -331,7 +331,7 @@ run_preflight
 prepare_local_environment
 
 if (( CHECK_ONLY == 1 )); then
-  printf '\nAstryx development environment is ready. No services were started.\n'
+  printf '\nOperatorOS development environment is ready. No services were started.\n'
   exit 0
 fi
 
@@ -366,7 +366,7 @@ wait_until_ready "Frontend" "http://$FRONTEND_HOST:$FRONTEND_PORT" "$FRONTEND_PI
 STACK_READY=1
 
 printf '\n+------------------------------------------------------------+\n'
-printf '| Astryx Development Stack                                  |\n'
+printf '| OperatorOS Development Stack                              |\n'
 printf '+------------------------------------------------------------+\n'
 printf '| Status    Ready                                            |\n'
 printf '| Frontend  %-48s |\n' "http://$FRONTEND_HOST:$FRONTEND_PORT"

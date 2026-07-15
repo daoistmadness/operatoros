@@ -23,7 +23,7 @@ DEFAULT_BRANDING = {
     "primary_color": "#1E3A8A",
     "secondary_color": "#0F172A",
     "accent_color": "#D97706",
-    "footer_text": "School Attendance Analytics",
+    "footer_text": "OperatorOS",
 }
 
 
@@ -203,7 +203,7 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#64748B"))
-        canvas.drawString(14 * mm, 8 * mm, branding.get("footer_text", "School Attendance Analytics"))
+        canvas.drawString(14 * mm, 8 * mm, branding.get("footer_text", "OperatorOS"))
         canvas.drawRightString(landscape(A4)[0] - 14 * mm, 8 * mm, f"Page {doc.page}")
         canvas.restoreState()
 

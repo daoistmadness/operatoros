@@ -15,7 +15,7 @@ from security.sessions import SESSION_COOKIE_NAME, session_digest, validate_sess
 from services.backup_service import BackupError, create_backup, resolve_backup_directory, resolve_sqlite_database_path
 from services.restore_service import AUDIT_FILENAME, RestoreError, restore_backup
 from models.backup_operation import BackupExecutionHistory
-from services.backup_scheduler import append_operations_audit, calculate_next_run, execute_backup, get_or_create_config
+from services.backup_scheduler import backup_scheduler, append_operations_audit, calculate_next_run, execute_backup, get_or_create_config
 
 
 router = APIRouter()
@@ -201,28 +201,35 @@ def post_restore(
     user: User = Depends(require_restore_admin),
 ):
     try:
-        result = restore_backup(
-            filename=filename,
-            confirmation=body.confirmation,
-            database_url=settings.database_url,
-            backup_dir=settings.BACKUP_DIR,
-            retention_count=settings.BACKUP_RETENTION_COUNT,
-            min_free_mb=settings.BACKUP_MIN_FREE_MB,
-            destructive_enabled=settings.ENABLE_DESTRUCTIVE_OPERATIONS,
-            engine=engine,
-            actor={
-                "user_id": user.id,
-                "username": user.username,
-                "role": user.role,
-                "session_digest": session_digest(token or "", settings.require_auth_cookie_secret()) if token else None,
-            },
-            request_context={
-                "ip_address": request.client.host if request.client else None,
-                "user_agent": (request.headers.get("user-agent") or "")[:1024] or None,
-            },
-            worker_count=settings.BACKEND_WORKERS,
-            single_worker_required=settings.RESTORE_SINGLE_WORKER_REQUIRED,
-        )
+        # Windows cannot atomically replace an open SQLite file. Suspend the
+        # scheduler so it cannot acquire a new connection during the guarded
+        # checkpoint/dispose/replace sequence, then always restore ownership.
+        backup_scheduler.stop()
+        try:
+            result = restore_backup(
+                filename=filename,
+                confirmation=body.confirmation,
+                database_url=settings.database_url,
+                backup_dir=settings.BACKUP_DIR,
+                retention_count=settings.BACKUP_RETENTION_COUNT,
+                min_free_mb=settings.BACKUP_MIN_FREE_MB,
+                destructive_enabled=settings.ENABLE_DESTRUCTIVE_OPERATIONS,
+                engine=engine,
+                actor={
+                    "user_id": user.id,
+                    "username": user.username,
+                    "role": user.role,
+                    "session_digest": session_digest(token or "", settings.require_auth_cookie_secret()) if token else None,
+                },
+                request_context={
+                    "ip_address": request.client.host if request.client else None,
+                    "user_agent": (request.headers.get("user-agent") or "")[:1024] or None,
+                },
+                worker_count=settings.BACKEND_WORKERS,
+                single_worker_required=settings.RESTORE_SINGLE_WORKER_REQUIRED,
+            )
+        finally:
+            backup_scheduler.start()
         response.delete_cookie(
             key=SESSION_COOKIE_NAME,
             path="/",

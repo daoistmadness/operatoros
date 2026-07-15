@@ -23,6 +23,8 @@ import {
 import { cn } from '../lib/cn';
 import { getServerStatus } from '../lib/api/endpoints';
 import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 const NAV_GROUPS = [
   {
@@ -100,9 +102,9 @@ function SidebarNav() {
     <nav className="app-sidebar fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 z-50 p-6 flex flex-col no-print">
       <div className="flex items-center gap-3 mb-10">
         <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand/20">
-          A
+          O
         </div>
-        <span className="font-bold text-xl tracking-tight text-slate-800">OPREDEL</span>
+        <span className="font-bold text-xl tracking-tight text-slate-800">OperatorOS</span>
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-1">
@@ -126,7 +128,6 @@ function SidebarNav() {
                         ? 'bg-brand/10 text-brand font-semibold'
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                     )}
-                    style={{ willChange: 'background-color, color' }}
                   >
                     <Icon size={20} />
                     <span>{item.name}</span>
@@ -142,10 +143,10 @@ function SidebarNav() {
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Logged in as</p>
           <p className="mt-1 truncate text-sm font-black text-slate-800">{user?.username}</p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-brand">{user?.role}</p>
-          <button type="button" onClick={handleLogout} disabled={loggingOut} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-600 hover:border-rose-200 hover:text-rose-600 disabled:opacity-60">
+          <Badge className="mt-1" variant="default">{user?.role}</Badge>
+          <Button variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut} className="mt-3 w-full text-xs hover:border-rose-200 hover:text-rose-600">
             <LogOut size={14} />{loggingOut ? 'Signing out…' : 'Logout'}
-          </button>
+          </Button>
         </div>
         <div className="flex items-center justify-between px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2">
@@ -186,7 +187,6 @@ function SidebarNav() {
               ? 'bg-slate-100 text-slate-800 font-semibold'
               : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
           )}
-          style={{ willChange: 'background-color, color' }}
         >
           <SettingsIcon size={20} />
           <span>Settings</span>

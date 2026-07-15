@@ -2,28 +2,90 @@
 @source not "./tailwind.css";
 
 @theme {
-  --color-brand: #6366f1;
-  --color-brand-hover: #4f46e5;
+  --color-brand: #4f46e5;
+  --color-brand-hover: #4338ca;
+  --color-slate-400: #64748b;
+  --color-slate-500: #526176;
+  --color-emerald-600: #047857;
+  --color-rose-600: #be123c;
   --font-sans: "Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", "Helvetica Neue", "sans-serif";
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --border: #e2e8f0;
+  --muted-foreground: #526176;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+  --success: #047857;
+  --warning: #d97706;
+  --danger: #be123c;
+  --information: #2563eb;
+  --focus-ring: #4f46e5;
+  --radius: 0.75rem;
+  --shadow-surface: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-elevated: 0 20px 25px -5px rgb(15 23 42 / 0.12), 0 8px 10px -6px rgb(15 23 42 / 0.08);
+  --motion-fast: 150ms;
+  --motion-standard: 200ms;
+  --z-navigation: 30;
+  --z-dropdown: 40;
+  --z-dialog: 50;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-information: var(--information);
+  --color-ring: var(--focus-ring);
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: calc(var(--radius) + 0.75rem);
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased font-sans transition-colors duration-200;
+    @apply bg-background text-foreground antialiased font-sans transition-colors duration-200;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
+/* Transitional legacy utilities for screens not yet entered into the Phase 10 loop. */
 @layer components {
   .card {
-    @apply bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:border-brand/20;
-    will-change: transform, box-shadow;
+    @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 ease-out hover:border-brand/20 hover:shadow-md;
   }
-  
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 transition-all duration-200;
+    @apply border border-white/20 bg-white/70 backdrop-blur-md transition-all duration-200;
   }
-  
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-2.5 bg-brand text-white font-medium rounded-xl transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50;
   }
 }

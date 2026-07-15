@@ -1,6 +1,6 @@
 # User Administration
 
-Astryx supports exactly one account-provisioning operation: secure first-run administrator creation through the setup screen or the interactive `PYTHONPATH=src .venv/bin/python -m cli create-admin` command from `backend/`. Both paths close permanently after the first user exists and reuse the Argon2id policy. Astryx still has no general user-management UI, invitation flow, password reset, role-management CLI, or public registration.
+OperatorOS supports exactly one account-provisioning operation: secure first-run administrator creation through the setup screen or the interactive `PYTHONPATH=src .venv/bin/python -m cli create-admin` command from `backend/`. Both paths close permanently after the first user exists and reuse the Argon2id policy. OperatorOS still has no general user-management UI, invitation flow, password reset, role-management CLI, or public registration.
 
 The following general-administration command shape remains unimplemented:
 

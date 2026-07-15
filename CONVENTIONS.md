@@ -1,17 +1,23 @@
 # Conventions
 
 ## Naming
-- Python modules and functions use `snake_case`.
-- React components and page files use `PascalCase` when they represent components.
-- SQL migration files are date-stamped, for example `2026_04_02_dashboard_performance_indexes.sql`.
+- Python modules, variables, and functions use `snake_case`.
+- React components, context providers, hook modules, and page files use `PascalCase` when they represent components or pages.
+- SQL migration files are date-stamped and descriptive, for example `2026_04_02_dashboard_performance_indexes.sql`.
 - Utility scripts use descriptive imperative names, for example `fix_parser.py` and `generate_primary_lateness_dashboard.py`.
 
 ## Organization
 - Backend routers live in `backend/src/api/`.
 - Backend models live in `backend/src/models/`.
-- Backend processing logic lives in `backend/src/services/`.
-- Frontend route screens live in `frontend/src/pages/`.
+- Backend processing logic/analytics live in `backend/src/services/`.
+- Frontend route screens/pages live in `frontend/src/pages/`.
 - Shared UI and API helpers live in `frontend/src/components/` and `frontend/src/lib/`.
+- Desktop Rust code lives in `frontend/src-tauri/src/`.
+
+## Formatting
+- **Python**: Follow PEP8 standards. Indentation uses 4 spaces.
+- **JavaScript / TypeScript / CSS / HTML / JSON**: Indentation uses 2 spaces. Semicolons are preferred in JavaScript and TypeScript.
+- **Markdown**: Use standard headers and lists. Do not backtick-wrap the display text of links (e.g. write `[link text](file://...)` rather than `[`link text`](file://...)`).
 
 ## Imports and Structure
 - Keep imports grouped by standard library, third-party, then local modules.
@@ -34,6 +40,7 @@
 
 ## Testing Style
 - Backend behavioral tests live under `backend/tests/` and use `pytest`.
+- Frontend tests live under `frontend/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
 - Validate behavior with startup checks, smoke requests, backend tests, and frontend build checks.
 - For user-visible frontend changes, run the Agent Browser smoke test when the tool is available.
 
