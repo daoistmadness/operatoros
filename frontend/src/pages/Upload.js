@@ -18,6 +18,30 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { buildApiUrl } from "../lib/api/client";
 
+export function classifyUploadError(err) {
+  const status = Number(err?.status || err?.response?.status || 0);
+  const detail = err?.response?.data?.detail;
+
+  if (status === 400 || status === 422) {
+    return typeof detail === "string"
+      ? detail
+      : "The workbook could not be validated. Check its required headers, dates, and row values.";
+  }
+  if (status === 401) return "Your session has expired. Sign in again before importing.";
+  if (status === 403) return "Your account does not have permission to import attendance data.";
+  if (status === 404) return "The attendance import endpoint was not found. Check the application routing configuration.";
+  if (status === 405) return "The attendance import route rejected the upload method. Check the application routing configuration.";
+  if (status === 413) return "The workbook is larger than the server upload limit.";
+  if (status >= 500) return "The server could not process the workbook because of an internal error. Check the backend logs.";
+  return "The backend could not be reached. Check that the OperatorOS server is running.";
+}
+
+export function uploadAttendanceFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post("/api/uploads/upload", formData);
+}
+
 function Upload() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
@@ -59,22 +83,13 @@ function Upload() {
     setUploading(true);
     setError(null);
     setReport(null);
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const response = await api.post("/uploads/upload", formData);
+      const response = await uploadAttendanceFile(file);
       setReport(response.data.report);
       setFile(null);
     } catch (err) {
       setReport(null);
-      // detail can be a string (400) or an object (500)
-      const detail = err.response?.data?.detail;
-      if (detail && typeof detail === "object") {
-        setError(detail);
-      } else {
-        setError(detail || "An unexpected error occurred. Check the browser console and backend logs.");
-      }
+      setError(classifyUploadError(err));
     } finally {
       setUploading(false);
     }

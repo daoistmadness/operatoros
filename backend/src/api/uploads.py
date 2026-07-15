@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import io
+import logging
 import pandas as pd
 from datetime import date, timedelta, time
 
@@ -11,9 +12,12 @@ from core.database import get_db
 from models.attendance import Attendance
 from models.student import Student
 from models.upload_log import UploadLog
+from models.user import User
+from security.dependencies import get_current_user
 from services.attendance_metrics import calculate_heb, derive_jenjang_from_class_name, month_year_filters
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 _XLS_MIME = "application/vnd.ms-excel"
@@ -54,13 +58,17 @@ def _resolve_upload_status(report: dict) -> str:
     return "success"
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_file(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Endpoint for uploading attendance Excel files.
     Returns a summary report of the processed data.
     """
     filename = file.filename or "unknown.xlsx"
-    uploaded_by = None
+    uploaded_by = current_user.username
 
     # Accept by MIME or by extension — browsers sometimes send octet-stream
     # for files with spaces or parentheses in the name.
@@ -127,16 +135,13 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail=str(val_err))
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         db.rollback()
         _write_upload_log(db, filename, uploaded_by, base_report, "failed")
+        logger.exception("Unexpected attendance workbook import failure")
         raise HTTPException(
             status_code=500,
-            detail={
-                "error": type(e).__name__,
-                "message": str(e),
-                "hint": "Check that your file matches the expected format and all required columns are present.",
-            },
+            detail="The server could not process the workbook because of an internal error.",
         )
 
 
