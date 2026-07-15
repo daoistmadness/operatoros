@@ -16,6 +16,7 @@ from models.student_master import (
 from services.student_linking import snapshot_checksum
 from services.student_normalization import normalize_name
 from services.academic_mapping import approved_rule_map, resolve_class, resolve_jenjang
+from models.academic_master import AcademicClass
 
 
 ENROLLMENT_CONFIRMATION = "POPULATE_STUDENT_ENROLLMENTS"
@@ -63,6 +64,12 @@ def build_enrollment_rows(
             student.jenjang, exact_jenjang, normalized_jenjang, jenjang_rules
         )
         proposed_class, _class_state, class_match = resolve_class(student.class_name, class_rules)
+        academic_class = db.query(AcademicClass).filter_by(
+            academic_year_id=academic_year_id,
+            jenjang_id=canonical_jenjang.id if canonical_jenjang else None,
+            class_name=proposed_class,
+            active=True,
+        ).first() if canonical_jenjang and proposed_class else None
 
         existing = (
             db.query(StudentEnrollment)
@@ -76,17 +83,17 @@ def build_enrollment_rows(
         elif canonical_jenjang is None:
             action = "MISSING_JENJANG"
             warnings.append("Legacy jenjang has no canonical mapping")
-        elif proposed_class is None:
+        elif existing and existing.student_master_id and existing.student_master_id != master_id:
+            action = "CROSS_JENJANG_CONFLICT"
+            warnings.append("Existing enrollment points to a different canonical master")
+        elif existing and existing.jenjang_id != canonical_jenjang.id:
+            action = "CROSS_JENJANG_CONFLICT"
+            warnings.append("Existing enrollment jenjang differs from the legacy proposal")
+        elif proposed_class is None or academic_class is None:
             action = "MISSING_CLASS"
-            warnings.append("Class is blank or lacks an approved academic mapping rule")
+            warnings.append("Class is blank or lacks active approved class master data")
         elif existing:
-            if existing.student_master_id and existing.student_master_id != master_id:
-                action = "CROSS_JENJANG_CONFLICT"
-                warnings.append("Existing enrollment points to a different canonical master")
-            elif existing.jenjang_id != canonical_jenjang.id:
-                action = "CROSS_JENJANG_CONFLICT"
-                warnings.append("Existing enrollment jenjang differs from the legacy proposal")
-            elif existing.class_name != proposed_class:
+            if existing.class_name != proposed_class:
                 action = "UPDATE_CLASS"
                 warnings.append("Class changes require reviewed effective-dated transfer handling")
             else:
@@ -116,6 +123,7 @@ def build_enrollment_rows(
             "jenjang_match": jenjang_match,
             "legacy_jenjang": student.jenjang,
             "proposed_class": proposed_class,
+            "academic_class_id": academic_class.id if academic_class else None,
             "class_match": class_match,
             "legacy_class": student.class_name,
             "effective_start_date": effective_start_date.isoformat(),
@@ -182,6 +190,7 @@ def commit_enrollment_preview(
                 student_master_id=row["student_master_id"],
                 academic_year_id=batch.academic_year_id,
                 jenjang_id=row["canonical_jenjang_id"],
+                academic_class_id=row["academic_class_id"],
                 class_name=row["proposed_class"],
                 class_assigned=True,
                 effective_from=batch.effective_start_date,

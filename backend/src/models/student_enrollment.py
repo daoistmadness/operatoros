@@ -13,6 +13,7 @@ class StudentEnrollment(Base):
     student_master_id = Column(String(36), ForeignKey("student_masters.id", ondelete="RESTRICT"), nullable=True, index=True)
     academic_year_id = Column(Integer, ForeignKey("academic_years.id", ondelete="RESTRICT"), nullable=False, index=True)
     jenjang_id = Column(Integer, ForeignKey("jenjangs.id", ondelete="RESTRICT"), nullable=False, index=True)
+    academic_class_id = Column(Integer, ForeignKey("academic_classes.id", ondelete="RESTRICT"), nullable=True, index=True)
     class_name = Column(String, nullable=True)
     class_assigned = Column(Boolean, nullable=False, default=False)
     effective_from = Column(Date, nullable=True)

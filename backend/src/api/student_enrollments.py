@@ -14,6 +14,7 @@ from services.enrollment_population import (
 )
 from services.academic_mapping import build_academic_mapping_preview
 from services.academic_roster import commit_roster_preview, create_roster_preview
+from services.academic_master_preview import create_academic_master_preview
 
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -35,6 +36,49 @@ class AcademicRosterCommitRequest(BaseModel):
     preview_id: str
     selected_row_ids: list[int] = Field(min_length=1)
     confirmation: str
+
+
+class JenjangMasterProposal(BaseModel):
+    code: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=255)
+    level: int = Field(gt=0)
+    active: bool = True
+
+
+class ProgramMasterProposal(BaseModel):
+    jenjang_code: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=255)
+    active: bool = True
+
+
+class ClassMasterProposal(BaseModel):
+    academic_year: str = Field(min_length=1, max_length=32)
+    jenjang_code: str = Field(min_length=1, max_length=32)
+    program: str = Field(min_length=1, max_length=255)
+    class_name: str = Field(min_length=1, max_length=255)
+    active: bool = True
+
+
+class AcademicMasterPreviewRequest(BaseModel):
+    source_owner: str = Field(min_length=2, max_length=255)
+    jenjangs: list[JenjangMasterProposal] = Field(default_factory=list)
+    programs: list[ProgramMasterProposal] = Field(default_factory=list)
+    classes: list[ClassMasterProposal] = Field(default_factory=list)
+
+
+@router.post("/academic-master-preview")
+def preview_academic_masters(
+    body: AcademicMasterPreviewRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role("admin")),
+):
+    preview = create_academic_master_preview(
+        db, body.model_dump(), body.source_owner.strip(), user.username
+    )
+    return {
+        "preview_id": preview.id, "status": preview.status,
+        **preview.validation_result,
+    }
 
 
 @router.post("/roster-preview")
