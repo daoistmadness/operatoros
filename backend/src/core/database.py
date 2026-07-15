@@ -202,6 +202,7 @@ def run_grade_ledger_patches(engine_arg) -> None:
 def _seed_grade_ledger_minimum(engine_arg) -> None:
     """Create minimal Grade Ledger master data without overwriting existing rows."""
     from models.academic_year import AcademicYear
+    from models.academic_mapping import StudentAcademicMappingRule
     from models.jenjang import Jenjang
     from models.subject import Subject
 
