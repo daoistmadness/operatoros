@@ -45,3 +45,7 @@ frontend/src-tauri/gen/schemas/
 .build-sidecar/
 dist/
 frontend/src-tauri/resources/operatoros-sidecar.exe
+
+# Release artifacts
+release/**/*.exe
+
