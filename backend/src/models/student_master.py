@@ -180,3 +180,55 @@ class StudentMasterChangeHistory(Base):
     import_batch_id = Column(String(36), ForeignKey("student_import_batches.id", ondelete="RESTRICT"), nullable=True, index=True)
     changed_by = Column(String(255), nullable=False)
     changed_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+
+
+class LegacyLinkPreviewBatch(Base):
+    __tablename__ = "legacy_link_preview_batches"
+    id = Column(String(36), primary_key=True, default=new_student_master_id)
+    snapshot_checksum = Column(String(64), nullable=False, index=True)
+    rows = Column(JSON, nullable=False, default=list)
+    created_by = Column(String(255), nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    committed_at = Column(DateTime, nullable=True)
+
+
+class LegacyLinkResolution(Base):
+    __tablename__ = "legacy_link_resolutions"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    legacy_student_id = Column(Integer, ForeignKey("students.id", ondelete="RESTRICT"), nullable=False, index=True)
+    resolution = Column(String(32), nullable=False)
+    student_master_id = Column(String(36), ForeignKey("student_masters.id", ondelete="RESTRICT"), nullable=True)
+    reason = Column(Text, nullable=False)
+    resolved_by = Column(String(255), nullable=False)
+    resolved_at = Column(DateTime, nullable=False, server_default=func.now())
+    __table_args__ = (
+        CheckConstraint("resolution IN ('linked','created','deferred','invalid')", name="ck_legacy_link_resolution"),
+    )
+
+
+class EnrollmentPopulationPreviewBatch(Base):
+    __tablename__ = "enrollment_population_preview_batches"
+    id = Column(String(36), primary_key=True, default=new_student_master_id)
+    academic_year_id = Column(Integer, ForeignKey("academic_years.id", ondelete="RESTRICT"), nullable=False)
+    effective_start_date = Column(Date, nullable=False)
+    snapshot_checksum = Column(String(64), nullable=False, index=True)
+    rows = Column(JSON, nullable=False, default=list)
+    created_by = Column(String(255), nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    committed_at = Column(DateTime, nullable=True)
+
+
+class StudentEnrollmentClassHistory(Base):
+    __tablename__ = "student_enrollment_class_history"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    enrollment_id = Column(Integer, ForeignKey("student_enrollments.id", ondelete="RESTRICT"), nullable=False, index=True)
+    class_name = Column(String(255), nullable=True)
+    effective_from = Column(Date, nullable=False)
+    effective_to = Column(Date, nullable=True)
+    changed_by = Column(String(255), nullable=False)
+    changed_at = Column(DateTime, nullable=False, server_default=func.now())
+    source = Column(String(128), nullable=False)
+    import_batch_id = Column(String(36), ForeignKey("student_import_batches.id", ondelete="RESTRICT"), nullable=True)
+    __table_args__ = (
+        CheckConstraint("effective_to IS NULL OR effective_to >= effective_from", name="ck_enrollment_class_history_dates"),
+    )
