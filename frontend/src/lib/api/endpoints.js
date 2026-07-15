@@ -99,7 +99,7 @@ export async function downloadTardinessManagementExcel(params) {
 }
 
 export async function getServerStatus() {
-  await apiRequest({ path: '/health' });
+  await apiRequest({ path: '/api/system/health' });
   return 'online';
 }
 
