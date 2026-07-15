@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Clock3, Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
 
 import api from "../api";
+import { getPageApiError } from "../lib/api/errors";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -24,8 +25,8 @@ function JenjangConfig() {
 
     try {
       const [configResponse, availableResponse] = await Promise.all([
-        api.get("/config/jenjang"),
-        api.get("/config/jenjang/available"),
+        api.get("/api/config/jenjang"),
+        api.get("/api/config/jenjang/available"),
       ]);
 
       const configuredRows = Array.isArray(configResponse.data?.configured)
@@ -47,7 +48,7 @@ function JenjangConfig() {
         Array.isArray(availableResponse.data?.jenjang_list) ? availableResponse.data.jenjang_list : []
       );
     } catch (err) {
-      setError(err.response?.data?.detail || "Gagal memuat konfigurasi jenjang.");
+      setError(getPageApiError(err, "Gagal memuat konfigurasi jenjang."));
     } finally {
       setLoading(false);
     }
@@ -97,7 +98,7 @@ function JenjangConfig() {
     setError("");
 
     try {
-      const response = await api.put(`/config/jenjang/${encodeURIComponent(editingJenjang)}`, {
+      const response = await api.put(`/api/config/jenjang/${encodeURIComponent(editingJenjang)}`, {
         cutoff_time: cutoff,
       });
 
@@ -126,7 +127,7 @@ function JenjangConfig() {
     setError("");
 
     try {
-      await api.delete(`/config/jenjang/${encodeURIComponent(jenjang)}`);
+      await api.delete(`/api/config/jenjang/${encodeURIComponent(jenjang)}`);
       setConfiguredMap((prev) => {
         const next = { ...prev };
         delete next[jenjang];
