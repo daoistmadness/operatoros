@@ -92,37 +92,36 @@ To ensure strict quality and architecture control, developers and AI agents must
 ---
 
 ## Project Overview
-- Full-stack attendance analytics system for school operations.
-- FastAPI backend with SQLAlchemy models, routers, and services.
-- React frontend with routed pages, charts, and configuration screens.
-- Excel import flow for attendance spreadsheets and sample-template downloads.
-- Local SQLite support plus Docker Compose PostgreSQL support.
-- Manual review features for attendance overrides and absence reasons.
-- Configuration screens for jenjang cutoffs, HEB overrides, and system settings.
-- Report generation for attendance, rekap absensi, tardiness, and dashboard views.
-- Vite-based development launcher with `/api` proxy to FastAPI.
-- Repository-owned Agent Browser smoke testing for frontend verification.
-- Utility scripts for dashboard generation, repair, and diagnostics.
+- Offline-first school attendance and grade analytics system (OperatorOS) supporting multiple school levels (Jenjang).
+- FastAPI backend exposing REST APIs with database-backed session auth, role authorization, and audit trails.
+- React 19 frontend built with Vite, React Router, Tailwind CSS 4, and dynamic Chart.js dashboards.
+- Excel import pipeline for ingestion of machine-generated attendance records with upsert validation.
+- SQLite database with WAL mode for local dev/desktop, and PostgreSQL 16 support for production Docker Compose setup.
+- Matrix-style Grade Ledger interface for grade entries, overrides, and batch grade submissions.
+- Configuration interfaces for KKM thresholds, dynamic term ranges, lateness rules, and non-effective school days (HEB).
+- Executive Management Analytics calculating lateness, attendance, formats/sumatifs, intervention impact, and forecasting.
+- Single-process backup scheduler and system data-clearing routes protected by destructive action safety contracts.
+- Packaged desktop feasibility using Tauri v2 supervisors and PyInstaller backend processes.
 
 ## Tech Stack
-- Languages: Python, JavaScript
-- Backend: FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
-- Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
-- Package managers: pip, npm
-- Databases: SQLite, PostgreSQL 16
-- Infrastructure: Docker, Docker Compose, Nginx
-- Tooling: `start-dev.sh`, shell scripts, Excel utilities
-- Testing: backend `pytest` tests, frontend Jest test suite
+- **Languages:** Python 3.12, JavaScript (ES6+), TypeScript, Rust (for Tauri desktop app)
+- **Backend Frameworks & Libs:** FastAPI, SQLAlchemy ORM, Pydantic, Uvicorn, Pandas, openpyxl, ReportLab, Argon2
+- **Frontend Frameworks & Libs:** React 19, Vite, React Router (v7), TanStack Query (v5), TanStack Table, Chart.js, Framer Motion, Lucide React, Tailwind CSS 4
+- **Package Managers:** pip (Python), npm (JavaScript), Cargo (Rust)
+- **Databases:** SQLite (local files with WAL mode enabled), PostgreSQL 16 (for production)
+- **Infrastructure & Deployment:** Docker, Docker Compose, Nginx, PyInstaller, Tauri v2
+- **Tooling & Dev Scripts:** `start-dev.sh` launcher, Portless proxy tool, Agent Browser
+- **Testing:** pytest (backend, 296 tests), Vitest (frontend, 110 tests)
 
 ## Repository Structure
-- `backend/`: API source, ORM models, services, and raw SQL migration files
-- `frontend/`: React source, API client, pages, components, and Nginx config
-- `docs/`: operating notes, WSL2 guidance, and utility script docs
-- `scratch/`: one-off diagnostics; do not treat as supported workflows
-- Top-level `*.py`: reporting or repair scripts; some rewrite code or output files
-- `docker-compose.yml`: container orchestration for backend, frontend, and PostgreSQL
-- `start-dev.sh`: local WSL2 dev launcher
-- Do not edit generated artifacts casually: `frontend/build/`, `frontend/node_modules/`, local `attendance.db*` files
+- [backend/](backend/): FastAPI backend application containing ORM models, API routes, SQL migrations, and services.
+- [frontend/](frontend/): React 19 frontend application including component structures, static public pages, and Vite configuration.
+- [frontend/src-tauri/](frontend/src-tauri/): Tauri v2 supervisor configuration and Rust supervisor code. *Do not edit casually.*
+- [docs/](docs/): Technical documentation, releases, architecture, and threat models.
+- [scratch/](scratch/): Location for temporary scripts and diagnostics. *Do not check into git.*
+- [scripts/](scripts/): Maintenance scripts such as backup, restore, and verification.
+- Top-level files: `start-dev.sh` (dev process launcher), `docker-compose.yml` (Docker configuration), and repair scripts.
+- *Do not edit generated artifacts casually:* `frontend/build/`, `frontend/node_modules/`, local `.db*` files, and exported reports.
 
 ## Common Commands
 See [COMMANDS.md](COMMANDS.md) for the verified command list. Keep this file command-focused.

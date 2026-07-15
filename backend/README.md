@@ -1,7 +1,7 @@
-# School Attendance Analytics Backend
+# OperatorOS Backend
 
 ## Responsibilities
-This backend exposes authenticated attendance, reporting, backup, and administration APIs for the offline-first Astryx deployment profile.
+This backend exposes authenticated attendance, reporting, backup, and administration APIs for the offline-first OperatorOS deployment profile.
 
 ## Structure
 ```text

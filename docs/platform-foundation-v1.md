@@ -1,10 +1,12 @@
-# Astryx Platform Foundation v1
+# OperatorOS Platform Foundation v1
 
-Release milestone: `v0.9.0-platform-foundation`.
+Historical Phase 9 release milestone: `v0.9.0-platform-foundation`.
+
+This document is the immutable Phase 9 foundation inventory. The current completed milestone is [Phase 10 — Incremental Design-System Modernization](releases/phase-10-design-system-modernization.md); current status and the remaining Phase 9.6 external gate are tracked in the [roadmap](project-status/current-roadmap.md).
 
 ## 1. Platform overview
 
-Astryx is a React 19/Vite administrative frontend backed by FastAPI, SQLAlchemy, and either local SQLite or PostgreSQL 16. The stabilized foundation consists of four cooperating layers:
+OperatorOS is a React 19/Vite administrative frontend backed by FastAPI, SQLAlchemy, and either local SQLite or PostgreSQL 16. The stabilized foundation consists of four cooperating layers:
 
 ```text
 Identity Layer + Reporting Layer + Backup Operations + Deployment Infrastructure
@@ -59,7 +61,7 @@ Implemented: hardened `start-dev.sh`, Docker build/runtime configuration, Docker
 
 Migration order is dialect-specific and additive: identity, first-admin state, then backup scheduler. Startup compatibility patches remain non-destructive and do not replace production migrations. See [backend migration guide](../backend/migrations/README.md).
 
-## Verification baseline
+## Historical Phase 9.5 verification baseline
 
 Phase 9.5 verification on 2026-07-14:
 
@@ -70,3 +72,7 @@ Phase 9.5 verification on 2026-07-14:
 - PostgreSQL migration contracts: statically tested; live PostgreSQL execution depends on an available PostgreSQL 16 service.
 
 See [security review](security/platform-foundation-review.md) and [release notes](releases/platform-foundation.md).
+
+## Current convergence status
+
+The Phase 9.5 figures above are the release baseline and are intentionally preserved. The current 2026-07-14 convergence result is **296 backend tests**, **21 frontend files / 110 frontend tests**, a passing production build, and **9 Windows desktop contracts with no xfail**. Phase 9.6 remains implemented but not externally closed because clean no-development-tool Windows validation is pending. See `project-status/phases-8-to-10.md` and `project-status/current-roadmap.md`.

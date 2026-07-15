@@ -22,6 +22,7 @@ This file records recurring failures, fragile areas, and debugging notes.
 - Uploads only accept `.xlsx` files.
 - `frontend/src/lib/api/client.js` checks browser local storage for bearer tokens, but the backend does not currently provide a matching auth flow.
 - The frontend Docker image proxies `/api/*`, while Portless and browser-smoke development also use `/api` with a dev proxy. Keep those paths aligned when changing API calls.
+- **Audit Table Write Abort**: The table `attendance_override_history` is strictly append-only. Any manual `UPDATE` or `DELETE` SQL operations on this table will abort with a database trigger exception (`trg_history_no_update`, `trg_history_no_delete`). To run resets or purges, triggers must be dropped and re-established programmatically (as in `backend/src/api/system.py`).
 
 ## Debugging Notes
 - If uploads fail, inspect the sample template and compare its column names to the source workbook.

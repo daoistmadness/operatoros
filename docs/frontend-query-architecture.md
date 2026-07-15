@@ -1,5 +1,7 @@
 # Frontend Query Architecture
 
+Phase 8 status: **COMPLETE FOR THE APPROVED MIGRATION SCOPE**. This remains the governing contract for new server-state work; Grade Matrix and other high-risk editable surfaces remain deliberate exclusions rather than incomplete pilot work.
+
 TanStack Query is the frontend server-state foundation. `index.js` owns the single application provider and `lib/query/queryClient.ts` owns both application and isolated test-client factories. Components should keep only UI drafts and selections in local state; API results, request status, and server errors belong in queries.
 
 ## Query keys

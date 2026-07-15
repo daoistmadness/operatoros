@@ -122,7 +122,7 @@ function emptyBrandingDraft(): BrandingDraft {
     logo_path: "",
     logo_label: "School Logo",
     footer_text: "Prepared for school leadership review",
-    prepared_by: "School Attendance Analytics",
+    prepared_by: "OperatorOS",
     is_default: true,
   };
 }

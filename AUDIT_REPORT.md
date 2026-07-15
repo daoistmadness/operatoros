@@ -1,7 +1,7 @@
 # Project Flow and Database Relationship Audit
 
 ## Executive Summary
-This audit inspects the data flows and relationship integrity of the dynamic Grade Ledger ecosystem (Phases 4-8) within the `school-attendance-analytics` project. The recent introduction of the Enrollment Bridge decouples the master student existence from their periodic academic participation, creating a highly scalable, jenjang-aware matrix architecture. This report maps out the lifecycle of a student from ingestion to grading, highlights the roles of key junction tables, and identifies potential structural anomalies and coverage gaps.
+This audit inspects the data flows and relationship integrity of the dynamic Grade Ledger ecosystem (Phases 4-8) within the `OperatorOS` project. The recent introduction of the Enrollment Bridge decouples the master student existence from their periodic academic participation, creating a highly scalable, jenjang-aware matrix architecture. This report maps out the lifecycle of a student from ingestion to grading, highlights the roles of key junction tables, and identifies potential structural anomalies and coverage gaps.
 
 ---
 

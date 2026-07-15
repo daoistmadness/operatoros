@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Astryx Phase 11 shell with no frontend-accessible native commands.",
+  "windows": ["main"],
+  "permissions": []
+}

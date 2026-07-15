@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './tailwind.css';
+import './index.css';
 import App from './App';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query/queryClient';

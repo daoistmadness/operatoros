@@ -6,7 +6,7 @@ Date: 2026-07-14
 
 **Status: ACTIVE**
 
-Docker is an actively supported secondary runtime for Astryx, alongside the primary direct-process local development workflow. It is not merely a historical documentation reference:
+Docker is an actively supported secondary runtime for OperatorOS, alongside the primary direct-process local development workflow. It is not merely a historical documentation reference:
 
 - `.github/workflows/ci.yml` contains a dedicated `compose` job that runs `docker compose config` on every supported push and pull request.
 - `docker-compose.yml` defines a coherent backend, frontend/Nginx, and PostgreSQL 16 topology with a persistent database volume and health-gated backend startup.

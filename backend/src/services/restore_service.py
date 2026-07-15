@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sqlite3
+import time
 import uuid
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -158,6 +159,18 @@ def _remove_sidecars(database_path: Path) -> None:
         Path(str(database_path) + suffix).unlink(missing_ok=True)
 
 
+def _replace_with_retry(source: Path, destination: Path, *, attempts: int = 50, delay: float = 0.1) -> None:
+    """Preserve atomic replacement while transient Windows file handles drain."""
+    for attempt in range(attempts):
+        try:
+            source.replace(destination)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(delay)
+
+
 def verify_restored_database(path: Path, expected_counts: dict[str, int], engine: Engine) -> None:
     validate_backup(path, set(PROTECTED_TABLES))
     if _table_counts(path, PROTECTED_TABLES) != expected_counts:
@@ -275,8 +288,8 @@ def restore_backup(
             with engine.connect() as connection:
                 connection.exec_driver_sql("PRAGMA wal_checkpoint(TRUNCATE)")
             engine.dispose()
-            live_path.replace(rollback)
-            candidate.replace(live_path)
+            _replace_with_retry(live_path, rollback)
+            _replace_with_retry(candidate, live_path)
             replaced = True
             _remove_sidecars(live_path)
             revoke_restored_sessions(live_path)
@@ -301,7 +314,7 @@ def restore_backup(
             engine.dispose()
             if replaced and rollback.exists():
                 live_path.unlink(missing_ok=True)
-                rollback.replace(live_path)
+                _replace_with_retry(rollback, live_path)
                 _remove_sidecars(live_path)
                 engine.dispose()
                 validate_backup(live_path, current_tables)

@@ -4,6 +4,8 @@
 
 This Phase 8.0 audit was completed before the TanStack implementation. It inventories the request layer, server data held in React state, effects that initiate requests, mutation refresh behavior, and migration risk. The frontend has no Axios dependency. All production HTTP traffic ultimately uses `apiRequest()` in `frontend/src/lib/api/client.js`, whose only direct `fetch()` call applies the canonical API base URL, credentials, timeout, response parsing, and global 401 event.
 
+> Completion update, 2026-07-14: the approved Phase 8 foundation and pilots are complete. TanStack Query now owns the shared provider/client, query keys, retry/cache policy, and approved authentication, Backup Management, and Executive Reports server-state flows. TanStack Table remains selective, and Grade Matrix remains intentionally excluded. The inventory below is retained as the pre-implementation baseline rather than a description of every screen's current state.
+
 ## API communication inventory
 
 | Location | API/domain | Methods | Purpose | Current pattern | Risk |
@@ -52,7 +54,7 @@ Risk classification:
 | Academic configuration | config plus analytics/report queries using the affected academic year |
 | Report template/branding mutations | matching report-builder list/detail queries |
 
-Phase 8 will standardize named mutation hooks and query-key-based invalidation for the selected pilots. Later migrations should invalidate the narrowest domain/context prefix that is definitely stale.
+Phase 8 standardized named mutation hooks and query-key-based invalidation for the selected pilots. Later migrations should continue to invalidate the narrowest domain/context prefix that is definitely stale.
 
 ## Migration candidates and order
 

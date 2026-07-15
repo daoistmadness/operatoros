@@ -1,8 +1,10 @@
-# School Attendance Analytics
+# OperatorOS
 
-Current release milestone: **`v0.9.0-platform-foundation`**. See the [platform foundation inventory](docs/platform-foundation-v1.md), [security review](docs/security/platform-foundation-review.md), and [release notes](docs/releases/platform-foundation.md).
+Current completed milestone: **Phase 10 — Incremental Design-System Modernization**. See the [Phase 10 release notes](docs/releases/phase-10-design-system-modernization.md), [design-system review](docs/phase10-design-system-review.md), and [current roadmap](docs/project-status/current-roadmap.md).
 
-School Attendance Analytics (Astryx) is an offline-first full-stack system for importing school attendance spreadsheets, reviewing and correcting attendance data, configuring lateness rules, and generating operational and executive reports.
+The prior **`v0.9.0-platform-foundation`** inventory, security review, and release notes remain the historical Phase 9 baseline. Phase 9.6 still requires the documented clean-Windows external acceptance run before the platform foundation is fully closed.
+
+OperatorOS is an offline-first full-stack system for importing school attendance spreadsheets, reviewing and correcting attendance data, configuring lateness rules, and generating operational and executive reports.
 
 ## What It Does
 - Imports `.xlsx` attendance exports into a backend database.
@@ -30,7 +32,7 @@ flowchart LR
 
 ## Security Architecture
 
-Astryx uses a layered local security model:
+OperatorOS uses a layered local security model:
 
 1. backup integrity protection;
 2. guarded restore with safety snapshot and rollback;
@@ -81,7 +83,7 @@ Direct Node.js/Vite and Python/FastAPI processes are the primary local-developme
 
 The launcher validates Node.js, npm, locked frontend dependencies, the Python environment, backend imports, and ports before starting anything. It displays the ready banner only after both health checks pass and stores service logs under `.dev-logs/`. Press `Ctrl+C` to stop both process groups cleanly.
 
-On a fresh database, open the frontend and create the first administrator on the setup screen. Astryx then closes setup permanently and redirects to normal login. There are no default credentials.
+On a fresh database, open the frontend and create the first administrator on the setup screen. OperatorOS then closes setup permanently and redirects to normal login. There are no default credentials.
 
 For a trusted headless/local shell, use the same provisioning service interactively:
 
@@ -240,7 +242,7 @@ flowchart TD
 - If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
 
 ## Security and Data Handling
-- Astryx uses database-backed users, revocable server-side sessions, an HttpOnly cookie, and Argon2id password hashes.
+- OperatorOS uses database-backed users, revocable server-side sessions, an HttpOnly cookie, and Argon2id password hashes.
 - Backend roles are `admin` and `staff`; client-provided roles never authorize a request.
 - `POST /api/system/clear-data` is disabled by default and requires an authenticated administrator plus exact confirmation when enabled.
 - Backup restore additionally requires identity-compatible data, an active administrator, single-worker runtime, and mandatory reauthentication after success.

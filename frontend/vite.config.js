@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as vite from 'vite';
+import path from 'node:path';
 
 const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || 'http://127.0.0.1:8000';
 
@@ -9,6 +10,7 @@ const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || 'http://127.0.0.1:
 // Tech Stack: Vite / React 19 / Vitest
 
 export default defineConfig({
+  resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
   plugins: [
     react(),
     {
@@ -32,6 +34,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      loader: { '.js': 'jsx' },
     },
   },
   build: {

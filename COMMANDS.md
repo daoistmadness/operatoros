@@ -13,16 +13,19 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
 - `cd backend && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000`
 - `cd frontend && npm run dev`
+- `cd frontend && npm run tauri:dev`  # Windows Tauri shell + Vite; backend remains a separate process
 - `cd frontend && VITE_API_BASE_URL=http://localhost:8000 npm run dev`
 
 ## Build
 - `cd frontend && npm run build`
+- `cd frontend && npm run tauri -- build --no-bundle`  # Windows desktop executable, without an installer
 - `docker compose up --build`
 
 ## Test / Validation
 - `cd backend && python3 -m pytest -q` (or with venv-backed execution: `DATABASE_URL=sqlite:///./attendance.db PYTHONPATH=backend backend/.venv/bin/pytest backend/tests/ -q`)
 - `cd backend && python3 -c "from src.main import app; assert app is not None"`
 - `cd frontend && npm test`  # Vitest frontend unit tests
+- `cd frontend/src-tauri && cargo check`  # run from a Windows Rust toolchain for the Windows shell
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
 - `docker compose config`
@@ -30,9 +33,15 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 
 ## Formatting / Lint / Typecheck
 - Not declared in the repository root, backend, or frontend scripts.
-- TODO: add repo-specific lint/typecheck commands if they are introduced later.
+- TODO: add repo-specific lint/typecheck/formatting commands if they are introduced later.
 
-## Database / Ops
+## Database Migration / Generation
+- No manual migration tool (like Alembic) is configured.
+- Database tables are automatically generated on startup via SQLAlchemy (`Base.metadata.create_all` in `backend/src/core/database.py`).
+- Schema updates/patches are programmatically run on startup via database patches (e.g. `run_grade_ledger_patches` in `backend/src/core/database.py`).
+- Raw SQL files in `backend/migrations/` represent the repository's migration history.
+
+## Database / Ops / Logs
 - `docker compose logs -f backend`
 - `docker compose logs -f frontend`
 - `docker compose logs -f db`

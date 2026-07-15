@@ -138,7 +138,7 @@ def test_dev_launcher_reports_missing_vite_before_starting_services(tmp_path):
     assert result.returncode == 2
     assert "Frontend dependency installation is incomplete" in output
     assert "npm ci" in output
-    assert "No Astryx services were started" in output
+    assert "No OperatorOS services were started" in output
 
 
 def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
@@ -152,7 +152,7 @@ def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
     output = result.stdout + result.stderr
     assert result.returncode == 2
     assert "node failed its version check" in output
-    assert "No Astryx services were started" in output
+    assert "No OperatorOS services were started" in output
 
 
 @pytest.mark.parametrize(("service", "frontend_port", "backend_port", "held_port"), [
@@ -171,7 +171,7 @@ def test_dev_launcher_detects_port_conflicts_before_startup(tmp_path, service, f
     assert result.returncode == 2
     assert f"Port {held_port} is already in use" in output
     assert service in output.lower()
-    assert "No Astryx services were started" in output
+    assert "No OperatorOS services were started" in output
 
 
 def test_dev_launcher_waits_for_readiness_and_ctrl_c_cleans_process_groups(tmp_path):
@@ -225,7 +225,7 @@ def test_dev_launcher_ctrl_c_during_startup_cleans_process_groups(tmp_path):
         os.killpg(process.pid, signal.SIGINT)
         output, _ = process.communicate(timeout=15)
         assert process.returncode == 0, output
-        assert "No Astryx services were started" in output or "Stopping Astryx development stack" in output
+        assert "No OperatorOS services were started" in output or "Stopping OperatorOS development stack" in output
         _assert_port_available(15179)
         _assert_port_available(18006)
     finally:

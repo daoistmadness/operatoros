@@ -1,4 +1,4 @@
-# School Attendance Analytics Frontend
+# OperatorOS Frontend
 
 ## Responsibilities
 This React app provides the staff-facing UI for uploading attendance files, mapping students to classes, configuring HEB and jenjang rules, reviewing attendance overrides, and viewing reports and charts.

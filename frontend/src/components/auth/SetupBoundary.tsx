@@ -5,7 +5,7 @@ import SetupAdmin from "../../pages/SetupAdmin";
 export function SetupBoundary({ children }: { children: ReactNode }) {
   const status = useSetupStatusQuery();
   if (status.isLoading) {
-    return <main aria-live="polite" className="flex min-h-screen items-center justify-center bg-slate-950 text-sm font-bold text-white">Checking Astryx setup…</main>;
+    return <main aria-live="polite" className="flex min-h-screen items-center justify-center bg-slate-950 text-sm font-bold text-white">Checking OperatorOS setup…</main>;
   }
   if (status.isError || !status.data) {
     return (

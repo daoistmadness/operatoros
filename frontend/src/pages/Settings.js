@@ -13,6 +13,13 @@ import api from "../api";
 import { cn } from "../lib/cn";
 import { getSystemHealth } from "../lib/api/endpoints";
 import { useAuth } from "../context/AuthContext";
+import { Alert } from "../components/ui/alert";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { Dialog, DialogContent } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 const RESET_CONFIRMATION = "CLEAR_ALL_ATTENDANCE_DATA";
 
@@ -95,7 +102,7 @@ function Settings() {
       {/* Main Settings Sections */}
       <div className="grid grid-cols-1 gap-6">
         {/* Info Card */}
-        <div className="card p-6 bg-white border border-slate-200">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
             <SettingsIcon size={20} className="text-brand" />
             <h2 className="font-bold text-slate-800 underline decoration-brand/30 decoration-2 underline-offset-4">General Configuration</h2>
@@ -106,16 +113,16 @@ function Settings() {
                 <p className="font-bold text-slate-900 text-sm">System Version</p>
                 <p className="text-xs text-slate-500 font-medium">v1.2.4 stable</p>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded-[9999px]">Active</span>
+              <Badge variant="success">Active</Badge>
             </div>
             {isAdmin && <Link to="/settings/backups" className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 font-bold text-slate-800 transition hover:border-brand hover:text-brand">
               <span>Backup Management</span><span aria-hidden="true">→</span>
             </Link>}
           </div>
-        </div>
+        </Card>
 
         {/* Danger Zone */}
-        <div className={cn("card p-6 border", resetControlsVisible ? "bg-rose-50/30 border-rose-100" : "bg-slate-50 border-slate-200")}>
+        <Card className={cn("p-6", resetControlsVisible ? "bg-rose-50/30 border-rose-100" : "bg-slate-50 border-slate-200")}>
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-rose-100">
             <ShieldAlert size={20} className="text-rose-500" />
             <h2 className="font-bold text-rose-900 underline decoration-rose-500/30 decoration-2 underline-offset-4">
@@ -199,30 +206,23 @@ function Settings() {
               Destructive operations are disabled in this environment. The reset controls stay hidden until the backend explicitly enables them.
             </div>
           )}
-        </div>
+        </Card>
 
       </div>
 
       {resetSuccess && (
-        <div className="card p-4 bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800 animate-in zoom-in-95 duration-500">
+        <Alert variant="success" className="flex items-center gap-3 animate-in zoom-in-95 duration-500">
           <CheckCircle2 size={20} className="text-emerald-500" />
           <div>
             <p className="font-bold">System successfully reset!</p>
             <p className="text-xs font-medium opacity-80">All data has been wiped. You can now start fresh by uploading new documents.</p>
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* Reset Confirmation Modal */}
-      {showResetModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}
-        >
-          <div 
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Dialog open={showResetModal} onOpenChange={(open) => !isResetting && setShowResetModal(open)}>
+        <DialogContent className="max-w-md overflow-hidden p-0">
             {/* Header - Red Alert */}
             <div className={cn(
               "px-8 py-8 text-white text-center flex-shrink-0 transition-colors duration-500",
@@ -259,15 +259,16 @@ function Settings() {
 
 
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1 block">Confirmation Key</label>
-                <input
+                <Label htmlFor="reset-confirmation" className="block px-1 text-xs uppercase tracking-widest">Confirmation Key</Label>
+                <Input
+                  id="reset-confirmation"
                   type="text"
                   autoFocus
                   placeholder={`Type "${RESET_CONFIRMATION}"...`}
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && confirmText === RESET_CONFIRMATION && handleResetData()}
-                  className="w-full px-4 py-4 border-2 border-slate-100 rounded-2xl text-slate-900 font-bold placeholder:text-slate-200 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all text-center tracking-[.25em] bg-slate-50 shadow-inner"
+                  className="h-14 text-center font-bold tracking-[.25em]"
                 />
               </div>
 
@@ -276,33 +277,27 @@ function Settings() {
               )}
 
               <div className="flex gap-4 pt-2">
-                <button
+                <Button
+                  variant="secondary"
                   disabled={isResetting}
                   onClick={() => setShowResetModal(false)}
-                  className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-600 font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors border border-slate-200 shadow-sm"
+                  className="flex-1 uppercase tracking-widest"
                 >
                   Cancel
-                </button>
-                 <button
+                </Button>
+                 <Button
                   onClick={handleResetData}
                   disabled={confirmText !== RESET_CONFIRMATION || isResetting}
-                  className={cn(
-                    "flex-1 py-4 rounded-2xl font-black uppercase text-[11px] tracking-widest transition-all shadow-lg",
-                    confirmText === RESET_CONFIRMATION 
-                      ? (resetMode === "full" 
-                        ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-600/30 ring-2 ring-rose-500 ring-offset-2" 
-                        : "bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/30 ring-2 ring-amber-500 ring-offset-2")
-                      : "bg-slate-200 text-slate-400 opacity-60 cursor-not-allowed shadow-none"
-                  )}
+                  variant={resetMode === "full" ? "danger" : "warning"}
+                  className="flex-1 uppercase tracking-widest"
                 >
 
                   {isResetting ? "Wiping..." : "Confirm Reset"}
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
