@@ -11,9 +11,25 @@ backend/*.sqlite3
 frontend/node_modules/
 frontend/build/
 .artifacts/
+artifacts/
+.playwright-mcp/
+.sisyphus/
 .dev-logs/
+.runtime/operatoros-dev/
+.runtime/operatoros-e2e/
+.runtime/
+e2e-results/
+playwright-report/
+test-results/
+coverage/
+.bun/
+.vite/
 
 *.log
+*.pid
+*.lock
+*.har
+*.trace
 
 # Local Backups
 backups/
@@ -45,7 +61,8 @@ frontend/src-tauri/gen/schemas/
 .build-sidecar/
 dist/
 frontend/src-tauri/resources/operatoros-sidecar.exe
+frontend/src-tauri/tauri.*.override.json
+frontend/src-tauri/tauri.*.generated.json
 
 # Release artifacts
 release/**/*.exe
-

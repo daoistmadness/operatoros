@@ -1,47 +1,58 @@
 #!/usr/bin/env bash
-# Reliable direct-process launcher for the Astryx development stack.
+# Repository-scoped OperatorOS development launcher.
 
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 BACKEND_DIR="$PROJECT_ROOT/backend"
-FRONTEND_DIR="$PROJECT_ROOT/frontend"
+FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
 VENV="$BACKEND_DIR/.venv"
-LOG_DIR="${ASTRYX_DEV_LOG_DIR:-$PROJECT_ROOT/.dev-logs}"
+RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
+RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
+DEV_STATE_DIR="${ASTRYX_DEV_STATE_DIR:-$BACKEND_DIR/.local-dev}"
+DEV_DATABASE="$DEV_STATE_DIR/astryx-development.db"
+DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
 
+BACKEND_PORT_CONFIGURED=0
+FRONTEND_PORT_CONFIGURED=0
+[[ -n "${BACKEND_PORT+x}" ]] && BACKEND_PORT_CONFIGURED=1
+[[ -n "${FRONTEND_PORT+x}" ]] && FRONTEND_PORT_CONFIGURED=1
 BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
-BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
+BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 READINESS_TIMEOUT_SECONDS="${ASTRYX_READINESS_TIMEOUT_SECONDS:-30}"
 SHUTDOWN_TIMEOUT_SECONDS="${ASTRYX_SHUTDOWN_TIMEOUT_SECONDS:-5}"
 
-DEV_STATE_DIR="${ASTRYX_DEV_STATE_DIR:-$BACKEND_DIR/.local-dev}"
-DEV_DATABASE="$DEV_STATE_DIR/astryx-development.db"
-DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-BACKEND_LOG="$LOG_DIR/backend.log"
-FRONTEND_LOG="$LOG_DIR/frontend.log"
-VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
-
 CHECK_ONLY=0
+CLEAN_STALE=1
+AUTO_PORT=0
+MODE=browser
+JS_RUNTIME="${OPERATOROS_JS_RUNTIME:-bun}"
+JS_RUNTIME_VERSION=""
+BUN_EXECUTABLE="${OPERATOROS_BUN_EXECUTABLE:-}"
 BACKEND_PID=""
 FRONTEND_PID=""
+SESSION_ID=""
+SESSION_TOKEN=""
 CLEANUP_STARTED=0
-STACK_READY=0
-INTERRUPTED=0
+LOCK_HELD=0
 
 usage() {
   cat <<'EOF'
-Usage: ./start-dev.sh [--check] [--help]
+Usage: ./start-dev.sh [options]
 
-  --check  Validate commands, dependencies, configuration, and ports without
-           starting either service.
-  --help   Show this help.
-
-Optional environment overrides:
-  BACKEND_HOST, BACKEND_PORT, FRONTEND_HOST, FRONTEND_PORT
-  ASTRYX_READINESS_TIMEOUT_SECONDS, ASTRYX_SHUTDOWN_TIMEOUT_SECONDS
+  --check             Validate without starting services
+  --clean-stale       Enable safe cleanup (default)
+  --no-clean-stale    Never clean; fail if a selected port is occupied
+  --auto-port         Select frontend 5173-5199 and backend 8000-8099
+  --mode browser      Fixed-port browser mode (default)
+  --mode tauri        Automatic-port mode for Windows Tauri coordination
+  --tauri-fixed       Dedicated Tauri ports 5174/8002
+  --runtime bun       Pinned Bun runtime (default)
+  --runtime node      Genuine Node.js 22 fallback
+  --help              Show this help
 EOF
 }
 
@@ -60,43 +71,18 @@ fail_preflight() {
 }
 
 require_command() {
-  local command_name="$1"
-  local service="$2"
-  local guidance="$3"
-  command -v "$command_name" >/dev/null 2>&1 || fail_preflight \
-    "$service prerequisite missing: $command_name was not found" \
-    "$guidance" \
-    "Then rerun:  ./start-dev.sh"
+  command -v "$1" >/dev/null 2>&1 || fail_preflight "$2 prerequisite missing: $1 was not found" "$3"
 }
 
-check_port() {
-  local host="$1"
-  local port="$2"
-  local service="$3"
-  if ! "$VENV/bin/python" - "$host" "$port" <<'PY'
-import socket
-import sys
-
-host, raw_port = sys.argv[1:]
-probe_host = "0.0.0.0" if host in {"0.0.0.0", "::"} else host
-family = socket.AF_INET6 if ":" in probe_host else socket.AF_INET
+port_is_free() {
+  "$VENV/bin/python" - "$1" "$2" <<'PY'
+import socket, sys
+host, port = sys.argv[1], int(sys.argv[2])
+family = socket.AF_INET6 if ':' in host else socket.AF_INET
 with socket.socket(family, socket.SOCK_STREAM) as sock:
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((probe_host, int(raw_port)))
+    sock.bind((host, port))
 PY
-  then
-    local owner=""
-    if command -v lsof >/dev/null 2>&1; then
-      owner="$(lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null | tail -n +2 | head -n 1 || true)"
-    elif command -v ss >/dev/null 2>&1; then
-      owner="$(ss -ltnp "sport = :$port" 2>/dev/null | tail -n +2 | head -n 1 || true)"
-    fi
-    fail_preflight \
-      "Port $port is already in use" \
-      "$service cannot start on http://$host:$port." \
-      "${owner:+Process:  $owner}" \
-      "Stop the existing process or configure a different ${service^^}_PORT."
-  fi
 }
 
 prepare_local_environment() {
@@ -107,147 +93,139 @@ prepare_local_environment() {
     export DATABASE_URL="sqlite:///$DEV_DATABASE"
     launcher_owns_database=1
   fi
-
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
     mkdir -p "$DEV_STATE_DIR"
     chmod 700 "$DEV_STATE_DIR"
     if [[ ! -s "$DEV_SECRET_FILE" ]]; then
-      "$VENV/bin/python" -c 'import secrets, sys; open(sys.argv[1], "x", encoding="utf-8").write(secrets.token_urlsafe(48))' "$DEV_SECRET_FILE"
+      "$VENV/bin/python" -c 'import secrets,sys; open(sys.argv[1],"x",encoding="utf-8").write(secrets.token_urlsafe(48))' "$DEV_SECRET_FILE"
       chmod 600 "$DEV_SECRET_FILE"
     fi
     export AUTH_COOKIE_SECRET="$(<"$DEV_SECRET_FILE")"
   fi
   export COOKIE_SECURE="${COOKIE_SECURE:-false}"
-
-  # Only a brand-new launcher-owned database receives the approved migration.
-  if [[ "$launcher_owns_database" == "1" ]] && [[ ! -e "$DEV_DATABASE" ]]; then
-    "$VENV/bin/python" - "$DEV_DATABASE" \
-      "$BACKEND_DIR/migrations/20260713_identity_schema_sqlite.sql" \
-      "$BACKEND_DIR/migrations/20260714_first_admin_setup_sqlite.sql" <<'PY'
-import sqlite3
-import sys
-from pathlib import Path
-
-database = Path(sys.argv[1])
-migrations = [Path(value) for value in sys.argv[2:]]
-connection = sqlite3.connect(database)
-try:
-    connection.execute("PRAGMA foreign_keys=ON")
-    for migration in migrations:
-        connection.executescript(migration.read_text(encoding="utf-8"))
-finally:
-    connection.close()
-PY
+  if [[ "$launcher_owns_database" == 1 && ! -e "$DEV_DATABASE" ]]; then
+    (
+      cd "$BACKEND_DIR"
+      export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+      "$VENV/bin/python" -m core.schema_migrations initialize-fresh --database "$DEV_DATABASE"
+    )
   fi
 }
 
 run_preflight() {
   printf 'OperatorOS Development Stack\n\nChecking environment...\n'
-  require_command bash "Launcher" "Install Bash using your Linux or WSL distribution."
-  require_command node "Frontend" "Install Node.js 22 with npm."
-  require_command npm "Frontend" "Install Node.js 22 with npm."
-  require_command curl "Readiness check" "Install curl using your Linux or WSL distribution."
-  require_command setsid "Process management" "Install the util-linux package using your Linux or WSL distribution."
-  require_command ps "Process management" "Install the procps package using your Linux or WSL distribution."
-
-  local node_version node_major npm_version
-  if ! node_version="$(node --version 2>/dev/null)" || [[ ! "$node_version" =~ ^v[0-9]+([.][0-9]+){1,2}$ ]]; then
-    fail_preflight \
-      "Frontend prerequisite is not usable: node failed its version check" \
-      "Install Node.js 22 with npm, and ensure its bin directory appears before compatibility shims in PATH."
-  fi
-  node_major="${node_version#v}"
-  node_major="${node_major%%.*}"
-  if [[ "$node_major" == "22" ]]; then
-    printf '  [ok] Node.js %s\n' "$node_version"
+  require_command bash Launcher "Install Bash using the Linux/WSL distribution."
+  require_command flock Launcher "Install util-linux for collision-safe allocation."
+  require_command curl "Readiness check" "Install curl."
+  require_command setsid "Process management" "Install util-linux."
+  require_command ps "Process management" "Install procps."
+  [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
+  "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
+  [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and package-lock.json."
+  if [[ "$JS_RUNTIME" == bun ]]; then
+    if [[ -z "$BUN_EXECUTABLE" ]]; then
+      BUN_EXECUTABLE="$(command -v bun 2>/dev/null || true)"
+    fi
+    if [[ -z "$BUN_EXECUTABLE" ]]; then
+      current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+      [[ -x "$current_user_home/.bun/bin/bun" ]] && BUN_EXECUTABLE="$current_user_home/.bun/bin/bun"
+    fi
+    if [[ -z "$BUN_EXECUTABLE" && -x "$(readlink -f "$(command -v node 2>/dev/null || printf /nonexistent)")" ]]; then
+      candidate="$(readlink -f "$(command -v node)")"
+      [[ "$(basename "$candidate")" == bun ]] && BUN_EXECUTABLE="$candidate"
+    fi
+    [[ -x "$BUN_EXECUTABLE" ]] || fail_preflight "BUN_RUNTIME_NOT_FOUND" "Set OPERATOROS_BUN_EXECUTABLE to the pinned Bun binary; Node 22 remains the fallback."
+    JS_RUNTIME_VERSION="$($BUN_EXECUTABLE --version)"
+    [[ "$JS_RUNTIME_VERSION" == "$(<"$PROJECT_ROOT/.bun-version")" ]] || fail_preflight "BUN_VERSION_MISMATCH" "Use the version pinned in .bun-version."
+    printf '  [ok] Bun %s\n' "$JS_RUNTIME_VERSION"
   else
-    printf '  [warn] Node.js %s detected; the documented project standard is Node.js 22.\n' "$node_version"
+    current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+    existing_node="$(command -v node 2>/dev/null || true)"
+    existing_version="$(node --version 2>/dev/null || true)"
+    if [[ ! "$existing_version" =~ ^v22[.] ]] || [[ -n "$existing_node" && "$(readlink -f "$existing_node")" == *"/.bun/bin/bun" ]]; then
+      node_manager_dir="${OPERATOROS_NVM_DIR:-$current_user_home/.nvm}"
+      if [[ ! -s "$node_manager_dir/nvm.sh" ]]; then
+        fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
+      fi
+      export NVM_DIR="$node_manager_dir"
+      # shellcheck disable=SC1090
+      source "$NVM_DIR/nvm.sh"
+      nvm use "$(<"$PROJECT_ROOT/.nvmrc")" >/dev/null
+    fi
+    command -v node >/dev/null 2>&1 || fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
+    command -v npm >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate the npm paired with Node.js 22."
+    if [[ "$(readlink -f "$(command -v node)")" == *"/.bun/bin/bun" ]]; then
+      fail_preflight "NODE_COMMAND_RESOLVES_TO_BUN" "Activate genuine Node.js 22 through NVM."
+    fi
+    local node_version node_major
+    node_version="$(node --version 2>/dev/null)" || fail_preflight "Frontend prerequisite is not usable: node failed its version check" "Install Node.js 22 with npm."
+    node_major="${node_version#v}"; node_major="${node_major%%.*}"
+    [[ "$node_major" == 22 ]] || fail_preflight "NODE_22_REQUIRED" "Detected $node_version; activate Node.js 22 through NVM."
+    npm --version >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate npm paired with Node.js 22."
+    JS_RUNTIME_VERSION="${node_version#v}"
+    printf '  [ok] Node.js %s\n' "$node_version"
   fi
-  if ! npm_version="$(npm --version 2>/dev/null)"; then
-    fail_preflight \
-      "Frontend prerequisite is not usable: npm failed its version check" \
-      "Install Node.js 22 with npm, then rerun:  ./start-dev.sh"
-  fi
-  printf '  [ok] npm %s\n' "$npm_version"
+  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && npm ci"
+  printf '  [ok] Backend and frontend dependencies\n'
+}
 
-  [[ -d "$BACKEND_DIR" && -f "$BACKEND_DIR/requirements.txt" ]] || fail_preflight \
-    "Backend directory is incomplete" \
-    "Expected:  $BACKEND_DIR/requirements.txt"
-  [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight \
-    "Python environment is missing or incomplete" \
-    "Create the supported environment:" \
-    "  cd $BACKEND_DIR" \
-    "  python3.12 -m venv .venv" \
-    "  source .venv/bin/activate" \
-    "  pip install -r requirements.txt"
-  "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight \
-    "Backend dependencies are incomplete" \
-    "Install the locked backend requirements:" \
-    "  cd $BACKEND_DIR" \
-    "  source .venv/bin/activate" \
-    "  pip install -r requirements.txt"
-  printf '  [ok] Python %s\n' "$($VENV/bin/python -c 'import platform; print(platform.python_version())')"
-  printf '  [ok] Backend dependencies\n'
-
-  [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight \
-    "Frontend manifest is incomplete" \
-    "Expected package.json and package-lock.json under:  $FRONTEND_DIR"
-  if [[ -z "${ASTRYX_VITE_EXECUTABLE:-}" && ! -d "$FRONTEND_DIR/node_modules" ]]; then
-    fail_preflight \
-      "Frontend dependencies are not installed" \
-      "The node_modules directory is missing." \
-      "Install the locked frontend dependencies:" \
-      "  cd $FRONTEND_DIR" \
-      "  npm ci"
+safe_cleanup_or_block() {
+  local port="$1" service="$2"
+  local host="$FRONTEND_HOST"
+  [[ "$service" == backend ]] && host="$BACKEND_HOST"
+  if port_is_free "$host" "$port" 2>/dev/null; then return 0; fi
+  if (( CLEAN_STALE == 0 )); then
+    fail_preflight "Port $port is already in use" "$service cannot start; cleanup is disabled. No process was terminated."
   fi
-  if [[ ! -x "$VITE_EXECUTABLE" ]]; then
-    fail_preflight \
-      "Frontend dependency installation is incomplete" \
-      "Vite could not be found at:" \
-      "  $VITE_EXECUTABLE" \
-      "Repair the locked dependency installation:" \
-      "  cd $FRONTEND_DIR" \
-      "  rm -rf node_modules" \
-      "  npm ci"
-  fi
-  printf '  [ok] Frontend dependencies\n'
+  "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "127.0.0.1" --port "$port" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || fail_preflight "Port $port is already in use" "$service listener is active, unrelated, or has unknown ownership. No unverified process was terminated."
+}
 
-  check_port "$FRONTEND_HOST" "$FRONTEND_PORT" "frontend"
-  printf '  [ok] Port %s available\n' "$FRONTEND_PORT"
-  check_port "$BACKEND_HOST" "$BACKEND_PORT" "backend"
-  printf '  [ok] Port %s available\n' "$BACKEND_PORT"
+allocate_ports() {
+  mkdir -p "$RUNTIME_DIR/sessions"
+  chmod 700 "$RUNTIME_DIR"
+  exec 9>"$RUNTIME_DIR/launcher.lock"
+  flock -w 30 9 || fail_preflight "Another OperatorOS launcher holds the allocation lock" "Wait for its startup to finish, then retry."
+  LOCK_HELD=1
+
+  if (( AUTO_PORT == 0 )); then
+    safe_cleanup_or_block "$FRONTEND_PORT" frontend
+    safe_cleanup_or_block "$BACKEND_PORT" backend
+  else
+    # Clean only proven stale listeners on preferred ports. Unknown/unrelated
+    # listeners are preserved and automatic allocation skips them.
+    if ! port_is_free "$FRONTEND_HOST" "$FRONTEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
+      "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || true
+    fi
+    if ! port_is_free "$BACKEND_HOST" "$BACKEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
+      "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || true
+    fi
+    FRONTEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$FRONTEND_HOST" --preferred "$FRONTEND_PORT" --maximum 5199 --auto)" || fail_preflight "No frontend port is available" "Allowed range: 5173-5199."
+    BACKEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$BACKEND_HOST" --preferred "$BACKEND_PORT" --maximum 8099 --auto)" || fail_preflight "No backend port is available" "Allowed range: 8000-8099."
+  fi
+  export FRONTEND_PORT BACKEND_PORT
+  export OPERATOROS_FRONTEND_URL="http://$FRONTEND_HOST:$FRONTEND_PORT"
+  export OPERATOROS_BACKEND_URL="http://$BACKEND_HOST:$BACKEND_PORT"
+  # Browser and Tauri development both load Vite, so API traffic stays
+  # same-origin and uses the synchronized proxy target below. A caller may
+  # still explicitly provide a desktop API base when testing that mode.
+  export VITE_API_BASE_URL="${VITE_API_BASE_URL:-}"
+  export DEV_API_PROXY_TARGET="$OPERATOROS_BACKEND_URL"
 }
 
 group_is_running() {
-  local pid="$1"
-  local state=""
-  [[ -n "$pid" ]] || return 1
-  kill -0 "$pid" 2>/dev/null || return 1
-  state="$(ps -o stat= -p "$pid" 2>/dev/null)"
-  state="${state//[[:space:]]/}"
-  [[ -n "$state" && "$state" != Z* ]]
-}
-
-process_group_exists() {
-  local pid="$1"
-  [[ -n "$pid" ]] && kill -0 -- "-$pid" 2>/dev/null
+  [[ -n "$1" ]] && kill -0 "$1" 2>/dev/null && [[ "$(ps -o stat= -p "$1" 2>/dev/null | tr -d ' ')" != Z* ]]
 }
 
 stop_group() {
-  local name="$1"
-  local pid="$2"
+  local name="$1" pid="$2"
   [[ -n "$pid" ]] || return 0
-  if process_group_exists "$pid"; then
-    kill -TERM -- "-$pid" 2>/dev/null || true
-    local elapsed=0
-    while process_group_exists "$pid" && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do
-      sleep 0.1
-      ((elapsed += 1))
-    done
-    if process_group_exists "$pid"; then
-      kill -KILL -- "-$pid" 2>/dev/null || true
-    fi
-  fi
+  kill -INT -- "-$pid" 2>/dev/null || true
+  local elapsed=0
+  while kill -0 -- "-$pid" 2>/dev/null && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
+  kill -TERM -- "-$pid" 2>/dev/null || true
+  elapsed=0
+  while kill -0 -- "-$pid" 2>/dev/null && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
+  kill -KILL -- "-$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
   printf '  [ok] %s stopped\n' "$name"
 }
@@ -255,143 +233,109 @@ stop_group() {
 cleanup() {
   (( CLEANUP_STARTED == 0 )) || return 0
   CLEANUP_STARTED=1
-  if [[ -n "$BACKEND_PID" || -n "$FRONTEND_PID" ]]; then
+  if [[ -n "$FRONTEND_PID" || -n "$BACKEND_PID" ]]; then
     printf '\nStopping OperatorOS development stack...\n'
-    stop_group "Frontend" "$FRONTEND_PID"
-    stop_group "Backend" "$BACKEND_PID"
-    printf 'Done.\n'
+    stop_group Frontend "$FRONTEND_PID"
+    stop_group Backend "$BACKEND_PID"
   fi
+  if [[ -n "$SESSION_ID" ]]; then "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status stopped 2>/dev/null || true; fi
+  if (( LOCK_HELD == 1 )); then flock -u 9 || true; LOCK_HELD=0; fi
 }
 
 handle_signal() {
-  INTERRUPTED=1
-  if [[ -n "$BACKEND_PID" || -n "$FRONTEND_PID" ]]; then
-    cleanup
-  else
-    printf '\nStartup cancelled. No OperatorOS services were started.\n'
+  if [[ -n "$FRONTEND_PID" || -n "$BACKEND_PID" ]]; then cleanup
+  else printf '\nStartup cancelled. No OperatorOS services were started.\n'
   fi
   exit 0
 }
-
-show_recent_log() {
-  local service="$1"
-  local log_file="$2"
-  printf '\nRecent %s output (%s):\n' "$service" "$log_file"
-  tail -n 20 "$log_file" 2>/dev/null | sed "s/^/[$service] /" || true
-}
+trap handle_signal INT TERM
+trap cleanup EXIT
 
 wait_until_ready() {
-  local service="$1"
-  local url="$2"
-  local pid="$3"
-  local log_file="$4"
-  local elapsed=0
+  local service="$1" url="$2" pid="$3" log="$4" elapsed=0
   while (( elapsed < READINESS_TIMEOUT_SECONDS )); do
-    if curl --fail --silent --show-error --max-time 2 --output /dev/null "$url" 2>/dev/null; then
-      printf '  [ok] %s ready\n' "$service"
-      return 0
-    fi
+    if curl --fail --silent --max-time 2 --output /dev/null "$url" 2>/dev/null; then printf '  [ok] %s ready\n' "$service"; return 0; fi
     if ! group_is_running "$pid"; then
       local status=0
       wait "$pid" || status=$?
       error_box "$service stopped during startup (exit $status)"
-      show_recent_log "${service,,}" "$log_file"
+      printf 'Recent %s output (%s):\n' "${service,,}" "$log"
+      tail -n 20 "$log" 2>/dev/null || true
       return 1
     fi
-    sleep 1
-    ((elapsed += 1))
+    sleep 1; ((elapsed += 1))
   done
   error_box "$service readiness timed out after ${READINESS_TIMEOUT_SECONDS}s"
-  printf 'Health check:  %s\n' "$url"
-  show_recent_log "${service,,}" "$log_file"
+  printf 'Recent %s output (%s):\n' "${service,,}" "$log"
+  tail -n 20 "$log" 2>/dev/null || true
   return 1
 }
 
-# Handle terminal interrupts during preflight and readiness as well as during
-# the steady running state. Cleanup is safe before child PIDs are assigned.
-trap handle_signal INT TERM
-
-for argument in "$@"; do
-  case "$argument" in
-    --check) CHECK_ONLY=1 ;;
+while (( $# )); do
+  case "$1" in
+    --check) CHECK_ONLY=1; shift ;;
+    --clean-stale) CLEAN_STALE=1; shift ;;
+    --no-clean-stale) CLEAN_STALE=0; shift ;;
+    --auto-port) AUTO_PORT=1; shift ;;
+    --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser || "$MODE" == tauri ]] || { usage >&2; exit 2; }; if [[ "$MODE" == tauri ]]; then AUTO_PORT=1; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8001; fi ;;
+    --tauri-fixed) MODE=tauri; AUTO_PORT=0; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8002; shift ;;
+    --runtime|--js-runtime) JS_RUNTIME="${2:-}"; shift 2; [[ "$JS_RUNTIME" == node || "$JS_RUNTIME" == bun ]] || { usage >&2; exit 2; } ;;
     --help|-h) usage; exit 0 ;;
-    *) usage >&2; printf '\nUnknown option: %s\n' "$argument" >&2; exit 2 ;;
+    *) usage >&2; printf '\nUnknown option: %s\n' "$1" >&2; exit 2 ;;
   esac
 done
 
-# The prepare-only hook is retained for isolated configuration tests. It never
-# starts services and is not a user-facing launcher mode.
-if [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == "1" ]]; then
-  [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing" "Expected:  $VENV/bin/python"
+if [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
+  [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing" "Expected $VENV/bin/python"
   prepare_local_environment
   exit 0
 fi
 
 run_preflight
+allocate_ports
 prepare_local_environment
-
 if (( CHECK_ONLY == 1 )); then
-  printf '\nOperatorOS development environment is ready. No services were started.\n'
+  printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
   exit 0
 fi
 
-mkdir -p "$LOG_DIR"
-: >"$BACKEND_LOG"
-: >"$FRONTEND_LOG"
-chmod 700 "$LOG_DIR"
-
-trap handle_signal INT TERM
-trap cleanup EXIT
-
-printf '\nStarting services...\n'
+SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
+SESSION_TOKEN="operatoros-session-$SESSION_ID"
+SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
+"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" >/dev/null
+BACKEND_LOG="$RUNTIME_DIR/backend.log"
+FRONTEND_LOG="$RUNTIME_DIR/frontend.log"
+: >"$BACKEND_LOG"; : >"$FRONTEND_LOG"
+printf '\nStarting services (session %s)...\n' "$SESSION_ID"
 (
   cd "$BACKEND_DIR"
   export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-  exec setsid "$VENV/bin/uvicorn" src.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" --reload
+  # Canonical command remains: "$VENV/bin/uvicorn" src.main:app
+  exec setsid bash -c 'exec "$1" src.main:app --host "$2" --port "$3" --reload' "$SESSION_TOKEN" "$VENV/bin/uvicorn" "$BACKEND_HOST" "$BACKEND_PORT"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
-printf '  [..] Backend process started (PID %s)\n' "$BACKEND_PID"
+"$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role backend --token "$SESSION_TOKEN" --pid "$BACKEND_PID" --port "$BACKEND_PORT" || true
 
+VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
 (
   cd "$FRONTEND_DIR"
-  export PATH="$(dirname "$VITE_EXECUTABLE"):$PATH"
-  export DEV_API_PROXY_TARGET="${DEV_API_PROXY_TARGET:-http://$BACKEND_HOST:$BACKEND_PORT}"
-  exec setsid npm run dev -- --host "$FRONTEND_HOST" --port "$FRONTEND_PORT"
+  if [[ "$JS_RUNTIME" == bun ]]; then
+    exec setsid bash -c 'exec "$1" x --bun vite --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$BUN_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
+  else
+    exec setsid bash -c 'exec "$1" --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$VITE_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
+  fi
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
-printf '  [..] Frontend process started (PID %s)\n' "$FRONTEND_PID"
+"$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true
 
-wait_until_ready "Backend" "http://$BACKEND_HOST:$BACKEND_PORT/health" "$BACKEND_PID" "$BACKEND_LOG" || exit 1
-wait_until_ready "Frontend" "http://$FRONTEND_HOST:$FRONTEND_PORT" "$FRONTEND_PID" "$FRONTEND_LOG" || exit 1
-STACK_READY=1
+wait_until_ready Backend "$OPERATOROS_BACKEND_URL/health" "$BACKEND_PID" "$BACKEND_LOG" || exit 1
+wait_until_ready Frontend "$OPERATOROS_FRONTEND_URL" "$FRONTEND_PID" "$FRONTEND_LOG" || exit 1
+"$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
+flock -u 9; LOCK_HELD=0
 
-printf '\n+------------------------------------------------------------+\n'
-printf '| OperatorOS Development Stack                              |\n'
-printf '+------------------------------------------------------------+\n'
-printf '| Status    Ready                                            |\n'
-printf '| Frontend  %-48s |\n' "http://$FRONTEND_HOST:$FRONTEND_PORT"
-printf '| Backend   %-48s |\n' "http://$BACKEND_HOST:$BACKEND_PORT"
-printf '| API docs  %-48s |\n' "http://$BACKEND_HOST:$BACKEND_PORT/docs"
-printf '| Health    %-48s |\n' "http://$BACKEND_HOST:$BACKEND_PORT/health"
-printf '+------------------------------------------------------------+\n'
-printf '| Logs      .dev-logs/backend.log and frontend.log           |\n'
-printf '| Press Ctrl+C to stop all services.                         |\n'
-printf '+------------------------------------------------------------+\n\n'
-
-while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
-  sleep 1
-done
-
-if ! group_is_running "$BACKEND_PID"; then
-  status=0
-  wait "$BACKEND_PID" || status=$?
-  error_box "Backend stopped unexpectedly (exit $status)"
-  show_recent_log backend "$BACKEND_LOG"
-else
-  status=0
-  wait "$FRONTEND_PID" || status=$?
-  error_box "Frontend stopped unexpectedly (exit $status)"
-  show_recent_log frontend "$FRONTEND_LOG"
+printf '\nOperatorOS Development Stack\nStatus    Ready\nFrontend  %s\nBackend   %s\nSession   %s\nRuntime   %s\nPress Ctrl+C to stop.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$SESSION_ID" "$RUNTIME_DIR"
+while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do sleep 1; done
+if ! group_is_running "$BACKEND_PID"; then error_box "Backend stopped unexpectedly"
+else error_box "Frontend stopped unexpectedly"
 fi
-
 exit 1
