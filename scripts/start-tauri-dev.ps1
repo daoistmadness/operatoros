@@ -43,6 +43,7 @@ if ($JavaScriptRuntime -eq "bun") {
 
 $portArgument = if ($PortStrategy -eq "fixed") { "--tauri-fixed" } else { "--mode tauri" }
 $shellCommand = "cd '$WslRepositoryPath' && ./start-dev.sh $portArgument --runtime $JavaScriptRuntime"
+$previousSessionId = (& wsl.exe -d $Distribution -- bash -lc "test -s '$WslRepositoryPath/.runtime/operatoros-dev/active-session' && cat '$WslRepositoryPath/.runtime/operatoros-dev/active-session'" 2>$null).Trim()
 $job = Start-Job -ScriptBlock {
     param($distro, $command)
     & wsl.exe -d $distro -- bash -lc $command
@@ -63,7 +64,7 @@ while (-not $ports) {
     if ($raw) {
         try {
             $candidate = $raw | ConvertFrom-Json
-            if ($candidate.status -eq "ready" -and $candidate.mode -eq "tauri") { $ports = $candidate }
+            if ($candidate.status -eq "ready" -and $candidate.mode -eq "tauri" -and $candidate.session_id -ne $previousSessionId) { $ports = $candidate }
         } catch { }
     }
     if (-not $ports) { Start-Sleep -Milliseconds 250 }
@@ -96,8 +97,11 @@ $env:OPERATOROS_TAURI_DEV_URL = $ports.frontend_url
     $completed = $true
 } finally {
     if ((Get-Location).Path -ne $windowsRoot) { Pop-Location }
-    if ($ports) {
-        & wsl.exe -d $Distribution -- bash -lc "cd '$WslRepositoryPath' && ./stop-dev.sh --session '$($ports.session_id)'"
+    $sessionToStop = if ($ports) { $ports.session_id } else {
+        (& wsl.exe -d $Distribution -- bash -lc "test -s '$WslRepositoryPath/.runtime/operatoros-dev/active-session' && cat '$WslRepositoryPath/.runtime/operatoros-dev/active-session'" 2>$null).Trim()
+    }
+    if ($sessionToStop -and $sessionToStop -ne $previousSessionId) {
+        & wsl.exe -d $Distribution -- bash -lc "cd '$WslRepositoryPath' && ./stop-dev.sh --session '$sessionToStop'"
     }
     Remove-Item Env:OPERATOROS_TAURI_DEV_URL -ErrorAction SilentlyContinue
     Stop-Job $job -ErrorAction SilentlyContinue

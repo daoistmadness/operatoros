@@ -108,6 +108,7 @@ def test_windows_launcher_generates_untracked_matching_dev_url():
     assert "beforeDevCommand = $null" in launcher
     assert "bundle = @{ resources = @() }" in launcher
     assert "$env:OPERATOROS_TAURI_DEV_URL = $ports.frontend_url" in launcher
+    assert "candidate.session_id -ne $previousSessionId" in launcher
     assert "./stop-dev.sh --session" in launcher
     assert "& $bunExecutable run tauri -- dev --config $overridePath" in launcher
     assert ".runtime/operatoros-dev/" in (ROOT / ".gitignore").read_text(encoding="utf-8")
