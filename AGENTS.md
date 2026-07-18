@@ -136,6 +136,16 @@ See [CONVENTIONS.md](CONVENTIONS.md) for observed naming, structure, error-handl
 4. Run the most relevant verification command.
 5. Summarize files changed, reasoning, and verification result.
 
+## E2E and Test Safety
+
+- Use [`e2e/README.md`](e2e/README.md) as the detailed E2E workflow authority.
+- Run `make e2e-validate` for infrastructure validation and `timeout 300 make e2e-smoke` for the local blocking smoke gate.
+- Treat `make e2e-full` as GitHub Actions-only unless an owner explicitly approves the guarded local override.
+- Run Playwright with genuine Node.js 22.23.1; Bun 1.3.14 owns the application stack but is unsupported for Playwright 1.55.1 collection.
+- Never use `backend/attendance.db` or `backend/.local-dev/` data as an E2E fixture, and never kill unknown port owners.
+- Do not commit `.runtime/operatoros-e2e/`, `e2e-results/`, or other generated evidence.
+- Desktop/Tauri regression is deferred and must not be reported as automated coverage.
+
 ## Boundaries
 - No broad refactors without explicit approval.
 - No dependency upgrades unless requested.

@@ -230,6 +230,12 @@ flowchart TD
 | Redoc | `http://127.0.0.1:8000/redoc` | `http://localhost:8000/redoc` |
 
 ## Validation and Testing
+
+The standardized E2E workflow uses isolated synthetic data and runtime-selected ports; [`e2e/README.md`](e2e/README.md) is the authoritative guide.
+
+- E2E infrastructure validation: `make e2e-validate`
+- Local blocking smoke: `timeout 300 make e2e-smoke`
+- Do not run `make e2e-full` locally without explicit owner approval; it is guarded for GitHub Actions.
 - Backend smoke check: `cd backend && python3 -c "from src.main import app; assert app is not None"`
 - Backend tests: `cd backend && pytest`
 - Frontend build: `cd frontend && npm run build`
