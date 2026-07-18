@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from models.absence_reason import AbsenceReason
 from models.academic_year import AcademicYear
+from models.academic_master import AcademicClass
 from models.assessment_component import AssessmentComponent
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride
@@ -54,6 +55,7 @@ def _scoped_enrollments(db: Session, academic_year_id: int, scope: ReportScope, 
         db.query(StudentEnrollment, Student, Jenjang)
         .join(Student, Student.id == StudentEnrollment.student_id)
         .join(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .filter(StudentEnrollment.academic_year_id == academic_year_id)
         .all()
     )
@@ -66,7 +68,8 @@ def _scoped_enrollments(db: Session, academic_year_id: int, scope: ReportScope, 
             continue
         if not level_matches_scope(jenjang.name, scope):
             continue
-        normalized_class = " ".join((enrollment.class_name or "").strip().split())
+        resolved_class = enrollment.academic_class.class_name if enrollment.academic_class_id and enrollment.academic_class else enrollment.class_name
+        normalized_class = " ".join((resolved_class or "").strip().split())
         if class_filter is not None and normalized_class != class_filter:
             continue
         selected.append((enrollment, student, jenjang, normalized_class or "Unknown / Not Provided"))

@@ -33,7 +33,6 @@ const NAV_GROUPS = [
       { name: 'Dashboard', path: '/', icon: LayoutDashboard, match: (pathname) => pathname === '/' },
       { name: 'Upload Data', path: '/upload', icon: UploadCloud },
       { name: 'Upload History', path: '/upload-history', icon: History },
-      { name: 'Class Mapping', path: '/mapping', icon: UsersIcon },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Academic & Student Management', path: '/academic-management', icon: Layers3 },
       { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck },

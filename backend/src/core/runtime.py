@@ -237,4 +237,6 @@ def apply_runtime_environment(
     target["HOST"] = "127.0.0.1"
     target["BACKEND_WORKERS"] = "1"
     target["RESTORE_SINGLE_WORKER_REQUIRED"] = "true"
+    target["OPERATOROS_PRODUCTION"] = "true"
+    target["ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION"] = "false"
     target.setdefault("COOKIE_SECURE", "false")

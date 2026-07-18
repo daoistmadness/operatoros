@@ -16,7 +16,7 @@ from models.student_master import (
 from services.student_linking import snapshot_checksum
 from services.student_normalization import normalize_name
 from services.academic_mapping import approved_rule_map, resolve_class, resolve_jenjang
-from models.academic_master import AcademicClass
+from models.academic_master import AcademicClass, AcademicGrade
 
 
 ENROLLMENT_CONFIRMATION = "POPULATE_STUDENT_ENROLLMENTS"
@@ -64,12 +64,17 @@ def build_enrollment_rows(
             student.jenjang, exact_jenjang, normalized_jenjang, jenjang_rules
         )
         proposed_class, _class_state, class_match = resolve_class(student.class_name, class_rules)
-        academic_class = db.query(AcademicClass).filter_by(
-            academic_year_id=academic_year_id,
-            jenjang_id=canonical_jenjang.id if canonical_jenjang else None,
-            class_name=proposed_class,
-            active=True,
-        ).first() if canonical_jenjang and proposed_class else None
+        academic_class = (
+            db.query(AcademicClass)
+            .join(AcademicGrade, AcademicGrade.id == AcademicClass.grade_id)
+            .filter(
+                AcademicClass.academic_year_id == academic_year_id,
+                AcademicClass.class_name == proposed_class,
+                AcademicClass.active.is_(True),
+                AcademicGrade.jenjang_id == canonical_jenjang.id,
+                AcademicGrade.active.is_(True),
+            ).first()
+        ) if canonical_jenjang and proposed_class else None
 
         existing = (
             db.query(StudentEnrollment)

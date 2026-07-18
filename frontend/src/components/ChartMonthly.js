@@ -64,9 +64,17 @@ function ChartMonthly({ data }) {
   }), [data]);
 
   return (
-    <div className="h-64">
-      <Bar options={options} data={chartData} />
-    </div>
+    <figure className="h-64">
+      <figcaption className="sr-only">
+        Monthly late entries bar chart showing late count per month.
+      </figcaption>
+      <div role="img" aria-label={`Monthly late entries chart: ${data.map(d => {
+        const date = new Date(d.month);
+        return `${date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}: ${d.late_count} late`;
+      }).join(", ")}`}>
+        <Bar options={options} data={chartData} />
+      </div>
+    </figure>
   );
 }
 

@@ -176,11 +176,42 @@ def test_manual_student_appears_in_candidates(app_context):
     assert response.status_code == 200
     student_id = response.json()["id"]
 
-    resp_candidates = client.get(
-        f"/api/grades/enrollment/candidates?academic_year_id={ay_id}&jenjang_id={j_id}&source_class=P1A"
+    from models.student_master import StudentMaster, StudentDeviceIdentity
+    import uuid
+    master = StudentMaster(
+        id=str(uuid.uuid4()),
+        full_name="Candidate Student",
+        normalized_name="candidate student",
+        gender="L",
+        student_status="active"
     )
-    assert resp_candidates.status_code == 200
-    candidates = resp_candidates.json()
-    assert any(c["id"] == student_id for c in candidates)
+    db.add(master)
+    db.commit()
+    device_id = StudentDeviceIdentity(
+        student_master_id=master.id,
+        legacy_student_id=student_id,
+        device_identifier=str(student_id),
+        device_source="tap",
+        effective_from=date(2025, 7, 1),
+        is_active=True
+    )
+    db.add(device_id)
+    db.commit()
+
+    # Override auth for admin-protected endpoint using fresh module reference
+    import security.dependencies as deps
+    from models.user import User
+    app_context["app"].dependency_overrides[deps.get_current_user] = lambda: User(
+        id=1, username="admin", role="admin", is_active=True
+    )
+    try:
+        resp_candidates = client.get(
+            f"/api/grades/enrollment/candidates?academic_year_id={ay_id}&jenjang_id={j_id}&source_class=P1A"
+        )
+        assert resp_candidates.status_code == 200
+        candidates = resp_candidates.json()
+        assert any(c["student_id"] == student_id for c in candidates)
+    finally:
+        app_context["app"].dependency_overrides.pop(deps.get_current_user, None)
 
     db.close()

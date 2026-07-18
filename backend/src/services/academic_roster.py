@@ -7,7 +7,7 @@ import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models.academic_master import AcademicClass, AcademicProgram
+from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram
 from models.academic_roster import AcademicRosterImportBatch
 from models.academic_year import AcademicYear
 from models.jenjang import Jenjang
@@ -101,12 +101,18 @@ def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: 
                     jenjang_id=jenjang.id if jenjang else None,
                     name=payload["program"], active=True,
                 ).first() if jenjang else None
-                academic_class = db.query(AcademicClass).filter_by(
-                    academic_year_id=year.id if year else None,
-                    jenjang_id=jenjang.id if jenjang else None,
-                    program_id=program.id if program else None,
-                    class_name=payload["class_name"], active=True,
-                ).first() if year and jenjang and program else None
+                academic_class = (
+                    db.query(AcademicClass)
+                    .join(AcademicGrade, AcademicGrade.id == AcademicClass.grade_id)
+                    .filter(
+                        AcademicClass.academic_year_id == year.id,
+                        AcademicClass.class_name == payload["class_name"],
+                        AcademicClass.active.is_(True),
+                        AcademicGrade.jenjang_id == jenjang.id,
+                        AcademicGrade.program_id == program.id,
+                        AcademicGrade.active.is_(True),
+                    ).first()
+                ) if year and jenjang and program else None
                 if year is None:
                     classification = "INVALID"; errors.append("Unknown academic year")
                 elif jenjang is None:

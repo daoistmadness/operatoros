@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from models.absence_reason import AbsenceReason
 from models.academic_year import AcademicYear
+from models.academic_master import AcademicClass
 from models.academic_intervention import AcademicIntervention
 from models.assessment_component import AssessmentComponent
 from models.attendance import Attendance
@@ -348,12 +349,13 @@ def build_management_summary(
             StudentEnrollment.student_id == Student.id,
             StudentEnrollment.academic_year_id == academic_year_id
         ))
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
         .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
         .filter(Attendance.date >= start_date, Attendance.date <= end_date)
     )
 
-    effective_class = func.coalesce(StudentEnrollment.class_name, Student.class_name)
+    effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
     effective_jenjang = func.coalesce(Jenjang.name, Student.jenjang)
 
     if jenjang_name:
@@ -377,6 +379,7 @@ def build_management_summary(
             StudentEnrollment.student_id == Student.id,
             StudentEnrollment.academic_year_id == academic_year_id
         ))
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
     )
     if month_pairs:
@@ -426,6 +429,7 @@ def build_management_summary(
             StudentEnrollment.student_id == Student.id,
             StudentEnrollment.academic_year_id == academic_year_id
         ))
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
         .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
         .filter(Attendance.date >= start_date, Attendance.date <= end_date)
@@ -463,7 +467,9 @@ def build_management_summary(
             effective_class.label("class_name"),
             func.count(func.distinct(StudentEnrollment.student_id)).label("student_count"),
         )
+        .select_from(StudentEnrollment)
         .join(Student, Student.id == StudentEnrollment.student_id)
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .filter(StudentEnrollment.academic_year_id == academic_year_id)
     )
     if jenjang_id:
@@ -482,7 +488,9 @@ def build_management_summary(
             AssessmentComponent.assessment_type.label("assessment_type"),
             func.avg(StudentSubjectGrade.score).label("average_score"),
         )
+        .select_from(StudentEnrollment)
         .join(Student, Student.id == StudentEnrollment.student_id)
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .join(StudentSubjectGrade, StudentSubjectGrade.enrollment_id == StudentEnrollment.id)
         .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
         .filter(StudentEnrollment.academic_year_id == academic_year_id)
@@ -526,9 +534,11 @@ def build_management_summary(
             func.avg(StudentSubjectGrade.score).label("average_score"),
             func.count(func.distinct(StudentEnrollment.student_id)).label("graded_student_count"),
         )
+        .select_from(Subject)
         .join(StudentSubjectGrade, StudentSubjectGrade.subject_id == Subject.id)
         .join(StudentEnrollment, StudentEnrollment.id == StudentSubjectGrade.enrollment_id)
         .join(Student, Student.id == StudentEnrollment.student_id)
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .join(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
         .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
         .filter(StudentEnrollment.academic_year_id == academic_year_id)
@@ -591,7 +601,9 @@ def build_management_summary(
             AssessmentComponent.assessment_type.label("assessment_type"),
             func.avg(StudentSubjectGrade.score).label("average_score"),
         )
+        .select_from(Student)
         .join(StudentEnrollment, StudentEnrollment.student_id == Student.id)
+        .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
         .join(StudentSubjectGrade, StudentSubjectGrade.enrollment_id == StudentEnrollment.id)
         .join(Subject, Subject.id == StudentSubjectGrade.subject_id)
         .join(AssessmentComponent, AssessmentComponent.id == StudentSubjectGrade.component_id)
@@ -734,6 +746,7 @@ def build_management_summary(
                 StudentEnrollment.student_id == Student.id,
                 StudentEnrollment.academic_year_id == academic_year_id
             ))
+            .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
             .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
             .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
             .filter(Attendance.date >= t_start, Attendance.date <= t_end)
@@ -761,6 +774,7 @@ def build_management_summary(
                 StudentEnrollment.student_id == Student.id,
                 StudentEnrollment.academic_year_id == academic_year_id
             ))
+            .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
             .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
         )
         if t_month_pairs:

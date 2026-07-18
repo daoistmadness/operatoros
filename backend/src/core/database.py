@@ -1,4 +1,6 @@
 import sqlite3
+import logging
+import os
 from datetime import date
 
 from sqlalchemy import create_engine, inspect, text, event
@@ -27,6 +29,8 @@ Base = declarative_base()
 GRADE_BOOTSTRAP_JENJANG = "Primary"
 GRADE_BOOTSTRAP_ACADEMIC_YEAR = "2025/2026"
 GRADE_BOOTSTRAP_SUBJECT = "Language"
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _ensure_students_schema_compatibility() -> None:
@@ -180,8 +184,35 @@ def _ensure_academic_master_compatibility() -> None:
             if "active" not in columns:
                 default = "TRUE" if engine.dialect.name == "postgresql" else "1"
                 connection.execute(text(f"ALTER TABLE jenjangs ADD COLUMN active BOOLEAN NOT NULL DEFAULT {default}"))
+            if "created_at" not in columns:
+                connection.execute(text("ALTER TABLE jenjangs ADD COLUMN created_at TIMESTAMP NULL"))
+            if "updated_at" not in columns:
+                connection.execute(text("ALTER TABLE jenjangs ADD COLUMN updated_at TIMESTAMP NULL"))
             connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_jenjangs_code ON jenjangs(code)"))
             connection.execute(text("CREATE INDEX IF NOT EXISTS ix_jenjangs_active ON jenjangs(active)"))
+        if "academic_years" in tables:
+            columns = {column["name"] for column in inspector.get_columns("academic_years")}
+            if "created_at" not in columns:
+                connection.execute(text("ALTER TABLE academic_years ADD COLUMN created_at TIMESTAMP NULL"))
+            if "updated_at" not in columns:
+                connection.execute(text("ALTER TABLE academic_years ADD COLUMN updated_at TIMESTAMP NULL"))
+        if "academic_programs" in tables:
+            columns = {column["name"] for column in inspector.get_columns("academic_programs")}
+            if "created_at" not in columns:
+                connection.execute(text("ALTER TABLE academic_programs ADD COLUMN created_at TIMESTAMP NULL"))
+            if "updated_at" not in columns:
+                connection.execute(text("ALTER TABLE academic_programs ADD COLUMN updated_at TIMESTAMP NULL"))
+        if "academic_classes" in tables:
+            columns = {column["name"] for column in inspector.get_columns("academic_classes")}
+            if "grade_id" not in columns:
+                class_count = connection.execute(text("SELECT COUNT(*) FROM academic_classes")).scalar() or 0
+                enrollment_refs = 0
+                if "student_enrollments" in tables and "academic_class_id" in {column["name"] for column in inspector.get_columns("student_enrollments")}:
+                    enrollment_refs = connection.execute(text("SELECT COUNT(*) FROM student_enrollments WHERE academic_class_id IS NOT NULL")).scalar() or 0
+                raise RuntimeError(
+                    "DATABASE_MIGRATION_REQUIRED: academic_classes.grade_id is missing; "
+                    f"rows={class_count}, enrollment_references={enrollment_refs}"
+                )
         if "student_enrollments" in tables:
             columns = {column["name"] for column in inspector.get_columns("student_enrollments")}
             if "academic_class_id" not in columns:
@@ -233,7 +264,7 @@ def _seed_grade_ledger_minimum(engine_arg) -> None:
     from models.academic_year import AcademicYear
     from models.academic_mapping import StudentAcademicMappingRule
     from models.academic_roster import AcademicRosterImportBatch
-    from models.academic_master import AcademicClass, AcademicMasterImportPreview, AcademicProgram
+    from models.academic_master import AcademicClass, AcademicGrade, AcademicMasterAudit, AcademicMasterImportPreview, AcademicProgram
     from models.jenjang import Jenjang
     from models.subject import Subject
 
@@ -299,6 +330,33 @@ def get_db():
         db.close()
 
 
+def validate_student_linking_gate(engine_arg: Engine, *, bypass: bool = False) -> None:
+    """Block startup when legacy students are not linked one-to-one to masters."""
+    with engine_arg.begin() as connection:
+        tables = set(inspect(connection).get_table_names())
+        if not {"students", "student_masters"}.issubset(tables):
+            return
+        students_count = connection.execute(text("SELECT COUNT(*) FROM students")).scalar() or 0
+        masters_count = connection.execute(text("SELECT COUNT(*) FROM student_masters")).scalar() or 0
+
+    if bypass:
+        LOGGER.warning(
+            "STUDENT LINKING GATE BYPASSED: BYPASS_STUDENT_LINKING_GATE=true "
+            "(students=%d, student_masters=%d). Do not use this setting in production.",
+            students_count,
+            masters_count,
+        )
+        return
+
+    # An empty database is the approved first-time deployment state. Once legacy
+    # students exist, every student must have a restored master before startup.
+    if students_count > 0 and masters_count != students_count:
+        raise RuntimeError(
+            "Deployment Gate Violation: legacy student linking is incomplete "
+            f"(students={students_count}, student_masters={masters_count})."
+        )
+
+
 def init_db():
     from models.student import Student
     from models.attendance import Attendance
@@ -326,6 +384,7 @@ def init_db():
     from models.report_builder import ReportTemplate, ReportBrandingConfig
     from models.backup_operation import BackupExecutionHistory, BackupSchedulerConfig
     from models.first_admin_setup import FirstAdminSetupState
+    from models.academic_master import AcademicClass, AcademicGrade, AcademicMasterAudit, AcademicMasterImportPreview, AcademicProgram
     # Identity tables are migration-owned even when their ORM models were imported.
     startup_tables = [
         table for table in Base.metadata.sorted_tables if table.name not in {"users", "sessions"}
@@ -342,3 +401,9 @@ def init_db():
     from services.report_builder import seed_report_builder_defaults
 
     seed_report_builder_defaults()
+
+    if not os.environ.get("PYTEST_CURRENT_TEST"):
+        validate_student_linking_gate(
+            engine,
+            bypass=os.environ.get("BYPASS_STUDENT_LINKING_GATE", "false").lower() == "true",
+        )

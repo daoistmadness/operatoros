@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.academic_config import router as academic_config_router
 from api.academic_interventions import router as academic_interventions_router
+from api.academic_masters import router as academic_masters_router
 from api.analytics import router as analytics_router
 from api.report_builder import router as report_builder_router
 from api.reports import router as reports_router
@@ -23,6 +24,7 @@ from api.uploads import router as uploads_router
 from api.system import router as system_router
 from api.review import router as review_router
 from core.database import init_db
+from core.schema_guard import validate_database_startup
 
 from core.config import settings
 from services.backup_scheduler import backup_scheduler
@@ -56,8 +58,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize database tables on startup
-init_db()
+# Production startup is validation-only. Legacy create/patch behavior is
+# available solely to explicit test/development harnesses while migrations are
+# moved into the versioned manifest.
+if os.environ.get("ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION", "false").lower() == "true":
+    init_db()
+else:
+    validate_database_startup()
 
 # Canonical /api/* routers — all frontend requests use these paths.
 # The Vite dev proxy forwards /api/* to http://127.0.0.1:8000/api/*.
@@ -72,6 +79,7 @@ app.include_router(review_router, prefix="/api/review", tags=["review"])
 app.include_router(grades_router, prefix="/api/grades", tags=["grades"])
 app.include_router(academic_config_router, prefix="/api/academic-config", tags=["academic-config"])
 app.include_router(academic_interventions_router, prefix="/api/academic-interventions", tags=["academic-interventions"])
+app.include_router(academic_masters_router, prefix="/api/academic-masters", tags=["academic-masters"])
 app.include_router(report_builder_router, prefix="/api/report-builder", tags=["report-builder"])
 app.include_router(reports_router, prefix="/api/reports", tags=["reports"])
 app.include_router(backups_router, prefix="/api/admin/backups", tags=["admin-backups"])
