@@ -24,6 +24,7 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.1",
     "@tauri-apps/cli": "^2.0.0",
     "@tailwindcss/cli": "^4.2.2",
     "@tailwindcss/postcss": "^4.0.0",
@@ -45,6 +46,10 @@
     "preview": "vite preview",
     "test": "vitest run"
   },
+  "trustedDependencies": [
+    "@parcel/watcher",
+    "esbuild"
+  ],
   "browserslist": {
     "production": [
       ">0.2%",

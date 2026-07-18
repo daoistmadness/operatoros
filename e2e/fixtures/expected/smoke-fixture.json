@@ -1,0 +1,18 @@
+{
+  "fixture_source": "generated-current-schema",
+  "fixture_checksum": "computed-and-recorded-per-invocation",
+  "baseline_id": "20260722_s38",
+  "users": {
+    "admin_username_env": "OPERATOROS_E2E_ADMIN_USERNAME",
+    "admin_password_env": "OPERATOROS_E2E_ADMIN_PASSWORD"
+  },
+  "expected_counts": {
+    "students": 3,
+    "student_masters": 3,
+    "student_device_identities": 3,
+    "attendance": 4,
+    "student_enrollments": 1
+  },
+  "reset_strategy": "one generated fixture per invocation; snapshot restore at suite boundaries for mutations",
+  "test_ordering": "independent; no test may rely on a preceding test"
+}
