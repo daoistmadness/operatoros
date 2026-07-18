@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from core.database import Base
 from models.student_master import StudentMaster  # noqa: F401 - registers FK target metadata
+from models.academic_master import AcademicClass  # noqa: F401 - registers FK target metadata
 
 
 class StudentEnrollment(Base):
@@ -24,6 +25,7 @@ class StudentEnrollment(Base):
     student = relationship("Student")
     academic_year = relationship("AcademicYear")
     jenjang = relationship("Jenjang")
+    academic_class = relationship("AcademicClass")
 
     __table_args__ = (
         UniqueConstraint("student_id", "academic_year_id", name="_student_year_uc"),

@@ -1,0 +1,103 @@
+{
+  "manifest_version": 1,
+  "current_schema": "20260722_s38",
+  "startup_is_migration_runner": false,
+  "states": [
+    {
+      "state": "fresh_empty",
+      "detection": "configured absolute path does not exist",
+      "schema_fingerprint": "empty",
+      "migration_id": "fresh_to_20260722_s38",
+      "outcome": "MIGRATION_COMPLETE",
+      "business_data_behavior": "creates schema only; inserts no students, identities, attendance, or enrollments",
+      "manual_approval": false
+    },
+    {
+      "state": "legacy_attendance_only",
+      "detection": "attendance exists; current required-table signature is incomplete",
+      "schema_fingerprint": "runtime-detected and approval-bound",
+      "migration_id": null,
+      "outcome": "UNSUPPORTED_SCHEMA",
+      "business_data_behavior": "none",
+      "manual_approval": true
+    },
+    {
+      "state": "legacy_students_without_identities",
+      "detection": "students > 0 and student_masters = 0",
+      "schema_fingerprint": "runtime-detected and approval-bound",
+      "migration_id": null,
+      "outcome": "MANUAL_IDENTITY_LINKING_REQUIRED",
+      "business_data_behavior": "never creates identities automatically",
+      "manual_approval": true
+    },
+    {
+      "state": "partially_linked",
+      "detection": "students > 0 and student_masters != students",
+      "schema_fingerprint": "runtime-detected and approval-bound",
+      "migration_id": null,
+      "outcome": "MANUAL_IDENTITY_LINKING_REQUIRED",
+      "business_data_behavior": "never repairs or completes linking automatically",
+      "manual_approval": true
+    },
+    {
+      "state": "reconciled_without_ledger",
+      "detection": "current schema signature, integrity OK, FK clean, full linking, ledger absent",
+      "schema_fingerprint": "captured in baseline approval package",
+      "migration_id": "adopt_20260722_s38_baseline",
+      "outcome": "MIGRATION_COMPLETE",
+      "business_data_behavior": "writes only migration-ledger metadata",
+      "manual_approval": true
+    },
+    {
+      "state": "current",
+      "detection": "ledger head and immutable schema fingerprint equal 20260722_s38",
+      "schema_fingerprint": "ledger-bound",
+      "migration_id": null,
+      "outcome": "MIGRATION_COMPLETE",
+      "business_data_behavior": "no-op",
+      "manual_approval": false
+    },
+    {
+      "state": "pending_known_migration",
+      "detection": "supported ledger predecessor has a manifest successor",
+      "schema_fingerprint": "revision-specific",
+      "migration_id": null,
+      "outcome": "UNSUPPORTED_SCHEMA",
+      "business_data_behavior": "none until an approved forward revision exists",
+      "manual_approval": true
+    },
+    {
+      "state": "unsupported_or_malformed",
+      "detection": "integrity failure, unknown schema signature, altered ledger checksum, or partial DDL",
+      "schema_fingerprint": "untrusted",
+      "migration_id": null,
+      "outcome": "MIGRATION_VALIDATION_FAILED",
+      "business_data_behavior": "none",
+      "manual_approval": true
+    }
+  ],
+  "migrations": [
+    {
+      "id": "fresh_to_20260722_s38",
+      "description": "Atomically create the current empty SQLite schema",
+      "predecessor": null,
+      "supported_source_schema": "empty",
+      "resulting_schema": "20260722_s38",
+      "checksum": "85e663bd5ea42634d4825ec5ce6209d206911cf499452d14e5bc4eb8eae70857",
+      "upgrade_entry_point": "core.schema_migrations.initialize_fresh_sqlite_database",
+      "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
+      "rollback_policy": "delete only the uncommitted .migrating temporary file; automatic downgrade forbidden"
+    },
+    {
+      "id": "adopt_20260722_s38_baseline",
+      "description": "Adopt a verified current reconciled database into the version ledger",
+      "predecessor": null,
+      "supported_source_schema": "current S3.8 schema without ledger",
+      "resulting_schema": "20260722_s38",
+      "checksum": "d903383178e981d9485a749be22c4f7191c928eca5c6d1dd83ff8f94b96523ef",
+      "upgrade_entry_point": "core.schema_migrations.adopt_current_sqlite_schema",
+      "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "required tables/indexes/triggers", "approved protected counts and fingerprints"],
+      "rollback_policy": "remove the single ledger row only under approved recovery; business data is untouched"
+    }
+  ]
+}

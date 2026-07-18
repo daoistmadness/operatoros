@@ -12,6 +12,9 @@ from security.dependencies import get_current_user
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride, AttendanceOverrideHistory
 from models.student import Student
+from models.student_enrollment import StudentEnrollment
+from models.academic_master import AcademicClass
+from models.academic_year import AcademicYear
 
 router = APIRouter()
 
@@ -24,8 +27,13 @@ def _format_time(value) -> str | None:
     return value.strftime("%H:%M")
 
 
+class ReviewClassItem(BaseModel):
+    id: int
+    name: str
+
+
 class ReviewClassesResponse(BaseModel):
-    classes: list[str]
+    classes: list[ReviewClassItem]
 
 
 class ReviewAttendanceItem(BaseModel):
@@ -100,24 +108,62 @@ class MassOverrideResponse(BaseModel):
 
 
 @router.get("/classes", response_model=ReviewClassesResponse)
-def get_review_classes(db: Session = Depends(get_db)):
-    rows = (
-        db.query(Student.class_name)
-        .filter(Student.class_name.isnot(None))
-        .distinct()
-        .order_by(Student.class_name.asc())
-        .all()
-    )
-    classes = [row[0] for row in rows if row[0] and row[0].strip()]
+def get_review_classes(
+    academic_year_id: int | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    if not academic_year_id:
+        default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
+        academic_year_id = default_year.id if default_year else None
+
+    if academic_year_id:
+        rows = (
+            db.query(AcademicClass.id, AcademicClass.class_name)
+            .filter(AcademicClass.academic_year_id == academic_year_id, AcademicClass.active.is_(True))
+            .order_by(AcademicClass.class_name.asc())
+            .all()
+        )
+        classes = [ReviewClassItem(id=row.id, name=row.class_name) for row in rows]
+    else:
+        rows = (
+            db.query(Student.class_name)
+            .filter(Student.class_name.isnot(None))
+            .distinct()
+            .order_by(Student.class_name.asc())
+            .all()
+        )
+        classes = [ReviewClassItem(id=-1, name=row[0]) for row in rows if row[0] and row[0].strip()]
     return ReviewClassesResponse(classes=classes)
 
 
 @router.get("/attendance", response_model=ReviewAttendanceResponse)
 def get_review_attendance(
     date_value: date = Query(..., alias="date"),
-    class_name: str = Query(..., min_length=1),
+    academic_year_id: int = Query(..., gt=0),
+    academic_class_id: int = Query(..., gt=0),
     db: Session = Depends(get_db),
 ):
+    academic_class = db.query(AcademicClass).filter(AcademicClass.id == academic_class_id).first()
+    display_class_name = academic_class.class_name if academic_class else "Unknown Class"
+
+    enrolled_student_ids = (
+        db.query(StudentEnrollment.student_id)
+        .filter(
+            StudentEnrollment.academic_year_id == academic_year_id,
+            StudentEnrollment.academic_class_id == academic_class_id
+        )
+        .all()
+    )
+    student_ids = [row[0] for row in enrolled_student_ids]
+
+    if not student_ids:
+        return ReviewAttendanceResponse(
+            date=date_value,
+            class_name=display_class_name,
+            total=0,
+            items=[],
+        )
+
     stmt = (
         select(
             Attendance.id.label("attendance_id"),
@@ -137,17 +183,8 @@ def get_review_attendance(
         .join(Student, Student.id == Attendance.student_id)
         .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
         .where(Attendance.date == date_value)
+        .where(Attendance.student_id.in_(student_ids))
     )
-
-    class_filter = class_name.strip()
-    if not class_filter:
-        raise HTTPException(status_code=400, detail="class_name must be a non-empty string")
-
-    if class_filter.lower() != "all":
-        if class_filter.lower() == "unassigned":
-            stmt = stmt.where(Student.class_name.is_(None))
-        else:
-            stmt = stmt.where(Student.class_name == class_filter)
 
     rows = db.execute(stmt.order_by(Student.name.asc())).all()
 
@@ -174,7 +211,7 @@ def get_review_attendance(
 
     return ReviewAttendanceResponse(
         date=date_value,
-        class_name=class_filter,
+        class_name=display_class_name,
         total=len(items),
         items=items,
     )

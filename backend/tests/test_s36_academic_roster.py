@@ -14,7 +14,7 @@ from sqlalchemy.pool import StaticPool
 from api.student_enrollments import router
 from core.database import Base, get_db
 from models.academic_mapping import StudentAcademicMappingRule
-from models.academic_master import AcademicClass, AcademicProgram
+from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram
 from models.academic_roster import AcademicRosterImportBatch
 from models.academic_year import AcademicYear
 from models.attendance import Attendance
@@ -57,9 +57,11 @@ def roster_db():
     db.add_all([year, jenjang]); db.flush()
     program = AcademicProgram(jenjang_id=jenjang.id, name="Primary", active=True)
     db.add(program); db.flush()
+    grade = AcademicGrade(jenjang_id=jenjang.id, program_id=program.id, name="Primary 1", sequence_number=1, active=True)
+    db.add(grade); db.flush()
     db.add(AcademicClass(
-        academic_year_id=year.id, program_id=program.id, jenjang_id=jenjang.id,
-        class_name="P1A", active=True,
+        academic_year_id=year.id, grade_id=grade.id,
+        class_name="P1A", section_code="A", active=True,
     ))
     db.add(StudentAcademicMappingRule(
         mapping_type="class", source_value="P1A", normalized_source_value="p1a",

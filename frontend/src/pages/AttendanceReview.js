@@ -27,7 +27,9 @@ const getStatusBadgeClass = (status, effective = false) => {
 
 function AttendanceReview() {
   const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState("all");
+  const [academicYears, setAcademicYears] = useState([]);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState("");
+  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [rows, setRows] = useState([]);
 
@@ -52,20 +54,41 @@ function AttendanceReview() {
   const [massOverrideNote, setMassOverrideNote] = useState("Mass override: student consistently does not scan out");
   const [massReviewer, setMassReviewer] = useState("");
 
+  const fetchAcademicYears = useCallback(async () => {
+    try {
+      const response = await api.get("/api/academic-masters/academic-years");
+      setAcademicYears(response.data || []);
+      const defaultYear = response.data.find(y => y.is_default) || response.data[0];
+      if (defaultYear) {
+        setSelectedAcademicYearId(defaultYear.id);
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to load academic years.");
+    }
+  }, []);
+
   const fetchClasses = useCallback(async () => {
+    if (!selectedAcademicYearId) return;
     setLoadingClasses(true);
     try {
-      const response = await api.get("/api/review/classes");
+      const response = await api.get("/api/review/classes", {
+        params: { academic_year_id: selectedAcademicYearId }
+      });
       setClasses(response.data.classes || []);
+      if (response.data.classes?.length > 0) {
+        setSelectedAcademicClassId(response.data.classes[0].id);
+      } else {
+        setSelectedAcademicClassId("");
+      }
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to load classes.");
     } finally {
       setLoadingClasses(false);
     }
-  }, []);
+  }, [selectedAcademicYearId]);
 
   const loadAttendance = useCallback(async () => {
-    if (!selectedDate || !selectedClass) {
+    if (!selectedDate || !selectedAcademicYearId || !selectedAcademicClassId) {
       return;
     }
 
@@ -75,7 +98,8 @@ function AttendanceReview() {
       const response = await api.get("/api/review/attendance", {
         params: {
           date: selectedDate,
-          class_name: selectedClass,
+          academic_year_id: selectedAcademicYearId,
+          academic_class_id: selectedAcademicClassId,
         },
       });
       setRows(response.data.items || []);
@@ -85,7 +109,11 @@ function AttendanceReview() {
     } finally {
       setLoadingRows(false);
     }
-  }, [selectedDate, selectedClass]);
+  }, [selectedDate, selectedAcademicYearId, selectedAcademicClassId]);
+
+  useEffect(() => {
+    fetchAcademicYears();
+  }, [fetchAcademicYears]);
 
   useEffect(() => {
     fetchClasses();
@@ -229,20 +257,42 @@ function AttendanceReview() {
       <section className="rounded-2xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-xl shadow-slate-900/5 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Class</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Academic Year</label>
             <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
+              value={selectedAcademicYearId}
+              onChange={(e) => {
+                setSelectedAcademicYearId(e.target.value);
+                setClasses([]);
+                setSelectedAcademicClassId("");
+              }}
               className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
-              disabled={loadingClasses}
             >
-              <option value="all">All Classes</option>
-              <option value="unassigned">Unassigned</option>
-              {classes.map((name) => (
-                <option key={name} value={name}>
-                  {name}
+              <option value="">Select Year...</option>
+              {academicYears.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.label} {year.is_default ? "(Default)" : ""}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Class</label>
+            <select
+              value={selectedAcademicClassId}
+              onChange={(e) => setSelectedAcademicClassId(e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
+              disabled={loadingClasses || classes.length === 0}
+            >
+              {classes.length === 0 ? (
+                <option value="">No classes available</option>
+              ) : (
+                classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 

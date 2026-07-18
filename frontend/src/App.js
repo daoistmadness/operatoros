@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Navigate, Outlet, Routes, Route } from 'react-
 import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import UploadHistory from './pages/UploadHistory';
-import ClassMapping from './pages/ClassMapping';
 import AttendanceReport from './pages/AttendanceReport';
 import AttendanceReview from './pages/AttendanceReview';
 import AbsenceReasons from './pages/AbsenceReasons';
@@ -48,7 +47,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/upload-history" element={<UploadHistory />} />
-              <Route path="/mapping" element={<ClassMapping />} />
+              <Route path="/mapping" element={<Navigate to="/enrollment" replace />} />
               <Route path="/analytics" element={<ManagementAnalytics />} />
               <Route path="/reports" element={<Navigate to="/reports/monthly" replace />} />
               <Route path="/reports/monthly" element={<ExecutiveReports reportType="monthly" />} />

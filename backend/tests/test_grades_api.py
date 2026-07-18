@@ -435,17 +435,77 @@ def test_enrollment_candidates_exclude_students_already_enrolled(app_context):
 
     session = db_module.SessionLocal()
     try:
+        from models.academic_master import AcademicProgram, AcademicGrade, AcademicClass
+        from models.student_master import StudentMaster, StudentDeviceIdentity
+        import uuid
         academic_year = session.query(AcademicYear).filter(AcademicYear.label == "2025/2026").one()
         jenjang = session.query(Jenjang).filter(Jenjang.name == "Primary").one()
+
+        program = AcademicProgram(
+            jenjang_id=jenjang.id,
+            name="General Program",
+            active=True
+        )
+        session.add(program)
+        session.flush()
+
+        grade = AcademicGrade(
+            jenjang_id=jenjang.id,
+            program_id=program.id,
+            name="Grade 1",
+            sequence_number=1,
+            active=True
+        )
+        session.add(grade)
+        session.flush()
+
+        class_row = AcademicClass(
+            academic_year_id=academic_year.id,
+            grade_id=grade.id,
+            class_name="1-A",
+            active=True
+        )
+        session.add(class_row)
+        session.flush()
+
+        def create_master(student_obj):
+            m = StudentMaster(
+                id=str(uuid.uuid4()),
+                full_name=student_obj.name,
+                normalized_name=student_obj.name.strip().casefold(),
+                gender="L",
+                student_status="active"
+            )
+            session.add(m)
+            session.flush()
+            device_id = StudentDeviceIdentity(
+                student_master_id=m.id,
+                legacy_student_id=student_obj.id,
+                device_identifier=str(student_obj.id),
+                device_source="tap",
+                effective_from=date(2025, 7, 1),
+                is_active=True
+            )
+            session.add(device_id)
+            session.flush()
+            return m
+
         enrolled = Student(id=20001, name="Already Enrolled", jenjang="primary", class_name="P1A")
         candidate_p1a = Student(id=20002, name="Candidate Student P1A", jenjang="primary", class_name="P1A")
         candidate_p3 = Student(id=20003, name="Candidate Student P3", jenjang="primary", class_name="P3")
         session.add_all([enrolled, candidate_p1a, candidate_p3])
         session.flush()
+
+        enrolled_master = create_master(enrolled)
+        candidate_p1a_master = create_master(candidate_p1a)
+        candidate_p3_master = create_master(candidate_p3)
+
         session.add(
             StudentEnrollment(
                 student_id=enrolled.id,
+                student_master_id=enrolled_master.id,
                 academic_year_id=academic_year.id,
+                academic_class_id=class_row.id,
                 jenjang_id=jenjang.id,
                 class_name="1-A",
                 class_assigned=True,
@@ -459,9 +519,9 @@ def test_enrollment_candidates_exclude_students_already_enrolled(app_context):
             db=session,
         )
         candidate_ids = {row["id"] for row in candidates}
-        assert candidate_p1a.id in candidate_ids
-        assert candidate_p3.id in candidate_ids
-        assert enrolled.id not in candidate_ids
+        assert candidate_p1a_master.id in candidate_ids
+        assert candidate_p3_master.id in candidate_ids
+        assert enrolled_master.id not in candidate_ids
 
         p1a_candidates = grades_api.get_enrollment_candidates(
             academic_year_id=academic_year.id,
@@ -469,7 +529,7 @@ def test_enrollment_candidates_exclude_students_already_enrolled(app_context):
             source_class="P1A",
             db=session,
         )
-        assert [row["id"] for row in p1a_candidates] == [candidate_p1a.id]
+        assert [row["id"] for row in p1a_candidates] == [candidate_p1a_master.id]
         assert all(row["class_name"] == "P1A" for row in p1a_candidates)
 
         missing_class_candidates = grades_api.get_enrollment_candidates(
@@ -499,21 +559,75 @@ def test_bulk_enrollment_lists_and_skips_duplicates(app_context):
 
     session = db_module.SessionLocal()
     try:
+        from models.academic_master import AcademicProgram, AcademicGrade, AcademicClass
+        from models.student_master import StudentMaster, StudentDeviceIdentity
+        import uuid
         academic_year = session.query(AcademicYear).filter(AcademicYear.label == "2025/2026").one()
         jenjang = session.query(Jenjang).filter(Jenjang.name == "Primary").one()
+
+        program = AcademicProgram(
+            jenjang_id=jenjang.id,
+            name="General Program",
+            active=True
+        )
+        session.add(program)
+        session.flush()
+
+        grade = AcademicGrade(
+            jenjang_id=jenjang.id,
+            program_id=program.id,
+            name="Grade 1",
+            sequence_number=1,
+            active=True
+        )
+        session.add(grade)
+        session.flush()
+
+        class_row = AcademicClass(
+            academic_year_id=academic_year.id,
+            grade_id=grade.id,
+            class_name="1-A",
+            active=True
+        )
+        session.add(class_row)
+        session.flush()
+
         students = [
             Student(id=20101, name="Bulk A", jenjang="primary", class_name="1-A"),
             Student(id=20102, name="Bulk B", jenjang="primary", class_name="1-A"),
         ]
         session.add_all(students)
-        session.commit()
+        session.flush()
+
+        masters = []
+        for s in students:
+            m = StudentMaster(
+                id=str(uuid.uuid4()),
+                full_name=s.name,
+                normalized_name=s.name.strip().casefold(),
+                gender="L",
+                student_status="active"
+            )
+            session.add(m)
+            session.flush()
+            device_id = StudentDeviceIdentity(
+                student_master_id=m.id,
+                legacy_student_id=s.id,
+                device_identifier=str(s.id),
+                device_source="tap",
+                effective_from=date(2025, 7, 1),
+                is_active=True
+            )
+            session.add(device_id)
+            session.flush()
+            masters.append(m)
 
         first = grades_api.bulk_enroll_students(
             grades_api.EnrollmentBulkRequest(
                 academic_year_id=academic_year.id,
                 jenjang_id=jenjang.id,
-                class_name="1-A",
-                student_ids=[student.id for student in students],
+                academic_class_id=class_row.id,
+                student_master_ids=[m.id for m in masters],
             ),
             db=session,
         )
@@ -525,8 +639,8 @@ def test_bulk_enrollment_lists_and_skips_duplicates(app_context):
             grades_api.EnrollmentBulkRequest(
                 academic_year_id=academic_year.id,
                 jenjang_id=jenjang.id,
-                class_name="1-A",
-                student_ids=[student.id for student in students],
+                academic_class_id=class_row.id,
+                student_master_ids=[m.id for m in masters],
             ),
             db=session,
         )
@@ -555,14 +669,69 @@ def test_delete_enrollment_removes_only_enrollment_not_student(app_context):
 
     session = db_module.SessionLocal()
     try:
+        from models.academic_master import AcademicProgram, AcademicGrade, AcademicClass
+        from models.student_master import StudentMaster, StudentDeviceIdentity
+        import uuid
         academic_year = session.query(AcademicYear).filter(AcademicYear.label == "2025/2026").one()
         jenjang = session.query(Jenjang).filter(Jenjang.name == "Primary").one()
+
+        program = AcademicProgram(
+            jenjang_id=jenjang.id,
+            name="General Program",
+            active=True
+        )
+        session.add(program)
+        session.flush()
+
+        grade = AcademicGrade(
+            jenjang_id=jenjang.id,
+            program_id=program.id,
+            name="Grade 1",
+            sequence_number=1,
+            active=True
+        )
+        session.add(grade)
+        session.flush()
+
+        class_row = AcademicClass(
+            academic_year_id=academic_year.id,
+            grade_id=grade.id,
+            class_name="1-A",
+            active=True
+        )
+        session.add(class_row)
+        session.flush()
+
         student = Student(id=20201, name="Delete Enrollment Only", jenjang="primary", class_name="1-A")
         session.add(student)
         session.flush()
+
+        master = StudentMaster(
+            id=str(uuid.uuid4()),
+            full_name=student.name,
+            normalized_name=student.name.strip().casefold(),
+            gender="L",
+            student_status="active"
+        )
+        session.add(master)
+        session.flush()
+
+        device_id = StudentDeviceIdentity(
+            student_master_id=master.id,
+            legacy_student_id=student.id,
+            device_identifier=str(student.id),
+            device_source="tap",
+            effective_from=date(2025, 7, 1),
+            is_active=True
+        )
+        session.add(device_id)
+        session.flush()
+
         enrollment = StudentEnrollment(
             student_id=student.id,
+            student_master_id=master.id,
             academic_year_id=academic_year.id,
+            academic_class_id=class_row.id,
             jenjang_id=jenjang.id,
             class_name="1-A",
             class_assigned=True,
@@ -587,16 +756,44 @@ def test_bulk_enrollment_rejects_invalid_ids(app_context):
 
     session = db_module.SessionLocal()
     try:
+        from models.academic_master import AcademicProgram, AcademicGrade, AcademicClass
         academic_year = session.query(AcademicYear).filter(AcademicYear.label == "2025/2026").one()
         jenjang = session.query(Jenjang).filter(Jenjang.name == "Primary").one()
+
+        program = AcademicProgram(
+            jenjang_id=jenjang.id,
+            name="General Program",
+            active=True
+        )
+        session.add(program)
+        session.flush()
+
+        grade = AcademicGrade(
+            jenjang_id=jenjang.id,
+            program_id=program.id,
+            name="Grade 1",
+            sequence_number=1,
+            active=True
+        )
+        session.add(grade)
+        session.flush()
+
+        class_row = AcademicClass(
+            academic_year_id=academic_year.id,
+            grade_id=grade.id,
+            class_name="1-A",
+            active=True
+        )
+        session.add(class_row)
+        session.commit()
 
         with pytest.raises(HTTPException) as missing_student:
             grades_api.bulk_enroll_students(
                 grades_api.EnrollmentBulkRequest(
                     academic_year_id=academic_year.id,
                     jenjang_id=jenjang.id,
-                    class_name="1-A",
-                    student_ids=[999999],
+                    academic_class_id=class_row.id,
+                    student_master_ids=["999999-invalid-uuid"],
                 ),
                 db=session,
             )
