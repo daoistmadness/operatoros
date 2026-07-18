@@ -80,7 +80,8 @@ $completed = $false
 try {
     Push-Location $windowsRoot
     if ($JavaScriptRuntime -eq "bun") {
-        & $bunExecutable --cwd frontend run tauri dev --config $overridePath
+        Push-Location (Join-Path $windowsRoot "frontend")
+        try { & $bunExecutable run tauri -- dev --config $overridePath } finally { Pop-Location }
     } else {
         Push-Location (Join-Path $windowsRoot "frontend")
         try { & npm run tauri -- dev --config $overridePath } finally { Pop-Location }

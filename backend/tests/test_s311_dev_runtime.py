@@ -107,4 +107,5 @@ def test_windows_launcher_generates_untracked_matching_dev_url():
     assert "tauri.dev.override.json" in launcher
     assert "beforeDevCommand = $null" in launcher
     assert "./stop-dev.sh --session" in launcher
+    assert "& $bunExecutable run tauri -- dev --config $overridePath" in launcher
     assert ".runtime/operatoros-dev/" in (ROOT / ".gitignore").read_text(encoding="utf-8")
