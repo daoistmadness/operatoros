@@ -8,6 +8,18 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 use sidecar::{LifecycleState, SidecarManager};
 
+#[cfg(debug_assertions)]
+fn build_managed_dev_window(app: &tauri::AppHandle, origin: &str) -> Result<(), String> {
+    let url = url::Url::parse(origin).map_err(|error| error.to_string())?;
+    WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
+        .title("OperatorOS")
+        .inner_size(1280.0, 800.0)
+        .min_inner_size(960.0, 640.0)
+        .build()
+        .map_err(|error| format!("could not create OperatorOS development window: {error}"))?;
+    Ok(())
+}
+
 fn build_main_window(app: &tauri::AppHandle, manager: &SidecarManager) -> Result<(), String> {
     let runtime = manager.runtime().ok_or("sidecar runtime is unavailable")?;
     let origin = format!("http://127.0.0.1:{}", runtime.port);
@@ -75,6 +87,13 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(move |app| {
+            #[cfg(debug_assertions)]
+            if let Ok(origin) = std::env::var("OPERATOROS_TAURI_DEV_URL") {
+                build_managed_dev_window(app.handle(), &origin)
+                    .map_err(|error| Box::<dyn std::error::Error>::from(error))?;
+                app.manage(Arc::clone(&setup_manager));
+                return Ok(());
+            }
             if let Err(error) = setup_manager.start(app.handle()) {
                 build_failure_window(app.handle(), LifecycleState::Failed, &error)
                     .map_err(|window_error| Box::<dyn std::error::Error>::from(window_error))?;

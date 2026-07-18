@@ -77,9 +77,13 @@ Invoke-RestMethod -Uri "$($ports.backend_url)/health" | Out-Null
 $sessionRuntime = Join-Path $env:LOCALAPPDATA "OperatorOS\dev\$($ports.session_id)"
 New-Item -ItemType Directory -Force -Path $sessionRuntime | Out-Null
 $overridePath = Join-Path $sessionRuntime "tauri.dev.override.json"
-@{ build = @{ devUrl = $ports.frontend_url; beforeDevCommand = $null } } |
+@{
+    build = @{ devUrl = $ports.frontend_url; beforeDevCommand = $null }
+    bundle = @{ resources = @() }
+} |
     ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8NoBOM $overridePath
 
+$env:OPERATOROS_TAURI_DEV_URL = $ports.frontend_url
     Push-Location $windowsRoot
     if ($JavaScriptRuntime -eq "bun") {
         Push-Location (Join-Path $windowsRoot "frontend")
@@ -95,6 +99,7 @@ $overridePath = Join-Path $sessionRuntime "tauri.dev.override.json"
     if ($ports) {
         & wsl.exe -d $Distribution -- bash -lc "cd '$WslRepositoryPath' && ./stop-dev.sh --session '$($ports.session_id)'"
     }
+    Remove-Item Env:OPERATOROS_TAURI_DEV_URL -ErrorAction SilentlyContinue
     Stop-Job $job -ErrorAction SilentlyContinue
     Receive-Job $job -ErrorAction SilentlyContinue
     Remove-Job $job -Force -ErrorAction SilentlyContinue
