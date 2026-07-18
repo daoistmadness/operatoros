@@ -35,6 +35,9 @@ This file records durable project decisions and stable context for future agent 
 - Phase 11.0 uses a minimal Tauri v2 shell under `frontend/src-tauri`. It embeds `frontend/build` through the `custom-protocol` feature, exposes no Rust commands or native capabilities, and does not start the FastAPI sidecar; runtime API injection and sidecar ownership remain Phase 11.1 work.
 - Phase 11.0.1 WebView2 authentication acceptance is complete. A disposable external backend verified first-admin setup, login validation, Secure HttpOnly SameSite=Lax cookie creation, reload/restart restoration, logout cleanup, protected-route blocking, and one-shot expired-session 401 recovery without local/session-storage tokens. Phase 11.1 is ready.
 - **Verified Test Suites (July 2026)**: The backend test suite contains 296 tests verified using `pytest`. The frontend test suite contains 110 tests verified using `Vitest`. Both suites pass cleanly on the standard development stack.
+- E2E conventions are durable: `make e2e-validate` validates infrastructure, `timeout 300 make e2e-smoke` is the local blocking gate, and `make e2e-full` is GitHub Actions-only unless explicitly owner-approved. The application stack uses Bun 1.3.14 while Playwright 1.55.1 collection uses genuine Node.js 22.23.1.
+- E2E runs use dynamic launcher state and a fresh synthetic SQLite database under `.runtime/operatoros-e2e/`; they never use `backend/attendance.db` or `backend/.local-dev/`, never kill unknown port owners, and must preserve production checksum and the seeded enrollment fingerprint. Desktop/Tauri regression remains separately deferred.
+- Documentation convention: keep durable E2E workflow details in `e2e/README.md`; keep root and agent guidance concise and link to that authority instead of duplicating runbooks or creating phase-status reports.
 
 ## Operational Notes
 - Keep SQLite database files and generated Excel outputs out of version control unless a task explicitly requires them.
