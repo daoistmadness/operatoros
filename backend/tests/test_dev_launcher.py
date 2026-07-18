@@ -34,6 +34,8 @@ exec "$ASTRYX_VITE_EXECUTABLE" "$@"
     environment = os.environ.copy()
     environment.update(
         PATH=f"{tools}:{environment['PATH']}",
+        OPERATOROS_JS_RUNTIME="node",
+        OPERATOROS_NVM_DIR=str(tmp_path / "no-nvm"),
         ASTRYX_VITE_EXECUTABLE=str(vite),
         ASTRYX_DEV_STATE_DIR=str(tmp_path / "state"),
         ASTRYX_DEV_LOG_DIR=str(tmp_path / "logs"),
@@ -151,7 +153,7 @@ def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
     result = subprocess.run([str(launcher), "--check"], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=20)
     output = result.stdout + result.stderr
     assert result.returncode == 2
-    assert "node failed its version check" in output
+    assert "NODE_22_REQUIRED" in output
     assert "No OperatorOS services were started" in output
 
 
@@ -178,6 +180,9 @@ def test_dev_launcher_waits_for_readiness_and_ctrl_c_cleans_process_groups(tmp_p
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
     environment.update(FRONTEND_PORT="15176", BACKEND_PORT="18003")
+    # Ensure ports are free from any previous interrupted test run
+    _assert_port_available(15176)
+    _assert_port_available(18003)
     process = subprocess.Popen([str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True)
     try:
         assert _wait_for_url("http://127.0.0.1:18003/health")

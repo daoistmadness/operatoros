@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react';
 import * as vite from 'vite';
 import path from 'node:path';
 
-const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || 'http://127.0.0.1:8000';
+const frontendPort = Number(process.env.FRONTEND_PORT ?? 5173);
+const backendPort = Number(process.env.BACKEND_PORT ?? 8000);
+const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
 
 // vite.config.js
 // Vite development server with API proxy, Vitest configuration, and JSX-in-JS transform support.
@@ -27,7 +29,13 @@ export default defineConfig({
   ],
   server: {
     host: '127.0.0.1',
-    port: 5173,
+    port: frontendPort,
+    strictPort: true,
+    clearScreen: false,
+    hmr: {
+      host: '127.0.0.1',
+      port: frontendPort,
+    },
     proxy: {
       '/api': {
         target: devApiProxyTarget,
