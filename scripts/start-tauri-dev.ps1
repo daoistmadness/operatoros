@@ -48,8 +48,12 @@ $job = Start-Job -ScriptBlock {
     & wsl.exe -d $distro -- bash -lc $command
 } -ArgumentList $Distribution, $shellCommand
 
-$deadline = (Get-Date).AddSeconds(60)
 $ports = $null
+$overridePath = $null
+$sessionRuntime = $null
+$completed = $false
+try {
+$deadline = (Get-Date).AddSeconds(60)
 while (-not $ports) {
     if ((Get-Date) -gt $deadline) {
         Stop-Job $job -ErrorAction SilentlyContinue
@@ -76,8 +80,6 @@ $overridePath = Join-Path $sessionRuntime "tauri.dev.override.json"
 @{ build = @{ devUrl = $ports.frontend_url; beforeDevCommand = $null } } |
     ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8NoBOM $overridePath
 
-$completed = $false
-try {
     Push-Location $windowsRoot
     if ($JavaScriptRuntime -eq "bun") {
         Push-Location (Join-Path $windowsRoot "frontend")
@@ -89,14 +91,16 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Tauri exited with code $LASTEXITCODE" }
     $completed = $true
 } finally {
-    Pop-Location
-    & wsl.exe -d $Distribution -- bash -lc "cd '$WslRepositoryPath' && ./stop-dev.sh --session '$($ports.session_id)'"
+    if ((Get-Location).Path -ne $windowsRoot) { Pop-Location }
+    if ($ports) {
+        & wsl.exe -d $Distribution -- bash -lc "cd '$WslRepositoryPath' && ./stop-dev.sh --session '$($ports.session_id)'"
+    }
     Stop-Job $job -ErrorAction SilentlyContinue
     Receive-Job $job -ErrorAction SilentlyContinue
     Remove-Job $job -Force -ErrorAction SilentlyContinue
-    if ($completed -and (Test-Path -LiteralPath $overridePath)) {
+    if ($completed -and $overridePath -and (Test-Path -LiteralPath $overridePath)) {
         Remove-Item -LiteralPath $overridePath -Force
-    } else {
+    } elseif ($sessionRuntime) {
         Write-Warning "Preserved Tauri override and logs under $sessionRuntime"
     }
 }
