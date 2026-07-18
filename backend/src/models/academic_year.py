@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, CheckConstraint, Column, Date, Index, Integer, String
+from sqlalchemy import Boolean, CheckConstraint, Column, Date, DateTime, Index, Integer, String, func
 
 from core.database import Base
 
@@ -12,6 +12,8 @@ class AcademicYear(Base):
     end_date = Column(Date, nullable=False)
     status = Column(String, nullable=False, default="upcoming")
     is_default = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         CheckConstraint("status IN ('upcoming', 'active', 'closed')", name="ck_academic_year_status"),

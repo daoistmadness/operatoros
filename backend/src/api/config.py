@@ -12,6 +12,9 @@ from models.absence_reason_class_entry import AbsenceReasonClassEntry
 from models.heb_override import HebOverride
 from models.jenjang_config import JenjangConfig
 from models.student import Student
+from models.student_enrollment import StudentEnrollment
+from models.academic_master import AcademicClass
+from models.academic_year import AcademicYear
 from services.attendance_metrics import derive_jenjang_from_class_name
 
 router = APIRouter()
@@ -657,7 +660,34 @@ def bulk_upsert_absence_reasons(
                 if not student:
                     raise HTTPException(status_code=404, detail=f"Student {update.student_id} not found")
 
-                if not student.class_name:
+                active_class_name = student.class_name
+                enrollment = (
+                    db.query(StudentEnrollment)
+                    .join(AcademicYear)
+                    .outerjoin(AcademicClass)
+                    .filter(
+                        StudentEnrollment.student_id == student.id,
+                        AcademicYear.start_date <= datetime(body.year, body.month, 1).date(),
+                        AcademicYear.end_date >= datetime(body.year, body.month, 1).date()
+                    )
+                    .first()
+                )
+                if not enrollment:
+                    enrollment = (
+                        db.query(StudentEnrollment)
+                        .outerjoin(AcademicClass)
+                        .filter(StudentEnrollment.student_id == student.id)
+                        .order_by(StudentEnrollment.created_at.desc())
+                        .first()
+                    )
+                if enrollment:
+                    active_class_name = (
+                        enrollment.academic_class.class_name
+                        if enrollment.academic_class
+                        else enrollment.class_name
+                    ) or active_class_name
+
+                if not active_class_name:
                     continue
 
                 row = (
@@ -675,7 +705,7 @@ def bulk_upsert_absence_reasons(
                 if row is None:
                     row = AbsenceReason(
                         student_id=update.student_id,
-                        class_name=student.class_name,
+                        class_name=active_class_name,
                         year=body.year,
                         month=body.month,
                         sakit=update.sakit,
@@ -686,7 +716,7 @@ def bulk_upsert_absence_reasons(
                     )
                     db.add(row)
                 else:
-                    row.class_name = student.class_name
+                    row.class_name = active_class_name
                     row.sakit = update.sakit
                     row.izin = update.izin
                     row.alfa = update.alfa

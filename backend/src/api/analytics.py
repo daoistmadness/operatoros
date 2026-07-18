@@ -23,6 +23,9 @@ from models.absence_reason_class_entry import AbsenceReasonClassEntry
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride
 from models.student import Student
+from models.student_enrollment import StudentEnrollment
+from models.academic_master import AcademicClass
+from models.academic_year import AcademicYear
 from services.attendance_metrics import (
     calculate_auto_heb,
     calculate_heb,
@@ -2096,16 +2099,44 @@ def get_monthly_late_trends(db: Session = Depends(get_db)):
 @router.get("/monthly-by-class")
 def get_monthly_late_by_class(db: Session = Depends(get_db)):
     start = time.perf_counter()
+    default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
+    year_id = default_year.id if default_year else None
     month_bucket = _month_bucket_expression(db).label("month")
-    rows = (
+
+    effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
+
+    query = (
         db.query(
-            Student.class_name,
+            effective_class.label("class_name"),
             month_bucket,
             func.count().label("late_count"),
         )
-        .join(Student)
-        .filter(Attendance.status == "late")
-        .group_by(Student.class_name, month_bucket)
+        .join(Student, Student.id == Attendance.student_id)
+    )
+
+    if year_id:
+        query = query.outerjoin(
+            StudentEnrollment,
+            and_(
+                StudentEnrollment.student_id == Student.id,
+                StudentEnrollment.academic_year_id == year_id,
+            )
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+    else:
+        query = query.outerjoin(
+            StudentEnrollment,
+            StudentEnrollment.student_id == Student.id
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+
+    rows = (
+        query.filter(Attendance.status == "late")
+        .group_by(effective_class, month_bucket)
         .all()
     )
     elapsed = time.perf_counter() - start
@@ -2116,18 +2147,45 @@ def get_monthly_late_by_class(db: Session = Depends(get_db)):
 @router.get("/frequent-offenders")
 def get_frequent_offenders(db: Session = Depends(get_db)):
     start = time.perf_counter()
+    default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
+    year_id = default_year.id if default_year else None
     month_trunc = _month_bucket_expression(db).label("month")
 
-    rows = (
+    effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
+
+    query = (
         db.query(
             Student.name,
-            Student.class_name,
+            effective_class.label("class_name"),
             month_trunc,
             func.count().label("late_count"),
         )
-        .join(Attendance)
-        .filter(Attendance.status == "late")
-        .group_by(Student.id, Student.name, Student.class_name, month_trunc)
+        .join(Attendance, Student.id == Attendance.student_id)
+    )
+
+    if year_id:
+        query = query.outerjoin(
+            StudentEnrollment,
+            and_(
+                StudentEnrollment.student_id == Student.id,
+                StudentEnrollment.academic_year_id == year_id,
+            )
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+    else:
+        query = query.outerjoin(
+            StudentEnrollment,
+            StudentEnrollment.student_id == Student.id
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+
+    rows = (
+        query.filter(Attendance.status == "late")
+        .group_by(Student.id, Student.name, effective_class, month_trunc)
         .having(func.count() >= 3)
         .order_by(desc("late_count"))
         .limit(20)
@@ -2141,9 +2199,14 @@ def get_frequent_offenders(db: Session = Depends(get_db)):
 @router.get("/class-leaderboard")
 def get_class_leaderboard(db: Session = Depends(get_db)):
     start = time.perf_counter()
-    rows = (
+    default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
+    year_id = default_year.id if default_year else None
+
+    effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
+
+    query = (
         db.query(
-            Student.class_name,
+            effective_class.label("class_name"),
             func.count(Attendance.id).label("total_records"),
             func.count(case((Attendance.status == "late", 1))).label("late_count"),
             (
@@ -2152,8 +2215,31 @@ def get_class_leaderboard(db: Session = Depends(get_db)):
                 / func.count(Attendance.id)
             ).label("punctuality_score"),
         )
-        .join(Student)
-        .group_by(Student.class_name)
+        .join(Student, Student.id == Attendance.student_id)
+    )
+
+    if year_id:
+        query = query.outerjoin(
+            StudentEnrollment,
+            and_(
+                StudentEnrollment.student_id == Student.id,
+                StudentEnrollment.academic_year_id == year_id,
+            )
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+    else:
+        query = query.outerjoin(
+            StudentEnrollment,
+            StudentEnrollment.student_id == Student.id
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        )
+
+    rows = (
+        query.group_by(effective_class)
         .order_by(desc("punctuality_score"))
         .all()
     )
@@ -2244,11 +2330,22 @@ def get_incomplete_summary(db: Session = Depends(get_db)):
 @router.get("/pending-categorization")
 def get_pending_categorization(db: Session = Depends(get_db)):
     start = time.perf_counter()
-    rows = (
-        db.query(Student)
-        .filter(or_(Student.class_name.is_(None), Student.class_name == "Unknown Class"))
-        .all()
-    )
+    default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
+    year_id = default_year.id if default_year else None
+
+    if year_id:
+        enrolled_student_ids = select(StudentEnrollment.student_id).filter(StudentEnrollment.academic_year_id == year_id)
+        rows = (
+            db.query(Student)
+            .filter(~Student.id.in_(enrolled_student_ids))
+            .all()
+        )
+    else:
+        rows = (
+            db.query(Student)
+            .filter(or_(Student.class_name.is_(None), Student.class_name == "Unknown Class"))
+            .all()
+        )
     elapsed = time.perf_counter() - start
     print(f"[PERF] /analytics/pending-categorization: {elapsed:.3f}s")
     return rows
@@ -2264,12 +2361,21 @@ def get_attendance_report(
 ):
     start = time.perf_counter()
 
+    academic_year = db.query(AcademicYear).filter(
+        AcademicYear.start_date <= end_date,
+        AcademicYear.end_date >= start_date
+    ).first()
+    year_id = academic_year.id if academic_year else None
+
+    effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
+    effective_jenjang = func.coalesce(Jenjang.name, Student.jenjang)
+
     query = (
         db.query(
             Student.id.label("student_id"),
             Student.name,
-            Student.class_name,
-            Student.jenjang,
+            effective_class.label("class_name"),
+            effective_jenjang.label("jenjang"),
             func.count(case((func.coalesce(AttendanceOverride.override_status, Attendance.status) == "on-time", 1))).label("present_count"),
             func.count(case((func.coalesce(AttendanceOverride.override_status, Attendance.status) == "late", 1))).label("late_count"),
             func.count(case((func.coalesce(AttendanceOverride.override_status, Attendance.status) == "absent", 1))).label("absent_count"),
@@ -2287,20 +2393,47 @@ def get_attendance_report(
         )
         .join(Attendance, Student.id == Attendance.student_id)
         .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
-        .filter(Attendance.date >= start_date, Attendance.date <= end_date)
     )
 
+    if year_id:
+        query = query.outerjoin(
+            StudentEnrollment,
+            and_(
+                StudentEnrollment.student_id == Student.id,
+                StudentEnrollment.academic_year_id == year_id
+            )
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        ).outerjoin(
+            Jenjang,
+            Jenjang.id == StudentEnrollment.jenjang_id
+        )
+    else:
+        query = query.outerjoin(
+            StudentEnrollment,
+            StudentEnrollment.student_id == Student.id
+        ).outerjoin(
+            AcademicClass,
+            AcademicClass.id == StudentEnrollment.academic_class_id
+        ).outerjoin(
+            Jenjang,
+            Jenjang.id == StudentEnrollment.jenjang_id
+        )
+
+    query = query.filter(Attendance.date >= start_date, Attendance.date <= end_date)
+
     if jenjang and jenjang.strip().lower() != "all":
-        query = query.filter(Student.jenjang == jenjang.strip())
+        query = query.filter(effective_jenjang == jenjang.strip())
 
     if class_name and class_name.strip().lower() != "all":
         if class_name.strip() == "unassigned":
-            query = query.filter(Student.class_name.is_(None))
+            query = query.filter(effective_class.is_(None))
         else:
-            query = query.filter(Student.class_name == class_name.strip())
+            query = query.filter(effective_class == class_name.strip())
 
     rows = (
-        query.group_by(Student.id, Student.name, Student.class_name, Student.jenjang)
+        query.group_by(Student.id, Student.name, effective_class, effective_jenjang)
         .order_by(Student.name)
         .all()
     )

@@ -7,7 +7,8 @@ export interface JenjangOption {
 }
 
 export interface EnrollmentStudent {
-  id: number;
+  id: string; // student_master_id
+  student_id: number;
   name: string;
   jenjang: string | null;
   class_name: string | null;
@@ -23,13 +24,13 @@ export interface EnrollmentRow {
   jenjang_id: number;
   class_name: string | null;
   class_assigned: boolean;
+  student_master_id?: string;
 }
 
 export interface BulkEnrollmentRequest {
   academic_year_id: number;
-  jenjang_id: number;
-  class_name: string | null;
-  student_ids: number[];
+  academic_class_id: number;
+  student_master_ids: string[];
 }
 
 export interface BulkEnrollmentResult {
@@ -117,5 +118,54 @@ export async function deleteEnrollment(enrollmentId: number): Promise<{ status: 
     method: "DELETE",
   });
 
+  return response.data;
+}
+
+export interface AcademicClass {
+  id: number;
+  academic_year_id: number;
+  grade_id: number;
+  class_name: string;
+  section_code: string;
+  active: boolean;
+}
+
+export interface AcademicGrade {
+  id: number;
+  jenjang_id: number;
+  program_id: number;
+  name: string;
+  sequence_number: number;
+  active: boolean;
+}
+
+export interface AcademicProgram {
+  id: number;
+  jenjang_id: number;
+  name: string;
+  active: boolean;
+}
+
+export async function fetchAcademicClasses(): Promise<AcademicClass[]> {
+  const response = await apiRequest<AcademicClass[]>({
+    path: "/api/academic-masters/classes",
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function fetchAcademicGrades(): Promise<AcademicGrade[]> {
+  const response = await apiRequest<AcademicGrade[]>({
+    path: "/api/academic-masters/grades",
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function fetchAcademicPrograms(): Promise<AcademicProgram[]> {
+  const response = await apiRequest<AcademicProgram[]>({
+    path: "/api/academic-masters/programs",
+    method: "GET",
+  });
   return response.data;
 }

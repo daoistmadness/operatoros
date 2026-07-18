@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from models.absence_reason import AbsenceReason
 from models.academic_intervention import AcademicIntervention
 from models.academic_year import AcademicYear
+from models.academic_master import AcademicClass
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride
 from models.jenjang import Jenjang
@@ -118,11 +119,12 @@ def _attendance_month_series(
                     StudentEnrollment.student_id == Student.id,
                     StudentEnrollment.academic_year_id == academic_year.id,
                 ))
+                .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
                 .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
                 .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
                 .filter(Attendance.date >= start, Attendance.date < end)
             )
-            effective_class = func.coalesce(StudentEnrollment.class_name, Student.class_name)
+            effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
             effective_jenjang = func.coalesce(Jenjang.name, Student.jenjang)
             if jenjang_name:
                 q_att = q_att.filter(effective_jenjang == jenjang_name)
@@ -141,6 +143,7 @@ def _attendance_month_series(
                     StudentEnrollment.student_id == Student.id,
                     StudentEnrollment.academic_year_id == academic_year.id,
                 ))
+                .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
                 .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
                 .filter(AbsenceReason.year == year, AbsenceReason.month == month)
             )
@@ -197,11 +200,12 @@ def _lateness_month_series(
                     StudentEnrollment.student_id == Student.id,
                     StudentEnrollment.academic_year_id == academic_year.id,
                 ))
+                .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
                 .outerjoin(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
                 .outerjoin(AttendanceOverride, AttendanceOverride.attendance_id == Attendance.id)
                 .filter(Attendance.date >= start, Attendance.date < end, effective_status == "late")
             )
-            effective_class = func.coalesce(StudentEnrollment.class_name, Student.class_name)
+            effective_class = func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name, Student.class_name)
             effective_jenjang = func.coalesce(Jenjang.name, Student.jenjang)
             if jenjang_name:
                 q = q.filter(effective_jenjang == jenjang_name)

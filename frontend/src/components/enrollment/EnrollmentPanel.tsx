@@ -8,9 +8,15 @@ import {
   fetchEnrollmentSourceClasses,
   fetchEnrollments,
   fetchJenjangs,
+  fetchAcademicClasses,
+  fetchAcademicGrades,
+  fetchAcademicPrograms,
   type EnrollmentRow,
   type EnrollmentStudent,
   type JenjangOption,
+  type AcademicClass,
+  type AcademicGrade,
+  type AcademicProgram,
 } from "../../api/enrollment";
 import type { AcademicYear } from "../../types/grade";
 
@@ -40,12 +46,17 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
   const [jenjangs, setJenjangs] = useState<JenjangOption[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(null);
   const [selectedJenjangId, setSelectedJenjangId] = useState<number | null>(null);
-  const [className, setClassName] = useState("1-A");
+  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState<number | null>(null);
+  const [academicClasses, setAcademicClasses] = useState<AcademicClass[]>([]);
+  const [academicGrades, setAcademicGrades] = useState<AcademicGrade[]>([]);
+  const [programs, setPrograms] = useState<AcademicProgram[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const [selectedGradeId, setSelectedGradeId] = useState<number | null>(null);
   const [sourceClasses, setSourceClasses] = useState<string[]>([]);
   const [selectedSourceClass, setSelectedSourceClass] = useState("");
   const [candidates, setCandidates] = useState<EnrollmentStudent[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
-  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(() => new Set());
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(() => new Set());
   const [isLoadingMasters, setIsLoadingMasters] = useState(true);
   const [isLoadingRows, setIsLoadingRows] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
@@ -60,6 +71,30 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     () => jenjangs.find((jenjang) => jenjang.id === selectedJenjangId) ?? null,
     [jenjangs, selectedJenjangId]
   );
+
+  const filteredPrograms = useMemo(() => {
+    if (!selectedJenjangId) return [];
+    return programs.filter((p) => p.jenjang_id === selectedJenjangId && p.active);
+  }, [programs, selectedJenjangId]);
+
+  const filteredGrades = useMemo(() => {
+    if (!selectedProgramId) return [];
+    return academicGrades.filter((g) => g.program_id === selectedProgramId && g.active);
+  }, [academicGrades, selectedProgramId]);
+
+  const filteredClasses = useMemo(() => {
+    if (!selectedAcademicYearId || !selectedGradeId) return [];
+    return academicClasses.filter((cls) => {
+      if (cls.academic_year_id !== selectedAcademicYearId || !cls.active) return false;
+      return cls.grade_id === selectedGradeId;
+    });
+  }, [academicClasses, selectedAcademicYearId, selectedGradeId]);
+
+  const selectedClassName = useMemo(() => {
+    if (!selectedAcademicClassId) return "";
+    return filteredClasses.find((cls) => cls.id === selectedAcademicClassId)?.class_name ?? "";
+  }, [filteredClasses, selectedAcademicClassId]);
+
   const allVisibleSelected = candidates.length > 0 && candidates.every((student) => selectedStudentIds.has(student.id));
 
   const loadMasters = useCallback(async () => {
@@ -67,10 +102,19 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     setError("");
 
     try {
-      const [yearsPayload, jenjangPayload] = await Promise.all([fetchAcademicYears(), fetchJenjangs()]);
+      const [yearsPayload, jenjangPayload, classesPayload, gradesPayload, programsPayload] = await Promise.all([
+        fetchAcademicYears(),
+        fetchJenjangs(),
+        fetchAcademicClasses(),
+        fetchAcademicGrades(),
+        fetchAcademicPrograms(),
+      ]);
       const defaultYear = yearsPayload.find((year) => year.is_default) ?? yearsPayload[0] ?? null;
       setAcademicYears(yearsPayload);
       setJenjangs(jenjangPayload);
+      setAcademicClasses(classesPayload);
+      setAcademicGrades(gradesPayload);
+      setPrograms(programsPayload);
       setSelectedAcademicYearId(defaultYear?.id ?? null);
       setSelectedJenjangId(jenjangPayload[0]?.id ?? null);
     } catch (loadError) {
@@ -78,9 +122,14 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
       setError(getErrorMessage(loadError));
       setAcademicYears([]);
       setJenjangs([]);
+      setAcademicClasses([]);
+      setAcademicGrades([]);
+      setPrograms([]);
       setSourceClasses([]);
       setSelectedAcademicYearId(null);
       setSelectedJenjangId(null);
+      setSelectedProgramId(null);
+      setSelectedGradeId(null);
       setSelectedSourceClass("");
     } finally {
       setIsLoadingMasters(false);
@@ -99,7 +148,8 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     setError("");
 
     try {
-      const classFilter = className.trim();
+      const activeClass = academicClasses.find((c) => c.id === selectedAcademicClassId);
+      const classFilter = activeClass?.class_name || "";
       const sourceClassFilter = selectedSourceClass.trim();
       const [candidatePayload, enrollmentPayload, sourceClassPayload] = await Promise.all([
         fetchEnrollmentCandidates({
@@ -133,7 +183,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     } finally {
       setIsLoadingRows(false);
     }
-  }, [className, selectedAcademicYearId, selectedJenjangId, selectedSourceClass]);
+  }, [selectedAcademicClassId, academicClasses, selectedAcademicYearId, selectedJenjangId, selectedSourceClass]);
 
   useEffect(() => {
     loadMasters();
@@ -143,7 +193,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     loadRows();
   }, [loadRows]);
 
-  const toggleStudent = (studentId: number) => {
+  const toggleStudent = (studentId: string) => {
     setSelectedStudentIds((current) => {
       const next = new Set(current);
       if (next.has(studentId)) {
@@ -166,13 +216,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
   };
 
   const enrollSelected = async () => {
-    if (!selectedAcademicYearId || !selectedJenjangId || selectedStudentIds.size === 0) {
-      return;
-    }
-
-    const trimmedClassName = className.trim();
-    if (!trimmedClassName) {
-      setError("Class name is required before bulk enrollment.");
+    if (!selectedAcademicYearId || !selectedAcademicClassId || selectedStudentIds.size === 0) {
       return;
     }
 
@@ -183,11 +227,10 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     try {
       const result = await bulkEnrollStudents({
         academic_year_id: selectedAcademicYearId,
-        jenjang_id: selectedJenjangId,
-        class_name: trimmedClassName,
-        student_ids: Array.from(selectedStudentIds),
+        academic_class_id: selectedAcademicClassId,
+        student_master_ids: Array.from(selectedStudentIds),
       });
-      setStatusMessage(`${result.created} enrollment(s) created. ${result.skipped_existing} skipped as existing.`);
+      setStatusMessage(`${result.created} enrollment(s) created.`);
       await loadRows();
     } catch (mutationError) {
       console.error("Bulk enrollment failure", mutationError);
@@ -259,6 +302,9 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                   value={selectedAcademicYearId ?? ""}
                   onChange={(event) => {
                     setSelectedAcademicYearId(Number(event.target.value) || null);
+                    setSelectedProgramId(null);
+                    setSelectedGradeId(null);
+                    setSelectedAcademicClassId(null);
                     setSelectedSourceClass("");
                     setSelectedStudentIds(new Set());
                   }}
@@ -281,6 +327,9 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                   value={selectedJenjangId ?? ""}
                   onChange={(event) => {
                     setSelectedJenjangId(Number(event.target.value) || null);
+                    setSelectedProgramId(null);
+                    setSelectedGradeId(null);
+                    setSelectedAcademicClassId(null);
                     setSelectedSourceClass("");
                     setSelectedStudentIds(new Set());
                   }}
@@ -297,17 +346,88 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
               </label>
             </div>
 
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
+                Program
+                <select
+                  value={selectedProgramId ?? ""}
+                  onChange={(event) => {
+                    setSelectedProgramId(Number(event.target.value) || null);
+                    setSelectedGradeId(null);
+                    setSelectedAcademicClassId(null);
+                    setSelectedStudentIds(new Set());
+                  }}
+                  disabled={isMutating || !selectedJenjangId || filteredPrograms.length === 0}
+                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                >
+                  {filteredPrograms.length === 0 ? (
+                    <option value="">No programs available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a program...</option>
+                      {filteredPrograms.map((prog) => (
+                        <option key={prog.id} value={prog.id}>
+                          {prog.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </label>
+
+              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
+                Grade
+                <select
+                  value={selectedGradeId ?? ""}
+                  onChange={(event) => {
+                    setSelectedGradeId(Number(event.target.value) || null);
+                    setSelectedAcademicClassId(null);
+                    setSelectedStudentIds(new Set());
+                  }}
+                  disabled={isMutating || !selectedProgramId || filteredGrades.length === 0}
+                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                >
+                  {filteredGrades.length === 0 ? (
+                    <option value="">No grades available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a grade...</option>
+                      {filteredGrades.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </label>
+            </div>
+
             <div className="flex gap-2">
               <label className="grid min-w-0 flex-1 gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Class Name
-                <input
-                  type="text"
-                  value={className}
-                  onChange={(event) => setClassName(event.target.value)}
-                  disabled={isMutating}
-                  placeholder="1-A"
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
-                />
+                Academic Class
+                <select
+                  value={selectedAcademicClassId ?? ""}
+                  onChange={(event) => {
+                    setSelectedAcademicClassId(Number(event.target.value) || null);
+                    setSelectedStudentIds(new Set());
+                  }}
+                  disabled={isMutating || !selectedGradeId || filteredClasses.length === 0}
+                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                >
+                  {filteredClasses.length === 0 ? (
+                    <option value="">No active classes available</option>
+                  ) : (
+                    <>
+                      <option value="">Select a class...</option>
+                      {filteredClasses.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.class_name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
               </label>
               <button
                 type="button"
@@ -456,7 +576,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
               <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Current Enrollment</p>
               <h2 className="mt-1 text-xl font-black tracking-tight text-slate-900">Assigned grade ledger rows</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Class filter: <span className="font-black text-slate-700">{className.trim() || "All classes"}</span>
+                Class filter: <span className="font-black text-slate-700">{selectedClassName || "All classes"}</span>
               </p>
             </div>
 

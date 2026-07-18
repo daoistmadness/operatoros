@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
-from api.setup import router as setup_router
+import api.setup as setup_api
 from core.config import Settings
 from core.database import Base, get_db
 from models.first_admin_setup import FirstAdminSetupState
@@ -149,17 +149,18 @@ def test_two_simultaneous_sqlite_attempts_create_exactly_one_admin_and_audit(tmp
 def test_setup_api_contract_and_password_confirmation(tmp_path, monkeypatch):
     factory, _ = database_factory(tmp_path)
     app = FastAPI()
-    app.include_router(setup_router, prefix="/api/setup")
+    app.include_router(setup_api.router, prefix="/api/setup")
 
     def override_db():
         with factory() as db:
             yield db
 
     app.dependency_overrides[get_db] = override_db
-    monkeypatch.setattr("api.setup.get_setup_status", lambda db: get_setup_status(db, configuration=configuration(tmp_path)))
+    monkeypatch.setattr(setup_api, "get_setup_status", lambda db: get_setup_status(db, configuration=configuration(tmp_path)))
     original = provision_first_admin
     monkeypatch.setattr(
-        "api.setup.provision_first_admin",
+        setup_api,
+        "provision_first_admin",
         lambda db, **kwargs: original(db, configuration=configuration(tmp_path), **kwargs),
     )
     client = TestClient(app)

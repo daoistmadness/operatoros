@@ -70,9 +70,14 @@ function ChartClass({ data }) {
   }), [data]);
 
   return (
-    <div className="h-full min-h-64">
-      <Bar options={options} data={chartData} />
-    </div>
+    <figure className="h-full min-h-64">
+      <figcaption className="sr-only">
+        Class punctuality bar chart showing punctuality percentage for each class.
+      </figcaption>
+      <div role="img" aria-label={`Class punctuality chart: ${data.map(d => `${d.class_name}: ${Math.round(d.punctuality_score)}%`).join(", ")}`}>
+        <Bar options={options} data={chartData} />
+      </div>
+    </figure>
   );
 }
 

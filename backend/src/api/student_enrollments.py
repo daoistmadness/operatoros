@@ -41,7 +41,7 @@ class AcademicRosterCommitRequest(BaseModel):
 class JenjangMasterProposal(BaseModel):
     code: str = Field(min_length=1, max_length=32)
     name: str = Field(min_length=1, max_length=255)
-    level: int = Field(gt=0)
+    level: str = Field(min_length=1, max_length=64)
     active: bool = True
 
 
@@ -55,14 +55,34 @@ class ClassMasterProposal(BaseModel):
     academic_year: str = Field(min_length=1, max_length=32)
     jenjang_code: str = Field(min_length=1, max_length=32)
     program: str = Field(min_length=1, max_length=255)
+    grade: str = Field(min_length=1, max_length=255)
     class_name: str = Field(min_length=1, max_length=255)
+    section_code: str = Field(default="", max_length=32)
+    active: bool = True
+
+
+class AcademicYearMasterProposal(BaseModel):
+    name: str = Field(min_length=1, max_length=32)
+    start_date: date | None = None
+    end_date: date | None = None
+    is_active: bool = False
+    is_default: bool = False
+
+
+class GradeMasterProposal(BaseModel):
+    jenjang_code: str = Field(min_length=1, max_length=32)
+    program: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255)
+    sequence_number: int = Field(gt=0)
     active: bool = True
 
 
 class AcademicMasterPreviewRequest(BaseModel):
     source_owner: str = Field(min_length=2, max_length=255)
+    academic_years: list[AcademicYearMasterProposal] = Field(default_factory=list)
     jenjangs: list[JenjangMasterProposal] = Field(default_factory=list)
     programs: list[ProgramMasterProposal] = Field(default_factory=list)
+    grades: list[GradeMasterProposal] = Field(default_factory=list)
     classes: list[ClassMasterProposal] = Field(default_factory=list)
 
 
@@ -72,13 +92,9 @@ def preview_academic_masters(
     db: Session = Depends(get_db),
     user: User = Depends(require_role("admin")),
 ):
-    preview = create_academic_master_preview(
+    return create_academic_master_preview(
         db, body.model_dump(), body.source_owner.strip(), user.username
     )
-    return {
-        "preview_id": preview.id, "status": preview.status,
-        **preview.validation_result,
-    }
 
 
 @router.post("/roster-preview")
