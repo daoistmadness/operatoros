@@ -344,7 +344,9 @@ function TardinessReport() {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { font-size: 11pt; background: white !important; }
-          table { page-break-inside: avoid; }
+          table { page-break-inside: auto; }
+          thead { display: table-header-group; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
           body.printing-tardiness-report .app-sidebar { display: none !important; }
           body.printing-tardiness-report .app-main { margin-left: 0 !important; padding: 0 !important; }
           body.printing-tardiness-report .report-print-area { padding: 0 !important; }
