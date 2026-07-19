@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     BACKEND_WORKERS: int = Field(1, ge=1, env="BACKEND_WORKERS")
     RESTORE_SINGLE_WORKER_REQUIRED: bool = Field(True, env="RESTORE_SINGLE_WORKER_REQUIRED")
     ASTRYX_SETUP_TOKEN: str | None = Field(default=None, env="ASTRYX_SETUP_TOKEN")
+    OPERATOROS_MANAGED_DEV_SETUP: bool = Field(False, env="OPERATOROS_MANAGED_DEV_SETUP")
 
     @model_validator(mode="after")
     def validate_session_lifetimes(self):

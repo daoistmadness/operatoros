@@ -321,6 +321,7 @@ SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
 DEV_DATABASE="$SESSION_DIR/state/operatoros-development.db"
 "$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
 prepare_local_environment
+SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
   printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
   exit 0
@@ -332,6 +333,8 @@ printf '\nStarting services (session %s)...\n' "$SESSION_ID"
 (
   cd "$BACKEND_DIR"
   export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+  export ASTRYX_SETUP_TOKEN="$SETUP_TOKEN"
+  export OPERATOROS_MANAGED_DEV_SETUP=true
   # Canonical command remains: "$VENV/bin/uvicorn" src.main:app
   exec setsid bash -c 'exec "$1" src.main:app --host "$2" --port "$3" --reload' "$SESSION_TOKEN" "$VENV/bin/uvicorn" "$BACKEND_HOST" "$BACKEND_PORT"
 ) >"$BACKEND_LOG" 2>&1 &

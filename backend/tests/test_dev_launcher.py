@@ -92,6 +92,16 @@ def test_dev_launcher_exposes_backend_src_import_root():
     assert '"$VENV/bin/uvicorn" src.main:app' in contents
 
 
+def test_dev_launcher_scopes_secure_setup_token_to_backend_process():
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    contents = launcher.read_text(encoding="utf-8")
+
+    assert "secrets.token_urlsafe(48)" in contents
+    assert contents.count('export ASTRYX_SETUP_TOKEN="$SETUP_TOKEN"') == 1
+    assert "export OPERATOROS_MANAGED_DEV_SETUP=true" in contents
+    assert "VITE_ASTRYX_SETUP_TOKEN" not in contents
+
+
 def test_dev_launcher_prepares_stable_local_configuration(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)

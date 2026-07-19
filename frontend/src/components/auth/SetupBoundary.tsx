@@ -19,6 +19,6 @@ export function SetupBoundary({ children }: { children: ReactNode }) {
     );
   }
   return status.data.setup_required
-    ? <SetupAdmin setupTokenRequired={status.data.setup_token_required} />
+    ? <SetupAdmin />
     : <>{children}</>;
 }
