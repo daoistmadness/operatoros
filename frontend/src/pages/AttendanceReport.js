@@ -14,6 +14,7 @@ import {
 
 import api from "../api";
 import { cn } from "../lib/cn";
+import { Card } from "../components/ui/card";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -109,7 +110,7 @@ const getDateRange = (type, periodValue, year) => {
 };
 
 const StatCard = ({ title, value, subtext, icon, color }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
+  <Card className="rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
@@ -120,7 +121,7 @@ const StatCard = ({ title, value, subtext, icon, color }) => (
       </div>
     </div>
     {subtext && <p className="text-sm font-medium text-slate-400 mt-4">{subtext}</p>}
-  </div>
+  </Card>
 );
 
 function AttendanceReport() {
@@ -257,7 +258,7 @@ function AttendanceReport() {
       </header>
 
       {/* Filter Panel */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <Card className="rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
           <Filter size={18} className="text-brand" />
           <h2 className="font-bold text-slate-800">Report Parameters</h2>
@@ -337,13 +338,13 @@ function AttendanceReport() {
             <Calendar size={18} />
           </button>
         </div>
-      </div>
+      </Card>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800 shadow-sm">
+        <Card className="rounded-2xl border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800">
           <AlertTriangle size={20} />
           <p className="font-medium">{error}</p>
-        </div>
+        </Card>
       )}
 
       {reportData.length > 0 && (
@@ -398,7 +399,7 @@ function AttendanceReport() {
 
 
           {/* Data Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <Card className="rounded-2xl overflow-hidden">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800">Report Results</h3>
               <span className="text-xs font-semibold text-slate-500 px-3 py-1 bg-slate-200 rounded-[9999px]">
@@ -469,18 +470,18 @@ function AttendanceReport() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
         </>
       )}
 
       {!loading && reportData.length === 0 && !error && (
-        <div className="rounded-2xl border border-dashed border-slate-100 bg-slate-50/50 p-12 flex flex-col items-center justify-center text-center shadow-sm">
+        <Card className="rounded-2xl border-dashed bg-slate-50/50 p-12 flex flex-col items-center justify-center text-center">
           <div className="w-20 h-20 bg-slate-100 rounded-[9999px] flex items-center justify-center mb-4">
             <Calendar size={32} className="text-slate-400" />
           </div>
           <h3 className="text-xl font-bold text-slate-900 mb-2">No Report Data</h3>
           <p className="text-slate-500 max-w-sm">Select your parameters and click "Generate Report" to see attendance data.</p>
-        </div>
+        </Card>
       )}
     </div>
   );
