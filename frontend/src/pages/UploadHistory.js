@@ -4,6 +4,7 @@ import { History, RefreshCw, FileSpreadsheet } from "lucide-react";
 
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
+import { Card } from "../components/ui/card";
 
 function formatDateTime(value) {
   if (!value) return "-";
@@ -75,10 +76,10 @@ function UploadHistory() {
       </header>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 font-medium shadow-sm">{error}</div>
+        <Card className="rounded-2xl border-rose-200 bg-rose-50 p-4 text-rose-800 font-medium">{error}</Card>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <Card className="rounded-2xl p-6">
         {loading ? (
           <div className="h-48 flex items-center justify-center text-slate-500">Loading upload history...</div>
         ) : history.length === 0 ? (
@@ -130,7 +131,7 @@ function UploadHistory() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -25,6 +25,8 @@ import {
 } from '../lib/api/endpoints';
 import { TERM_OPTIONS } from '../lib/reportPeriods';
 import { HebBadgeRow } from '../components/HebBadgeRow';
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const FILTER_MODES = [
   { value: 'month', label: 'Month' },
@@ -77,7 +79,7 @@ function sanitizePeriodLabel(label) {
 
 function SummaryCard({ title, value, icon, tone }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+    <Card className="rounded-2xl p-6 print:border print:shadow-none print:rounded-none">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
@@ -87,25 +89,25 @@ function SummaryCard({ title, value, icon, tone }) {
           {icon}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+      <Card className="rounded-2xl p-6 animate-pulse">
         <div className="h-6 w-56 bg-slate-200 rounded" />
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <div key={index} className="h-24 rounded-2xl bg-slate-100" />
           ))}
         </div>
-      </div>
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+      </Card>
+      <Card className="rounded-2xl p-6 animate-pulse">
         <div className="h-5 w-48 bg-slate-200 rounded" />
         <div className="mt-4 h-72 rounded-2xl bg-slate-100" />
-      </div>
+      </Card>
     </div>
   );
 }
@@ -368,7 +370,7 @@ function TardinessReport() {
         description="Analyze student tardiness distribution by level and by class."
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 filter-bar no-print">
+      <Card className="rounded-2xl p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Period Mode</label>
@@ -470,15 +472,15 @@ function TardinessReport() {
           </div>
 
           <div>
-            <button
+            <Button
               type="button"
               onClick={handleGenerateReport}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 w-full h-[46px] font-bold"
+              className="w-full h-[46px] font-bold"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
               <span>{loading ? 'Loading...' : 'Generate Report'}</span>
-            </button>
+            </Button>
           </div>
 
           <div className="export-actions">
@@ -519,7 +521,7 @@ function TardinessReport() {
             )}
           </div>
         </div>
-      </section>
+      </Card>
 
       {error && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 flex items-start gap-3 no-print">
@@ -534,16 +536,16 @@ function TardinessReport() {
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
             <h2 className="text-2xl md:text-3xl font-black tracking-wide text-slate-900 uppercase">{report.report_title}</h2>
             <p className="mt-2 text-lg font-semibold text-slate-700 uppercase">{report.school_name}</p>
             <p className="mt-2 text-base text-slate-500">{report.period.label}</p>
             <div className="flex justify-center mt-4 no-print">
               <HebBadgeRow hebByJenjang={report?.heb_by_jenjang} />
             </div>
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
               <h3 className="text-xl font-bold text-slate-900">Management Summary</h3>
               <p className="text-sm text-slate-500">Separates total late incidents from the actual number of school days affected.</p>
@@ -597,9 +599,9 @@ function TardinessReport() {
               affecting {Number(managementSummary.school_impact_rate_pct || 0).toFixed(1)}% of the {managementSummary.tracked_school_days} recorded school days
               in this period, with an average of {Number(managementSummary.average_lateness_density || 0).toFixed(2)} late students per affected day.
             </div>
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Jenjang Late Summary</h3>
@@ -643,9 +645,9 @@ function TardinessReport() {
             </div>
 
             <TardinessBarChart data={jenjangSummaryRows} />
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
                  <h3 className="text-xl font-bold text-slate-900">Class Breakdown</h3>
                  <p className="text-sm text-slate-500">Classes are sorted alphabetically within each level.</p>
@@ -709,7 +711,7 @@ function TardinessReport() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           <div className="report-section print:break-inside-avoid">
             <div className="mb-4">
