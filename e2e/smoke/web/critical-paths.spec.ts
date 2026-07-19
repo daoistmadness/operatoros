@@ -5,8 +5,8 @@ const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 
 async function login(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Username").fill(username);
-  await page.getByLabel("Password").fill(password);
+  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
+  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
