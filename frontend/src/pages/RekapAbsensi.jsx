@@ -16,6 +16,7 @@ import {
 import { HebBadgeRow } from '../components/HebBadgeRow';
 import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
+import { PageHeader } from "../components/common/page-header";
 import { downloadRekapAbsensiExcel, getRekapAbsensiReport } from '../lib/api/endpoints';
 import { TERM_OPTIONS, getAcademicYearLabel, getTermAcademicYearLabel } from '../lib/reportPeriods';
 
@@ -343,10 +344,11 @@ function RekapAbsensi() {
         }
       `}</style>
 
-      <header className="page-header no-print">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Rekap Absensi</h1>
-        <p className="text-slate-500 mt-1">Ringkasan persentase hadir, sakit, izin, alfa, dan lain-lain per jenjang.</p>
-      </header>
+      <PageHeader
+        className="no-print"
+        title="Rekap Absensi"
+        description="Laporan rekapitulasi kehadiran siswa bulanan, date range, atau term."
+      />
 
       <section className="card p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
