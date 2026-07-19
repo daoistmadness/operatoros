@@ -378,8 +378,9 @@ function AttendanceReview() {
 
               {!loadingRows && rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-500">
-                    No attendance rows found for selected date/class.
+                  <td colSpan={6} className="px-6 py-10 text-center">
+                    <p className="font-bold text-slate-600">No attendance records for this selection.</p>
+                    <p className="mt-1 text-sm text-slate-400">Choose an academic year and class, then select a date and load records.</p>
                   </td>
                 </tr>
               ) : null}

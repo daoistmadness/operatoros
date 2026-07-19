@@ -34,6 +34,27 @@
   --z-navigation: 30;
   --z-dropdown: 40;
   --z-dialog: 50;
+
+  /* shadcn variables */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --input: #e2e8f0;
+  --ring: #4f46e5;
+
+  /* sidebar variables */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-border: #e2e8f0;
 }
 
 @theme inline {
@@ -55,6 +76,26 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 0.25rem);
   --radius-xl: calc(var(--radius) + 0.75rem);
+
+  /* shadcn variables */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+
+  /* sidebar variables */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
 }
 
 @layer base {
