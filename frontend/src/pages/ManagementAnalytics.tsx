@@ -62,6 +62,7 @@ import type {
   ManagementSummaryResponse,
   ExecutiveInsight,
 } from "../types/analytics";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 
 ChartJS.register(
   CategoryScale,
@@ -1665,17 +1666,17 @@ export default function ManagementAnalytics() {
         </div>
       ) : null}
 
+      <Dialog open={Boolean(selectedAlert)} onOpenChange={(open) => { if (!open && !isSavingIntervention) closeInterventionModal(); }}>
       {selectedAlert ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+          <DialogContent showClose={false} className="max-w-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-slate-800">
+                <DialogTitle>
                   {selectedAlert.intervention_id ? "Update Academic Intervention" : "Create Academic Intervention"}
-                </h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">
+                </DialogTitle>
+                <DialogDescription>
                   {selectedAlert.student_name} · {selectedAlert.subject_name} · {selectedAlert.assessment_type}
-                </p>
+                </DialogDescription>
               </div>
               <button
                 type="button"
@@ -1786,19 +1787,18 @@ export default function ManagementAnalytics() {
                 {isSavingIntervention ? "Saving..." : selectedAlert.intervention_id ? "Update Intervention" : "Create Intervention"}
               </button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
       ) : null}
+      </Dialog>
 
-      {showExportModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 text-left">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+      <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
+          <DialogContent showClose={false} className="max-w-lg text-left">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-xl font-black text-slate-800">Export Settings</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">
+                <DialogTitle>Export Settings</DialogTitle>
+                <DialogDescription>
                   Configure output parameters for management review reports
-                </p>
+                </DialogDescription>
               </div>
               <button
                 type="button"
@@ -2032,9 +2032,8 @@ export default function ManagementAnalytics() {
                 Export Report
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }

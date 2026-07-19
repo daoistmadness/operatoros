@@ -18,6 +18,7 @@ import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { cn } from "../lib/cn";
 import { Card } from "../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -548,23 +549,16 @@ function ClassMapping() {
         </Card>
       </div>
 
-      {showAddModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
-          onClick={() => setShowAddModal(false)}
-        >
-          <div 
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Dialog open={showAddModal} onOpenChange={(open) => { if (!open && !addingStudent) setShowAddModal(false); }}>
+          <DialogContent showClose={false} className="max-w-md overflow-hidden p-0">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2">
                   <UserPlus size={20} className="text-brand" />
                   Add Manual Student
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Create a student in the master student pool</p>
+                </DialogTitle>
+                <DialogDescription>Create a student in the master student pool</DialogDescription>
               </div>
               <button
                 type="button"
@@ -658,9 +652,8 @@ function ClassMapping() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }
