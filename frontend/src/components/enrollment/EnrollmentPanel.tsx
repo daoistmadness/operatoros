@@ -19,6 +19,20 @@ import {
   type AcademicProgram,
 } from "../../api/enrollment";
 import type { AcademicYear } from "../../types/grade";
+import { Input } from "../ui/input";
+import { NativeSelect } from "../ui/native-select";
+import { FormField, FieldLabel } from "../ui/field";
+import { Button } from "../ui/button";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableContainer,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow,
+} from "../common/data-table";
+
 
 interface EnrollmentPanelProps {
   showHero?: boolean;
@@ -296,9 +310,9 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
 
           <div className="grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4">
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Academic Year
-                <select
+              <FormField id="enrollment-academic-year">
+                <FieldLabel className="text-slate-300 font-black uppercase tracking-[0.18em] text-xs">Academic Year</FieldLabel>
+                <NativeSelect
                   value={selectedAcademicYearId ?? ""}
                   onChange={(event) => {
                     setSelectedAcademicYearId(Number(event.target.value) || null);
@@ -309,7 +323,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isLoadingMasters || isMutating}
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                  className="bg-white text-slate-950 font-black normal-case tracking-normal rounded-2xl h-11 border-white/10"
                 >
                   {academicYears.length === 0 ? <option value="">No academic years</option> : null}
                   {academicYears.map((year) => (
@@ -318,12 +332,12 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       {year.is_default ? " - Default" : ""}
                     </option>
                   ))}
-                </select>
-              </label>
+                </NativeSelect>
+              </FormField>
 
-              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Jenjang
-                <select
+              <FormField id="enrollment-jenjang">
+                <FieldLabel className="text-slate-300 font-black uppercase tracking-[0.18em] text-xs">Jenjang</FieldLabel>
+                <NativeSelect
                   value={selectedJenjangId ?? ""}
                   onChange={(event) => {
                     setSelectedJenjangId(Number(event.target.value) || null);
@@ -334,7 +348,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isLoadingMasters || isMutating}
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                  className="bg-white text-slate-950 font-black normal-case tracking-normal rounded-2xl h-11 border-white/10"
                 >
                   {jenjangs.length === 0 ? <option value="">No jenjangs</option> : null}
                   {jenjangs.map((jenjang) => (
@@ -342,14 +356,14 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       {jenjang.name}
                     </option>
                   ))}
-                </select>
-              </label>
+                </NativeSelect>
+              </FormField>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Program
-                <select
+              <FormField id="enrollment-program">
+                <FieldLabel className="text-slate-300 font-black uppercase tracking-[0.18em] text-xs">Program</FieldLabel>
+                <NativeSelect
                   value={selectedProgramId ?? ""}
                   onChange={(event) => {
                     setSelectedProgramId(Number(event.target.value) || null);
@@ -358,9 +372,11 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isMutating || !selectedJenjangId || filteredPrograms.length === 0}
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                  className="bg-white text-slate-950 font-black normal-case tracking-normal rounded-2xl h-11 border-white/10"
                 >
-                  {filteredPrograms.length === 0 ? (
+                  {!selectedJenjangId ? (
+                    <option value="">Select Jenjang first</option>
+                  ) : filteredPrograms.length === 0 ? (
                     <option value="">No programs available</option>
                   ) : (
                     <>
@@ -372,12 +388,12 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       ))}
                     </>
                   )}
-                </select>
-              </label>
+                </NativeSelect>
+              </FormField>
 
-              <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Grade
-                <select
+              <FormField id="enrollment-grade">
+                <FieldLabel className="text-slate-300 font-black uppercase tracking-[0.18em] text-xs">Grade</FieldLabel>
+                <NativeSelect
                   value={selectedGradeId ?? ""}
                   onChange={(event) => {
                     setSelectedGradeId(Number(event.target.value) || null);
@@ -385,9 +401,11 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isMutating || !selectedProgramId || filteredGrades.length === 0}
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                  className="bg-white text-slate-950 font-black normal-case tracking-normal rounded-2xl h-11 border-white/10"
                 >
-                  {filteredGrades.length === 0 ? (
+                  {!selectedProgramId ? (
+                    <option value="">Select Program first</option>
+                  ) : filteredGrades.length === 0 ? (
                     <option value="">No grades available</option>
                   ) : (
                     <>
@@ -399,23 +417,25 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       ))}
                     </>
                   )}
-                </select>
-              </label>
+                </NativeSelect>
+              </FormField>
             </div>
 
             <div className="flex gap-2">
-              <label className="grid min-w-0 flex-1 gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
-                Academic Class
-                <select
+              <FormField id="enrollment-class" className="min-w-0 flex-1">
+                <FieldLabel className="text-slate-300 font-black uppercase tracking-[0.18em] text-xs">Academic Class</FieldLabel>
+                <NativeSelect
                   value={selectedAcademicClassId ?? ""}
                   onChange={(event) => {
                     setSelectedAcademicClassId(Number(event.target.value) || null);
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isMutating || !selectedGradeId || filteredClasses.length === 0}
-                  className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:bg-slate-200"
+                  className="bg-white text-slate-950 font-black normal-case tracking-normal rounded-2xl h-11 border-white/10"
                 >
-                  {filteredClasses.length === 0 ? (
+                  {!selectedGradeId ? (
+                    <option value="">Select Grade first</option>
+                  ) : filteredClasses.length === 0 ? (
                     <option value="">No active classes available</option>
                   ) : (
                     <>
@@ -427,17 +447,17 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       ))}
                     </>
                   )}
-                </select>
-              </label>
-              <button
+                </NativeSelect>
+              </FormField>
+              <Button
                 type="button"
                 onClick={loadRows}
                 disabled={isLoadingRows || isMutating || !selectedAcademicYearId || !selectedJenjangId}
-                className="mt-6 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="mt-6 h-11 px-4 text-slate-950 bg-white hover:bg-slate-100 disabled:bg-slate-400"
                 aria-label="Refresh enrollment data"
               >
                 <RefreshCw className={isLoadingRows ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -464,47 +484,45 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
         <EnrollmentSkeleton />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-          <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4">
+          <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 bg-slate-50/50">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Candidate Pool</p>
                   <h2 className="mt-1 text-xl font-black tracking-tight text-slate-900">Master students not enrolled</h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 font-semibold">
                     {selectedAcademicYear?.label ?? "No year"} / {selectedJenjang?.name ?? "No jenjang"}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={toggleAllVisible}
                     disabled={candidates.length === 0 || isMutating}
-                    className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
                   >
                     {allVisibleSelected ? "Clear" : "Select All"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={enrollSelected}
                     disabled={selectedStudentIds.size === 0 || isMutating}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     <ArrowRight className="h-4 w-4" />
                     {isMutating ? "Enrolling..." : `Enroll ${selectedStudentIds.size}`}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <label className="grid max-w-sm gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-400">
-                Source Class
-                <select
+              <FormField id="enrollment-source-class" className="max-w-sm">
+                <FieldLabel>Source Class</FieldLabel>
+                <NativeSelect
                   value={selectedSourceClass}
                   onChange={(event) => {
                     setSelectedSourceClass(event.target.value);
                     setSelectedStudentIds(new Set());
                   }}
                   disabled={isLoadingRows || isMutating || sourceClasses.length === 0}
-                  className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black normal-case tracking-normal text-slate-900 outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                 >
                   <option value="">All source classes</option>
                   {sourceClasses.map((sourceClass) => (
@@ -512,51 +530,51 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       {sourceClass}
                     </option>
                   ))}
-                </select>
-              </label>
+                </NativeSelect>
+              </FormField>
             </div>
 
-            <div className="max-h-[34rem] overflow-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="sticky top-0 bg-slate-50">
-                  <tr>
-                    <th className="w-12 px-5 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <DataTableContainer className="max-h-[34rem] overflow-auto border-0 rounded-none">
+              <DataTable>
+                <DataTableHeader className="sticky top-0 bg-slate-50 z-10">
+                  <DataTableRow>
+                    <DataTableHead className="w-12 px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Pick
-                    </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    </DataTableHead>
+                    <DataTableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Student
-                    </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    </DataTableHead>
+                    <DataTableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Source Class
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                    </DataTableHead>
+                  </DataTableRow>
+                </DataTableHeader>
+                <DataTableBody>
                   {candidates.map((student) => (
-                    <tr key={student.id} className="hover:bg-slate-50/70">
-                      <td className="px-5 py-3">
+                    <DataTableRow key={student.id}>
+                      <DataTableCell className="px-5 py-3">
                         <input
                           type="checkbox"
                           checked={selectedStudentIds.has(student.id)}
                           onChange={() => toggleStudent(student.id)}
                           disabled={isMutating}
-                          className="h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-900"
+                          className="h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-950 cursor-pointer"
                         />
-                      </td>
-                      <td className="px-4 py-3">
+                      </DataTableCell>
+                      <DataTableCell className="px-4 py-3">
                         <div className="font-black text-slate-900">{student.name}</div>
                         <div className="text-xs font-semibold text-slate-400">ID {student.id}</div>
-                      </td>
-                      <td className="px-4 py-3">
+                      </DataTableCell>
+                      <DataTableCell className="px-4 py-3">
                         <span className="rounded-[9999px] bg-slate-100 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-600">
                           {student.class_name || "Unassigned"}
                         </span>
-                      </td>
-                    </tr>
+                      </DataTableCell>
+                    </DataTableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </DataTableBody>
+              </DataTable>
+            </DataTableContainer>
 
             {candidates.length === 0 ? (
               <div className="px-6 py-14 text-center">
@@ -571,58 +589,60 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
             ) : null}
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-5 py-4">
+          <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="border-b border-slate-200 px-5 py-4 bg-slate-50/50">
               <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Current Enrollment</p>
               <h2 className="mt-1 text-xl font-black tracking-tight text-slate-900">Assigned grade ledger rows</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 font-semibold">
                 Class filter: <span className="font-black text-slate-700">{selectedClassName || "All classes"}</span>
               </p>
             </div>
 
-            <div className="max-h-[34rem] overflow-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="sticky top-0 bg-slate-50">
-                  <tr>
-                    <th className="px-5 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <DataTableContainer className="max-h-[34rem] overflow-auto border-0 rounded-none">
+              <DataTable>
+                <DataTableHeader className="sticky top-0 bg-slate-50 z-10">
+                  <DataTableRow>
+                    <DataTableHead className="px-5 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Student
-                    </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    </DataTableHead>
+                    <DataTableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Class
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    </DataTableHead>
+                    <DataTableHead className="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                    </DataTableHead>
+                  </DataTableRow>
+                </DataTableHeader>
+                <DataTableBody>
                   {enrollments.map((enrollment) => (
-                    <tr key={enrollment.enrollment_id} className="hover:bg-slate-50/70">
-                      <td className="px-5 py-3">
+                    <DataTableRow key={enrollment.enrollment_id}>
+                      <DataTableCell className="px-5 py-3">
                         <div className="font-black text-slate-900">{enrollment.student_name}</div>
                         <div className="text-xs font-semibold text-slate-400">ID {enrollment.student_id}</div>
-                      </td>
-                      <td className="px-4 py-3">
+                      </DataTableCell>
+                      <DataTableCell className="px-4 py-3">
                         <span className="rounded-[9999px] bg-emerald-50 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-700">
                           {enrollment.class_name || "Unassigned"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
+                      </DataTableCell>
+                      <DataTableCell className="px-4 py-3 text-right">
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => removeEnrollment(enrollment.enrollment_id)}
                           disabled={isMutating}
-                          className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-xs font-black text-rose-700 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                          className="text-rose-700 hover:bg-rose-50 border-rose-200"
                         >
                           <Trash2 className="h-4 w-4" />
                           Remove
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </DataTableCell>
+                    </DataTableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </DataTableBody>
+              </DataTable>
+            </DataTableContainer>
 
             {enrollments.length === 0 ? (
               <div className="px-6 py-14 text-center">
