@@ -10,9 +10,9 @@ FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
 VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
-DEV_STATE_DIR="${ASTRYX_DEV_STATE_DIR:-$BACKEND_DIR/.local-dev}"
-DEV_DATABASE="$DEV_STATE_DIR/astryx-development.db"
-DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
+DEV_STATE_DIR=""
+DEV_DATABASE=""
+DEV_SECRET_FILE=""
 
 BACKEND_PORT_CONFIGURED=0
 FRONTEND_PORT_CONFIGURED=0
@@ -87,13 +87,40 @@ PY
 
 prepare_local_environment() {
   local launcher_owns_database=0
+  if [[ "${DATABASE_URL:-}" == sqlite:* ]]; then
+    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "Explicit SQLite overrides are not accepted by the managed development launcher."
+  fi
   if [[ -z "${DATABASE_URL:-}" ]] && [[ -z "${POSTGRES_USER:-}${POSTGRES_PASSWORD:-}${POSTGRES_DB:-}${POSTGRES_HOST:-}${POSTGRES_PORT:-}" ]]; then
+    [[ -n "$SESSION_ID" && -n "$SESSION_DIR" ]] || fail_preflight "Development session state is unavailable" "A managed session must exist before database initialization."
+    DEV_STATE_DIR="$SESSION_DIR/state"
+    DEV_DATABASE="$DEV_STATE_DIR/operatoros-development.db"
+    DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
     mkdir -p "$DEV_STATE_DIR"
     chmod 700 "$DEV_STATE_DIR"
+    "$VENV/bin/python" - "$PROJECT_ROOT" "$RUNTIME_DIR" "$SESSION_DIR" "$DEV_DATABASE" <<'PY'
+import sys
+from pathlib import Path
+
+project, runtime, session, database = (Path(value).resolve() for value in sys.argv[1:])
+expected_state = session / "state"
+protected = {
+    project / "backend" / "attendance.db",
+    project / "attendance.db",
+}
+if not Path(sys.argv[4]).is_absolute():
+    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: path must be absolute")
+if session.parent != runtime / "sessions" or database.parent != expected_state:
+    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: path must be inside the managed session state")
+if database in protected or project / "backend" / ".local-dev" in database.parents:
+    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: protected database path")
+if database.exists():
+    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: session database already exists")
+PY
     export DATABASE_URL="sqlite:///$DEV_DATABASE"
     launcher_owns_database=1
   fi
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
+    [[ -n "$DEV_SECRET_FILE" ]] || { DEV_STATE_DIR="$SESSION_DIR/state"; DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"; }
     mkdir -p "$DEV_STATE_DIR"
     chmod 700 "$DEV_STATE_DIR"
     if [[ ! -s "$DEV_SECRET_FILE" ]]; then
@@ -109,6 +136,7 @@ prepare_local_environment() {
       export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
       "$VENV/bin/python" -m core.schema_migrations initialize-fresh --database "$DEV_DATABASE"
     )
+    printf 'Development DB: %s\n' "${DEV_DATABASE#"$PROJECT_ROOT/"}"
   fi
 }
 
@@ -285,24 +313,18 @@ while (( $# )); do
   esac
 done
 
-if [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
-  [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing" "Expected $VENV/bin/python"
-  prepare_local_environment
-  exit 0
-fi
-
 run_preflight
 allocate_ports
-prepare_local_environment
-if (( CHECK_ONLY == 1 )); then
-  printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
-  exit 0
-fi
-
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
-"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" >/dev/null
+DEV_DATABASE="$SESSION_DIR/state/operatoros-development.db"
+"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
+prepare_local_environment
+if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
+  printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
+  exit 0
+fi
 BACKEND_LOG="$RUNTIME_DIR/backend.log"
 FRONTEND_LOG="$RUNTIME_DIR/frontend.log"
 : >"$BACKEND_LOG"; : >"$FRONTEND_LOG"
