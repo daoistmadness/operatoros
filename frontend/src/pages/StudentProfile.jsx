@@ -9,7 +9,6 @@ import {
   TrendingUp,
   UserX,
   BarChart3,
-  AlertCircle,
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -27,6 +26,9 @@ import { Line } from 'react-chartjs-2';
 import api from '../api';
 import { cn } from '../lib/cn';
 import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { PageHeader } from "../components/common/page-header";
+import { ErrorState } from "../components/common/state-message";
 
 ChartJS.register(
   CategoryScale,
@@ -309,13 +311,11 @@ export default function StudentProfile() {
   if (error) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-colors">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="px-0">
           <ArrowLeft size={16} /> Back
-        </button>
-        <Card className="rounded-2xl p-8 flex flex-col items-center gap-3 text-center">
-          <AlertCircle size={32} className="text-rose-400" />
-          <p className="font-semibold text-slate-700">{error}</p>
-        </Card>
+        </Button>
+        <PageHeader title="Student profile unavailable" description="The selected student profile could not be loaded." />
+        <ErrorState title="Attendance history could not be loaded" description={error} />
       </div>
     );
   }

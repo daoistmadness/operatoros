@@ -491,6 +491,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
             <select
+              aria-label="Bulan"
               value={month}
               onChange={(event) => setMonth(Number(event.target.value))}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800"
@@ -504,6 +505,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
             <input
+              aria-label="Tahun"
               type="number"
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
@@ -514,6 +516,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Diisi oleh</label>
             <input
+              aria-label="Diisi oleh"
               type="text"
               value={enteredBy}
               onChange={(event) => setEnteredBy(event.target.value)}
@@ -631,6 +634,7 @@ function AbsenceReasons() {
                                   inputRefs.current[`${rowIndex}-${fieldIndex}`] = node;
                                 }}
                                 type="number"
+                                aria-label={`${field} untuk ${row.class_name}`}
                                 min="0"
                                 value={row[field] || 0}
                                 onChange={(event) => updateRow(row.class_name, field, event.target.value)}
@@ -642,6 +646,7 @@ function AbsenceReasons() {
                           <td className="px-6 py-4">
                             <input
                               type="text"
+                              aria-label={`Catatan untuk ${row.class_name}`}
                               value={row.note || ""}
                               onChange={(event) => updateRow(row.class_name, "note", event.target.value)}
                               placeholder="Catatan kelas"
@@ -690,6 +695,7 @@ function AbsenceReasons() {
                   <label className="text-xs font-bold uppercase text-slate-400">{label}</label>
                   <input
                     type="number"
+                    aria-label={`${label} untuk semua kelas ${quickFillJenjang}`}
                     min="0"
                     value={quickFillForm[label.toLowerCase()]}
                     onChange={(event) =>

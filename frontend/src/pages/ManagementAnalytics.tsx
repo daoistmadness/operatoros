@@ -734,6 +734,7 @@ export default function ManagementAnalytics() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
+            type="button"
             onClick={() => handleExport("pdf")}
             disabled={isLoading || exportingFormat !== null || currentParams === null}
             className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
@@ -742,6 +743,7 @@ export default function ManagementAnalytics() {
             {exportingFormat === "pdf" ? "Exporting PDF..." : "Export PDF"}
           </button>
           <button
+            type="button"
             onClick={() => handleExport("excel")}
             disabled={isLoading || exportingFormat !== null || currentParams === null}
             className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
@@ -750,6 +752,8 @@ export default function ManagementAnalytics() {
             {exportingFormat === "excel" ? "Exporting Excel..." : "Export Excel"}
           </button>
           <button
+            type="button"
+            aria-label="Export options"
             onClick={() => setShowExportModal(true)}
             disabled={isLoading || exportingFormat !== null || currentParams === null}
             className="flex items-center justify-center p-3 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
@@ -758,6 +762,7 @@ export default function ManagementAnalytics() {
             <Settings className="h-4 w-4" />
           </button>
           <button
+            type="button"
             onClick={loadSummaryData}
             disabled={isLoading}
             className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow transition-all"
@@ -779,6 +784,7 @@ export default function ManagementAnalytics() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500">Tahun Ajaran</label>
             <select
+              aria-label="Tahun Ajaran"
               value={academicYearId || ""}
               onChange={(e) => setAcademicYearId(Number(e.target.value) || null)}
               className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
@@ -795,6 +801,7 @@ export default function ManagementAnalytics() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500">Jenjang</label>
             <select
+              aria-label="Jenjang"
               value={jenjangId || ""}
               onChange={(e) => setJenjangId(Number(e.target.value) || null)}
               className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
@@ -812,6 +819,7 @@ export default function ManagementAnalytics() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500">Kelas</label>
             <select
+              aria-label="Kelas"
               value={className || ""}
               onChange={(e) => setClassName(e.target.value || null)}
               disabled={isUpdatingFilters}
@@ -830,6 +838,7 @@ export default function ManagementAnalytics() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500">Mata Pelajaran</label>
             <select
+              aria-label="Mata Pelajaran"
               value={subjectId || ""}
               onChange={(e) => setSubjectId(Number(e.target.value) || null)}
               disabled={isUpdatingFilters}
@@ -848,6 +857,7 @@ export default function ManagementAnalytics() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-500">Term</label>
             <select
+              aria-label="Term"
               value={term || ""}
               onChange={(e) => setTerm(e.target.value || null)}
               className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold outline-none focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all"
@@ -1012,6 +1022,7 @@ export default function ManagementAnalytics() {
               </div>
               <div className="grid gap-2 sm:grid-cols-4 lg:w-[720px]">
                 <select
+                  aria-label="Trend granularity"
                   value={trendGranularity}
                   onChange={(event) => setTrendGranularity(event.target.value as "month" | "term" | "academic_year")}
                   className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-brand"
@@ -1021,6 +1032,7 @@ export default function ManagementAnalytics() {
                   <option value="academic_year">Academic Year</option>
                 </select>
                 <select
+                  aria-label="Trend metric group"
                   value={trendMetricGroup}
                   onChange={(event) => setTrendMetricGroup(event.target.value as "attendance" | "lateness" | "grades" | "interventions")}
                   className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-brand"
@@ -1031,6 +1043,7 @@ export default function ManagementAnalytics() {
                   <option value="interventions">Interventions</option>
                 </select>
                 <select
+                  aria-label="Forecast method"
                   value={forecastMethod}
                   onChange={(event) => setForecastMethod(event.target.value as "moving_average" | "weighted_moving_average" | "linear_trend")}
                   className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-brand"
@@ -1142,6 +1155,7 @@ export default function ManagementAnalytics() {
               </div>
               <div className="grid gap-2 sm:grid-cols-2 lg:w-[420px]">
                 <select
+                  aria-label="Intervention status"
                   value={impactStatusFilter}
                   onChange={(event) => setImpactStatusFilter(event.target.value)}
                   className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-brand"
@@ -1152,6 +1166,7 @@ export default function ManagementAnalytics() {
                   ))}
                 </select>
                 <select
+                  aria-label="Intervention risk"
                   value={impactRiskFilter}
                   onChange={(event) => setImpactRiskFilter(event.target.value)}
                   className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-brand"
