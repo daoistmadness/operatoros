@@ -166,7 +166,7 @@ function JenjangConfig() {
         </div>
       )}
 
-      <section className="card p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Clock3 size={18} className="text-brand" />

@@ -75,10 +75,10 @@ function UploadHistory() {
       </header>
 
       {error && (
-        <div className="card p-4 bg-rose-50 border border-rose-200 text-rose-800 font-medium">{error}</div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 font-medium shadow-sm">{error}</div>
       )}
 
-      <div className="card p-6 bg-white">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         {loading ? (
           <div className="h-48 flex items-center justify-center text-slate-500">Loading upload history...</div>
         ) : history.length === 0 ? (
