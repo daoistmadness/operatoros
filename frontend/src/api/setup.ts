@@ -9,7 +9,6 @@ export interface FirstAdminInput {
   username: string;
   password: string;
   password_confirmation: string;
-  setup_token?: string;
 }
 
 export interface ProvisionedAdmin {
@@ -20,6 +19,10 @@ export interface ProvisionedAdmin {
 
 export async function getSetupStatus(): Promise<SetupStatus> {
   return (await apiRequest<SetupStatus>({ path: "/api/setup/status" })).data;
+}
+
+export async function bootstrapSetupAuthorization(): Promise<void> {
+  await apiRequest<void>({ path: "/api/setup/bootstrap", method: "POST" });
 }
 
 export async function provisionFirstAdmin(input: FirstAdminInput): Promise<ProvisionedAdmin> {

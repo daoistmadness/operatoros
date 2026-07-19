@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useProvisionFirstAdminMutation } from "../hooks/useSetupQueries";
 import { queryKeys } from "../lib/query/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
-
-type SetupAdminProps = { setupTokenRequired: boolean };
+import { bootstrapSetupAuthorization } from "../api/setup";
 
 function errorCode(error: unknown): string | undefined {
   return (error as { data?: { detail?: { code?: string } } })?.data?.detail?.code;
 }
 
-export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
+export default function SetupAdmin() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const mutation = useProvisionFirstAdminMutation();
@@ -19,7 +18,6 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const [setupToken, setSetupToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
 
@@ -41,15 +39,14 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
       return;
     }
     try {
+      await bootstrapSetupAuthorization();
       await mutation.mutateAsync({
         username: username.trim(),
         password,
         password_confirmation: confirmation,
-        ...(setupTokenRequired ? { setup_token: setupToken } : {}),
       });
       setPassword("");
       setConfirmation("");
-      setSetupToken("");
       window.sessionStorage.setItem("astryx:login-notice", "Administrator created. Sign in with your new account.");
       navigate("/login", { replace: true });
     } catch (error) {
@@ -59,8 +56,8 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
         navigate("/login", { replace: true });
         return;
       }
-      if (code === "SETUP_TOKEN_REQUIRED" || code === "SETUP_TOKEN_INVALID") {
-        setValidationError("The setup token is missing or invalid.");
+      if (code?.startsWith("SETUP_AUTHORIZATION_")) {
+        setValidationError("This local installation could not authorize initial setup. Restart the managed development session and retry.");
       } else if (code === "PASSWORD_POLICY_FAILED") {
         setValidationError("Password must be at least 12 characters long.");
       } else {
@@ -77,6 +74,7 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
           <div><p className="text-xs font-black uppercase tracking-[0.2em] text-brand">OperatorOS first run</p><h1 id="setup-title" className="text-2xl font-black text-slate-900">Create administrator</h1></div>
         </div>
         <p className="mb-6 text-sm text-slate-600">Create the first local administrator. Setup closes permanently afterward, and you will sign in normally.</p>
+        <p className="mb-6 text-sm font-semibold text-emerald-700">This local installation is authorized for initial setup.</p>
         {validationError && <div role="alert" tabIndex={-1} className="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700">{validationError}</div>}
         <form onSubmit={submit} className="space-y-5">
           <label className="block text-sm font-bold text-slate-700">Administrator username
@@ -89,9 +87,6 @@ export default function SetupAdmin({ setupTokenRequired }: SetupAdminProps) {
           <label className="block text-sm font-bold text-slate-700">Confirm password
             <input aria-label="Confirm password" type={showPassword ? "text" : "password"} autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-brand" required />
           </label>
-          {setupTokenRequired && <label className="block text-sm font-bold text-slate-700">Deployment setup token
-            <input aria-label="Deployment setup token" type="password" autoComplete="off" value={setupToken} onChange={(event) => setSetupToken(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-brand" required />
-          </label>}
           <button type="submit" disabled={mutation.isPending} aria-busy={mutation.isPending} className="w-full rounded-xl bg-brand px-5 py-3.5 font-black text-white shadow-lg shadow-brand/20 disabled:cursor-not-allowed disabled:opacity-60">{mutation.isPending ? "Creating administrator…" : "Create administrator"}</button>
         </form>
       </section>

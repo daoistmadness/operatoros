@@ -15,6 +15,7 @@ from core.database import Base, get_db
 from models.first_admin_setup import FirstAdminSetupState
 from models.user import User
 from security.password import verify_password
+from security.setup_authorization import COOKIE_NAME, issue_setup_authorization, validate_setup_authorization
 from services.first_admin_provisioning import ProvisioningError, get_setup_status, provision_first_admin
 
 
@@ -32,6 +33,8 @@ def configuration(tmp_path: Path, token: str | None = None) -> Settings:
         DATABASE_URL=f"sqlite:///{tmp_path / 'config.db'}",
         AUTH_COOKIE_SECRET="first-admin-test-cookie-secret-32-characters",
         ASTRYX_SETUP_TOKEN=token,
+        OPERATOROS_MANAGED_DEV_SETUP=True,
+        ALLOWED_ORIGINS="http://127.0.0.1:5173",
         BACKUP_DIR=str(tmp_path / "backups"),
     )
 
@@ -149,6 +152,12 @@ def test_two_simultaneous_sqlite_attempts_create_exactly_one_admin_and_audit(tmp
 def test_setup_api_contract_and_password_confirmation(tmp_path, monkeypatch):
     factory, _ = database_factory(tmp_path)
     app = FastAPI()
+
+    @app.middleware("http")
+    async def local_test_client(request, call_next):
+        request.scope["client"] = ("127.0.0.1", 50000)
+        return await call_next(request)
+
     app.include_router(setup_api.router, prefix="/api/setup")
 
     def override_db():
@@ -156,17 +165,27 @@ def test_setup_api_contract_and_password_confirmation(tmp_path, monkeypatch):
             yield db
 
     app.dependency_overrides[get_db] = override_db
-    monkeypatch.setattr(setup_api, "get_setup_status", lambda db: get_setup_status(db, configuration=configuration(tmp_path)))
+    managed_configuration = configuration(tmp_path, "managed-session-token")
+    monkeypatch.setattr(setup_api, "settings", managed_configuration)
+    monkeypatch.setattr(setup_api, "get_setup_status", lambda db: get_setup_status(db, configuration=managed_configuration))
     original = provision_first_admin
     monkeypatch.setattr(
         setup_api,
         "provision_first_admin",
-        lambda db, **kwargs: original(db, configuration=configuration(tmp_path), **kwargs),
+        lambda db, **kwargs: original(db, configuration=managed_configuration, **kwargs),
     )
     client = TestClient(app)
     status_response = client.get("/api/setup/status")
     assert status_response.json() == {"setup_required": True, "setup_token_required": False}
     assert status_response.headers["cache-control"] == "no-store"
+    missing = client.post("/api/setup/admin", json={"username": "admin", "password": "correct horse battery", "password_confirmation": "correct horse battery"})
+    assert missing.status_code == 403
+    assert missing.json()["detail"]["code"] == "SETUP_AUTHORIZATION_REQUIRED"
+    bootstrap = client.post("/api/setup/bootstrap", headers={"origin": "http://127.0.0.1:5173"})
+    assert bootstrap.status_code == 204
+    cookie = bootstrap.headers["set-cookie"]
+    assert COOKIE_NAME in cookie and "HttpOnly" in cookie and "SameSite=strict" in cookie
+    assert "managed-session-token" not in cookie
     mismatch = client.post("/api/setup/admin", json={"username": "admin", "password": "correct horse battery", "password_confirmation": "different password"})
     assert mismatch.status_code == 400
     assert mismatch.json()["detail"]["code"] == "PASSWORD_CONFIRMATION_MISMATCH"
@@ -174,8 +193,36 @@ def test_setup_api_contract_and_password_confirmation(tmp_path, monkeypatch):
     assert created.status_code == 201
     assert created.json()["role"] == "admin"
     completed = client.post("/api/setup/admin", json={"username": "second", "password": "correct horse battery", "password_confirmation": "correct horse battery"})
-    assert completed.status_code == 409
-    assert completed.json()["detail"]["code"] == "SETUP_ALREADY_COMPLETED"
+    assert completed.status_code == 403
+    assert completed.json()["detail"]["code"] == "SETUP_AUTHORIZATION_REQUIRED"
+    assert client.post("/api/setup/bootstrap", headers={"origin": "http://127.0.0.1:5173"}).status_code == 409
+
+
+def test_managed_setup_authorization_security_boundaries(tmp_path):
+    managed = configuration(tmp_path, "managed-secret")
+    authorization = issue_setup_authorization(
+        configuration=managed,
+        client_host="127.0.0.1",
+        origin="http://127.0.0.1:5173",
+        now=1000,
+    )
+    assert "managed-secret" not in authorization
+    assert validate_setup_authorization(authorization, configuration=managed, now=1200) == "managed-secret"
+    with pytest.raises(ProvisioningError) as expired:
+        validate_setup_authorization(authorization, configuration=managed, now=1400)
+    assert expired.value.code == "SETUP_AUTHORIZATION_EXPIRED"
+    with pytest.raises(ProvisioningError) as invalid:
+        validate_setup_authorization(authorization + "x", configuration=managed, now=1200)
+    assert invalid.value.code == "SETUP_AUTHORIZATION_INVALID"
+    production = configuration(tmp_path, "production-secret")
+    production.OPERATOROS_MANAGED_DEV_SETUP = False
+    with pytest.raises(ProvisioningError) as unavailable:
+        issue_setup_authorization(
+            configuration=production,
+            client_host="127.0.0.1",
+            origin="http://127.0.0.1:5173",
+        )
+    assert unavailable.value.code == "SETUP_AUTHORIZATION_UNAVAILABLE"
 
 
 def test_cli_uses_shared_service_and_never_prints_password(monkeypatch, capsys):
