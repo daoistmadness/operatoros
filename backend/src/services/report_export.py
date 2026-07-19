@@ -118,6 +118,11 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
             small,
         ),
         Spacer(1, 5 * mm),
+        Paragraph("Reporting Basis", section_style),
+        _table([
+            ["Section", "Basis", "Label"],
+            *[[name.title(), row["basis"], row["label"]] for name, row in report["report_period"]["sections"].items()],
+        ], widths=[35 * mm, 70 * mm, 105 * mm]),
         Paragraph("Executive Summary", section_style),
     ]
     executive = report["executive_summary"]
@@ -128,7 +133,7 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
     ], widths=[35 * mm] * 6))
 
     distribution = report["student_distribution"]
-    story.extend([Paragraph("Student Distribution", section_style)])
+    story.extend([Paragraph("Academic-Year Enrollment Snapshot", section_style), Paragraph(report["report_period"]["sections"]["population"]["label"], small)])
     dist_rows = [["Dimension", "Name", "Count", "Percentage"]]
     for dimension, key in (("Level", "by_level"), ("Class", "by_class")):
         for row in distribution[key]:
@@ -139,7 +144,7 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
     story.append(Paragraph("Demographic distributions are unavailable in the current Student master schema.", small))
 
     attendance = report["attendance_summary"]
-    story.extend([Paragraph("Attendance Summary", section_style), _table([
+    story.extend([Paragraph("Monthly Attendance" if meta["report_type"] == "monthly" else "Attendance Summary", section_style), Paragraph(report["report_period"]["sections"]["attendance"]["label"], small), _table([
         ["Present", "Sakit", "Izin", "Alfa", "Incomplete", "Late Days", "Late Minutes", "Attendance Rate", "Late Rate"],
         [attendance["present"], attendance["sakit"], attendance["izin"], attendance["alfa"],
          attendance["incomplete"], attendance["late_days"], attendance["late_minutes"],
@@ -154,7 +159,10 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
     story.extend([Paragraph("Attendance by Level", section_style), _table(level_rows)])
 
     academic = report["academic_summary"]
-    story.extend([PageBreak(), Paragraph("Academic Summary", section_style), _table([
+    academic_disclosure = "Academic performance figures reflect available records for the selected academic year."
+    if meta["report_type"] == "monthly":
+        academic_disclosure += " They are not restricted to the selected calendar month."
+    story.extend([PageBreak(), Paragraph("Available Academic Performance Summary", section_style), Paragraph(report["report_period"]["sections"]["academics"]["label"], small), Paragraph(academic_disclosure, small), _table([
         ["Availability", "Sumatif Average", "Formatif Average", "Below KKM Count"],
         ["Available" if academic["availability"] else "Unavailable", _display(academic["sumatif_average"]),
          _display(academic["formatif_average"]), academic["below_kkm_count"]],
@@ -262,6 +270,10 @@ def build_report_xlsx(report: dict, branding: dict | None = None) -> bytes:
         ["Late Minutes", executive["late_minutes"]],
         ["Below KKM Count", executive["below_kkm_count"]],
         ["Data Completeness Rate", executive["data_completeness_rate"]],
+        ["Attendance Time Basis", report["report_period"]["sections"]["attendance"]["label"]],
+        ["Population Time Basis", report["report_period"]["sections"]["population"]["label"]],
+        ["Academic Time Basis", report["report_period"]["sections"]["academics"]["label"]],
+        ["Academic Month Bound", report["report_period"]["sections"]["academics"]["month_bound"]],
     ]
     if report["meta"]["report_type"] == "annual":
         for label, key in (("Highest Attendance Month", "highest_attendance_month"),

@@ -15,4 +15,9 @@ export const queryKeys = {
     filters: (academicYearId?: number | null, scope?: ReportScope) => ["reports", "filters", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
     detail: (type: ReportType, query: ReportQuery) => ["reports", type, query] as const,
   },
+  managementReports: {
+    all: ["management-reports"] as const,
+    metadata: (academicYearId?: number | null, scope?: ReportScope) => ["management-reports", "metadata", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
+    monthly: (query: ReportQuery) => ["management-reports", "monthly", query] as const,
+  },
 };

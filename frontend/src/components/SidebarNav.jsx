@@ -52,6 +52,7 @@ const NAV_GROUPS = [
     title: 'Reports',
     items: [
       { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, match: (pathname) => pathname === '/reports/monthly' || pathname === '/reports/annual' },
+      { name: 'Monthly Management Report', path: '/reports/management/monthly', icon: BarChart3 },
       { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },
       { name: 'Rekap Absensi', path: '/reports/rekap-absensi', icon: BarChart3 },
       { name: 'Laporan Keterlambatan', path: '/reports/tardiness', icon: FileClock },

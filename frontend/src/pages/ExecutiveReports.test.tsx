@@ -21,6 +21,7 @@ vi.mock("chart.js", () => ({
 const summary = { present: 18, sakit: 2, izin: 1, alfa: 1, incomplete: 3, late_days: 4, late_minutes: 27, attendance_rate: 81.82, late_rate: 18.18 };
 const report: ExecutiveReport = {
   meta: { report_type: "annual", scope: "combined", academic_year: { id: 2, name: "2025/2026" }, period: { start: "2025-07-01", end: "2026-06-30" }, generated_at: "2026-07-13T00:00:00Z" },
+  report_period: { selected_month: "", academic_year_id: 2, academic_year_label: "2025/2026", sections: { attendance: { basis: "academic_year", month_bound: false, label: "Academic Year 2025/2026" }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: "Academic Year 2025/2026" }, academics: { basis: "available_academic_year_records", month_bound: false, label: "Available Academic Records - AY 2025/2026" } } },
   executive_summary: { total_students: 25, male_students: 0, female_students: 0, attendance_rate: 81.82, late_rate: null, late_minutes: 27, below_kkm_count: 6, data_completeness_rate: 88.5 },
   student_distribution: { by_level: [{ name: "Primary", count: 25, percentage: 100 }], by_class: [{ name: "P1A", count: 25, percentage: 100 }], by_gender: [], by_religion: [], by_domicile: [] },
   attendance_summary: summary,
@@ -45,9 +46,9 @@ describe("Executive Reports presentation", () => {
   it("defines Monthly as the default report type", () => expect(DEFAULT_REPORT_TYPE).toBe("monthly"));
   it("defines Combined as the default scope", () => expect(DEFAULT_REPORT_SCOPE).toBe("combined"));
 
-  it("selects the backend default academic year and first valid month", () => {
-    const filters = { default_academic_year_id: 2, academic_years: [{ id: 1 }, { id: 2 }], months: [{ value: "2025-07" }] } as ReportFiltersResponse;
-    expect(selectFilterDefaults(filters)).toEqual({ academicYearId: 2, month: "2025-07" });
+  it("selects the current month inside the backend default academic year", () => {
+    const filters = { default_academic_year_id: 2, academic_years: [{ id: 1 }, { id: 2, start_date: "2025-07-01", end_date: "2026-06-30" }], months: [{ value: "2025-07" }, { value: "2026-02" }] } as ReportFiltersResponse;
+    expect(selectFilterDefaults(filters, new Date("2026-02-15T00:00:00Z"))).toEqual({ academicYearId: 2, month: "2026-02" });
   });
 
   it("clears stale report data", () => expect(staleReport()).toBeNull());
