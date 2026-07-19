@@ -5,6 +5,7 @@ import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
 import { Card } from "../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -680,13 +681,12 @@ function AbsenceReasons() {
       </Card>
       </section>
 
-      {quickFillJenjang && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setQuickFillJenjang("")} />
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl space-y-6">
+      <Dialog open={Boolean(quickFillJenjang)} onOpenChange={(open) => { if (!open) setQuickFillJenjang(""); }}>
+        {quickFillJenjang ? (
+          <DialogContent className="max-w-md space-y-6 p-8">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Isi semua kelas {quickFillJenjang}</h3>
-              <p className="text-slate-500 text-sm mt-1">Terapkan nilai yang sama ke semua kelas pada jenjang ini.</p>
+              <DialogTitle>Isi semua kelas {quickFillJenjang}</DialogTitle>
+              <DialogDescription>Terapkan nilai yang sama ke semua kelas pada jenjang ini.</DialogDescription>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -726,9 +726,9 @@ function AbsenceReasons() {
                 Terapkan ke semua kelas {quickFillJenjang}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        ) : null}
+      </Dialog>
     </div>
   );
 }
