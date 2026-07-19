@@ -17,6 +17,7 @@ import {
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { cn } from "../lib/cn";
+import { Card } from "../components/ui/card";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -287,21 +288,21 @@ function ClassMapping() {
       </header>
 
       {successMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800 shadow-sm">
+        <Card className="rounded-2xl border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800">
           <CheckCircle2 size={20} />
           <p className="font-medium">{successMessage}</p>
-        </div>
+        </Card>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800 shadow-sm">
+        <Card className="rounded-2xl border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800">
           <AlertTriangle size={20} />
           <p className="font-medium">{error}</p>
-        </div>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
+        <Card className="rounded-2xl xl:col-span-2 p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative md:col-span-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -434,9 +435,9 @@ function ClassMapping() {
               Next <ChevronRight size={16} />
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
+        <Card className="rounded-2xl p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -544,7 +545,7 @@ function ClassMapping() {
             <Users size={16} />
             {assigning ? "Assigning..." : "Assign Class"}
           </button>
-        </div>
+        </Card>
       </div>
 
       {showAddModal && (

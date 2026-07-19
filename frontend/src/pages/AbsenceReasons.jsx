@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, Copy, Loader2,
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
+import { Card } from "../components/ui/card";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -428,7 +429,7 @@ function AbsenceReasons() {
       />
 
       {coverageRows.length > 0 && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5 shadow-sm">
+        <Card className="rounded-2xl border-amber-200 bg-amber-50 px-6 py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-amber-800">
@@ -452,7 +453,7 @@ function AbsenceReasons() {
               Isi Sekarang <ChevronRight size={16} />
             </button>
           </div>
-        </section>
+        </Card>
       )}
 
       {(message || error) && (
@@ -480,7 +481,7 @@ function AbsenceReasons() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-slate-100 bg-white shadow-sm p-6 space-y-4">
+      <Card className="rounded-2xl border-slate-100 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <CalendarDays size={18} className="text-brand" />
           <h2 className="text-lg font-bold text-slate-900">Periode & Petugas</h2>
@@ -532,9 +533,10 @@ function AbsenceReasons() {
             </button>
           </div>
         </div>
-      </section>
+      </Card>
 
-      <section ref={tableSectionRef} className="rounded-2xl border border-slate-100 bg-white shadow-sm p-0 overflow-hidden">
+      <section ref={tableSectionRef}>
+      <Card className="rounded-2xl border-slate-100 p-0 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Input Kelas — {getMonthLabel(month)} {year}</h2>
@@ -670,6 +672,7 @@ function AbsenceReasons() {
             </table>
           </div>
         )}
+      </Card>
       </section>
 
       {quickFillJenjang && (

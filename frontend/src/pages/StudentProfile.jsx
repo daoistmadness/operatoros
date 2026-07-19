@@ -26,6 +26,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import api from '../api';
 import { cn } from '../lib/cn';
+import { Card } from "../components/ui/card";
 
 ChartJS.register(
   CategoryScale,
@@ -47,8 +48,8 @@ const MONTH_NAMES = [
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color }) {
   return (
-    <div className={cn(
-      'rounded-2xl border border-slate-200 bg-white shadow-sm p-5 flex items-start gap-4 border-l-4 transition-all duration-200 ease-out hover:border-brand/20 hover:shadow-md',
+    <Card className={cn(
+      'rounded-2xl p-5 flex items-start gap-4 border-l-4 transition-all duration-200 ease-out hover:border-brand/20 hover:shadow-md',
       color === 'green'  && 'border-l-emerald-400',
       color === 'amber'  && 'border-l-amber-400',
       color === 'red'    && 'border-l-rose-400',
@@ -68,7 +69,7 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
         <p className="text-3xl font-extrabold text-slate-900 mt-0.5 tabular-nums">{value ?? '—'}</p>
         {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -311,10 +312,10 @@ export default function StudentProfile() {
         <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-colors">
           <ArrowLeft size={16} /> Back
         </button>
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-8 flex flex-col items-center gap-3 text-center">
+        <Card className="rounded-2xl p-8 flex flex-col items-center gap-3 text-center">
           <AlertCircle size={32} className="text-rose-400" />
           <p className="font-semibold text-slate-700">{error}</p>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -331,7 +332,7 @@ export default function StudentProfile() {
       </button>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+      <Card className="rounded-2xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-brand/10 flex items-center justify-center shrink-0">
             <GraduationCap size={28} className="text-brand" />
@@ -357,11 +358,11 @@ export default function StudentProfile() {
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* ── Month Selector ─────────────────────────────────────────────── */}
       {!loadingHistory && allMonths.length > 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
+        <Card className="rounded-2xl p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
             <CalendarDays size={13} /> Select Month
           </p>
@@ -391,7 +392,7 @@ export default function StudentProfile() {
               );
             })}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ── Stat Cards ─────────────────────────────────────────────────── */}
@@ -427,7 +428,7 @@ export default function StudentProfile() {
       </div>
 
       {/* ── Trend Chart ────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+      <Card className="rounded-2xl p-6">
         <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
           <TrendingUp size={18} className="text-brand" />
           Attendance Trend
@@ -441,14 +442,14 @@ export default function StudentProfile() {
         ) : (
           <div className="h-52 flex items-center justify-center text-slate-400 text-sm">No data available.</div>
         )}
-      </div>
+      </Card>
 
       {/* ── Calendar Heatmap + Breakdown Table ─────────────────────────── */}
       {selectedMonth && (
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
 
           {/* Calendar */}
-          <div className="xl:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+          <Card className="rounded-2xl xl:col-span-2 p-6">
             <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
               <CalendarDays size={18} className="text-brand" />
               {MONTH_NAMES[selectedMonth.month]} {selectedMonth.year}
@@ -462,10 +463,10 @@ export default function StudentProfile() {
                 month={selectedMonth.month}
               />
             )}
-          </div>
+          </Card>
 
           {/* Breakdown table */}
-          <div className="xl:col-span-3 rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+          <Card className="rounded-2xl xl:col-span-3 p-6">
             <h2 className="text-base font-bold text-slate-800 mb-4">Daily Breakdown</h2>
             {loadingSummary ? (
               <div className="p-8 text-center text-slate-400 text-sm">Loading…</div>
@@ -504,7 +505,7 @@ export default function StudentProfile() {
                 </table>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
     </div>
