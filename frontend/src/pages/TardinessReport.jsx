@@ -15,6 +15,7 @@ import {
 
 import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
+import { PageHeader } from "../components/common/page-header";
 import {
   downloadTardinessExcel,
   downloadTardinessManagementExcel,
@@ -361,10 +362,11 @@ function TardinessReport() {
         }
       `}</style>
 
-      <header className="page-header no-print">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tardiness Report</h1>
-        <p className="text-slate-500 mt-1">Analyze student tardiness distribution by level and by class.</p>
-      </header>
+      <PageHeader
+        className="no-print"
+        title="Tardiness Report"
+        description="Analyze student tardiness distribution by level and by class."
+      />
 
       <section className="card p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">

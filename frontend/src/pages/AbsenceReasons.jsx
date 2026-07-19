@@ -3,6 +3,7 @@ import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, Copy, Loader2,
 
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
+import { PageHeader } from "../components/common/page-header";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -421,10 +422,10 @@ function AbsenceReasons() {
         </div>
       )}
 
-      <header>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Sakit / Izin / Alfa</h1>
-        <p className="text-slate-500 mt-1">Isi rekap SIA bulanan per kelas dengan workflow cepat untuk admin.</p>
-      </header>
+      <PageHeader
+        title="Sakit / Izin / Alfa"
+        description="Isi rekap SIA bulanan per kelas dengan workflow cepat untuk admin."
+      />
 
       {coverageRows.length > 0 && (
         <section className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5 shadow-sm">

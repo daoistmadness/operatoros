@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../api";
+import { PageHeader } from "../components/common/page-header";
+import { LoadingState, EmptyState } from "../components/common/state-message";
 import { getPageApiError } from "../lib/api/errors";
 
 const MONTH_OPTIONS = [
@@ -204,12 +206,10 @@ function HebConfig() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <header>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Override HEB</h1>
-        <p className="text-slate-500 mt-1">
-          Bandingkan HEB otomatis dengan override manual untuk setiap bulan dan jenjang.
-        </p>
-      </header>
+      <PageHeader
+        title="Override HEB"
+        description="Bandingkan HEB otomatis dengan override manual untuk setiap bulan dan jenjang."
+      />
 
       {(message || error) && (
         <div
@@ -252,12 +252,9 @@ function HebConfig() {
 
       <section className="card p-0 overflow-hidden">
         {loading ? (
-          <div className="p-12 flex flex-col items-center justify-center gap-4">
-            <Loader2 size={32} className="animate-spin text-brand" />
-            <p className="text-slate-500 font-medium">Memuat data HEB tahunan...</p>
-          </div>
+          <LoadingState title="Memuat data HEB tahunan..." />
         ) : rows.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">Belum ada data HEB untuk tahun ini.</div>
+          <EmptyState title="Belum ada data HEB untuk tahun ini." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-sm">
