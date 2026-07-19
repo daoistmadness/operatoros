@@ -14,6 +14,7 @@ import { EnrollmentPanel } from "../components/enrollment/EnrollmentPanel";
 import ReportBuilderPanel from "../components/report-builder/ReportBuilderPanel";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
+import { FormField, FieldLabel } from "../components/ui/field";
 import { Button } from "../components/ui/button";
 import {
   DataTable,
@@ -304,7 +305,7 @@ export default function AcademicManagement() {
       {activeTab === "calendar" ? (
         <div className="space-y-5">
           <div className="grid gap-5 xl:grid-cols-[1fr_24rem]">
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section className="min-w-0 rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-200 px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Academic Years</p>
                 <h2 className="mt-1 text-xl font-black tracking-tight text-slate-900">Calendar matrix</h2>
@@ -428,7 +429,7 @@ export default function AcademicManagement() {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[1fr_24rem]">
-            <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section className="min-w-0 rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400">Subjects</p>
