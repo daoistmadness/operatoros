@@ -326,7 +326,9 @@ function RekapAbsensi() {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { font-size: 11pt; background: white !important; }
-          table { page-break-inside: avoid; }
+          table { page-break-inside: auto; }
+          thead { display: table-header-group; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
           .chart-section { page-break-before: avoid; }
           body.printing-rekap-absensi .app-sidebar { display: none !important; }
           body.printing-rekap-absensi .app-main { margin-left: 0 !important; padding: 0 !important; }
@@ -561,11 +563,11 @@ function RekapAbsensi() {
                           </tr>
 
                           {/* Expanded Classes */}
-                          {isExpanded && j.classes.map((cls, idx) => {
+                          {j.classes.map((cls, idx) => {
                             const pcts = cls.percentages;
                             const flags = cls.warning_flags;
                             return (
-                              <tr key={cls.class_name} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                              <tr key={cls.class_name} className={cn(!isExpanded && 'hidden print:table-row', idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                                 <td className="px-4 py-3 pl-10 text-left font-semibold text-slate-800 border-b border-slate-200 flex items-center gap-2">
                                   <span>{cls.class_name}</span>
                                   {flags.excluded_unclassified && (

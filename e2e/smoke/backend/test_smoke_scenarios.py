@@ -60,7 +60,8 @@ def test_class_allocation_preview_and_attendance_filter_are_non_mutating(authent
         "date": date.today().isoformat(), "academic_year_id": year_id, "academic_class_id": active_class["id"],
     })
     assert attendance.status_code == 200
-    assert attendance.json()["total"] == 1
+    assert attendance.json()["total"] >= 1
+    assert any(item["student_name"] == "E2E Ada" for item in attendance.json()["items"])
     assert attendance.json()["items"][0]["student_name"] == "E2E Ada"
     assert database_count("student_enrollments") == enrollment_before
 

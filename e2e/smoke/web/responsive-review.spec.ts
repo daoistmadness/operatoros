@@ -47,6 +47,7 @@ async function verifyNoHorizontalOverflow(page: Page, label: string) {
 const VIEWPORTS = [
   { width: 1366, height: 768 },
   { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
   { width: 390, height: 844 },
 ];
 
