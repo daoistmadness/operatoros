@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Navigate, Outlet, Routes, Route } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Upload from './pages/Upload';
 import UploadHistory from './pages/UploadHistory';
@@ -25,10 +26,30 @@ import { RequireAuth, RequireRole } from './components/auth/RouteGuards.tsx';
 import { SetupBoundary } from './components/auth/SetupBoundary.tsx';
 
 function AppShell() {
+  const [navigationOpen, setNavigationOpen] = useState(false);
+
   return (
-    <div className="app-shell min-h-screen bg-slate-50 flex">
-      <SidebarNav />
-      <main className="app-main min-w-0 flex-1 ml-64 p-8">
+    <div className="app-shell min-h-screen bg-slate-50 xl:flex">
+      <button
+        type="button"
+        aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={navigationOpen}
+        aria-controls="primary-navigation"
+        onClick={() => setNavigationOpen((open) => !open)}
+        className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm xl:hidden"
+      >
+        {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+      </button>
+      {navigationOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setNavigationOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] xl:hidden"
+        />
+      )}
+      <SidebarNav open={navigationOpen} onNavigate={() => setNavigationOpen(false)} />
+      <main className="app-main min-w-0 flex-1 px-4 pb-8 pt-20 sm:px-6 xl:ml-64 xl:p-8">
         <div className="max-w-7xl mx-auto"><Outlet /></div>
       </main>
     </div>

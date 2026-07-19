@@ -59,7 +59,7 @@ const NAV_GROUPS = [
   },
 ];
 
-function SidebarNav() {
+function SidebarNav({ open = false, onNavigate }) {
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState('checking');
   const { user, logout } = useAuth();
@@ -98,7 +98,14 @@ function SidebarNav() {
   };
 
   return (
-    <nav className="app-sidebar fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 z-50 p-6 flex flex-col no-print">
+    <nav
+      id="primary-navigation"
+      aria-label="Primary navigation"
+      className={cn(
+        'app-sidebar fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white p-6 transition-transform duration-200 no-print',
+        open ? 'translate-x-0' : '-translate-x-full xl:translate-x-0',
+      )}
+    >
       <div className="flex items-center gap-3 mb-10">
         <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand/20">
           O
@@ -121,6 +128,8 @@ function SidebarNav() {
                   <Link
                     key={item.path}
                     to={item.path}
+                    onClick={onNavigate}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 ease-out',
                       isActive
@@ -180,6 +189,8 @@ function SidebarNav() {
 
         <Link
           to="/settings"
+          onClick={onNavigate}
+          aria-current={location.pathname === '/settings' ? 'page' : undefined}
           className={cn(
             'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 ease-out',
             location.pathname === '/settings'
