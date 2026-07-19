@@ -3,6 +3,8 @@ import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-
 
 import api from "../api";
 import { cn } from "../lib/cn";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
 
 const STATUS_OPTIONS = ["on-time", "late", "incomplete", "absent"];
 
@@ -392,14 +394,13 @@ function AttendanceReview() {
         </div>
       </section>
 
-      {modalOpen && activeRow ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={closeOverrideModal} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-5">
+      <Dialog open={modalOpen} onOpenChange={(open) => { if (!open && !submitting) closeOverrideModal(); }}>
+      {activeRow ? (
+          <DialogContent showClose={false} className="max-w-lg space-y-5">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Override Attendance Status</h2>
-                <p className="text-sm text-slate-500 mt-1">{activeRow.student_name} • {selectedDate}</p>
+                <DialogTitle>Override Attendance Status</DialogTitle>
+                <DialogDescription>{activeRow.student_name} • {selectedDate}</DialogDescription>
               </div>
               <button type="button" aria-label="Close override dialog" className="text-slate-400 hover:text-slate-700" onClick={closeOverrideModal}>
                 <X size={20} aria-hidden="true" />
@@ -480,23 +481,22 @@ function AttendanceReview() {
                 Save Override
               </button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
       ) : null}
+      </Dialog>
 
-      {massModalOpen ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setMassModalOpen(false)} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-5">
+      <AlertDialog open={massModalOpen} onOpenChange={(open) => { if (!open && !massSubmitting) setMassModalOpen(false); }}>
+          <AlertDialogContent className="max-w-lg space-y-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="text-amber-500" size={24} />
-                <h2 className="text-xl font-bold text-slate-900">Mass Override: Incomplete → On-time</h2>
+                <AlertDialogTitle>Mass Override: Incomplete → On-time</AlertDialogTitle>
               </div>
               <button type="button" aria-label="Close mass override dialog" className="text-slate-400 hover:text-slate-700" onClick={() => setMassModalOpen(false)}>
                 <X size={20} aria-hidden="true" />
               </button>
             </div>
+            <AlertDialogDescription className="sr-only">Overrides every incomplete record with a valid scan-in and records the action in the audit trail.</AlertDialogDescription>
 
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 space-y-2">
               <p>
@@ -548,9 +548,8 @@ function AttendanceReview() {
                 {massSubmitting ? "Overriding..." : "Confirm Override"}
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
+          </AlertDialogContent>
+      </AlertDialog>
 
       <div className={cn(
         "fixed inset-y-0 right-0 z-[80] w-full max-w-md bg-white shadow-2xl border-l border-slate-200 transition-transform duration-200 ease-out",
