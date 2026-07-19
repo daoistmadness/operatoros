@@ -551,7 +551,6 @@ function ClassMapping() {
       {showAddModal && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}
           onClick={() => setShowAddModal(false)}
         >
           <div 
@@ -569,10 +568,11 @@ function ClassMapping() {
               </div>
               <button
                 type="button"
+                aria-label="Close add student dialog"
                 onClick={() => setShowAddModal(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 

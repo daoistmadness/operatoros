@@ -234,6 +234,7 @@ function HebConfig() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
             <input
+              aria-label="Tahun HEB"
               type="number"
               value={yearInput}
               onChange={(event) => setYearInput(event.target.value)}
