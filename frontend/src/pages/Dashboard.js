@@ -36,6 +36,7 @@ import { NativeSelect } from "../components/ui/native-select";
 import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableHead, DataTableHeader, DataTableRow } from "../components/common/data-table";
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
+import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
   assignStudentClass,
@@ -219,33 +220,33 @@ export default function Dashboard() {
 
       {/* 4. KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard 
+        <StatCard 
           title="Total Late Entries" 
           value={summary.total_late} 
           icon={<TrendingUp size={24} className="text-indigo-600" />} 
           trend="Total distinct instances"
-          color="bg-indigo-50"
+          iconBgColor="bg-indigo-50"
         />
-        <KpiCard 
+        <StatCard 
           title="Frequent Offenders" 
           value={summary.total_offenders} 
           icon={<AlertTriangle size={24} className="text-rose-600" />} 
           trend="Individuals (>3 lates)"
-          color="bg-rose-50"
+          iconBgColor="bg-rose-50"
         />
-        <KpiCard 
+        <StatCard 
           title="Unmapped Students" 
           value={pending.length} 
           icon={<UserPlus size={24} className="text-slate-600" />} 
           trend={pending.length > 0 ? "Action required" : "All mapped"}
-          color="bg-slate-100"
+          iconBgColor="bg-slate-100"
         />
-        <KpiCard 
+        <StatCard 
           title="Incomplete Records" 
           value={incompleteSummary?.total_incomplete || 0} 
           icon={<Fingerprint size={24} className="text-amber-600" />} 
           trend="Missing checkout scans"
-          color="bg-amber-50"
+          iconBgColor="bg-amber-50"
         />
       </div>
 
@@ -463,26 +464,6 @@ function MetricBlock({ label, value, color }) {
   );
 }
 
-const KpiCard = ({ title, value, icon, trend, color }) => (
-  <motion.div 
-    whileHover={{ y: -4, scale: 1.01 }}
-    transition={snappySpring}
-    className="rounded-2xl border border-border bg-surface p-6 flex flex-col justify-between shadow-sm"
-  >
-    <div className="flex items-start justify-between">
-      <div className={cn("p-3 rounded-xl shadow-inner", color)}>
-        {icon}
-      </div>
-    </div>
-    <div className="mt-6">
-      <div className="text-[2.5rem] font-bold tracking-tight text-slate-900 leading-none">{value}</div>
-      <p className="text-slate-500 font-semibold mt-2">{title}</p>
-    </div>
-    <div className="mt-4 flex items-center gap-2">
-      <span className="text-sm font-medium text-slate-400">{trend}</span>
-    </div>
-  </motion.div>
-);
 
 const EmptyState = ({ message, onMapClick }) => (
   <div className="flex flex-col items-center justify-center text-center">
