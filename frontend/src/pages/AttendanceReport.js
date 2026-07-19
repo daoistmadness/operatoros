@@ -4,7 +4,6 @@ import {
   Download,
   Filter,
   Users,
-  AlertTriangle,
   GraduationCap,
   Clock,
   TrendingUp,
@@ -15,6 +14,12 @@ import {
 import api from "../api";
 import { cn } from "../lib/cn";
 import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { FormField, FieldLabel } from "../components/ui/field";
+import { NativeSelect } from "../components/ui/native-select";
+import { FilterBar } from "../components/common/filter-bar";
+import { PageHeader } from "../components/common/page-header";
+import { EmptyState, ErrorState } from "../components/common/state-message";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -242,109 +247,95 @@ function AttendanceReport() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Attendance Reports</h1>
-          <p className="text-slate-500 mt-1">Generate flexible reports by timeframe, level, and class.</p>
-        </div>
-        <button
-          onClick={exportCSV}
-          disabled={reportData.length === 0}
-          className="px-6 py-2.5 rounded-xl bg-brand text-white font-bold inline-flex items-center gap-2 hover:bg-brand-hover disabled:opacity-50 transition-colors shadow-lg shadow-brand/20"
-        >
+      <PageHeader
+        title="Attendance Reports"
+        description="Generate flexible reports by timeframe, level, and class."
+        actions={<Button variant="outline" onClick={exportCSV} disabled={reportData.length === 0}>
           <Download size={18} />
           Export CSV
-        </button>
-      </header>
+        </Button>}
+      />
 
       {/* Filter Panel */}
-      <Card className="rounded-2xl p-6">
+      <FilterBar className="p-6">
         <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
           <Filter size={18} className="text-brand" />
           <h2 className="font-bold text-slate-800">Report Parameters</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Period Type</label>
-            <select
+          <FormField id="attendance-period-type">
+            <FieldLabel>Period Type</FieldLabel>
+            <NativeSelect
               value={periodType}
               onChange={(e) => setPeriodType(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               {PERIOD_TYPES.map(pt => <option key={pt.id} value={pt.id}>{pt.label}</option>)}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Select Period</label>
-            <select
+          <FormField id="attendance-period">
+            <FieldLabel>Select Period</FieldLabel>
+            <NativeSelect
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(Number(e.target.value))}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               {periodOptions.map(po => <option key={po.value} value={po.value}>{po.label}</option>)}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Year</label>
-            <select
+          <FormField id="attendance-year">
+            <FieldLabel>Year</FieldLabel>
+            <NativeSelect
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               {YEARS.map(y => <option key={y} value={y}>{y}/{y+1}</option>)}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Jenjang</label>
-            <select
+          <FormField id="attendance-jenjang">
+            <FieldLabel>Jenjang</FieldLabel>
+            <NativeSelect
               value={jenjangFilter}
               onChange={(e) => setJenjangFilter(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               <option value="all">All Jenjang</option>
               {JENJANG_OPTIONS.map((level) => (
                 <option key={level} value={level}>{level}</option>
               ))}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Class</label>
-            <select
+          <FormField id="attendance-class">
+            <FieldLabel>Class</FieldLabel>
+            <NativeSelect
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               <option value="all">All Classes</option>
               <option value="unassigned">Unassigned</option>
               {classes.map((className) => (
                 <option key={className} value={className}>{className}</option>
               ))}
-            </select>
-          </div>
+            </NativeSelect>
+          </FormField>
         </div>
 
         <div className="mt-6 pt-6 border-t border-slate-100 flex justify-end">
-          <button
+          <Button
             onClick={generateReport}
             disabled={loading}
-            className="px-8 py-3 rounded-xl bg-slate-900 text-white font-bold inline-flex items-center gap-2 hover:bg-slate-800 disabled:opacity-70 transition-colors"
+            size="lg"
           >
             {loading ? "Generating..." : "Generate Report"}
             <Calendar size={18} />
-          </button>
+          </Button>
         </div>
-      </Card>
+      </FilterBar>
 
       {error && (
-        <Card className="rounded-2xl border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800">
-          <AlertTriangle size={20} />
-          <p className="font-medium">{error}</p>
-        </Card>
+        <ErrorState title="Attendance report could not be generated" description={error} />
       )}
 
       {reportData.length > 0 && (
@@ -475,13 +466,7 @@ function AttendanceReport() {
       )}
 
       {!loading && reportData.length === 0 && !error && (
-        <Card className="rounded-2xl border-dashed bg-slate-50/50 p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 bg-slate-100 rounded-[9999px] flex items-center justify-center mb-4">
-            <Calendar size={32} className="text-slate-400" />
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">No Report Data</h3>
-          <p className="text-slate-500 max-w-sm">Select your parameters and click "Generate Report" to see attendance data.</p>
-        </Card>
+        <EmptyState title="No report data" description="Select your parameters and generate the report to see attendance data." />
       )}
     </div>
   );
