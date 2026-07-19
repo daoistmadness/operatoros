@@ -39,7 +39,12 @@ def get_setup_status(db: Session, *, configuration: Settings = settings) -> Setu
     state = db.get(FirstAdminSetupState, 1)
     return SetupStatus(
         setup_required=not has_user and not bool(state and state.completed),
-        setup_token_required=not has_user and not bool(state and state.completed) and bool(configuration.ASTRYX_SETUP_TOKEN),
+        setup_token_required=(
+            not has_user
+            and not bool(state and state.completed)
+            and bool(configuration.ASTRYX_SETUP_TOKEN)
+            and not configuration.OPERATOROS_MANAGED_DEV_SETUP
+        ),
     )
 
 
