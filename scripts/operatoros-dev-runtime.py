@@ -223,6 +223,7 @@ def init_session(args: argparse.Namespace) -> int:
         "mode": args.mode,
         "javascript_runtime": args.javascript_runtime,
         "javascript_runtime_version": args.javascript_runtime_version,
+        "database_path": str(Path(args.database_path).resolve()),
         "status": "starting",
     }
     atomic_json(session_dir / "session.json", common)
@@ -318,6 +319,7 @@ def parser() -> argparse.ArgumentParser:
     for name in ("runtime", "repo", "session", "mode", "token", "javascript-runtime", "javascript-runtime-version"):
         init.add_argument(f"--{name}", required=True)
     init.add_argument("--launcher-pid", type=int, required=True); init.add_argument("--frontend-host", required=True); init.add_argument("--backend-host", required=True); init.add_argument("--frontend-port", type=int, required=True); init.add_argument("--backend-port", type=int, required=True)
+    init.add_argument("--database-path", required=True)
     init.set_defaults(func=init_session)
     registration = sub.add_parser("register")
     for name in ("runtime", "repo", "session", "role", "token"):

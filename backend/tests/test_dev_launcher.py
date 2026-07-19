@@ -1,3 +1,4 @@
+import json
 import os
 import signal
 import shutil
@@ -36,8 +37,8 @@ exec "$ASTRYX_VITE_EXECUTABLE" "$@"
         PATH=f"{tools}:{environment['PATH']}",
         OPERATOROS_JS_RUNTIME="node",
         OPERATOROS_NVM_DIR=str(tmp_path / "no-nvm"),
+        OPERATOROS_RUNTIME_DIR=str(tmp_path / "runtime"),
         ASTRYX_VITE_EXECUTABLE=str(vite),
-        ASTRYX_DEV_STATE_DIR=str(tmp_path / "state"),
         ASTRYX_DEV_LOG_DIR=str(tmp_path / "logs"),
         ASTRYX_READINESS_TIMEOUT_SECONDS="15",
         ASTRYX_SHUTDOWN_TIMEOUT_SECONDS="2",
@@ -93,42 +94,47 @@ def test_dev_launcher_exposes_backend_src_import_root():
 
 def test_dev_launcher_prepares_stable_local_configuration(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
-    state = tmp_path / "dev-state"
-    environment = os.environ.copy()
-    for name in ("DATABASE_URL", "AUTH_COOKIE_SECRET", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_HOST", "POSTGRES_PORT"):
-        environment.pop(name, None)
-    environment.update(ASTRYX_DEV_STATE_DIR=str(state), ASTRYX_DEV_PREPARE_ONLY="1")
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    environment.update(ASTRYX_DEV_PREPARE_ONLY="1", FRONTEND_PORT="15171", BACKEND_PORT="18008")
 
     first = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
     assert first.returncode == 0, first.stderr
+    sessions = sorted((tmp_path / "runtime" / "sessions").iterdir())
+    assert len(sessions) == 1
+    state = sessions[0] / "state"
     secret = (state / "auth-cookie-secret").read_text(encoding="utf-8")
     assert len(secret) >= 32
     assert secret not in first.stdout and secret not in first.stderr
-    database = state / "astryx-development.db"
+    database = state / "operatoros-development.db"
     with sqlite3.connect(database) as connection:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"users", "sessions"}.issubset(tables)
+    session_record = json.loads((sessions[0] / "session.json").read_text(encoding="utf-8"))
+    assert session_record["database_path"] == str(database)
 
     second = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
     assert second.returncode == 0, second.stderr
-    assert (state / "auth-cookie-secret").read_text(encoding="utf-8") == secret
+    sessions = sorted((tmp_path / "runtime" / "sessions").iterdir())
+    assert len(sessions) == 2
+    databases = {session / "state" / "operatoros-development.db" for session in sessions}
+    assert len(databases) == 2
+    assert all(database.exists() for database in databases)
 
 
-def test_dev_launcher_does_not_overwrite_explicit_environment(tmp_path):
+@pytest.mark.parametrize("database", ["relative.db", "backend/attendance.db", "backend/.local-dev/astryx-development.db", "attendance.db"])
+def test_dev_launcher_rejects_explicit_sqlite_database(tmp_path, database):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
-    state = tmp_path / "unused-state"
-    explicit_database = tmp_path / "explicit.db"
-    environment = os.environ.copy()
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
     environment.update(
-        ASTRYX_DEV_STATE_DIR=str(state),
         ASTRYX_DEV_PREPARE_ONLY="1",
-        DATABASE_URL=f"sqlite:///{explicit_database}",
+        FRONTEND_PORT="15172",
+        BACKEND_PORT="18009",
+        DATABASE_URL=f"sqlite:///{database}",
         AUTH_COOKIE_SECRET="explicit-test-secret-that-is-at-least-32-characters",
     )
     result = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
-    assert result.returncode == 0, result.stderr
-    assert not state.exists()
-    assert not explicit_database.exists()
+    assert result.returncode == 2
+    assert "DEVELOPMENT_DATABASE_PATH_REJECTED" in result.stdout + result.stderr
 
 
 def test_dev_launcher_reports_missing_vite_before_starting_services(tmp_path):
