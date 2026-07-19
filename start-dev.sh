@@ -87,9 +87,6 @@ PY
 
 prepare_local_environment() {
   local launcher_owns_database=0
-  if [[ "${DATABASE_URL:-}" == sqlite:* ]]; then
-    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "Explicit SQLite overrides are not accepted by the managed development launcher."
-  fi
   if [[ -z "${DATABASE_URL:-}" ]] && [[ -z "${POSTGRES_USER:-}${POSTGRES_PASSWORD:-}${POSTGRES_DB:-}${POSTGRES_HOST:-}${POSTGRES_PORT:-}" ]]; then
     [[ -n "$SESSION_ID" && -n "$SESSION_DIR" ]] || fail_preflight "Development session state is unavailable" "A managed session must exist before database initialization."
     DEV_STATE_DIR="$SESSION_DIR/state"
@@ -318,8 +315,74 @@ allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
-DEV_DATABASE="$SESSION_DIR/state/operatoros-development.db"
+if [[ "${DATABASE_URL:-}" == sqlite:* ]]; then
+  if [[ "${DATABASE_URL}" != sqlite:/* ]]; then
+    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "Explicit database overrides must be absolute SQLite paths (sqlite:////path/to/db)."
+  fi
+
+  # Validate with Python against isolation requirements
+  db_validation_error="$("$VENV/bin/python" - "$PROJECT_ROOT" "$DATABASE_URL" <<'PY' || true
+import sys
+import os
+from pathlib import Path
+
+try:
+    project = Path(sys.argv[1]).resolve()
+    url = sys.argv[2]
+
+    if not url.startswith("sqlite:///"):
+        print("DATABASE_URL must start with sqlite:///")
+        sys.exit(1)
+
+    db_path_str = url[len("sqlite:///")]
+
+    db_path = Path(url[len("sqlite:///"):])
+    if not db_path.is_absolute():
+        print("Database path must be absolute")
+        sys.exit(1)
+
+    resolved_db = db_path.resolve()
+    protected = {
+        project / "backend" / "attendance.db",
+        project / "attendance.db",
+    }
+    if resolved_db in protected or project / "backend" / ".local-dev" in resolved_db.parents:
+        print("Database path is protected")
+        sys.exit(1)
+
+    if resolved_db.name == "attendance.db" and resolved_db.parent == project:
+        print("Database path is protected")
+        sys.exit(1)
+
+    # Must be inside .runtime/operatoros-dev or .runtime/operatoros-e2e
+    dev_root = (project / ".runtime" / "operatoros-dev").resolve()
+    e2e_root = (project / ".runtime" / "operatoros-e2e").resolve()
+
+    def is_subpath(p: Path, parent: Path) -> bool:
+        try:
+            p.relative_to(parent)
+            return True
+        except ValueError:
+            return False
+
+    if not (is_subpath(resolved_db, dev_root) or is_subpath(resolved_db, e2e_root)):
+        print("Database path must reside inside .runtime/operatoros-dev or .runtime/operatoros-e2e")
+        sys.exit(1)
+
+except Exception as e:
+    print(f"Validation error: {e}")
+    sys.exit(1)
+PY
+)"
+  if [[ -n "$db_validation_error" ]]; then
+    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "$db_validation_error"
+  fi
+  DEV_DATABASE="${DATABASE_URL#sqlite:///}"
+else
+  DEV_DATABASE="$SESSION_DIR/state/operatoros-development.db"
+fi
 "$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
+
 prepare_local_environment
 SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
