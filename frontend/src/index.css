@@ -123,9 +123,6 @@
   .card {
     @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 ease-out hover:border-brand/20 hover:shadow-md;
   }
-  .glass {
-    @apply border border-white/20 bg-white/70 backdrop-blur-md transition-all duration-200;
-  }
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50;
   }
