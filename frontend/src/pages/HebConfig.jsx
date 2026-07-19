@@ -223,7 +223,7 @@ function HebConfig() {
         </div>
       )}
 
-      <section className="card p-6 space-y-4">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Clock3 size={18} className="text-brand" />
           <h2 className="text-lg font-bold text-slate-900">Filter Tahun</h2>
@@ -250,7 +250,7 @@ function HebConfig() {
         </div>
       </section>
 
-      <section className="card p-0 overflow-hidden">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-0 overflow-hidden">
         {loading ? (
           <LoadingState title="Memuat data HEB tahunan..." />
         ) : rows.length === 0 ? (
@@ -437,7 +437,7 @@ function HebConfig() {
         )}
       </section>
 
-      <section className="card p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
           <CheckCircle2 size={18} className="text-emerald-500" />
           <h2 className="text-lg font-bold text-slate-900">Total HEB per Jenjang ({activeYear})</h2>

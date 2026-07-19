@@ -77,7 +77,7 @@ function sanitizePeriodLabel(label) {
 
 function SummaryCard({ title, value, icon, tone }) {
   return (
-    <div className="card p-6 print:border print:shadow-none print:rounded-none">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
@@ -94,7 +94,7 @@ function SummaryCard({ title, value, icon, tone }) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="card p-6 animate-pulse">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
         <div className="h-6 w-56 bg-slate-200 rounded" />
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, index) => (
@@ -102,7 +102,7 @@ function LoadingSkeleton() {
           ))}
         </div>
       </div>
-      <div className="card p-6 animate-pulse">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
         <div className="h-5 w-48 bg-slate-200 rounded" />
         <div className="mt-4 h-72 rounded-2xl bg-slate-100" />
       </div>
@@ -112,7 +112,7 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="card p-10 text-center border border-dashed border-slate-300 bg-white">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
       <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
         <CalendarDays size={24} />
       </div>
@@ -368,7 +368,7 @@ function TardinessReport() {
         description="Analyze student tardiness distribution by level and by class."
       />
 
-      <section className="card p-6 filter-bar no-print">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Period Mode</label>
@@ -474,7 +474,7 @@ function TardinessReport() {
               type="button"
               onClick={handleGenerateReport}
               disabled={loading}
-              className="btn-primary w-full h-[46px] font-bold"
+              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 w-full h-[46px] font-bold"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
               <span>{loading ? 'Loading...' : 'Generate Report'}</span>
@@ -534,7 +534,7 @@ function TardinessReport() {
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
-          <div className="report-section card px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
+          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
             <h2 className="text-2xl md:text-3xl font-black tracking-wide text-slate-900 uppercase">{report.report_title}</h2>
             <p className="mt-2 text-lg font-semibold text-slate-700 uppercase">{report.school_name}</p>
             <p className="mt-2 text-base text-slate-500">{report.period.label}</p>
@@ -543,7 +543,7 @@ function TardinessReport() {
             </div>
           </div>
 
-          <div className="report-section card p-6 print:border print:shadow-none print:rounded-none">
+          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
               <h3 className="text-xl font-bold text-slate-900">Management Summary</h3>
               <p className="text-sm text-slate-500">Separates total late incidents from the actual number of school days affected.</p>
@@ -599,7 +599,7 @@ function TardinessReport() {
             </div>
           </div>
 
-          <div className="report-section card p-6 print:border print:shadow-none print:rounded-none">
+          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Jenjang Late Summary</h3>
@@ -645,7 +645,7 @@ function TardinessReport() {
             <TardinessBarChart data={jenjangSummaryRows} />
           </div>
 
-          <div className="report-section card p-6 print:border print:shadow-none print:rounded-none">
+          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
                  <h3 className="text-xl font-bold text-slate-900">Class Breakdown</h3>
                  <p className="text-sm text-slate-500">Classes are sorted alphabetically within each level.</p>
@@ -740,7 +740,7 @@ function TardinessReport() {
       )}
 
       {!loading && !hasGenerated && (
-        <div className="card p-10 text-center border border-dashed border-slate-300 bg-white no-print">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center no-print">
           <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
             <Download size={24} />
           </div>
