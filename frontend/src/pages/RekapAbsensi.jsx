@@ -99,7 +99,7 @@ function WarningBanner({ children, linkTo, linkLabel }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="card p-6 animate-pulse">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
       <div className="h-8 w-72 bg-slate-200 rounded mx-auto" />
       <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
         <div className="grid grid-cols-7 bg-emerald-700">
@@ -123,7 +123,7 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="card p-10 text-center border border-dashed border-slate-300 bg-white">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
       <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
         <CalendarDays size={24} />
       </div>
@@ -350,7 +350,7 @@ function RekapAbsensi() {
         description="Laporan rekapitulasi kehadiran siswa bulanan, date range, atau term."
       />
 
-      <section className="card p-6 filter-bar no-print">
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3 xl:col-span-1">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Mode Periode</label>
@@ -443,7 +443,7 @@ function RekapAbsensi() {
               type="button"
               onClick={handleGenerateReport}
               disabled={loading}
-              className="btn-primary w-full h-[46px] font-bold"
+              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 w-full h-[46px] font-bold"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
               <span>{loading ? 'Memuat...' : 'Buat Laporan'}</span>
@@ -512,7 +512,7 @@ function RekapAbsensi() {
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
-          <div className="report-section card px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
+          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
             <h2 className="text-2xl md:text-3xl font-black tracking-wide text-slate-900 uppercase">{report.report_title}</h2>
             <p className="mt-2 text-lg font-semibold text-slate-700 uppercase">{report.school_name}</p>
             <p className="mt-2 text-base text-slate-500">{report.period.label}</p>
@@ -522,7 +522,7 @@ function RekapAbsensi() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,1fr)] gap-8">
-            <div className="report-section card p-6 print:border print:shadow-none print:rounded-none">
+            <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-slate-900">Tabel Rekap Absensi</h3>
                 <p className="text-sm text-slate-500">Persentase dibulatkan ke bilangan bulat. RATA2 menampilkan rata-rata per jenjang, bukan rata seluruh siswa.</p>
@@ -619,7 +619,7 @@ function RekapAbsensi() {
       )}
 
       {!loading && !hasGenerated && (
-        <div className="card p-10 text-center border border-dashed border-slate-300 bg-white no-print">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center no-print">
           <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
             <Download size={24} />
           </div>

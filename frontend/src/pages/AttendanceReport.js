@@ -109,7 +109,7 @@ const getDateRange = (type, periodValue, year) => {
 };
 
 const StatCard = ({ title, value, subtext, icon, color }) => (
-  <div className="card p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
+  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
@@ -257,7 +257,7 @@ function AttendanceReport() {
       </header>
 
       {/* Filter Panel */}
-      <div className="card p-6 bg-white border border-slate-200">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
           <Filter size={18} className="text-brand" />
           <h2 className="font-bold text-slate-800">Report Parameters</h2>
@@ -340,7 +340,7 @@ function AttendanceReport() {
       </div>
 
       {error && (
-        <div className="card p-4 bg-rose-50 border border-rose-200 flex items-center gap-3 text-rose-800">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800 shadow-sm">
           <AlertTriangle size={20} />
           <p className="font-medium">{error}</p>
         </div>
@@ -398,7 +398,7 @@ function AttendanceReport() {
 
 
           {/* Data Table */}
-          <div className="card bg-white border border-slate-200 overflow-hidden">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800">Report Results</h3>
               <span className="text-xs font-semibold text-slate-500 px-3 py-1 bg-slate-200 rounded-[9999px]">
@@ -474,7 +474,7 @@ function AttendanceReport() {
       )}
 
       {!loading && reportData.length === 0 && !error && (
-        <div className="card p-12 flex flex-col items-center justify-center text-center bg-slate-50/50 border border-slate-100 border-dashed">
+        <div className="rounded-2xl border border-dashed border-slate-100 bg-slate-50/50 p-12 flex flex-col items-center justify-center text-center shadow-sm">
           <div className="w-20 h-20 bg-slate-100 rounded-[9999px] flex items-center justify-center mb-4">
             <Calendar size={32} className="text-slate-400" />
           </div>

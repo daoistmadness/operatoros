@@ -480,7 +480,7 @@ function AbsenceReasons() {
         </div>
       )}
 
-      <section className="card p-6 space-y-4 shadow-sm border-slate-100">
+      <section className="rounded-2xl border border-slate-100 bg-white shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-2">
           <CalendarDays size={18} className="text-brand" />
           <h2 className="text-lg font-bold text-slate-900">Periode & Petugas</h2>
@@ -534,7 +534,7 @@ function AbsenceReasons() {
         </div>
       </section>
 
-      <section ref={tableSectionRef} className="card p-0 overflow-hidden shadow-sm border-slate-100">
+      <section ref={tableSectionRef} className="rounded-2xl border border-slate-100 bg-white shadow-sm p-0 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Input Kelas — {getMonthLabel(month)} {year}</h2>

@@ -287,21 +287,21 @@ function ClassMapping() {
       </header>
 
       {successMessage && (
-        <div className="card p-4 bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800 shadow-sm">
           <CheckCircle2 size={20} />
           <p className="font-medium">{successMessage}</p>
         </div>
       )}
 
       {error && (
-        <div className="card p-4 bg-rose-50 border border-rose-200 flex items-center gap-3 text-rose-800">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800 shadow-sm">
           <AlertTriangle size={20} />
           <p className="font-medium">{error}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 card p-6 space-y-5">
+        <div className="xl:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative md:col-span-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -436,7 +436,7 @@ function ClassMapping() {
           </div>
         </div>
 
-        <div className="card p-6 space-y-5">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">

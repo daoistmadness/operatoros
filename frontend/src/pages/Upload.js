@@ -118,7 +118,7 @@ function Upload() {
         <p className="text-slate-500 max-w-md mx-auto">Sync your biometric machine logs with the OperatorOS analytics engine.</p>
       </header>
 
-      <div className="card p-10 bg-white border-2 border-dashed border-slate-200 hover:border-brand/40 transition-all duration-200 group">
+      <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white shadow-sm p-10 hover:border-brand/40 hover:shadow-md transition-all duration-200 group">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">
           <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 group-hover:bg-brand/10 group-hover:text-brand transition-all duration-200">
             <UploadCloud size={40} />
@@ -131,7 +131,7 @@ function Upload() {
             <p className="text-slate-400 text-sm italic">Supports .xlsx and .xls (Attendance Machine Export)</p>
           </div>
 
-          <label className="btn-primary cursor-pointer group-hover:scale-105 transition-transform">
+          <label className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 cursor-pointer group-hover:scale-105">
             Browse Files
             <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleFileChange} />
           </label>
@@ -165,7 +165,7 @@ function Upload() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card p-8 bg-green-50 border-green-100 shadow-lg shadow-green-900/5 ring-1 ring-green-600/10"
+            className="rounded-2xl border border-green-100 bg-green-50 p-8 shadow-lg shadow-green-900/5 ring-1 ring-green-600/10"
           >
             <div className="flex items-center gap-3 mb-6">
               <CheckCircle2 className="text-green-600" size={28} />
@@ -248,7 +248,7 @@ function Upload() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card overflow-hidden border-red-200"
+            className="rounded-2xl border border-red-200 bg-white shadow-sm overflow-hidden"
           >
             {/* Error header */}
             <div className="bg-red-600 px-6 py-4 flex items-center justify-between">
@@ -336,7 +336,7 @@ function Upload() {
         )}
       </AnimatePresence>
 
-      <div className="card p-6 bg-slate-50 border-slate-200 border-dashed">
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1">
             <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
