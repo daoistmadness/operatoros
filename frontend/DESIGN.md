@@ -234,6 +234,7 @@ Use `Badge` for compact state, `Alert` for consequential inline feedback, and `L
 - **Upload:** Show supported input expectations before selection, an explicit selected-file state, guarded submission with progress, and a durable result summary. Never expose real student data in client logs.
 - **Configuration:** Group related fields, expose current values before editing, distinguish save from reset/delete, and retain context after success or error.
 - **Reports:** Present filters before generation, disable exports until valid data exists, keep tables scrollable on screen, and retain `.report-section` print behavior with unclipped content and acceptable page breaks.
+- Reports combining metrics with different time bases must label each section's reporting basis directly beside the section heading and preserve the same backend-owned wording in screen, PDF, and spreadsheet exports.
 - **Analytics:** Pair chart color with labels, legends, or values; provide loading, empty, and error states; and preserve the canonical attendance color mapping.
 
 ## Do's and Don'ts

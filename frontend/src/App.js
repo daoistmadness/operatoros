@@ -18,6 +18,7 @@ import Enrollment from './pages/Enrollment.tsx';
 import AcademicManagement from './pages/AcademicManagement.tsx';
 import ManagementAnalytics from './pages/ManagementAnalytics';
 import ExecutiveReports from './pages/ExecutiveReports.tsx';
+import MonthlyManagementReport from './pages/MonthlyManagementReport.tsx';
 import BackupManagement from './pages/BackupManagement.tsx';
 import SidebarNav from './components/SidebarNav';
 import Login from './pages/Login.tsx';
@@ -73,6 +74,7 @@ function App() {
               <Route path="/reports" element={<Navigate to="/reports/monthly" replace />} />
               <Route path="/reports/monthly" element={<ExecutiveReports reportType="monthly" />} />
               <Route path="/reports/annual" element={<ExecutiveReports reportType="annual" />} />
+              <Route path="/reports/management/monthly" element={<MonthlyManagementReport />} />
               <Route path="/reports/attendance" element={<AttendanceReport />} />
               <Route path="/reports/tardiness" element={<TardinessReport />} />
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />

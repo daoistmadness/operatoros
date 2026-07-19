@@ -1,4 +1,6 @@
 from datetime import date, time
+from io import BytesIO
+import re
 import sys
 from pathlib import Path
 
@@ -7,6 +9,7 @@ if str(SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(SOURCE_ROOT))
 
 import pytest
+from openpyxl import load_workbook
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -23,6 +26,7 @@ from models.attendance_review import AttendanceOverride, AttendanceOverrideHisto
 from models.jenjang import Jenjang
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
+from models.student_master import StudentAddress, StudentMaster
 from models.student_subject_grade import StudentSubjectGrade
 from models.subject import Subject
 from api.reports import router
@@ -292,3 +296,63 @@ def test_database_constraints_protect_duplicate_rows(report_context):
     with pytest.raises(Exception):
         report_context["db"].flush()
     report_context["db"].rollback()
+
+
+def test_monthly_time_basis_is_backend_owned(report_context):
+    data = monthly(report_context["client"], report_context["year"].id).json()
+    assert data["report_period"]["sections"] == {
+        "attendance": {"basis": "calendar_month", "month_bound": True, "label": "February 2024"},
+        "population": {"basis": "academic_year_enrollment_snapshot", "month_bound": False, "label": "Academic Year 2023/2024"},
+        "academics": {"basis": "available_academic_year_records", "month_bound": False, "label": "Available Academic Records - AY 2023/2024"},
+    }
+
+
+def test_management_demographics_reconcile_without_forcing_totals(report_context):
+    db = report_context["db"]
+    primary_a = report_context["students"]["Primary A"][1]
+    primary_b = report_context["students"]["Primary B"][1]
+    first = StudentMaster(full_name="Synthetic One", normalized_name="synthetic one", student_status="active", gender="male", religion="Islam")
+    second = StudentMaster(full_name="Synthetic Two", normalized_name="synthetic two", student_status="active", gender="female", religion=None)
+    db.add_all([first, second]); db.flush()
+    primary_a.student_master_id = first.id; primary_b.student_master_id = second.id
+    db.add(StudentAddress(student_master_id=first.id, kelurahan="  jatibening BARU "))
+    db.commit()
+    response = report_context["client"].get("/api/reports/management/monthly", params={
+        "academic_year_id": report_context["year"].id, "month": "2024-02", "scope": "primary",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["metadata"]["report_type"] == "monthly_management"
+    assert data["data_quality"]["reconciliation"] == {
+        "population_total": 2, "student_master_linked": 2, "student_master_unlinked": 0,
+        "religion_known": 1, "religion_unknown": 1, "gender_known": 2, "gender_unknown": 0,
+        "location_known": 1, "location_unknown": 1,
+    }
+    assert data["demographics"]["religion"]["rows"][0]["percentage_of_known"] == 100.0
+    assert data["demographics"]["religion"]["rows"][0]["percentage_of_eligible"] == 50.0
+    assert data["demographics"]["residential_area"]["rows"][0]["name"] == "Jatibening Baru"
+    assert all(row["reconciles"] for row in data["data_quality"]["sections"].values())
+
+
+@pytest.mark.parametrize(("format", "mime"), [
+    ("pdf", "application/pdf"),
+    ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+])
+def test_management_export_contract(report_context, format, mime):
+    response = report_context["client"].get("/api/reports/management/monthly/export", params={
+        "academic_year_id": report_context["year"].id, "month": "2024-02", "scope": "primary", "format": format,
+    })
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(mime)
+    assert f"management-report_monthly_primary_2024-02.{format}" in response.headers["content-disposition"]
+    assert len(response.content) > 1000
+    if format == "pdf":
+        assert len(re.findall(rb"/Type\s*/Page\b", response.content)) >= 2
+        assert b"Data Quality & Coverage" in response.content
+        assert b"not restricted to the selected calendar month" in response.content
+    else:
+        workbook = load_workbook(BytesIO(response.content), data_only=True)
+        assert workbook.sheetnames == [
+            "Executive Summary", "Population by Jenjang", "Population by Class", "Religion", "Gender",
+            "Residential Area", "Monthly Attendance", "Academic Summary", "Data Quality",
+        ]
