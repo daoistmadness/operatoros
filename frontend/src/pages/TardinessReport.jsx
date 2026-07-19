@@ -9,13 +9,13 @@ import {
   Printer,
   Search,
   TimerReset,
-  TriangleAlert,
   Users,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
 import { PageHeader } from "../components/common/page-header";
+import { EmptyState, ErrorState } from "../components/common/state-message";
 import {
   downloadTardinessExcel,
   downloadTardinessManagementExcel,
@@ -108,18 +108,6 @@ function LoadingSkeleton() {
         <div className="h-5 w-48 bg-slate-200 rounded" />
         <div className="mt-4 h-72 rounded-2xl bg-slate-100" />
       </Card>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-      <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
-        <CalendarDays size={24} />
-      </div>
-      <h3 className="mt-4 text-lg font-bold text-slate-900">No tardiness data found for this period.</h3>
-      <p className="mt-2 text-sm text-slate-500">Try changing the reporting period and generate the report again.</p>
     </div>
   );
 }
@@ -374,7 +362,7 @@ function TardinessReport() {
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Period Mode</label>
-            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1" role="group" aria-label="Period mode">
               {FILTER_MODES.map((option) => (
                 <button
                   key={option.value}
@@ -396,6 +384,7 @@ function TardinessReport() {
             {filterMode === 'month' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Report month"
                   value={month}
                   onChange={(event) => setMonth(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -407,6 +396,7 @@ function TardinessReport() {
                   ))}
                 </select>
                 <input
+                  aria-label="Report year"
                   type="number"
                   min="1900"
                   value={year}
@@ -419,12 +409,14 @@ function TardinessReport() {
             {filterMode === 'date_range' && (
               <div className="grid grid-cols-2 gap-3">
                 <input
+                  aria-label="Report start date"
                   type="date"
                   value={dateFrom}
                   onChange={(event) => setDateFrom(event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
                 <input
+                  aria-label="Report end date"
                   type="date"
                   value={dateTo}
                   onChange={(event) => setDateTo(event.target.value)}
@@ -436,6 +428,7 @@ function TardinessReport() {
             {filterMode === 'term' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Academic term"
                   value={term}
                   onChange={(event) => setTerm(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -447,6 +440,7 @@ function TardinessReport() {
                   ))}
                 </select>
                 <input
+                  aria-label="Academic year"
                   type="number"
                   min="1900"
                   value={year}
@@ -460,6 +454,7 @@ function TardinessReport() {
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Level (Jenjang)</label>
             <select
+              aria-label="Level (Jenjang)"
               value={selectedJenjang}
               onChange={(event) => setSelectedJenjang(event.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -486,33 +481,36 @@ function TardinessReport() {
           <div className="export-actions">
             {report ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleExportExcel}
                   disabled={exportingExcel}
-                  className="h-[46px] rounded-xl border border-emerald-200 bg-emerald-50 px-4 font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   {exportingExcel ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
                   <span>Export Excel</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleExportManagementExcel}
                   disabled={exportingManagementExcel}
-                  className="h-[46px] rounded-xl border border-indigo-200 bg-indigo-50 px-4 font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   {exportingManagementExcel ? <Loader2 className="animate-spin" size={18} /> : <BriefcaseBusiness size={18} />}
                   <span>Export Executive</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handlePrint}
                   disabled={printing}
-                  className="h-[46px] rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   <Printer size={18} />
                   <span>Print PDF</span>
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="h-[46px] rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 flex items-center justify-center text-sm text-slate-400">
@@ -524,15 +522,12 @@ function TardinessReport() {
       </Card>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 flex items-start gap-3 no-print">
-          <TriangleAlert className="mt-0.5" size={20} />
-          <p className="font-medium">{error}</p>
-        </div>
+        <ErrorState className="no-print" title="Tardiness report could not be generated" description={error} />
       )}
 
       {loading && <LoadingSkeleton />}
 
-      {!loading && hasGenerated && !hasData && !error && <EmptyState />}
+      {!loading && hasGenerated && !hasData && !error && <EmptyState title="No tardiness data found for this period" description="Try changing the reporting period and generate the report again." />}
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
