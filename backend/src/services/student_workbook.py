@@ -34,6 +34,8 @@ from services.student_management import (
 )
 from services.spreadsheet_security import validate_xlsx_upload
 from services.student_normalization import normalize_name
+from models.student_import_session import StudentImportSession
+from services.student_import_sessions import append_action, create_preview_session, mark_committed, mark_preview_ready, validate_commit_session
 
 
 UPDATE_CONFIRMATION = "COMMIT_STUDENT_DATA_UPDATE"
@@ -179,7 +181,7 @@ def _preview_checksum(rows: list[StudentImportRow]) -> str:
 def serialize_update_batch(db: Session, batch: StudentImportBatch) -> dict:
     rows = db.query(StudentImportRow).filter_by(batch_id=batch.id).order_by(StudentImportRow.source_row).all()
     return {
-        "id": batch.id, "filename": batch.filename, "file_checksum": batch.file_checksum,
+        "id": batch.id, "session_id": batch.session_id, "filename": batch.filename, "file_checksum": batch.file_checksum,
         "status": batch.status, "created_by": batch.created_by, "created_at": batch.created_at,
         "committed_at": batch.committed_at, "preview_checksum": _preview_checksum(rows),
         "summary": {
@@ -200,6 +202,7 @@ def serialize_update_batch(db: Session, batch: StudentImportBatch) -> dict:
 def create_update_preview(db: Session, file_bytes: bytes, filename: str, username: str, content_type: str | None = None) -> StudentImportBatch:
     filename = validate_xlsx_upload(file_bytes, filename, content_type)
     checksum = hashlib.sha256(file_bytes).hexdigest()
+    session = create_preview_session(db, import_type="STUDENT_DATA_UPDATE", filename=filename, file_checksum=checksum, actor=username)
     try:
         workbook = load_workbook(BytesIO(file_bytes), read_only=True, data_only=True, keep_links=False)
     except Exception as exc:
@@ -215,7 +218,7 @@ def create_update_preview(db: Session, file_bytes: bytes, filename: str, usernam
         raise HTTPException(status_code=400, detail={"code": "MISSING_COLUMNS", "columns": missing})
     indexes = {header: header_values.index(header) for header in HEADERS}
     batch = StudentImportBatch(
-        filename=filename, file_checksum=checksum, source_sheet="student_update",
+        session_id=session.id, filename=filename, file_checksum=checksum, source_sheet="student_update",
         status="preview", created_by=username,
     )
     db.add(batch); db.flush()
@@ -299,6 +302,8 @@ def create_update_preview(db: Session, file_bytes: bytes, filename: str, usernam
         batch.unchanged_count = counts["NO_CHANGE"]
         batch.conflict_count = counts["CONFLICT"]
         batch.invalid_count = counts["INVALID"]
+        db.flush()
+        mark_preview_ready(session, checksum=_preview_checksum(db.query(StudentImportRow).filter_by(batch_id=batch.id).order_by(StudentImportRow.source_row).all()), row_count=batch.total_rows)
         db.commit(); db.refresh(batch); return batch
     except Exception:
         db.rollback(); raise
@@ -313,8 +318,10 @@ def commit_update_preview(db: Session, batch_id: str, row_ids: list[int], confir
     rows = db.query(StudentImportRow).filter_by(batch_id=batch.id).order_by(StudentImportRow.source_row).all()
     if preview_checksum != _preview_checksum(rows):
         raise HTTPException(status_code=409, detail={"code": "PREVIEW_CHECKSUM_MISMATCH", "message": "Preview changed; upload the workbook again"})
+    session = db.get(StudentImportSession, batch.session_id) if batch.session_id else None
     if batch.status == "committed":
         return {"status": "committed", "batch_id": batch.id, "updated": batch.update_count, "idempotent_replay": True}
+    validate_commit_session(session, import_type="STUDENT_DATA_UPDATE", actor=username, preview_checksum=preview_checksum)
     if batch.created_at and datetime.now() - batch.created_at > timedelta(hours=24):
         batch.status = "expired"; db.commit()
         raise HTTPException(status_code=409, detail={"code": "PREVIEW_EXPIRED", "message": "Preview expired; upload the workbook again"})
@@ -325,22 +332,30 @@ def commit_update_preview(db: Session, batch_id: str, row_ids: list[int], confir
     if blocked:
         raise HTTPException(status_code=409, detail={"code": "ROWS_NOT_COMMITTABLE", "rows": blocked})
     try:
+        action_count = 0
         for row in selected:
             student = db.get(StudentMaster, row.matched_student_master_id)
             if student is None or row.normalized_payload["Record Version"] != record_version(student):
                 raise HTTPException(status_code=409, detail={"code": "STALE_RECORD", "row": row.source_row})
             payload = row.normalized_payload
+            profile_before = {}
             for field, change in row.differences.items():
                 if field in PROFILE_MAP.values():
                     new = change["uploaded"]
                     if field == "birth_date":
                         new = date.fromisoformat(new) if new else None
+                    profile_before[field] = getattr(student, field)
                     _audit(db, student.id, "profile_updated", username, "student_update_workbook", field, getattr(student, field), new, batch.id)
                     setattr(student, field, new)
             _check_identifier_conflicts(db, {field: getattr(student, field) for field in ("nipd", "nisn", "nik")}, student.id)
             student.normalized_name = normalize_name(student.full_name)
             student.updated_by = username
             student.updated_at = datetime.now()
+            profile_fields = sorted(field for field in row.differences if field in PROFILE_MAP.values())
+            if profile_fields:
+                action_count += 1
+                sensitive = any(field in {"nipd", "nisn", "nik"} for field in profile_fields)
+                append_action(db, session, source_row=row.source_row, sequence=action_count, action_type="UPDATE_SENSITIVE_IDENTIFIER" if sensitive else "UPDATE_STUDENT_PROFILE", entity_type="STUDENT_MASTER", entity_id=student.id, actor=username, before_state={"changed_fields": profile_fields, "record_version": row.normalized_payload["Record Version"]}, after_state={"changed_fields": profile_fields, "record_version": record_version(student)}, compensation_type="MANUAL_REVIEW_REQUIRED" if sensitive else "RESTORE_PROFILE_FIELDS", eligibility="MANUAL_REVIEW_REQUIRED" if sensitive else "ELIGIBLE", student_batch_id=batch.id)
             address = db.query(StudentAddress).filter_by(student_master_id=student.id).first()
             contact = db.query(StudentContact).filter_by(student_master_id=student.id).first()
             for field in ADDRESS_MAP.values():
@@ -367,10 +382,12 @@ def commit_update_preview(db: Session, batch_id: str, row_ids: list[int], confir
                     conflict = db.query(StudentDeviceIdentity).filter(StudentDeviceIdentity.device_identifier == change["uploaded"], StudentDeviceIdentity.is_active.is_(True), StudentDeviceIdentity.student_master_id != student.id).first()
                     if conflict: raise HTTPException(status_code=409, detail={"code": "DEVICE_ID_IN_USE", "row": row.source_row})
                     if old: old.is_active = False; old.effective_to = date.today()
-                    _create_legacy_identity(db, student, {"device_identifier": change["uploaded"], "device_source": payload["Device Source"] or "attendance_machine", "effective_from": date.today(), "actor": username})
+                    new_mapping = _create_legacy_identity(db, student, {"device_identifier": change["uploaded"], "device_source": payload["Device Source"] or "attendance_machine", "effective_from": date.today(), "actor": username})
                 elif old:
                     old.is_active = False; old.effective_to = date.today()
                 _audit(db, student.id, "device_identity_replaced", username, "student_update_workbook", "device_identifier", change["current"], change["uploaded"], batch.id)
+                action_count += 1
+                append_action(db, session, source_row=row.source_row, sequence=action_count, action_type="REPLACE_DEVICE_IDENTITY", entity_type="DEVICE_IDENTITY", entity_id=(new_mapping.id if change["uploaded"] else old.id), actor=username, before_state={"prior_mapping_id": old.id if old else None}, after_state={"active_mapping_id": new_mapping.id if change["uploaded"] else None, "retired_mapping_id": old.id if old else None}, compensation_type="REACTIVATE_DEVICE_MAPPING", eligibility="ELIGIBLE", student_batch_id=batch.id)
             if "academic_class_id" in row.differences:
                 class_id = int(row.differences["academic_class_id"]["uploaded"])
                 year_id = int(payload["Academic Year ID"])
@@ -387,8 +404,11 @@ def commit_update_preview(db: Session, batch_id: str, row_ids: list[int], confir
                     db.add(enrollment); db.flush()
                 db.add(StudentEnrollmentClassHistory(enrollment_id=enrollment.id, class_name=target.class_name, effective_from=max(date.today(), year.start_date), changed_by=username, source="student_update_workbook", import_batch_id=batch.id))
                 _audit(db, student.id, "enrollment_transferred" if old_class else "enrollment_created", username, "student_update_workbook", "class_name", old_class, target.class_name, batch.id)
+                action_count += 1
+                append_action(db, session, source_row=row.source_row, sequence=action_count, action_type="TRANSFER_ENROLLMENT" if old_class else "CREATE_ENROLLMENT", entity_type="STUDENT_ENROLLMENT", entity_id=enrollment.id, actor=username, before_state={"academic_class_id": row.differences["academic_class_id"]["current"]}, after_state={"academic_class_id": target.id, "enrollment_id": enrollment.id}, compensation_type="COMPENSATING_ENROLLMENT_TRANSFER" if old_class else "END_ENROLLMENT", eligibility="ELIGIBLE", student_batch_id=batch.id)
             row.selected_for_commit = True
         batch.status = "committed"; batch.committed_at = datetime.now(); batch.update_count = len(selected)
+        mark_committed(session, actor=username, selected_count=len(selected), action_count=action_count)
         db.commit()
         return {"status": "committed", "batch_id": batch.id, "updated": len(selected), "idempotent_replay": False}
     except HTTPException:

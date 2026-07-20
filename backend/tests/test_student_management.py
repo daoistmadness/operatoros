@@ -19,6 +19,7 @@ from models.student_master import (
     StudentDeviceIdentity, StudentEnrollmentClassHistory, StudentImportBatch,
     StudentMaster, StudentMasterChangeHistory,
 )
+from models.student_import_session import StudentImportAppliedAction, StudentImportSession
 from schemas.student_management import (
     DeviceReassignRequest, DeviceReplaceRequest, DeviceRetireRequest, EnrollmentTransferRequest,
     StudentCreateRequest, StudentProfilePatch,
@@ -159,10 +160,16 @@ def test_xlsx_export_preview_commit_round_trip_and_stale_protection(student_db):
     batch = create_update_preview(db, changed.getvalue(), "synthetic-update.xlsx", "admin")
     preview = serialize_update_batch(db, batch)
     assert preview["summary"]["updates"] == 1
+    assert db.get(StudentImportSession, batch.session_id).preview_checksum == preview["preview_checksum"]
     row = preview["rows"][0]
     assert row["differences"]["preferred_name"]["uploaded"] == "Round Trip"
     result = commit_update_preview(db, batch.id, [row["id"]], UPDATE_CONFIRMATION, preview["preview_checksum"], "admin")
     assert result["updated"] == 1
+    session = db.get(StudentImportSession, batch.session_id)
+    assert session.status == "COMMITTED" and session.provenance_status == "COMPLETE_ACTION_PROVENANCE"
+    actions = db.query(StudentImportAppliedAction).filter_by(session_id=session.id).all()
+    assert actions and len({action.operation_id for action in actions}) == len(actions)
+    assert all("000903" not in str(action.after_state) for action in actions)
     replay = commit_update_preview(db, batch.id, [row["id"]], UPDATE_CONFIRMATION, preview["preview_checksum"], "admin")
     assert replay["idempotent_replay"] is True
     db.refresh(student)

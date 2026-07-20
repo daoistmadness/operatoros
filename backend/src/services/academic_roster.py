@@ -19,6 +19,8 @@ from models.student_master import StudentDeviceIdentity, StudentEnrollmentClassH
 from services.student_normalization import normalize_name
 from services.student_management import _audit, _check_identifier_conflicts, _create_enrollment, _create_legacy_identity
 from services.spreadsheet_security import validate_xlsx_upload
+from models.student_import_session import StudentImportSession
+from services.student_import_sessions import append_action, create_preview_session, mark_committed, mark_preview_ready, validate_commit_session
 
 
 ROSTER_CONFIRMATION = "COMMIT_ACADEMIC_ROSTER"
@@ -91,6 +93,8 @@ def _match_master(db: Session, payload: dict) -> tuple[StudentMaster | None, str
 
 def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: str, received: date, username: str, content_type: str | None = None):
     filename = validate_xlsx_upload(file_bytes, filename, content_type)
+    file_checksum = hashlib.sha256(file_bytes).hexdigest()
+    session = create_preview_session(db, import_type="STUDENT_ROSTER", filename=filename, file_checksum=file_checksum, actor=username)
     workbook = pd.ExcelFile(BytesIO(file_bytes), engine="openpyxl")
     frames = []
     for sheet in workbook.sheet_names:
@@ -172,10 +176,10 @@ def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: 
     counts = Counter(row["classification"] for row in rows)
     summary = {"total": len(rows), **{key.casefold(): counts[key] for key in ("CREATE_ENROLLMENT", "CREATE_NEW_MASTER", "POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS", "INVALID")}}
     batch = AcademicRosterImportBatch(
-        filename=filename, checksum=hashlib.sha256(file_bytes).hexdigest(), source_owner=owner,
+        session_id=session.id, filename=filename, checksum=file_checksum, source_owner=owner,
         date_received=received, created_by=username, rows=rows, summary=summary,
     )
-    db.add(batch); db.commit(); db.refresh(batch)
+    db.add(batch); db.flush(); mark_preview_ready(session, checksum=roster_preview_checksum(rows), row_count=len(rows)); db.commit(); db.refresh(batch)
     return batch
 
 
@@ -192,6 +196,8 @@ def commit_roster_preview(db: Session, preview_id: str, selected_rows: list[int]
     if preview_checksum and preview_checksum != roster_preview_checksum(batch.rows):
         raise HTTPException(status_code=409, detail="Roster preview checksum changed")
     selected = [row for row in batch.rows if row["preview_row_id"] in set(selected_rows)]
+    session = db.get(StudentImportSession, batch.session_id) if batch.session_id else None
+    validate_commit_session(session, import_type="STUDENT_ROSTER", actor=username, preview_checksum=preview_checksum or roster_preview_checksum(batch.rows))
     if not selected or len(selected) != len(set(selected_rows)):
         raise HTTPException(status_code=400, detail="Selected rows are not part of the preview")
     blocked = [row["preview_row_id"] for row in selected if row["classification"] not in {"CREATE_ENROLLMENT", "CREATE_NEW_MASTER"}]
@@ -200,6 +206,7 @@ def commit_roster_preview(db: Session, preview_id: str, selected_rows: list[int]
     created = 0
     try:
         created_students = 0
+        action_count = 0
         for row in selected:
             payload = row["payload"]
             effective_from = date.fromisoformat(
@@ -219,25 +226,32 @@ def commit_roster_preview(db: Session, preview_id: str, selected_rows: list[int]
                     created_by=username, updated_by=username,
                 )
                 db.add(master); db.flush()
-                _create_legacy_identity(db, master, {
+                action_count += 1
+                parent = append_action(db, session, source_row=row["source_row"], sequence=action_count, action_type="CREATE_STUDENT_MASTER", entity_type="STUDENT_MASTER", entity_id=master.id, actor=username, before_state=None, after_state={"student_master_id": master.id, "status": master.student_status}, compensation_type="DEACTIVATE_CREATED_MASTER", eligibility="ELIGIBLE", roster_batch_id=batch.id)
+                mapping = _create_legacy_identity(db, master, {
                     "device_identifier": payload["student_identifier"], "device_source": "attendance_machine",
                     "effective_from": effective_from, "actor": username,
                 })
                 db.flush()
+                action_count += 1
+                append_action(db, session, source_row=row["source_row"], sequence=action_count, action_type="ADD_DEVICE_IDENTITY", entity_type="DEVICE_IDENTITY", entity_id=mapping.id, actor=username, before_state=None, after_state={"mapping_id": mapping.id, "student_master_id": master.id}, compensation_type="RETIRE_DEVICE_MAPPING", eligibility="ELIGIBLE", roster_batch_id=batch.id, parent_action_id=parent.id)
                 _audit(db, master.id, "student_created", username, "academic_roster_import")
                 _audit(db, master.id, "device_identity_added", username, "academic_roster_import", "device_identifier", None, payload["student_identifier"])
                 row["matched_student_master_id"] = master.id
                 created_students += 1
             if db.query(StudentEnrollment).filter_by(student_master_id=master.id, academic_year_id=payload["academic_year_id"]).first():
                 raise HTTPException(status_code=409, detail=f"Enrollment changed after preview row {row['source_row']}")
-            _create_enrollment(db, master, {
+            enrollment = _create_enrollment(db, master, {
                 "academic_year_id": payload["academic_year_id"],
                 "academic_class_id": payload["academic_class_id"],
                 "effective_from": effective_from,
             }, username, "academic_roster_import")
+            action_count += 1
+            append_action(db, session, source_row=row["source_row"], sequence=action_count, action_type="CREATE_ENROLLMENT", entity_type="STUDENT_ENROLLMENT", entity_id=enrollment.id, actor=username, before_state=None, after_state={"enrollment_id": enrollment.id, "academic_class_id": enrollment.academic_class_id}, compensation_type="END_ENROLLMENT", eligibility="ELIGIBLE", roster_batch_id=batch.id)
             created += 1
         result = {"status": "committed", "preview_id": batch.id, "created": created, "students_created": created_students}
         batch.status = "committed"; batch.committed_by = username; batch.committed_at = datetime.now(); batch.commit_result = result
+        mark_committed(session, actor=username, selected_count=len(selected), action_count=action_count)
         db.commit(); return result
     except Exception:
         db.rollback(); raise
