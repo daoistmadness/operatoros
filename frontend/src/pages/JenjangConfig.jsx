@@ -245,7 +245,7 @@ function JenjangConfig() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px]">
-              <thead><tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500"><th className="py-3 pr-4 text-left">Jenjang siswa</th><th className="py-3 pr-4 text-left">Status</th><th className="py-3 pr-4 text-left">Cutoff</th><th className="py-3 pr-4 text-left">Terakhir diubah</th>{canEdit && <th className="py-3 text-right">Aksi</th>}</tr></thead>
+              <thead><tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500"><th className="py-3 pr-4 text-left">Jenjang</th><th className="py-3 pr-4 text-left">Status</th><th className="py-3 pr-4 text-left">Cutoff</th><th className="py-3 pr-4 text-left">Terakhir diubah</th>{canEdit && <th className="py-3 text-right">Aksi</th>}</tr></thead>
               <tbody>
                 {rows.map((row) => (
                   <React.Fragment key={row.jenjang}>

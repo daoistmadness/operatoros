@@ -103,7 +103,7 @@ def create_kkm_threshold(body: KkmThresholdRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=409, detail="KKM threshold conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during KKM threshold create: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The KKM threshold could not be saved. Retry or contact the system administrator.") from exc
 
 
 @router.put("/kkm-thresholds/{threshold_id}")
@@ -133,7 +133,7 @@ def update_kkm_threshold(threshold_id: int, body: KkmThresholdUpdateRequest, db:
         raise HTTPException(status_code=409, detail="KKM threshold conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during KKM threshold update: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The KKM threshold could not be updated. Retry or contact the system administrator.") from exc
 
 
 @router.delete("/kkm-thresholds/{threshold_id}")
@@ -147,7 +147,7 @@ def delete_kkm_threshold(threshold_id: int, db: Session = Depends(get_db)):
         return {"status": "success", "deleted": 1, "id": threshold_id}
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during KKM threshold delete: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The KKM threshold could not be deleted. Retry or contact the system administrator.") from exc
 
 
 @router.get("/kkm-effective")
@@ -201,7 +201,7 @@ def create_term_config(body: AcademicTermRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=409, detail="Term config already exists for this academic year and term") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during term config create: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The term configuration could not be saved. Retry or contact the system administrator.") from exc
 
 
 @router.put("/terms/{term_id}")
@@ -228,7 +228,7 @@ def update_term_config(term_id: int, body: AcademicTermUpdateRequest, db: Sessio
         raise HTTPException(status_code=409, detail="Term config conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during term config update: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The term configuration could not be updated. Retry or contact the system administrator.") from exc
 
 
 @router.delete("/terms/{term_id}")
@@ -242,7 +242,7 @@ def delete_term_config(term_id: int, db: Session = Depends(get_db)):
         return {"status": "success", "deleted": 1, "id": term_id}
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during term config delete: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The term configuration could not be deleted. Retry or contact the system administrator.") from exc
 
 
 @router.get("/terms/effective")

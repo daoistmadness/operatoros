@@ -757,7 +757,7 @@ def bulk_upsert_absence_reasons(
             db.rollback()
             if isinstance(e, HTTPException):
                 raise e
-            raise HTTPException(status_code=500, detail=f"Database error during bulk save: {str(e)}")
+            raise HTTPException(status_code=500, detail="The records could not be saved. Retry or contact the system administrator.")
 
     available_classes = {
         item["class_name"]: item
@@ -835,7 +835,7 @@ def bulk_upsert_absence_reasons(
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during catch-up save: {str(e)}")
+        raise HTTPException(status_code=500, detail="The records could not be saved. Retry or contact the system administrator.")
 
 
 @router.get("/absence-reasons/summary")
