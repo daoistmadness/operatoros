@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from services.report_builder import (
     create_branding,
@@ -142,7 +143,7 @@ def post_template(body: ReportTemplateBody, db: Session = Depends(get_db)):
         return create_template(db, body.model_dump())
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The report template could not be saved. Retry or contact the system administrator.") from exc
+        raise_internal_error("The report template could not be saved. Retry or contact the system administrator.", exc)
 
 
 @router.get("/templates/{template_id}")
@@ -157,7 +158,7 @@ def patch_template(template_id: int, body: ReportTemplateUpdateBody, db: Session
         return update_template(db, template_id, payload)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The report template could not be updated. Retry or contact the system administrator.") from exc
+        raise_internal_error("The report template could not be updated. Retry or contact the system administrator.", exc)
 
 
 @router.delete("/templates/{template_id}")
@@ -166,7 +167,7 @@ def remove_template(template_id: int, db: Session = Depends(get_db)):
         return delete_template(db, template_id)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The report template could not be deleted. Retry or contact the system administrator.") from exc
+        raise_internal_error("The report template could not be deleted. Retry or contact the system administrator.", exc)
 
 
 @router.get("/branding")
@@ -182,7 +183,7 @@ def post_branding(body: ReportBrandingBody, db: Session = Depends(get_db)):
         return create_branding(db, body.model_dump())
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The branding configuration could not be saved. Retry or contact the system administrator.") from exc
+        raise_internal_error("The branding configuration could not be saved. Retry or contact the system administrator.", exc)
 
 
 @router.patch("/branding/{branding_id}")
@@ -192,7 +193,7 @@ def patch_branding(branding_id: int, body: ReportBrandingUpdateBody, db: Session
         return update_branding(db, branding_id, payload)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The branding configuration could not be updated. Retry or contact the system administrator.") from exc
+        raise_internal_error("The branding configuration could not be updated. Retry or contact the system administrator.", exc)
 
 
 @router.post("/preview")

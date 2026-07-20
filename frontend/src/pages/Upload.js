@@ -30,10 +30,10 @@ export function classifyUploadError(err) {
   }
   if (status === 401) return "Your session has expired. Sign in again before importing.";
   if (status === 403) return "Your account does not have permission to import attendance data.";
-  if (status === 404) return "The attendance import endpoint was not found. Check the application routing configuration.";
-  if (status === 405) return "The attendance import route rejected the upload method. Check the application routing configuration.";
+  if (status === 404) return "The attendance import service was not found. Refresh the page or contact the system administrator.";
+  if (status === 405) return "The attendance import could not be accepted. Refresh the page or contact the system administrator.";
   if (status === 413) return "The workbook is larger than the server upload limit.";
-  if (status >= 500) return "The server could not process the workbook because of an internal error. Check the backend logs.";
+  if (status >= 500) return "The server could not process the workbook. Retry or contact the system administrator if the problem persists.";
   return "The backend could not be reached. Check that the OperatorOS server is running.";
 }
 

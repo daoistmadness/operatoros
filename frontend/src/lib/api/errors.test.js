@@ -29,4 +29,3 @@ describe("page API error classification", () => {
     expect(msg).not.toContain("console");
   });
 });
-
