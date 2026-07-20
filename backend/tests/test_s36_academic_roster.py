@@ -84,7 +84,7 @@ def test_preview_is_non_mutating_and_matches_approved_device_identity(roster_db)
     db, master, _year, _jenjang = roster_db
     protected = (db.query(Student).count(), db.query(StudentMaster).count(), db.query(Attendance).count(), db.query(StudentEnrollment).count())
     batch = create_roster_preview(db, workbook_bytes([roster_row("scanner-8101", "Roster Student")]), "official.xlsx", "Registrar", date(2026, 7, 1), "admin")
-    assert batch.summary["matched"] == 1
+    assert batch.summary["create_enrollment"] == 1
     assert batch.rows[0]["matched_student_master_id"] == master.id
     assert batch.rows[0]["match_rule"] == "approved_device_identity"
     assert protected == (db.query(Student).count(), db.query(StudentMaster).count(), db.query(Attendance).count(), db.query(StudentEnrollment).count())
@@ -103,8 +103,22 @@ def test_invalid_academic_mappings_are_blocked(roster_db, jenjang, class_name, c
 def test_name_without_birth_identity_is_not_matched(roster_db):
     db, _master, _year, _jenjang = roster_db
     batch = create_roster_preview(db, workbook_bytes([roster_row("unmapped", "Roster Student")]), "ambiguous.xlsx", "Registrar", date(2026, 7, 1), "admin")
-    assert batch.rows[0]["classification"] == "NEW_STUDENT"
+    assert batch.rows[0]["classification"] == "INVALID"
     assert batch.rows[0]["matched_student_master_id"] is None
+
+
+def test_new_student_roster_requires_preview_and_creates_canonical_layers(roster_db):
+    db, _master, _year, _jenjang = roster_db
+    row = roster_row("990001", "New Synthetic Roster")
+    row[4] = "0000990001"
+    row[5] = "3201000000990001"
+    batch = create_roster_preview(db, workbook_bytes([row]), "new-synthetic.xlsx", "Registrar", date(2026, 7, 1), "admin")
+    assert batch.rows[0]["classification"] == "CREATE_NEW_MASTER"
+    result = commit_roster_preview(db, batch.id, [1], ROSTER_CONFIRMATION, "admin")
+    assert result["students_created"] == 1
+    created = db.query(StudentMaster).filter_by(nisn="0000990001").one()
+    assert db.query(StudentDeviceIdentity).filter_by(student_master_id=created.id, is_active=True).one().device_identifier == "990001"
+    assert db.query(StudentEnrollment).filter_by(student_master_id=created.id).count() == 1
 
 
 def test_ambiguous_name_and_birth_date_is_blocked(roster_db):
@@ -118,14 +132,14 @@ def test_ambiguous_name_and_birth_date_is_blocked(roster_db):
     row = roster_row("unmapped", "Roster Student")
     row[6] = "2018-01-02"
     batch = create_roster_preview(db, workbook_bytes([row]), "ambiguous-birth.xlsx", "Registrar", date(2026, 7, 1), "admin")
-    assert batch.rows[0]["classification"] == "AMBIGUOUS"
+    assert batch.rows[0]["classification"] == "POSSIBLE_DUPLICATE"
 
 
 def test_duplicate_enrollment_in_file_is_blocked(roster_db):
     db, master, _year, _jenjang = roster_db
     rows = [roster_row("scanner-8101", "Roster Student"), roster_row("scanner-8101", "Roster Student")]
     batch = create_roster_preview(db, workbook_bytes(rows), "duplicate.xlsx", "Registrar", date(2026, 7, 1), "admin")
-    assert [row["classification"] for row in batch.rows] == ["MATCHED", "INVALID"]
+    assert [row["classification"] for row in batch.rows] == ["CREATE_ENROLLMENT", "INVALID"]
 
 
 def test_commit_is_atomic_idempotent_and_preserves_protected_data(roster_db):
@@ -135,7 +149,7 @@ def test_commit_is_atomic_idempotent_and_preserves_protected_data(roster_db):
     batch = create_roster_preview(db, workbook_bytes([roster_row("scanner-8101", "Roster Student")]), "commit.xlsx", "Registrar", date(2026, 7, 1), "admin")
     first = commit_roster_preview(db, batch.id, [1], ROSTER_CONFIRMATION, "admin")
     second = commit_roster_preview(db, batch.id, [1], ROSTER_CONFIRMATION, "admin")
-    assert first == second == {"status": "committed", "preview_id": batch.id, "created": 1}
+    assert first == second == {"status": "committed", "preview_id": batch.id, "created": 1, "students_created": 0}
     assert db.query(StudentEnrollment).count() == 1
     assert db.query(Attendance).count() == attendance_before
     assert [(row.id, row.full_name, row.updated_at) for row in db.query(StudentMaster).all()] == masters_before
