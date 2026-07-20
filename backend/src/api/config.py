@@ -15,6 +15,8 @@ from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.academic_master import AcademicClass
 from models.academic_year import AcademicYear
+from models.user import User
+from security.dependencies import get_current_user, require_role
 from services.attendance_metrics import derive_jenjang_from_class_name
 
 router = APIRouter()
@@ -444,7 +446,10 @@ def _upsert_student_absence_reason_rows(
 
 
 @router.get("/jenjang")
-def get_jenjang_configs(db: Session = Depends(get_db)):
+def get_jenjang_configs(
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
     rows = db.query(JenjangConfig).order_by(JenjangConfig.jenjang.asc()).all()
     available_jenjangs = _get_available_jenjangs(db)
     configured = [
@@ -465,14 +470,22 @@ def get_jenjang_configs(db: Session = Depends(get_db)):
 
 
 @router.get("/jenjang/available")
-def get_available_jenjangs(db: Session = Depends(get_db)):
+def get_available_jenjangs(
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
     return {
         "jenjang_list": _get_available_jenjangs(db)
     }
 
 
 @router.put("/jenjang/{jenjang}")
-def upsert_jenjang_config(jenjang: str, body: JenjangCutoffBody, db: Session = Depends(get_db)):
+def upsert_jenjang_config(
+    jenjang: str,
+    body: JenjangCutoffBody,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
         raise HTTPException(status_code=400, detail="jenjang must be a non-empty string")
@@ -502,7 +515,11 @@ def upsert_jenjang_config(jenjang: str, body: JenjangCutoffBody, db: Session = D
 
 
 @router.delete("/jenjang/{jenjang}")
-def delete_jenjang_config(jenjang: str, db: Session = Depends(get_db)):
+def delete_jenjang_config(
+    jenjang: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     row = db.query(JenjangConfig).filter(JenjangConfig.jenjang == jenjang_key).first()
     if row is None:
