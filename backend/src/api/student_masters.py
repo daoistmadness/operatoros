@@ -154,7 +154,7 @@ async def preview_student_update_workbook(
     contents = await file.read()
     if not contents or len(contents) > 25 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Student update file must be between 1 byte and 25 MB")
-    batch = create_update_preview(db, contents, file.filename or "student-update.xlsx", user.username)
+    batch = create_update_preview(db, contents, file.filename or "student-update.xlsx", user.username, file.content_type)
     return serialize_update_batch(db, batch)
 
 

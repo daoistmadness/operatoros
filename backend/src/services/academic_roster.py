@@ -89,8 +89,8 @@ def _match_master(db: Session, payload: dict) -> tuple[StudentMaster | None, str
     return None, None
 
 
-def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: str, received: date, username: str):
-    filename = validate_xlsx_upload(file_bytes, filename)
+def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: str, received: date, username: str, content_type: str | None = None):
+    filename = validate_xlsx_upload(file_bytes, filename, content_type)
     workbook = pd.ExcelFile(BytesIO(file_bytes), engine="openpyxl")
     frames = []
     for sheet in workbook.sheet_names:

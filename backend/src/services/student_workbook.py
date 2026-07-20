@@ -197,8 +197,8 @@ def serialize_update_batch(db: Session, batch: StudentImportBatch) -> dict:
     }
 
 
-def create_update_preview(db: Session, file_bytes: bytes, filename: str, username: str) -> StudentImportBatch:
-    filename = validate_xlsx_upload(file_bytes, filename)
+def create_update_preview(db: Session, file_bytes: bytes, filename: str, username: str, content_type: str | None = None) -> StudentImportBatch:
+    filename = validate_xlsx_upload(file_bytes, filename, content_type)
     checksum = hashlib.sha256(file_bytes).hexdigest()
     try:
         workbook = load_workbook(BytesIO(file_bytes), read_only=True, data_only=True, keep_links=False)
