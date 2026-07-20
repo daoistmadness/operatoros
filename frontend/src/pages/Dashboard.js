@@ -36,6 +36,9 @@ import { NativeSelect } from "../components/ui/native-select";
 import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableHead, DataTableHeader, DataTableRow } from "../components/common/data-table";
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
+import { SetupOverview } from "../components/onboarding/SetupOverview";
+import { useAuth } from "../context/AuthContext.tsx";
+import { useReadinessQuery } from "../hooks/useReadinessQuery";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
@@ -69,6 +72,8 @@ function formatMonthYearLabel(month, year) {
 const snappySpring = { type: "spring", stiffness: 400, damping: 30 };
 
 export default function Dashboard() {
+  const { user, can } = useAuth();
+  const readiness = useReadinessQuery(user?.id ?? null);
   const today = useMemo(() => new Date(), []);
   const [loading, setLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState("");
@@ -153,6 +158,7 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
       <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />
+      <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
         <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
@@ -179,13 +185,13 @@ export default function Dashboard() {
               <p className="text-sm text-amber-700/80 mt-1">This may affect the absolute accuracy of class-level analytics.</p>
             </div>
           </div>
-          <Button
+          {can("manage_enrollment") ? <Button
             variant="outline"
             onClick={() => document.getElementById('pending-categorization')?.scrollIntoView({ behavior: 'smooth' })}
             className="whitespace-nowrap shrink-0 border-amber-300 text-amber-700"
           >
             Fix Mapping
-          </Button>
+          </Button> : <p className="text-sm font-bold text-amber-800">An administrator can update student enrollment.</p>}
         </motion.div>
       )}
 
@@ -195,7 +201,7 @@ export default function Dashboard() {
           <span className="flex items-center justify-center w-8 h-8 rounded-[9999px] bg-emerald-100 text-emerald-600">
             <Check size={18} strokeWidth={3} />
           </span>
-          <div className="font-bold text-slate-800 uppercase tracking-wide text-sm">Attendance Health: GOOD</div>
+          <div className="font-bold text-slate-800 uppercase tracking-wide text-sm">Attendance Health: {monthlyData.length > 0 ? "GOOD" : "AWAITING DATA"}</div>
         </div>
         <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
         <div className="flex items-center gap-2">
@@ -329,9 +335,9 @@ export default function Dashboard() {
           </div>
           
           <div className="mt-8 z-10 relative">
-            <Link to="/config/absence-reasons" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
+            {user?.role === "admin" ? <Link to="/config/absence-reasons" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
               Complete Review
-            </Link>
+            </Link> : <p className="text-sm font-semibold text-slate-300">An administrator manages absence-reason configuration.</p>}
           </div>
         </motion.div>
       </div>
