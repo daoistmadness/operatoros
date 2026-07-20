@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from core.database import get_db
 from models.user import User
-from security.dependencies import get_current_user, require_role
+from security.dependencies import get_current_user, require_capability
 from services.enrollment_population import (
     commit_enrollment_preview,
     create_enrollment_preview,
@@ -84,7 +84,11 @@ class GradeMasterProposal(BaseModel):
 
 
 @router.get("/student/{student_master_id}")
-def list_student_enrollment_history(student_master_id: str, db: Session = Depends(get_db)):
+def list_student_enrollment_history(
+    student_master_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
     if db.get(StudentMaster, student_master_id) is None:
         raise HTTPException(status_code=404, detail="Student master not found")
     enrollments = db.query(StudentEnrollment).filter_by(student_master_id=student_master_id).order_by(StudentEnrollment.academic_year_id.desc(), StudentEnrollment.id.desc()).all()
@@ -116,7 +120,7 @@ def create_student_enrollment(
     student_master_id: str,
     body: EnrollmentInput,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("manage_enrollment")),
 ):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
@@ -130,7 +134,7 @@ def transfer_student_enrollment(
     enrollment_id: int,
     body: EnrollmentTransferRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("transfer_enrollment")),
 ):
     enrollment = db.get(StudentEnrollment, enrollment_id)
     if enrollment is None:
@@ -144,7 +148,7 @@ def end_student_enrollment(
     enrollment_id: int,
     body: EnrollmentEndRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("end_enrollment")),
 ):
     enrollment = db.get(StudentEnrollment, enrollment_id)
     if enrollment is None:
@@ -166,7 +170,7 @@ class AcademicMasterPreviewRequest(BaseModel):
 def preview_academic_masters(
     body: AcademicMasterPreviewRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("import_student_roster")),
 ):
     return create_academic_master_preview(
         db, body.model_dump(), body.source_owner.strip(), user.username
@@ -179,7 +183,7 @@ async def preview_academic_roster(
     source_owner: str = Form(..., min_length=2),
     date_received: date = Form(...),
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("import_student_roster")),
 ):
     if not (file.filename or "").lower().endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="Academic roster must be an .xlsx workbook")
@@ -200,7 +204,7 @@ async def preview_academic_roster(
 
 @router.get("/roster-template")
 def download_academic_roster_template(
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("import_student_roster")),
 ):
     return Response(
         content=roster_template(),
@@ -213,7 +217,7 @@ def download_academic_roster_template(
 def commit_academic_roster(
     body: AcademicRosterCommitRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("commit_student_roster")),
 ):
     return commit_roster_preview(
         db, body.preview_id, body.selected_row_ids, body.confirmation, user.username,
@@ -224,7 +228,7 @@ def commit_academic_roster(
 @router.post("/mapping-preview")
 def preview_academic_mappings(
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("import_student_roster")),
 ):
     """Return reviewed academic mappings without mutating students or enrollments."""
     return build_academic_mapping_preview(db)
@@ -234,7 +238,7 @@ def preview_academic_mappings(
 def preview_enrollment_population(
     body: EnrollmentPopulationPreviewRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("import_student_roster")),
 ):
     batch = create_enrollment_preview(
         db, body.academic_year_id, body.effective_start_date,
@@ -252,7 +256,7 @@ def preview_enrollment_population(
 def commit_enrollment_population(
     body: EnrollmentPopulationCommitRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("commit_student_roster")),
 ):
     return commit_enrollment_preview(
         db, body.preview_id, body.selected_legacy_student_ids,

@@ -3,7 +3,7 @@ from io import BytesIO
 
 import pytest
 from fastapi import HTTPException
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -26,8 +26,10 @@ from schemas.student_management import (
 from services.student_management import (
     DEVICE_REASSIGN_CONFIRMATION, DEVICE_REPLACE_CONFIRMATION, DEVICE_RETIRE_CONFIRMATION,
     ENROLLMENT_TRANSFER_CONFIRMATION, add_or_replace_device, create_student,
-    reassign_device, record_version, retire_device, transfer_enrollment, update_student,
+    reassign_device, record_version, retire_device, serialize_student_detail,
+    transfer_enrollment, update_student,
 )
+from services.spreadsheet_security import validate_xlsx_upload
 from services.student_workbook import (
     UPDATE_CONFIRMATION, commit_update_preview, create_update_preview,
     export_student_workbook, result_workbook, serialize_update_batch,
@@ -188,3 +190,46 @@ def test_guarded_device_reassignment_preserves_both_audit_sides(student_db):
     assert db.query(StudentDeviceIdentity).filter_by(student_master_id=source.id, is_active=True).count() == 0
     assert db.query(StudentMasterChangeHistory).filter_by(student_master_id=source.id, action="device_identity_reassigned_out").count() == 1
     assert db.query(StudentMasterChangeHistory).filter_by(student_master_id=target.id, action="device_identity_reassigned_in").count() == 1
+
+
+def test_sensitive_profile_view_is_masked_and_identifier_change_requires_confirmation(student_db):
+    db, _year, _first, _second = student_db
+    student = create_student(db, create_payload(), "admin")
+    masked = serialize_student_detail(db, student, include_sensitive=False)
+    assert masked["identity"]["nik"] == "************0901"
+    assert masked["identity"]["nisn"] == "******0901"
+    assert masked["contact"]["address"] != "Synthetic Street"
+    assert masked["guardians"][0]["phone"] != "0800000000"
+    assert masked["device_identities"][0]["device_identifier"] != "000901"
+
+    identity = {field: getattr(student, field) for field in (
+        "full_name", "preferred_name", "nipd", "nisn", "nik", "birth_place",
+        "birth_date", "gender", "religion", "citizenship", "blood_type",
+        "student_status", "admission_date", "admission_type", "previous_school",
+    )}
+    identity["nik"] = "3201000000000999"
+    body = StudentProfilePatch.model_validate({
+        "record_version": record_version(student),
+        "identity": identity,
+        "reason": "Correct synthetic identifier",
+    })
+    with pytest.raises(HTTPException) as missing_confirmation:
+        update_student(db, student, body, "admin")
+    assert missing_confirmation.value.status_code == 400
+
+    confirmed = body.model_copy(update={"sensitive_confirmation": "CHANGE_SENSITIVE_STUDENT_IDENTIFIERS"})
+    update_student(db, student, confirmed, "admin")
+    audit = db.query(StudentMasterChangeHistory).filter_by(student_master_id=student.id, field_name="nik").one()
+    assert audit.old_value == "************0901"
+    assert audit.new_value == "************0999"
+
+
+def test_xlsx_security_rejects_malformed_and_formula_workbooks():
+    with pytest.raises(HTTPException):
+        validate_xlsx_upload(b"not-a-zip", "../../unsafe.xlsx")
+    workbook = Workbook()
+    workbook.active["A1"] = "=1+1"
+    output = BytesIO(); workbook.save(output)
+    with pytest.raises(HTTPException) as formula:
+        validate_xlsx_upload(output.getvalue(), "formula.xlsx")
+    assert formula.value.detail == "Formula cells are not accepted"

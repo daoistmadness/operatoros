@@ -21,7 +21,8 @@ from schemas.student_management import (
     DeviceReassignRequest, DeviceReplaceRequest, DeviceRetireRequest, ImportCommitRequest,
     StudentCreateRequest, StudentProfilePatch,
 )
-from security.dependencies import get_current_user, require_role
+from security.capabilities import capabilities_for_role
+from security.dependencies import get_current_user, require_capability
 from services.student_normalization import mask_identifier
 from services.student_linking import (
     build_legacy_link_rows,
@@ -79,6 +80,7 @@ def list_student_masters(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
 ):
     query = db.query(StudentMaster)
     if search and search.strip():
@@ -112,6 +114,7 @@ def list_managed_students(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
 ):
     return list_students(
         db, search=search, academic_year_id=academic_year_id, jenjang_id=jenjang_id,
@@ -121,14 +124,17 @@ def list_managed_students(
 
 
 @router.get("/management/quality")
-def managed_student_quality(db: Session = Depends(get_db)):
+def managed_student_quality(
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
     return quality_summary(db)
 
 
 @router.get("/management/export-template")
 def export_managed_students(
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("export_student_data")),
 ):
     return Response(
         content=export_student_workbook(db),
@@ -141,7 +147,7 @@ def export_managed_students(
 async def preview_student_update_workbook(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("import_student_updates")),
 ):
     if not (file.filename or "").lower().endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="Student update file must be XLSX")
@@ -157,7 +163,7 @@ def commit_student_update_workbook(
     batch_id: str,
     body: ImportCommitRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("commit_student_updates")),
 ):
     return commit_update_preview(
         db, batch_id, body.selected_row_ids, body.confirmation,
@@ -170,7 +176,7 @@ def student_update_import_history(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=100),
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("view_student_audit")),
 ):
     query = db.query(StudentImportBatch).filter(StudentImportBatch.source_sheet == "student_update")
     total = query.count()
@@ -182,7 +188,7 @@ def student_update_import_history(
 def student_update_import_detail(
     batch_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("view_student_audit")),
 ):
     batch = db.get(StudentImportBatch, batch_id)
     if batch is None or batch.source_sheet != "student_update":
@@ -194,7 +200,7 @@ def student_update_import_detail(
 def student_update_result_workbook(
     batch_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("view_student_audit")),
 ):
     batch = db.get(StudentImportBatch, batch_id)
     if batch is None or batch.source_sheet != "student_update":
@@ -210,13 +216,16 @@ def student_update_result_workbook(
 def create_canonical_student(
     body: StudentCreateRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("create_student")),
 ):
     return serialize_student_detail(db, create_student(db, body, user.username))
 
 
 @router.get("/data-quality-summary")
-def student_master_data_quality_summary(db: Session = Depends(get_db)):
+def student_master_data_quality_summary(
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
     total = db.query(StudentMaster).count()
     pending_review = db.query(StudentMaster).filter(StudentMaster.student_status == "pending_review").count()
     missing_nisn = db.query(StudentMaster).filter(StudentMaster.nisn.is_(None)).count()
@@ -283,7 +292,7 @@ def student_master_data_quality_summary(db: Session = Depends(get_db)):
 @router.post("/legacy-link/preview")
 def preview_legacy_student_links(
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("import_student_roster")),
 ):
     batch = create_legacy_preview(db, user.username)
     return {
@@ -298,7 +307,7 @@ def preview_legacy_student_links(
 def commit_legacy_student_links(
     body: LegacyLinkCommitRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("commit_student_roster")),
 ):
     return commit_legacy_preview(
         db, body.preview_id, body.selected_legacy_student_ids, body.confirmation, user.username
@@ -310,7 +319,7 @@ def resolve_legacy_student_link(
     legacy_student_id: int,
     body: LegacyLinkResolutionRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("resolve_student_duplicates")),
 ):
     return resolve_legacy_student(
         db, legacy_student_id, body.action, body.student_master_id,
@@ -319,7 +328,11 @@ def resolve_legacy_student_link(
 
 
 @router.get("/{student_master_id}", response_model=StudentMasterSummary)
-def get_student_master(student_master_id: str, db: Session = Depends(get_db)):
+def get_student_master(
+    student_master_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student master not found")
@@ -330,12 +343,15 @@ def get_student_master(student_master_id: str, db: Session = Depends(get_db)):
 def get_student_profile(
     student_master_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("view_student")),
 ):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student master not found")
-    return serialize_student_detail(db, student)
+    return serialize_student_detail(
+        db, student,
+        include_sensitive="view_sensitive_student_fields" in capabilities_for_role(user.role),
+    )
 
 
 @router.patch("/{student_master_id}/profile")
@@ -343,11 +359,17 @@ def patch_student_profile(
     student_master_id: str,
     body: StudentProfilePatch,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("edit_student")),
 ):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student master not found")
+    sensitive_changed = any(
+        getattr(student, field) != getattr(body.identity, field)
+        for field in ("nipd", "nisn", "nik")
+    )
+    if sensitive_changed and "edit_sensitive_identifiers" not in capabilities_for_role(user.role):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
     return serialize_student_detail(db, update_student(db, student, body, user.username))
 
 
@@ -355,13 +377,14 @@ def patch_student_profile(
 def get_student_change_history(
     student_master_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("view_student_audit")),
 ):
     if db.get(StudentMaster, student_master_id) is None:
         raise HTTPException(status_code=404, detail="Student master not found")
     from models.student_master import StudentMasterChangeHistory
     rows = db.query(StudentMasterChangeHistory).filter_by(student_master_id=student_master_id).order_by(StudentMasterChangeHistory.changed_at.desc(), StudentMasterChangeHistory.id.desc()).all()
-    return [{"id": row.id, "action": row.action, "field_name": row.field_name, "old_value": row.old_value, "new_value": row.new_value, "source": row.source, "changed_by": row.changed_by, "changed_at": row.changed_at, "import_batch_id": row.import_batch_id} for row in rows]
+    sensitive_fields = {"nipd", "nisn", "nik", "device_identifier", "address", "student_phone", "student_email", "phone", "email"}
+    return [{"id": row.id, "action": row.action, "field_name": row.field_name, "old_value": mask_identifier(row.old_value) if row.field_name in sensitive_fields else row.old_value, "new_value": mask_identifier(row.new_value) if row.field_name in sensitive_fields else row.new_value, "source": row.source, "changed_by": row.changed_by, "changed_at": row.changed_at, "import_batch_id": row.import_batch_id} for row in rows]
 
 
 @router.post("/{student_master_id}/device-identities", status_code=201)
@@ -369,7 +392,7 @@ def replace_student_device_identity(
     student_master_id: str,
     body: DeviceReplaceRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("manage_device_identity")),
 ):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
@@ -383,7 +406,7 @@ def guarded_reassign_student_device_identity(
     student_master_id: str,
     body: DeviceReassignRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("reassign_device_identity")),
 ):
     student = db.get(StudentMaster, student_master_id)
     if student is None:
@@ -398,7 +421,7 @@ def retire_student_device_identity(
     identity_id: int,
     body: DeviceRetireRequest,
     db: Session = Depends(get_db),
-    user: User = Depends(require_role("admin")),
+    user: User = Depends(require_capability("manage_device_identity")),
 ):
     student = db.get(StudentMaster, student_master_id)
     mapping = db.get(StudentDeviceIdentity, identity_id)
@@ -412,7 +435,7 @@ def retire_student_device_identity(
 def list_student_device_identities(
     student_master_id: str,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_role("admin")),
+    _user: User = Depends(require_capability("manage_device_identity")),
 ):
     if db.get(StudentMaster, student_master_id) is None:
         raise HTTPException(status_code=404, detail="Student master not found")

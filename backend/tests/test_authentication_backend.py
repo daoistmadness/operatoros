@@ -202,7 +202,10 @@ def test_login_cookie_me_logout_and_no_sensitive_response(auth_api):
         "/api/auth/login", json={"username": "admin", "password": "correct horse battery"}
     )
     assert response.status_code == 200
-    assert response.json() == {"id": 1, "username": "admin", "role": "admin"}
+    payload = response.json()
+    assert payload["id"] == 1 and payload["username"] == "admin" and payload["role"] == "admin"
+    assert "view_student" in payload["capabilities"]
+    assert "edit_sensitive_identifiers" in payload["capabilities"]
     assert "password" not in response.text and "token" not in response.text
     cookie = response.headers["set-cookie"].lower()
     assert "astyx_session=" in cookie and "httponly" in cookie
