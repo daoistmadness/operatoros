@@ -19,9 +19,11 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: logout,
     onSettled: async () => {
-      await client.cancelQueries({ queryKey: queryKeys.auth.all });
+      await client.cancelQueries();
       client.setQueryData(queryKeys.auth.me, null);
-      await client.invalidateQueries({ queryKey: queryKeys.auth.all, refetchType: "none" });
+      client.removeQueries({
+        predicate: (query) => query.queryKey[0] !== queryKeys.auth.all[0],
+      });
     },
   });
 }
