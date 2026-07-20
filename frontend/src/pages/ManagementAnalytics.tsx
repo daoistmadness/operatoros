@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   BarChart3,
@@ -7,9 +8,11 @@ import {
   Clock,
   ClipboardCheck,
   Download,
+  Filter,
   GraduationCap,
   Info,
   RefreshCw,
+  RotateCcw,
   Settings,
   TrendingUp,
   UserX,
@@ -28,6 +31,15 @@ import {
   Legend,
 } from "chart.js";
 
+import { useAuth } from "../context/AuthContext";
+import {
+  EmptyState,
+  ErrorState,
+  FilteredEmptyState,
+  LoadingState,
+  PermissionRestrictedState,
+  SetupRequiredState,
+} from "../components/common/state-message";
 import {
   fetchAnalyticsFilters,
   fetchHistoricalTrends,
@@ -116,6 +128,9 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function ManagementAnalytics() {
+  const navigate = useNavigate();
+  const { user, can } = useAuth();
+
   const [filterOptions, setFilterOptions] = useState<AnalyticsFiltersResponse | null>(null);
   const [termOptions, setTermOptions] = useState<AcademicTermConfig[]>([]);
   const [academicYearId, setAcademicYearId] = useState<number | null>(null);
@@ -177,6 +192,11 @@ export default function ManagementAnalytics() {
   const [interventionError, setInterventionError] = useState<string>("");
   const [isSavingIntervention, setIsSavingIntervention] = useState(false);
 
+  // Stale request tracking refs
+  const summaryRequestIdRef = useRef(0);
+  const trendRequestIdRef = useRef(0);
+  const impactRequestIdRef = useRef(0);
+
   const currentParams = useMemo<FetchSummaryParams | null>(() => {
     if (academicYearId === null) {
       return null;
@@ -189,6 +209,30 @@ export default function ManagementAnalytics() {
       subject_id: subjectId,
     };
   }, [academicYearId, jenjangId, className, term, subjectId]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      jenjangId !== null ||
+        className !== null ||
+        subjectId !== null ||
+        term !== null ||
+        impactRiskFilter !== "" ||
+        impactStatusFilter !== ""
+    );
+  }, [jenjangId, className, subjectId, term, impactRiskFilter, impactStatusFilter]);
+
+  const handleResetFilters = () => {
+    setJenjangId(null);
+    setClassName(null);
+    setSubjectId(null);
+    setTerm(null);
+    setImpactRiskFilter("");
+    setImpactStatusFilter("");
+    if (filterOptions?.academic_years.length) {
+      const defaultYear = filterOptions.academic_years.find((y) => y.is_default);
+      setAcademicYearId(defaultYear ? defaultYear.id : filterOptions.academic_years[0].id);
+    }
+  };
 
   // Load initial filter parameters
   useEffect(() => {
@@ -203,6 +247,8 @@ export default function ManagementAnalytics() {
           setAcademicYearId(defaultYear.id);
         } else if (filters.academic_years.length > 0) {
           setAcademicYearId(filters.academic_years[0].id);
+        } else {
+          setIsLoading(false);
         }
       } catch (err) {
         setError(getErrorMessage(err));
@@ -235,12 +281,15 @@ export default function ManagementAnalytics() {
         const terms = await fetchEffectiveTerms(activeAcademicYearId);
         setTermOptions(terms);
 
-        // Safe cleanup: reset selected class/subject if no longer valid
+        // Safe cleanup: reset selected class/subject/term if no longer valid
         if (className && !updated.class_names.includes(className)) {
           setClassName(null);
         }
         if (subjectId && !updated.subjects.some((s) => s.id === subjectId)) {
           setSubjectId(null);
+        }
+        if (term && terms.length > 0 && !terms.some((t) => t.value === term)) {
+          setTerm(null);
         }
       } catch (err) {
         console.error("Failed to update dependent filters", err);
@@ -264,19 +313,26 @@ export default function ManagementAnalytics() {
     updateDependentOptions();
   }, [academicYearId, jenjangId]);
 
-  // Load summary data
+  // Load summary data with stale request protection
   const loadSummaryData = async () => {
     if (currentParams === null) return;
+    const reqId = ++summaryRequestIdRef.current;
     setIsLoading(true);
     setError("");
 
     try {
       const summary = await fetchManagementSummary(currentParams);
-      setSummaryData(summary);
+      if (reqId === summaryRequestIdRef.current) {
+        setSummaryData(summary);
+      }
     } catch (err) {
-      setError(getErrorMessage(err));
+      if (reqId === summaryRequestIdRef.current) {
+        setError(getErrorMessage(err));
+      }
     } finally {
-      setIsLoading(false);
+      if (reqId === summaryRequestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -299,6 +355,7 @@ export default function ManagementAnalytics() {
 
   const loadTrendData = async () => {
     if (currentParams === null) return;
+    const reqId = ++trendRequestIdRef.current;
     setIsTrendLoading(true);
     setTrendError("");
     try {
@@ -309,11 +366,17 @@ export default function ManagementAnalytics() {
         forecast_method: forecastMethod,
       };
       const trends = await fetchHistoricalTrends(params);
-      setTrendData(trends);
+      if (reqId === trendRequestIdRef.current) {
+        setTrendData(trends);
+      }
     } catch (err) {
-      setTrendError(getErrorMessage(err));
+      if (reqId === trendRequestIdRef.current) {
+        setTrendError(getErrorMessage(err));
+      }
     } finally {
-      setIsTrendLoading(false);
+      if (reqId === trendRequestIdRef.current) {
+        setIsTrendLoading(false);
+      }
     }
   };
 
@@ -323,6 +386,7 @@ export default function ManagementAnalytics() {
 
   const loadImpactData = async () => {
     if (currentParams === null) return;
+    const reqId = ++impactRequestIdRef.current;
     setIsImpactLoading(true);
     setImpactError("");
     try {
@@ -331,11 +395,17 @@ export default function ManagementAnalytics() {
         status: impactStatusFilter || null,
         risk_level: impactRiskFilter || null,
       });
-      setImpactData(impact);
+      if (reqId === impactRequestIdRef.current) {
+        setImpactData(impact);
+      }
     } catch (err) {
-      setImpactError(getErrorMessage(err));
+      if (reqId === impactRequestIdRef.current) {
+        setImpactError(getErrorMessage(err));
+      }
     } finally {
-      setIsImpactLoading(false);
+      if (reqId === impactRequestIdRef.current) {
+        setIsImpactLoading(false);
+      }
     }
   };
 
@@ -776,10 +846,22 @@ export default function ManagementAnalytics() {
 
       {/* Filter Bar */}
       <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-4">
-        <h2 className="text-sm font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-          <Info className="h-4 w-4" />
-          Filter Analisis
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <Info className="h-4 w-4" />
+            Filter Analisis
+          </h2>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset Filter
+            </button>
+          )}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
           {/* Academic Year */}
           <div className="flex flex-col gap-1.5">
@@ -874,9 +956,35 @@ export default function ManagementAnalytics() {
         </div>
       </div>
 
-      {/* Loading Skeleton */}
-      {isLoading ? (
-        <div className="space-y-6">
+      {/* Deterministic State Container Rendering */}
+      {error.toLowerCase().includes("403") || error.toLowerCase().includes("permission") || error.toLowerCase().includes("akses ditolak") ? (
+        <PermissionRestrictedState
+          title="Akses Terbatas"
+          description="Akun Anda tidak memiliki izin untuk mengakses laporan Analisis Manajemen."
+        />
+      ) : (filterOptions && filterOptions.academic_years.length === 0) || (academicYearId === null && !isLoading) ? (
+        <SetupRequiredState
+          title="Konfigurasi Akademik Diperlukan"
+          description="Tahun Ajaran aktif belum dikonfigurasi dalam sistem. Konfigurasi tahun ajaran aktif terlebih dahulu untuk mengaktifkan analisis manajemen."
+          action={
+            can("manage_student_permissions") || can("create_student") ? (
+              <button
+                type="button"
+                onClick={() => navigate("/academic-management")}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-sm hover:bg-amber-700 transition"
+              >
+                Buka Pengaturan Akademik
+              </button>
+            ) : (
+              <p className="text-xs text-amber-800 font-semibold">
+                Hubungi Administrator untuk mengonfigurasi tahun ajaran aktif.
+              </p>
+            )
+          }
+        />
+      ) : isLoading && !summaryData ? (
+        <div className="space-y-6" role="status" aria-live="polite">
+          <span className="sr-only">Memuat data analisis...</span>
           <div className="grid gap-4 md:grid-cols-4">
             {[0, 1, 2, 3].map((val) => (
               <div key={val} className="h-28 animate-pulse rounded-3xl bg-slate-200/50" />
@@ -888,15 +996,55 @@ export default function ManagementAnalytics() {
           </div>
         </div>
       ) : error ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-800">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0" />
-            <div>
-              <h3 className="text-lg font-black">Gagal memuat visualisasi analisis</h3>
-              <p className="mt-1 text-sm font-semibold">{error}</p>
-            </div>
-          </div>
-        </div>
+        <ErrorState
+          title="Gagal Memuat Analisis Manajemen"
+          description={error}
+          action={
+            <button
+              type="button"
+              onClick={loadSummaryData}
+              className="px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-sm hover:bg-rose-700 transition"
+            >
+              Coba Lagi
+            </button>
+          }
+        />
+      ) : summaryData && summaryData.total_students === 0 ? (
+        <EmptyState
+          title="Analisis Belum Tersedia"
+          description="Sistem belum memiliki data siswa terdaftar untuk dianalisis. Lakukan import data siswa untuk menampilkan laporan."
+          action={
+            can("import_student_roster") ? (
+              <button
+                type="button"
+                onClick={() => navigate("/upload")}
+                className="px-4 py-2.5 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand/90 transition"
+              >
+                Import Data Siswa
+              </button>
+            ) : null
+          }
+        />
+      ) : summaryData &&
+        summaryData.total_students > 0 &&
+        summaryData.grade_by_class.length === 0 &&
+        summaryData.grade_by_subject.length === 0 &&
+        (summaryData.below_kkm_alerts?.length ?? 0) === 0 &&
+        summaryData.grade_by_student.length === 0 &&
+        summaryData.tardiness_summary.total_late_records === 0 ? (
+        <FilteredEmptyState
+          title="Tidak Ada Data Sesuai Filter"
+          description="Filter yang Anda pilih tidak menghasilkan data. Coba ubah atau sesuaikan pilihan filter."
+          action={
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition"
+            >
+              Reset Filter
+            </button>
+          }
+        />
       ) : summaryData ? (
         <div className="space-y-8 animate-[fadeIn_0.2s_ease-out]">
           {/* Warnings Banner */}
