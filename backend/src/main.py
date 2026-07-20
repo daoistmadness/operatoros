@@ -20,6 +20,8 @@ from api.grades import router as grades_router
 from api.students import router as students_router
 from api.student_masters import router as student_masters_router
 from api.student_enrollments import router as student_enrollments_router
+from api.student_import_sessions import router as student_import_sessions_router
+from api.student_exports import router as student_exports_router
 from api.uploads import router as uploads_router
 from api.system import router as system_router
 from api.review import router as review_router
@@ -73,6 +75,8 @@ app.include_router(config_router, prefix="/api/config", tags=["config"])
 app.include_router(students_router, prefix="/api/students", tags=["students"])
 app.include_router(student_masters_router, prefix="/api/student-masters", tags=["student-masters"])
 app.include_router(student_enrollments_router, prefix="/api/student-enrollments", tags=["student-enrollments"])
+app.include_router(student_import_sessions_router, prefix="", tags=["student-import-sessions"])
+app.include_router(student_exports_router, prefix="", tags=["student-exports"])
 app.include_router(uploads_router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(system_router, prefix="/api/system", tags=["system"])
 app.include_router(review_router, prefix="/api/review", tags=["review"])

@@ -1,17 +1,21 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.absence_reason import AbsenceReason
 from models.student import Student
 from models.attendance import Attendance
+from models.user import User
 from core.database import get_db
+from security.dependencies import require_capability
+from services.operations_audit_service import query_operations_audit_events
 from services.attendance_metrics import (
     calculate_heb,
     derive_jenjang_from_class_name,
     month_year_filters,
 )
 import math
+from datetime import datetime
 
 router = APIRouter()
 
@@ -416,4 +420,45 @@ def create_student(body: CreateStudentBody, db: Session = Depends(get_db)):
         "jenjang": student.jenjang,
         "class_name": student.class_name,
     }
+
+
+@router.get("/operations")
+def get_operations_audit_logs(
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
+    actor: str | None = Query(default=None),
+    operation: str | None = Query(default=None),
+    entity_type: str | None = Query(default=None),
+    risk_level: str | None = Query(default=None),
+    success: bool | None = Query(default=None),
+    source: str | None = Query(default=None),
+    import_session_id: str | None = Query(default=None),
+    correlation_id: str | None = Query(default=None),
+    rollback_activity: bool = Query(default=False),
+    high_risk_only: bool = Query(default=False),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    dt_start = datetime.fromisoformat(start_date) if start_date else None
+    dt_end = datetime.fromisoformat(end_date) if end_date else None
+    return query_operations_audit_events(
+        db,
+        start_date=dt_start,
+        end_date=dt_end,
+        actor=actor,
+        operation=operation,
+        entity_type=entity_type,
+        risk_level=risk_level,
+        success=success,
+        source=source,
+        import_session_id=import_session_id,
+        correlation_id=correlation_id,
+        rollback_activity_only=rollback_activity,
+        high_risk_only=high_risk_only,
+        page=page,
+        page_size=page_size,
+    )
+
 

@@ -17,11 +17,13 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "import_student_roster",
     "commit_student_roster",
     "export_student_data",
+    "export_sensitive_student_fields",
     "import_student_updates",
     "commit_student_updates",
     "resolve_student_duplicates",
     "view_student_audit",
     "manage_student_permissions",
+    "rollback_import_session",
 })
 
 
