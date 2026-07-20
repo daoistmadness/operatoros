@@ -43,7 +43,7 @@ export function uploadAttendanceFile(file) {
   return api.post("/api/uploads/upload", formData);
 }
 
-function Upload() {
+function Upload({ embedded = false }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -115,7 +115,11 @@ function Upload() {
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h1>
+        {embedded ? (
+          <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h2>
+        ) : (
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h1>
+        )}
         <p className="text-slate-500 max-w-md mx-auto">Sync your biometric machine logs with the OperatorOS analytics engine.</p>
       </header>
 

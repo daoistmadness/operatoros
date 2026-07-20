@@ -394,7 +394,7 @@ function ClassMapping() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/students/${student.id}`);
+                              navigate(`/attendance/students/${student.id}`);
                             }}
                             className="hover:text-brand hover:underline transition-colors text-left"
                           >

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Navigate, Outlet, Routes, Route } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
-import Upload from './pages/Upload';
+import UploadCenter from './pages/UploadCenter.tsx';
 import UploadHistory from './pages/UploadHistory';
 import AttendanceReport from './pages/AttendanceReport';
 import AttendanceReview from './pages/AttendanceReview';
@@ -13,6 +13,8 @@ import Settings from './pages/Settings';
 import TardinessReport from './pages/TardinessReport';
 import RekapAbsensi from './pages/RekapAbsensi';
 import StudentProfile from './pages/StudentProfile';
+import StudentManagement from './pages/StudentManagement.tsx';
+import CanonicalStudentProfile from './pages/CanonicalStudentProfile.tsx';
 import GradeLedger from './pages/GradeLedger.tsx';
 import Enrollment from './pages/Enrollment.tsx';
 import AcademicManagement from './pages/AcademicManagement.tsx';
@@ -67,7 +69,7 @@ function App() {
           <Route element={<RequireAuth />}>
             <Route element={<AppShell />}>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/upload" element={<Upload />} />
+              <Route path="/upload" element={<UploadCenter />} />
               <Route path="/upload-history" element={<UploadHistory />} />
               <Route path="/mapping" element={<Navigate to="/enrollment" replace />} />
               <Route path="/analytics" element={<ManagementAnalytics />} />
@@ -87,7 +89,9 @@ function App() {
               <Route path="/config/absence-reasons" element={<AbsenceReasons />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/backups" element={<RequireRole role="admin"><BackupManagement /></RequireRole>} />
-              <Route path="/students/:id" element={<StudentProfile />} />
+              <Route path="/students" element={<RequireRole role="admin"><StudentManagement /></RequireRole>} />
+              <Route path="/students/:id" element={<RequireRole role="admin"><CanonicalStudentProfile /></RequireRole>} />
+              <Route path="/attendance/students/:id" element={<StudentProfile />} />
             </Route>
           </Route>
           </Routes>
