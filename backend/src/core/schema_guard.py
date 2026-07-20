@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import hashlib
 import sqlite3
 from pathlib import Path
 
@@ -12,7 +13,8 @@ from core.config import settings
 from core.database import engine, validate_student_linking_gate
 
 
-CURRENT_SCHEMA_VERSION = "20260722_s38"
+CURRENT_SCHEMA_VERSION = "20260722_s39"
+PREVIOUS_SCHEMA_VERSION = "20260722_s38"
 LEDGER_TABLE = "operatoros_schema_migrations"
 
 
@@ -56,12 +58,53 @@ def _validate_sqlite_file(path: Path) -> None:
         if LEDGER_TABLE not in tables:
             raise DatabaseStartupError("DATABASE_MIGRATION_REQUIRED: schema ledger is missing")
         row = connection.execute(
-            f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
+            f"SELECT version, schema_fingerprint FROM {LEDGER_TABLE} "
+            "ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
-        if row != (CURRENT_SCHEMA_VERSION,):
+        if row and row[0] == PREVIOUS_SCHEMA_VERSION:
+            s39_objects = {"student_import_sessions", "student_import_applied_actions"}
+            if s39_objects.intersection(tables):
+                raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: partial S3.9 migration")
+            raise DatabaseStartupError(
+                f"DATABASE_MIGRATION_REQUIRED: eligible {PREVIOUS_SCHEMA_VERSION} -> {CURRENT_SCHEMA_VERSION}"
+            )
+        if not row or row[0] != CURRENT_SCHEMA_VERSION:
             raise DatabaseStartupError(
                 f"DATABASE_MIGRATION_REQUIRED: expected {CURRENT_SCHEMA_VERSION}"
             )
+        required_tables = {"student_import_sessions", "student_import_applied_actions"}
+        if not required_tables.issubset(tables):
+            raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance tables missing")
+        triggers = {
+            item[0] for item in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='trigger'"
+            )
+        }
+        required_triggers = {
+            "trg_student_import_actions_no_delete",
+            "trg_student_import_actions_immutable",
+            "trg_student_import_batch_session_type",
+            "trg_academic_roster_batch_session_type",
+        }
+        if not required_triggers.issubset(triggers):
+            raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance triggers missing")
+        for table in ("student_import_batches", "academic_roster_import_batches"):
+            session_column = next(
+                (item for item in connection.execute(f"PRAGMA table_info({table})") if item[1] == "session_id"),
+                None,
+            )
+            if session_column is None or session_column[3] != 1:
+                raise DatabaseStartupError(f"DATABASE_SCHEMA_INVALID: {table}.session_id")
+            if connection.execute(f"SELECT COUNT(*) FROM {table} WHERE session_id IS NULL").fetchone()[0]:
+                raise DatabaseStartupError(f"DATABASE_SCHEMA_INVALID: orphan {table}")
+        objects = connection.execute(
+            "SELECT type, name, tbl_name, COALESCE(sql, '') FROM sqlite_master "
+            "WHERE name NOT LIKE 'sqlite_%' AND name != ? ORDER BY type, name",
+            (LEDGER_TABLE,),
+        ).fetchall()
+        actual_fingerprint = hashlib.sha256(repr(objects).encode("utf-8")).hexdigest()
+        if actual_fingerprint != row[1]:
+            raise DatabaseStartupError("DATABASE_MIGRATION_CHECKSUM_MISMATCH")
     except sqlite3.DatabaseError as exc:
         if isinstance(exc, DatabaseStartupError):
             raise

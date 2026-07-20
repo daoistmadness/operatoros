@@ -196,7 +196,7 @@ async def preview_academic_roster(
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
-        "preview_id": batch.id, "checksum": batch.checksum, "status": batch.status,
+        "preview_id": batch.id, "session_id": batch.session_id, "checksum": batch.checksum, "status": batch.status,
         "preview_checksum": roster_preview_checksum(batch.rows),
         "summary": batch.summary, "rows": batch.rows,
     }
