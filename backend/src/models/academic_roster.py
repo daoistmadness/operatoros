@@ -9,6 +9,7 @@ class AcademicRosterImportBatch(Base):
     __tablename__ = "academic_roster_import_batches"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String(36), ForeignKey("student_import_sessions.id", ondelete="RESTRICT"), nullable=False, unique=True)
     filename = Column(String(255), nullable=False)
     checksum = Column(String(64), nullable=False, index=True)
     source_owner = Column(String(255), nullable=False)
@@ -25,4 +26,3 @@ class AcademicRosterImportBatch(Base):
     __table_args__ = (
         CheckConstraint("status IN ('preview','committed','failed','expired')", name="ck_academic_roster_batch_status"),
     )
-

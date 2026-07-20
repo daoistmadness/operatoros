@@ -5,6 +5,7 @@ import { Clock3, Pencil, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
+import { Card } from "../components/ui/card";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -166,7 +167,7 @@ function JenjangConfig() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+      <Card className="rounded-2xl p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
             <Clock3 size={18} className="text-brand" />
@@ -316,7 +317,7 @@ function JenjangConfig() {
             </table>
           </div>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

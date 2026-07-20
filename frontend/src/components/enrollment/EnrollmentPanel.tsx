@@ -555,6 +555,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       <DataTableCell className="px-5 py-3">
                         <input
                           type="checkbox"
+                          aria-label={`Select ${student.name}`}
                           checked={selectedStudentIds.has(student.id)}
                           onChange={() => toggleStudent(student.id)}
                           disabled={isMutating}

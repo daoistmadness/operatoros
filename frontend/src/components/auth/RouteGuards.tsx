@@ -32,3 +32,11 @@ export function RequireRole({ role, children }: { role: UserRole; children: Reac
   if (user.role !== role) return <AccessDenied />;
   return <>{children}</>;
 }
+
+export function RequireCapability({ capability, children }: { capability: string; children: ReactNode }) {
+  const { loading, user, can } = useAuth();
+  if (loading) return <AuthLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!can(capability)) return <AccessDenied />;
+  return <>{children}</>;
+}

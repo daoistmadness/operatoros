@@ -3,6 +3,8 @@ import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-
 
 import api from "../api";
 import { cn } from "../lib/cn";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
 
 const STATUS_OPTIONS = ["on-time", "late", "incomplete", "absent"];
 
@@ -259,6 +261,7 @@ function AttendanceReview() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Academic Year</label>
             <select
+              aria-label="Academic year"
               value={selectedAcademicYearId}
               onChange={(e) => {
                 setSelectedAcademicYearId(e.target.value);
@@ -279,6 +282,7 @@ function AttendanceReview() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Class</label>
             <select
+              aria-label="Class"
               value={selectedAcademicClassId}
               onChange={(e) => setSelectedAcademicClassId(e.target.value)}
               className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -299,6 +303,7 @@ function AttendanceReview() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Date</label>
             <input
+              aria-label="Attendance date"
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -389,17 +394,16 @@ function AttendanceReview() {
         </div>
       </section>
 
-      {modalOpen && activeRow ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={closeOverrideModal} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-5">
+      <Dialog open={modalOpen} onOpenChange={(open) => { if (!open && !submitting) closeOverrideModal(); }}>
+      {activeRow ? (
+          <DialogContent showClose={false} className="max-w-lg space-y-5">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Override Attendance Status</h2>
-                <p className="text-sm text-slate-500 mt-1">{activeRow.student_name} • {selectedDate}</p>
+                <DialogTitle>Override Attendance Status</DialogTitle>
+                <DialogDescription>{activeRow.student_name} • {selectedDate}</DialogDescription>
               </div>
-              <button className="text-slate-400 hover:text-slate-700" onClick={closeOverrideModal}>
-                <X size={20} />
+              <button type="button" aria-label="Close override dialog" className="text-slate-400 hover:text-slate-700" onClick={closeOverrideModal}>
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 
@@ -417,6 +421,7 @@ function AttendanceReview() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">New Status</label>
               <select
+                aria-label="New attendance status"
                 value={overrideStatus}
                 onChange={(e) => setOverrideStatus(e.target.value)}
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -432,6 +437,7 @@ function AttendanceReview() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewer</label>
               <input
+                aria-label="Reviewer"
                 type="text"
                 value={reviewer}
                 onChange={(e) => setReviewer(e.target.value)}
@@ -443,6 +449,7 @@ function AttendanceReview() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Justification Note (min. 5 chars)</label>
               <textarea
+                aria-label="Justification note"
                 value={overrideNote}
                 onChange={(e) => setOverrideNote(e.target.value)}
                 rows={4}
@@ -474,23 +481,22 @@ function AttendanceReview() {
                 Save Override
               </button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
       ) : null}
+      </Dialog>
 
-      {massModalOpen ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setMassModalOpen(false)} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 space-y-5">
+      <AlertDialog open={massModalOpen} onOpenChange={(open) => { if (!open && !massSubmitting) setMassModalOpen(false); }}>
+          <AlertDialogContent className="max-w-lg space-y-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="text-amber-500" size={24} />
-                <h2 className="text-xl font-bold text-slate-900">Mass Override: Incomplete → On-time</h2>
+                <AlertDialogTitle>Mass Override: Incomplete → On-time</AlertDialogTitle>
               </div>
-              <button className="text-slate-400 hover:text-slate-700" onClick={() => setMassModalOpen(false)}>
-                <X size={20} />
+              <button type="button" aria-label="Close mass override dialog" className="text-slate-400 hover:text-slate-700" onClick={() => setMassModalOpen(false)}>
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
+            <AlertDialogDescription className="sr-only">Overrides every incomplete record with a valid scan-in and records the action in the audit trail.</AlertDialogDescription>
 
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 space-y-2">
               <p>
@@ -504,6 +510,7 @@ function AttendanceReview() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewed by (Admin)</label>
               <input
+                aria-label="Reviewed by admin"
                 type="text"
                 value={massReviewer}
                 onChange={(e) => setMassReviewer(e.target.value)}
@@ -515,6 +522,7 @@ function AttendanceReview() {
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Justification Note</label>
               <textarea
+                aria-label="Mass override justification note"
                 value={massOverrideNote}
                 onChange={(e) => setMassOverrideNote(e.target.value)}
                 rows={3}
@@ -540,9 +548,8 @@ function AttendanceReview() {
                 {massSubmitting ? "Overriding..." : "Confirm Override"}
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
+          </AlertDialogContent>
+      </AlertDialog>
 
       <div className={cn(
         "fixed inset-y-0 right-0 z-[80] w-full max-w-md bg-white shadow-2xl border-l border-slate-200 transition-transform duration-200 ease-out",
@@ -556,8 +563,8 @@ function AttendanceReview() {
               <h3 className="font-bold text-slate-900">Override History</h3>
               <p className="text-xs text-slate-500 mt-1">{activeRow?.student_name || "Attendance record"}</p>
             </div>
-            <button className="text-slate-400 hover:text-slate-700" onClick={() => setHistoryOpen(false)}>
-              <X size={20} />
+            <button type="button" aria-label="Close override history" className="text-slate-400 hover:text-slate-700" onClick={() => setHistoryOpen(false)}>
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
 

@@ -17,8 +17,11 @@ import { HebBadgeRow } from '../components/HebBadgeRow';
 import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
 import { PageHeader } from "../components/common/page-header";
+import { EmptyState, ErrorState } from "../components/common/state-message";
 import { downloadRekapAbsensiExcel, getRekapAbsensiReport } from '../lib/api/endpoints';
 import { TERM_OPTIONS, getAcademicYearLabel, getTermAcademicYearLabel } from '../lib/reportPeriods';
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const FILTER_MODES = [
   { value: 'month', label: 'Bulan' },
@@ -99,7 +102,7 @@ function WarningBanner({ children, linkTo, linkLabel }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+    <Card className="rounded-2xl p-6 animate-pulse">
       <div className="h-8 w-72 bg-slate-200 rounded mx-auto" />
       <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
         <div className="grid grid-cols-7 bg-emerald-700">
@@ -117,19 +120,7 @@ function LoadingSkeleton() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-      <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
-        <CalendarDays size={24} />
-      </div>
-      <h3 className="mt-4 text-lg font-bold text-slate-900">Tidak ada data untuk periode ini.</h3>
-      <p className="mt-2 text-sm text-slate-500">Coba ganti periode lalu klik Buat Laporan lagi.</p>
-    </div>
+    </Card>
   );
 }
 
@@ -335,7 +326,9 @@ function RekapAbsensi() {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { font-size: 11pt; background: white !important; }
-          table { page-break-inside: avoid; }
+          table { page-break-inside: auto; }
+          thead { display: table-header-group; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
           .chart-section { page-break-before: avoid; }
           body.printing-rekap-absensi .app-sidebar { display: none !important; }
           body.printing-rekap-absensi .app-main { margin-left: 0 !important; padding: 0 !important; }
@@ -350,11 +343,11 @@ function RekapAbsensi() {
         description="Laporan rekapitulasi kehadiran siswa bulanan, date range, atau term."
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 filter-bar no-print">
+      <Card className="rounded-2xl p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3 xl:col-span-1">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Mode Periode</label>
-            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1" role="group" aria-label="Mode periode">
               {FILTER_MODES.map((option) => (
                 <button
                   key={option.value}
@@ -376,6 +369,7 @@ function RekapAbsensi() {
             {filterMode === 'month' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Bulan laporan"
                   value={month}
                   onChange={(event) => setMonth(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -387,6 +381,7 @@ function RekapAbsensi() {
                   ))}
                 </select>
                 <input
+                  aria-label="Tahun laporan"
                   type="number"
                   min="1900"
                   value={year}
@@ -399,12 +394,14 @@ function RekapAbsensi() {
             {filterMode === 'date_range' && (
               <div className="grid grid-cols-2 gap-3">
                 <input
+                  aria-label="Tanggal mulai laporan"
                   type="date"
                   value={dateFrom}
                   onChange={(event) => setDateFrom(event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
                 <input
+                  aria-label="Tanggal akhir laporan"
                   type="date"
                   value={dateTo}
                   onChange={(event) => setDateTo(event.target.value)}
@@ -416,6 +413,7 @@ function RekapAbsensi() {
             {filterMode === 'term' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Term akademik"
                   value={term}
                   onChange={(event) => setTerm(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -427,6 +425,7 @@ function RekapAbsensi() {
                   ))}
                 </select>
                 <input
+                  aria-label="Tahun akademik"
                   type="number"
                   min="1900"
                   value={year}
@@ -439,38 +438,40 @@ function RekapAbsensi() {
           </div>
 
           <div className="xl:col-span-1">
-            <button
+            <Button
               type="button"
               onClick={handleGenerateReport}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 w-full h-[46px] font-bold"
+              className="w-full h-[46px] font-bold"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
               <span>{loading ? 'Memuat...' : 'Buat Laporan'}</span>
-            </button>
+            </Button>
           </div>
 
           <div className="xl:col-span-1">
             {report ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleExportExcel}
                   disabled={exportingExcel}
-                  className="h-[46px] rounded-xl border border-emerald-200 bg-emerald-50 px-4 font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   {exportingExcel ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
                   <span>Export Excel</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handlePrint}
                   disabled={printing}
-                  className="h-[46px] rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   <Printer size={18} />
                   <span>Cetak PDF</span>
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="h-[46px] rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 flex items-center justify-center text-sm text-slate-400">
@@ -479,13 +480,10 @@ function RekapAbsensi() {
             )}
           </div>
         </div>
-      </section>
+      </Card>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 flex items-start gap-3 no-print">
-          <TriangleAlert className="mt-0.5" size={20} />
-          <p className="font-medium">{error}</p>
-        </div>
+        <ErrorState className="no-print" title="Rekap absensi tidak dapat dibuat" description={error} />
       )}
 
       {report?.global_flags?.heb_missing && (
@@ -508,21 +506,21 @@ function RekapAbsensi() {
 
       {loading && <LoadingSkeleton />}
 
-      {!loading && hasGenerated && !hasData && !error && <EmptyState />}
+      {!loading && hasGenerated && !hasData && !error && <EmptyState title="Tidak ada data untuk periode ini" description="Coba ganti periode lalu buat laporan lagi." />}
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
             <h2 className="text-2xl md:text-3xl font-black tracking-wide text-slate-900 uppercase">{report.report_title}</h2>
             <p className="mt-2 text-lg font-semibold text-slate-700 uppercase">{report.school_name}</p>
             <p className="mt-2 text-base text-slate-500">{report.period.label}</p>
             <div className="flex justify-center mt-4 no-print">
               <HebBadgeRow hebByJenjang={report?.heb_by_jenjang} />
             </div>
-          </div>
+          </Card>
 
           <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,1fr)] gap-8">
-            <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+            <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-slate-900">Tabel Rekap Absensi</h3>
                 <p className="text-sm text-slate-500">Persentase dibulatkan ke bilangan bulat. RATA2 menampilkan rata-rata per jenjang, bukan rata seluruh siswa.</p>
@@ -565,11 +563,11 @@ function RekapAbsensi() {
                           </tr>
 
                           {/* Expanded Classes */}
-                          {isExpanded && j.classes.map((cls, idx) => {
+                          {j.classes.map((cls, idx) => {
                             const pcts = cls.percentages;
                             const flags = cls.warning_flags;
                             return (
-                              <tr key={cls.class_name} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                              <tr key={cls.class_name} className={cn(!isExpanded && 'hidden print:table-row', idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                                 <td className="px-4 py-3 pl-10 text-left font-semibold text-slate-800 border-b border-slate-200 flex items-center gap-2">
                                   <span>{cls.class_name}</span>
                                   {flags.excluded_unclassified && (
@@ -609,7 +607,7 @@ function RekapAbsensi() {
               <div className="mt-4 text-xs font-medium text-slate-400 italic">
                 *Data tidak terklasifikasi (LAIN2) dikecualikan secara penuh dari perhitungan pembagi (100%).
               </div>
-            </div>
+            </Card>
 
             <div className="report-section print:break-inside-avoid">
               <RekapAbsensiChart data={report.chart_data || []} title={report.report_title} />

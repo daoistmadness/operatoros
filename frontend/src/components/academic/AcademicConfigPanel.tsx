@@ -19,6 +19,7 @@ import {
 import { fetchAcademicYears, fetchSubjects } from "../../api/grades";
 import { fetchJenjangs, type JenjangOption } from "../../api/enrollment";
 import type { AcademicYear, Subject } from "../../types/grade";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from "../ui/alert-dialog";
 
 interface KkmFormState {
   id: number | null;
@@ -95,6 +96,8 @@ export function AcademicConfigPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingKkm, setIsSavingKkm] = useState(false);
   const [isSavingTerm, setIsSavingTerm] = useState(false);
+  const [confirmation, setConfirmation] = useState<{ kind: "kkm"; row: KkmThreshold } | { kind: "term"; row: AcademicTermConfig } | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
 
@@ -264,22 +267,33 @@ export function AcademicConfigPanel() {
   };
 
   const handleDeleteKkm = async (row: KkmThreshold) => {
-    if (!window.confirm("Delete this KKM threshold?")) return;
-    setError("");
-    setStatus("");
-    await deleteKkmThreshold(row.id);
-    setStatus("KKM threshold deleted.");
-    await loadConfig(row.academic_year_id);
+    setConfirmation({ kind: "kkm", row });
   };
 
   const handleRestoreTermDefault = async (row: AcademicTermConfig) => {
-    if (!row.id) return;
-    if (!window.confirm(`Restore ${row.label} to the default mapping?`)) return;
+    if (row.id) setConfirmation({ kind: "term", row });
+  };
+
+  const handleConfirmDestructiveAction = async () => {
+    if (!confirmation || isConfirming) return;
+    setIsConfirming(true);
     setError("");
     setStatus("");
-    await deleteTermConfig(row.id);
-    setStatus("Term default mapping restored.");
-    await loadConfig(row.academic_year_id);
+    try {
+      if (confirmation.kind === "kkm") {
+        await deleteKkmThreshold(confirmation.row.id);
+        setStatus("KKM threshold deleted.");
+      } else {
+        await deleteTermConfig(confirmation.row.id!);
+        setStatus("Term default mapping restored.");
+      }
+      await loadConfig(confirmation.row.academic_year_id);
+      setConfirmation(null);
+    } catch (actionError) {
+      setError(getErrorMessage(actionError));
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -615,6 +629,23 @@ export function AcademicConfigPanel() {
           </div>
         </form>
       </div>
+      <AlertDialog open={confirmation !== null} onOpenChange={(open) => { if (!open && !isConfirming) setConfirmation(null); }}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{confirmation?.kind === "kkm" ? "Delete KKM threshold?" : "Restore default term mapping?"}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {confirmation?.kind === "kkm"
+              ? "This removes the custom threshold. This action cannot be undone."
+              : `This removes the custom ${confirmation?.row.label ?? "term"} dates and restores the default mapping.`}
+          </AlertDialogDescription>
+          {error ? <p role="alert" className="mt-4 text-sm font-bold text-rose-700">{error}</p> : null}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isConfirming} className="rounded-xl border border-slate-200 px-4 py-2 font-bold">Cancel</AlertDialogCancel>
+            <button type="button" disabled={isConfirming} onClick={handleConfirmDestructiveAction} className="rounded-xl bg-rose-600 px-4 py-2 font-bold text-white disabled:opacity-50">
+              {isConfirming ? "Working..." : confirmation?.kind === "kkm" ? "Delete threshold" : "Restore default"}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

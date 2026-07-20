@@ -584,11 +584,11 @@ export default function ReportBuilderPanel() {
                             </span>
                           </label>
                           <div className="flex items-center gap-1">
-                            <button type="button" onClick={() => reorderSection(key, "up")} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50">
-                              <ArrowUp className="h-4 w-4" />
+                            <button type="button" aria-label={`Move ${meta?.label ?? key} up`} onClick={() => reorderSection(key, "up")} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50">
+                              <ArrowUp className="h-4 w-4" aria-hidden="true" />
                             </button>
-                            <button type="button" onClick={() => reorderSection(key, "down")} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50">
-                              <ArrowDown className="h-4 w-4" />
+                            <button type="button" aria-label={`Move ${meta?.label ?? key} down`} onClick={() => reorderSection(key, "down")} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50">
+                              <ArrowDown className="h-4 w-4" aria-hidden="true" />
                             </button>
                           </div>
                         </div>

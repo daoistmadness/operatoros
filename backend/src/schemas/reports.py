@@ -122,6 +122,7 @@ class DataQuality(BaseModel):
 
 class MonthlyReportResponse(BaseModel):
     meta: ReportMeta
+    report_period: dict
     executive_summary: ExecutiveSummary
     student_distribution: StudentDistribution
     attendance_summary: AttendanceSummary
@@ -129,6 +130,17 @@ class MonthlyReportResponse(BaseModel):
     academic_summary: AcademicSummary
     trends: list
     data_quality: DataQuality
+
+
+class ManagementReportResponse(BaseModel):
+    metadata: dict
+    report_period: dict
+    executive_summary: dict
+    student_population: dict
+    attendance: dict
+    academic_summary: dict
+    demographics: dict
+    data_quality: dict
 
 
 class AnnualTrend(BaseModel):
@@ -172,6 +184,7 @@ class AnnualReportMeta(BaseModel):
 
 class AnnualReportResponse(BaseModel):
     meta: AnnualReportMeta
+    report_period: dict
     executive_summary: ExecutiveSummary
     student_distribution: StudentDistribution
     attendance_summary: AttendanceSummary

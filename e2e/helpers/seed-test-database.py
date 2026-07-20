@@ -59,6 +59,10 @@ def main() -> int:
         )
         active_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1B','B',1)",
+            (year_id, grade_id),
+        )
+        connection.execute(
             "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1 / MAIN','INACTIVE',0)",
             (year_id, grade_id),
         )
@@ -92,6 +96,33 @@ def main() -> int:
             connection.execute(
                 "INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (?,?,?,?,?,'fixture',?,?)",
                 (student_id, attendance_date.isoformat(), check_in, check_out, late_duration, status == "absent", status),
+            )
+        # Populated report-only rows: deterministic synthetic identities and one
+        # legacy class per row force both report tables across multiple pages.
+        # They intentionally have no StudentEnrollment records.
+        for index in range(1, 73):
+            report_master_id = f"10000000-0000-4000-8000-{index:012d}"
+            report_name = f"Synthetic Learner {index:03d}"
+            connection.execute(
+                "INSERT INTO students (name,jenjang,class_name) VALUES (?,?,?)",
+                (report_name, "Primary", f"Synthetic Class {index:03d}"),
+            )
+            report_student_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+            connection.execute(
+                "INSERT INTO student_masters (id,full_name,normalized_name,nipd,student_status,created_by,updated_by) VALUES (?,?,?,?, 'inactive','e2e','e2e')",
+                (report_master_id, report_name, report_name.lower(), f"PRINT-{index:03d}"),
+            )
+            connection.execute(
+                "INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active,created_by) VALUES (?,?,?,?,?,1,'e2e')",
+                (report_master_id, report_student_id, f"PRINT-DEVICE-{index:03d}", "E2E_PRINT_FIXTURE", "2026-07-01"),
+            )
+            connection.execute(
+                "INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (?,?,?,?,?,'fixture',0,'late')",
+                (report_student_id, today.isoformat(), "07:45:00", "14:00:00", 30 + (index % 15)),
+            )
+            connection.execute(
+                "INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from) VALUES (?,?,?,?,?,?,1,'2026-07-01')",
+                (report_student_id, report_master_id, year_id, jenjang_id, active_class_id, f"Synthetic Class {index:03d}"),
             )
         connection.execute(
             "INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from) VALUES (?,?,?,?,?,'Primary 1A',1,'2026-07-01')",
