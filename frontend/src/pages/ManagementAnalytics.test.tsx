@@ -1,123 +1,117 @@
-import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import React, { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ManagementAnalytics from "./ManagementAnalytics";
 import * as analyticsApi from "../api/analytics";
-import { AuthContext, AuthContextValue } from "../context/AuthContext";
+import * as academicConfigApi from "../api/academicConfig";
+import * as reportBuilderApi from "../api/reportBuilder";
+import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 
-// Mock react-chartjs-2 to avoid canvas issues
 vi.mock("react-chartjs-2", () => ({
-  Bar: (props: any) => <div data-testid="bar-chart">{props.data?.labels?.join(", ")}</div>,
-  Doughnut: (props: any) => <div data-testid="doughnut-chart">{props.data?.labels?.join(", ")}</div>,
-  Line: (props: any) => <div data-testid="line-chart">{props.data?.labels?.join(", ")}</div>,
+  Bar: () => <div data-testid="bar-chart" />,
+  Doughnut: () => <div data-testid="doughnut-chart" />,
+  Line: () => <div data-testid="line-chart" />,
 }));
 
-// Mock Analytics API
 vi.mock("../api/analytics", () => ({
   fetchAnalyticsFilters: vi.fn(),
   fetchManagementSummary: vi.fn(),
   fetchHistoricalTrends: vi.fn(),
   fetchInterventionImpact: vi.fn(),
-  fetchEffectiveTerms: vi.fn(),
-  fetchReportTemplates: vi.fn(),
   downloadManagementSummaryPdf: vi.fn(),
   downloadManagementSummaryExcel: vi.fn(),
+}));
+vi.mock("../api/academicConfig", () => ({ fetchEffectiveTerms: vi.fn() }));
+vi.mock("../api/reportBuilder", () => ({
+  fetchReportTemplates: vi.fn(),
+  previewReportBuilder: vi.fn(),
   downloadReportBuilderPdf: vi.fn(),
   downloadReportBuilderExcel: vi.fn(),
-  previewReportBuilder: vi.fn(),
 }));
 
-const mockAdminAuth: AuthContextValue = {
-  user: { id: 1, name: "Admin", role: "admin", capabilities: ["import_student_roster", "create_student", "manage_student_permissions"] },
+const adminAuth: AuthContextValue = {
+  user: { id: 1, name: "Admin", role: "admin", capabilities: ["view_student", "import_student_roster"] },
   loading: false,
   authenticated: true,
-  can: (cap: string) => true,
+  can: () => true,
   login: vi.fn(),
   logout: vi.fn(),
 };
 
-const mockStaffAuth: AuthContextValue = {
-  user: { id: 2, name: "Staff User", role: "staff", capabilities: ["view_student"] },
-  loading: false,
-  authenticated: true,
-  can: (cap: string) => false,
-  login: vi.fn(),
-  logout: vi.fn(),
+const restrictedAuth: AuthContextValue = {
+  ...adminAuth,
+  user: { id: 2, name: "Staff", role: "staff", capabilities: [] },
+  can: () => false,
 };
 
-const renderComponent = (authValue: AuthContextValue = mockAdminAuth) => {
-  return renderToStaticMarkup(
-    <MemoryRouter>
-      <AuthContext.Provider value={authValue}>
-        <ManagementAnalytics />
-      </AuthContext.Provider>
-    </MemoryRouter>
-  );
+const filters = {
+  academic_years: [{ id: 10, label: "2025/2026", is_default: true }],
+  jenjangs: [{ id: 1, name: "SD", code: "SD" }],
+  class_names: ["1A"],
+  subjects: [{ id: 101, name: "Matematika", code: "MATH" }],
 };
 
-describe("ManagementAnalytics Component - Static & State Render Tests", () => {
+let container: HTMLDivElement;
+let root: Root;
+
+async function renderPage(auth: AuthContextValue = adminAuth) {
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+  await act(async () => {
+    root.render(
+      <MemoryRouter>
+        <AuthContext.Provider value={auth}>
+          <ManagementAnalytics />
+        </AuthContext.Provider>
+      </MemoryRouter>
+    );
+  });
+  return container;
+}
+
+describe("ManagementAnalytics state handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (analyticsApi.fetchAnalyticsFilters as any).mockResolvedValue({
-      academic_years: [{ id: 10, label: "2025/2026", is_default: true }],
-      jenjangs: [{ id: 1, name: "SD", code: "SD" }],
-      class_names: ["1A"],
-      subjects: [{ id: 101, name: "Matematika", code: "MATH" }],
-    });
-    (analyticsApi.fetchEffectiveTerms as any).mockResolvedValue([
-      { value: "term_1", label: "Term 1" },
-    ]);
-    (analyticsApi.fetchReportTemplates as any).mockResolvedValue([]);
-    (analyticsApi.fetchHistoricalTrends as any).mockResolvedValue({
-      granularity: "term",
-      trend_series: { attendance: { by_term: [] }, lateness: { by_term: [] }, grades: { by_term: [] }, interventions: { by_term: [] } },
-      forecast_series: [],
-    });
-    (analyticsApi.fetchInterventionImpact as any).mockResolvedValue({
-      summary: { total_interventions: 0, interventions_by_status: {} },
-      subject_breakdown: [],
-      impact_rows: [],
-    });
+    vi.mocked(analyticsApi.fetchAnalyticsFilters).mockResolvedValue(filters);
+    vi.mocked(academicConfigApi.fetchEffectiveTerms).mockResolvedValue([]);
+    vi.mocked(reportBuilderApi.fetchReportTemplates).mockResolvedValue([]);
+    vi.mocked(analyticsApi.fetchHistoricalTrends).mockResolvedValue({} as never);
+    vi.mocked(analyticsApi.fetchInterventionImpact).mockResolvedValue({} as never);
+    vi.mocked(analyticsApi.fetchManagementSummary).mockReturnValue(new Promise(() => {}));
   });
 
-  it("renders main title, header actions, and filter bar shell", () => {
-    const html = renderComponent();
-    expect(html).toContain("Management Analytics");
-    expect(html).toContain("Export PDF");
-    expect(html).toContain("Export Excel");
-    expect(html).toContain("Filter Analisis");
+  afterEach(async () => {
+    if (root) await act(async () => root.unmount());
+    container?.remove();
   });
 
-  it("renders loading skeleton accessibility role during initial async state", () => {
-    (analyticsApi.fetchAnalyticsFilters as any).mockReturnValue(new Promise(() => {}));
-    const html = renderComponent();
-    expect(html).toContain('role="status"');
-    expect(html).toContain("Memuat data analisis...");
+  it("gives capability denial precedence without making analytics requests", async () => {
+    const view = await renderPage(restrictedAuth);
+    expect(view.textContent).toContain("Akses Terbatas");
+    expect(analyticsApi.fetchAnalyticsFilters).not.toHaveBeenCalled();
+    expect(analyticsApi.fetchManagementSummary).not.toHaveBeenCalled();
+    expect(reportBuilderApi.fetchReportTemplates).not.toHaveBeenCalled();
   });
 
-  it("renders SYSTEM_EMPTY state when total_students === 0", async () => {
-    (analyticsApi.fetchManagementSummary as any).mockResolvedValue({
-      academic_year: { id: 10, name: "2025/2026" },
-      total_students: 0,
-      attendance_summary: { overall_attendance_percentage: 0, status_counts: {} },
-      tardiness_summary: { total_late_records: 0, total_late_minutes: 0, average_late_minutes: 0 },
-      grade_by_class: [],
-      grade_by_subject: [],
-      grade_by_student: [],
-      below_kkm_alerts: [],
-      warnings: [],
-      executive_insights: [],
-    });
-
-    const html = renderComponent();
-    // Verify structure
-    expect(html).toContain("Management Analytics");
+  it("shows setup guidance when no academic year exists", async () => {
+    vi.mocked(analyticsApi.fetchAnalyticsFilters).mockResolvedValue({ ...filters, academic_years: [] });
+    const view = await renderPage();
+    expect(view.textContent).toContain("Konfigurasi Akademik Diperlukan");
+    expect(view.textContent).toContain("Buka Pengaturan Akademik");
   });
 
-  it("renders PERMISSION_RESTRICTED state when staff user accesses restricted analytics or receives 403", () => {
-    (analyticsApi.fetchAnalyticsFilters as any).mockRejectedValue(new Error("403 Forbidden: Akses ditolak"));
-    const html = renderComponent(mockStaffAuth);
-    expect(html).toContain("Management Analytics");
+  it("shows an accessible initial loading state", async () => {
+    vi.mocked(analyticsApi.fetchAnalyticsFilters).mockReturnValue(new Promise(() => {}));
+    const view = await renderPage();
+    expect(view.querySelector('[role="status"]')?.textContent).toContain("Memuat data analisis");
+  });
+
+  it("does not render raw backend error details", async () => {
+    vi.mocked(analyticsApi.fetchAnalyticsFilters).mockRejectedValue(new Error("SQLSTATE secret internal detail"));
+    const view = await renderPage();
+    expect(view.textContent).toContain("Gagal Memuat Analisis Manajemen");
+    expect(view.textContent).not.toContain("SQLSTATE");
   });
 });

@@ -120,11 +120,14 @@ interface InterventionFormState {
   outcome: string;
 }
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Terjadi kesalahan saat memuat data analisis manajemen.";
+function isPermissionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes("403") || message.includes("permission") || message.includes("akses ditolak");
+}
+
+function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan saat memuat data analisis manajemen."): string {
+  return isPermissionError(error) ? "Akses ditolak." : fallback;
 }
 
 export default function ManagementAnalytics() {
@@ -191,6 +194,7 @@ export default function ManagementAnalytics() {
   const [interventionMessage, setInterventionMessage] = useState<string>("");
   const [interventionError, setInterventionError] = useState<string>("");
   const [isSavingIntervention, setIsSavingIntervention] = useState(false);
+  const hasAnalyticsPermission = can("view_student");
 
   // Stale request tracking refs
   const summaryRequestIdRef = useRef(0);
@@ -236,6 +240,7 @@ export default function ManagementAnalytics() {
 
   // Load initial filter parameters
   useEffect(() => {
+    if (!hasAnalyticsPermission) return;
     async function loadInitialFilters() {
       try {
         const filters = await fetchAnalyticsFilters();
@@ -256,7 +261,7 @@ export default function ManagementAnalytics() {
       }
     }
     loadInitialFilters();
-  }, []);
+  }, [hasAnalyticsPermission]);
 
   // Update classes and subjects reactively when academic year or jenjang changes
   useEffect(() => {
@@ -288,7 +293,7 @@ export default function ManagementAnalytics() {
         if (subjectId && !updated.subjects.some((s) => s.id === subjectId)) {
           setSubjectId(null);
         }
-        if (term && terms.length > 0 && !terms.some((t) => t.value === term)) {
+        if (term && !terms.some((t) => t.value === term)) {
           setTerm(null);
         }
       } catch (err) {
@@ -315,7 +320,7 @@ export default function ManagementAnalytics() {
 
   // Load summary data with stale request protection
   const loadSummaryData = async () => {
-    if (currentParams === null) return;
+    if (!hasAnalyticsPermission || currentParams === null) return;
     const reqId = ++summaryRequestIdRef.current;
     setIsLoading(true);
     setError("");
@@ -341,6 +346,7 @@ export default function ManagementAnalytics() {
   }, [currentParams]);
 
   useEffect(() => {
+    if (!hasAnalyticsPermission) return;
     async function loadReportTemplatesList() {
       try {
         const templates = await fetchReportTemplates();
@@ -351,10 +357,10 @@ export default function ManagementAnalytics() {
       }
     }
     loadReportTemplatesList();
-  }, []);
+  }, [hasAnalyticsPermission]);
 
   const loadTrendData = async () => {
-    if (currentParams === null) return;
+    if (!hasAnalyticsPermission || currentParams === null) return;
     const reqId = ++trendRequestIdRef.current;
     setIsTrendLoading(true);
     setTrendError("");
@@ -371,7 +377,7 @@ export default function ManagementAnalytics() {
       }
     } catch (err) {
       if (reqId === trendRequestIdRef.current) {
-        setTrendError(getErrorMessage(err));
+        setTrendError(getErrorMessage(err, "Data tren belum dapat dimuat."));
       }
     } finally {
       if (reqId === trendRequestIdRef.current) {
@@ -385,7 +391,7 @@ export default function ManagementAnalytics() {
   }, [currentParams, trendGranularity, forecastMethod, includeForecast]);
 
   const loadImpactData = async () => {
-    if (currentParams === null) return;
+    if (!hasAnalyticsPermission || currentParams === null) return;
     const reqId = ++impactRequestIdRef.current;
     setIsImpactLoading(true);
     setImpactError("");
@@ -400,7 +406,7 @@ export default function ManagementAnalytics() {
       }
     } catch (err) {
       if (reqId === impactRequestIdRef.current) {
-        setImpactError(getErrorMessage(err));
+        setImpactError(getErrorMessage(err, "Data dampak intervensi belum dapat dimuat."));
       }
     } finally {
       if (reqId === impactRequestIdRef.current) {
@@ -454,7 +460,7 @@ export default function ManagementAnalytics() {
       link.click();
       revokeDownloadUrl(url);
     } catch (err) {
-      setError(getErrorMessage(err) || "Gagal mengunduh laporan analisis manajemen.");
+      setError(getErrorMessage(err, "Gagal mengunduh laporan analisis manajemen."));
     } finally {
       setExportingFormat(null);
     }
@@ -475,7 +481,7 @@ export default function ManagementAnalytics() {
       });
       setReportPreview(preview);
     } catch (err) {
-      setReportBuilderError(getErrorMessage(err));
+      setReportBuilderError(getErrorMessage(err, "Pratinjau laporan belum dapat dimuat."));
     } finally {
       setIsPreviewingTemplate(false);
     }
@@ -551,7 +557,7 @@ export default function ManagementAnalytics() {
       await loadSummaryData();
       setSelectedAlert(null);
     } catch (err) {
-      setInterventionError(getErrorMessage(err) || "Gagal menyimpan intervensi akademik.");
+      setInterventionError(getErrorMessage(err, "Gagal menyimpan intervensi akademik."));
     } finally {
       setIsSavingIntervention(false);
     }
@@ -957,12 +963,12 @@ export default function ManagementAnalytics() {
       </div>
 
       {/* Deterministic State Container Rendering */}
-      {error.toLowerCase().includes("403") || error.toLowerCase().includes("permission") || error.toLowerCase().includes("akses ditolak") ? (
+      {!hasAnalyticsPermission || error === "Akses ditolak." ? (
         <PermissionRestrictedState
           title="Akses Terbatas"
           description="Akun Anda tidak memiliki izin untuk mengakses laporan Analisis Manajemen."
         />
-      ) : (filterOptions && filterOptions.academic_years.length === 0) || (academicYearId === null && !isLoading) ? (
+      ) : filterOptions?.academic_years.length === 0 ? (
         <SetupRequiredState
           title="Konfigurasi Akademik Diperlukan"
           description="Tahun Ajaran aktif belum dikonfigurasi dalam sistem. Konfigurasi tahun ajaran aktif terlebih dahulu untuk mengaktifkan analisis manajemen."
@@ -1216,8 +1222,11 @@ export default function ManagementAnalytics() {
             {isTrendLoading ? (
               <div className="h-72 animate-pulse rounded-2xl bg-slate-100" />
             ) : trendError ? (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
-                {trendError}
+              <div role="alert" className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+                <p>{trendError}</p>
+                <button type="button" onClick={loadTrendData} className="mt-3 rounded-xl bg-rose-600 px-3 py-2 text-xs font-black text-white hover:bg-rose-700">
+                  Coba Lagi
+                </button>
               </div>
             ) : trendData && trendCardMetrics ? (
               <>
@@ -1332,8 +1341,11 @@ export default function ManagementAnalytics() {
             {isImpactLoading ? (
               <div className="h-72 animate-pulse rounded-2xl bg-slate-100" />
             ) : impactError ? (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
-                {impactError}
+              <div role="alert" className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+                <p>{impactError}</p>
+                <button type="button" onClick={loadImpactData} className="mt-3 rounded-xl bg-rose-600 px-3 py-2 text-xs font-black text-white hover:bg-rose-700">
+                  Coba Lagi
+                </button>
               </div>
             ) : impactData && impactData.summary.total_interventions > 0 ? (
               <>
