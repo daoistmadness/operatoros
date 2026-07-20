@@ -447,7 +447,7 @@ def mass_override_incomplete(
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during mass override: {str(e)}")
+        raise HTTPException(status_code=500, detail="The mass override could not be completed. Retry or contact the system administrator.")
 
     # skipped tracks records where check_in was null. The requirement is: "skipped: count of incomplete records where check_in was null".
     # Let's count them:

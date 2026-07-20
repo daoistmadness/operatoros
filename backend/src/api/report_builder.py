@@ -142,7 +142,7 @@ def post_template(body: ReportTemplateBody, db: Session = Depends(get_db)):
         return create_template(db, body.model_dump())
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during template create: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The report template could not be saved. Retry or contact the system administrator.") from exc
 
 
 @router.get("/templates/{template_id}")
@@ -157,7 +157,7 @@ def patch_template(template_id: int, body: ReportTemplateUpdateBody, db: Session
         return update_template(db, template_id, payload)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during template update: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The report template could not be updated. Retry or contact the system administrator.") from exc
 
 
 @router.delete("/templates/{template_id}")
@@ -166,7 +166,7 @@ def remove_template(template_id: int, db: Session = Depends(get_db)):
         return delete_template(db, template_id)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during template delete: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The report template could not be deleted. Retry or contact the system administrator.") from exc
 
 
 @router.get("/branding")
@@ -182,7 +182,7 @@ def post_branding(body: ReportBrandingBody, db: Session = Depends(get_db)):
         return create_branding(db, body.model_dump())
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during branding create: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The branding configuration could not be saved. Retry or contact the system administrator.") from exc
 
 
 @router.patch("/branding/{branding_id}")
@@ -192,7 +192,7 @@ def patch_branding(branding_id: int, body: ReportBrandingUpdateBody, db: Session
         return update_branding(db, branding_id, payload)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during branding update: {exc}") from exc
+        raise HTTPException(status_code=500, detail="The branding configuration could not be updated. Retry or contact the system administrator.") from exc
 
 
 @router.post("/preview")

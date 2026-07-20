@@ -79,7 +79,7 @@ function Settings() {
 
       // Auto-refresh or redirect could happen here, but for now we'll show success state
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to reset database. Check console for details.");
+      setError(err.response?.data?.detail || "Data reset could not be completed. Retry or contact the system administrator.");
     } finally {
       setIsResetting(false);
     }
