@@ -40,7 +40,8 @@ const markup = (node: React.ReactNode) => renderToStaticMarkup(<>{node}</>);
 
 describe("Executive Reports presentation", () => {
   it("allows the application main area to shrink at narrow viewports", () => {
-    expect(appSource).toContain('className="app-main min-w-0 flex-1 px-4 pb-8 pt-20 sm:px-6 xl:ml-64 xl:p-8"');
+    expect(appSource).toContain('className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8');
+    expect(appSource).toContain("navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'");
     expect(appSource).toContain('aria-label={navigationOpen ? \'Close navigation\' : \'Open navigation\'}');
   });
   it("defines Monthly as the default report type", () => expect(DEFAULT_REPORT_TYPE).toBe("monthly"));
