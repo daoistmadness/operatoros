@@ -18,6 +18,7 @@ from models.student_enrollment import StudentEnrollment
 from models.student_master import StudentDeviceIdentity, StudentEnrollmentClassHistory, StudentMaster
 from services.student_normalization import normalize_name
 from services.student_management import _audit, _check_identifier_conflicts, _create_enrollment, _create_legacy_identity
+from services.spreadsheet_security import validate_xlsx_upload
 
 
 ROSTER_CONFIRMATION = "COMMIT_ACADEMIC_ROSTER"
@@ -89,10 +90,13 @@ def _match_master(db: Session, payload: dict) -> tuple[StudentMaster | None, str
 
 
 def create_roster_preview(db: Session, file_bytes: bytes, filename: str, owner: str, received: date, username: str):
+    filename = validate_xlsx_upload(file_bytes, filename)
     workbook = pd.ExcelFile(BytesIO(file_bytes), engine="openpyxl")
     frames = []
     for sheet in workbook.sheet_names:
         frame = pd.read_excel(workbook, sheet_name=sheet, dtype=str)
+        if len(frame.index) > 10_000:
+            raise ValueError("Academic roster exceeds the 10,000-row limit")
         frame.columns = [str(column).strip().casefold().replace(" ", "_") for column in frame.columns]
         missing = REQUIRED - set(frame.columns)
         if missing:

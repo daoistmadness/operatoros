@@ -138,6 +138,7 @@ class StudentProfilePatch(BaseModel):
     contact: StudentContactInput | None = None
     guardians: list[GuardianInput] | None = Field(default=None, max_length=3)
     reason: str = Field(min_length=3, max_length=1000)
+    sensitive_confirmation: str | None = None
 
 
 class DeviceReplaceRequest(DeviceIdentityInput):
