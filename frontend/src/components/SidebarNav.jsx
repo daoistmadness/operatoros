@@ -46,7 +46,7 @@ const NAV_GROUPS = [
   {
     title: 'Configuration',
     items: [
-      { name: 'Jenjang Config', path: '/config/jenjang', icon: Clock3 },
+      { name: 'Cutoff Jenjang', path: '/config/jenjang', icon: Clock3 },
       { name: 'Override HEB', path: '/config/heb', icon: Clock3 },
       { name: 'Sakit / Izin / Alfa', path: '/config/absence-reasons', icon: CalendarDays },
     ],
