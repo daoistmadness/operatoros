@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.absence_reason import AbsenceReason
 from models.absence_reason_class_entry import AbsenceReasonClassEntry
@@ -757,7 +758,7 @@ def bulk_upsert_absence_reasons(
             db.rollback()
             if isinstance(e, HTTPException):
                 raise e
-            raise HTTPException(status_code=500, detail="The records could not be saved. Retry or contact the system administrator.")
+            raise_internal_error("The records could not be saved. Retry or contact the system administrator.", e)
 
     available_classes = {
         item["class_name"]: item
@@ -835,7 +836,7 @@ def bulk_upsert_absence_reasons(
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The records could not be saved. Retry or contact the system administrator.")
+        raise_internal_error("The records could not be saved. Retry or contact the system administrator.", e)
 
 
 @router.get("/absence-reasons/summary")
