@@ -30,6 +30,7 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `python3 .github/scripts/check_markdown_links.py`
 - `docker compose config`
 - `curl http://localhost:8000/docs`
+- `PYTHONPATH=backend:backend/src python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # deterministic optional-engine pilot; never point output at a database
 
 ## Formatting / Lint / Typecheck
 - Not declared in the repository root, backend, or frontend scripts.
