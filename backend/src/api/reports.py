@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from core.database import get_db
 from security.dependencies import get_current_user
-from schemas.reports import AnnualReportResponse, MonthlyReportResponse, ReportFiltersResponse
-from services.report_service import build_annual_report, build_monthly_report, build_report_filters
+from schemas.reports import AnnualReportResponse, ManagementReportResponse, MonthlyReportResponse, ReportFiltersResponse
+from services.report_service import build_annual_report, build_monthly_management_report, build_monthly_report, build_report_filters
 from services.report_export import build_report_pdf, build_report_xlsx, get_report_branding
+from services.monthly_management_export import build_monthly_management_pdf, build_monthly_management_xlsx
 
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -58,6 +59,31 @@ def get_monthly_report(
         class_name=class_name,
         subject_id=subject_id,
     )
+
+
+@router.get("/management/monthly", response_model=ManagementReportResponse)
+def get_monthly_management_report(
+    academic_year_id: int = Query(..., gt=0),
+    month: str = Query(...),
+    scope: ReportScope = Query(...),
+    class_name: str | None = Query(default=None),
+    subject_id: int | None = Query(default=None, gt=0),
+    db: Session = Depends(get_db),
+):
+    return build_monthly_management_report(db, academic_year_id, month, scope, class_name, subject_id)
+
+
+@router.get("/management/monthly/export")
+def export_monthly_management_report(
+    academic_year_id: int = Query(..., gt=0), month: str = Query(...), scope: ReportScope = Query(...),
+    format: ExportFormat = Query(...), class_name: str | None = Query(default=None),
+    subject_id: int | None = Query(default=None, gt=0), db: Session = Depends(get_db),
+):
+    report = build_monthly_management_report(db, academic_year_id, month, scope, class_name, subject_id)
+    branding = get_report_branding(db)
+    content = build_monthly_management_pdf(report, branding) if format == "pdf" else build_monthly_management_xlsx(report, branding)
+    filename = f"management-report_monthly_{scope}_{month}.{format}"
+    return _export_response(content, format, filename)
 
 
 @router.get("/annual", response_model=AnnualReportResponse)

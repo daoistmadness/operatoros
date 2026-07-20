@@ -17,6 +17,7 @@ from core.schema_guard import (
 from core.schema_migrations import (
     adopt_current_sqlite_schema,
     initialize_fresh_sqlite_database,
+    migrate_s38_to_s39_sqlite,
     main as migration_main,
 )
 
@@ -71,6 +72,7 @@ def test_explicit_baseline_preserves_every_protected_row(tmp_path):
 def test_current_migrated_copy_passes_startup(tmp_path, monkeypatch):
     target = production_copy(tmp_path)
     adopt_current_sqlite_schema(target, expected_counts=expected_production_counts())
+    migrate_s38_to_s39_sqlite(target)
     monkeypatch.delenv("BYPASS_STUDENT_LINKING_GATE", raising=False)
     engine = create_engine(f"sqlite:///{target}")
     validate_sqlite_startup(f"sqlite:///{target}", engine)
@@ -129,6 +131,7 @@ def test_inaccessible_database_is_rejected(tmp_path, monkeypatch):
 def test_production_bypass_is_forbidden(tmp_path, monkeypatch):
     target = production_copy(tmp_path)
     adopt_current_sqlite_schema(target, expected_counts=expected_production_counts())
+    migrate_s38_to_s39_sqlite(target)
     monkeypatch.setenv("BYPASS_STUDENT_LINKING_GATE", "true")
     with pytest.raises(DatabaseStartupError, match="PRODUCTION_BYPASS_FORBIDDEN"):
         validate_sqlite_startup(f"sqlite:///{target}", create_engine(f"sqlite:///{target}"))

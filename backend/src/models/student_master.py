@@ -138,6 +138,7 @@ class StudentDocumentStatus(Base):
 class StudentImportBatch(Base):
     __tablename__ = "student_import_batches"
     id = Column(String(36), primary_key=True, default=new_student_master_id)
+    session_id = Column(String(36), ForeignKey("student_import_sessions.id", ondelete="RESTRICT"), nullable=False, unique=True)
     filename = Column(String(255), nullable=False)
     file_checksum = Column(String(64), nullable=False, index=True)
     source_sheet = Column(String(255), nullable=True)

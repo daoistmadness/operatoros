@@ -379,6 +379,9 @@ def init_db():
         StudentImportRow, StudentMaster, StudentMasterChangeHistory, StudentParentGuardian,
     )
     from models.student_subject_grade import StudentSubjectGrade
+    from models.academic_roster import AcademicRosterImportBatch
+    from models.student_import_session import StudentImportAppliedAction, StudentImportSession
+    from models.operations_audit import OperationsAuditEvent
     from models.academic_config import AcademicTermConfig, KkmThreshold
     from models.academic_intervention import AcademicIntervention
     from models.report_builder import ReportTemplate, ReportBrandingConfig

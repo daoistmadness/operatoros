@@ -8,6 +8,7 @@ from core.config import settings
 from models.user import User
 from security.audit import audit_auth_event
 from security.sessions import SESSION_COOKIE_NAME, validate_session
+from security.capabilities import STUDENT_CAPABILITIES, capabilities_for_role
 
 
 def get_optional_user(
@@ -54,6 +55,33 @@ def require_role(role: str):
         return user
 
     return role_dependency
+
+
+def require_capability(capability: str):
+    if capability not in STUDENT_CAPABILITIES:
+        raise ValueError("Unsupported student-management capability")
+
+    def capability_dependency(request: Request, user: User = Depends(get_current_user)) -> User:
+        if capability not in capabilities_for_role(user.role):
+            audit_auth_event(
+                backup_dir=settings.BACKUP_DIR,
+                event="authorization_denied",
+                user_id=user.id,
+                username=user.username,
+                session_id_hash=None,
+                user_agent=request.headers.get("user-agent"),
+                ip_address=request.client.host if request.client else None,
+                resource=request.url.path,
+                reason="missing_capability",
+                metadata={"capability": capability},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return user
+
+    return capability_dependency
 
 
 def get_authenticated_user_id(user: User) -> int:

@@ -1,13 +1,13 @@
 {
   "manifest_version": 1,
-  "current_schema": "20260722_s38",
+  "current_schema": "20260722_s39",
   "startup_is_migration_runner": false,
   "states": [
     {
       "state": "fresh_empty",
       "detection": "configured absolute path does not exist",
       "schema_fingerprint": "empty",
-      "migration_id": "fresh_to_20260722_s38",
+      "migration_id": "fresh_to_20260722_s39",
       "outcome": "MIGRATION_COMPLETE",
       "business_data_behavior": "creates schema only; inserts no students, identities, attendance, or enrollments",
       "manual_approval": false
@@ -50,7 +50,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260722_s38",
+      "detection": "ledger head and immutable schema fingerprint equal 20260722_s39",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -62,7 +62,7 @@
       "detection": "supported ledger predecessor has a manifest successor",
       "schema_fingerprint": "revision-specific",
       "migration_id": null,
-      "outcome": "UNSUPPORTED_SCHEMA",
+      "outcome": "DATABASE_MIGRATION_REQUIRED",
       "business_data_behavior": "none until an approved forward revision exists",
       "manual_approval": true
     },
@@ -78,12 +78,12 @@
   ],
   "migrations": [
     {
-      "id": "fresh_to_20260722_s38",
+      "id": "fresh_to_20260722_s39",
       "description": "Atomically create the current empty SQLite schema",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260722_s38",
-      "checksum": "85e663bd5ea42634d4825ec5ce6209d206911cf499452d14e5bc4eb8eae70857",
+      "resulting_schema": "20260722_s39",
+      "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.initialize_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
       "rollback_policy": "delete only the uncommitted .migrating temporary file; automatic downgrade forbidden"
@@ -98,6 +98,24 @@
       "upgrade_entry_point": "core.schema_migrations.adopt_current_sqlite_schema",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "required tables/indexes/triggers", "approved protected counts and fingerprints"],
       "rollback_policy": "remove the single ledger row only under approved recovery; business data is untouched"
+    },
+    {
+      "id": "20260722_s38_to_20260722_s39",
+      "description": "Add unified student import sessions and immutable applied-action provenance",
+      "predecessor": "20260722_s38",
+      "supported_source_schema": "ledger-validated 20260722_s38",
+      "resulting_schema": "20260722_s39",
+      "checksum": "20da2b65b370ca88c9c81665d9a1da07ba088d9aa6e7e5f4fb821fc4a85e50f6",
+      "sqlite_checksum": "11b60b1f4ba0df34dd315c5df562ba3b81e3bada979f58416aab7659dcb4c420",
+      "postgresql_checksum": "58fb4936d670c595a3b9e3b2ba6f5eb461fce220a36ebfc42d7e74a30b467d18",
+      "sqlite_migration": "20260722_s39_student_import_provenance_sqlite.sql",
+      "postgresql_migration": "20260722_s39_student_import_provenance_postgresql.sql",
+      "upgrade_entry_point": "core.schema_migrations.migrate_s38_to_s39_sqlite",
+      "schema_objects": ["student_import_sessions", "student_import_applied_actions", "non-null batch session ownership", "append-only ledger triggers"],
+      "historical_backfill": "one deterministic UUIDv5 legacy session per batch; no applied actions inferred",
+      "validation_queries": ["source revision exactly S3.8", "no null batch ownership", "foreign keys", "schema fingerprint", "protected fingerprints unchanged"],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
+      "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, preview, result, checksum, and audit values remain unchanged"
     }
   ]
 }

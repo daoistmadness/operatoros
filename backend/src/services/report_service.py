@@ -15,10 +15,12 @@ from models.attendance_review import AttendanceOverride
 from models.jenjang import Jenjang
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
+from models.student_master import StudentAddress, StudentMaster
 from models.student_subject_grade import StudentSubjectGrade
 from models.subject import Subject
 from services.academic_config import resolve_effective_kkm
 from services.report_grouping import ReportScope, canonical_scope_for_level, level_matches_scope, scope_options
+from services.student_normalization import normalize_kelurahan
 
 
 def _round_rate(numerator: int | float, denominator: int | float) -> float | None:
@@ -298,6 +300,25 @@ def build_monthly_report(
         {"name": name, "count": count, "percentage": _round_rate(count, total_students)}
         for name, count in sorted(values.items(), key=lambda item: item[0].casefold())
     ]
+    month_label = start_date.strftime("%B %Y")
+    report_period = {
+        "selected_month": month,
+        "academic_year_id": academic_year.id,
+        "academic_year_label": academic_year.label,
+        "sections": {
+            "attendance": {"basis": "calendar_month", "month_bound": True, "label": month_label},
+            "population": {
+                "basis": "academic_year_enrollment_snapshot",
+                "month_bound": False,
+                "label": f"Academic Year {academic_year.label}",
+            },
+            "academics": {
+                "basis": "available_academic_year_records",
+                "month_bound": False,
+                "label": f"Available Academic Records - AY {academic_year.label}",
+            },
+        },
+    }
     return {
         "meta": {
             "report_type": "monthly",
@@ -306,6 +327,7 @@ def build_monthly_report(
             "period": {"start": start_date, "end": end_date},
             "generated_at": datetime.now(timezone.utc),
         },
+        "report_period": report_period,
         "executive_summary": {
             "total_students": total_students,
             "male_students": 0,
@@ -334,6 +356,183 @@ def build_monthly_report(
             "unmapped_levels": unmapped_levels,
             "warnings": warnings,
         },
+    }
+
+
+def _quality_section(eligible: int, known: int, *, excluded: int = 0, denominator: str, reasons: list[str] | None = None) -> dict:
+    unknown = max(eligible - known, 0)
+    return {
+        "eligible_count": eligible,
+        "known_count": known,
+        "unknown_count": unknown,
+        "excluded_count": excluded,
+        "denominator_used": denominator,
+        "percentage_basis": denominator,
+        "exclusion_reasons": reasons or [],
+        "reconciliation_difference": eligible - known - unknown,
+        "reconciles": eligible == known + unknown,
+    }
+
+
+def _demographic_distribution(values: list[str | None], eligible: int) -> dict:
+    counts: dict[str, int] = defaultdict(int)
+    for value in values:
+        if value:
+            counts[value] += 1
+    known = sum(counts.values())
+    return {
+        "eligible_count": eligible,
+        "known_count": known,
+        "unknown_count": eligible - known,
+        "denominator_used": "known_values",
+        "percentage_basis": "known demographic values; eligible-population percentage is also provided",
+        "rows": [
+            {
+                "name": name,
+                "count": count,
+                "percentage_of_known": _round_rate(count, known),
+                "percentage_of_eligible": _round_rate(count, eligible),
+            }
+            for name, count in sorted(counts.items(), key=lambda item: (-item[1], item[0].casefold()))
+        ],
+    }
+
+
+def build_monthly_management_report(
+    db: Session,
+    academic_year_id: int,
+    month: str,
+    scope: ReportScope,
+    class_name: str | None = None,
+    subject_id: int | None = None,
+) -> dict:
+    """Build management views from the same validated monthly canonical calculations."""
+    executive = build_monthly_report(db, academic_year_id, month, scope, class_name, subject_id)
+    enrollments, unmapped_levels = _scoped_enrollments(db, academic_year_id, scope, class_name)
+    eligible = len(enrollments)
+    master_ids = [enrollment.student_master_id for enrollment, *_ in enrollments if enrollment.student_master_id]
+    masters = {
+        row.id: row
+        for row in db.query(StudentMaster).filter(StudentMaster.id.in_(master_ids)).all()
+    } if master_ids else {}
+    addresses = {
+        row.student_master_id: row
+        for row in db.query(StudentAddress).filter(StudentAddress.student_master_id.in_(master_ids)).all()
+    } if master_ids else {}
+
+    genders: list[str | None] = []
+    religions: list[str | None] = []
+    locations: list[str | None] = []
+    level_counts: dict[str, int] = defaultdict(int)
+    level_classes: dict[str, set[str]] = defaultdict(set)
+    class_counts: dict[tuple[str, str], int] = defaultdict(int)
+    for enrollment, _, jenjang, class_label in enrollments:
+        level = jenjang.name.strip()
+        level_counts[level] += 1
+        level_classes[level].add(class_label)
+        class_counts[(level, class_label)] += 1
+        master = masters.get(enrollment.student_master_id)
+        genders.append(master.gender.title() if master and master.gender else None)
+        religions.append(master.religion if master and master.religion else None)
+        address = addresses.get(enrollment.student_master_id)
+        normalized_location = normalize_kelurahan(address.kelurahan) if address else None
+        locations.append(normalized_location.title() if normalized_location else None)
+
+    population_by_level = [
+        {
+            "jenjang": name,
+            "student_count": count,
+            "percentage_of_eligible": _round_rate(count, eligible),
+            "class_count": len(level_classes[name]),
+            "classification": "known",
+        }
+        for name, count in sorted(level_counts.items(), key=lambda item: item[0].casefold())
+    ]
+    population_by_class = [
+        {
+            "jenjang": level,
+            "class_name": class_label,
+            "student_count": count,
+            "percentage_within_jenjang": _round_rate(count, level_counts[level]),
+            "percentage_of_eligible": _round_rate(count, eligible),
+        }
+        for (level, class_label), count in sorted(class_counts.items(), key=lambda item: (item[0][0].casefold(), item[0][1].casefold()))
+    ]
+    gender = _demographic_distribution(genders, eligible)
+    religion = _demographic_distribution(religions, eligible)
+    location = _demographic_distribution(locations, eligible)
+    attendance = executive["attendance_summary"]
+    attendance_denominator = attendance["present"] + attendance["sakit"] + attendance["izin"] + attendance["alfa"]
+    enrollment_ids = [row[0].id for row in enrollments]
+    academic_student_query = db.query(func.count(func.distinct(StudentSubjectGrade.enrollment_id))).filter(
+        StudentSubjectGrade.enrollment_id.in_(enrollment_ids), StudentSubjectGrade.score.isnot(None)
+    )
+    if subject_id is not None:
+        academic_student_query = academic_student_query.filter(StudentSubjectGrade.subject_id == subject_id)
+    academic_students = academic_student_query.scalar() or 0
+    attendance_student_ids = {
+        student_id for (student_id,) in db.query(Attendance.student_id).filter(
+            Attendance.student_id.in_([entry[1].id for entry in enrollments]),
+            Attendance.date >= executive["meta"]["period"]["start"],
+            Attendance.date <= executive["meta"]["period"]["end"],
+        ).distinct().all()
+    } if enrollments else set()
+    linked = len(masters)
+    quality = {
+        "reconciliation": {
+            "population_total": eligible,
+            "student_master_linked": linked,
+            "student_master_unlinked": eligible - linked,
+            "religion_known": religion["known_count"], "religion_unknown": religion["unknown_count"],
+            "gender_known": gender["known_count"], "gender_unknown": gender["unknown_count"],
+            "location_known": location["known_count"], "location_unknown": location["unknown_count"],
+        },
+        "sections": {
+            "population": _quality_section(eligible, eligible, denominator="selected academic-year enrollments"),
+            "religion": _quality_section(eligible, religion["known_count"], denominator="known religion values"),
+            "gender": _quality_section(eligible, gender["known_count"], denominator="known gender values"),
+            "residential_area": _quality_section(eligible, location["known_count"], denominator="known kelurahan values"),
+            "attendance": {
+                **_quality_section(eligible, sum(1 for row in enrollments if row[1].id in attendance_student_ids), denominator="eligible students with selected-month attendance records"),
+                "attendance_event_denominator": attendance_denominator,
+            },
+            "academics": _quality_section(eligible, min(eligible, academic_students), denominator="students represented by available academic-year records"),
+        },
+        "unmapped_levels": unmapped_levels,
+        "warnings": [
+            "Demographic percentages use their disclosed known-value denominator and are never forced to match another section total.",
+            "Academic figures use available academic-year records and are not restricted to the selected calendar month.",
+            *executive["data_quality"]["warnings"],
+        ],
+    }
+    return {
+        "metadata": {
+            "report_type": "monthly_management",
+            "title": "Monthly Management Report",
+            "scope": scope,
+            "academic_year": executive["meta"]["academic_year"],
+            "generated_at": executive["meta"]["generated_at"],
+            "filters": {"class_name": class_name, "subject_id": subject_id},
+        },
+        "report_period": executive["report_period"],
+        "executive_summary": {
+            "total_students": eligible,
+            "total_classes": len(class_counts),
+            "attendance_rate": attendance["attendance_rate"],
+            "present_count": attendance["present"],
+            "excused_absence_count": attendance["izin"],
+            "sick_count": attendance["sakit"],
+            "unexcused_absence_count": attendance["alfa"],
+            "late_count": attendance["late_days"],
+            "students_below_kkm": executive["academic_summary"]["below_kkm_count"],
+            "data_completeness_rate": executive["executive_summary"]["data_completeness_rate"],
+            "attendance_denominator": attendance_denominator,
+        },
+        "student_population": {"eligible_count": eligible, "by_jenjang": population_by_level, "by_class": population_by_class},
+        "attendance": {"summary": attendance, "by_jenjang": executive["attendance_by_level"]},
+        "academic_summary": executive["academic_summary"],
+        "demographics": {"religion": religion, "gender": gender, "residential_area": location},
+        "data_quality": quality,
     }
 
 
@@ -463,6 +662,16 @@ def build_annual_report(
             "academic_year": {"id": academic_year.id, "name": academic_year.label},
             "period": {"start": academic_year.start_date, "end": academic_year.end_date},
             "generated_at": datetime.now(timezone.utc),
+        },
+        "report_period": {
+            "selected_month": "",
+            "academic_year_id": academic_year.id,
+            "academic_year_label": academic_year.label,
+            "sections": {
+                "attendance": {"basis": "academic_year", "month_bound": False, "label": f"Academic Year {academic_year.label}"},
+                "population": {"basis": "academic_year_enrollment_snapshot", "month_bound": False, "label": f"Academic Year {academic_year.label}"},
+                "academics": {"basis": "available_academic_year_records", "month_bound": False, "label": f"Available Academic Records - AY {academic_year.label}"},
+            },
         },
         "executive_summary": {
             "total_students": population["total_students"],

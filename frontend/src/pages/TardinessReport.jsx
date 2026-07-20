@@ -9,13 +9,13 @@ import {
   Printer,
   Search,
   TimerReset,
-  TriangleAlert,
   Users,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
 import { PageHeader } from "../components/common/page-header";
+import { EmptyState, ErrorState } from "../components/common/state-message";
 import {
   downloadTardinessExcel,
   downloadTardinessManagementExcel,
@@ -25,6 +25,8 @@ import {
 } from '../lib/api/endpoints';
 import { TERM_OPTIONS } from '../lib/reportPeriods';
 import { HebBadgeRow } from '../components/HebBadgeRow';
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const FILTER_MODES = [
   { value: 'month', label: 'Month' },
@@ -77,7 +79,7 @@ function sanitizePeriodLabel(label) {
 
 function SummaryCard({ title, value, icon, tone }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+    <Card className="rounded-2xl p-6 print:border print:shadow-none print:rounded-none">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
@@ -87,37 +89,25 @@ function SummaryCard({ title, value, icon, tone }) {
           {icon}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+      <Card className="rounded-2xl p-6 animate-pulse">
         <div className="h-6 w-56 bg-slate-200 rounded" />
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <div key={index} className="h-24 rounded-2xl bg-slate-100" />
           ))}
         </div>
-      </div>
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 animate-pulse">
+      </Card>
+      <Card className="rounded-2xl p-6 animate-pulse">
         <div className="h-5 w-48 bg-slate-200 rounded" />
         <div className="mt-4 h-72 rounded-2xl bg-slate-100" />
-      </div>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-      <div className="mx-auto w-14 h-14 rounded-[9999px] bg-slate-100 flex items-center justify-center text-slate-400">
-        <CalendarDays size={24} />
-      </div>
-      <h3 className="mt-4 text-lg font-bold text-slate-900">No tardiness data found for this period.</h3>
-      <p className="mt-2 text-sm text-slate-500">Try changing the reporting period and generate the report again.</p>
+      </Card>
     </div>
   );
 }
@@ -354,7 +344,9 @@ function TardinessReport() {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { font-size: 11pt; background: white !important; }
-          table { page-break-inside: avoid; }
+          table { page-break-inside: auto; }
+          thead { display: table-header-group; }
+          tr { break-inside: avoid; page-break-inside: avoid; }
           body.printing-tardiness-report .app-sidebar { display: none !important; }
           body.printing-tardiness-report .app-main { margin-left: 0 !important; padding: 0 !important; }
           body.printing-tardiness-report .report-print-area { padding: 0 !important; }
@@ -368,11 +360,11 @@ function TardinessReport() {
         description="Analyze student tardiness distribution by level and by class."
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 filter-bar no-print">
+      <Card className="rounded-2xl p-6 filter-bar no-print">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Period Mode</label>
-            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1" role="group" aria-label="Period mode">
               {FILTER_MODES.map((option) => (
                 <button
                   key={option.value}
@@ -394,6 +386,7 @@ function TardinessReport() {
             {filterMode === 'month' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Report month"
                   value={month}
                   onChange={(event) => setMonth(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -405,6 +398,7 @@ function TardinessReport() {
                   ))}
                 </select>
                 <input
+                  aria-label="Report year"
                   type="number"
                   min="1900"
                   value={year}
@@ -417,12 +411,14 @@ function TardinessReport() {
             {filterMode === 'date_range' && (
               <div className="grid grid-cols-2 gap-3">
                 <input
+                  aria-label="Report start date"
                   type="date"
                   value={dateFrom}
                   onChange={(event) => setDateFrom(event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
                 <input
+                  aria-label="Report end date"
                   type="date"
                   value={dateTo}
                   onChange={(event) => setDateTo(event.target.value)}
@@ -434,6 +430,7 @@ function TardinessReport() {
             {filterMode === 'term' && (
               <div className="grid grid-cols-2 gap-3">
                 <select
+                  aria-label="Academic term"
                   value={term}
                   onChange={(event) => setTerm(Number(event.target.value))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -445,6 +442,7 @@ function TardinessReport() {
                   ))}
                 </select>
                 <input
+                  aria-label="Academic year"
                   type="number"
                   min="1900"
                   value={year}
@@ -458,6 +456,7 @@ function TardinessReport() {
           <div className="space-y-3">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Level (Jenjang)</label>
             <select
+              aria-label="Level (Jenjang)"
               value={selectedJenjang}
               onChange={(event) => setSelectedJenjang(event.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
@@ -470,47 +469,50 @@ function TardinessReport() {
           </div>
 
           <div>
-            <button
+            <Button
               type="button"
               onClick={handleGenerateReport}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-2.5 font-medium text-white transition-all duration-150 ease-out hover:bg-brand-hover focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50 w-full h-[46px] font-bold"
+              className="w-full h-[46px] font-bold"
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
               <span>{loading ? 'Loading...' : 'Generate Report'}</span>
-            </button>
+            </Button>
           </div>
 
           <div className="export-actions">
             {report ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleExportExcel}
                   disabled={exportingExcel}
-                  className="h-[46px] rounded-xl border border-emerald-200 bg-emerald-50 px-4 font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   {exportingExcel ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
                   <span>Export Excel</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleExportManagementExcel}
                   disabled={exportingManagementExcel}
-                  className="h-[46px] rounded-xl border border-indigo-200 bg-indigo-50 px-4 font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   {exportingManagementExcel ? <Loader2 className="animate-spin" size={18} /> : <BriefcaseBusiness size={18} />}
                   <span>Export Executive</span>
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handlePrint}
                   disabled={printing}
-                  className="h-[46px] rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  className="h-[46px]"
                 >
                   <Printer size={18} />
                   <span>Print PDF</span>
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="h-[46px] rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 flex items-center justify-center text-sm text-slate-400">
@@ -519,31 +521,28 @@ function TardinessReport() {
             )}
           </div>
         </div>
-      </section>
+      </Card>
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800 flex items-start gap-3 no-print">
-          <TriangleAlert className="mt-0.5" size={20} />
-          <p className="font-medium">{error}</p>
-        </div>
+        <ErrorState className="no-print" title="Tardiness report could not be generated" description={error} />
       )}
 
       {loading && <LoadingSkeleton />}
 
-      {!loading && hasGenerated && !hasData && !error && <EmptyState />}
+      {!loading && hasGenerated && !hasData && !error && <EmptyState title="No tardiness data found for this period" description="Try changing the reporting period and generate the report again." />}
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section px-6 py-10 text-center print:border print:shadow-none print:rounded-none">
             <h2 className="text-2xl md:text-3xl font-black tracking-wide text-slate-900 uppercase">{report.report_title}</h2>
             <p className="mt-2 text-lg font-semibold text-slate-700 uppercase">{report.school_name}</p>
             <p className="mt-2 text-base text-slate-500">{report.period.label}</p>
             <div className="flex justify-center mt-4 no-print">
               <HebBadgeRow hebByJenjang={report?.heb_by_jenjang} />
             </div>
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
               <h3 className="text-xl font-bold text-slate-900">Management Summary</h3>
               <p className="text-sm text-slate-500">Separates total late incidents from the actual number of school days affected.</p>
@@ -597,9 +596,9 @@ function TardinessReport() {
               affecting {Number(managementSummary.school_impact_rate_pct || 0).toFixed(1)}% of the {managementSummary.tracked_school_days} recorded school days
               in this period, with an average of {Number(managementSummary.average_lateness_density || 0).toFixed(2)} late students per affected day.
             </div>
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Jenjang Late Summary</h3>
@@ -643,9 +642,9 @@ function TardinessReport() {
             </div>
 
             <TardinessBarChart data={jenjangSummaryRows} />
-          </div>
+          </Card>
 
-          <div className="report-section rounded-2xl border border-slate-200 bg-white shadow-sm p-6 print:border print:shadow-none print:rounded-none">
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
                  <h3 className="text-xl font-bold text-slate-900">Class Breakdown</h3>
                  <p className="text-sm text-slate-500">Classes are sorted alphabetically within each level.</p>
@@ -709,7 +708,7 @@ function TardinessReport() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           <div className="report-section print:break-inside-avoid">
             <div className="mb-4">
