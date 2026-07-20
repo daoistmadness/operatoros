@@ -148,6 +148,55 @@ def test_admin_jenjang_cutoff_mutation_reaches_domain_validation(authorization_a
 
 
 @pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/config/heb"),
+        ("put", "/api/config/heb/Primary/2026/7"),
+        ("delete", "/api/config/heb/Primary/2026/7"),
+        ("get", "/api/config/absence-reasons?month=7&year=2026"),
+        ("post", "/api/config/absence-reasons/bulk"),
+        ("get", "/api/config/absence-reasons/summary?month=7&year=2026"),
+    ],
+)
+def test_anonymous_administrative_config_is_rejected(authorization_app, method, path):
+    module, _ = authorization_app
+    client = _client(module)
+    response = getattr(client, method)(path)
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Authentication required"}
+    client.close()
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/config/heb"),
+        ("put", "/api/config/heb/Primary/2026/7"),
+        ("delete", "/api/config/heb/Primary/2026/7"),
+        ("get", "/api/config/absence-reasons?month=7&year=2026"),
+        ("post", "/api/config/absence-reasons/bulk"),
+        ("get", "/api/config/absence-reasons/summary?month=7&year=2026"),
+    ],
+)
+def test_staff_administrative_config_is_forbidden(authorization_app, method, path):
+    module, _ = authorization_app
+    client = _client(module, "staff", "staff authorization pass")
+    response = getattr(client, method)(path)
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Insufficient permissions"}
+    client.close()
+
+
+def test_admin_can_read_administrative_config(authorization_app):
+    module, _ = authorization_app
+    client = _client(module, "admin", "admin authorization pass")
+    assert client.get("/api/config/heb").status_code == 200
+    assert client.get("/api/config/absence-reasons?month=7&year=2026").status_code == 200
+    assert client.get("/api/config/absence-reasons/summary?month=7&year=2026").status_code == 200
+    client.close()
+
+
+@pytest.mark.parametrize(
     "path",
     [
         "/api/reports/filters",
