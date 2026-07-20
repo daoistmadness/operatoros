@@ -115,5 +115,11 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByRole("tab", { name: /Student Roster/ })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Student Data Update/ })).toBeVisible();
     await verifyNoHorizontalOverflow(page, `UploadCenter ${vp.width}x${vp.height}`);
+
+    // 6. Student-derived lateness cutoff configuration
+    await page.goto("/config/jenjang");
+    await expect(page.getByRole("heading", { name: "Cutoff Keterlambatan per Jenjang" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Status cutoff jenjang" })).toBeVisible();
+    await verifyNoHorizontalOverflow(page, `JenjangConfig ${vp.width}x${vp.height}`);
   });
 }
