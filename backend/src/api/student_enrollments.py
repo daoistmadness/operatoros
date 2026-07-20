@@ -190,7 +190,7 @@ async def preview_academic_roster(
     try:
         batch = create_roster_preview(
             db, await file.read(), file.filename or "roster.xlsx",
-            source_owner.strip(), date_received, user.username,
+            source_owner.strip(), date_received, user.username, file.content_type,
         )
     except ValueError as exc:
         db.rollback()
