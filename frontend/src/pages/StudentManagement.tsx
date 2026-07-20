@@ -117,6 +117,7 @@ export default function StudentManagement() {
   const exporter = useStudentTemplateExport();
   const columns = useMemo(() => [
     column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-black text-brand hover:underline" to={`/students/${row.original.id}`}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
+    column.accessor("nipd_masked", { header: "NIPD", cell: (info) => info.getValue() || "—" }),
     column.accessor("nisn_masked", { header: "NISN", cell: (info) => info.getValue() || "—" }),
     column.accessor("current_jenjang", { header: "Jenjang", cell: (info) => info.getValue() || "—" }),
     column.accessor("current_class", { header: "Class", cell: ({ row }) => <div>{row.original.current_class || "—"}<p className="text-xs text-muted-foreground">{row.original.academic_year || "No enrollment"}</p></div> }),
