@@ -10,6 +10,7 @@ export interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   authenticated: boolean;
+  can: (capability: string) => boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
 }
@@ -26,8 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      void client.cancelQueries({ queryKey: queryKeys.auth.all });
+      void client.cancelQueries();
       client.setQueryData(queryKeys.auth.me, null);
+      client.removeQueries({
+        predicate: (query) => query.queryKey[0] !== queryKeys.auth.all[0],
+      });
     };
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
@@ -41,9 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await logoutMutation.mutateAsync();
   }, [logoutMutation]);
 
+  const can = useCallback(
+    (capability: string) => Boolean(user?.capabilities?.includes(capability)),
+    [user],
+  );
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, authenticated: user !== null, login, logout }),
-    [user, loading, login, logout],
+    () => ({ user, loading, authenticated: user !== null, can, login, logout }),
+    [user, loading, can, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
