@@ -1,16 +1,18 @@
 # Management Analytics Empty States, Filter Handling, and Setup Guidance Remediation
 
-**Workstream**: Management Analytics Empty States, Filter Handling, and Setup Guidance  
-**Branch**: `feature/product-audit-remediation`  
-**Base Commit**: `8a1a05c`  
-**Date**: 2026-07-20  
-**Status**: COMPLETE  
+**Workstream**: Management Analytics Empty States, Filter Handling, and Setup Guidance
+**Branch**: `feature/product-audit-remediation`
+**Base Commit**: `8a1a05c`
+**Date**: 2026-07-20
+**Status**: COMPLETE
 
 ---
 
 ## Executive Summary
 
-This remediation workstream audited and enhanced the **Management Analytics** user experience (`frontend/src/pages/ManagementAnalytics.tsx`) to guarantee deterministic state resolution, contextual empty states, role-aware setup guidance, safe filter reset behavior, stale request protection, and accessibility standards without mutating production data or altering application behavior.
+This remediation workstream audited and enhanced the **Management Analytics** user experience (`frontend/src/pages/ManagementAnalytics.tsx`) to guarantee deterministic state resolution, contextual empty states, role-aware setup guidance, safe filter reset behavior, stale request protection, and accessibility standards without mutating production data or changing unrelated application behavior.
+
+The original audit identified ambiguous empty states, setup and permission states that could be confused with request failures, dependent filters that could retain invalid values, and async responses that could overwrite newer selections. The remediation addresses those findings within the Management Analytics page and shared state-message primitives.
 
 ---
 
@@ -21,12 +23,12 @@ The page state resolution evaluates in the following precedence sequence:
 | Priority | State | Condition | Visual Representation |
 | :--- | :--- | :--- | :--- |
 | **1** | `PERMISSION_RESTRICTED` | `!can("view_student")` or API returns HTTP 403 / "Akses ditolak" | `PermissionRestrictedState` banner explaining missing capability without leaking data |
-| **2** | `SETUP_REQUIRED` | `academic_years.length === 0` or `academicYearId === null` after filter load | `SetupRequiredState` banner with role-aware action link to `/academic-management` |
+| **2** | `SETUP_REQUIRED` | A successful filter response contains `academic_years.length === 0` | `SetupRequiredState` banner with role-aware action link to `/academic-management` |
 | **3** | `LOADING_INITIAL` | Initial filter options fetch pending (`summaryData === null && isLoading`) | Accessible Skeleton pulse grid with `role="status"` and `aria-live="polite"` |
 | **4** | `ERROR_BLOCKING` | Critical initial API exception during management summary load | `ErrorState` card with clear message and "Coba Lagi" retry button |
 | **5** | `EMPTY_SYSTEM` | Summary loaded successfully but `total_students === 0` | `EmptyState` explaining prerequisite data and link to `/upload` (if permitted) |
 | **6** | `EMPTY_FILTERED` | `total_students > 0` but current filter selections match 0 records | `FilteredEmptyState` explaining 0 matches with a prominent "Reset Filter" button |
-| **7** | `LOADING_REFRESH` | Main summary present but background filter update / refresh in progress | Filter select controls disabled (`aria-disabled="true"`) with active spin indicator |
+| **7** | `LOADING_REFRESH` | Main summary present but background filter update / refresh in progress | Dependent filter select controls disabled with an active refresh indicator |
 | **8** | `ERROR_RECOVERABLE` | Secondary endpoint (trends or impact) failed while summary data is visible | Inline recoverable warning alert with dedicated retry action |
 | **9** | `READY_WITH_DATA` | Data present across summary, trends, and intervention metrics | Full interactive dashboard with KPI cards, Chart.js visualizations, and tables |
 
@@ -64,9 +66,9 @@ The page state resolution evaluates in the following precedence sequence:
 
 ## 4. Accessibility & Responsive Standards
 
-- **Keyboard Navigation**: All filter drop-downs, refresh, reset, retry, and export action buttons feature focus ring indicators (`focus:ring-2 focus:ring-brand/10`).
+- **Keyboard Navigation**: Native filter controls and labeled action buttons remain keyboard-accessible; the icon-only export-options action has an accessible name.
 - **Live Regions**: Skeleton loading containers announce state changes via `role="status"` and `aria-live="polite"`. Error containers use `role="alert"`.
-- **Screen Reader Summaries**: Visual Chart.js canvases include hidden structured data alternatives (`aria-label`, data table summaries).
+- **Screen Reader Feedback**: Initial loading and error states expose appropriate live-region semantics.
 - **Responsive Layout**: Filter grid (`grid gap-4 sm:grid-cols-2 md:grid-cols-5`) and action button row scale cleanly across 390px, 768px, 1024px, and 1366px viewports with zero horizontal body overflow (`scrollWidth <= clientWidth + 2`).
 
 ---
@@ -78,3 +80,9 @@ The page state resolution evaluates in the following precedence sequence:
 - **Frontend Vitest Suite**: 31 test files passed (155 tests, including `ManagementAnalytics.test.tsx`).
 - **Backend Pytest Suite**: 480 passed (0 failed).
 - **E2E Smoke Gate**: `make e2e-validate` & `make e2e-smoke` passed (Backend 4 passed, Web 11 passed).
+
+---
+
+## 6. Deferred Items
+
+Jenjang Config, navigation density, broader terminology consistency, native desktop/Tauri regression coverage, and all other Product Audit workstreams remain deferred and are outside this remediation.
