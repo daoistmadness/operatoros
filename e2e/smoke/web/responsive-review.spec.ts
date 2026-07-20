@@ -123,3 +123,47 @@ for (const vp of VIEWPORTS) {
     await verifyNoHorizontalOverflow(page, `JenjangConfig ${vp.width}x${vp.height}`);
   });
 }
+
+test('mobile navigation manages focus, dismissal, history, and route state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page);
+
+  const opener = page.getByRole('button', { name: 'Open navigation' });
+  await opener.click();
+  const drawer = page.getByRole('dialog', { name: 'Application navigation' });
+  await expect(drawer).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeVisible();
+  await expect(page.locator('#main-content')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+  await expect(drawer.getByRole('button', { name: 'Overview' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(drawer.getByRole('button', { name: 'Overview' })).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(opener).toBeFocused();
+
+  await opener.click();
+  await drawer.getByRole('link', { name: 'Management Analytics' }).click();
+  await expect(page).toHaveURL(/\/analytics$/);
+  await expect(drawer).toBeHidden();
+  await expect(page.locator('#main-content')).toBeFocused();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await opener.click();
+  await expect(drawer.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('button', { name: 'Close navigation' }).click();
+  await expect(opener).toBeFocused();
+  const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+  await skipLink.focus();
+  await skipLink.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+  await verifyNoHorizontalOverflow(page, 'mobile navigation 390x844');
+
+  await page.goto('/not-a-real-route');
+  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary navigation' })).toBeAttached();
+});
