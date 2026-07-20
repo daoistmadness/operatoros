@@ -17,6 +17,8 @@ import {
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { cn } from "../lib/cn";
+import { Card } from "../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -287,21 +289,21 @@ function ClassMapping() {
       </header>
 
       {successMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800 shadow-sm">
+        <Card className="rounded-2xl border-emerald-200 bg-emerald-50 p-4 flex items-center gap-3 text-emerald-800">
           <CheckCircle2 size={20} />
           <p className="font-medium">{successMessage}</p>
-        </div>
+        </Card>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800 shadow-sm">
+        <Card className="rounded-2xl border-rose-200 bg-rose-50 p-4 flex items-center gap-3 text-rose-800">
           <AlertTriangle size={20} />
           <p className="font-medium">{error}</p>
-        </div>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
+        <Card className="rounded-2xl xl:col-span-2 p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative md:col-span-1">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -392,7 +394,7 @@ function ClassMapping() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/students/${student.id}`);
+                              navigate(`/attendance/students/${student.id}`);
                             }}
                             className="hover:text-brand hover:underline transition-colors text-left"
                           >
@@ -434,9 +436,9 @@ function ClassMapping() {
               Next <ChevronRight size={16} />
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
+        <Card className="rounded-2xl p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -544,34 +546,27 @@ function ClassMapping() {
             <Users size={16} />
             {assigning ? "Assigning..." : "Assign Class"}
           </button>
-        </div>
+        </Card>
       </div>
 
-      {showAddModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setShowAddModal(false)}
-        >
-          <div 
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Dialog open={showAddModal} onOpenChange={(open) => { if (!open && !addingStudent) setShowAddModal(false); }}>
+          <DialogContent showClose={false} className="max-w-md overflow-hidden p-0">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2">
                   <UserPlus size={20} className="text-brand" />
                   Add Manual Student
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Create a student in the master student pool</p>
+                </DialogTitle>
+                <DialogDescription>Create a student in the master student pool</DialogDescription>
               </div>
               <button
                 type="button"
+                aria-label="Close add student dialog"
                 onClick={() => setShowAddModal(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
@@ -657,9 +652,8 @@ function ClassMapping() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }

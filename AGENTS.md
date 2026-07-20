@@ -64,6 +64,7 @@ To ensure strict quality and architecture control, developers and AI agents must
   * Owns and maintains the unified tabbed state layout within AcademicManagement.tsx and the shared infrastructure of EnrollmentPanel.tsx, preserving structural scannability under high-density rendering states.
   * Owns and maintains the Chart.js metric visualizations within ManagementAnalytics.tsx, ensuring semantic clarity and layout precision under dynamic filter modifications.
 * **Strict Boundaries:**
+  * All new or migrated frontend UI must follow `frontend/DESIGN.md` and reuse existing shared primitives before introducing new visual patterns.
   * Never alter styling colors to violate the status-to-color mapping standard.
   * Never use inline styles on React nodes (use Tailwind CSS classes or styled configuration properties).
   * Must implement proper loading states (`isLoading`) and handle API errors gracefully in UI alerts.

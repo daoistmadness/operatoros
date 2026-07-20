@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildApiUrl } from "../lib/api/client";
+import { Card } from "../components/ui/card";
 
 export function classifyUploadError(err) {
   const status = Number(err?.status || err?.response?.status || 0);
@@ -42,7 +43,7 @@ export function uploadAttendanceFile(file) {
   return api.post("/api/uploads/upload", formData);
 }
 
-function Upload() {
+function Upload({ embedded = false }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -114,11 +115,15 @@ function Upload() {
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h1>
+        {embedded ? (
+          <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h2>
+        ) : (
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Import Attendance Data</h1>
+        )}
         <p className="text-slate-500 max-w-md mx-auto">Sync your biometric machine logs with the OperatorOS analytics engine.</p>
       </header>
 
-      <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white shadow-sm p-10 hover:border-brand/40 hover:shadow-md transition-all duration-200 group">
+      <Card className="rounded-2xl border-2 border-dashed p-10 hover:border-brand/40 hover:shadow-md transition-all duration-200 group">
         <div className="flex flex-col items-center justify-center space-y-6 text-center">
           <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-300 group-hover:bg-brand/10 group-hover:text-brand transition-all duration-200">
             <UploadCloud size={40} />
@@ -136,7 +141,7 @@ function Upload() {
             <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleFileChange} />
           </label>
         </div>
-      </div>
+      </Card>
 
       <AnimatePresence>
         {file && (
@@ -336,7 +341,7 @@ function Upload() {
         )}
       </AnimatePresence>
 
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <Card className="rounded-2xl border-dashed bg-slate-50 p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex-1">
             <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
@@ -356,18 +361,18 @@ function Upload() {
             Download Template
           </a>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
 
 const ReportStat = ({ label, value }) => (
-  <div className="bg-white p-4 rounded-2xl shadow-sm border border-green-100">
+  <Card className="rounded-2xl p-4 border-green-100">
     <div>
       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</p>
       <p className="text-2xl font-black text-slate-800 leading-tight">{value}</p>
     </div>
-  </div>
+  </Card>
 );
 
 export default Upload;

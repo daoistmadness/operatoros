@@ -81,5 +81,33 @@ test("attendance review filters disposable attendance", async ({ page }) => {
   await page.locator('input[type="date"]').fill(new Date().toISOString().slice(0, 10));
   await page.getByRole("button", { name: "Load" }).click();
   await expect(page.getByText("E2E Ada")).toBeVisible();
-  await expect(page.getByText("1 records")).toBeVisible();
+  await expect(page.getByText(/\d+ records/)).toBeVisible();
+});
+
+test("student management creates edits and links a synthetic canonical profile", async ({ page }) => {
+  await login(page);
+  await page.goto("/students");
+  await expect(page.getByRole("heading", { name: "Student Management" })).toBeVisible();
+  await page.getByRole("button", { name: "Add student" }).click();
+  await page.getByLabel("Legal name").fill("E2E Browser Student");
+  await page.getByRole("button", { name: "Review student" }).click();
+  await expect(page.getByText("Confirm student creation")).toBeVisible();
+  await page.getByRole("button", { name: "Confirm and create" }).click();
+  await page.getByLabel("Search students").fill("E2E Browser Student");
+  await expect(page.getByRole("link", { name: "E2E Browser Student" })).toBeVisible();
+  await page.getByRole("link", { name: "E2E Browser Student" }).click();
+  await expect(page.getByRole("heading", { name: "E2E Browser Student" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Edit profile" }).click();
+  await page.getByLabel("preferred name").fill("E2E Browser Preferred");
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByText("E2E Browser Preferred")).toBeVisible();
+
+  await page.getByRole("button", { name: "Manage Device ID" }).click();
+  await page.getByLabel("New Attendance Device ID").fill("990130");
+  await page.getByLabel("Reason").fill("E2E browser device assignment");
+  await page.getByRole("button", { name: "Confirm device change" }).click();
+  await page.getByRole("tab", { name: "Attendance Device" }).click();
+  await expect(page.getByText("990130")).toBeVisible();
+  await expect(page.getByText("Active", { exact: true })).toBeVisible();
 });

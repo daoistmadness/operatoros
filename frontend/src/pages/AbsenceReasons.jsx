@@ -4,6 +4,8 @@ import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, Copy, Loader2,
 import api from "../api";
 import { getPageApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
+import { Card } from "../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -428,7 +430,7 @@ function AbsenceReasons() {
       />
 
       {coverageRows.length > 0 && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-5 shadow-sm">
+        <Card className="rounded-2xl border-amber-200 bg-amber-50 px-6 py-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-amber-800">
@@ -452,7 +454,7 @@ function AbsenceReasons() {
               Isi Sekarang <ChevronRight size={16} />
             </button>
           </div>
-        </section>
+        </Card>
       )}
 
       {(message || error) && (
@@ -480,7 +482,7 @@ function AbsenceReasons() {
         </div>
       )}
 
-      <section className="rounded-2xl border border-slate-100 bg-white shadow-sm p-6 space-y-4">
+      <Card className="rounded-2xl border-slate-100 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <CalendarDays size={18} className="text-brand" />
           <h2 className="text-lg font-bold text-slate-900">Periode & Petugas</h2>
@@ -490,6 +492,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Bulan</label>
             <select
+              aria-label="Bulan"
               value={month}
               onChange={(event) => setMonth(Number(event.target.value))}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800"
@@ -503,6 +506,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Tahun</label>
             <input
+              aria-label="Tahun"
               type="number"
               value={year}
               onChange={(event) => setYear(Number(event.target.value))}
@@ -513,6 +517,7 @@ function AbsenceReasons() {
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Diisi oleh</label>
             <input
+              aria-label="Diisi oleh"
               type="text"
               value={enteredBy}
               onChange={(event) => setEnteredBy(event.target.value)}
@@ -532,9 +537,10 @@ function AbsenceReasons() {
             </button>
           </div>
         </div>
-      </section>
+      </Card>
 
-      <section ref={tableSectionRef} className="rounded-2xl border border-slate-100 bg-white shadow-sm p-0 overflow-hidden">
+      <section ref={tableSectionRef}>
+      <Card className="rounded-2xl border-slate-100 p-0 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Input Kelas — {getMonthLabel(month)} {year}</h2>
@@ -629,6 +635,7 @@ function AbsenceReasons() {
                                   inputRefs.current[`${rowIndex}-${fieldIndex}`] = node;
                                 }}
                                 type="number"
+                                aria-label={`${field} untuk ${row.class_name}`}
                                 min="0"
                                 value={row[field] || 0}
                                 onChange={(event) => updateRow(row.class_name, field, event.target.value)}
@@ -640,6 +647,7 @@ function AbsenceReasons() {
                           <td className="px-6 py-4">
                             <input
                               type="text"
+                              aria-label={`Catatan untuk ${row.class_name}`}
                               value={row.note || ""}
                               onChange={(event) => updateRow(row.class_name, "note", event.target.value)}
                               placeholder="Catatan kelas"
@@ -670,15 +678,15 @@ function AbsenceReasons() {
             </table>
           </div>
         )}
+      </Card>
       </section>
 
-      {quickFillJenjang && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setQuickFillJenjang("")} />
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl space-y-6">
+      <Dialog open={Boolean(quickFillJenjang)} onOpenChange={(open) => { if (!open) setQuickFillJenjang(""); }}>
+        {quickFillJenjang ? (
+          <DialogContent className="max-w-md space-y-6 p-8">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Isi semua kelas {quickFillJenjang}</h3>
-              <p className="text-slate-500 text-sm mt-1">Terapkan nilai yang sama ke semua kelas pada jenjang ini.</p>
+              <DialogTitle>Isi semua kelas {quickFillJenjang}</DialogTitle>
+              <DialogDescription>Terapkan nilai yang sama ke semua kelas pada jenjang ini.</DialogDescription>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -687,6 +695,7 @@ function AbsenceReasons() {
                   <label className="text-xs font-bold uppercase text-slate-400">{label}</label>
                   <input
                     type="number"
+                    aria-label={`${label} untuk semua kelas ${quickFillJenjang}`}
                     min="0"
                     value={quickFillForm[label.toLowerCase()]}
                     onChange={(event) =>
@@ -717,9 +726,9 @@ function AbsenceReasons() {
                 Terapkan ke semua kelas {quickFillJenjang}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        ) : null}
+      </Dialog>
     </div>
   );
 }

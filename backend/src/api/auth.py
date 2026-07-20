@@ -6,6 +6,7 @@ from core.config import settings
 from core.database import get_db
 from models.user import User
 from security.dependencies import get_current_user
+from security.capabilities import capabilities_for_role
 from security.sessions import SESSION_COOKIE_NAME
 from services.auth_service import AuthenticationFailure, authenticate_user, logout_user
 
@@ -22,6 +23,16 @@ class CurrentUserResponse(BaseModel):
     id: int
     username: str
     role: str
+    capabilities: list[str]
+
+
+def _current_user_response(user: User) -> CurrentUserResponse:
+    return CurrentUserResponse(
+        id=user.id,
+        username=user.username,
+        role=user.role,
+        capabilities=sorted(capabilities_for_role(user.role)),
+    )
 
 
 def _request_context(request: Request) -> tuple[str | None, str | None]:
@@ -54,7 +65,7 @@ def login(body: LoginRequest, request: Request, response: Response, db: Session 
         httponly=True,
         samesite="lax",
     )
-    return CurrentUserResponse(id=result.user.id, username=result.user.username, role=result.user.role)
+    return _current_user_response(result.user)
 
 
 @router.post("/logout", status_code=204)
@@ -79,4 +90,4 @@ def logout(
 
 @router.get("/me", response_model=CurrentUserResponse)
 def current_user(user: User = Depends(get_current_user)):
-    return CurrentUserResponse(id=user.id, username=user.username, role=user.role)
+    return _current_user_response(user)
