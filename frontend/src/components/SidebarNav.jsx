@@ -17,6 +17,7 @@ import {
   UploadCloud,
   UserCheck,
   LogOut,
+  ShieldCheck,
   Users as UsersIcon,
 } from 'lucide-react';
 
@@ -35,7 +36,8 @@ const NAV_GROUPS = [
       { name: 'Upload History', path: '/upload-history', icon: History },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Academic & Student Management', path: '/academic-management', icon: Layers3 },
-      { name: 'Students', path: '/students', icon: UsersIcon, match: (pathname) => pathname === '/students' || pathname.startsWith('/students/') },
+      { name: 'Students', path: '/students', icon: UsersIcon, match: (pathname) => pathname === '/students' || (pathname.startsWith('/students/') && pathname !== '/students/operations') },
+      { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck, capability: 'view_student_audit' },
       { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck },
       { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
       { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },

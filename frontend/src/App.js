@@ -22,6 +22,7 @@ import ManagementAnalytics from './pages/ManagementAnalytics';
 import ExecutiveReports from './pages/ExecutiveReports.tsx';
 import MonthlyManagementReport from './pages/MonthlyManagementReport.tsx';
 import BackupManagement from './pages/BackupManagement.tsx';
+import OperationsAudit from './pages/OperationsAudit.tsx';
 import SidebarNav from './components/SidebarNav';
 import Login from './pages/Login.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
@@ -90,6 +91,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/backups" element={<RequireRole role="admin"><BackupManagement /></RequireRole>} />
               <Route path="/students" element={<RequireCapability capability="view_student"><StudentManagement /></RequireCapability>} />
+              <Route path="/students/operations" element={<RequireCapability capability="view_student_audit"><OperationsAudit /></RequireCapability>} />
               <Route path="/students/:id" element={<RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>} />
               <Route path="/attendance/students/:id" element={<StudentProfile />} />
             </Route>
