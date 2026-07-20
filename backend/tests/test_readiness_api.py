@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.exc import SQLAlchemyError
 
+import api.readiness as readiness_api
 from api.readiness import router
 from core.database import Base, get_db
 from models.academic_config import AcademicTermConfig
@@ -132,7 +133,7 @@ def test_internal_readiness_error_is_sanitized(readiness_app, monkeypatch):
     def fail(*_args, **_kwargs):
         raise SQLAlchemyError("SQLSTATE secret table constraint /srv/private.py")
 
-    monkeypatch.setattr("api.readiness.build_setup_readiness", fail)
+    monkeypatch.setattr(readiness_api, "build_setup_readiness", fail)
     response = TestClient(app, raise_server_exceptions=False).get("/api/readiness")
     assert response.status_code == 500
     assert response.json() == {"detail": "Setup readiness could not be checked. Retry or contact the system administrator."}
