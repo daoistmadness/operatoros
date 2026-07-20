@@ -59,6 +59,10 @@ def main() -> int:
         )
         active_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1B','B',1)",
+            (year_id, grade_id),
+        )
+        connection.execute(
             "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1 / MAIN','INACTIVE',0)",
             (year_id, grade_id),
         )

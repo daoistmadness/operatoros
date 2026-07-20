@@ -66,7 +66,7 @@ with sqlite3.connect(database) as connection:
     enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments ORDER BY id").fetchall()
 checksum = hashlib.sha256(open(database, "rb").read()).hexdigest()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-json.dump({"disposable_database": database, "production_checksum": production_checksum, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, **counts}, open(output, "w"), indent=2)
+json.dump({"disposable_database": database, "production_checksum": production_checksum, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
 PY
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
@@ -86,13 +86,14 @@ trap - EXIT
 production_after="MISSING"
 [[ -f "$production_database" ]] && production_after="$(sha256sum "$production_database" | awk '{print $1}')"
 database_after="$(sha256sum "$database" | awk '{print $1}')"
-"$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$production_after" "$database_after" "$results/database-after.json" <<'PY'
+"$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$production_after" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
 import hashlib, json, sqlite3, sys
-database, production_before, production_after, database_checksum, output = sys.argv[1:]
+database, production_before, production_after, database_checksum, before_file, output = sys.argv[1:]
+baseline_max_id = json.load(open(before_file))["baseline_enrollment_max_id"]
 with sqlite3.connect(database) as connection:
     enrollment_count = connection.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0]
     attendance_count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
-    enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments ORDER BY id").fetchall()
+    enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments WHERE id <= ? ORDER BY id", (baseline_max_id,)).fetchall()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
 json.dump({"production_checksum_before": production_before, "production_checksum_after": production_after, "disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
 PY

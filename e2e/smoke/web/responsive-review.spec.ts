@@ -103,5 +103,17 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByLabel("Academic Class")).toBeVisible();
 
     await verifyNoHorizontalOverflow(page, `Enrollment ${vp.width}x${vp.height}`);
+
+    // 4. Canonical student management
+    await page.goto("/students");
+    await expect(page.getByRole("heading", { name: "Student Management" })).toBeVisible();
+    await verifyNoHorizontalOverflow(page, `StudentManagement ${vp.width}x${vp.height}`);
+
+    // 5. Unified import center
+    await page.goto("/upload");
+    await expect(page.getByRole("heading", { name: "Data Import Center" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Student Roster/ })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Student Data Update/ })).toBeVisible();
+    await verifyNoHorizontalOverflow(page, `UploadCenter ${vp.width}x${vp.height}`);
   });
 }
