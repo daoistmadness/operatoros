@@ -536,6 +536,7 @@ def get_heb_overrides(
     year: int | None = Query(None),
     jenjang: str | None = Query(None),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     query = db.query(HebOverride)
 
@@ -569,6 +570,7 @@ def upsert_heb_override(
     month: int,
     body: HebOverrideBody,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
@@ -616,7 +618,13 @@ def upsert_heb_override(
 
 
 @router.delete("/heb/{jenjang}/{year}/{month}")
-def delete_heb_override(jenjang: str, year: int, month: int, db: Session = Depends(get_db)):
+def delete_heb_override(
+    jenjang: str,
+    year: int,
+    month: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
         raise HTTPException(status_code=400, detail="jenjang must be a non-empty string")
@@ -652,6 +660,7 @@ def get_absence_reasons(
     year: int = Query(...),
     class_name: str | None = Query(None),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     return _build_absence_reason_rows(db, month, year, class_name)
 
@@ -660,6 +669,7 @@ def get_absence_reasons(
 def bulk_upsert_absence_reasons(
     body: BulkAbsenceReasonBody | BulkAbsenceReasonCatchupBody,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     if isinstance(body, BulkAbsenceReasonBody):
         _validate_reporting_period(body.month, body.year)
@@ -833,6 +843,7 @@ def get_absence_reasons_summary(
     month: int = Query(...),
     year: int = Query(...),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     rows = _build_absence_reason_rows(db, month, year)
     summary_by_jenjang: dict[str, dict] = {}
