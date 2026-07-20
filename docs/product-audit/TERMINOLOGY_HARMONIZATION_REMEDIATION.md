@@ -1,8 +1,8 @@
 # Terminology Harmonization Remediation
 
-**Workstream**: Product Audit — Terminology, Language Consistency, and Error Sanitization  
-**Branch**: `feature/product-audit-remediation`  
-**Date**: 2026-07-20  
+**Workstream**: Product Audit — Terminology, Language Consistency, and Error Sanitization
+**Branch**: `feature/product-audit-remediation`
+**Date**: 2026-07-20
 **Status**: COMPLETE
 
 ---
@@ -67,9 +67,13 @@ This hybrid model is intentional, not an i18n gap. Mixing languages within a str
 |--------|-------|--------|
 | Column header: `"Jenjang siswa"` | `"Jenjang"` | "Jenjang siswa" was lowercase and redundant — the page context establishes this is student data; "Jenjang" is the canonical domain term |
 
+#### [`frontend/src/pages/Upload.js`](../../frontend/src/pages/Upload.js) — closeout correction
+
+The closeout inventory found three attendance-import error fallbacks that still exposed "endpoint", "upload method", "routing configuration", or "backend logs". They now use user-directed service and retry language. The initial inventory was therefore incomplete: four frontend files changed in the accepted terminology commit, and one additional frontend file was corrected during closeout.
+
 ### Backend Error Sanitization
 
-All the following backend API files exposed raw SQLAlchemy exception objects (via `{exc}` or `{str(e)}` interpolation) in 500 HTTP response bodies. These have been replaced with safe, user-directed messages. The exception chain is preserved (`from exc`) for server-side logging.
+All the following backend API files exposed raw exception text (via `{exc}` or `{str(e)}` interpolation) in 500 HTTP response bodies. These paths now delegate to a shared helper that returns safe, user-directed messages and preserves exception chaining. No logging claim is made because these handlers do not emit logger calls.
 
 | File | Errors Fixed |
 |------|-------------|
@@ -106,10 +110,11 @@ A 13-section canonical glossary covering:
 #### [`frontend/src/lib/api/errors.test.js`](../../frontend/src/lib/api/errors.test.js)
 
 - Updated existing assertions for 404/405 and 500 to match new safe message content
-- Added 2 new guard tests confirming 404 responses do not contain "routing configuration" or "API"
-- Added 2 new guard tests confirming 500 responses do not contain "backend logs" or "console"
+- Added 2 guard tests: one for 404/405 implementation terms and one for 500 implementation terms, with two negative assertions in each test
+- Added a backend API-boundary test parameterized across all 22 sanitized response messages
+- Added 3 parameterized upload-error guard cases during closeout
 
-**Frontend: 176 → 178 tests passing**
+**Accepted terminology commit: 176 → 178 frontend tests. Closeout adds 6 tests/cases, for 184 tests across 34 files.**
 
 ---
 
@@ -119,7 +124,7 @@ Per workstream constraints, the following are explicitly preserved:
 
 - **No database schema changes** — no column renames, table renames, or migrations
 - **No API path changes** — all `/api/...` routes are immutable
-- **No API response field renames** — all JSON field names are immutable  
+- **No API response field renames** — all JSON field names are immutable
 - **No authentication or authorization logic changes**
 - **No UI/UX redesign** — only text content was modified
 - **No changes to attendance status labels** — Hadir, Alfa, Sakit, Izin, Terlambat are canonical and unchanged
@@ -132,8 +137,10 @@ Per workstream constraints, the following are explicitly preserved:
 
 | Check | Result |
 |-------|--------|
-| Frontend tests (Vitest) | ✅ 178/178 passed (33 files) |
-| Backend tests (pytest) | Running against test DB — checking |
+| Frontend tests (Vitest) | ✅ 184/184 passed (34 files) with Bun 1.3.14 and Node 22.23.1 |
+| Backend tests (pytest) | ✅ 518/518 passed against explicit in-memory SQLite |
+| Backend sanitization tests | 22 parameterized response paths use a synthetic sentinel and the established FastAPI test client |
+| Complete validation | Recorded in the closeout report after the pinned Bun, Node, pytest, and E2E gates |
 | `git status` clean before changes | ✅ Confirmed at workstream start |
 | Protected `attendance.db` unchanged | ✅ Confirmed (sha256sum matches at baseline) |
 

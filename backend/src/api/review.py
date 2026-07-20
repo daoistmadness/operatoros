@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.user import User
 from security.dependencies import get_current_user
@@ -447,7 +448,7 @@ def mass_override_incomplete(
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The mass override could not be completed. Retry or contact the system administrator.")
+        raise_internal_error("The mass override could not be completed. Retry or contact the system administrator.", e)
 
     # skipped tracks records where check_in was null. The requirement is: "skipped: count of incomplete records where check_in was null".
     # Let's count them:

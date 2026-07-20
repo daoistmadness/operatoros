@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.user import User
 from models.academic_year import AcademicYear
@@ -425,7 +426,7 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
         raise HTTPException(status_code=409, detail="Enrollment conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The enrollment could not be saved. Retry or contact the system administrator.") from exc
+        raise_internal_error("The enrollment could not be saved. Retry or contact the system administrator.", exc)
 
 
 @router.delete("/enrollment/{enrollment_id}")
@@ -444,7 +445,7 @@ def delete_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Enrollment cannot be deleted while referenced") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The enrollment could not be deleted. Retry or contact the system administrator.") from exc
+        raise_internal_error("The enrollment could not be deleted. Retry or contact the system administrator.", exc)
 
 
 @router.post("/save")
@@ -503,7 +504,7 @@ def save_grade_ledger(body: GradeGridSaveRequest, db: Session = Depends(get_db))
         raise
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The grade record could not be saved. Retry or contact the system administrator.") from exc
+        raise_internal_error("The grade record could not be saved. Retry or contact the system administrator.", exc)
 
 
 @router.get("/analytics")
@@ -609,7 +610,7 @@ def create_academic_year(body: AcademicYearCreateRequest, db: Session = Depends(
         raise HTTPException(status_code=409, detail="Academic year conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The academic year could not be created. Retry or contact the system administrator.") from exc
+        raise_internal_error("The academic year could not be created. Retry or contact the system administrator.", exc)
 
 
 @router.get("/subjects")
@@ -657,7 +658,7 @@ def create_subject(body: SubjectCreateRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Subject conflict detected") from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail="The subject could not be created. Retry or contact the system administrator.") from exc
+        raise_internal_error("The subject could not be created. Retry or contact the system administrator.", exc)
 
 
 @router.get("/jenjangs")

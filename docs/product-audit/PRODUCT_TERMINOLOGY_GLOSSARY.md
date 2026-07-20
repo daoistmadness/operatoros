@@ -1,9 +1,9 @@
 # OperatorOS Product Terminology Glossary
 
-**Version**: 1.0  
-**Workstream**: Product Audit — Terminology Harmonization  
-**Branch**: `feature/product-audit-remediation`  
-**Date**: 2026-07-20  
+**Version**: 1.0
+**Workstream**: Product Audit — Terminology Harmonization
+**Branch**: `feature/product-audit-remediation`
+**Date**: 2026-07-20
 **Status**: CANONICAL
 
 ---
