@@ -55,6 +55,13 @@ def _audit(
     db: Session, student_id: str, action: str, actor: str, source: str,
     field: str | None = None, old=None, new=None, import_batch_id: str | None = None,
 ):
+    sensitive_fields = {
+        "nipd", "nisn", "nik", "device_identifier", "address", "student_phone",
+        "student_email", "emergency_contact_phone", "phone", "email",
+    }
+    if field in sensitive_fields:
+        old = mask_identifier(None if old is None else str(old))
+        new = mask_identifier(None if new is None else str(new))
     db.add(StudentMasterChangeHistory(
         student_master_id=student_id, action=action, field_name=field,
         old_value=None if old is None else str(old), new_value=None if new is None else str(new),
@@ -228,6 +235,9 @@ def update_student(db: Session, student: StudentMaster, body, actor: str):
     if record_version(student) != body.record_version:
         raise HTTPException(status_code=409, detail={"code": "STALE_RECORD", "message": "Student changed after this form was loaded."})
     values = body.identity.model_dump()
+    if any(values[field] != getattr(student, field) for field in ("nik", "nisn")):
+        if body.sensitive_confirmation != "CHANGE_SENSITIVE_STUDENT_IDENTIFIERS":
+            raise HTTPException(status_code=400, detail="Sensitive identifier changes require explicit confirmation")
     _check_identifier_conflicts(db, values, student.id)
     try:
         for field in IDENTITY_FIELDS:
@@ -379,7 +389,7 @@ def end_enrollment(db: Session, enrollment: StudentEnrollment, body, actor: str)
     db.commit(); db.refresh(enrollment); return enrollment
 
 
-def serialize_student_detail(db: Session, student: StudentMaster) -> dict:
+def serialize_student_detail(db: Session, student: StudentMaster, *, include_sensitive: bool = True) -> dict:
     address = db.query(StudentAddress).filter_by(student_master_id=student.id).first()
     contact = db.query(StudentContact).filter_by(student_master_id=student.id).first()
     guardians = db.query(StudentParentGuardian).filter_by(student_master_id=student.id).order_by(StudentParentGuardian.id).all()
@@ -394,12 +404,26 @@ def serialize_student_detail(db: Session, student: StudentMaster) -> dict:
         .filter(StudentEnrollment.student_master_id == student.id)
         .order_by(AcademicYear.start_date.desc()).all()
     )
+    identity = {field: getattr(student, field) for field in IDENTITY_FIELDS}
+    contact_values = {**({field: getattr(address, field) for field in ("address", "kelurahan", "kecamatan", "city_regency", "province", "postal_code")} if address else {}), **({field: getattr(contact, field) for field in CONTACT_FIELDS if hasattr(contact, field)} if contact else {})}
+    guardian_values = [{field: getattr(row, field) for field in ("guardian_type", "name", "phone", "email", "occupation", "education", "address")} for row in guardians]
+    if not include_sensitive:
+        for field in ("nipd", "nisn", "nik"):
+            identity[field] = mask_identifier(identity[field])
+        for field in ("birth_date", "birth_place", "blood_type"):
+            identity[field] = None
+        for field in ("address", "student_phone", "student_email", "emergency_contact_phone"):
+            if field in contact_values:
+                contact_values[field] = mask_identifier(contact_values[field])
+        for guardian in guardian_values:
+            for field in ("phone", "email", "address"):
+                guardian[field] = mask_identifier(guardian.get(field))
     return {
         "id": student.id, "record_version": record_version(student),
-        "identity": {field: getattr(student, field) for field in IDENTITY_FIELDS},
-        "contact": {**({field: getattr(address, field) for field in ("address", "kelurahan", "kecamatan", "city_regency", "province", "postal_code")} if address else {}), **({field: getattr(contact, field) for field in CONTACT_FIELDS if hasattr(contact, field)} if contact else {})},
-        "guardians": [{field: getattr(row, field) for field in ("guardian_type", "name", "phone", "email", "occupation", "education", "address")} for row in guardians],
-        "device_identities": [{"id": row.id, "device_identifier": row.device_identifier, "device_source": row.device_source, "effective_from": row.effective_from, "effective_to": row.effective_to, "is_active": row.is_active} for row in devices],
+        "identity": identity,
+        "contact": contact_values,
+        "guardians": guardian_values,
+        "device_identities": [{"id": row.id, "device_identifier": row.device_identifier if include_sensitive else mask_identifier(row.device_identifier), "device_source": row.device_source, "effective_from": row.effective_from, "effective_to": row.effective_to, "is_active": row.is_active} for row in devices],
         "enrollments": [{"id": row.id, "academic_year_id": year.id, "academic_year": year.label, "jenjang_id": jenjang.id, "jenjang": jenjang.name, "program": program.name if program else None, "grade": grade.name if grade else None, "academic_class_id": academic_class.id if academic_class else None, "class_name": academic_class.class_name if academic_class else row.class_name, "effective_from": row.effective_from, "effective_to": row.effective_to, "active": row.class_assigned and row.effective_to is None} for row, year, academic_class, grade, program, jenjang in enrollments],
         "updated_at": student.updated_at,
     }

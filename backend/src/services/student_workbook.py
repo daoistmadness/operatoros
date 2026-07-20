@@ -32,6 +32,7 @@ from services.student_management import (
     _resolve_class,
     record_version,
 )
+from services.spreadsheet_security import validate_xlsx_upload
 from services.student_normalization import normalize_name
 
 
@@ -197,14 +198,17 @@ def serialize_update_batch(db: Session, batch: StudentImportBatch) -> dict:
 
 
 def create_update_preview(db: Session, file_bytes: bytes, filename: str, username: str) -> StudentImportBatch:
+    filename = validate_xlsx_upload(file_bytes, filename)
     checksum = hashlib.sha256(file_bytes).hexdigest()
     try:
-        workbook = load_workbook(BytesIO(file_bytes), read_only=True, data_only=True)
+        workbook = load_workbook(BytesIO(file_bytes), read_only=True, data_only=True, keep_links=False)
     except Exception as exc:
         raise HTTPException(status_code=400, detail="The uploaded file is not a readable XLSX workbook") from exc
     if SHEET_NAME not in workbook.sheetnames:
         raise HTTPException(status_code=400, detail=f"Workbook must contain the '{SHEET_NAME}' worksheet")
     sheet = workbook[SHEET_NAME]
+    if sheet.max_row > 10_001:
+        raise HTTPException(status_code=400, detail="Workbook exceeds the 10,000-row limit")
     header_values = [_clean(value) for value in next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), [])]
     missing = [header for header in HEADERS if header not in header_values]
     if missing:
