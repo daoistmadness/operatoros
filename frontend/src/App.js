@@ -25,7 +25,7 @@ import BackupManagement from './pages/BackupManagement.tsx';
 import SidebarNav from './components/SidebarNav';
 import Login from './pages/Login.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
-import { RequireAuth, RequireRole } from './components/auth/RouteGuards.tsx';
+import { RequireAuth, RequireCapability, RequireRole } from './components/auth/RouteGuards.tsx';
 import { SetupBoundary } from './components/auth/SetupBoundary.tsx';
 
 function AppShell() {
@@ -89,8 +89,8 @@ function App() {
               <Route path="/config/absence-reasons" element={<AbsenceReasons />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/backups" element={<RequireRole role="admin"><BackupManagement /></RequireRole>} />
-              <Route path="/students" element={<RequireRole role="admin"><StudentManagement /></RequireRole>} />
-              <Route path="/students/:id" element={<RequireRole role="admin"><CanonicalStudentProfile /></RequireRole>} />
+              <Route path="/students" element={<RequireCapability capability="view_student"><StudentManagement /></RequireCapability>} />
+              <Route path="/students/:id" element={<RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>} />
               <Route path="/attendance/students/:id" element={<StudentProfile />} />
             </Route>
           </Route>
