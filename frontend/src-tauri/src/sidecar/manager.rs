@@ -107,10 +107,10 @@ impl SidecarManager {
     fn start_loop(&self, app: tauri::AppHandle) {
         let weak = Arc::downgrade(&self.inner);
         std::thread::spawn(move || {
-            let mut current_restarts = 0;
+            let mut current_restarts;
             loop {
                 if let Some(shared) = weak.upgrade() {
-                    let mut inner = match shared.lock() {
+                    let inner = match shared.lock() {
                         Ok(inner) => inner,
                         Err(_) => return,
                     };
@@ -329,6 +329,7 @@ fn lifecycle_line(state: &str, message: &str) -> String {
     format!("timestamp_unix={timestamp} state={state} message={sanitized}\n")
 }
 
+#[allow(dead_code)]
 fn write_root_lifecycle_log(root: &Path, state: &str, message: &str) -> Result<(), String> {
     let log_dir = root.join("Logs");
     fs::create_dir_all(&log_dir)

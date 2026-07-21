@@ -3,8 +3,18 @@ import react from '@vitejs/plugin-react';
 import * as vite from 'vite';
 import path from 'node:path';
 
-const frontendPort = Number(process.env.FRONTEND_PORT ?? 5173);
-const backendPort = Number(process.env.BACKEND_PORT ?? 8000);
+const rawFrontendPort = process.env.FRONTEND_PORT ?? 5173;
+const rawBackendPort = process.env.BACKEND_PORT ?? 8000;
+const frontendPort = Number(rawFrontendPort);
+const backendPort = Number(rawBackendPort);
+
+if (!Number.isInteger(frontendPort) || frontendPort < 1 || frontendPort > 65535) {
+  throw new Error(`Invalid FRONTEND_PORT: ${rawFrontendPort}`);
+}
+if (!Number.isInteger(backendPort) || backendPort < 1 || backendPort > 65535) {
+  throw new Error(`Invalid BACKEND_PORT: ${rawBackendPort}`);
+}
+
 const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
 
 // vite.config.js

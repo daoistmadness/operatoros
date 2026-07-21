@@ -25,7 +25,7 @@
 - Keep route registration explicit in `backend/src/main.py`.
 - Keep frontend route definitions explicit in `frontend/src/App.js`.
 - Keep API URL construction centralized in `frontend/src/lib/api/client.js` rather than scattering backend URLs across pages.
-- Keep Portless development routing centralized in `frontend/src/setupProxy.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
+- Keep development routing centralized in `frontend/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
 - Keep destructive request payloads typed with Pydantic models rather than accepting unstructured JSON.
 
 ## Error Handling
