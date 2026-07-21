@@ -7,10 +7,10 @@ import type {BackupEntry,BackupStatus} from "../api/backups";
 import {QueryClientProvider} from "@tanstack/react-query";
 import {createTestQueryClient} from "../lib/query/queryClient";
 
-vi.mock("../api/backups",()=>({createBackup:vi.fn(),getBackupStatus:vi.fn(()=>new Promise(()=>{})),listBackups:vi.fn(()=>new Promise(()=>{})),getBackupScheduler:vi.fn(()=>new Promise(()=>{})),listBackupHistory:vi.fn(()=>new Promise(()=>{})),updateBackupScheduler:vi.fn(),restoreBackup:vi.fn()}));
+vi.mock("../api/backups",()=>({createBackup:vi.fn(),getBackupStatus:vi.fn(()=>new Promise(()=>{})),listBackups:vi.fn(()=>new Promise(()=>{})),getBackupScheduler:vi.fn(()=>new Promise(()=>{})),listBackupHistory:vi.fn(()=>new Promise(()=>{})),updateBackupScheduler:vi.fn(),restoreBackup:vi.fn(),deleteBackup:vi.fn(),downloadBackupUrl:vi.fn((f)=>`/api/admin/backups/${f}/download`)}));
 vi.mock("lucide-react",()=>{
   const Icon=(props:Record<string,unknown>)=><span {...props}/>;
-  return {AlertCircle:Icon,AlertTriangle:Icon,ArrowLeft:Icon,CheckCircle2:Icon,DatabaseBackup:Icon,HardDrive:Icon,Inbox:Icon,Loader2:Icon,RefreshCw:Icon,RotateCcw:Icon,ShieldAlert:Icon,X:Icon};
+  return {AlertCircle:Icon,AlertTriangle:Icon,ArrowLeft:Icon,CheckCircle2:Icon,DatabaseBackup:Icon,HardDrive:Icon,Inbox:Icon,Loader2:Icon,RefreshCw:Icon,RotateCcw:Icon,ShieldAlert:Icon,X:Icon,Download:Icon,Trash2:Icon};
 });
 const status:BackupStatus={latest_backup_timestamp:"2026-07-13T00:00:00Z",latest_backup_outcome:"success",backup_count:1,retention_limit:10,free_disk_space_bytes:1048576,database_basename:"attendance.db",sqlite_journal_mode:"wal",destructive_operations_enabled:false,authentication_available:true,restore_support_mode:"single_process_only",restore_requires_admin:true,restore_requires_reauthentication:true,restore_multi_worker_safe:false};
 const item:BackupEntry={filename:"backup_2026-07-13T00-00-00Z.sqlite3",created_at:"2026-07-13T00:00:00Z",trigger:"manual",size:2048,checksum:"abcdef1234567890",schema_version:"unknown"};
@@ -19,8 +19,8 @@ describe("Backup Management",()=>{
   it("renders its loading state",()=>expect(html(<BackupManagement/>)).toContain("Loading backup management"));
   it("renders safe status values",()=>{const out=html(<BackupStatusPanel status={status}/>);expect(out).toContain("attendance.db");expect(out).toContain("WAL");expect(out).toContain("1 of 10");});
   it("renders the administrator restriction in the page shell",()=>expect(html(<BackupManagement/>)).toContain("restricted to authenticated administrators"));
-  it("renders a backup row",()=>{const out=html(<BackupList backups={[item]} onRestore={vi.fn()}/>);expect(out).toContain(item.filename);expect(out).toContain("abcdef123456");});
-  it("renders an empty list state",()=>expect(html(<BackupList backups={[]} onRestore={vi.fn()}/>)).toContain("No backups have been created yet"));
+  it("renders a backup row",()=>{const out=html(<BackupList backups={[item]} onRestore={vi.fn()} onDelete={vi.fn()}/>);expect(out).toContain(item.filename);expect(out).toContain("abcdef123456");});
+  it("renders an empty list state",()=>expect(html(<BackupList backups={[]} onRestore={vi.fn()} onDelete={vi.fn()}/>)).toContain("No backups have been created yet"));
   it("formats byte sizes",()=>{expect(formatBytes(2048)).toBe("2.0 KB");expect(formatBytes(1048576)).toBe("1.0 MB");});
   it("blocks restore while destructive mode is disabled",()=>expect(canRestore(item.filename,item.filename,false,false)).toBe(false));
   it("blocks restore before exact match",()=>expect(canRestore(item.filename,"wrong",true,false)).toBe(false));
