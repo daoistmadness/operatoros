@@ -317,7 +317,7 @@ If the save button is disabled, check whether a valid row, year, jenjang, and su
 | Candidate Pool is empty | Students already enrolled or source filter too narrow | Change source filter or check current enrollment |
 | Grade Matrix has no rows | No students enrolled for selected context | Use Class Allocation |
 | Saved score disappears after refresh | Save failed or wrong context selected | Check the alert and selected year, jenjang, and subject |
-| 404 on grade endpoints | API path or proxy problem | Check the Grade Ledger API wrapper and Portless path convention |
+| 404 on grade endpoints | API path or proxy problem | Check the Grade Ledger API wrapper and `/api` path convention |
 
 ## 12. Developer Notes
 
