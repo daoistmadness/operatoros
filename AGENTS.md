@@ -111,7 +111,7 @@ To ensure strict quality and architecture control, developers and AI agents must
 - **Package Managers:** pip (Python), npm (JavaScript), Cargo (Rust)
 - **Databases:** SQLite (local files with WAL mode enabled), PostgreSQL 16 (for production)
 - **Infrastructure & Deployment:** Docker, Docker Compose, Nginx, PyInstaller, Tauri v2
-- **Tooling & Dev Scripts:** `start-dev.sh` launcher, Portless proxy tool, Agent Browser
+- **Tooling & Dev Scripts:** `start-dev.sh` launcher, Agent Browser
 - **Testing:** pytest (backend, 296 tests), Vitest (frontend, 110 tests)
 
 ## Repository Structure
