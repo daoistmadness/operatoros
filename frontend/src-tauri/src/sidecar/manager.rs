@@ -6,8 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::Manager;
 
-use super::health::wait_until_ready;
-use super::instance_lock::InstanceLock;
+use super::health::{wait_until_ready, HealthError};
 use super::lifecycle::LifecycleState;
 use super::process::ManagedProcess;
 
@@ -24,7 +23,8 @@ struct Inner {
     state: LifecycleState,
     runtime: Option<RuntimeConfiguration>,
     process: Option<ManagedProcess>,
-    instance_lock: Option<InstanceLock>,
+    restarts: u32,
+    error_message: Option<String>,
 }
 
 pub struct SidecarManager {
@@ -38,13 +38,22 @@ impl SidecarManager {
                 state: LifecycleState::Stopped,
                 runtime: None,
                 process: None,
-                instance_lock: None,
+                restarts: 0,
+                error_message: None,
             })),
         }
     }
 
     pub fn state(&self) -> LifecycleState {
         self.inner.lock().expect("sidecar state poisoned").state
+    }
+
+    pub fn error_message(&self) -> Option<String> {
+        self.inner
+            .lock()
+            .expect("sidecar state poisoned")
+            .error_message
+            .clone()
     }
 
     pub fn runtime(&self) -> Option<RuntimeConfiguration> {
@@ -67,41 +76,149 @@ impl SidecarManager {
     }
 
     pub fn start(&self, app: &tauri::AppHandle) -> Result<(), String> {
-        let instance_lock = InstanceLock::acquire()?;
         {
             let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
             Self::transition(&mut inner, LifecycleState::Starting)?;
-            inner.instance_lock = Some(instance_lock);
+            inner.restarts = 0;
+            inner.error_message = None;
         }
 
-        let result = self.start_inner(app);
-        if let Err(error) = result {
-            let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
-            if let Some(runtime) = inner.runtime.as_ref() {
-                let _ = write_lifecycle_log(runtime, "FAILED", &error);
-            } else if let Ok(root) = operatoros_root() {
-                let _ = write_root_lifecycle_log(&root, "FAILED", &error);
-            }
-            inner.process = None;
-            inner.instance_lock = None;
-            let _ = Self::transition(&mut inner, LifecycleState::Failed);
-            return Err(error);
-        }
+        self.start_loop(app.clone());
         Ok(())
     }
 
-    fn start_inner(&self, app: &tauri::AppHandle) -> Result<(), String> {
-        let root = operatoros_root()?;
-        let runtime = create_runtime(&root, app.package_info().version.to_string())?;
+    pub fn retry(&self, app: &tauri::AppHandle) -> Result<(), String> {
         {
             let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
-            inner.runtime = Some(runtime.clone());
+            if inner.state == LifecycleState::Ready {
+                return Ok(());
+            }
+            if let Some(mut process) = inner.process.take() {
+                let _ = process.graceful_stop(Duration::from_secs(5));
+            }
+            inner.state = LifecycleState::Starting;
+            inner.restarts = 0;
+            inner.error_message = None;
         }
-        write_lifecycle_log(&runtime, "STARTING", "sidecar startup attempt")?;
+        self.start_loop(app.clone());
+        Ok(())
+    }
+
+    fn start_loop(&self, app: tauri::AppHandle) {
+        let weak = Arc::downgrade(&self.inner);
+        std::thread::spawn(move || {
+            let mut current_restarts = 0;
+            loop {
+                if let Some(shared) = weak.upgrade() {
+                    let mut inner = match shared.lock() {
+                        Ok(inner) => inner,
+                        Err(_) => return,
+                    };
+                    if inner.state == LifecycleState::Stopped
+                        || inner.state == LifecycleState::Stopping
+                    {
+                        return;
+                    }
+                    if inner.state == LifecycleState::Ready {
+                        break;
+                    }
+                    current_restarts = inner.restarts;
+                    drop(inner);
+                } else {
+                    return;
+                }
+
+                if current_restarts > 3 {
+                    if let Some(shared) = weak.upgrade() {
+                        if let Ok(mut inner) = shared.lock() {
+                            let _ = SidecarManager::transition(
+                                &mut inner,
+                                LifecycleState::BackendFailed,
+                            );
+                            inner.error_message = Some("Maximum restart limit exceeded.".into());
+                        }
+                    }
+                    return;
+                }
+
+                let result = SidecarManager::start_step(&weak, &app);
+
+                if let Some(shared) = weak.upgrade() {
+                    if let Ok(mut inner) = shared.lock() {
+                        if let Err(e) = result {
+                            inner.error_message = Some(e.to_string());
+                            let _ =
+                                SidecarManager::transition(&mut inner, LifecycleState::Restarting);
+                            inner.restarts += 1;
+                            std::thread::sleep(Duration::from_secs(2));
+                            continue;
+                        } else {
+                            break; // Successfully reached Ready
+                        }
+                    }
+                }
+            }
+
+            // If we successfully started, start the crash monitor
+            if let Some(shared) = weak.upgrade() {
+                let inner = shared.lock().unwrap();
+                if inner.state == LifecycleState::Ready {
+                    drop(inner);
+                    SidecarManager::start_crash_monitor_loop(weak);
+                }
+            }
+        });
+    }
+
+    fn start_step(
+        weak: &std::sync::Weak<Mutex<Inner>>,
+        app: &tauri::AppHandle,
+    ) -> Result<(), String> {
+        let root = operatoros_root()?;
+
+        if let Some(shared) = weak.upgrade() {
+            let mut inner = shared.lock().map_err(|_| "sidecar state poisoned")?;
+            SidecarManager::transition(&mut inner, LifecycleState::LocatingBackend)?;
+        }
         let executable = resolve_sidecar(app)?;
+
+        if let Some(shared) = weak.upgrade() {
+            let mut inner = shared.lock().map_err(|_| "sidecar state poisoned")?;
+            SidecarManager::transition(&mut inner, LifecycleState::SelectingPort)?;
+        }
+
+        let port = match allocate_port() {
+            Ok(p) => p,
+            Err(e) => {
+                if let Some(shared) = weak.upgrade() {
+                    if let Ok(mut inner) = shared.lock() {
+                        let _ =
+                            SidecarManager::transition(&mut inner, LifecycleState::PortConflict);
+                    }
+                }
+                return Err(e);
+            }
+        };
+
+        let runtime = create_runtime(&root, port, app.package_info().version.to_string())?;
+
+        if let Some(shared) = weak.upgrade() {
+            let mut inner = shared.lock().map_err(|_| "sidecar state poisoned")?;
+            inner.runtime = Some(runtime.clone());
+            SidecarManager::transition(&mut inner, LifecycleState::SpawningBackend)?;
+        }
+
+        write_lifecycle_log(&runtime, "STARTING", "sidecar startup attempt")?;
+
         let stdout = runtime.log_dir.join("sidecar-stdout.log");
         let stderr = runtime.log_dir.join("sidecar-stderr.log");
         let mut process = ManagedProcess::spawn(&executable, &runtime, &stdout, &stderr)?;
+
+        if let Some(shared) = weak.upgrade() {
+            let mut inner = shared.lock().map_err(|_| "sidecar state poisoned")?;
+            SidecarManager::transition(&mut inner, LifecycleState::WaitingForReadiness)?;
+        }
+
         if let Err(error) = wait_until_ready(
             &mut process,
             runtime.port,
@@ -109,22 +226,40 @@ impl SidecarManager {
             health_timeout(),
         ) {
             let _ = process.graceful_stop(Duration::from_secs(10));
-            return Err(error);
+            if let Some(shared) = weak.upgrade() {
+                if let Ok(mut inner) = shared.lock() {
+                    match error {
+                        HealthError::Timeout => {
+                            let _ = SidecarManager::transition(
+                                &mut inner,
+                                LifecycleState::ReadinessTimeout,
+                            );
+                        }
+                        _ => {
+                            let _ = SidecarManager::transition(
+                                &mut inner,
+                                LifecycleState::BackendFailed,
+                            );
+                        }
+                    }
+                }
+            }
+            return Err(error.to_string());
         }
-        let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
-        inner.process = Some(process);
-        inner.runtime = Some(runtime);
-        Self::transition(&mut inner, LifecycleState::Ready)?;
-        if let Some(runtime) = inner.runtime.as_ref() {
-            let _ = write_lifecycle_log(runtime, "READY", "sidecar health check accepted");
+
+        if let Some(shared) = weak.upgrade() {
+            let mut inner = shared.lock().map_err(|_| "sidecar state poisoned")?;
+            inner.process = Some(process);
+            inner.runtime = Some(runtime.clone());
+            inner.restarts = 0; // Reset restarts on success
+            SidecarManager::transition(&mut inner, LifecycleState::Ready)?;
         }
-        drop(inner);
-        self.start_crash_monitor();
+        let _ = write_lifecycle_log(&runtime, "READY", "sidecar health check accepted");
+
         Ok(())
     }
 
-    fn start_crash_monitor(&self) {
-        let weak = Arc::downgrade(&self.inner);
+    fn start_crash_monitor_loop(weak: std::sync::Weak<Mutex<Inner>>) {
         std::thread::spawn(move || loop {
             let Some(shared) = weak.upgrade() else { return };
             let mut inner = match shared.lock() {
@@ -147,6 +282,7 @@ impl SidecarManager {
                     );
                 }
                 inner.process = None;
+                inner.error_message = Some(format!("sidecar exited unexpectedly: {status}"));
                 let _ = Self::transition(&mut inner, LifecycleState::Crashed);
                 return;
             }
@@ -161,7 +297,7 @@ impl SidecarManager {
             if inner.state == LifecycleState::Stopped {
                 return Ok(());
             }
-            Self::transition(&mut inner, LifecycleState::Stopping)?;
+            let _ = Self::transition(&mut inner, LifecycleState::Stopping);
             inner.process.take()
         };
         let result = process
@@ -170,8 +306,7 @@ impl SidecarManager {
             .transpose();
         let mut inner = self.inner.lock().map_err(|_| "sidecar state poisoned")?;
         inner.runtime = None;
-        inner.instance_lock = None;
-        Self::transition(&mut inner, LifecycleState::Stopped)?;
+        let _ = Self::transition(&mut inner, LifecycleState::Stopped);
         result.map(|_| ())
     }
 }
@@ -181,7 +316,7 @@ fn health_timeout() -> Duration {
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .filter(|value| (1..=90).contains(value))
-        .unwrap_or(90);
+        .unwrap_or(30); // reduced from 90 to 30 for better desktop UX
     Duration::from_secs(seconds)
 }
 
@@ -235,7 +370,7 @@ fn allocate_port() -> Result<u16, String> {
         .map_err(|error| error.to_string())
 }
 
-fn create_runtime(root: &Path, version: String) -> Result<RuntimeConfiguration, String> {
+fn create_runtime(root: &Path, port: u16, version: String) -> Result<RuntimeConfiguration, String> {
     let data_dir = root.join("Data");
     let log_dir = root.join("Logs");
     let runtime_dir = root.join("Runtime");
@@ -250,7 +385,7 @@ fn create_runtime(root: &Path, version: String) -> Result<RuntimeConfiguration, 
             .map_err(|error| format!("could not create {}: {error}", directory.display()))?;
     }
     let configuration = RuntimeConfiguration {
-        port: allocate_port()?,
+        port,
         data_dir,
         log_dir,
         runtime_dir: runtime_dir.clone(),
@@ -272,15 +407,18 @@ fn resolve_sidecar(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if packaged.is_file() {
         return Ok(packaged);
     }
-    let development = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("..")
-        .join("dist")
-        .join("operatoros-sidecar.exe");
-    if development.is_file() {
-        return development
-            .canonicalize()
-            .map_err(|error| error.to_string());
+    #[cfg(debug_assertions)]
+    {
+        let development = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("dist")
+            .join("operatoros-sidecar.exe");
+        if development.is_file() {
+            return development
+                .canonicalize()
+                .map_err(|error| error.to_string());
+        }
     }
     Err("operatoros-sidecar.exe was not found in packaged resources or repository dist".into())
 }
@@ -325,6 +463,6 @@ mod tests {
     #[test]
     fn health_timeout_defaults_to_release_contract() {
         std::env::remove_var("OPERATOROS_HEALTH_TIMEOUT_SECONDS");
-        assert_eq!(health_timeout(), Duration::from_secs(90));
+        assert_eq!(health_timeout(), Duration::from_secs(30));
     }
 }

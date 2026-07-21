@@ -21,6 +21,9 @@ impl ManagedProcess {
         stdout_path: &Path,
         stderr_path: &Path,
     ) -> Result<Self, String> {
+        if !executable.is_file() {
+            return Err(format!("executable not found at {}", executable.display()));
+        }
         let stdout = create_log(stdout_path)?;
         let stderr = create_log(stderr_path)?;
         let mut command = Command::new(executable);
