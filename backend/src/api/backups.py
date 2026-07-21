@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, StrictStr
 
 from core.config import settings
@@ -12,7 +13,7 @@ from models.user import User
 from security.dependencies import require_role
 from security.audit import audit_auth_event
 from security.sessions import SESSION_COOKIE_NAME, session_digest, validate_session
-from services.backup_service import BackupError, create_backup, resolve_backup_directory, resolve_sqlite_database_path
+from services.backup_service import BackupError, create_backup, resolve_backup_directory, resolve_sqlite_database_path, delete_backup, resolve_verified_backup_for_download
 from services.restore_service import AUDIT_FILENAME, RestoreError, restore_backup
 from models.backup_operation import BackupExecutionHistory
 from services.backup_scheduler import backup_scheduler, append_operations_audit, calculate_next_run, execute_backup, get_or_create_config
@@ -242,3 +243,34 @@ def post_restore(
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     except BackupError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.delete("/{filename}")
+def delete_backup_endpoint(filename: str, user: User = Depends(require_role("admin"))):
+    try:
+        delete_backup(settings.BACKUP_DIR, filename)
+        append_operations_audit("backup_deleted", {"user_id": user.id, "filename": filename})
+        return {"status": "success"}
+    except BackupError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail="Failed to delete backup.") from exc
+
+
+@router.get("/{filename}/download")
+def download_backup(filename: str, user: User = Depends(require_role("admin"))):
+    try:
+        path = resolve_verified_backup_for_download(settings.BACKUP_DIR, filename)
+        return FileResponse(
+            path=path,
+            filename=filename,
+            media_type="application/vnd.sqlite3",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, private",
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    except BackupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=500, detail="Failed to read backup.") from exc
