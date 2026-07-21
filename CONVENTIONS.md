@@ -17,7 +17,7 @@
 ## Formatting
 - **Python**: Follow PEP8 standards. Indentation uses 4 spaces.
 - **JavaScript / TypeScript / CSS / HTML / JSON**: Indentation uses 2 spaces. Semicolons are preferred in JavaScript and TypeScript.
-- **Markdown**: Use standard headers and lists. Do not backtick-wrap the display text of links (e.g. write `[link text](file://...)` rather than `[`link text`](file://...)`).
+- **Markdown**: Use standard headers and lists. Do not backtick-wrap the display text of links (e.g. write `[link text](README.md)` rather than `[`link text`](README.md)`).
 
 ## Imports and Structure
 - Keep imports grouped by standard library, third-party, then local modules.
