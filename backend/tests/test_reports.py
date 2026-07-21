@@ -135,7 +135,7 @@ def report_context():
         yield db
 
     app.dependency_overrides[get_db] = override_db
-    app.dependency_overrides[get_current_user] = lambda: object()
+    app.dependency_overrides[get_current_user] = lambda: type("MockUser", (), {"role": "admin"})()
     yield {"client": TestClient(app), "db": db, "year": year, "levels": levels, "students": students, "math": math}
     db.close()
     Base.metadata.drop_all(engine)
