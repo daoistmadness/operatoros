@@ -1,6 +1,6 @@
 # Executive Reporting Remediation
 
-**STATUS**: EXECUTIVE_REPORTING_REMEDIATION_READY
+**STATUS**: EXECUTIVE_REPORTING_REMEDIATION_MERGED
 
 ## Overview
 This document outlines the security and operational remediation applied to the executive reporting workflow in `feature/executive-reporting-remediation`. The primary goal was to ensure that authorized users can generate, preview, and download accurate management reports without exposing student data, backend internals, or unsafe filesystem paths.
@@ -20,9 +20,9 @@ This document outlines the security and operational remediation applied to the e
 *   **Accessibility**: Added ARIA live regions and enforced correct heading hierarchy for the summary sections, ensuring screen readers announce dynamic data gracefully.
 
 ## 4. Test Suite Coverage
-*   **Backend Tests**: Fixed the mocked `get_current_user` dependency in `test_reports.py` and `test_phase20_report_builder.py` to ensure role authorization passes smoothly under test conditions.
+*   **Backend Tests**: Fixed the mocked `get_current_user` dependency in `test_reports.py` and `test_phase20_report_builder.py` to ensure role authorization passes smoothly under test conditions. Additionally, eliminated module reloading in `builder_app` fixture to ensure deterministic test isolation across the full suite without dependency override leaks.
 *   **Module Resolution**: Ensured `backend/tests/` imports correctly execute without mutating path structures during E2E verification.
-*   **All tests passing**: Verified all 52 backend integration tests are passing successfully without leaving residual test databases or files on disk.
+*   **All tests passing**: Verified all 526 backend integration tests are passing successfully without leaving residual test databases or files on disk. The full suite was run twice successfully to prove deterministic isolation.
 
 ## Deferred Scope
 *   Scheduled backups, backup restoration, and native Tauri automation remain deferred to isolated future workstreams.
