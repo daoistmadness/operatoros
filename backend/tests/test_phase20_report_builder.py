@@ -42,12 +42,20 @@ def create_legacy_grade_table(db_path: Path) -> None:
 
 @pytest.fixture
 def builder_app(monkeypatch, tmp_path):
+    import src.main as main_module
+    
     db_path = tmp_path / "report-builder.db"
     create_legacy_grade_table(db_path)
     monkeypatch.syspath_prepend(str(SOURCE_ROOT))
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+    
+    # Snapshot overrides
+    original_overrides = main_module.app.dependency_overrides.copy()
+    main_module.app.dependency_overrides.clear()
+    
     unload_app_modules()
-
+    
+    importlib.invalidate_caches()
     main_module = importlib.import_module("src.main")
     db_module = importlib.import_module("core.database")
     student_module = importlib.import_module("models.student")
@@ -169,14 +177,23 @@ def builder_app(monkeypatch, tmp_path):
     db.commit()
     db.close()
 
-    return {
-        "app": main_module.app,
-        "db_module": db_module,
-        "ReportTemplate": ReportTemplate,
-        "AcademicYear": AcademicYear,
-        "Jenjang": Jenjang,
-        "Subject": Subject,
-    }
+    sec_module = importlib.import_module("security.dependencies")
+    main_module.app.dependency_overrides[sec_module.get_current_user] = lambda: type("MockUser", (), {"role": "admin"})()
+
+    try:
+        yield {
+            "app": main_module.app,
+            "db_module": db_module,
+            "ReportTemplate": ReportTemplate,
+            "AcademicYear": AcademicYear,
+            "Jenjang": Jenjang,
+            "Subject": Subject,
+        }
+    finally:
+        main_module.app.dependency_overrides.clear()
+        main_module.app.dependency_overrides.update(original_overrides)
+        if hasattr(db_module, "engine"):
+            db_module.engine.dispose()
 
 
 def test_report_builder_routes_and_default_seeding(builder_app):

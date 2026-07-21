@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+import uuid
 from io import BytesIO
 
 from openpyxl import Workbook
@@ -39,9 +42,12 @@ def _table(rows: list[list], widths=None) -> Table:
 
 def build_monthly_management_pdf(report: dict, branding: dict | None = None) -> bytes:
     branding = branding or DEFAULT_BRANDING
-    output = BytesIO()
+
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    temp_pdf_path = os.path.join(temp_dir_obj.name, f"monthly_management_{uuid.uuid4().hex}.pdf")
+
     document = SimpleDocTemplate(
-        output, pagesize=A4, leftMargin=14 * mm, rightMargin=14 * mm,
+        temp_pdf_path, pagesize=A4, leftMargin=14 * mm, rightMargin=14 * mm,
         topMargin=15 * mm, bottomMargin=15 * mm,
         title="Monthly Management Report", author=branding["school_name"], pageCompression=0,
     )
@@ -125,7 +131,10 @@ def build_monthly_management_pdf(report: dict, branding: dict | None = None) -> 
         canvas.drawRightString(A4[0] - 14 * mm, 8 * mm, f"Page {doc.page}"); canvas.restoreState()
 
     document.build(story, onFirstPage=footer, onLaterPages=footer)
-    return output.getvalue()
+    with open(temp_pdf_path, "rb") as f:
+        data = f.read()
+    temp_dir_obj.cleanup()
+    return data
 
 
 def _sheet(workbook: Workbook, name: str, headers: list[str], rows: list[list], primary: str) -> None:

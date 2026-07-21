@@ -126,5 +126,5 @@ export function downloadReportBlob(blob: Blob, filename: string) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  revokeDownloadUrl(url);
+  setTimeout(() => revokeDownloadUrl(url), 100);
 }
