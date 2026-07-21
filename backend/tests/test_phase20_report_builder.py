@@ -9,14 +9,8 @@ import pytest
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 
-MODULE_PREFIXES = ("src", "api", "core", "models", "services")
+
 SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
-
-
-def unload_app_modules() -> None:
-    for name in list(sys.modules):
-        if name == "src" or name.startswith(MODULE_PREFIXES):
-            sys.modules.pop(name, None)
 
 
 def create_legacy_grade_table(db_path: Path) -> None:
@@ -42,49 +36,57 @@ def create_legacy_grade_table(db_path: Path) -> None:
 
 @pytest.fixture
 def builder_app(monkeypatch, tmp_path):
+    import os
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    
     import src.main as main_module
+    import core.database as db_module
+    from security.dependencies import get_current_user
+    
+    # Snapshot environment
+    original_env = dict(os.environ)
+    
+    # Snapshot overrides
+    original_overrides = main_module.app.dependency_overrides.copy()
+    main_module.app.dependency_overrides.clear()
     
     db_path = tmp_path / "report-builder.db"
     create_legacy_grade_table(db_path)
     monkeypatch.syspath_prepend(str(SOURCE_ROOT))
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
     
-    # Snapshot overrides
-    original_overrides = main_module.app.dependency_overrides.copy()
-    main_module.app.dependency_overrides.clear()
+    # Create isolated engine
+    isolated_engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+    IsolatedSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=isolated_engine)
     
-    unload_app_modules()
+    # Snapshot database module state
+    original_engine = getattr(db_module, "engine", None)
+    original_SessionLocal = getattr(db_module, "SessionLocal", None)
     
-    importlib.invalidate_caches()
-    main_module = importlib.import_module("src.main")
-    db_module = importlib.import_module("core.database")
-    student_module = importlib.import_module("models.student")
-    attendance_module = importlib.import_module("models.attendance")
-    academic_year_module = importlib.import_module("models.academic_year")
-    jenjang_module = importlib.import_module("models.jenjang")
-    subject_module = importlib.import_module("models.subject")
-    enrollment_module = importlib.import_module("models.student_enrollment")
-    component_module = importlib.import_module("models.assessment_component")
-    grade_module = importlib.import_module("models.student_subject_grade")
-    config_module = importlib.import_module("models.academic_config")
-    intervention_module = importlib.import_module("models.academic_intervention")
-    report_module = importlib.import_module("models.report_builder")
-
+    # Also snapshot services.report_builder.engine because of from import
+    import services.report_builder as report_service
+    original_report_engine = getattr(report_service, "engine", None)
+    
+    db_module.engine = isolated_engine
+    db_module.SessionLocal = IsolatedSessionLocal
+    report_service.engine = isolated_engine
+    
+    from models.student import Student
+    from models.attendance import Attendance
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.subject import Subject
+    from models.student_enrollment import StudentEnrollment
+    from models.assessment_component import AssessmentComponent
+    from models.student_subject_grade import StudentSubjectGrade
+    from models.academic_config import KkmThreshold, AcademicTermConfig
+    from models.academic_intervention import AcademicIntervention
+    from models.report_builder import ReportTemplate
+    
     db_module.init_db()
-    db = db_module.SessionLocal()
-    AcademicYear = academic_year_module.AcademicYear
-    Jenjang = jenjang_module.Jenjang
-    Subject = subject_module.Subject
-    Student = student_module.Student
-    Attendance = attendance_module.Attendance
-    StudentEnrollment = enrollment_module.StudentEnrollment
-    AssessmentComponent = component_module.AssessmentComponent
-    StudentSubjectGrade = grade_module.StudentSubjectGrade
-    KkmThreshold = config_module.KkmThreshold
-    AcademicTermConfig = config_module.AcademicTermConfig
-    AcademicIntervention = intervention_module.AcademicIntervention
-    ReportTemplate = report_module.ReportTemplate
-
+    db = IsolatedSessionLocal()
+    
     ay = db.query(AcademicYear).filter(AcademicYear.label == "2025/2026").first()
     if ay is None:
         ay = AcademicYear(label="2025/2026", start_date=date(2025, 7, 1), end_date=date(2026, 6, 30), status="active", is_default=True)
@@ -120,7 +122,6 @@ def builder_app(monkeypatch, tmp_path):
         for_component = AssessmentComponent(name="Math Formatif", assessment_type="formatif", subject_id=subject.id)
         db.add(for_component)
         db.flush()
-
     if db.query(Attendance).count() == 0:
       db.add_all(
         [
@@ -128,7 +129,6 @@ def builder_app(monkeypatch, tmp_path):
           Attendance(student_id=student.id, date=date(2025, 10, 10), check_in=time(7, 35), check_out=time(14, 0), status="late", late_duration=35),
         ]
       )
-
     if db.query(StudentSubjectGrade).count() == 0:
       db.add_all(
         [
@@ -136,10 +136,8 @@ def builder_app(monkeypatch, tmp_path):
           StudentSubjectGrade(enrollment_id=enrollment.id, subject_id=subject.id, component_id=for_component.id, score=82.0),
         ]
       )
-
     if db.query(KkmThreshold).count() == 0:
       db.add(KkmThreshold(academic_year_id=ay.id, jenjang_id=jen.id, subject_id=subject.id, assessment_type="sumatif", threshold=80.0))
-
     if db.query(AcademicTermConfig).count() == 0:
       db.add_all(
         [
@@ -149,7 +147,6 @@ def builder_app(monkeypatch, tmp_path):
           AcademicTermConfig(academic_year_id=ay.id, term_number=4, label="Term 4", start_date=date(2026, 4, 1), end_date=date(2026, 6, 30)),
         ]
       )
-
     if db.query(AcademicIntervention).count() == 0:
       db.add(
         AcademicIntervention(
@@ -173,13 +170,12 @@ def builder_app(monkeypatch, tmp_path):
           resolved_at=datetime(2025, 7, 20),
         )
       )
-
     db.commit()
     db.close()
-
-    sec_module = importlib.import_module("security.dependencies")
-    main_module.app.dependency_overrides[sec_module.get_current_user] = lambda: type("MockUser", (), {"role": "admin"})()
-
+    
+    # Apply our override for this test
+    main_module.app.dependency_overrides[get_current_user] = lambda: type("MockUser", (), {"role": "admin"})()
+    
     try:
         yield {
             "app": main_module.app,
@@ -192,8 +188,17 @@ def builder_app(monkeypatch, tmp_path):
     finally:
         main_module.app.dependency_overrides.clear()
         main_module.app.dependency_overrides.update(original_overrides)
-        if hasattr(db_module, "engine"):
-            db_module.engine.dispose()
+        
+        isolated_engine.dispose()
+        if original_engine is not None:
+            db_module.engine = original_engine
+        if original_SessionLocal is not None:
+            db_module.SessionLocal = original_SessionLocal
+        if original_report_engine is not None:
+            report_service.engine = original_report_engine
+            
+        os.environ.clear()
+        os.environ.update(original_env)
 
 
 def test_report_builder_routes_and_default_seeding(builder_app):
