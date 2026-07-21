@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.absence_reason import AbsenceReason
 from models.absence_reason_class_entry import AbsenceReasonClassEntry
@@ -15,6 +16,8 @@ from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.academic_master import AcademicClass
 from models.academic_year import AcademicYear
+from models.user import User
+from security.dependencies import get_current_user, require_role
 from services.attendance_metrics import derive_jenjang_from_class_name
 
 router = APIRouter()
@@ -444,7 +447,10 @@ def _upsert_student_absence_reason_rows(
 
 
 @router.get("/jenjang")
-def get_jenjang_configs(db: Session = Depends(get_db)):
+def get_jenjang_configs(
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
     rows = db.query(JenjangConfig).order_by(JenjangConfig.jenjang.asc()).all()
     available_jenjangs = _get_available_jenjangs(db)
     configured = [
@@ -465,14 +471,22 @@ def get_jenjang_configs(db: Session = Depends(get_db)):
 
 
 @router.get("/jenjang/available")
-def get_available_jenjangs(db: Session = Depends(get_db)):
+def get_available_jenjangs(
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
     return {
         "jenjang_list": _get_available_jenjangs(db)
     }
 
 
 @router.put("/jenjang/{jenjang}")
-def upsert_jenjang_config(jenjang: str, body: JenjangCutoffBody, db: Session = Depends(get_db)):
+def upsert_jenjang_config(
+    jenjang: str,
+    body: JenjangCutoffBody,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
         raise HTTPException(status_code=400, detail="jenjang must be a non-empty string")
@@ -502,7 +516,11 @@ def upsert_jenjang_config(jenjang: str, body: JenjangCutoffBody, db: Session = D
 
 
 @router.delete("/jenjang/{jenjang}")
-def delete_jenjang_config(jenjang: str, db: Session = Depends(get_db)):
+def delete_jenjang_config(
+    jenjang: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     row = db.query(JenjangConfig).filter(JenjangConfig.jenjang == jenjang_key).first()
     if row is None:
@@ -519,6 +537,7 @@ def get_heb_overrides(
     year: int | None = Query(None),
     jenjang: str | None = Query(None),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     query = db.query(HebOverride)
 
@@ -552,6 +571,7 @@ def upsert_heb_override(
     month: int,
     body: HebOverrideBody,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
@@ -599,7 +619,13 @@ def upsert_heb_override(
 
 
 @router.delete("/heb/{jenjang}/{year}/{month}")
-def delete_heb_override(jenjang: str, year: int, month: int, db: Session = Depends(get_db)):
+def delete_heb_override(
+    jenjang: str,
+    year: int,
+    month: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
+):
     jenjang_key = jenjang.strip()
     if not jenjang_key:
         raise HTTPException(status_code=400, detail="jenjang must be a non-empty string")
@@ -635,6 +661,7 @@ def get_absence_reasons(
     year: int = Query(...),
     class_name: str | None = Query(None),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     return _build_absence_reason_rows(db, month, year, class_name)
 
@@ -643,6 +670,7 @@ def get_absence_reasons(
 def bulk_upsert_absence_reasons(
     body: BulkAbsenceReasonBody | BulkAbsenceReasonCatchupBody,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     if isinstance(body, BulkAbsenceReasonBody):
         _validate_reporting_period(body.month, body.year)
@@ -730,7 +758,7 @@ def bulk_upsert_absence_reasons(
             db.rollback()
             if isinstance(e, HTTPException):
                 raise e
-            raise HTTPException(status_code=500, detail=f"Database error during bulk save: {str(e)}")
+            raise_internal_error("The records could not be saved. Retry or contact the system administrator.", e)
 
     available_classes = {
         item["class_name"]: item
@@ -808,7 +836,7 @@ def bulk_upsert_absence_reasons(
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during catch-up save: {str(e)}")
+        raise_internal_error("The records could not be saved. Retry or contact the system administrator.", e)
 
 
 @router.get("/absence-reasons/summary")
@@ -816,6 +844,7 @@ def get_absence_reasons_summary(
     month: int = Query(...),
     year: int = Query(...),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_role("admin")),
 ):
     rows = _build_absence_reason_rows(db, month, year)
     summary_by_jenjang: dict[str, dict] = {}

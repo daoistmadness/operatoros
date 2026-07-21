@@ -3,6 +3,7 @@ import type { ReportQuery, ReportScope, ReportType } from "../../api/reports";
 export const queryKeys = {
   setup: { all: ["setup"] as const, status: ["setup", "status"] as const },
   auth: { all: ["auth"] as const, me: ["auth", "me"] as const },
+  readiness: { all: ["readiness"] as const, status: (userId: number | null) => ["readiness", "status", { userId }] as const },
   backups: {
     all: ["backups"] as const,
     status: ["backups", "status"] as const,
