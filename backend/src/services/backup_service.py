@@ -228,3 +228,35 @@ def create_backup(
             temporary_metadata.unlink(missing_ok=True)
             if published_database and not final_metadata.exists():
                 final_database.unlink(missing_ok=True)
+def delete_backup(backup_dir: str, filename: str) -> None:
+    with BACKUP_OPERATION_LOCK:
+        if not filename or ".." in filename or "/" in filename or "\\" in filename:
+            raise BackupError("Invalid backup filename.")
+        if not filename.endswith(".sqlite3") or filename.startswith("."):
+            raise BackupError("Invalid backup format or temporary file.")
+            
+        target_dir = resolve_backup_directory(backup_dir)
+        database_path = target_dir / filename
+        metadata_path = Path(str(database_path) + ".meta.json")
+        
+        if not database_path.is_file() or not metadata_path.is_file():
+            raise BackupError("Backup not found or incomplete.")
+            
+        metadata_path.unlink(missing_ok=True)
+        database_path.unlink(missing_ok=True)
+
+
+def resolve_verified_backup_for_download(backup_dir: str, filename: str) -> Path:
+    if not filename or ".." in filename or "/" in filename or "\\" in filename:
+        raise BackupError("Invalid backup filename.")
+    if not filename.endswith(".sqlite3") or filename.startswith("."):
+        raise BackupError("Invalid backup format or temporary file.")
+        
+    target_dir = resolve_backup_directory(backup_dir)
+    database_path = target_dir / filename
+    metadata_path = Path(str(database_path) + ".meta.json")
+    
+    if not database_path.is_file() or not metadata_path.is_file():
+        raise BackupError("Backup not found or incomplete.")
+        
+    return database_path
