@@ -18,7 +18,7 @@ This repository includes several one-off scripts for reporting, dashboard genera
 ## Diagnostics
 | Script | Purpose | Inputs | Outputs | Data Changes | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `scripts/verify-browser.sh` | Runs the Agent Browser smoke test against a live frontend URL or the current Portless route. | Frontend URL or active Portless routes, Agent Browser installation, browser binaries | Screenshot and text diagnostics under `.artifacts/browser/` | No app data changes | Verification only; does not call the destructive reset endpoint. |
+| `scripts/verify-browser.sh` | Runs the Agent Browser smoke test against a live frontend URL. | Frontend URL, Agent Browser installation, browser binaries | Screenshot and text diagnostics under `.artifacts/browser/` | No app data changes | Verification only; does not call the destructive reset endpoint. |
 | `scratch/verify_heb.py` | Prints auto, override, and final HEB values for sample months. | Local database | Console output | Read-only | Useful for quick verification. |
 | `scratch/check_sql.py` | Prints a compiled SQL query for inspection. | Local database | Console output | Read-only | Diagnostic only. |
 
