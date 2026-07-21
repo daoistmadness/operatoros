@@ -53,3 +53,5 @@ export const restoreBackup = async (filename: string, confirmation: string) => (
     path: backupApiPath(`/${encodeURIComponent(filename)}/restore`), method: "POST", body: { confirmation },
   })
 ).data;
+export const deleteBackup = async (filename: string) => (await apiRequest<{status: string}>({ path: backupApiPath(`/${encodeURIComponent(filename)}`), method: "DELETE" })).data;
+export const downloadBackupUrl = (filename: string) => backupApiPath(`/${encodeURIComponent(filename)}/download`);
