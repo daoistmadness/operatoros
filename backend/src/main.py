@@ -25,6 +25,7 @@ from api.student_exports import router as student_exports_router
 from api.uploads import router as uploads_router
 from api.system import router as system_router
 from api.review import router as review_router
+from api.readiness import router as readiness_router
 from core.database import init_db
 from core.schema_guard import validate_database_startup
 
@@ -89,6 +90,7 @@ app.include_router(reports_router, prefix="/api/reports", tags=["reports"])
 app.include_router(backups_router, prefix="/api/admin/backups", tags=["admin-backups"])
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(setup_router, prefix="/api/setup", tags=["setup"])
+app.include_router(readiness_router, prefix="/api/readiness", tags=["readiness"])
 
 
 

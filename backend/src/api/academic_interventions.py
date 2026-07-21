@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.academic_intervention import AcademicIntervention
 from models.academic_year import AcademicYear
@@ -216,7 +217,7 @@ def _create_intervention(body: AcademicInterventionCreateRequest, db: Session):
         return _serialize_intervention(row)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during intervention create: {exc}") from exc
+        raise_internal_error("The intervention record could not be saved. Retry or contact the system administrator.", exc)
 
 
 @router.post("")
@@ -262,7 +263,7 @@ def update_intervention(
         return _serialize_intervention(row)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during intervention update: {exc}") from exc
+        raise_internal_error("The intervention record could not be updated. Retry or contact the system administrator.", exc)
 
 
 @router.delete("/{intervention_id}")
@@ -279,4 +280,4 @@ def close_intervention(intervention_id: int, db: Session = Depends(get_db)):
         return {"status": "success", "closed": 1, "id": intervention_id}
     except SQLAlchemyError as exc:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error during intervention close: {exc}") from exc
+        raise_internal_error("The intervention record could not be closed. Retry or contact the system administrator.", exc)

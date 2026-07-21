@@ -117,6 +117,85 @@ def test_admin_can_use_backup_management(authorization_app):
     client.close()
 
 
+def test_jenjang_cutoff_reads_require_authentication(authorization_app):
+    module, _ = authorization_app
+    client = _client(module)
+    assert client.get("/api/config/jenjang").status_code == 401
+    assert client.get("/api/config/jenjang/available").status_code == 401
+    client.close()
+
+
+def test_staff_can_read_but_cannot_mutate_jenjang_cutoffs(authorization_app):
+    module, _ = authorization_app
+    client = _client(module, "staff", "staff authorization pass")
+    assert client.get("/api/config/jenjang").status_code == 200
+    assert client.get("/api/config/jenjang/available").status_code == 200
+    denied_save = client.put("/api/config/jenjang/Primary", json={"cutoff_time": "07:00"})
+    denied_delete = client.delete("/api/config/jenjang/Primary")
+    assert denied_save.status_code == 403
+    assert denied_delete.status_code == 403
+    assert denied_save.json() == {"detail": "Insufficient permissions"}
+    client.close()
+
+
+def test_admin_jenjang_cutoff_mutation_reaches_domain_validation(authorization_app):
+    module, _ = authorization_app
+    client = _client(module, "admin", "admin authorization pass")
+    response = client.put("/api/config/jenjang/Unknown", json={"cutoff_time": "07:00"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "jenjang must exist in students data"}
+    client.close()
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/config/heb"),
+        ("put", "/api/config/heb/Primary/2026/7"),
+        ("delete", "/api/config/heb/Primary/2026/7"),
+        ("get", "/api/config/absence-reasons?month=7&year=2026"),
+        ("post", "/api/config/absence-reasons/bulk"),
+        ("get", "/api/config/absence-reasons/summary?month=7&year=2026"),
+    ],
+)
+def test_anonymous_administrative_config_is_rejected(authorization_app, method, path):
+    module, _ = authorization_app
+    client = _client(module)
+    response = getattr(client, method)(path)
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Authentication required"}
+    client.close()
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", "/api/config/heb"),
+        ("put", "/api/config/heb/Primary/2026/7"),
+        ("delete", "/api/config/heb/Primary/2026/7"),
+        ("get", "/api/config/absence-reasons?month=7&year=2026"),
+        ("post", "/api/config/absence-reasons/bulk"),
+        ("get", "/api/config/absence-reasons/summary?month=7&year=2026"),
+    ],
+)
+def test_staff_administrative_config_is_forbidden(authorization_app, method, path):
+    module, _ = authorization_app
+    client = _client(module, "staff", "staff authorization pass")
+    response = getattr(client, method)(path)
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Insufficient permissions"}
+    client.close()
+
+
+def test_admin_can_read_administrative_config(authorization_app):
+    module, _ = authorization_app
+    client = _client(module, "admin", "admin authorization pass")
+    assert client.get("/api/config/heb").status_code == 200
+    assert client.get("/api/config/absence-reasons?month=7&year=2026").status_code == 200
+    assert client.get("/api/config/absence-reasons/summary?month=7&year=2026").status_code == 200
+    client.close()
+
+
 @pytest.mark.parametrize(
     "path",
     [

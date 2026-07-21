@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableHead, DataTableHeader, DataTableRow } from "../components/common/data-table";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { useAuth } from "../context/AuthContext";
 
 const column = createColumnHelper<ManagedStudent>();
 const today = () => new Date().toISOString().slice(0, 10);
@@ -106,6 +107,7 @@ function AddStudentDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
 }
 
 export default function StudentManagement() {
+  const { can } = useAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [device, setDevice] = useState("");
@@ -131,7 +133,7 @@ export default function StudentManagement() {
   const exportTemplate = async () => { const blob = await exporter.mutateAsync(); saveBlob(blob, "operatoros-student-update.xlsx"); };
 
   return <div className="space-y-6">
-    <PageHeader eyebrow="Student information" title="Student Management" description="Manage canonical student profiles, attendance device identities, academic enrollment, and guarded imports." actions={<><Button variant="outline" onClick={exportTemplate} disabled={exporter.isPending}><Download className="size-4" />{exporter.isPending ? "Exporting…" : "Export update template"}</Button><Button variant="outline" onClick={() => { window.location.href = "/upload"; }}><Upload className="size-4" />Import students</Button><Button onClick={() => setAddOpen(true)}><Plus className="size-4" />Add student</Button></>} />
+    <PageHeader eyebrow="Student information" title="Student Management" description="Manage canonical student profiles, attendance device identities, academic enrollment, and guarded imports." actions={can("create_student") ? <><Button variant="outline" onClick={exportTemplate} disabled={exporter.isPending}><Download className="size-4" />{exporter.isPending ? "Exporting…" : "Export update template"}</Button>{can("import_student_roster") && <Button variant="outline" onClick={() => { window.location.href = "/upload"; }}><Upload className="size-4" />Import students</Button>}<Button onClick={() => setAddOpen(true)}><Plus className="size-4" />Add student</Button></> : undefined} />
     <Tabs defaultValue="all">
       <TabsList className="max-w-full overflow-x-auto"><TabsTrigger value="all">All Students</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="history">Import / Update History</TabsTrigger></TabsList>
       <TabsContent value="all" className="space-y-4">
@@ -140,14 +142,14 @@ export default function StudentManagement() {
           <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setDevice(event.target.value); setPage(1); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
         </CardContent></Card>
-        {students.isPending ? <LoadingState title="Loading students" /> : students.isError ? <ErrorState title="Students could not be loaded" description={students.error.message} /> : !students.data?.items.length ? <EmptyState title="No students found" description="Adjust the filters or add a canonical student." /> : <>
+        {students.isPending ? <LoadingState title="Loading students" /> : students.isError ? <ErrorState title="Students could not be loaded" description={students.error.message} /> : !students.data?.items.length ? <EmptyState title="No students found" description={can("create_student") ? "Adjust the filters or add a canonical student." : "Adjust the filters, or ask an administrator to add or import students."} /> : <>
           <DataTableContainer><DataTable><DataTableHeader>{table.getHeaderGroups().map((group) => <DataTableRow key={group.id}>{group.headers.map((header) => <DataTableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</DataTableHead>)}</DataTableRow>)}</DataTableHeader><DataTableBody>{table.getRowModel().rows.map((row) => <DataTableRow key={row.id}>{row.getVisibleCells().map((cell) => <DataTableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</DataTableCell>)}</DataTableRow>)}</DataTableBody></DataTable></DataTableContainer>
           <div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Page {students.data.page} of {Math.max(1, students.data.total_pages)} · {students.data.total} students</p><div className="flex gap-2"><Button variant="outline" disabled={page <= 1 || students.isFetching} onClick={() => setPage((value) => value - 1)}>Previous</Button><Button variant="outline" disabled={page >= students.data.total_pages || students.isFetching} onClick={() => setPage((value) => value + 1)}>Next</Button></div></div>
         </>}
       </TabsContent>
       <TabsContent value="quality">{quality.isPending ? <LoadingState title="Calculating data quality" /> : quality.isError ? <ErrorState title="Data quality could not be loaded" /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{Object.entries(quality.data || {}).map(([key, value]) => <Card key={key}><CardHeader><CardTitle className="text-sm capitalize">{key.replaceAll("_", " ")}</CardTitle></CardHeader><CardContent><p className="text-3xl font-black tabular-nums">{value}</p></CardContent></Card>)}</div>}</TabsContent>
-      <TabsContent value="history"><Card><CardHeader><CardTitle>Student import and update history</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">Roster previews and student update workbooks are available in the Data Import Center. Every commit is retained with its checksum and operator.</p><Button onClick={() => { window.location.href = "/upload"; }}>Open Data Import Center</Button></CardContent></Card></TabsContent>
+      <TabsContent value="history"><Card><CardHeader><CardTitle>Student import and update history</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">Roster previews and student update workbooks are available in the Data Import Center. Every commit is retained with its checksum and operator.</p>{can("import_student_roster") ? <Button onClick={() => { window.location.href = "/upload"; }}>Open Data Import Center</Button> : <p className="text-sm font-semibold text-slate-600">An administrator manages student imports and update workbooks.</p>}</CardContent></Card></TabsContent>
     </Tabs>
-    <AddStudentDialog open={addOpen} onOpenChange={setAddOpen} />
+    {can("create_student") && <AddStudentDialog open={addOpen} onOpenChange={setAddOpen} />}
   </div>;
 }
