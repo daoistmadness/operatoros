@@ -2,7 +2,6 @@
 
 mod sidecar;
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::{Manager, State, WebviewUrl, WebviewWindowBuilder};
 
@@ -122,27 +121,30 @@ pub fn run() {
     let setup_manager = Arc::clone(&manager);
     let event_manager = Arc::clone(&manager);
 
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            get_lifecycle_state,
-            retry_startup,
-            exit_application,
-            launch_main_window
-        ])
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(main_window) = app.get_webview_window("main") {
-                let _ = main_window.show();
-                let _ = main_window.set_focus();
-            } else if let Some(startup_window) = app.get_webview_window("startup") {
-                let _ = startup_window.show();
-                let _ = startup_window.set_focus();
-            }
-        }))
+    let builder = tauri::Builder::default().invoke_handler(tauri::generate_handler![
+        get_lifecycle_state,
+        retry_startup,
+        exit_application,
+        launch_main_window
+    ]);
+
+    #[cfg(windows)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Some(main_window) = app.get_webview_window("main") {
+            let _ = main_window.show();
+            let _ = main_window.set_focus();
+        } else if let Some(startup_window) = app.get_webview_window("startup") {
+            let _ = startup_window.show();
+            let _ = startup_window.set_focus();
+        }
+    }));
+
+    builder
         .setup(move |app| {
             #[cfg(debug_assertions)]
             if let Ok(origin) = std::env::var("OPERATOROS_TAURI_DEV_URL") {
                 build_managed_dev_window(app.handle(), &origin)
-                    .map_err(|error| Box::<dyn std::error::Error>::from(error))?;
+                    .map_err(Box::<dyn std::error::Error>::from)?;
                 app.manage(Arc::clone(&setup_manager));
                 return Ok(());
             }
@@ -150,7 +152,7 @@ pub fn run() {
             app.manage(Arc::clone(&setup_manager));
 
             build_startup_window(app.handle())
-                .map_err(|window_error| Box::<dyn std::error::Error>::from(window_error))?;
+                .map_err(Box::<dyn std::error::Error>::from)?;
 
             let _ = setup_manager.start(app.handle());
 
@@ -162,10 +164,8 @@ pub fn run() {
             if matches!(
                 event,
                 tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
-            ) {
-                if event_manager.state() != LifecycleState::Stopped {
-                    let _ = event_manager.shutdown();
-                }
+            ) && event_manager.state() != LifecycleState::Stopped {
+                let _ = event_manager.shutdown();
             }
         });
 }
