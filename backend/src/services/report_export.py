@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+import uuid
 from io import BytesIO
 
 from openpyxl import Workbook
@@ -18,12 +21,12 @@ from models.report_builder import ReportBrandingConfig
 
 DEFAULT_BRANDING = {
     "school_name": "EDELWEISS SCHOOL",
-    "report_header_title": "Executive Report",
-    "report_subtitle": "Attendance and Academic Analytics",
+    "report_header_title": "Executive Summary & Attendance Analytics",
+    "report_subtitle": "Verified Multi-Jenjang Leadership Reporting",
     "primary_color": "#1E3A8A",
     "secondary_color": "#0F172A",
-    "accent_color": "#D97706",
-    "footer_text": "OperatorOS",
+    "accent_color": "#F97316",
+    "footer_text": "OperatorOS -- Verified Executive Attendance & Academic Analytics",
 }
 
 
@@ -84,9 +87,12 @@ def _table(rows: list[list], header: bool = True, widths=None) -> Table:
 
 def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
     branding = branding or DEFAULT_BRANDING
-    output = BytesIO()
+
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    temp_pdf_path = os.path.join(temp_dir_obj.name, f"report_export_{uuid.uuid4().hex}.pdf")
+
     document = SimpleDocTemplate(
-        output,
+        temp_pdf_path,
         pagesize=landscape(A4),
         leftMargin=14 * mm,
         rightMargin=14 * mm,
@@ -216,7 +222,10 @@ def build_report_pdf(report: dict, branding: dict | None = None) -> bytes:
         canvas.restoreState()
 
     document.build(story, onFirstPage=page_footer, onLaterPages=page_footer)
-    return output.getvalue()
+    with open(temp_pdf_path, "rb") as f:
+        data = f.read()
+    temp_dir_obj.cleanup()
+    return data
 
 
 def _write_sheet(ws, title: str, headers: list[str], rows: list[list], primary_color: str) -> None:
