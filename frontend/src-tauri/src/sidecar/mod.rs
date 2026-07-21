@@ -1,5 +1,4 @@
 mod health;
-mod instance_lock;
 mod job_object;
 mod lifecycle;
 mod manager;
