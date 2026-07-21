@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date
+import os
+import tempfile
+import uuid
 from io import BytesIO
 from math import ceil
 
@@ -410,8 +413,11 @@ def build_report_builder_pdf(payload: dict) -> bytes:
     template = payload.get("selected_template") or {}
     branding = payload.get("branding") or {}
     sections = payload.get("resolved_sections") or ["executive_summary"]
-    stream = BytesIO()
-    pdf = canvas.Canvas(stream, pagesize=landscape(letter), pageCompression=0)
+
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    temp_pdf_path = os.path.join(temp_dir_obj.name, f"report_builder_{uuid.uuid4().hex}.pdf")
+
+    pdf = canvas.Canvas(temp_pdf_path, pagesize=landscape(letter), pageCompression=0)
     for section_key in sections:
         render = SECTION_RENDERERS.get(section_key)
         if render is None:
@@ -419,7 +425,10 @@ def build_report_builder_pdf(payload: dict) -> bytes:
         render(pdf, summary, branding, template)
         pdf.showPage()
     pdf.save()
-    return stream.getvalue()
+    with open(temp_pdf_path, "rb") as f:
+        data = f.read()
+    temp_dir_obj.cleanup()
+    return data
 
 
 def _sheet_visible(template: dict | None, sheet_name: str) -> bool:
