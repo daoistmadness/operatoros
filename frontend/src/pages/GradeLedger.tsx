@@ -15,7 +15,7 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "Data nilai gagal diproses. Periksa koneksi API dan integritas payload.";
+  return "Grade data could not be processed. Check your connection and retry.";
 }
 
 async function fetchLedgerRows(academicYearId: number, jenjangId: number): Promise<GradeMatrixEnrollment[]> {
@@ -66,7 +66,7 @@ class GradeLedgerErrorBoundary extends Component<React.PropsWithChildren, Bounda
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 h-5 w-5" />
             <div>
-              <h2 className="text-lg font-black">Grade Ledger failed to render</h2>
+              <h2 className="text-lg font-black">Grade Ledger could not be displayed</h2>
               <p className="mt-1 text-sm font-semibold">{this.state.error.message}</p>
             </div>
           </div>
@@ -230,8 +230,8 @@ function GradeLedgerContent() {
               Dynamic normalized grade matrix
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              Subject-aware assessment entry for enrolled students. This view writes only to the normalized Grade
-              Ledger API and does not mutate daily attendance scan records.
+              Subject-aware assessment entry for enrolled students. This view writes only to the normalized grade
+              record and does not mutate daily attendance scan records.
             </p>
           </div>
 

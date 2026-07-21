@@ -28,6 +28,7 @@ jobs:
     env:
       CI: "true"
       PYTHONPATH: backend/src
+      DATABASE_URL: sqlite:///:memory:
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
       OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
       OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
