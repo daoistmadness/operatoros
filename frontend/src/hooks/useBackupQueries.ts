@@ -30,3 +30,8 @@ export function useRestoreBackupMutation() {
     },
   });
 }
+
+export function useDeleteBackupMutation() {
+  const client = useQueryClient();
+  return useMutation({ mutationFn: (filename: string) => import('../api/backups').then(m => m.deleteBackup(filename)), onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.backups.all }) });
+}

@@ -411,3 +411,32 @@ def test_api_restore_suspends_and_restarts_scheduler_on_failure(api_context, mon
 
     assert response.status_code == 403
     assert events == ["stop", "start"]
+
+def test_api_delete_backup(api_context):
+    client, tmp_path = api_context
+    created = client.post("/api/admin/backups")
+    assert created.status_code == 200
+    filename = created.json()["filename"]
+    
+    assert (tmp_path / "backups" / filename).exists()
+    
+    deleted = client.delete(f"/api/admin/backups/{filename}")
+    assert deleted.status_code == 200
+    assert deleted.json()["status"] == "success"
+    
+    assert not (tmp_path / "backups" / filename).exists()
+    assert client.delete(f"/api/admin/backups/{filename}").status_code == 400
+
+
+def test_api_download_backup(api_context):
+    client, tmp_path = api_context
+    created = client.post("/api/admin/backups")
+    filename = created.json()["filename"]
+    
+    downloaded = client.get(f"/api/admin/backups/{filename}/download")
+    assert downloaded.status_code == 200
+    assert downloaded.headers["Content-Disposition"] == f'attachment; filename="{filename}"'
+    assert downloaded.headers["Cache-Control"] == "no-store, no-cache, must-revalidate, private"
+    assert len(downloaded.content) > 0
+    
+    assert client.get("/api/admin/backups/invalid_name/download").status_code == 404
