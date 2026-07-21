@@ -4,9 +4,53 @@ mod sidecar;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 use sidecar::{LifecycleState, SidecarManager};
+
+#[tauri::command]
+fn get_lifecycle_state(
+    manager: State<'_, Arc<SidecarManager>>,
+) -> Result<serde_json::Value, String> {
+    let state = manager.state();
+    let message = manager.error_message().unwrap_or_default();
+
+    // Include runtime URL if ready
+    let mut payload = serde_json::json!({
+        "state": state,
+        "message": message,
+    });
+
+    if state == LifecycleState::Ready {
+        if let Some(runtime) = manager.runtime() {
+            payload["url"] = format!("http://127.0.0.1:{}", runtime.port).into();
+        }
+    }
+
+    Ok(payload)
+}
+
+#[tauri::command]
+fn retry_startup(
+    app: tauri::AppHandle,
+    manager: State<'_, Arc<SidecarManager>>,
+) -> Result<(), String> {
+    manager.retry(&app)
+}
+
+#[tauri::command]
+fn exit_application(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn launch_main_window(
+    app: tauri::AppHandle,
+    manager: State<'_, Arc<SidecarManager>>,
+) -> Result<(), String> {
+    let _ = build_main_window(&app, &manager);
+    Ok(())
+}
 
 #[cfg(debug_assertions)]
 fn build_managed_dev_window(app: &tauri::AppHandle, origin: &str) -> Result<(), String> {
@@ -35,6 +79,15 @@ fn build_main_window(app: &tauri::AppHandle, manager: &SidecarManager) -> Result
         runtime_json
     );
 
+    if let Some(startup_window) = app.get_webview_window("startup") {
+        let _ = startup_window.close();
+    }
+
+    // Close existing main window if any (just in case)
+    if let Some(existing_main) = app.get_webview_window("main") {
+        let _ = existing_main.close();
+    }
+
     WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
         .title("OperatorOS")
         .inner_size(1280.0, 800.0)
@@ -45,36 +98,22 @@ fn build_main_window(app: &tauri::AppHandle, manager: &SidecarManager) -> Result
     Ok(())
 }
 
-fn build_failure_window(
-    app: &tauri::AppHandle,
-    state: LifecycleState,
-    error: &str,
-) -> Result<(), String> {
+fn build_startup_window(app: &tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.close();
     }
-    if let Some(window) = app.get_webview_window("failure") {
-        let _ = window.close();
-    }
-    let payload = serde_json::json!({
-        "state": state,
-        "message": error,
-    });
-    let initialization_script = format!(
-        "Object.defineProperty(window, '__OPERATOROS_FAILURE__', {{ value: Object.freeze({payload}), writable: false, configurable: false }});"
-    );
+
     WebviewWindowBuilder::new(
         app,
-        "failure",
-        WebviewUrl::App("desktop-failure.html".into()),
+        "startup",
+        WebviewUrl::App("desktop-startup.html".into()),
     )
-    .title("OperatorOS — Runtime Failure")
+    .title("OperatorOS — Starting Up")
     .inner_size(720.0, 520.0)
     .min_inner_size(640.0, 440.0)
     .resizable(true)
-    .initialization_script(&initialization_script)
     .build()
-    .map_err(|build_error| format!("could not create failure window: {build_error}"))?;
+    .map_err(|build_error| format!("could not create startup window: {build_error}"))?;
     Ok(())
 }
 
@@ -82,10 +121,23 @@ pub fn run() {
     let manager = Arc::new(SidecarManager::new());
     let setup_manager = Arc::clone(&manager);
     let event_manager = Arc::clone(&manager);
-    let failure_presented = Arc::new(AtomicBool::new(false));
-    let event_failure_presented = Arc::clone(&failure_presented);
 
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            get_lifecycle_state,
+            retry_startup,
+            exit_application,
+            launch_main_window
+        ])
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(main_window) = app.get_webview_window("main") {
+                let _ = main_window.show();
+                let _ = main_window.set_focus();
+            } else if let Some(startup_window) = app.get_webview_window("startup") {
+                let _ = startup_window.show();
+                let _ = startup_window.set_focus();
+            }
+        }))
         .setup(move |app| {
             #[cfg(debug_assertions)]
             if let Ok(origin) = std::env::var("OPERATOROS_TAURI_DEV_URL") {
@@ -94,30 +146,19 @@ pub fn run() {
                 app.manage(Arc::clone(&setup_manager));
                 return Ok(());
             }
-            if let Err(error) = setup_manager.start(app.handle()) {
-                build_failure_window(app.handle(), LifecycleState::Failed, &error)
-                    .map_err(|window_error| Box::<dyn std::error::Error>::from(window_error))?;
-                failure_presented.store(true, Ordering::SeqCst);
-                app.manage(Arc::clone(&setup_manager));
-                return Ok(());
-            }
-            build_main_window(app.handle(), &setup_manager)
-                .map_err(|error| Box::<dyn std::error::Error>::from(error))?;
+
             app.manage(Arc::clone(&setup_manager));
+
+            build_startup_window(app.handle())
+                .map_err(|window_error| Box::<dyn std::error::Error>::from(window_error))?;
+
+            let _ = setup_manager.start(app.handle());
+
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("failed to build OperatorOS desktop shell")
-        .run(move |app, event| {
-            if event_manager.state() == LifecycleState::Crashed
-                && !event_failure_presented.swap(true, Ordering::SeqCst)
-            {
-                let _ = build_failure_window(
-                    app,
-                    LifecycleState::Crashed,
-                    "The OperatorOS backend stopped unexpectedly. Close OperatorOS, then reopen it. Diagnostic details were written to Logs\\desktop-runtime.log.",
-                );
-            }
+        .run(move |_app, event| {
             if matches!(
                 event,
                 tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
