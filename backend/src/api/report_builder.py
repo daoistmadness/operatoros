@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from io import BytesIO
+import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,6 +12,8 @@ from sqlalchemy.orm import Session
 
 from api.error_responses import raise_internal_error
 from core.database import get_db
+from models.user import User
+from security.dependencies import get_current_user, require_role
 from services.report_builder import (
     create_branding,
     create_template,
@@ -29,19 +32,19 @@ from services.report_builder import (
 )
 from services.report_builder_export import PDF_MIME, XLSX_MIME, build_report_builder_excel, build_report_builder_pdf
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 TemplateType = Literal["management_summary", "academic_review", "intervention_review", "attendance_review"]
 OutputFormat = Literal["pdf", "excel", "both"]
-ForecastMethod = Literal["moving_average", "weighted_moving_average", "linear_trend"]
-Granularity = Literal["month", "term", "academic_year"]
+Granularity = Literal["term", "monthly", "cumulative"]
+ForecastMethod = Literal["linear_trend", "weighted_moving_average", "baseline_flat"]
 
 
 class ReportTemplateBody(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    description: str | None = None
+    name: str = Field(min_length=1, max_length=160)
+    description: str | None = Field(default=None, max_length=300)
     template_type: TemplateType
-    output_format: OutputFormat
+    output_format: OutputFormat = "both"
     is_default: bool = False
     is_active: bool = True
     page_order_json: list[str] = Field(default_factory=list)
@@ -53,8 +56,8 @@ class ReportTemplateBody(BaseModel):
 
 
 class ReportTemplateUpdateBody(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=120)
-    description: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=160)
+    description: str | None = Field(default=None, max_length=300)
     template_type: TemplateType | None = None
     output_format: OutputFormat | None = None
     is_default: bool | None = None
@@ -119,8 +122,9 @@ class ExportBody(ReportPreviewBody):
 
 
 def _template_filename(name: str, extension: str) -> str:
-    slug = "-".join(part for part in name.lower().split() if part)
-    return f"report-builder-{slug or 'template'}.{extension}"
+    cleaned = re.sub(r"[^A-Za-z0-9_-]+", "-", name.lower().strip()).strip("-")
+    slug = cleaned or "template"
+    return f"report-builder-{slug}.{extension}"
 
 
 @router.get("/sections")
@@ -138,7 +142,7 @@ def get_templates(
 
 
 @router.post("/templates")
-def post_template(body: ReportTemplateBody, db: Session = Depends(get_db)):
+def post_template(body: ReportTemplateBody, db: Session = Depends(get_db), _user: User = Depends(require_role("admin"))):
     try:
         return create_template(db, body.model_dump())
     except SQLAlchemyError as exc:
@@ -152,7 +156,7 @@ def get_template(template_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/templates/{template_id}")
-def patch_template(template_id: int, body: ReportTemplateUpdateBody, db: Session = Depends(get_db)):
+def patch_template(template_id: int, body: ReportTemplateUpdateBody, db: Session = Depends(get_db), _user: User = Depends(require_role("admin"))):
     try:
         payload = body.model_dump(exclude_unset=True)
         return update_template(db, template_id, payload)
@@ -162,7 +166,7 @@ def patch_template(template_id: int, body: ReportTemplateUpdateBody, db: Session
 
 
 @router.delete("/templates/{template_id}")
-def remove_template(template_id: int, db: Session = Depends(get_db)):
+def remove_template(template_id: int, db: Session = Depends(get_db), _user: User = Depends(require_role("admin"))):
     try:
         return delete_template(db, template_id)
     except SQLAlchemyError as exc:
@@ -178,7 +182,7 @@ def get_branding(db: Session = Depends(get_db)):
 
 
 @router.post("/branding")
-def post_branding(body: ReportBrandingBody, db: Session = Depends(get_db)):
+def post_branding(body: ReportBrandingBody, db: Session = Depends(get_db), _user: User = Depends(require_role("admin"))):
     try:
         return create_branding(db, body.model_dump())
     except SQLAlchemyError as exc:
@@ -187,7 +191,7 @@ def post_branding(body: ReportBrandingBody, db: Session = Depends(get_db)):
 
 
 @router.patch("/branding/{branding_id}")
-def patch_branding(branding_id: int, body: ReportBrandingUpdateBody, db: Session = Depends(get_db)):
+def patch_branding(branding_id: int, body: ReportBrandingUpdateBody, db: Session = Depends(get_db), _user: User = Depends(require_role("admin"))):
     try:
         payload = body.model_dump(exclude_unset=True)
         return update_branding(db, branding_id, payload)
@@ -198,75 +202,98 @@ def patch_branding(branding_id: int, body: ReportBrandingUpdateBody, db: Session
 
 @router.post("/preview")
 def preview_report(body: ReportPreviewBody, db: Session = Depends(get_db)):
-    payload = build_report_payload(
-        db,
-        academic_year_id=body.filters.academic_year_id,
-        jenjang_id=body.filters.jenjang_id,
-        class_name=body.filters.class_name,
-        term=body.filters.term,
-        subject_id=body.filters.subject_id,
-        template_id=body.template_id,
-        include_trends=body.include_trends,
-        include_forecast=body.include_forecast,
-        forecast_method=body.forecast_method,
-    )
-    return {
-        "selected_template": payload["selected_template"],
-        "resolved_sections": payload["resolved_sections"],
-        "resolved_filters": payload["filters"],
-        "estimated_pdf_pages": payload["estimated_pdf_pages"],
-        "excel_sheets": payload["excel_sheets"],
-        "warnings": payload["warnings"],
-        "data_quality_diagnostics": payload["data_quality_diagnostics"],
-        "available_sections": payload["available_sections"],
-        "missing_sections": payload["missing_sections"],
-        "branding": payload["branding"],
-    }
+    try:
+        payload = build_report_payload(
+            db,
+            academic_year_id=body.filters.academic_year_id,
+            jenjang_id=body.filters.jenjang_id,
+            class_name=body.filters.class_name,
+            term=body.filters.term,
+            subject_id=body.filters.subject_id,
+            template_id=body.template_id,
+            include_trends=body.include_trends,
+            include_forecast=body.include_forecast,
+            forecast_method=body.forecast_method,
+        )
+        return {
+            "selected_template": payload["selected_template"],
+            "resolved_sections": payload["resolved_sections"],
+            "resolved_filters": payload["filters"],
+            "estimated_pdf_pages": payload["estimated_pdf_pages"],
+            "excel_sheets": payload["excel_sheets"],
+            "warnings": payload["warnings"],
+            "data_quality_diagnostics": payload["data_quality_diagnostics"],
+            "available_sections": payload["available_sections"],
+            "missing_sections": payload["missing_sections"],
+            "branding": payload["branding"],
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise_internal_error("The report preview could not be generated. Please review inputs.", exc)
 
 
 @router.post("/export/pdf")
 def export_report_pdf(body: ExportBody, db: Session = Depends(get_db)):
-    payload = build_report_payload(
-        db,
-        academic_year_id=body.filters.academic_year_id,
-        jenjang_id=body.filters.jenjang_id,
-        class_name=body.filters.class_name,
-        term=body.filters.term,
-        subject_id=body.filters.subject_id,
-        template_id=body.template_id,
-        include_trends=body.include_trends,
-        include_forecast=body.include_forecast,
-        forecast_method=body.forecast_method,
-    )
-    pdf_bytes = build_report_builder_pdf(payload)
-    template = payload["selected_template"] or {}
-    filename = _template_filename(template.get("name") or "report", "pdf")
-    return StreamingResponse(
-        BytesIO(pdf_bytes),
-        media_type=PDF_MIME,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    try:
+        payload = build_report_payload(
+            db,
+            academic_year_id=body.filters.academic_year_id,
+            jenjang_id=body.filters.jenjang_id,
+            class_name=body.filters.class_name,
+            term=body.filters.term,
+            subject_id=body.filters.subject_id,
+            template_id=body.template_id,
+            include_trends=body.include_trends,
+            include_forecast=body.include_forecast,
+            forecast_method=body.forecast_method,
+        )
+        pdf_bytes = build_report_builder_pdf(payload)
+        template = payload["selected_template"] or {}
+        filename = _template_filename(template.get("name") or "report", "pdf")
+        return StreamingResponse(
+            BytesIO(pdf_bytes),
+            media_type=PDF_MIME,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-store, no-cache, must-revalidate, private",
+                "Pragma": "no-cache",
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise_internal_error("The PDF report export failed. Please retry.", exc)
 
 
 @router.post("/export/excel")
 def export_report_excel(body: ExportBody, db: Session = Depends(get_db)):
-    payload = build_report_payload(
-        db,
-        academic_year_id=body.filters.academic_year_id,
-        jenjang_id=body.filters.jenjang_id,
-        class_name=body.filters.class_name,
-        term=body.filters.term,
-        subject_id=body.filters.subject_id,
-        template_id=body.template_id,
-        include_trends=body.include_trends,
-        include_forecast=body.include_forecast,
-        forecast_method=body.forecast_method,
-    )
-    excel_bytes = build_report_builder_excel(payload)
-    template = payload["selected_template"] or {}
-    filename = _template_filename(template.get("name") or "report", "xlsx")
-    return StreamingResponse(
-        BytesIO(excel_bytes),
-        media_type=XLSX_MIME,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    try:
+        payload = build_report_payload(
+            db,
+            academic_year_id=body.filters.academic_year_id,
+            jenjang_id=body.filters.jenjang_id,
+            class_name=body.filters.class_name,
+            term=body.filters.term,
+            subject_id=body.filters.subject_id,
+            template_id=body.template_id,
+            include_trends=body.include_trends,
+            include_forecast=body.include_forecast,
+            forecast_method=body.forecast_method,
+        )
+        excel_bytes = build_report_builder_excel(payload)
+        template = payload["selected_template"] or {}
+        filename = _template_filename(template.get("name") or "report", "xlsx")
+        return StreamingResponse(
+            BytesIO(excel_bytes),
+            media_type=XLSX_MIME,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-store, no-cache, must-revalidate, private",
+                "Pragma": "no-cache",
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise_internal_error("The Excel report export failed. Please retry.", exc)
