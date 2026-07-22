@@ -10,6 +10,8 @@ from models.jenjang_config import JenjangConfig
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.student_master import StudentDeviceIdentity, StudentMaster
+from models.academic_master import AcademicClass
+from models.student_progression import StudentProgressionPreviewBatch
 
 
 @dataclass(frozen=True)
@@ -74,6 +76,24 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
         )
     has_attendance = db.query(Attendance.id).first() is not None
     has_cutoff_override = db.query(JenjangConfig.id).first() is not None
+    destination_year = None
+    progression_configured = False
+    unresolved_progression = False
+    if usable_year:
+        destination_year = (
+            db.query(AcademicYear)
+            .filter(AcademicYear.start_date > usable_year.start_date, AcademicYear.status != "closed")
+            .order_by(AcademicYear.start_date.asc(), AcademicYear.id.asc())
+            .first()
+        )
+        progression_configured = bool(
+            destination_year
+            and db.query(AcademicClass.id).filter_by(academic_year_id=destination_year.id, active=True).first()
+        )
+        unresolved_progression = db.query(StudentProgressionPreviewBatch.id).filter(
+            StudentProgressionPreviewBatch.source_academic_year_id == usable_year.id,
+            StudentProgressionPreviewBatch.status.in_(("PREVIEW", "STALE", "FAILED")),
+        ).first() is not None
     responsibility = None if can_manage else "An administrator can complete this step."
 
     steps = [
@@ -136,6 +156,20 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
             destination="/upload" if can_manage else "/attendance-review",
             can_manage=can_manage,
             responsibility=None if can_manage else "You can review attendance after an administrator imports it.",
+        ),
+        ReadinessStep(
+            code="student_progression",
+            name="Prepare academic-year progression",
+            status="ATTENTION" if unresolved_progression else _step_status(progression_configured, optional=True),
+            requirement="WORKFLOW",
+            reason=(
+                "A progression preview requires a later open academic year with active destination classes."
+                if not unresolved_progression
+                else "An unresolved progression preview requires review before academic-year rollover."
+            ),
+            destination="/academic-management" if can_manage else None,
+            can_manage=can_manage,
+            responsibility=responsibility,
         ),
         ReadinessStep(
             code="cutoff_jenjang",

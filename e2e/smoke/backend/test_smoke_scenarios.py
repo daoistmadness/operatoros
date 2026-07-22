@@ -40,9 +40,9 @@ def test_authentication_authorization_and_hierarchy(client, authenticated):
     programs = authenticated.get("/api/academic-masters/programs").json()
     grades = authenticated.get("/api/academic-masters/grades").json()
     classes = authenticated.get("/api/academic-masters/classes").json()
-    assert [item["name"] for item in programs if item["active"]] == ["MAIN"]
-    assert [item["name"] for item in grades if item["active"]] == ["Primary 1"]
-    assert [item["class_name"] for item in classes if item["active"]] == ["Primary 1A", "Primary 1B"]
+    assert {item["name"] for item in programs if item["active"]} == {"MAIN", "SECONDARY MAIN"}
+    assert {item["name"] for item in grades if item["active"]} == {"Primary 1", "Primary 2", "Secondary 7"}
+    assert {"Primary 1A", "Primary 1B", "Primary 2A", "Next Primary 1A", "Next Primary 2A", "Secondary 7A"}.issubset({item["class_name"] for item in classes if item["active"]})
     assert "Primary 1 / MAIN" not in [item["class_name"] for item in classes if item["active"]]
 
 
@@ -51,8 +51,8 @@ def test_class_allocation_preview_and_attendance_filter_are_non_mutating(authent
     years = authenticated.get("/api/academic-masters/academic-years").json()
     jenjangs = authenticated.get("/api/academic-masters/jenjangs").json()
     classes = authenticated.get("/api/academic-masters/classes").json()
-    year_id, jenjang_id = years[0]["id"], jenjangs[0]["id"]
-    active_class = next(item for item in classes if item["active"])
+    year_id, jenjang_id = next(item for item in years if item["status"] == "active")["id"], next(item for item in jenjangs if item["name"] == "Primary")["id"]
+    active_class = next(item for item in classes if item["active"] and item["academic_year_id"] == year_id and item["class_name"] == "Primary 1A")
     candidates = authenticated.get("/api/grades/enrollment/candidates", params={"academic_year_id": year_id, "jenjang_id": jenjang_id})
     assert candidates.status_code == 200
     assert [item["name"] for item in candidates.json()] == ["E2E Bima", "E2E Citra"]
@@ -89,7 +89,7 @@ def test_upload_preview_validation_does_not_commit_attendance(authenticated):
 def test_student_management_identity_enrollment_roster_and_xlsx_round_trip(authenticated):
     years = authenticated.get("/api/academic-masters/academic-years").json()
     classes = [row for row in authenticated.get("/api/academic-masters/classes").json() if row["active"]]
-    year_id = years[0]["id"]
+    year_id = next(row for row in years if row["status"] == "active")["id"]
     class_a = next(row for row in classes if row["class_name"] == "Primary 1A")
     class_b = next(row for row in classes if row["class_name"] == "Primary 1B")
     created = authenticated.post("/api/student-masters", json={
@@ -164,3 +164,128 @@ def test_student_management_identity_enrollment_roster_and_xlsx_round_trip(authe
     })
     assert roster_commit.status_code == 200, roster_commit.text
     assert roster_commit.json()["students_created"] == 1
+
+
+def test_progression_promotion_retention_graduation_cross_jenjang_stale_and_rollback(authenticated):
+    years = authenticated.get("/api/academic-masters/academic-years").json()
+    classes = authenticated.get("/api/academic-masters/classes").json()
+    grades = authenticated.get("/api/academic-masters/grades").json()
+    programs = authenticated.get("/api/academic-masters/programs").json()
+    jenjangs = authenticated.get("/api/academic-masters/jenjangs").json()
+    source_year = next(row for row in years if row["label"] == "2026/2027")
+    destination_year = next(row for row in years if row["label"] == "2027/2028")
+    class_by_name = {row["class_name"]: row for row in classes}
+    grade_by_id = {row["id"]: row for row in grades}
+    program_by_id = {row["id"]: row for row in programs}
+    jenjang_by_name = {row["name"]: row for row in jenjangs}
+
+    sequence = iter(range(991201, 991220))
+
+    def create_source(name: str, source_class_name: str):
+        device_identifier = str(next(sequence))
+        created = authenticated.post("/api/student-masters", json={
+            "identity": {"full_name": name, "student_status": "active"},
+            "device_identity": {
+                "device_identifier": device_identifier,
+                "device_source": "attendance_machine",
+                "effective_from": "2026-07-01",
+                "reason": "Synthetic progression E2E identity",
+            },
+        })
+        assert created.status_code == 201, created.text
+        master_id = created.json()["id"]
+        enrollment = authenticated.post(f"/api/student-enrollments/student/{master_id}", json={
+            "academic_year_id": source_year["id"],
+            "academic_class_id": class_by_name[source_class_name]["id"],
+            "effective_from": "2026-07-01",
+        })
+        assert enrollment.status_code == 201, enrollment.text
+        return {"master_id": master_id, "enrollment_id": enrollment.json()["id"], "legacy_id": int(device_identifier)}
+
+    promoted = create_source("E2E Progress Promote", "Primary 1A")
+    retained = create_source("E2E Progress Retain", "Primary 1A")
+    graduated = create_source("E2E Progress Graduate", "Primary 2A")
+    crossed = create_source("E2E Progress Cross", "Primary 2A")
+
+    database = os.environ["OPERATOROS_E2E_DATABASE"]
+    with sqlite3.connect(database) as connection:
+        subject_id = connection.execute("SELECT id FROM subjects WHERE name='E2E Progression Subject'").fetchone()[0]
+        component_id = connection.execute("SELECT id FROM assessment_components WHERE name='E2E Progression Score'").fetchone()[0]
+        connection.execute("INSERT INTO student_subject_grades(enrollment_id,subject_id,component_id,score) VALUES(?,?,?,88.0)", (promoted["enrollment_id"], subject_id, component_id))
+        connection.execute("INSERT INTO attendance(student_id,date,late_duration,late_source,is_absent,status) VALUES(?,'2026-08-01',0,'fixture',0,'Hadir')", (promoted["legacy_id"],))
+
+    retain_class = class_by_name["Next Primary 1A"]
+    retain_grade = grade_by_id[retain_class["grade_id"]]
+    retain_program = program_by_id[retain_grade["program_id"]]
+    cross_class = class_by_name["Secondary 7A"]
+    cross_grade = grade_by_id[cross_class["grade_id"]]
+    cross_program = program_by_id[cross_grade["program_id"]]
+    preview = authenticated.post("/api/student-progression/previews", json={
+        "source_academic_year_id": source_year["id"],
+        "destination_academic_year_id": destination_year["id"],
+        "source_enrollment_ids": [promoted["enrollment_id"], retained["enrollment_id"], graduated["enrollment_id"], crossed["enrollment_id"]],
+        "overrides": [
+            {
+                "source_enrollment_id": retained["enrollment_id"], "outcome": "RETAIN",
+                "destination_jenjang_id": retain_program["jenjang_id"], "destination_program_id": retain_program["id"],
+                "destination_grade_id": retain_grade["id"], "destination_class_id": retain_class["id"],
+                "reason_code": "RETENTION_APPROVED", "reason": "Synthetic retention review",
+            },
+            {
+                "source_enrollment_id": crossed["enrollment_id"], "outcome": "CROSS_JENJANG",
+                "destination_jenjang_id": jenjang_by_name["Secondary"]["id"], "destination_program_id": cross_program["id"],
+                "destination_grade_id": cross_grade["id"], "destination_class_id": cross_class["id"],
+                "reason_code": "CROSS_JENJANG_APPROVED", "reason": "Synthetic cross-Jenjang review",
+            },
+        ],
+    })
+    assert preview.status_code == 201, preview.text
+    preview_json = preview.json()
+    assert {row["proposed_outcome"] for row in preview_json["rows"]} == {"PROMOTE", "RETAIN", "GRADUATE", "CROSS_JENJANG"}
+    committed = authenticated.post(f"/api/student-progression/previews/{preview_json['batch_id']}/commit", json={
+        "preview_version": preview_json["preview_version"],
+        "effective_date": destination_year["start_date"],
+        "confirmation": "COMMIT_CROSS_JENJANG_PROGRESSION",
+    })
+    assert committed.status_code == 200, committed.text
+    assert committed.json()["destination_enrollments_created"] == 3
+    assert committed.json()["graduated"] == committed.json()["retained"] == committed.json()["cross_jenjang"] == 1
+    with sqlite3.connect(database) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM student_subject_grades WHERE enrollment_id=? AND score=88.0", (promoted["enrollment_id"],)).fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM attendance WHERE student_id=? AND date='2026-08-01'", (promoted["legacy_id"],)).fetchone()[0] == 1
+        assert connection.execute("SELECT lifecycle_state FROM student_enrollments WHERE id=?", (graduated["enrollment_id"],)).fetchone()[0] == "GRADUATED"
+        assert connection.execute("SELECT COUNT(*) FROM student_progression_audit WHERE batch_id=?", (preview_json["batch_id"],)).fetchone()[0] == 4
+
+    stale_one = create_source("E2E Progress Stale", "Primary 1A")
+    stale_preview = authenticated.post("/api/student-progression/previews", json={
+        "source_academic_year_id": source_year["id"], "destination_academic_year_id": destination_year["id"],
+        "source_enrollment_ids": [stale_one["enrollment_id"]], "overrides": [],
+    }).json()
+    revalidated = authenticated.post(f"/api/student-progression/previews/{stale_preview['batch_id']}/revalidate", json={"preview_version": 1})
+    assert revalidated.status_code == 200 and revalidated.json()["preview_version"] == 2
+    stale_commit = authenticated.post(f"/api/student-progression/previews/{stale_preview['batch_id']}/commit", json={
+        "preview_version": 1, "effective_date": destination_year["start_date"], "confirmation": "COMMIT_STUDENT_PROGRESSION",
+    })
+    assert stale_commit.status_code == 409 and stale_commit.json()["detail"]["code"] == "PROGRESSION_PREVIEW_STALE"
+
+    rollback_one = create_source("E2E Progress Rollback One", "Primary 1A")
+    rollback_two = create_source("E2E Progress Rollback Two", "Primary 1A")
+    rollback_preview = authenticated.post("/api/student-progression/previews", json={
+        "source_academic_year_id": source_year["id"], "destination_academic_year_id": destination_year["id"],
+        "source_enrollment_ids": [rollback_one["enrollment_id"], rollback_two["enrollment_id"]], "overrides": [],
+    }).json()
+    trigger_name = "e2e_inject_progression_failure"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            f"CREATE TRIGGER {trigger_name} BEFORE INSERT ON student_progression_audit "
+            "WHEN NEW.batch_id=? AND NEW.preview_row_id=2 BEGIN SELECT RAISE(ABORT, 'synthetic progression failure'); END".replace("?", f"'{rollback_preview['batch_id']}'", 1)
+        )
+    failed = authenticated.post(f"/api/student-progression/previews/{rollback_preview['batch_id']}/commit", json={
+        "preview_version": 1, "effective_date": destination_year["start_date"], "confirmation": "COMMIT_STUDENT_PROGRESSION",
+    })
+    with sqlite3.connect(database) as connection:
+        connection.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
+        states = connection.execute("SELECT lifecycle_state FROM student_enrollments WHERE id IN (?,?) ORDER BY id", (rollback_one["enrollment_id"], rollback_two["enrollment_id"])).fetchall()
+        destination_count = connection.execute("SELECT COUNT(*) FROM student_enrollments WHERE student_master_id IN (?,?) AND academic_year_id=?", (rollback_one["master_id"], rollback_two["master_id"], destination_year["id"])).fetchone()[0]
+    assert failed.status_code == 409 and failed.json()["detail"]["code"] == "PROGRESSION_TRANSACTION_FAILED"
+    assert states == [("ACTIVE",), ("ACTIVE",)] and destination_count == 0

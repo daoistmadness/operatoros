@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, Settings, UserCheck } from "lucide-react";
+import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, Repeat2, Settings, UserCheck } from "lucide-react";
 import {
   createAcademicYear,
   createSubject,
@@ -11,6 +11,7 @@ import {
 import { fetchJenjangs, type JenjangOption } from "../api/enrollment";
 import { AcademicConfigPanel } from "../components/academic/AcademicConfigPanel";
 import { EnrollmentPanel } from "../components/enrollment/EnrollmentPanel";
+import { ProgressionPanel } from "../components/progression/ProgressionPanel";
 import ReportBuilderPanel from "../components/report-builder/ReportBuilderPanel";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
@@ -27,7 +28,7 @@ import {
 } from "../components/common/data-table";
 import type { AcademicYear, Subject } from "../types/grade";
 
-type ManagementTab = "calendar" | "allocation" | "settings" | "report-builder";
+type ManagementTab = "calendar" | "allocation" | "progression" | "settings" | "report-builder";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -262,6 +263,7 @@ export default function AcademicManagement() {
         {[
           { id: "calendar" as const, label: "Calendar & Subjects", icon: CalendarDays },
           { id: "allocation" as const, label: "Class Allocation", icon: UserCheck },
+          { id: "progression" as const, label: "Progression", icon: Repeat2 },
           { id: "settings" as const, label: "KKM & Term Settings", icon: Settings },
           { id: "report-builder" as const, label: "Report Builder", icon: BookOpen },
         ].map((tab) => {
@@ -555,6 +557,8 @@ export default function AcademicManagement() {
           </div>
           <EnrollmentPanel showHero={false} />
         </div>
+      ) : activeTab === "progression" ? (
+        <ProgressionPanel />
       ) : activeTab === "settings" ? (
         <AcademicConfigPanel />
       ) : (

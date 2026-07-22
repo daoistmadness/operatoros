@@ -13,9 +13,9 @@ from core.config import settings
 from core.database import engine, validate_student_linking_gate
 
 
-CURRENT_SCHEMA_VERSION = "20260722_s40"
-PREVIOUS_SCHEMA_VERSION = "20260722_s39"
-LEGACY_SCHEMA_VERSION = "20260722_s38"
+CURRENT_SCHEMA_VERSION = "20260722_s41"
+PREVIOUS_SCHEMA_VERSION = "20260722_s40"
+LEGACY_SCHEMA_VERSION = "20260722_s39"
 LEDGER_TABLE = "operatoros_schema_migrations"
 
 
@@ -75,6 +75,13 @@ def _validate_sqlite_file(path: Path) -> None:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance tables missing")
         if "student_enrollment_lifecycle_audit" not in tables:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
+        progression_tables = {
+            "student_progression_mapping_rules",
+            "student_progression_preview_batches",
+            "student_progression_audit",
+        }
+        if not progression_tables.issubset(tables):
+            raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: progression tables missing")
         triggers = {
             item[0] for item in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='trigger'"
@@ -87,6 +94,8 @@ def _validate_sqlite_file(path: Path) -> None:
             "trg_academic_roster_batch_session_type",
             "trg_student_enrollment_lifecycle_audit_no_delete",
             "trg_student_enrollment_lifecycle_audit_no_update",
+            "trg_student_progression_audit_no_delete",
+            "trg_student_progression_audit_no_update",
         }
         if not required_triggers.issubset(triggers):
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance triggers missing")
