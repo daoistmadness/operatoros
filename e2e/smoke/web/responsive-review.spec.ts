@@ -90,6 +90,9 @@ for (const vp of VIEWPORTS) {
     await page.goto("/academic-management");
     await expect(page.getByRole("heading", { name: "Calendar matrix" })).toBeVisible();
     await verifyNoHorizontalOverflow(page, `AcademicManagement ${vp.width}x${vp.height}`);
+    await page.getByRole("button", { name: "Progression" }).click();
+    await expect(page.getByRole("heading", { name: "Student Progression" })).toBeVisible();
+    await verifyNoHorizontalOverflow(page, `StudentProgression ${vp.width}x${vp.height}`);
 
     // 3. Class Allocation / Enrollment
     await page.goto("/enrollment");

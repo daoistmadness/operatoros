@@ -1,13 +1,13 @@
 {
   "manifest_version": 1,
-  "current_schema": "20260722_s40",
+  "current_schema": "20260722_s41",
   "startup_is_migration_runner": false,
   "states": [
     {
       "state": "fresh_empty",
       "detection": "configured absolute path does not exist",
       "schema_fingerprint": "empty",
-      "migration_id": "fresh_to_20260722_s40",
+      "migration_id": "fresh_to_20260722_s41",
       "outcome": "MIGRATION_COMPLETE",
       "business_data_behavior": "creates schema only; inserts no students, identities, attendance, or enrollments",
       "manual_approval": false
@@ -50,7 +50,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260722_s40",
+      "detection": "ledger head and immutable schema fingerprint equal 20260722_s41",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -78,11 +78,11 @@
   ],
   "migrations": [
     {
-      "id": "fresh_to_20260722_s40",
+      "id": "fresh_to_20260722_s41",
       "description": "Atomically create the current empty SQLite schema",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260722_s40",
+      "resulting_schema": "20260722_s41",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.initialize_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
@@ -134,6 +134,24 @@
       "validation_queries": ["isolated path approval", "protected row counts unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
       "protected_data_expectation": "no enrollment, grade, attendance, identity, import, or audit row is deleted"
+    },
+    {
+      "id": "20260722_s40_to_20260722_s41",
+      "description": "Add versioned progression previews, explicit mapping rules, and append-only progression audit history",
+      "predecessor": "20260722_s40",
+      "supported_source_schema": "ledger-validated 20260722_s40",
+      "resulting_schema": "20260722_s41",
+      "checksum": "35ff9418d6dd9a81b022e7a2c82e8483f1df2b0c9583be247c5c5ff8c2d07401",
+      "sqlite_checksum": "87660d67a2d59cf424f8658894b5d810bdb2d2d9a1719d97bf9658c609f3c942",
+      "postgresql_checksum": "dd84b4b967586d0a3af4bf2248d114a17a438174c89d4d7788146e97ef77ee6c",
+      "sqlite_migration": "20260722_student_progression_rollover_sqlite.sql",
+      "postgresql_migration": "20260722_student_progression_rollover_postgresql.sql",
+      "upgrade_entry_point": "core.student_progression_migration.migrate_student_progression_sqlite",
+      "schema_objects": ["student_progression_mapping_rules", "student_progression_preview_batches", "student_progression_audit", "append-only progression audit triggers"],
+      "historical_backfill": "none; progression previews and audits begin empty without rewriting enrollment history",
+      "validation_queries": ["isolated path approval", "preserved table fingerprints unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
+      "protected_data_expectation": "no enrollment, class history, lifecycle audit, grade, attendance, intervention, report, identity, or import row is modified"
     }
   ]
 }
