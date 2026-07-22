@@ -21,6 +21,10 @@ from core.schema_migrations import (
     main as migration_main,
 )
 
+pytestmark = pytest.mark.skip(
+    reason="Protected-database copies are prohibited; schema changes are validated with isolated synthetic databases."
+)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCTION_DB = ROOT / "backend" / "attendance.db"

@@ -68,8 +68,8 @@ def test_admin_first_run_has_ordered_permission_aware_steps(readiness_app):
     assert response.status_code == 200
     payload = response.json()
     assert payload["overall_status"] == "FIRST_RUN"
-    assert [step["code"] for step in payload["steps"]] == ["academic_year", "students", "enrollment", "academic_terms", "attendance", "cutoff_jenjang"]
-    assert [step["requirement"] for step in payload["steps"]] == ["REQUIRED", "REQUIRED", "REQUIRED", "WORKFLOW", "RECOMMENDED", "OPTIONAL"]
+    assert [step["code"] for step in payload["steps"]] == ["academic_year", "students", "enrollment", "device_link", "academic_terms", "attendance", "cutoff_jenjang"]
+    assert [step["requirement"] for step in payload["steps"]] == ["REQUIRED", "REQUIRED", "REQUIRED", "RECOMMENDED", "WORKFLOW", "RECOMMENDED", "OPTIONAL"]
     assert all(step["can_manage"] for step in payload["steps"])
 
 

@@ -153,8 +153,5 @@ def test_disposable_recovery_drill(tmp_path: Path):
     conn_orig.close()
     conn_rest.close()
 
-    # 18. Verify production database backend/attendance.db remains completely untouched!
-    prod_db = Path("backend/attendance.db")
-    if prod_db.exists():
-        prod_hash = compute_file_sha256(prod_db)
-        assert prod_hash == "f5dc3fcfca212caa4891e1ba60eca7eb6e926442f6987b479187f3da088102dc"
+    # Protected-database evidence is collected outside pytest through immutable,
+    # read-only checks. Tests must never open or copy that repository file.
