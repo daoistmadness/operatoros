@@ -139,6 +139,7 @@ def _ensure_student_foundation_compatibility() -> None:
                 "student_master_change_history",
                 "student_enrollment_class_history",
                 "student_enrollment_lifecycle_audit",
+                "student_progression_audit",
             )
             if table_name in tables
         ]
@@ -415,6 +416,9 @@ def init_db():
         StudentImportRow, StudentMaster, StudentMasterChangeHistory, StudentParentGuardian,
     )
     from models.student_subject_grade import StudentSubjectGrade
+    from models.student_progression import (
+        StudentProgressionAudit, StudentProgressionMappingRule, StudentProgressionPreviewBatch,
+    )
     from models.academic_roster import AcademicRosterImportBatch
     from models.student_import_session import StudentImportAppliedAction, StudentImportSession
     from models.operations_audit import OperationsAuditEvent
