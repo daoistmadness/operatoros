@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from security.dependencies import get_current_user, require_role
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -15,11 +15,13 @@ from models.academic_year import AcademicYear
 from models.assessment_component import AssessmentComponent
 from models.jenjang import Jenjang
 from models.student import Student
-from models.student_enrollment import StudentEnrollment
+from models.student_enrollment import StudentEnrollment, StudentEnrollmentLifecycleAudit
 from models.student_subject_grade import StudentSubjectGrade
 from models.subject import Subject
 from models.academic_master import AcademicClass
-from models.student_master import StudentMaster, StudentDeviceIdentity
+from models.student_master import StudentEnrollmentClassHistory, StudentMaster, StudentDeviceIdentity
+from schemas.student_management import EnrollmentDeleteRequest
+from services.student_management import enrollment_deletion_status, hard_delete_enrollment
 
 
 router = APIRouter(dependencies=[Depends(get_current_user), Depends(require_role("admin"))])
@@ -71,6 +73,8 @@ def _verify_grade_references(db: Session, body: GradeGridSaveRequest) -> Student
     enrollment = db.query(StudentEnrollment).filter(StudentEnrollment.id == body.enrollment_id).first()
     if enrollment is None:
         raise HTTPException(status_code=404, detail="Enrollment not found")
+    if enrollment.lifecycle_state != "ACTIVE":
+        raise HTTPException(status_code=409, detail={"code": "ENROLLMENT_NOT_ACTIVE", "message": "Grades may only be recorded for an active enrollment."})
 
     subject_ids = {item.subject_id for item in body.grades}
     component_ids = {item.component_id for item in body.grades}
@@ -132,19 +136,38 @@ def _serialize_student(row: Student) -> dict:
     }
 
 
-def _serialize_enrollment(enrollment: StudentEnrollment, student: Student) -> dict:
+def _serialize_enrollment(enrollment: StudentEnrollment, student: Student | None, master: StudentMaster | None = None, db: Session | None = None) -> dict:
     resolved_class_name = enrollment.academic_class.class_name if enrollment.academic_class_id and enrollment.academic_class else enrollment.class_name
     return {
         "enrollment_id": enrollment.id,
-        "student_id": student.id,
-        "student_name": student.name,
-        "jenjang": student.jenjang,
-        "student_class_name": student.class_name,
+        "student_id": student.id if student else None,
+        "student_name": master.full_name if master else (student.name if student else "Unlinked student"),
+        "jenjang": student.jenjang if student else None,
+        "student_class_name": student.class_name if student else None,
         "academic_year_id": enrollment.academic_year_id,
         "jenjang_id": enrollment.jenjang_id,
         "class_name": resolved_class_name,
         "class_assigned": enrollment.class_assigned,
         "student_master_id": enrollment.student_master_id,
+        "lifecycle_state": enrollment.lifecycle_state,
+        "device_linked": enrollment.student_id is not None,
+        "effective_from": enrollment.effective_from,
+        "effective_to": enrollment.effective_to,
+        "deletion": enrollment_deletion_status(db, enrollment) if db else None,
+        "class_history": [
+            {
+                "id": history.id, "class_name": history.class_name,
+                "effective_from": history.effective_from, "effective_to": history.effective_to,
+                "source": history.source,
+            }
+            for history in (
+                db.query(StudentEnrollmentClassHistory)
+                .filter_by(enrollment_id=enrollment.id)
+                .order_by(StudentEnrollmentClassHistory.effective_from.asc(), StudentEnrollmentClassHistory.id.asc())
+                .all()
+                if db else []
+            )
+        ],
     }
 
 
@@ -240,9 +263,11 @@ def get_enrollment_candidates(
     )
     query = (
         db.query(StudentMaster, Student)
-        .join(StudentDeviceIdentity, StudentDeviceIdentity.student_master_id == StudentMaster.id)
-        .join(Student, Student.id == StudentDeviceIdentity.legacy_student_id)
-        .filter(StudentDeviceIdentity.is_active.is_(True))
+        .outerjoin(StudentDeviceIdentity, and_(
+            StudentDeviceIdentity.student_master_id == StudentMaster.id,
+            StudentDeviceIdentity.is_active.is_(True),
+        ))
+        .outerjoin(Student, Student.id == StudentDeviceIdentity.legacy_student_id)
         .filter(~StudentMaster.id.in_(enrolled_master_ids))
     )
     if source_class:
@@ -252,10 +277,11 @@ def get_enrollment_candidates(
     return [
         {
             "id": master.id,
-            "student_id": student.id,
+            "student_id": student.id if student else None,
             "name": master.full_name,
-            "jenjang": student.jenjang,
-            "class_name": student.class_name,
+            "jenjang": student.jenjang if student else None,
+            "class_name": student.class_name if student else None,
+            "device_linked": student is not None,
         }
         for master, student in results
     ]
@@ -300,8 +326,9 @@ def get_enrollments(
 ):
     _require_academic_context(db, academic_year_id, jenjang_id)
     query = (
-        db.query(StudentEnrollment, Student)
-        .join(Student, Student.id == StudentEnrollment.student_id)
+        db.query(StudentEnrollment, Student, StudentMaster)
+        .outerjoin(Student, Student.id == StudentEnrollment.student_id)
+        .outerjoin(StudentMaster, StudentMaster.id == StudentEnrollment.student_master_id)
         .filter(
             StudentEnrollment.academic_year_id == academic_year_id,
             StudentEnrollment.jenjang_id == jenjang_id,
@@ -313,13 +340,14 @@ def get_enrollments(
             func.coalesce(AcademicClass.class_name, StudentEnrollment.class_name) == class_name
         )
 
-    rows = query.order_by(StudentEnrollment.class_name.asc(), Student.name.asc(), Student.id.asc()).all()
-    return [_serialize_enrollment(enrollment, student) for enrollment, student in rows]
+    rows = query.order_by(StudentEnrollment.class_name.asc(), StudentMaster.full_name.asc(), Student.name.asc()).all()
+    return [_serialize_enrollment(enrollment, student, master, db) for enrollment, student, master in rows]
 
 
 @router.post("/enrollment/bulk")
-def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_db)):
+def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     try:
+        actor = user.username if isinstance(user, User) else "system"
         academic_class = db.query(AcademicClass).filter(AcademicClass.id == body.academic_class_id).first()
         if not academic_class:
             raise HTTPException(status_code=404, detail="Academic class not found")
@@ -331,6 +359,8 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
         academic_year = db.query(AcademicYear).filter(AcademicYear.id == body.academic_year_id).first()
         if not academic_year:
             raise HTTPException(status_code=404, detail="Academic year not found")
+        if academic_year.status == "closed":
+            raise HTTPException(status_code=409, detail={"code": "ACADEMIC_YEAR_CLOSED", "message": "Closed academic years cannot receive new enrollments."})
 
         from models.academic_master import AcademicGrade
         grade = db.query(AcademicGrade).filter(AcademicGrade.id == academic_class.grade_id).first()
@@ -365,13 +395,6 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
             for m in device_mappings if m.legacy_student_id is not None
         }
 
-        for master_id in normalized_master_ids:
-            if master_id not in master_to_legacy:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"No active legacy student mapping found for master student {master_id}"
-                )
-
         existing_enrollments_by_master = {
             enrollment.student_master_id
             for enrollment in db.query(StudentEnrollment).filter(
@@ -387,7 +410,7 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
 
         created_rows: list[StudentEnrollment] = []
         for master_id in to_enroll_master_ids:
-            legacy_id = master_to_legacy[master_id]
+            legacy_id = master_to_legacy.get(master_id)
             enrollment = StudentEnrollment(
                 student_id=legacy_id,
                 student_master_id=master_id,
@@ -397,9 +420,24 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
                 class_name=academic_class.class_name,
                 class_assigned=True,
                 effective_from=academic_year.start_date
+                ,lifecycle_state="ACTIVE", lifecycle_effective_date=academic_year.start_date,
+                lifecycle_reason_code="BULK_ENROLLMENT_CREATED"
             )
             db.add(enrollment)
             created_rows.append(enrollment)
+
+        db.flush()
+        for enrollment in created_rows:
+            db.add(StudentEnrollmentClassHistory(
+                enrollment_id=enrollment.id, class_name=enrollment.class_name,
+                effective_from=enrollment.effective_from, changed_by=actor,
+                source="grade_enrollment_bulk",
+            ))
+            db.add(StudentEnrollmentLifecycleAudit(
+                enrollment_id=enrollment.id, prior_state="DRAFT", new_state="ACTIVE",
+                effective_date=enrollment.effective_from, actor=actor,
+                reason_code="BULK_ENROLLMENT_CREATED", source_workflow="grade_enrollment_bulk",
+            ))
 
         db.commit()
         for row in created_rows:
@@ -430,22 +468,12 @@ def bulk_enroll_students(body: EnrollmentBulkRequest, db: Session = Depends(get_
 
 
 @router.delete("/enrollment/{enrollment_id}")
-def delete_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
+def delete_enrollment(enrollment_id: int, body: EnrollmentDeleteRequest | None = None, db: Session = Depends(get_db)):
     enrollment = db.query(StudentEnrollment).filter(StudentEnrollment.id == enrollment_id).first()
     if enrollment is None:
         raise HTTPException(status_code=404, detail="Enrollment not found")
 
-    student_id = enrollment.student_id
-    try:
-        db.delete(enrollment)
-        db.commit()
-        return {"status": "success", "deleted": 1, "enrollment_id": enrollment_id, "student_id": student_id}
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Enrollment cannot be deleted while referenced") from exc
-    except SQLAlchemyError as exc:
-        db.rollback()
-        raise_internal_error("The enrollment could not be deleted. Retry or contact the system administrator.", exc)
+    return hard_delete_enrollment(db, enrollment, body.confirmation if body else "")
 
 
 @router.post("/save")
