@@ -117,6 +117,29 @@ def test_admin_can_use_backup_management(authorization_app):
     client.close()
 
 
+def test_progression_preview_and_commit_authorization_boundaries(authorization_app):
+    module, _ = authorization_app
+    anonymous = _client(module)
+    payload = {"source_academic_year_id": 1, "destination_academic_year_id": 2, "overrides": []}
+    assert anonymous.post("/api/student-progression/previews", json=payload).status_code == 401
+    assert anonymous.post("/api/student-progression/previews/example/commit", json={
+        "preview_version": 1,
+        "effective_date": "2027-07-01",
+        "confirmation": "COMMIT_STUDENT_PROGRESSION",
+    }).status_code == 401
+    anonymous.close()
+
+    staff = _client(module, "staff", "staff authorization pass")
+    assert staff.get("/api/student-progression/previews").status_code == 200
+    assert staff.post("/api/student-progression/previews", json=payload).status_code == 403
+    assert staff.post("/api/student-progression/previews/example/commit", json={
+        "preview_version": 1,
+        "effective_date": "2027-07-01",
+        "confirmation": "COMMIT_STUDENT_PROGRESSION",
+    }).status_code == 403
+    staff.close()
+
+
 def test_jenjang_cutoff_reads_require_authentication(authorization_app):
     module, _ = authorization_app
     client = _client(module)
