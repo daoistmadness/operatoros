@@ -121,6 +121,9 @@ class EnrollmentInput(BaseModel):
     effective_from: date
 
 
+EnrollmentLifecycleState = Literal["ENDED", "WITHDRAWN", "GRADUATED", "ACTIVE", "VOIDED"]
+
+
 class StudentCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     identity: StudentIdentityInput
@@ -166,6 +169,17 @@ class EnrollmentTransferRequest(BaseModel):
 class EnrollmentEndRequest(BaseModel):
     effective_date: date
     reason: str = Field(min_length=3, max_length=1000)
+    confirmation: str
+
+
+class EnrollmentLifecycleRequest(BaseModel):
+    effective_date: date
+    reason: str = Field(min_length=3, max_length=1000)
+    reason_code: str = Field(min_length=2, max_length=64, pattern=r"^[A-Z0-9_]+$")
+    confirmation: str
+
+
+class EnrollmentDeleteRequest(BaseModel):
     confirmation: str
 
 

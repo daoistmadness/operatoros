@@ -18,8 +18,14 @@ from services.academic_roster import commit_roster_preview, create_roster_previe
 from services.academic_master_preview import create_academic_master_preview
 from models.student_enrollment import StudentEnrollment
 from models.student_master import StudentEnrollmentClassHistory, StudentMaster
-from schemas.student_management import EnrollmentEndRequest, EnrollmentInput, EnrollmentTransferRequest
-from services.student_management import create_enrollment_for_student, end_enrollment, transfer_enrollment
+from schemas.student_management import (
+    EnrollmentDeleteRequest, EnrollmentEndRequest, EnrollmentInput,
+    EnrollmentLifecycleRequest, EnrollmentTransferRequest,
+)
+from services.student_management import (
+    create_enrollment_for_student, end_enrollment, enrollment_deletion_status,
+    hard_delete_enrollment, transfer_enrollment, transition_enrollment,
+)
 
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -109,7 +115,11 @@ def list_student_enrollment_history(
             "id": enrollment.id, "academic_year_id": enrollment.academic_year_id,
             "jenjang_id": enrollment.jenjang_id, "academic_class_id": enrollment.academic_class_id,
             "class_name": enrollment.class_name, "effective_from": enrollment.effective_from,
-            "effective_to": enrollment.effective_to, "active": enrollment.class_assigned and enrollment.effective_to is None,
+            "effective_to": enrollment.effective_to, "active": enrollment.lifecycle_state == "ACTIVE",
+            "lifecycle_state": enrollment.lifecycle_state,
+            "lifecycle_effective_date": enrollment.lifecycle_effective_date,
+            "device_linked": enrollment.student_id is not None,
+            "deletion": enrollment_deletion_status(db, enrollment),
             "class_history": history_items,
         })
     return result
@@ -126,7 +136,7 @@ def create_student_enrollment(
     if student is None:
         raise HTTPException(status_code=404, detail="Student master not found")
     row = create_enrollment_for_student(db, student, body, user.username)
-    return {"id": row.id, "academic_year_id": row.academic_year_id, "academic_class_id": row.academic_class_id, "class_name": row.class_name, "effective_from": row.effective_from, "active": row.class_assigned}
+    return {"id": row.id, "academic_year_id": row.academic_year_id, "academic_class_id": row.academic_class_id, "class_name": row.class_name, "effective_from": row.effective_from, "active": row.class_assigned, "lifecycle_state": row.lifecycle_state, "device_linked": row.student_id is not None}
 
 
 @router.post("/{enrollment_id}/transfer")
@@ -154,7 +164,40 @@ def end_student_enrollment(
     if enrollment is None:
         raise HTTPException(status_code=404, detail="Enrollment not found")
     row = end_enrollment(db, enrollment, body, user.username)
-    return {"id": row.id, "effective_to": row.effective_to, "active": row.class_assigned}
+    return {"id": row.id, "effective_to": row.effective_to, "active": row.class_assigned, "lifecycle_state": row.lifecycle_state}
+
+
+LIFECYCLE_ACTIONS = {
+    "withdraw": "WITHDRAWN",
+    "graduate": "GRADUATED",
+    "reactivate": "ACTIVE",
+    "void": "VOIDED",
+}
+
+
+@router.get("/{enrollment_id}/deletion-status")
+def get_enrollment_deletion_status(
+    enrollment_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
+    enrollment = db.get(StudentEnrollment, enrollment_id)
+    if enrollment is None:
+        raise HTTPException(status_code=404, detail={"code": "ENROLLMENT_NOT_FOUND", "message": "Enrollment not found."})
+    return enrollment_deletion_status(db, enrollment)
+
+
+@router.delete("/{enrollment_id}")
+def delete_unused_draft_enrollment(
+    enrollment_id: int,
+    body: EnrollmentDeleteRequest,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("delete_enrollment_draft")),
+):
+    enrollment = db.get(StudentEnrollment, enrollment_id)
+    if enrollment is None:
+        raise HTTPException(status_code=404, detail={"code": "ENROLLMENT_NOT_FOUND", "message": "Enrollment not found."})
+    return hard_delete_enrollment(db, enrollment, body.confirmation)
 
 
 class AcademicMasterPreviewRequest(BaseModel):
@@ -262,3 +305,23 @@ def commit_enrollment_population(
         db, body.preview_id, body.selected_legacy_student_ids,
         body.confirmation, user.username,
     )
+
+
+# Keep this catch-all lifecycle route after every static POST route so
+# /populate/*, /roster-*, and /mapping-preview retain their existing handlers.
+@router.post("/{enrollment_id}/{action}")
+def change_student_enrollment_lifecycle(
+    enrollment_id: int,
+    action: str,
+    body: EnrollmentLifecycleRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_capability("manage_enrollment_lifecycle")),
+):
+    target_state = LIFECYCLE_ACTIONS.get(action)
+    if target_state is None:
+        raise HTTPException(status_code=404, detail={"code": "LIFECYCLE_ACTION_NOT_FOUND", "message": "Enrollment lifecycle action not found."})
+    enrollment = db.get(StudentEnrollment, enrollment_id)
+    if enrollment is None:
+        raise HTTPException(status_code=404, detail={"code": "ENROLLMENT_NOT_FOUND", "message": "Enrollment not found."})
+    row = transition_enrollment(db, enrollment, target_state, body, user.username, f"manual_{action}")
+    return {"id": row.id, "lifecycle_state": row.lifecycle_state, "effective_to": row.effective_to, "active": row.class_assigned}

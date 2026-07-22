@@ -8,15 +8,26 @@ export interface JenjangOption {
 
 export interface EnrollmentStudent {
   id: string; // student_master_id
-  student_id: number;
+  student_id: number | null;
   name: string;
   jenjang: string | null;
   class_name: string | null;
+  device_linked: boolean;
+}
+
+export type EnrollmentLifecycleState = "DRAFT" | "ACTIVE" | "ENDED" | "WITHDRAWN" | "GRADUATED" | "VOIDED";
+
+export interface EnrollmentClassHistory {
+  id: number;
+  class_name: string | null;
+  effective_from: string;
+  effective_to: string | null;
+  source: string;
 }
 
 export interface EnrollmentRow {
   enrollment_id: number;
-  student_id: number;
+  student_id: number | null;
   student_name: string;
   jenjang: string | null;
   student_class_name: string | null;
@@ -25,6 +36,17 @@ export interface EnrollmentRow {
   class_name: string | null;
   class_assigned: boolean;
   student_master_id?: string;
+  lifecycle_state: EnrollmentLifecycleState;
+  device_linked: boolean;
+  effective_from: string | null;
+  effective_to: string | null;
+  class_history: EnrollmentClassHistory[];
+  deletion: {
+    can_hard_delete: boolean;
+    code: string;
+    message: string;
+    dependencies: string[];
+  };
 }
 
 export interface BulkEnrollmentRequest {
@@ -116,8 +138,38 @@ export async function deleteEnrollment(enrollmentId: number): Promise<{ status: 
   const response = await apiRequest<{ status: "success"; deleted: number }>({
     path: gradeApiPath(`/enrollment/${enrollmentId}`),
     method: "DELETE",
+    body: { confirmation: "DELETE_UNUSED_DRAFT_ENROLLMENT" },
   });
 
+  return response.data;
+}
+
+export type EnrollmentLifecycleAction = "end" | "withdraw" | "graduate" | "reactivate" | "void";
+
+const lifecycleConfirmation: Record<EnrollmentLifecycleAction, string> = {
+  end: "END_STUDENT_ENROLLMENT",
+  withdraw: "WITHDRAW_STUDENT_ENROLLMENT",
+  graduate: "GRADUATE_STUDENT_ENROLLMENT",
+  reactivate: "REACTIVATE_STUDENT_ENROLLMENT",
+  void: "VOID_STUDENT_ENROLLMENT",
+};
+
+export async function changeEnrollmentLifecycle(
+  enrollmentId: number,
+  action: EnrollmentLifecycleAction,
+  effectiveDate: string,
+  reason: string,
+): Promise<{ id: number; lifecycle_state: EnrollmentLifecycleState }> {
+  const response = await apiRequest<{ id: number; lifecycle_state: EnrollmentLifecycleState }>({
+    path: `/api/student-enrollments/${enrollmentId}/${action}`,
+    method: "POST",
+    body: {
+      effective_date: effectiveDate,
+      reason,
+      ...(action === "end" ? {} : { reason_code: `MANUAL_${action.toUpperCase()}` }),
+      confirmation: lifecycleConfirmation[action],
+    },
+  });
   return response.data;
 }
 
