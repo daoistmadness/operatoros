@@ -8,7 +8,7 @@ class StudentSubjectGrade(Base):
     __tablename__ = "student_subject_grades"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    enrollment_id = Column(Integer, ForeignKey("student_enrollments.id", ondelete="CASCADE"), nullable=False, index=True)
+    enrollment_id = Column(Integer, ForeignKey("student_enrollments.id", ondelete="RESTRICT"), nullable=False, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=False, index=True)
     component_id = Column(Integer, ForeignKey("assessment_components.id", ondelete="RESTRICT"), nullable=False, index=True)
     score = Column(Float, nullable=True)

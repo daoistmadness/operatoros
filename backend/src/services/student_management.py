@@ -3,7 +3,7 @@ import json
 from datetime import date, datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import func, or_
+from sqlalchemy import func, inspect, or_, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -11,7 +11,7 @@ from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram
 from models.academic_year import AcademicYear
 from models.jenjang import Jenjang
 from models.student import Student
-from models.student_enrollment import StudentEnrollment
+from models.student_enrollment import StudentEnrollment, StudentEnrollmentLifecycleAudit
 from models.student_master import (
     StudentAddress,
     StudentContact,
@@ -29,6 +29,14 @@ DEVICE_RETIRE_CONFIRMATION = "RETIRE_ATTENDANCE_DEVICE_ID"
 DEVICE_REASSIGN_CONFIRMATION = "REASSIGN_ATTENDANCE_DEVICE_ID"
 ENROLLMENT_TRANSFER_CONFIRMATION = "TRANSFER_STUDENT_ENROLLMENT"
 ENROLLMENT_END_CONFIRMATION = "END_STUDENT_ENROLLMENT"
+ENROLLMENT_LIFECYCLE_CONFIRMATIONS = {
+    "ENDED": ENROLLMENT_END_CONFIRMATION,
+    "WITHDRAWN": "WITHDRAW_STUDENT_ENROLLMENT",
+    "GRADUATED": "GRADUATE_STUDENT_ENROLLMENT",
+    "ACTIVE": "REACTIVATE_STUDENT_ENROLLMENT",
+    "VOIDED": "VOID_STUDENT_ENROLLMENT",
+}
+ENROLLMENT_DELETE_CONFIRMATION = "DELETE_UNUSED_DRAFT_ENROLLMENT"
 
 
 IDENTITY_FIELDS = (
@@ -111,6 +119,11 @@ def _resolve_class(db: Session, academic_year_id: int, class_id: int):
     if not row:
         raise HTTPException(status_code=400, detail="Academic class does not belong to the selected academic year")
     academic_class, grade, program, jenjang, year = row
+    if grade.program_id != program.id or grade.jenjang_id != program.jenjang_id or program.jenjang_id != jenjang.id:
+        raise HTTPException(status_code=409, detail={
+            "code": "INCOMPATIBLE_ACADEMIC_HIERARCHY",
+            "message": "The class, grade, program, and Jenjang are not compatible.",
+        })
     if not academic_class.active or not grade.active or not program.active or not jenjang.active:
         raise HTTPException(status_code=400, detail="Academic class hierarchy is not active")
     return academic_class, grade, program, jenjang, year
@@ -168,6 +181,11 @@ def _create_enrollment(db: Session, student: StudentMaster, enrollment: dict, ac
     academic_class, _grade, _program, jenjang, year = _resolve_class(
         db, enrollment["academic_year_id"], enrollment["academic_class_id"]
     )
+    if year.status == "closed":
+        raise HTTPException(status_code=409, detail={
+            "code": "ACADEMIC_YEAR_CLOSED",
+            "message": "Closed academic years cannot receive new enrollments.",
+        })
     if enrollment["effective_from"] < year.start_date or enrollment["effective_from"] > year.end_date:
         raise HTTPException(status_code=400, detail="Enrollment effective date is outside the academic year")
     mapping = db.query(StudentDeviceIdentity).filter(
@@ -175,13 +193,13 @@ def _create_enrollment(db: Session, student: StudentMaster, enrollment: dict, ac
         StudentDeviceIdentity.is_active.is_(True),
         StudentDeviceIdentity.legacy_student_id.isnot(None),
     ).order_by(StudentDeviceIdentity.id.desc()).first()
-    if mapping is None:
-        raise HTTPException(status_code=400, detail="An active attendance identity is required before enrollment")
     row = StudentEnrollment(
-        student_id=mapping.legacy_student_id, student_master_id=student.id,
+        student_id=mapping.legacy_student_id if mapping else None, student_master_id=student.id,
         academic_year_id=year.id, jenjang_id=jenjang.id, academic_class_id=academic_class.id,
         class_name=academic_class.class_name, class_assigned=True,
         effective_from=enrollment["effective_from"],
+        lifecycle_state="ACTIVE", lifecycle_effective_date=enrollment["effective_from"],
+        lifecycle_reason_code="ENROLLMENT_CREATED",
     )
     db.add(row); db.flush()
     db.add(StudentEnrollmentClassHistory(
@@ -290,6 +308,11 @@ def add_or_replace_device(db: Session, student: StudentMaster, body, actor: str)
             old.is_active = False
             old.effective_to = device["effective_from"]
         mapping = _create_legacy_identity(db, student, device)
+        db.flush()
+        db.query(StudentEnrollment).filter(
+            StudentEnrollment.student_master_id == student.id,
+            StudentEnrollment.student_id.is_(None),
+        ).update({StudentEnrollment.student_id: mapping.legacy_student_id}, synchronize_session=False)
         student.updated_at = datetime.now(); student.updated_by = actor
         _audit(db, student.id, "device_identity_replaced" if old else "device_identity_added", actor, "manual_device", "device_identifier", old.device_identifier if old else None, mapping.device_identifier)
         db.commit(); db.refresh(mapping); return mapping
@@ -360,21 +383,36 @@ def transfer_enrollment(db: Session, enrollment: StudentEnrollment, body, actor:
     if body.confirmation != ENROLLMENT_TRANSFER_CONFIRMATION:
         raise HTTPException(status_code=400, detail="Invalid confirmation token")
     target, _grade, _program, jenjang, year = _resolve_class(db, enrollment.academic_year_id, body.target_class_id)
+    if jenjang.id != enrollment.jenjang_id:
+        raise HTTPException(status_code=409, detail={
+            "code": "CROSS_JENJANG_TRANSITION_UNSUPPORTED",
+            "message": "Cross-Jenjang movement requires the deferred transition workflow and cannot rewrite this enrollment.",
+        })
     if body.effective_date < (enrollment.effective_from or year.start_date) or body.effective_date > year.end_date:
         raise HTTPException(status_code=400, detail="Transfer date is outside the enrollment period")
     if target.id == enrollment.academic_class_id:
         raise HTTPException(status_code=409, detail="Student is already assigned to the target class")
-    old_class = enrollment.class_name
-    enrollment.academic_class_id = target.id; enrollment.jenjang_id = jenjang.id
-    enrollment.class_name = target.class_name; enrollment.class_assigned = True
-    db.add(StudentEnrollmentClassHistory(
-        enrollment_id=enrollment.id, class_name=target.class_name,
-        effective_from=body.effective_date, changed_by=actor, source="manual_transfer",
-    ))
-    _audit(db, enrollment.student_master_id, "enrollment_transferred", actor, "manual_transfer", "class_name", old_class, f"{target.class_name}: {body.reason}")
-    student = db.get(StudentMaster, enrollment.student_master_id)
-    student.updated_at = datetime.now(); student.updated_by = actor
-    db.commit(); db.refresh(enrollment); return enrollment
+    try:
+        old_class = enrollment.class_name
+        previous = db.query(StudentEnrollmentClassHistory).filter(
+            StudentEnrollmentClassHistory.enrollment_id == enrollment.id,
+            StudentEnrollmentClassHistory.effective_to.is_(None),
+        ).order_by(StudentEnrollmentClassHistory.effective_from.desc(), StudentEnrollmentClassHistory.id.desc()).first()
+        if previous:
+            previous.effective_to = body.effective_date
+        enrollment.academic_class_id = target.id; enrollment.jenjang_id = jenjang.id
+        enrollment.class_name = target.class_name; enrollment.class_assigned = True
+        db.add(StudentEnrollmentClassHistory(
+            enrollment_id=enrollment.id, class_name=target.class_name,
+            effective_from=body.effective_date, changed_by=actor, source="manual_transfer",
+        ))
+        _audit(db, enrollment.student_master_id, "enrollment_transferred", actor, "manual_transfer", "class_name", old_class, f"{target.class_name}: {body.reason}")
+        student = db.get(StudentMaster, enrollment.student_master_id)
+        if student:
+            student.updated_at = datetime.now(); student.updated_by = actor
+        db.commit(); db.refresh(enrollment); return enrollment
+    except Exception:
+        db.rollback(); raise
 
 
 def end_enrollment(db: Session, enrollment: StudentEnrollment, body, actor: str):
@@ -382,11 +420,111 @@ def end_enrollment(db: Session, enrollment: StudentEnrollment, body, actor: str)
         raise HTTPException(status_code=400, detail="Invalid confirmation token")
     if enrollment.effective_from and body.effective_date < enrollment.effective_from:
         raise HTTPException(status_code=400, detail="End date predates enrollment")
-    enrollment.effective_to = body.effective_date; enrollment.class_assigned = False
-    _audit(db, enrollment.student_master_id, "enrollment_ended", actor, "manual_enrollment", "effective_to", None, f"{body.effective_date}: {body.reason}")
-    student = db.get(StudentMaster, enrollment.student_master_id)
-    student.updated_at = datetime.now(); student.updated_by = actor
-    db.commit(); db.refresh(enrollment); return enrollment
+    return transition_enrollment(db, enrollment, "ENDED", body, actor, "manual_end", reason_code="ORDINARY_END")
+
+
+def transition_enrollment(db: Session, enrollment: StudentEnrollment, target_state: str, body, actor: str, source: str, *, reason_code: str | None = None):
+    expected_confirmation = ENROLLMENT_LIFECYCLE_CONFIRMATIONS.get(target_state)
+    if body.confirmation != expected_confirmation:
+        raise HTTPException(status_code=400, detail={"code": "CONFIRMATION_REQUIRED", "message": "The lifecycle confirmation token is invalid."})
+    prior = enrollment.lifecycle_state or ("ACTIVE" if enrollment.class_assigned and enrollment.effective_to is None else "ENDED")
+    allowed = {
+        "DRAFT": {"ACTIVE", "VOIDED"},
+        "ACTIVE": {"ENDED", "WITHDRAWN", "GRADUATED"},
+        "ENDED": {"ACTIVE"},
+        "WITHDRAWN": {"ACTIVE"},
+        "GRADUATED": set(),
+        "VOIDED": set(),
+    }
+    if target_state not in allowed.get(prior, set()):
+        raise HTTPException(status_code=409, detail={
+            "code": "INVALID_LIFECYCLE_TRANSITION",
+            "message": f"Enrollment cannot transition from {prior} to {target_state}.",
+        })
+    if enrollment.effective_from and body.effective_date < enrollment.effective_from:
+        raise HTTPException(status_code=400, detail={"code": "INVALID_EFFECTIVE_DATE", "message": "Lifecycle date predates enrollment."})
+    if target_state == "ACTIVE":
+        year = db.get(AcademicYear, enrollment.academic_year_id)
+        if year is None or year.status == "closed" or body.effective_date > year.end_date:
+            raise HTTPException(status_code=409, detail={"code": "REACTIVATION_CONTEXT_CLOSED", "message": "Enrollment cannot be reactivated in a closed academic context."})
+        enrollment.effective_to = None
+        enrollment.class_assigned = enrollment.academic_class_id is not None
+        if enrollment.class_assigned:
+            db.add(StudentEnrollmentClassHistory(
+                enrollment_id=enrollment.id, class_name=enrollment.class_name,
+                effective_from=body.effective_date, changed_by=actor,
+                source="manual_reactivation",
+            ))
+    else:
+        enrollment.effective_to = body.effective_date
+        enrollment.class_assigned = False
+        open_history = db.query(StudentEnrollmentClassHistory).filter_by(enrollment_id=enrollment.id, effective_to=None).order_by(StudentEnrollmentClassHistory.id.desc()).first()
+        if open_history:
+            open_history.effective_to = body.effective_date
+    enrollment.lifecycle_state = target_state
+    enrollment.lifecycle_effective_date = body.effective_date
+    safe_reason_code = reason_code or body.reason_code
+    enrollment.lifecycle_reason_code = safe_reason_code
+    enrollment.lifecycle_reason = body.reason
+    db.add(StudentEnrollmentLifecycleAudit(
+        enrollment_id=enrollment.id, prior_state=prior, new_state=target_state,
+        effective_date=body.effective_date, actor=actor, reason_code=safe_reason_code,
+        source_workflow=source,
+    ))
+    _audit(db, enrollment.student_master_id, "enrollment_lifecycle_changed", actor, source, "lifecycle_state", prior, target_state)
+    student = db.get(StudentMaster, enrollment.student_master_id) if enrollment.student_master_id else None
+    if student:
+        student.updated_at = datetime.now(); student.updated_by = actor
+    try:
+        db.commit(); db.refresh(enrollment); return enrollment
+    except Exception:
+        db.rollback(); raise
+
+
+def enrollment_deletion_status(db: Session, enrollment: StudentEnrollment) -> dict:
+    dependencies = []
+    tables = set(inspect(db.bind).get_table_names())
+
+    def exists(table: str, predicate: str, values: dict) -> bool:
+        if table not in tables:
+            return False
+        return db.execute(text(f"SELECT 1 FROM {table} WHERE {predicate} LIMIT 1"), values).first() is not None
+
+    checks = (
+        ("CLASS_HISTORY", db.query(StudentEnrollmentClassHistory.id).filter_by(enrollment_id=enrollment.id).first()),
+        ("GRADES", exists("student_subject_grades", "enrollment_id=:enrollment_id", {"enrollment_id": enrollment.id})),
+        ("INTERVENTIONS", exists("academic_interventions", "enrollment_id=:enrollment_id", {"enrollment_id": enrollment.id})),
+        ("LIFECYCLE_AUDIT", db.query(StudentEnrollmentLifecycleAudit.id).filter_by(enrollment_id=enrollment.id).first()),
+        ("IMPORT_HISTORY", exists(
+            "student_import_applied_actions",
+            "entity_type=:entity_type AND entity_id=:entity_id",
+            {"entity_type": "STUDENT_ENROLLMENT", "entity_id": str(enrollment.id)},
+        )),
+        ("ATTENDANCE", exists("attendance", "student_id=:student_id", {"student_id": enrollment.student_id}) if enrollment.student_id else False),
+    )
+    dependencies.extend(code for code, present in checks if bool(present))
+    unused_draft = enrollment.lifecycle_state == "DRAFT" and not enrollment.class_assigned and not dependencies
+    return {
+        "can_hard_delete": unused_draft,
+        "code": "HARD_DELETE_ALLOWED" if unused_draft else "ENROLLMENT_HAS_HISTORY",
+        "message": "Unused draft enrollment may be deleted." if unused_draft else "Enrollment history must be preserved; use an explicit lifecycle action.",
+        "dependencies": dependencies,
+    }
+
+
+def hard_delete_enrollment(db: Session, enrollment: StudentEnrollment, confirmation: str) -> dict:
+    if confirmation != ENROLLMENT_DELETE_CONFIRMATION:
+        raise HTTPException(status_code=400, detail={"code": "CONFIRMATION_REQUIRED", "message": "The hard-delete confirmation token is invalid."})
+    status = enrollment_deletion_status(db, enrollment)
+    if not status["can_hard_delete"]:
+        raise HTTPException(status_code=409, detail=status)
+    enrollment_id = enrollment.id
+    try:
+        db.delete(enrollment); db.commit()
+        return {"status": "success", "deleted": 1, "enrollment_id": enrollment_id}
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail={"code": "ENROLLMENT_DEPENDENCY_CONFLICT", "message": "Enrollment is referenced and cannot be deleted."}) from exc
 
 
 def serialize_student_detail(db: Session, student: StudentMaster, *, include_sensitive: bool = True) -> dict:

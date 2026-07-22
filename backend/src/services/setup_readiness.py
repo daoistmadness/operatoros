@@ -9,6 +9,7 @@ from models.attendance import Attendance
 from models.jenjang_config import JenjangConfig
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
+from models.student_master import StudentDeviceIdentity, StudentMaster
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,11 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
         .order_by(AcademicYear.is_default.desc(), AcademicYear.start_date.desc())
         .first()
     )
-    has_students = db.query(Student.id).first() is not None
+    has_students = db.query(StudentMaster.id).first() is not None or db.query(Student.id).first() is not None
+    has_device_link = (
+        db.query(StudentDeviceIdentity.id).filter(StudentDeviceIdentity.is_active.is_(True)).first() is not None
+        or db.query(Attendance.id).first() is not None
+    )
     has_enrollment = False
     has_terms = False
     if usable_year:
@@ -48,6 +53,7 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
             db.query(StudentEnrollment.id)
             .filter(
                 StudentEnrollment.academic_year_id == usable_year.id,
+                StudentEnrollment.lifecycle_state == "ACTIVE",
                 StudentEnrollment.class_assigned.is_(True),
                 or_(
                     StudentEnrollment.academic_class_id.isnot(None),
@@ -102,6 +108,16 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
             responsibility=responsibility,
         ),
         ReadinessStep(
+            code="device_link",
+            name="Link attendance-machine identities",
+            status=_step_status(has_device_link),
+            requirement="RECOMMENDED",
+            reason="Academic enrollment is ready without biometrics; a device link is only required for attendance-machine matching.",
+            destination="/students" if can_manage else None,
+            can_manage=can_manage,
+            responsibility=responsibility,
+        ),
+        ReadinessStep(
             code="academic_terms",
             name="Configure academic periods",
             status=_step_status(has_terms),
@@ -139,7 +155,7 @@ def build_setup_readiness(db: Session, *, role: str) -> tuple[str, list[Readines
         overall = "FIRST_RUN"
     elif completed_required < len(required):
         overall = "SETUP_PARTIAL"
-    elif any(step.status != "COMPLETE" for step in steps[3:5]):
+    elif any(step.status != "COMPLETE" for step in steps[3:6]):
         overall = "READY_WITH_RECOMMENDATIONS"
     else:
         overall = "OPERATIONALLY_READY"
