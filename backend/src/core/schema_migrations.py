@@ -18,7 +18,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from core.database import Base
-from core.schema_guard import CURRENT_SCHEMA_VERSION, LEDGER_TABLE, PREVIOUS_SCHEMA_VERSION
+from core.schema_guard import CURRENT_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, LEDGER_TABLE, PREVIOUS_SCHEMA_VERSION
 
 
 REQUIRED_TABLES = {
@@ -87,15 +87,15 @@ class Migration:
 
 
 BASELINE = Migration(
-    revision=PREVIOUS_SCHEMA_VERSION,
+    revision=LEGACY_SCHEMA_VERSION,
     predecessor=None,
     backup_required=False,
     description="Adopt an already-current S3.8 SQLite schema into the version ledger",
 )
 
 S39 = Migration(
-    revision=CURRENT_SCHEMA_VERSION,
-    predecessor=PREVIOUS_SCHEMA_VERSION,
+    revision=PREVIOUS_SCHEMA_VERSION,
+    predecessor=LEGACY_SCHEMA_VERSION,
     backup_required=True,
     description="Add unified student import sessions and immutable applied-action provenance",
 )
@@ -290,11 +290,23 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
                 "attendance_override_history",
                 "student_master_change_history",
                 "student_enrollment_class_history",
+                "student_enrollment_lifecycle_audit",
             ):
-                connection.execute(
-                    f"CREATE TRIGGER IF NOT EXISTS trg_{table}_no_update "
-                    f"BEFORE UPDATE ON {table} BEGIN SELECT RAISE(ABORT, 'append-only'); END"
-                )
+                if table == "student_enrollment_class_history":
+                    immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
+                    same = " AND ".join(f"OLD.{column} IS NEW.{column}" for column in immutable)
+                    connection.execute(
+                        "CREATE TRIGGER IF NOT EXISTS trg_student_enrollment_class_history_no_update "
+                        "BEFORE UPDATE ON student_enrollment_class_history WHEN NOT ("
+                        f"{same} AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL "
+                        "AND NEW.effective_to >= OLD.effective_from) BEGIN "
+                        "SELECT RAISE(ABORT, 'class history permits only one-way interval closure'); END"
+                    )
+                else:
+                    connection.execute(
+                        f"CREATE TRIGGER IF NOT EXISTS trg_{table}_no_update "
+                        f"BEFORE UPDATE ON {table} BEGIN SELECT RAISE(ABORT, 'append-only'); END"
+                    )
                 connection.execute(
                     f"CREATE TRIGGER IF NOT EXISTS trg_{table}_no_delete "
                     f"BEFORE DELETE ON {table} BEGIN SELECT RAISE(ABORT, 'append-only'); END"
@@ -382,12 +394,12 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
         revision = connection.execute(
             f"SELECT version, schema_fingerprint FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
-        if revision and revision[0] == CURRENT_SCHEMA_VERSION:
+        if revision and revision[0] == S39.revision:
             actual = _validate_current_schema(connection, require_s39=True)
             if actual != revision[1]:
                 raise RuntimeError("DATABASE_MIGRATION_CHECKSUM_MISMATCH")
             connection.close(); temporary.unlink(); return "MIGRATION_ALREADY_CURRENT"
-        if not revision or revision[0] != PREVIOUS_SCHEMA_VERSION:
+        if not revision or revision[0] != S39.predecessor:
             raise RuntimeError("UNSUPPORTED_SCHEMA: S3.8 predecessor required")
         protected_before = protected_fingerprints(connection)
         update_count = connection.execute("SELECT COUNT(*) FROM student_import_batches").fetchone()[0]
@@ -396,7 +408,7 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
         connection.close()
         for module in MODEL_MODULES:
             importlib.import_module(module)
-        LOGGER.info("schema_migration_started", extra={"source_revision": PREVIOUS_SCHEMA_VERSION, "target_revision": CURRENT_SCHEMA_VERSION, "database_engine": "sqlite"})
+        LOGGER.info("schema_migration_started", extra={"source_revision": S39.predecessor, "target_revision": S39.revision, "database_engine": "sqlite"})
         migration_engine = create_engine(f"sqlite:///{temporary}")
         from models.student_import_session import StudentImportAppliedAction, StudentImportSession
         Base.metadata.create_all(migration_engine, tables=[StudentImportSession.__table__])
@@ -429,7 +441,7 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
                     legacy_expiry = connection.execute(
                         "SELECT datetime(?, '+24 hours')", (created_at,)
                     ).fetchone()[0]
-                    connection.execute("INSERT OR IGNORE INTO student_import_sessions (id,session_uuid,import_type,status,provenance_status,created_at,created_by,updated_at,committed_at,expires_at,source_filename,source_file_checksum,idempotency_key,row_count,selected_row_count,applied_action_count,rollback_state,metadata,schema_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (session_id,stable_uuid,import_type,"COMMITTED" if status == "committed" else "ARCHIVED","LEGACY_PROVENANCE_UNAVAILABLE",created_at,actor,created_at,committed_at,legacy_expiry,filename or "legacy-import.xlsx",checksum,None,row_count or 0,0,0,"NOT_AVAILABLE",json.dumps({"legacy_batch_model":table,"legacy_batch_id":batch_id,"migration_revision":CURRENT_SCHEMA_VERSION,"backfill_version":"1"}),"1"))
+                    connection.execute("INSERT OR IGNORE INTO student_import_sessions (id,session_uuid,import_type,status,provenance_status,created_at,created_by,updated_at,committed_at,expires_at,source_filename,source_file_checksum,idempotency_key,row_count,selected_row_count,applied_action_count,rollback_state,metadata,schema_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (session_id,stable_uuid,import_type,"COMMITTED" if status == "committed" else "ARCHIVED","LEGACY_PROVENANCE_UNAVAILABLE",created_at,actor,created_at,committed_at,legacy_expiry,filename or "legacy-import.xlsx",checksum,None,row_count or 0,0,0,"NOT_AVAILABLE",json.dumps({"legacy_batch_model":table,"legacy_batch_id":batch_id,"migration_revision":S39.revision,"backfill_version":"1"}),"1"))
                     if failure_step == "historical_session_backfill":
                         raise RuntimeError("INJECTED_FAILURE:historical_session_backfill")
                     connection.execute(f"UPDATE {table} SET session_id=? WHERE id=?", (session_id,batch_id))
@@ -450,11 +462,11 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
                 raise RuntimeError("MIGRATION_VALIDATION_FAILED: foreign keys")
             fingerprint = _schema_fingerprint(connection)
             if failure_step == "before_revision": raise RuntimeError("INJECTED_FAILURE:before_revision")
-            connection.execute(f"INSERT INTO {LEDGER_TABLE} (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?,?,?,?,?,?)", (CURRENT_SCHEMA_VERSION,PREVIOUS_SCHEMA_VERSION,fingerprint,json.dumps(protected_fingerprints(connection),sort_keys=True,separators=(",",":")),"S39_MIGRATION",datetime.now(timezone.utc).isoformat()))
+            connection.execute(f"INSERT INTO {LEDGER_TABLE} (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?,?,?,?,?,?)", (S39.revision,S39.predecessor,fingerprint,json.dumps(protected_fingerprints(connection),sort_keys=True,separators=(",",":")),"S39_MIGRATION",datetime.now(timezone.utc).isoformat()))
         connection.close()
         if failure_step == "revision": raise RuntimeError("INJECTED_FAILURE")
         os.replace(temporary, source)
-        LOGGER.info("schema_migration_committed", extra={"source_revision": PREVIOUS_SCHEMA_VERSION, "target_revision": CURRENT_SCHEMA_VERSION, "sessions_created": update_count + roster_count, "batches_linked": update_count + roster_count, "triggers_installed": True, "validation_passed": True})
+        LOGGER.info("schema_migration_committed", extra={"source_revision": S39.predecessor, "target_revision": S39.revision, "sessions_created": update_count + roster_count, "batches_linked": update_count + roster_count, "triggers_installed": True, "validation_passed": True})
         return "MIGRATION_COMPLETE"
     except Exception:
         if temporary.exists(): temporary.unlink()
@@ -474,6 +486,8 @@ def main(argv: list[str] | None = None) -> int:
     adopt.add_argument("--approved-by", required=True)
     upgrade = commands.add_parser("upgrade-s39")
     upgrade.add_argument("--database", required=True, type=Path)
+    upgrade_s40 = commands.add_parser("upgrade-s40")
+    upgrade_s40.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
         adopt.add_argument(f"--expected-{table.replace('_', '-')}", required=True, type=int)
     arguments = parser.parse_args(argv)
@@ -482,6 +496,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if arguments.command == "upgrade-s39":
         print(json.dumps({"status": migrate_s38_to_s39_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s40":
+        from core.enrollment_ledger_migration import migrate_enrollment_ledger_sqlite
+        print(json.dumps({"status": migrate_enrollment_ledger_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")
