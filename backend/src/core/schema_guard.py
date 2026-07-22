@@ -13,8 +13,9 @@ from core.config import settings
 from core.database import engine, validate_student_linking_gate
 
 
-CURRENT_SCHEMA_VERSION = "20260722_s39"
-PREVIOUS_SCHEMA_VERSION = "20260722_s38"
+CURRENT_SCHEMA_VERSION = "20260722_s40"
+PREVIOUS_SCHEMA_VERSION = "20260722_s39"
+LEGACY_SCHEMA_VERSION = "20260722_s38"
 LEDGER_TABLE = "operatoros_schema_migrations"
 
 
@@ -62,9 +63,6 @@ def _validate_sqlite_file(path: Path) -> None:
             "ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
         if row and row[0] == PREVIOUS_SCHEMA_VERSION:
-            s39_objects = {"student_import_sessions", "student_import_applied_actions"}
-            if s39_objects.intersection(tables):
-                raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: partial S3.9 migration")
             raise DatabaseStartupError(
                 f"DATABASE_MIGRATION_REQUIRED: eligible {PREVIOUS_SCHEMA_VERSION} -> {CURRENT_SCHEMA_VERSION}"
             )
@@ -75,6 +73,8 @@ def _validate_sqlite_file(path: Path) -> None:
         required_tables = {"student_import_sessions", "student_import_applied_actions"}
         if not required_tables.issubset(tables):
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance tables missing")
+        if "student_enrollment_lifecycle_audit" not in tables:
+            raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
         triggers = {
             item[0] for item in connection.execute(
                 "SELECT name FROM sqlite_master WHERE type='trigger'"
@@ -85,6 +85,8 @@ def _validate_sqlite_file(path: Path) -> None:
             "trg_student_import_actions_immutable",
             "trg_student_import_batch_session_type",
             "trg_academic_roster_batch_session_type",
+            "trg_student_enrollment_lifecycle_audit_no_delete",
+            "trg_student_enrollment_lifecycle_audit_no_update",
         }
         if not required_triggers.issubset(triggers):
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance triggers missing")

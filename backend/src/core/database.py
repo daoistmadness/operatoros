@@ -138,16 +138,29 @@ def _ensure_student_foundation_compatibility() -> None:
                 "attendance_override_history",
                 "student_master_change_history",
                 "student_enrollment_class_history",
+                "student_enrollment_lifecycle_audit",
             )
             if table_name in tables
         ]
         if engine.dialect.name == "sqlite":
             for table_name in protected_tables:
-                connection.execute(text(
-                    f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_update "
-                    f"BEFORE UPDATE ON {table_name} BEGIN "
-                    f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
-                ))
+                if table_name == "student_enrollment_class_history":
+                    connection.execute(text("DROP TRIGGER IF EXISTS trg_student_enrollment_class_history_no_update"))
+                    immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
+                    same = " AND ".join(f"OLD.{column} IS NEW.{column}" for column in immutable)
+                    connection.execute(text(
+                        "CREATE TRIGGER trg_student_enrollment_class_history_no_update "
+                        "BEFORE UPDATE ON student_enrollment_class_history WHEN NOT ("
+                        f"{same} AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL "
+                        "AND NEW.effective_to >= OLD.effective_from) BEGIN "
+                        "SELECT RAISE(FAIL, 'class history permits only one-way interval closure'); END"
+                    ))
+                else:
+                    connection.execute(text(
+                        f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_update "
+                        f"BEFORE UPDATE ON {table_name} BEGIN "
+                        f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
+                    ))
                 connection.execute(text(
                     f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_delete "
                     f"BEFORE DELETE ON {table_name} BEGIN "
@@ -168,6 +181,29 @@ def _ensure_student_foundation_compatibility() -> None:
                         f"CREATE TRIGGER {trigger_name} BEFORE {action} ON {table_name} "
                         "FOR EACH ROW EXECUTE FUNCTION prevent_operatoros_append_only_mutation()"
                     ))
+            if "student_enrollment_class_history" in protected_tables:
+                connection.execute(text("DROP TRIGGER IF EXISTS trg_student_enrollment_class_history_no_update ON student_enrollment_class_history"))
+                connection.execute(text("""
+                    CREATE OR REPLACE FUNCTION permit_enrollment_history_interval_closure()
+                    RETURNS trigger AS $$ BEGIN
+                        IF OLD.id IS NOT DISTINCT FROM NEW.id
+                           AND OLD.enrollment_id IS NOT DISTINCT FROM NEW.enrollment_id
+                           AND OLD.class_name IS NOT DISTINCT FROM NEW.class_name
+                           AND OLD.effective_from IS NOT DISTINCT FROM NEW.effective_from
+                           AND OLD.changed_by IS NOT DISTINCT FROM NEW.changed_by
+                           AND OLD.changed_at IS NOT DISTINCT FROM NEW.changed_at
+                           AND OLD.source IS NOT DISTINCT FROM NEW.source
+                           AND OLD.import_batch_id IS NOT DISTINCT FROM NEW.import_batch_id
+                           AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL
+                           AND NEW.effective_to >= OLD.effective_from THEN RETURN NEW; END IF;
+                        RAISE EXCEPTION 'class history permits only one-way interval closure';
+                    END; $$ LANGUAGE plpgsql
+                """))
+                connection.execute(text(
+                    "CREATE TRIGGER trg_student_enrollment_class_history_no_update "
+                    "BEFORE UPDATE ON student_enrollment_class_history FOR EACH ROW "
+                    "EXECUTE FUNCTION permit_enrollment_history_interval_closure()"
+                ))
 
 
 def _ensure_academic_master_compatibility() -> None:
@@ -371,7 +407,7 @@ def init_db():
     from models.jenjang import Jenjang
     from models.subject import Subject
     from models.assessment_component import AssessmentComponent
-    from models.student_enrollment import StudentEnrollment
+    from models.student_enrollment import StudentEnrollment, StudentEnrollmentLifecycleAudit
     from models.student_master import (
         EnrollmentPopulationPreviewBatch, LegacyLinkPreviewBatch, LegacyLinkResolution,
         StudentAddress, StudentContact, StudentDeviceIdentity, StudentDocumentStatus,
