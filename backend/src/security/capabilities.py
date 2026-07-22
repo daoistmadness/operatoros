@@ -14,6 +14,8 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "manage_enrollment",
     "transfer_enrollment",
     "end_enrollment",
+    "manage_enrollment_lifecycle",
+    "delete_enrollment_draft",
     "import_student_roster",
     "commit_student_roster",
     "export_student_data",

@@ -1,13 +1,13 @@
 {
   "manifest_version": 1,
-  "current_schema": "20260722_s39",
+  "current_schema": "20260722_s40",
   "startup_is_migration_runner": false,
   "states": [
     {
       "state": "fresh_empty",
       "detection": "configured absolute path does not exist",
       "schema_fingerprint": "empty",
-      "migration_id": "fresh_to_20260722_s39",
+      "migration_id": "fresh_to_20260722_s40",
       "outcome": "MIGRATION_COMPLETE",
       "business_data_behavior": "creates schema only; inserts no students, identities, attendance, or enrollments",
       "manual_approval": false
@@ -50,7 +50,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260722_s39",
+      "detection": "ledger head and immutable schema fingerprint equal 20260722_s40",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -78,11 +78,11 @@
   ],
   "migrations": [
     {
-      "id": "fresh_to_20260722_s39",
+      "id": "fresh_to_20260722_s40",
       "description": "Atomically create the current empty SQLite schema",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260722_s39",
+      "resulting_schema": "20260722_s40",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.initialize_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
@@ -116,6 +116,24 @@
       "validation_queries": ["source revision exactly S3.8", "no null batch ownership", "foreign keys", "schema fingerprint", "protected fingerprints unchanged"],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
       "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, preview, result, checksum, and audit values remain unchanged"
+    },
+    {
+      "id": "20260722_s39_to_20260722_s40",
+      "description": "Preserve enrollment identity, add explicit lifecycle state and append-only lifecycle audit, and replace destructive foreign keys",
+      "predecessor": "20260722_s39",
+      "supported_source_schema": "ledger-validated 20260722_s39",
+      "resulting_schema": "20260722_s40",
+      "checksum": "8266f5a106fb0123a6773a79b77b1065bb0129b43a092ef0bee50fc79f38b082",
+      "sqlite_checksum": "958a4aee7299459665d900f04e1cfd9bfdfc0f10e9b140611280778d98a2e5c8",
+      "postgresql_checksum": "d4a00be6071833418b19cd2e4a21f8c17e6a9525dd42cd0a38aceea7b7152a05",
+      "sqlite_migration": "20260722_student_enrollment_ledger_safety_sqlite.sql",
+      "postgresql_migration": "20260722_student_enrollment_ledger_safety_postgresql.sql",
+      "upgrade_entry_point": "core.enrollment_ledger_migration.migrate_enrollment_ledger_sqlite",
+      "schema_objects": ["student_enrollments lifecycle columns", "student_enrollment_lifecycle_audit", "append-only lifecycle triggers", "SET NULL legacy student foreign key", "RESTRICT grade foreign key"],
+      "historical_backfill": "active rows remain ACTIVE; ended rows become ENDED; dates and safe LEGACY_BACKFILL reason are retained",
+      "validation_queries": ["isolated path approval", "protected row counts unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
+      "protected_data_expectation": "no enrollment, grade, attendance, identity, import, or audit row is deleted"
     }
   ]
 }

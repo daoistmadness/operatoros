@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, RefreshCw, ShieldCheck, Trash2, UserCheck, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, History, RefreshCw, ShieldCheck, Trash2, UserCheck, Users } from "lucide-react";
 import { fetchAcademicYears } from "../../api/grades";
 import {
   bulkEnrollStudents,
+  changeEnrollmentLifecycle,
   deleteEnrollment,
   fetchEnrollmentCandidates,
   fetchEnrollmentSourceClasses,
@@ -17,12 +18,15 @@ import {
   type AcademicClass,
   type AcademicGrade,
   type AcademicProgram,
+  type EnrollmentLifecycleAction,
 } from "../../api/enrollment";
 import type { AcademicYear } from "../../types/grade";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { FormField, FieldLabel } from "../ui/field";
 import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import {
   DataTable,
   DataTableBody,
@@ -76,6 +80,9 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [lifecycleDialog, setLifecycleDialog] = useState<{ row: EnrollmentRow; action: EnrollmentLifecycleAction } | null>(null);
+  const [lifecycleDate, setLifecycleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [lifecycleReason, setLifecycleReason] = useState("");
 
   const selectedAcademicYear = useMemo(
     () => academicYears.find((year) => year.id === selectedAcademicYearId) ?? null,
@@ -265,6 +272,35 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
       await loadRows();
     } catch (mutationError) {
       console.error("Enrollment delete failure", mutationError);
+      setError(getErrorMessage(mutationError));
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const openLifecycleDialog = (row: EnrollmentRow, action: EnrollmentLifecycleAction) => {
+    setLifecycleDialog({ row, action });
+    setLifecycleDate(new Date().toISOString().slice(0, 10));
+    setLifecycleReason("");
+  };
+
+  const submitLifecycleChange = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!lifecycleDialog || lifecycleReason.trim().length < 3 || isMutating) return;
+    setIsMutating(true);
+    setError("");
+    setStatusMessage("");
+    try {
+      await changeEnrollmentLifecycle(
+        lifecycleDialog.row.enrollment_id,
+        lifecycleDialog.action,
+        lifecycleDate,
+        lifecycleReason.trim(),
+      );
+      setStatusMessage(`Enrollment ${lifecycleDialog.action} action completed.`);
+      setLifecycleDialog(null);
+      await loadRows();
+    } catch (mutationError) {
       setError(getErrorMessage(mutationError));
     } finally {
       setIsMutating(false);
@@ -565,6 +601,9 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       <DataTableCell className="px-4 py-3">
                         <div className="font-black text-slate-900">{student.name}</div>
                         <div className="text-xs font-semibold text-slate-400">ID {student.id}</div>
+                        <div className="text-xs font-semibold text-slate-500">
+                          {student.device_linked ? "Attendance device linked" : "Academic-ready · device not linked"}
+                        </div>
                       </DataTableCell>
                       <DataTableCell className="px-4 py-3">
                         <span className="rounded-[9999px] bg-slate-100 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-600">
@@ -607,7 +646,10 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                       Student
                     </DataTableHead>
                     <DataTableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
-                      Class
+                      Academic context
+                    </DataTableHead>
+                    <DataTableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      State and history
                     </DataTableHead>
                     <DataTableHead className="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Action
@@ -619,25 +661,54 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
                     <DataTableRow key={enrollment.enrollment_id}>
                       <DataTableCell className="px-5 py-3">
                         <div className="font-black text-slate-900">{enrollment.student_name}</div>
-                        <div className="text-xs font-semibold text-slate-400">ID {enrollment.student_id}</div>
+                        <div className="text-xs font-semibold text-slate-400">
+                          {enrollment.device_linked ? `Device-linked ID ${enrollment.student_id}` : "Academic enrollment · device not linked"}
+                        </div>
                       </DataTableCell>
                       <DataTableCell className="px-4 py-3">
                         <span className="rounded-[9999px] bg-emerald-50 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-700">
                           {enrollment.class_name || "Unassigned"}
                         </span>
+                        <div className="mt-2 text-xs font-semibold text-slate-500">
+                          {enrollment.effective_from || "No start date"} → {enrollment.effective_to || "Current"}
+                        </div>
+                      </DataTableCell>
+                      <DataTableCell className="px-4 py-3">
+                        <span className="rounded-[9999px] bg-slate-100 px-2.5 py-1 text-xs font-black tracking-wider text-slate-700">
+                          {enrollment.lifecycle_state}
+                        </span>
+                        <details className="mt-2 max-w-64 text-xs text-slate-600">
+                          <summary className="inline-flex cursor-pointer items-center gap-1 font-bold"><History className="h-3.5 w-3.5" /> Class history ({enrollment.class_history.length})</summary>
+                          <ul className="mt-2 space-y-1">
+                            {enrollment.class_history.map((item) => (
+                              <li key={item.id}>{item.class_name || "Unassigned"}: {item.effective_from} → {item.effective_to || "Current"}</li>
+                            ))}
+                          </ul>
+                        </details>
                       </DataTableCell>
                       <DataTableCell className="px-4 py-3 text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeEnrollment(enrollment.enrollment_id)}
-                          disabled={isMutating}
-                          className="text-rose-700 hover:bg-rose-50 border-rose-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove
-                        </Button>
+                        <div className="flex min-w-44 flex-wrap justify-end gap-2">
+                          {enrollment.lifecycle_state === "ACTIVE" ? (
+                            <>
+                              <Button type="button" variant="outline" size="sm" disabled={isMutating} onClick={() => openLifecycleDialog(enrollment, "end")}>End</Button>
+                              <Button type="button" variant="outline" size="sm" disabled={isMutating} onClick={() => openLifecycleDialog(enrollment, "withdraw")}>Withdraw</Button>
+                              <Button type="button" variant="outline" size="sm" disabled={isMutating} onClick={() => openLifecycleDialog(enrollment, "graduate")}>Graduate</Button>
+                            </>
+                          ) : null}
+                          {enrollment.lifecycle_state === "ENDED" || enrollment.lifecycle_state === "WITHDRAWN" ? (
+                            <Button type="button" variant="outline" size="sm" disabled={isMutating} onClick={() => openLifecycleDialog(enrollment, "reactivate")}>Reactivate</Button>
+                          ) : null}
+                          {enrollment.lifecycle_state === "DRAFT" ? (
+                            <Button type="button" variant="outline" size="sm" disabled={isMutating} onClick={() => openLifecycleDialog(enrollment, "void")}>Void</Button>
+                          ) : null}
+                          {enrollment.deletion?.can_hard_delete ? (
+                            <Button type="button" variant="outline" size="sm" onClick={() => removeEnrollment(enrollment.enrollment_id)} disabled={isMutating} className="border-rose-200 text-rose-700 hover:bg-rose-50">
+                              <Trash2 className="h-4 w-4" /> Delete draft
+                            </Button>
+                          ) : (
+                            <span className="max-w-48 text-xs font-semibold text-slate-400" title={enrollment.deletion?.dependencies.join(", ")}>Delete unavailable: history is preserved.</span>
+                          )}
+                        </div>
                       </DataTableCell>
                     </DataTableRow>
                   ))}
@@ -655,6 +726,32 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
           </section>
         </div>
       )}
+      <Dialog open={lifecycleDialog !== null} onOpenChange={(open) => { if (!open && !isMutating) setLifecycleDialog(null); }}>
+        <DialogContent showClose={!isMutating} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="capitalize">{lifecycleDialog?.action} enrollment?</DialogTitle>
+            <DialogDescription>
+              This is an effective-dated, audited lifecycle change. Academic and class history will remain readable.
+            </DialogDescription>
+          </DialogHeader>
+          <form id="enrollment-lifecycle-form" className="space-y-4" onSubmit={submitLifecycleChange}>
+            <div className="space-y-2">
+              <Label htmlFor="enrollment-lifecycle-date">Effective date</Label>
+              <Input id="enrollment-lifecycle-date" type="date" required value={lifecycleDate} onChange={(event) => setLifecycleDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="enrollment-lifecycle-reason">Reason</Label>
+              <Input id="enrollment-lifecycle-reason" required minLength={3} maxLength={1000} value={lifecycleReason} onChange={(event) => setLifecycleReason(event.target.value)} />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={isMutating} onClick={() => setLifecycleDialog(null)}>Cancel</Button>
+            <Button type="submit" form="enrollment-lifecycle-form" disabled={isMutating || lifecycleReason.trim().length < 3}>
+              {isMutating ? "Saving…" : "Confirm lifecycle change"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
