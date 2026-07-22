@@ -44,6 +44,11 @@ def main() -> int:
             ("2026/2027", "2026-07-01", "2027-06-30", "active"),
         )
         year_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES (?,?,?,?,0)",
+            ("2027/2028", "2027-07-01", "2028-06-30", "upcoming"),
+        )
+        destination_year_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute("INSERT INTO jenjangs (name,code,level,active) VALUES ('Primary','PRI','primary',1)")
         jenjang_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?,'MAIN',1)", (jenjang_id,))
@@ -53,6 +58,11 @@ def main() -> int:
             (jenjang_id, program_id),
         )
         grade_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?, 'Primary 2',2,1)",
+            (jenjang_id, program_id),
+        )
+        terminal_grade_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(
             "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1A','A',1)",
             (year_id, grade_id),
@@ -66,6 +76,38 @@ def main() -> int:
             "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 1 / MAIN','INACTIVE',0)",
             (year_id, grade_id),
         )
+        connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Primary 2A','A',1)",
+            (year_id, terminal_grade_id),
+        )
+        terminal_source_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Next Primary 1A','A',1)",
+            (destination_year_id, grade_id),
+        )
+        destination_retain_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Next Primary 2A','A',1)",
+            (destination_year_id, terminal_grade_id),
+        )
+        destination_promote_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO jenjangs (name,code,level,active) VALUES ('Secondary','SEC','secondary',1)")
+        secondary_jenjang_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?,'SECONDARY MAIN',1)", (secondary_jenjang_id,))
+        secondary_program_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?, 'Secondary 7',1,1)",
+            (secondary_jenjang_id, secondary_program_id),
+        )
+        secondary_grade_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Secondary 7A','A',1)",
+            (destination_year_id, secondary_grade_id),
+        )
+        destination_secondary_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('E2E Progression Subject',?,1,1)", (jenjang_id,))
+        progression_subject_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES ('E2E Progression Score','sumatif',?)", (progression_subject_id,))
 
         names = ("E2E Ada", "E2E Bima", "E2E Citra")
         source_classes = ("Legacy P1A", "Legacy P1B", "Legacy P1B")

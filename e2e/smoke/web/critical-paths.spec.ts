@@ -20,7 +20,9 @@ async function enrollmentFingerprint(page: Page): Promise<string> {
     };
     const years = await getJson("/api/academic-masters/academic-years");
     const jenjangs = await getJson("/api/academic-masters/jenjangs");
-    const rows = await getJson(`/api/grades/enrollment?academic_year_id=${years[0].id}&jenjang_id=${jenjangs[0].id}`);
+    const sourceYear = years.find((year: any) => year.status === "active");
+    const primary = jenjangs.find((jenjang: any) => jenjang.name === "Primary");
+    const rows = await getJson(`/api/grades/enrollment?academic_year_id=${sourceYear.id}&jenjang_id=${primary.id}`);
     return JSON.stringify(rows.map((row: any) => ({
       enrollment_id: row.enrollment_id,
       student_id: row.student_id,
@@ -71,6 +73,22 @@ test("academic hierarchy reaches candidates without enrollment mutation", async 
   await expect(page.getByText("E2E Citra")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Assigned grade ledger rows" })).toBeVisible();
   await expect(page.getByText("E2E Ada")).toBeVisible();
+  expect(await enrollmentFingerprint(page)).toBe(enrollmentBefore);
+});
+
+test("progression management generates a responsive non-mutating preview", async ({ page }) => {
+  await login(page);
+  const enrollmentBefore = await enrollmentFingerprint(page);
+  await page.goto("/academic-management");
+  await page.getByRole("button", { name: "Progression" }).click();
+  await expect(page.getByRole("heading", { name: "Student Progression" })).toBeVisible();
+  await page.getByLabel("Source academic year").selectOption({ label: "2026/2027 · active" });
+  await page.getByLabel("Destination academic year").selectOption({ label: "2027/2028 · upcoming" });
+  await page.getByRole("button", { name: "Generate Preview" }).click();
+  await expect(page.getByText("Confirmation summary")).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: "E2E Ada" }).getByText("PROMOTE", { exact: true }).first()).toBeVisible();
+  const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   expect(await enrollmentFingerprint(page)).toBe(enrollmentBefore);
 });
 
