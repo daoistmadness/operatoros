@@ -9,7 +9,8 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
 # Load .env from the backend root (two levels above this file: src/core/ -> src/ -> backend/)
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+if not os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("OPERATOROS_ISOLATED_TEST"):
+    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 
 class Settings(BaseSettings):
@@ -86,6 +87,19 @@ class Settings(BaseSettings):
             )
 
         if self.DATABASE_URL:
+            # Enforce protected path guard on self.DATABASE_URL
+            from pathlib import Path
+            from sqlalchemy.engine import make_url
+            url_obj = make_url(self.DATABASE_URL)
+            if url_obj.drivername.startswith("sqlite") and url_obj.database and url_obj.database != ":memory:":
+                resolved_db = Path(url_obj.database).resolve()
+                root = Path(__file__).resolve().parent.parent.parent.parent
+                protected_paths = {
+                    (root / "backend" / "attendance.db").resolve(),
+                    (root / "attendance.db").resolve(),
+                }
+                if resolved_db in protected_paths or (resolved_db.name == "attendance.db" and resolved_db.parent == root):
+                    raise ValueError(f"PROTECTED_DATABASE_PATH_REJECTED: Direct access or fallbacks to protected database ({resolved_db}) are strictly prohibited.")
             return self.DATABASE_URL
 
         raise ValueError(
