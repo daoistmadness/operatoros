@@ -18,7 +18,11 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from core.database import Base
-from core.schema_guard import CURRENT_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION, LEDGER_TABLE, PREVIOUS_SCHEMA_VERSION
+from core.schema_guard import CURRENT_SCHEMA_VERSION, LEDGER_TABLE
+
+
+S38_SCHEMA_VERSION = "20260722_s38"
+S39_SCHEMA_VERSION = "20260722_s39"
 
 
 REQUIRED_TABLES = {
@@ -69,6 +73,7 @@ MODEL_MODULES = (
     "models.student",
     "models.student_enrollment",
     "models.student_master",
+    "models.student_progression",
     "models.student_import_session",
     "models.student_subject_grade",
     "models.subject",
@@ -87,15 +92,15 @@ class Migration:
 
 
 BASELINE = Migration(
-    revision=LEGACY_SCHEMA_VERSION,
+    revision=S38_SCHEMA_VERSION,
     predecessor=None,
     backup_required=False,
     description="Adopt an already-current S3.8 SQLite schema into the version ledger",
 )
 
 S39 = Migration(
-    revision=PREVIOUS_SCHEMA_VERSION,
-    predecessor=LEGACY_SCHEMA_VERSION,
+    revision=S39_SCHEMA_VERSION,
+    predecessor=S38_SCHEMA_VERSION,
     backup_required=True,
     description="Add unified student import sessions and immutable applied-action provenance",
 )
@@ -291,6 +296,7 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
                 "student_master_change_history",
                 "student_enrollment_class_history",
                 "student_enrollment_lifecycle_audit",
+                "student_progression_audit",
             ):
                 if table == "student_enrollment_class_history":
                     immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
@@ -488,6 +494,8 @@ def main(argv: list[str] | None = None) -> int:
     upgrade.add_argument("--database", required=True, type=Path)
     upgrade_s40 = commands.add_parser("upgrade-s40")
     upgrade_s40.add_argument("--database", required=True, type=Path)
+    upgrade_s41 = commands.add_parser("upgrade-s41")
+    upgrade_s41.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
         adopt.add_argument(f"--expected-{table.replace('_', '-')}", required=True, type=int)
     arguments = parser.parse_args(argv)
@@ -500,6 +508,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s40":
         from core.enrollment_ledger_migration import migrate_enrollment_ledger_sqlite
         print(json.dumps({"status": migrate_enrollment_ledger_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s41":
+        from core.student_progression_migration import migrate_student_progression_sqlite
+        print(json.dumps({"status": migrate_student_progression_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")
