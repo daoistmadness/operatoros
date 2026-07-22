@@ -150,7 +150,8 @@ def test_student_change_history_is_append_only(foundation_db):
 def test_enrollment_keeps_legacy_link_and_accepts_optional_master_link(foundation_db):
     _engine, db = foundation_db
     columns = {column.name: column for column in StudentEnrollment.__table__.columns}
-    assert columns["student_id"].nullable is False
+    assert columns["student_id"].nullable is True
+    assert next(iter(columns["student_id"].foreign_keys)).ondelete == "SET NULL"
     assert columns["student_master_id"].nullable is True
 
 

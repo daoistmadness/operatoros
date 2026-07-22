@@ -740,9 +740,17 @@ def test_delete_enrollment_removes_only_enrollment_not_student(app_context):
         session.commit()
         enrollment_id = enrollment.id
 
-        result = grades_api.delete_enrollment(enrollment_id=enrollment_id, db=session)
-        assert result["deleted"] == 1
-        assert session.query(StudentEnrollment).filter(StudentEnrollment.id == enrollment_id).first() is None
+        with pytest.raises(HTTPException) as missing_confirmation:
+            grades_api.delete_enrollment(enrollment_id=enrollment_id, db=session)
+        assert missing_confirmation.value.status_code == 400
+        with pytest.raises(HTTPException) as protected:
+            grades_api.delete_enrollment(
+                enrollment_id=enrollment_id,
+                body=grades_api.EnrollmentDeleteRequest(confirmation="DELETE_UNUSED_DRAFT_ENROLLMENT"),
+                db=session,
+            )
+        assert protected.value.status_code == 409
+        assert session.query(StudentEnrollment).filter(StudentEnrollment.id == enrollment_id).one()
         assert session.query(Student).filter(Student.id == student.id).one().name == student.name
     finally:
         session.close()
