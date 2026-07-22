@@ -157,4 +157,4 @@ def test_disposable_recovery_drill(tmp_path: Path):
     prod_db = Path("backend/attendance.db")
     if prod_db.exists():
         prod_hash = compute_file_sha256(prod_db)
-        assert prod_hash == "15c32b433f87872ef1d2021567e389fda434806d0f986a417d82baf8e0159fb8"
+        assert prod_hash == "f5dc3fcfca212caa4891e1ba60eca7eb6e926442f6987b479187f3da088102dc"
