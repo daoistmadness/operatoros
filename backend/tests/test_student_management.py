@@ -15,20 +15,23 @@ from models.attendance import Attendance
 from models.jenjang import Jenjang
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
+from models.student_enrollment import StudentEnrollmentLifecycleAudit
 from models.student_master import (
     StudentDeviceIdentity, StudentEnrollmentClassHistory, StudentImportBatch,
     StudentMaster, StudentMasterChangeHistory,
 )
 from models.student_import_session import StudentImportAppliedAction, StudentImportSession
 from schemas.student_management import (
-    DeviceReassignRequest, DeviceReplaceRequest, DeviceRetireRequest, EnrollmentTransferRequest,
+    DeviceReassignRequest, DeviceReplaceRequest, DeviceRetireRequest,
+    EnrollmentLifecycleRequest, EnrollmentTransferRequest,
     StudentCreateRequest, StudentProfilePatch,
 )
 from services.student_management import (
     DEVICE_REASSIGN_CONFIRMATION, DEVICE_REPLACE_CONFIRMATION, DEVICE_RETIRE_CONFIRMATION,
-    ENROLLMENT_TRANSFER_CONFIRMATION, add_or_replace_device, create_student,
+    ENROLLMENT_DELETE_CONFIRMATION, ENROLLMENT_TRANSFER_CONFIRMATION,
+    add_or_replace_device, create_student, enrollment_deletion_status, hard_delete_enrollment,
     reassign_device, record_version, retire_device, serialize_student_detail,
-    transfer_enrollment, update_student,
+    transfer_enrollment, transition_enrollment, update_student,
 )
 from services.spreadsheet_security import validate_xlsx_upload
 from services.student_workbook import (
@@ -136,11 +139,85 @@ def test_device_history_transfer_and_attendance_preservation(student_db):
     }), "admin")
     assert enrollment.academic_class_id == second_class.id
     assert db.query(StudentEnrollmentClassHistory).filter_by(enrollment_id=enrollment.id).count() == 2
+    histories = db.query(StudentEnrollmentClassHistory).filter_by(enrollment_id=enrollment.id).order_by(StudentEnrollmentClassHistory.id).all()
+    assert histories[0].effective_to == date(2026, 9, 1)
     retire_device(db, student, replacement, DeviceRetireRequest.model_validate({
         "effective_to": "2026-10-01", "reason": "Synthetic retirement",
         "confirmation": DEVICE_RETIRE_CONFIRMATION,
     }), "admin")
     assert not replacement.is_active
+
+
+def test_enrollment_without_device_identity_and_device_can_be_added_later(student_db):
+    db, year, first_class, _second = student_db
+    body = StudentCreateRequest.model_validate({
+        "identity": {"full_name": "Academic Only Student", "student_status": "active"},
+        "enrollment": {"academic_year_id": year.id, "academic_class_id": first_class.id, "effective_from": "2026-07-01"},
+    })
+    student = create_student(db, body, "admin")
+    enrollment = db.query(StudentEnrollment).filter_by(student_master_id=student.id).one()
+    assert enrollment.student_id is None
+    assert enrollment.lifecycle_state == "ACTIVE"
+    mapping = add_or_replace_device(db, student, DeviceReplaceRequest.model_validate({
+        "device_identifier": "000955", "device_source": "attendance_machine",
+        "effective_from": "2026-08-01", "reason": "Machine link added after admission",
+        "confirmation": DEVICE_REPLACE_CONFIRMATION,
+    }), "admin")
+    assert mapping.is_active
+    db.refresh(enrollment)
+    assert enrollment.student_id == mapping.legacy_student_id
+
+
+def test_lifecycle_withdraw_reactivate_graduate_and_invalid_backward_transition(student_db):
+    db, year, first_class, _second = student_db
+    student = create_student(db, create_payload(class_id=first_class.id, year_id=year.id), "admin")
+    enrollment = db.query(StudentEnrollment).filter_by(student_master_id=student.id).one()
+    withdrawn = EnrollmentLifecycleRequest.model_validate({
+        "effective_date": "2026-09-10", "reason": "Family relocation",
+        "reason_code": "FAMILY_RELOCATION", "confirmation": "WITHDRAW_STUDENT_ENROLLMENT",
+    })
+    transition_enrollment(db, enrollment, "WITHDRAWN", withdrawn, "admin", "manual_withdraw")
+    assert enrollment.lifecycle_state == "WITHDRAWN" and not enrollment.class_assigned
+    reactivate = EnrollmentLifecycleRequest.model_validate({
+        "effective_date": "2026-10-01", "reason": "Student returned",
+        "reason_code": "RETURNED", "confirmation": "REACTIVATE_STUDENT_ENROLLMENT",
+    })
+    transition_enrollment(db, enrollment, "ACTIVE", reactivate, "admin", "manual_reactivate")
+    graduate = EnrollmentLifecycleRequest.model_validate({
+        "effective_date": "2027-06-30", "reason": "Completed terminal grade",
+        "reason_code": "PROGRAM_COMPLETED", "confirmation": "GRADUATE_STUDENT_ENROLLMENT",
+    })
+    transition_enrollment(db, enrollment, "GRADUATED", graduate, "admin", "manual_graduate")
+    with pytest.raises(HTTPException) as invalid:
+        transition_enrollment(db, enrollment, "ACTIVE", reactivate, "admin", "manual_reactivate")
+    assert invalid.value.detail["code"] == "INVALID_LIFECYCLE_TRANSITION"
+    audits = db.query(StudentEnrollmentLifecycleAudit).filter_by(enrollment_id=enrollment.id).all()
+    assert [(row.prior_state, row.new_state) for row in audits] == [
+        ("ACTIVE", "WITHDRAWN"), ("WITHDRAWN", "ACTIVE"), ("ACTIVE", "GRADUATED")
+    ]
+
+
+def test_hard_delete_only_unused_draft(student_db):
+    db, year, first_class, _second = student_db
+    student = create_student(db, StudentCreateRequest.model_validate({"identity": {"full_name": "Draft Student"}}), "admin")
+    draft = StudentEnrollment(
+        student_master_id=student.id, student_id=None, academic_year_id=year.id,
+        jenjang_id=db.get(AcademicGrade, first_class.grade_id).jenjang_id,
+        academic_class_id=first_class.id, class_name=first_class.class_name,
+        class_assigned=False, effective_from=year.start_date, lifecycle_state="DRAFT",
+    )
+    db.add(draft); db.commit()
+    assert enrollment_deletion_status(db, draft)["can_hard_delete"] is True
+    draft_id = draft.id
+    assert hard_delete_enrollment(db, draft, ENROLLMENT_DELETE_CONFIRMATION)["deleted"] == 1
+    assert db.get(StudentEnrollment, draft_id) is None
+
+    operational_student = create_student(db, create_payload(name="Operational Student", device="000956", nisn="0000000956", nik="3201000000000956", class_id=first_class.id, year_id=year.id), "admin")
+    operational = db.query(StudentEnrollment).filter_by(student_master_id=operational_student.id).one()
+    with pytest.raises(HTTPException) as protected:
+        hard_delete_enrollment(db, operational, ENROLLMENT_DELETE_CONFIRMATION)
+    assert protected.value.status_code == 409
+    assert "CLASS_HISTORY" in protected.value.detail["dependencies"]
 
 
 def test_xlsx_export_preview_commit_round_trip_and_stale_protection(student_db):
