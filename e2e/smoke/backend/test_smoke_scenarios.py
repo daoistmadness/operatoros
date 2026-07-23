@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import os
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 
 import httpx
 import openpyxl
@@ -28,6 +28,17 @@ def authenticated(client):
     return client
 
 
+@pytest.fixture(scope="session")
+def staff_client():
+    with httpx.Client(base_url=os.environ["OPERATOROS_E2E_BACKEND_URL"], timeout=15.0) as session:
+        response = session.post("/api/auth/login", json={
+            "username": "operatoros_e2e_staff",
+            "password": os.environ["OPERATOROS_E2E_ADMIN_PASSWORD"],
+        })
+        assert response.status_code == 200, response.text
+        yield session
+
+
 def database_count(table: str) -> int:
     with sqlite3.connect(os.environ["OPERATOROS_E2E_DATABASE"]) as connection:
         return connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
@@ -44,6 +55,32 @@ def test_authentication_authorization_and_hierarchy(client, authenticated):
     assert {item["name"] for item in grades if item["active"]} == {"Primary 1", "Primary 2", "Secondary 7"}
     assert {"Primary 1A", "Primary 1B", "Primary 2A", "Next Primary 1A", "Next Primary 2A", "Secondary 7A"}.issubset({item["class_name"] for item in classes if item["active"]})
     assert "Primary 1 / MAIN" not in [item["class_name"] for item in classes if item["active"]]
+
+
+def test_attendance_review_authorization_and_session_actor(client, staff_client, authenticated):
+    attendance_id = database_count("attendance")
+    anonymous = httpx.post(
+        f"{os.environ['OPERATOROS_E2E_BACKEND_URL']}/api/review/attendance/{attendance_id}/override",
+        json={"override_status": "late", "note": "Anonymous denied"},
+        timeout=15.0,
+    )
+    assert anonymous.status_code == 401
+    denied = staff_client.post(
+        f"/api/review/attendance/{attendance_id}/override",
+        json={"override_status": "late", "note": "Staff denied"},
+    )
+    assert denied.status_code == 403
+    assert database_count("attendance_overrides") == 0
+
+    accepted = authenticated.post(
+        f"/api/review/attendance/{attendance_id}/override",
+        json={"override_status": "late", "note": "E2E authorized correction"},
+    )
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["reviewed_by"] == os.environ["OPERATOROS_E2E_ADMIN_USERNAME"]
+    history = authenticated.get(f"/api/review/attendance/{attendance_id}/history")
+    assert history.status_code == 200
+    assert history.json()["items"][0]["reviewed_by"] == os.environ["OPERATOROS_E2E_ADMIN_USERNAME"]
 
 
 def test_class_allocation_preview_and_attendance_filter_are_non_mutating(authenticated):
@@ -74,7 +111,7 @@ def test_upload_preview_validation_does_not_commit_attendance(authenticated):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.append(["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"])
-    sheet.append(["E2E-DEVICE-2", "E2E Bima", date.today(), "07:20", "14:00", "00:05", "00:00", "", "E2E-WEEK"])
+    sheet.append([100002, "E2E Bima", date.today() + timedelta(days=2), "07:20", "14:00", "00:05", "00:00", "", "E2E-WEEK"])
     payload = io.BytesIO()
     workbook.save(payload)
     valid = authenticated.post(
@@ -83,7 +120,38 @@ def test_upload_preview_validation_does_not_commit_attendance(authenticated):
     )
     assert valid.status_code == 200, valid.text
     assert "batch_id" in valid.json()
+    assert valid.json()["rows"][0]["classification"] == "NEW"
     assert database_count("attendance") == attendance_before
+
+    unmatched_book = openpyxl.Workbook()
+    unmatched_sheet = unmatched_book.active
+    unmatched_sheet.append(["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"])
+    unmatched_sheet.append([999999, "Not A Student", date.today(), "07:20", "14:00", "", "", "", "E2E-WEEK"])
+    unmatched_payload = io.BytesIO()
+    unmatched_book.save(unmatched_payload)
+    unmatched = authenticated.post(
+        "/api/uploads/preview",
+        files={"file": ("e2e-unmatched.xlsx", unmatched_payload.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert unmatched.status_code == 200, unmatched.text
+    unresolved = unmatched.json()["rows"][0]
+    assert unresolved["classification"] == "CONFLICT"
+    assert unresolved["validation_error"].startswith("DEVICE_IDENTITY_UNMATCHED")
+    rejected = authenticated.post(
+        f"/api/uploads/preview/{unmatched.json()['batch_id']}/commit",
+        json={"selected_row_ids": [unresolved["id"]], "confirmation": "COMMIT_ATTENDANCE_IMPORT"},
+    )
+    assert rejected.status_code == 409
+    assert rejected.json()["detail"]["code"] == "UNRESOLVED_IMPORT_ROWS"
+    assert database_count("attendance") == attendance_before
+
+    selected = [row["id"] for row in valid.json()["rows"] if row["classification"] in {"NEW", "DIFFERENCE", "UNCHANGED"}]
+    committed = authenticated.post(
+        f"/api/uploads/preview/{valid.json()['batch_id']}/commit",
+        json={"selected_row_ids": selected, "confirmation": "COMMIT_ATTENDANCE_IMPORT"},
+    )
+    assert committed.status_code == 200, committed.text
+    assert database_count("attendance") == attendance_before + 1
 
 
 def test_student_management_identity_enrollment_roster_and_xlsx_round_trip(authenticated):

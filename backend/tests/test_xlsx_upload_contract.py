@@ -61,33 +61,18 @@ def test_authenticated_canonical_xlsx_upload_contract(monkeypatch, tmp_path):
             )
             assert wrong_field.status_code == 422
 
-            first = client.post(
+            disabled = client.post(
                 "/api/uploads/upload",
                 files={"file": ("attendance export.xls.xlsx", _workbook_bytes(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
             )
-            assert first.status_code == 200
-            assert first.json()["report"]["rows_inserted"] == 1
-
-            second = client.post(
-                "/api/uploads/upload",
-                files={"file": ("attendance export.xls.xlsx", _workbook_bytes(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
-            )
-            assert second.status_code == 200
-            assert second.json()["report"]["rows_unchanged"] == 1
-
-            missing_header = client.post(
-                "/api/uploads/upload",
-                files={"file": ("invalid.xlsx", _workbook_bytes(["No. ID", "Nama"]), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
-            )
-            assert missing_header.status_code == 400
-            assert "Missing required column" in missing_header.json()["detail"]
+            assert disabled.status_code == 410
+            assert disabled.json()["detail"]["code"] == "LEGACY_ATTENDANCE_IMPORT_DISABLED"
 
         session = database.SessionLocal()
         try:
-            assert session.query(Attendance).count() == 1
+            assert session.query(Attendance).count() == 0
             logs = session.query(UploadLog).order_by(UploadLog.id).all()
-            assert [row.status for row in logs] == ["success", "success", "failed"]
-            assert all(row.uploaded_by == "fixture-admin" for row in logs)
+            assert logs == []
         finally:
             session.close()
     finally:
