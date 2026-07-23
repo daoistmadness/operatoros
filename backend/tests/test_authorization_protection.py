@@ -286,7 +286,7 @@ def test_restore_authorization_and_phase6_safety_chain(authorization_app):
     admin.close()
 
 
-def test_legacy_request_role_is_metadata_not_authorization(authorization_app):
+def test_attendance_override_requires_capability_and_rejects_actor_spoofing(authorization_app):
     module, _ = authorization_app
     staff = _client(module, "staff", "staff authorization pass")
     response = staff.post(
@@ -298,11 +298,28 @@ def test_legacy_request_role_is_metadata_not_authorization(authorization_app):
             "role": "untrusted-client-value",
         },
     )
-    assert response.status_code == 200
-    assert response.json()["reviewed_by"] == "Display Name Only"
+    assert response.status_code == 403
+    staff.close()
+
+    admin = _client(module, "admin", "admin authorization pass")
+    spoofed = admin.post(
+        "/api/review/attendance/mass-override-incomplete",
+        json={
+            "override_status": "on-time",
+            "note": "Authenticated admin review",
+            "reviewed_by": "Display Name Only",
+        },
+    )
+    assert spoofed.status_code == 422
+    accepted = admin.post(
+        "/api/review/attendance/mass-override-incomplete",
+        json={"override_status": "on-time", "note": "Authenticated admin review"},
+    )
+    assert accepted.status_code == 200
+    assert accepted.json()["reviewed_by"] == "admin"
     source = (SOURCE_ROOT / "api" / "review.py").read_text(encoding="utf-8")
     assert 'role not in {"admin", "teacher"}' not in source
-    staff.close()
+    admin.close()
 
 
 def test_authorization_helpers_use_database_user_identity():

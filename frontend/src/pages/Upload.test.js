@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import api from '../api';
-import { classifyUploadError, uploadAttendanceFile } from './Upload';
+import { classifyUploadError, commitAttendancePreview, previewAttendanceFile } from './Upload';
 
 vi.mock('../api', () => ({
   default: { post: vi.fn() },
@@ -11,27 +11,32 @@ describe('attendance upload errors', () => {
     vi.clearAllMocks();
   });
 
-  it('posts a browser-managed multipart body to the canonical route', async () => {
-    api.post.mockResolvedValue({ data: { report: {} } });
+  it('uses preview and explicit commit without calling the legacy upload route', async () => {
+    api.post.mockResolvedValue({ data: {} });
     const file = new File(['workbook'], 'attendance export.xls.xlsx', {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    await uploadAttendanceFile(file);
+    await previewAttendanceFile(file);
+    await commitAttendancePreview('batch-1', [7, 8]);
 
-    expect(api.post).toHaveBeenCalledTimes(1);
-    const [path, body, config] = api.post.mock.calls[0];
-    expect(path).toBe('/api/uploads/upload');
+    expect(api.post).toHaveBeenCalledTimes(2);
+    const [path, body] = api.post.mock.calls[0];
+    expect(path).toBe('/api/uploads/preview');
     expect(body).toBeInstanceOf(FormData);
     expect(body.get('file')).toBe(file);
-    expect(config).toBeUndefined();
+    expect(api.post).toHaveBeenLastCalledWith('/api/uploads/preview/batch-1/commit', {
+      selected_row_ids: [7, 8],
+      confirmation: 'COMMIT_ATTENDANCE_IMPORT',
+    });
+    expect(api.post.mock.calls.flat()).not.toContain('/api/uploads/upload');
   });
 
   it.each([
     [401, 'session has expired'],
     [403, 'does not have permission'],
-    [404, 'service was not found'],
-    [405, 'could not be accepted'],
+    [404, 'could not be completed'],
+    [405, 'could not be completed'],
     [413, 'larger than'],
     [422, 'could not be validated'],
     [500, 'could not process the workbook'],

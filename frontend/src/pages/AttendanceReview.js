@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api";
+import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
@@ -28,6 +29,8 @@ const getStatusBadgeClass = (status, effective = false) => {
 };
 
 function AttendanceReview() {
+  const { user, can } = useAuth();
+  const canManageAttendance = can("manage_attendance");
   const [classes, setClasses] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState("");
@@ -45,7 +48,6 @@ function AttendanceReview() {
   const [activeRow, setActiveRow] = useState(null);
   const [overrideStatus, setOverrideStatus] = useState("on-time");
   const [overrideNote, setOverrideNote] = useState("");
-  const [reviewer, setReviewer] = useState("admin");
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyItems, setHistoryItems] = useState([]);
@@ -54,7 +56,6 @@ function AttendanceReview() {
   const [massSubmitting, setMassSubmitting] = useState(false);
   const [massSuccessMsg, setMassSuccessMsg] = useState("");
   const [massOverrideNote, setMassOverrideNote] = useState("Mass override: student consistently does not scan out");
-  const [massReviewer, setMassReviewer] = useState("");
 
   const fetchAcademicYears = useCallback(async () => {
     try {
@@ -125,7 +126,6 @@ function AttendanceReview() {
     setActiveRow(row);
     setOverrideStatus(row.effective_status || row.original_status);
     setOverrideNote(row.override_note || "");
-    setReviewer(row.reviewed_by || "admin");
     setModalOpen(true);
   };
 
@@ -150,7 +150,6 @@ function AttendanceReview() {
       await api.post(`/api/review/attendance/${activeRow.attendance_id}/override`, {
         override_status: overrideStatus,
         note: trimmed,
-        reviewed_by: reviewer.trim() || "admin",
       });
       closeOverrideModal();
       await loadAttendance();
@@ -167,12 +166,6 @@ function AttendanceReview() {
       setError("Override note must be at least 5 characters.");
       return;
     }
-    const trimmedReviewer = massReviewer.trim();
-    if (!trimmedReviewer) {
-      setError("Reviewer is required.");
-      return;
-    }
-
     setMassSubmitting(true);
     setError("");
     setMassSuccessMsg("");
@@ -181,14 +174,11 @@ function AttendanceReview() {
       const response = await api.post("/api/review/attendance/mass-override-incomplete", {
         override_status: "on-time",
         note: trimmedNote,
-        reviewed_by: trimmedReviewer,
-        role: "admin",
       });
 
       const { overridden } = response.data;
-      setMassSuccessMsg(`✅ ${overridden} records overridden to on-time by ${trimmedReviewer}`);
+      setMassSuccessMsg(`✅ ${overridden} records overridden to on-time by ${response.data.reviewed_by}`);
       setMassModalOpen(false);
-      setMassReviewer(""); 
       setMassOverrideNote("Mass override: student consistently does not scan out");
       await loadAttendance();
     } catch (err) {
@@ -234,7 +224,7 @@ function AttendanceReview() {
           <p className="text-slate-500 mt-1">Inspect imported attendance and apply audited manual overrides without mutating raw data.</p>
         </div>
         
-        {/* Mass Override Button is always visible since it's global */}
+        {canManageAttendance ? (
         <div className="flex flex-col items-end shrink-0">
           <button
             onClick={() => setMassModalOpen(true)}
@@ -247,6 +237,7 @@ function AttendanceReview() {
             Applies to all incomplete records system-wide
           </p>
         </div>
+        ) : null}
       </header>
 
       {massSuccessMsg ? (
@@ -360,14 +351,14 @@ function AttendanceReview() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
-                      <button
+                      {canManageAttendance ? <button
                         type="button"
                         onClick={() => openOverrideModal(row)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand/10 text-brand hover:bg-brand/20 transition-colors text-xs font-bold"
                       >
                         <Edit3 size={14} />
                         Override
-                      </button>
+                      </button> : null}
                       <button
                         type="button"
                         onClick={() => openHistoryDrawer(row)}
@@ -435,15 +426,8 @@ function AttendanceReview() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewer</label>
-              <input
-                aria-label="Reviewer"
-                type="text"
-                value={reviewer}
-                onChange={(e) => setReviewer(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
-                placeholder="e.g. admin"
-              />
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewer (session)</label>
+              <p className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-700">{user?.username || "Authenticated user"}</p>
             </div>
 
             <div className="space-y-2">
@@ -508,15 +492,8 @@ function AttendanceReview() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewed by (Admin)</label>
-              <input
-                aria-label="Reviewed by admin"
-                type="text"
-                value={massReviewer}
-                onChange={(e) => setMassReviewer(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300/30 focus:border-amber-400"
-                placeholder="e.g. admin"
-              />
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reviewed by (session)</label>
+              <p className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-700">{user?.username || "Authenticated user"}</p>
             </div>
 
             <div className="space-y-2">
@@ -541,7 +518,7 @@ function AttendanceReview() {
               <button
                 type="button"
                 onClick={submitMassOverride}
-                disabled={massSubmitting || !massReviewer.trim()}
+                disabled={massSubmitting || massOverrideNote.trim().length < 5}
                 className="px-5 py-2 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 disabled:opacity-50 inline-flex items-center gap-2"
               >
                 {massSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}
