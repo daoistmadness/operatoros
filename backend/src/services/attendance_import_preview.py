@@ -10,6 +10,7 @@ from models.attendance import Attendance
 from models.attendance_import import AttendanceImportBatch, AttendanceImportRow
 from models.attendance_review import AttendanceOverride
 from models.student import Student
+from models.student_master import StudentDeviceIdentity
 from models.upload_log import UploadLog
 from services.attendance_metrics import derive_jenjang_from_class_name
 from services.excel_parser import (
@@ -23,6 +24,7 @@ from services.excel_parser import (
 
 ATTENDANCE_IMPORT_CONFIRMATION = "COMMIT_ATTENDANCE_IMPORT"
 COMMITTABLE_CLASSIFICATIONS = {"NEW", "DIFFERENCE", "UNCHANGED"}
+DEVICE_IDENTITY_UNMATCHED = "DEVICE_IDENTITY_UNMATCHED"
 
 
 def _empty_stats() -> dict:
@@ -59,6 +61,21 @@ def _attendance_payload(row: Attendance) -> dict:
         "week": row.week,
         "status": row.status,
     }
+
+
+def _resolve_device_student(db: Session, student_identifier: int) -> Student | None:
+    mapping = (
+        db.query(StudentDeviceIdentity)
+        .filter(
+            StudentDeviceIdentity.device_identifier == str(student_identifier),
+            StudentDeviceIdentity.is_active.is_(True),
+        )
+        .order_by(StudentDeviceIdentity.id.asc())
+        .first()
+    )
+    if mapping is None or mapping.legacy_student_id is None:
+        return None
+    return db.get(Student, mapping.legacy_student_id)
 
 
 def _proposed_payload(entry: dict, student: Student | None, existing: Attendance | None, cutoff_map: dict) -> dict:
@@ -150,38 +167,40 @@ def create_attendance_preview(
     db.add(batch)
     db.flush()
 
-    new_student_ids: set[int] = set()
     counts = {key: 0 for key in ("NEW", "UNCHANGED", "DIFFERENCE", "CONFLICT", "INVALID")}
     for entry in entries:
         student_id = entry["student_id"]
         key = (student_id, entry["date"])
-        student = db.get(Student, student_id)
-        same_name = db.query(Student).filter(Student.name == entry["student_name"]).first()
+        student = _resolve_device_student(db, student_id)
         existing = (
             db.query(Attendance)
-            .filter(Attendance.student_id == student_id, Attendance.date == entry["date"])
+            .filter(
+                Attendance.student_id == student.id if student is not None else False,
+                Attendance.date == entry["date"],
+            )
             .first()
         )
         warning_parts = []
         validation_error = None
+        if student is None:
+            classification = "CONFLICT"
+            validation_error = (
+                f"{DEVICE_IDENTITY_UNMATCHED}: no active attendance device identity "
+                f"is linked to {student_id}"
+            )
         if key in exact_duplicates:
             warning_parts.append("Identical duplicate source key collapsed to one logical row")
-        if key in divergent_duplicates:
+        if student is not None and key in divergent_duplicates:
             classification = "CONFLICT"
             validation_error = "Divergent duplicate rows share the same student/date key"
         elif student is not None and student.name != entry["student_name"]:
             classification = "CONFLICT"
             validation_error = "Student identifier belongs to a different existing name"
-        elif student is None and same_name is not None and same_name.id != student_id:
-            classification = "CONFLICT"
-            validation_error = "Student name already belongs to a different identifier"
-        else:
+        elif student is not None:
             proposed = _proposed_payload(entry, student, existing, cutoff_map)
             before = _attendance_payload(existing) if existing else None
             if existing is None:
                 classification = "NEW"
-                if student is None:
-                    new_student_ids.add(student_id)
             elif before == proposed:
                 classification = "UNCHANGED"
             else:
@@ -233,7 +252,7 @@ def create_attendance_preview(
     batch.unchanged_records = counts["UNCHANGED"]
     batch.conflict_records = counts["CONFLICT"]
     batch.invalid_records = counts["INVALID"]
-    batch.new_students = len(new_student_ids)
+    batch.new_students = 0
     db.commit()
     db.refresh(batch)
     return batch
@@ -313,35 +332,42 @@ def commit_attendance_preview(
         raise HTTPException(status_code=400, detail="Selected rows are not part of this preview")
     blocked = [row.id for row in rows if row.classification not in COMMITTABLE_CLASSIFICATIONS]
     if blocked:
-        raise HTTPException(status_code=409, detail=f"Selected rows require resolution: {blocked}")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "UNRESOLVED_IMPORT_ROWS",
+                "message": "Selected attendance import rows require identity resolution.",
+                "row_ids": blocked,
+            },
+        )
 
     inserted = updated = unchanged = new_students = late_entries = incomplete_entries = 0
     try:
         batch.status = "committing"
         for row in rows:
-            student_id = int(row.student_identifier)
-            student = db.get(Student, student_id)
+            student_identifier = int(row.student_identifier)
+            student = _resolve_device_student(db, student_identifier)
             if student is None:
-                name_conflict = db.query(Student).filter(Student.name == row.student_name).first()
-                if name_conflict is not None:
-                    raise HTTPException(status_code=409, detail=f"Student identity conflict at preview row {row.id}")
-                student = Student(id=student_id, name=row.student_name, class_name=None, jenjang=None)
-                db.add(student)
-                db.flush()
-                new_students += 1
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": DEVICE_IDENTITY_UNMATCHED,
+                        "message": f"Attendance device identity is unresolved at preview row {row.id}",
+                    },
+                )
             elif student.name != row.student_name:
                 raise HTTPException(status_code=409, detail=f"Student changed after preview row {row.id}")
 
             existing = (
                 db.query(Attendance)
-                .filter(Attendance.student_id == student_id, Attendance.date == row.attendance_date)
+                .filter(Attendance.student_id == student.id, Attendance.date == row.attendance_date)
                 .first()
             )
             current_payload = _attendance_payload(existing) if existing else None
             if current_payload != row.existing_record:
                 raise HTTPException(status_code=409, detail=f"Attendance changed after preview row {row.id}")
             if row.classification == "NEW":
-                attendance = Attendance(student_id=student_id, date=row.attendance_date)
+                attendance = Attendance(student_id=student.id, date=row.attendance_date)
                 _apply_payload(attendance, row.proposed_change)
                 db.add(attendance)
                 inserted += 1

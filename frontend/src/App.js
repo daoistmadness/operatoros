@@ -123,7 +123,7 @@ function App() {
               <Route path="/reports/attendance" element={<AttendanceReport />} />
               <Route path="/reports/tardiness" element={<TardinessReport />} />
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
-              <Route path="/attendance-review" element={<AttendanceReview />} />
+              <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
               <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
               <Route path="/enrollment" element={<RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>} />
               <Route path="/grades" element={<RequireRole role="admin"><GradeLedger /></RequireRole>} />

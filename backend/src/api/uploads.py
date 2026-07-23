@@ -15,7 +15,7 @@ from models.student import Student
 from models.upload_log import UploadLog
 from models.attendance_import import AttendanceImportRow
 from models.user import User
-from security.dependencies import get_current_user, require_role
+from security.dependencies import get_current_user, require_capability
 from services.attendance_import_preview import (
     commit_attendance_preview,
     create_attendance_preview,
@@ -23,7 +23,7 @@ from services.attendance_import_preview import (
 )
 from services.attendance_metrics import calculate_heb, derive_jenjang_from_class_name, month_year_filters
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 logger = logging.getLogger(__name__)
 
 _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -84,7 +84,7 @@ def _resolve_upload_status(report: dict) -> str:
 async def preview_attendance_import(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_capability("import_attendance")),
 ):
     """Parse an attendance workbook into staging without changing live records."""
     _validate_excel_upload(file)
@@ -118,7 +118,7 @@ def commit_previewed_attendance_import(
     batch_id: str,
     request: AttendanceImportCommitRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_capability("import_attendance")),
 ):
     """Atomically commit explicitly selected, non-conflicting preview rows."""
     return commit_attendance_preview(
@@ -129,93 +129,26 @@ def commit_previewed_attendance_import(
         current_user.username,
     )
 
-@router.post("/upload")
+@router.post("/upload", deprecated=True)
 async def upload_file(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(require_capability("import_attendance")),
 ):
-    """
-    Endpoint for uploading attendance Excel files.
-    Returns a summary report of the processed data.
-    """
-    filename = file.filename or "unknown.xlsx"
-    uploaded_by = current_user.username
-
-    # Accept by MIME or by extension — browsers sometimes send octet-stream
-    # for files with spaces or parentheses in the name.
-    try:
-        _validate_excel_upload(file)
-    except HTTPException:
-        _write_upload_log(db, filename, uploaded_by, {
-            "total_records": 0, "new_students": 0, "late_entries": 0, "failed_rows": 0,
-        }, "failed")
-        raise
-    
-    base_report = {
-        "total_records": 0,
-        "new_students": 0,
-        "late_entries": 0,
-        "failed_rows": 0,
-        "skipped_empty": 0,
-        "incomplete_entries": 0,
-        "rows_inserted": 0,
-        "rows_updated": 0,
-        "rows_unchanged": 0,
-        "rows_dropped_invalid": 0,
-        "scans_coerced_to_null": 0,
-        "dates_coerced_to_null": 0,
-        "null_overwrite_blocked": 0,
-        "intra_chunk_conflicts": 0,
-        "chunk_fallbacks": 0,
-        "row_errors": [],
-        "failed_records": [],
-        "pending_categorization_count": 0,
-    }
-
-    
-    try:
-        report = await parse_excel(file, db)
-        pending_count = (
-            db.query(func.count(Student.id))
-            .filter(Student.class_name.is_(None))
-            .scalar()
-            or 0
-        )
-        report["pending_categorization_count"] = pending_count
-        status = _resolve_upload_status(report)
-
-        _write_upload_log(db, filename, uploaded_by, report, status)
-
-        if status == "success":
-            message = "Upload Complete"
-        elif status == "partial":
-            message = "Upload Partially Complete"
-        else:
-            message = "Upload Failed"
-        
-        return {
-            "message": message,
-            "report": report
-        }
-    except ValueError as val_err:
-        db.rollback()
-        _write_upload_log(db, filename, uploaded_by, base_report, "failed")
-        raise HTTPException(status_code=400, detail=str(val_err))
-    except HTTPException:
-        raise
-    except Exception:
-        db.rollback()
-        _write_upload_log(db, filename, uploaded_by, base_report, "failed")
-        logger.exception("Unexpected attendance workbook import failure")
-        raise HTTPException(
-            status_code=500,
-            detail="The server could not process the workbook because of an internal error.",
-        )
+    del file
+    raise HTTPException(
+        status_code=410,
+        detail={
+            "code": "LEGACY_ATTENDANCE_IMPORT_DISABLED",
+            "message": "Direct attendance import is disabled. Use preview and commit.",
+        },
+    )
 
 
 @router.get("/history")
-def get_upload_history(db: Session = Depends(get_db)):
+def get_upload_history(
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("import_attendance")),
+):
     return db.query(UploadLog).order_by(UploadLog.uploaded_at.desc()).limit(20).all()
 
 
@@ -225,6 +158,7 @@ def get_missing_records(
     year: int,
     class_name: str | None = None,
     db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_attendance")),
 ):
     if month < 1 or month > 12:
         raise HTTPException(status_code=400, detail="month must be between 1 and 12")
@@ -284,7 +218,9 @@ def get_missing_records(
 
 
 @router.get("/sample-template")
-def download_sample_template():
+def download_sample_template(
+    _user: User = Depends(require_capability("import_attendance")),
+):
     """Returns a sample .xlsx matching the required import format."""
     today = date.today()
 

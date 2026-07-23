@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from api.error_responses import raise_internal_error
 from core.database import get_db
 from models.user import User
-from security.dependencies import get_current_user
+from security.dependencies import get_current_user, require_capability
 from models.attendance import Attendance
 from models.attendance_review import AttendanceOverride, AttendanceOverrideHistory
 from models.student import Student
@@ -17,7 +17,7 @@ from models.student_enrollment import StudentEnrollment
 from models.academic_master import AcademicClass
 from models.academic_year import AcademicYear
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 ALLOWED_STATUSES = {"on-time", "late", "absent", "incomplete"}
 
@@ -63,9 +63,10 @@ class ReviewAttendanceResponse(BaseModel):
 
 
 class OverrideRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     override_status: str
     note: str = Field(min_length=5)
-    reviewed_by: str = Field(min_length=1)
 
 
 class OverrideResponse(BaseModel):
@@ -94,10 +95,10 @@ class OverrideHistoryResponse(BaseModel):
 
 
 class MassOverrideRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     override_status: str
     note: str = Field(min_length=5)
-    reviewed_by: str = Field(min_length=1)
-    role: str = Field(min_length=1)
 
 
 class MassOverrideResponse(BaseModel):
@@ -111,7 +112,8 @@ class MassOverrideResponse(BaseModel):
 @router.get("/classes", response_model=ReviewClassesResponse)
 def get_review_classes(
     academic_year_id: int | None = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_attendance")),
 ):
     if not academic_year_id:
         default_year = db.query(AcademicYear).filter(AcademicYear.is_default.is_(True)).first()
@@ -143,6 +145,7 @@ def get_review_attendance(
     academic_year_id: int = Query(..., gt=0),
     academic_class_id: int = Query(..., gt=0),
     db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_attendance")),
 ):
     academic_class = db.query(AcademicClass).filter(AcademicClass.id == academic_class_id).first()
     display_class_name = academic_class.class_name if academic_class else "Unknown Class"
@@ -223,6 +226,7 @@ def upsert_attendance_override(
     attendance_id: int,
     body: OverrideRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_capability("manage_attendance")),
 ):
     override_status = body.override_status.strip()
     if override_status not in ALLOWED_STATUSES:
@@ -232,9 +236,7 @@ def upsert_attendance_override(
     if len(note) < 5:
         raise HTTPException(status_code=400, detail="note must be at least 5 characters")
 
-    reviewed_by = body.reviewed_by.strip()
-    if not reviewed_by:
-        raise HTTPException(status_code=400, detail="reviewed_by must be a non-empty string")
+    reviewed_by = current_user.username
 
     attendance = db.query(Attendance).filter(Attendance.id == attendance_id).first()
     if attendance is None:
@@ -321,7 +323,11 @@ def upsert_attendance_override(
 
 
 @router.get("/attendance/{attendance_id}/history", response_model=OverrideHistoryResponse)
-def get_override_history(attendance_id: int, db: Session = Depends(get_db)):
+def get_override_history(
+    attendance_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_attendance")),
+):
     attendance_exists = db.query(Attendance.id).filter(Attendance.id == attendance_id).first()
     if attendance_exists is None:
         raise HTTPException(status_code=404, detail="Attendance not found")
@@ -353,7 +359,7 @@ def get_override_history(attendance_id: int, db: Session = Depends(get_db)):
 def mass_override_incomplete(
     body: MassOverrideRequest,
     db: Session = Depends(get_db),
-    _user: User = Depends(get_current_user),
+    current_user: User = Depends(require_capability("manage_attendance")),
 ):
     override_status = body.override_status.strip()
     if override_status not in {"on-time", "late"}:
@@ -363,10 +369,7 @@ def mass_override_incomplete(
         )
 
     note = body.note.strip()
-    reviewed_by = body.reviewed_by.strip()
-    # Retained only as backward-compatible metadata. Authorization comes from the
-    # validated session user above, never from this client-supplied value.
-    _legacy_role_metadata = body.role.strip()
+    reviewed_by = current_user.username
 
     now = datetime.utcnow()
 
