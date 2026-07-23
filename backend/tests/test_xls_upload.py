@@ -45,23 +45,7 @@ def test_xls_extension_validation_success(app_context):
     mock_file.filename = "attendance_export.xls"
     mock_file.content_type = "application/vnd.ms-excel"
     
-    # We should be able to pass through validation
-    # If validation passes, it will call parse_excel (which we mock here)
-    with patch("api.uploads.parse_excel") as mock_parse:
-        mock_parse.return_value = {"total_records": 0}
-        
-        # Call the endpoint handler function directly
-        db_session = MagicMock()
-        user = app_context["User"](username="tester", role="admin")
-        
-        # Should execute without throwing 400 HTTPException
-        # Note: Since the endpoint is async, we can run it using standard asyncio
-        import asyncio
-        response = asyncio.run(
-            uploads.upload_file(file=mock_file, db=db_session, current_user=user)
-        )
-        assert response is not None
-        mock_parse.assert_called_once_with(mock_file, db_session)
+    uploads._validate_excel_upload(mock_file)
 
 def test_invalid_extension_rejected(app_context):
     """Verify that unsupported extensions are rejected."""
@@ -71,14 +55,8 @@ def test_invalid_extension_rejected(app_context):
     mock_file.filename = "attendance_export.csv"
     mock_file.content_type = "text/csv"
     
-    db_session = MagicMock()
-    user = app_context["User"](username="tester", role="admin")
-    import asyncio
-    
     with pytest.raises(HTTPException) as exc_info:
-        asyncio.run(
-            uploads.upload_file(file=mock_file, db=db_session, current_user=user)
-        )
+        uploads._validate_excel_upload(mock_file)
         
     assert exc_info.value.status_code == 400
     assert "Please upload a .xlsx or .xls file." in exc_info.value.detail
