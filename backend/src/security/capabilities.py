@@ -34,6 +34,9 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "retain_students",
     "execute_cross_jenjang_transition",
     "reverse_progression_error",
+    "view_attendance",
+    "manage_attendance",
+    "import_attendance",
 })
 
 
@@ -42,7 +45,7 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
     # The repository currently has one non-administrative role. Keep it a
     # deliberately narrow operational reader until institution-specific roles
     # are introduced through an approved schema migration.
-    "staff": frozenset({"view_student", "view_progression_preview"}),
+    "staff": frozenset({"view_student", "view_progression_preview", "view_attendance"}),
 }
 
 
