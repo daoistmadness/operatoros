@@ -39,6 +39,17 @@ def staff_client():
         yield session
 
 
+@pytest.fixture(scope="session")
+def checker_client():
+    with httpx.Client(base_url=os.environ["OPERATOROS_E2E_BACKEND_URL"], timeout=15.0) as session:
+        response = session.post("/api/auth/login", json={
+            "username": "operatoros_e2e_checker",
+            "password": os.environ["OPERATOROS_E2E_ADMIN_PASSWORD"],
+        })
+        assert response.status_code == 200, response.text
+        yield session
+
+
 def database_count(table: str) -> int:
     with sqlite3.connect(os.environ["OPERATOROS_E2E_DATABASE"]) as connection:
         return connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
@@ -81,6 +92,119 @@ def test_attendance_review_authorization_and_session_actor(client, staff_client,
     history = authenticated.get(f"/api/review/attendance/{attendance_id}/history")
     assert history.status_code == 200
     assert history.json()["items"][0]["reviewed_by"] == os.environ["OPERATOROS_E2E_ADMIN_USERNAME"]
+
+
+def test_attendance_correction_approval_finalization_and_reopening(authenticated, checker_client):
+    with sqlite3.connect(os.environ["OPERATOROS_E2E_DATABASE"]) as connection:
+        attendance_rows = connection.execute(
+            "SELECT id,date,status FROM attendance ORDER BY id LIMIT 3"
+        ).fetchall()
+        academic_year_id, academic_class_id = connection.execute(
+            "SELECT academic_year_id,academic_class_id FROM student_enrollments "
+            "WHERE student_id=(SELECT student_id FROM attendance WHERE id=?)",
+            (attendance_rows[0][0],),
+        ).fetchone()
+    approved_id, attendance_date, raw_status = attendance_rows[0]
+    rejected_id = attendance_rows[1][0]
+
+    created = authenticated.post("/api/attendance-corrections", json={
+        "attendance_id": approved_id,
+        "proposed_status": "late",
+        "proposed_check_in": "07:40",
+        "reason_code": "E2E_EVIDENCE",
+        "explanation": "Synthetic evidence requires a late correction",
+    })
+    assert created.status_code == 200, created.text
+    request_id = created.json()["id"]
+    assert created.json()["requester"] == os.environ["OPERATOROS_E2E_ADMIN_USERNAME"]
+    submitted = authenticated.post(f"/api/attendance-corrections/{request_id}/submit")
+    assert submitted.status_code == 200
+
+    self_approval = authenticated.post(
+        f"/api/attendance-corrections/{request_id}/approve",
+        json={"confirmation": "APPROVE_ATTENDANCE_CORRECTION"},
+    )
+    assert self_approval.status_code == 403
+    assert self_approval.json()["detail"]["code"] == "ATTENDANCE_CORRECTION_SELF_APPROVAL_FORBIDDEN"
+    before_approval = authenticated.get(
+        "/api/review/attendance", params={
+            "date": attendance_date,
+            "academic_year_id": academic_year_id,
+            "academic_class_id": academic_class_id,
+        },
+    ).json()
+    pending_row = next(
+        item for item in before_approval["items"] if item["attendance_id"] == approved_id
+    )
+    assert pending_row["effective_status"] == raw_status
+
+    finalized = checker_client.post("/api/attendance-corrections/periods/finalize", json={
+        "attendance_date": attendance_date,
+        "reason": "Synthetic daily register closed",
+        "confirmation": "FINALIZE_ATTENDANCE_PERIOD",
+    })
+    assert finalized.status_code == 200, finalized.text
+    version = finalized.json()["version"]
+    direct = checker_client.post(f"/api/review/attendance/{approved_id}/override", json={
+        "override_status": "late", "note": "Must be blocked while finalized",
+    })
+    assert direct.status_code == 409
+    blocked = checker_client.post(
+        f"/api/attendance-corrections/{request_id}/approve",
+        json={"confirmation": "APPROVE_ATTENDANCE_CORRECTION"},
+    )
+    assert blocked.status_code == 409
+
+    reopened = checker_client.post("/api/attendance-corrections/periods/reopen", json={
+        "attendance_date": attendance_date,
+        "reason": "Synthetic evidence accepted for review",
+        "confirmation": "REOPEN_ATTENDANCE_PERIOD",
+        "expected_version": version,
+    })
+    assert reopened.status_code == 200, reopened.text
+    approved = checker_client.post(
+        f"/api/attendance-corrections/{request_id}/approve",
+        json={"confirmation": "APPROVE_ATTENDANCE_CORRECTION"},
+    )
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["approver"] == "operatoros_e2e_checker"
+
+    after_approval = authenticated.get(
+        "/api/review/attendance", params={
+            "date": attendance_date,
+            "academic_year_id": academic_year_id,
+            "academic_class_id": academic_class_id,
+        },
+    ).json()
+    approved_row = next(
+        item for item in after_approval["items"] if item["attendance_id"] == approved_id
+    )
+    assert approved_row["effective_status"] == "late"
+
+    rejected = authenticated.post("/api/attendance-corrections", json={
+        "attendance_id": rejected_id,
+        "proposed_status": "absent",
+        "reason_code": "E2E_REJECT",
+        "explanation": "Synthetic request that will be rejected",
+    })
+    assert rejected.status_code == 200
+    rejected_request_id = rejected.json()["id"]
+    assert authenticated.post(
+        f"/api/attendance-corrections/{rejected_request_id}/submit"
+    ).status_code == 200
+    decision = checker_client.post(
+        f"/api/attendance-corrections/{rejected_request_id}/reject",
+        json={"rejection_reason": "Synthetic evidence is insufficient"},
+    )
+    assert decision.status_code == 200
+    with sqlite3.connect(os.environ["OPERATOROS_E2E_DATABASE"]) as connection:
+        assert connection.execute(
+            "SELECT status FROM attendance WHERE id=?", (approved_id,)
+        ).fetchone() == (raw_status,)
+        assert connection.execute(
+            "SELECT COUNT(*) FROM attendance_overrides WHERE attendance_id=?",
+            (rejected_id,),
+        ).fetchone() == (0,)
 
 
 def test_class_allocation_preview_and_attendance_filter_are_non_mutating(authenticated):

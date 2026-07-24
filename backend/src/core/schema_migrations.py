@@ -297,6 +297,8 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
                 "student_enrollment_class_history",
                 "student_enrollment_lifecycle_audit",
                 "student_progression_audit",
+                "attendance_correction_audit",
+                "attendance_period_audit",
             ):
                 if table == "student_enrollment_class_history":
                     immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
@@ -496,6 +498,8 @@ def main(argv: list[str] | None = None) -> int:
     upgrade_s40.add_argument("--database", required=True, type=Path)
     upgrade_s41 = commands.add_parser("upgrade-s41")
     upgrade_s41.add_argument("--database", required=True, type=Path)
+    upgrade_s42 = commands.add_parser("upgrade-s42")
+    upgrade_s42.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
         adopt.add_argument(f"--expected-{table.replace('_', '-')}", required=True, type=int)
     arguments = parser.parse_args(argv)
@@ -512,6 +516,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s41":
         from core.student_progression_migration import migrate_student_progression_sqlite
         print(json.dumps({"status": migrate_student_progression_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s42":
+        from core.attendance_correction_migration import migrate_attendance_corrections_sqlite
+        print(json.dumps({"status": migrate_attendance_corrections_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")
