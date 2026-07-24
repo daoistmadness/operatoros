@@ -51,6 +51,11 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "manage_teacher_class_assignments",
     "view_all_attendance",
     "manage_all_attendance",
+    "view_early_departure",
+    "manage_early_departure_policy",
+    "record_early_departure_excuse",
+    "revoke_early_departure_excuse",
+    "view_early_departure_audit",
 })
 
 
@@ -62,6 +67,7 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
         "cancel_attendance_correction",
         "view_assigned_attendance", "enter_assigned_class_attendance",
         "request_assigned_attendance_correction",
+        "view_early_departure", "record_early_departure_excuse",
     }),
 }
 
