@@ -24,6 +24,8 @@ import ExecutiveReports from './pages/ExecutiveReports.tsx';
 import MonthlyManagementReport from './pages/MonthlyManagementReport.tsx';
 import BackupManagement from './pages/BackupManagement.tsx';
 import OperationsAudit from './pages/OperationsAudit.tsx';
+import TeacherClassAssignments from './pages/TeacherClassAssignments.tsx';
+import ClassAttendanceEntry from './pages/ClassAttendanceEntry.tsx';
 import SidebarNav from './components/SidebarNav';
 import Login from './pages/Login.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
@@ -127,6 +129,8 @@ function App() {
               <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
               <Route path="/attendance-corrections" element={<RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>} />
               <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
+              <Route path="/teacher-class-assignments" element={<RequireRole role="admin"><TeacherClassAssignments /></RequireRole>} />
+              <Route path="/attendance/class-entry" element={<RequireCapability capability="enter_assigned_class_attendance"><ClassAttendanceEntry /></RequireCapability>} />
               <Route path="/enrollment" element={<RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>} />
               <Route path="/grades" element={<RequireRole role="admin"><GradeLedger /></RequireRole>} />
               <Route path="/config/jenjang" element={<JenjangConfig />} />
