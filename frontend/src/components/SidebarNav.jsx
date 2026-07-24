@@ -21,6 +21,7 @@ export const NAV_GROUPS = [
   {
     id: 'workflows', title: 'Daily Workflows',
     items: [
+      { name: 'Input Absensi Kelas', path: '/attendance/class-entry', icon: CalendarDays, capability: 'enter_assigned_class_attendance' },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: ShieldCheck, capability: 'view_attendance_corrections' },
       { name: 'Students', path: '/students', icon: UsersIcon, capability: 'view_student', nested: true, exclude: ['/students/operations'] },
@@ -45,6 +46,7 @@ export const NAV_GROUPS = [
   {
     id: 'administration', title: 'Administration',
     items: [
+      { name: 'Penugasan Guru Kelas', path: '/teacher-class-assignments', icon: UserCheck, role: 'admin' },
       { name: 'Cutoff Jenjang', path: '/config/jenjang', icon: Clock3 },
       { name: 'HEB Overrides', path: '/config/heb', icon: Clock3, role: 'admin' },
       { name: 'Absence Reasons', path: '/config/absence-reasons', icon: CalendarDays, role: 'admin' },
