@@ -16,6 +16,7 @@ from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.academic_master import AcademicClass
 from models.academic_year import AcademicYear
+from services.attendance_corrections import ensure_period_open
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -241,6 +242,7 @@ def upsert_attendance_override(
     attendance = db.query(Attendance).filter(Attendance.id == attendance_id).first()
     if attendance is None:
         raise HTTPException(status_code=404, detail="Attendance not found")
+    ensure_period_open(db, attendance.date)
 
     now = datetime.utcnow()
     existing = db.query(AttendanceOverride).filter(AttendanceOverride.attendance_id == attendance_id).first()
@@ -392,6 +394,10 @@ def mass_override_incomplete(
         )
 
     attendance_ids = [row.id for row in candidates]
+    for attendance_date in (
+        db.query(Attendance.date).filter(Attendance.id.in_(attendance_ids)).distinct().all()
+    ):
+        ensure_period_open(db, attendance_date[0])
 
     # Fetch existing overrides for these attendances
     existing_overrides = (

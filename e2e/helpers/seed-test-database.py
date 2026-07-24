@@ -38,6 +38,10 @@ def main() -> int:
             "INSERT INTO users (username,password_hash,role,is_active,failed_login_attempts) VALUES (?,?,?,?,0)",
             ("operatoros_e2e_staff", hash_password(password), "staff", 1),
         )
+        connection.execute(
+            "INSERT INTO users (username,password_hash,role,is_active,failed_login_attempts) VALUES (?,?,?,?,0)",
+            ("operatoros_e2e_checker", hash_password(password), "admin", 1),
+        )
         user_id = connection.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()[0]
         connection.execute(
             "UPDATE first_admin_setup_state SET completed=1,completed_at=CURRENT_TIMESTAMP,created_user_id=?,normalized_username=?,provisioning_source='E2E_FIXTURE' WHERE id=1",

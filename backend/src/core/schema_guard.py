@@ -13,9 +13,9 @@ from core.config import settings
 from core.database import engine, validate_student_linking_gate
 
 
-CURRENT_SCHEMA_VERSION = "20260722_s41"
-PREVIOUS_SCHEMA_VERSION = "20260722_s40"
-LEGACY_SCHEMA_VERSION = "20260722_s39"
+CURRENT_SCHEMA_VERSION = "20260724_s42"
+PREVIOUS_SCHEMA_VERSION = "20260722_s41"
+LEGACY_SCHEMA_VERSION = "20260722_s40"
 LEDGER_TABLE = "operatoros_schema_migrations"
 
 
