@@ -45,18 +45,23 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "cancel_attendance_correction",
     "finalize_attendance_period",
     "reopen_attendance_period",
+    "view_assigned_attendance",
+    "enter_assigned_class_attendance",
+    "request_assigned_attendance_correction",
+    "manage_teacher_class_assignments",
+    "view_all_attendance",
+    "manage_all_attendance",
 })
 
 
 ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
     "admin": STUDENT_CAPABILITIES,
-    # The repository currently has one non-administrative role. Keep it a
-    # deliberately narrow operational reader until institution-specific roles
-    # are introduced through an approved schema migration.
     "staff": frozenset({
         "view_student", "view_progression_preview", "view_attendance",
         "view_attendance_corrections", "request_attendance_correction",
         "cancel_attendance_correction",
+        "view_assigned_attendance", "enter_assigned_class_attendance",
+        "request_assigned_attendance_correction",
     }),
 }
 
