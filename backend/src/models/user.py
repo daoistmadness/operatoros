@@ -26,3 +26,4 @@ class User(Base):
         CheckConstraint("role IN ('admin', 'staff')", name="ck_users_role"),
         CheckConstraint("failed_login_attempts >= 0", name="ck_users_failed_login_attempts"),
     )
+from models.user_session import UserSession  # noqa: F401
