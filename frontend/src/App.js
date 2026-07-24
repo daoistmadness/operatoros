@@ -6,6 +6,7 @@ import UploadCenter from './pages/UploadCenter.tsx';
 import UploadHistory from './pages/UploadHistory';
 import AttendanceReport from './pages/AttendanceReport';
 import AttendanceReview from './pages/AttendanceReview';
+import AttendanceCorrections from './pages/AttendanceCorrections';
 import AbsenceReasons from './pages/AbsenceReasons';
 import HebConfig from './pages/HebConfig';
 import JenjangConfig from './pages/JenjangConfig';
@@ -124,6 +125,7 @@ function App() {
               <Route path="/reports/tardiness" element={<TardinessReport />} />
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
               <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
+              <Route path="/attendance-corrections" element={<RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>} />
               <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
               <Route path="/enrollment" element={<RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>} />
               <Route path="/grades" element={<RequireRole role="admin"><GradeLedger /></RequireRole>} />
