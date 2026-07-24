@@ -25,6 +25,7 @@ from services.attendance_import_preview import (
     commit_attendance_preview,
     create_attendance_preview,
 )
+from services.attendance_corrections import finalize_period
 
 
 HEADERS = [
@@ -210,6 +211,29 @@ def test_commit_is_atomic_idempotent_and_writes_upload_history(preview_db):
     assert db.query(Attendance).count() == 1
     assert db.query(UploadLog).count() == 1
     assert db.query(UploadLog).one().uploaded_by == "admin"
+
+
+def test_import_preview_remains_readable_but_commit_respects_finalized_period(preview_db):
+    db = preview_db
+    add_device_identity(db, 9551, "Finalized Import")
+    batch = create_attendance_preview(
+        db,
+        workbook_bytes([source_row(9551, "Finalized Import")]),
+        "finalized.xlsx",
+        "admin",
+    )
+    row = db.query(AttendanceImportRow).filter_by(batch_id=batch.id).one()
+    finalize_period(db, date(2026, 7, 1), "admin", "Daily register verified")
+    db.commit()
+
+    with pytest.raises(HTTPException) as finalized:
+        commit_attendance_preview(
+            db, batch.id, [row.id], ATTENDANCE_IMPORT_CONFIRMATION, "admin"
+        )
+    assert finalized.value.status_code == 409
+    assert finalized.value.detail["code"] == "ATTENDANCE_PERIOD_FINALIZED"
+    assert db.query(Attendance).count() == 0
+    assert db.get(AttendanceImportBatch, batch.id).status == "preview"
 
 
 def test_commit_detects_stale_preview_and_rolls_back_all_rows(preview_db):

@@ -140,6 +140,8 @@ def _ensure_student_foundation_compatibility() -> None:
                 "student_enrollment_class_history",
                 "student_enrollment_lifecycle_audit",
                 "student_progression_audit",
+                "attendance_correction_audit",
+                "attendance_period_audit",
             )
             if table_name in tables
         ]

@@ -22,6 +22,7 @@ export const NAV_GROUPS = [
     id: 'workflows', title: 'Daily Workflows',
     items: [
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
+      { name: 'Attendance Corrections', path: '/attendance-corrections', icon: ShieldCheck, capability: 'view_attendance_corrections' },
       { name: 'Students', path: '/students', icon: UsersIcon, capability: 'view_student', nested: true, exclude: ['/students/operations'] },
       { name: 'Data Import Center', path: '/upload', icon: UploadCloud, role: 'admin' },
       { name: 'Import History', path: '/upload-history', icon: History, role: 'admin' },

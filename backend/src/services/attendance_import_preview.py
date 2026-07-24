@@ -13,6 +13,7 @@ from models.student import Student
 from models.student_master import StudentDeviceIdentity
 from models.upload_log import UploadLog
 from services.attendance_metrics import derive_jenjang_from_class_name
+from services.attendance_corrections import ensure_period_open
 from services.excel_parser import (
     REQUIRED_COLUMNS,
     _build_chunk_entries,
@@ -363,6 +364,7 @@ def commit_attendance_preview(
                 .filter(Attendance.student_id == student.id, Attendance.date == row.attendance_date)
                 .first()
             )
+            ensure_period_open(db, row.attendance_date)
             current_payload = _attendance_payload(existing) if existing else None
             if current_payload != row.existing_record:
                 raise HTTPException(status_code=409, detail=f"Attendance changed after preview row {row.id}")
