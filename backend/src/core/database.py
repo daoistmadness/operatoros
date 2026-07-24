@@ -142,6 +142,7 @@ def _ensure_student_foundation_compatibility() -> None:
                 "student_progression_audit",
                 "attendance_correction_audit",
                 "attendance_period_audit",
+                "teacher_class_assignment_audit",
             )
             if table_name in tables
         ]
@@ -430,6 +431,7 @@ def init_db():
     from models.backup_operation import BackupExecutionHistory, BackupSchedulerConfig
     from models.first_admin_setup import FirstAdminSetupState
     from models.academic_master import AcademicClass, AcademicGrade, AcademicMasterAudit, AcademicMasterImportPreview, AcademicProgram
+    from models.teacher_class_assignment import TeacherClassAssignment, TeacherClassAssignmentAudit
     # Identity tables are migration-owned even when their ORM models were imported.
     startup_tables = [
         table for table in Base.metadata.sorted_tables if table.name not in {"users", "sessions"}

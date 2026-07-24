@@ -14,7 +14,7 @@ import SidebarNav, {
 vi.mock('../lib/api/client', () => ({ getServerStatus: vi.fn().mockResolvedValue({ status: 'ok' }) }));
 
 const users = {
-  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'manage_enrollment'] },
+  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'manage_enrollment', 'enter_assigned_class_attendance'] },
   staff: { id: 2, username: 'staff', role: 'staff', capabilities: ['view_student'] },
 };
 
@@ -60,7 +60,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete admin inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(19);
+    expect(container.querySelectorAll('nav a')).toHaveLength(21);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
