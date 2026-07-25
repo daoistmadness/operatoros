@@ -25,6 +25,7 @@ export const NAV_GROUPS = [
       { name: 'Kepulangan Awal Kelas', path: '/attendance/class-departures', icon: Clock3, capability: 'view_early_departure' },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: ShieldCheck, capability: 'view_attendance_corrections' },
+      { name: 'Follow-Up Queue', path: '/attendance/followups', icon: ShieldCheck, capability: 'view_attendance_followups' },
       { name: 'Students', path: '/students', icon: UsersIcon, capability: 'view_student', nested: true, exclude: ['/students/operations'] },
       { name: 'Data Import Center', path: '/upload', icon: UploadCloud, role: 'admin' },
       { name: 'Import History', path: '/upload-history', icon: History, role: 'admin' },
