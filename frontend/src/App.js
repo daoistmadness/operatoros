@@ -7,6 +7,7 @@ import UploadHistory from './pages/UploadHistory';
 import AttendanceReport from './pages/AttendanceReport';
 import AttendanceReview from './pages/AttendanceReview';
 import AttendanceCorrections from './pages/AttendanceCorrections';
+import AttendanceFollowUpQueue from './pages/AttendanceFollowUpQueue';
 import AbsenceReasons from './pages/AbsenceReasons';
 import HebConfig from './pages/HebConfig';
 import JenjangConfig from './pages/JenjangConfig';
@@ -130,6 +131,7 @@ function App() {
               <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
               <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
               <Route path="/attendance-corrections" element={<RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>} />
+              <Route path="/attendance/followups" element={<RequireCapability capability="view_attendance_followups"><AttendanceFollowUpQueue /></RequireCapability>} />
               <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
               <Route path="/teacher-class-assignments" element={<RequireRole role="admin"><TeacherClassAssignments /></RequireRole>} />
               <Route path="/attendance/class-entry" element={<RequireCapability capability="enter_assigned_class_attendance"><ClassAttendanceEntry /></RequireCapability>} />
