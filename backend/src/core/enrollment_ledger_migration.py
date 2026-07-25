@@ -54,6 +54,9 @@ def migrate_enrollment_ledger_sqlite(path: Path) -> str:
     shutil.copy2(target, temporary)
     try:
         with sqlite3.connect(temporary) as connection:
+            se_cols = {row[1] for row in connection.execute("PRAGMA table_info(student_enrollments)")}
+            if "academic_class_id" not in se_cols:
+                connection.execute("ALTER TABLE student_enrollments ADD COLUMN academic_class_id INTEGER NULL REFERENCES academic_classes(id) ON DELETE RESTRICT")
             connection.executescript(SQLITE_MIGRATION.read_text(encoding="utf-8"))
             after_counts = {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in before_counts}
             if after_counts != before_counts:
