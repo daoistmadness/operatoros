@@ -56,6 +56,14 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "record_early_departure_excuse",
     "revoke_early_departure_excuse",
     "view_early_departure_audit",
+    "view_attendance_followups",
+    "create_attendance_followup",
+    "assign_attendance_followup",
+    "update_attendance_followup",
+    "resolve_attendance_followup",
+    "reopen_attendance_followup",
+    "view_attendance_followup_audit",
+    "manage_all_attendance_followups",
 })
 
 
@@ -68,6 +76,10 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
         "view_assigned_attendance", "enter_assigned_class_attendance",
         "request_assigned_attendance_correction",
         "view_early_departure", "record_early_departure_excuse",
+        "view_attendance_followups", "create_attendance_followup",
+        "assign_attendance_followup", "update_attendance_followup",
+        "resolve_attendance_followup", "reopen_attendance_followup",
+        "view_attendance_followup_audit",
     }),
 }
 
