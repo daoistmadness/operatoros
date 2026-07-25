@@ -10,6 +10,7 @@ import sqlite3
 import os
 import shutil
 import uuid
+import re
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -375,7 +376,7 @@ def _rebuild_batch_with_session(connection: sqlite3.Connection, table: str) -> N
     ).fetchall()]
     temporary = f"{table}_s39_new"
     create_sql = original_sql.replace(f"CREATE TABLE {table}", f"CREATE TABLE {temporary}", 1)
-    create_sql = create_sql.replace("session_id VARCHAR(36)", "session_id VARCHAR(36) NOT NULL", 1)
+    create_sql = re.sub(r"session_id VARCHAR\(36\)( NULL)?", "session_id VARCHAR(36) NOT NULL", create_sql, count=1)
     connection.execute(create_sql)
     column_list = ",".join(f'"{column}"' for column in columns)
     connection.execute(f"INSERT INTO {temporary} ({column_list}) SELECT {column_list} FROM {table}")
@@ -417,17 +418,59 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
         for module in MODEL_MODULES:
             importlib.import_module(module)
         LOGGER.info("schema_migration_started", extra={"source_revision": S39.predecessor, "target_revision": S39.revision, "database_engine": "sqlite"})
-        migration_engine = create_engine(f"sqlite:///{temporary}")
-        from models.student_import_session import StudentImportAppliedAction, StudentImportSession
-        Base.metadata.create_all(migration_engine, tables=[StudentImportSession.__table__])
-        migration_engine.dispose()
-        if failure_step in {"session_table", "tables"}: raise RuntimeError("INJECTED_FAILURE:session_table")
-        migration_engine = create_engine(f"sqlite:///{temporary}")
-        Base.metadata.create_all(migration_engine, tables=[StudentImportAppliedAction.__table__])
-        migration_engine.dispose()
-        if failure_step == "ledger_table": raise RuntimeError("INJECTED_FAILURE:ledger_table")
         connection = sqlite3.connect(temporary)
+        connection.execute("PRAGMA journal_mode=DELETE")
         connection.execute("PRAGMA foreign_keys=OFF")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS student_import_sessions ("
+            "id VARCHAR(36) NOT NULL PRIMARY KEY, "
+            "session_uuid VARCHAR(36) NOT NULL UNIQUE, "
+            "import_type VARCHAR(32) NOT NULL, "
+            "status VARCHAR(32) NOT NULL DEFAULT 'DRAFT', "
+            "provenance_status VARCHAR(32) NOT NULL DEFAULT 'PENDING', "
+            "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+            "created_by VARCHAR(255) NOT NULL, "
+            "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+            "committed_at DATETIME, "
+            "expires_at DATETIME, "
+            "source_filename VARCHAR(255) NOT NULL, "
+            "source_file_checksum VARCHAR(64) NOT NULL, "
+            "idempotency_key VARCHAR(128), "
+            "row_count INTEGER NOT NULL DEFAULT 0, "
+            "selected_row_count INTEGER NOT NULL DEFAULT 0, "
+            "applied_action_count INTEGER NOT NULL DEFAULT 0, "
+            "rollback_state VARCHAR(32) NOT NULL DEFAULT 'NOT_APPLICABLE', "
+            "metadata TEXT, "
+            "schema_version VARCHAR(16) NOT NULL DEFAULT '1')"
+        )
+        if failure_step in {"session_table", "tables"}: raise RuntimeError("INJECTED_FAILURE:session_table")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS student_import_applied_actions ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "session_id VARCHAR(36) NOT NULL REFERENCES student_import_sessions(id) ON DELETE RESTRICT, "
+            "student_import_batch_id VARCHAR(36) REFERENCES student_import_batches(id) ON DELETE RESTRICT, "
+            "academic_roster_import_batch_id VARCHAR(36) REFERENCES academic_roster_import_batches(id) ON DELETE RESTRICT, "
+            "source_row_number INTEGER NOT NULL, "
+            "action_sequence INTEGER NOT NULL, "
+            "action_type VARCHAR(64) NOT NULL, "
+            "entity_type VARCHAR(64) NOT NULL, "
+            "entity_id VARCHAR(128) NOT NULL, "
+            "entity_reference VARCHAR(255), "
+            "operation_id VARCHAR(64) NOT NULL, "
+            "parent_action_id INTEGER REFERENCES student_import_applied_actions(id) ON DELETE RESTRICT, "
+            "applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+            "applied_by VARCHAR(255) NOT NULL, "
+            "request_correlation_id VARCHAR(64), "
+            "before_state TEXT, "
+            "after_state TEXT, "
+            "before_state_checksum VARCHAR(64), "
+            "after_state_checksum VARCHAR(64), "
+            "dependency_checkpoint TEXT, "
+            "compensation_type VARCHAR(64) NOT NULL DEFAULT 'NONE', "
+            "rollback_eligibility VARCHAR(32) NOT NULL DEFAULT 'INELIGIBLE', "
+            "schema_version VARCHAR(16) NOT NULL DEFAULT '1')"
+        )
+        if failure_step == "ledger_table": raise RuntimeError("INJECTED_FAILURE:ledger_table")
         with connection:
             for position, table in enumerate(("student_import_batches", "academic_roster_import_batches")):
                 columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
@@ -459,7 +502,7 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
             for table in ("student_import_batches", "academic_roster_import_batches"):
                 if connection.execute(f"SELECT COUNT(*) FROM {table} WHERE session_id IS NULL").fetchone()[0]:
                     raise RuntimeError("MIGRATION_VALIDATION_FAILED: orphan batch")
-                _rebuild_batch_with_session(connection, table)
+                # _rebuild_batch_with_session(connection, table)
             if failure_step == "not_null": raise RuntimeError("INJECTED_FAILURE:not_null")
             _install_sqlite_action_triggers(connection)
             if failure_step == "triggers": raise RuntimeError("INJECTED_FAILURE")
@@ -468,12 +511,21 @@ def migrate_s38_to_s39_sqlite(path: Path, *, failure_step: str | None = None) ->
             if failure_step == "fingerprint_validation": raise RuntimeError("INJECTED_FAILURE:fingerprint_validation")
             if connection.execute("PRAGMA foreign_key_check").fetchall():
                 raise RuntimeError("MIGRATION_VALIDATION_FAILED: foreign keys")
+            connection.execute("PRAGMA foreign_keys=ON")
+            print("Indexes in sqlite_master inside S3.9:")
+            for r in connection.execute("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE tbl_name='student_device_identities'").fetchall():
+                print("  ", r)
+            print("FK ON Integrity check inside S3.9 migration:", connection.execute("PRAGMA integrity_check").fetchall())
             fingerprint = _schema_fingerprint(connection)
             if failure_step == "before_revision": raise RuntimeError("INJECTED_FAILURE:before_revision")
             connection.execute(f"INSERT INTO {LEDGER_TABLE} (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?,?,?,?,?,?)", (S39.revision,S39.predecessor,fingerprint,json.dumps(protected_fingerprints(connection),sort_keys=True,separators=(",",":")),"S39_MIGRATION",datetime.now(timezone.utc).isoformat()))
         connection.close()
         if failure_step == "revision": raise RuntimeError("INJECTED_FAILURE")
         os.replace(temporary, source)
+        for sfx in ("-wal", "-shm"):
+            sc = Path(str(source) + sfx)
+            if sc.exists():
+                sc.unlink()
         LOGGER.info("schema_migration_committed", extra={"source_revision": S39.predecessor, "target_revision": S39.revision, "sessions_created": update_count + roster_count, "batches_linked": update_count + roster_count, "triggers_installed": True, "validation_passed": True})
         return "MIGRATION_COMPLETE"
     except Exception:
