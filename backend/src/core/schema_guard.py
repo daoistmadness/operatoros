@@ -45,7 +45,7 @@ def resolve_existing_sqlite_path(database_url: str) -> Path:
 
 def _validate_sqlite_file(path: Path) -> None:
     try:
-        connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+        connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro&immutable=1", uri=True)
     except sqlite3.Error as exc:
         raise DatabaseStartupError("DATABASE_ACCESS_FAILED") from exc
     try:
