@@ -311,7 +311,12 @@ def _apply_payload(attendance: Attendance, payload: dict) -> None:
 
 
 def commit_attendance_preview(
-    db: Session, batch_id: str, selected_row_ids: list[int], confirmation: str, username: str
+    db: Session,
+    batch_id: str,
+    selected_row_ids: list[int],
+    confirmation: str,
+    username: str,
+    preview_checksum: str | None = None,
 ) -> dict:
     if confirmation != ATTENDANCE_IMPORT_CONFIRMATION:
         raise HTTPException(status_code=400, detail="Invalid confirmation token")
@@ -322,6 +327,14 @@ def commit_attendance_preview(
         return batch.commit_result or {"status": "committed", "idempotent": True}
     if batch.status != "preview":
         raise HTTPException(status_code=409, detail="Attendance import preview is not committable")
+    if preview_checksum is not None and preview_checksum != batch.checksum:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "ATTENDANCE_PREVIEW_SOURCE_MISMATCH",
+                "message": "The attendance preview no longer matches the source workbook.",
+            },
+        )
     unique_ids = list(dict.fromkeys(selected_row_ids))
     rows = (
         db.query(AttendanceImportRow)

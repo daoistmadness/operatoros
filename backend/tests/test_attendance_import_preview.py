@@ -197,6 +197,32 @@ def test_commit_requires_token_and_rejects_conflicts_without_partial_mutation(pr
     assert db.get(AttendanceImportBatch, batch.id).status == "preview"
 
 
+def test_commit_rejects_source_checksum_mismatch(preview_db):
+    db = preview_db
+    add_device_identity(db, 9410, "Checksum Student")
+    batch = create_attendance_preview(
+        db,
+        workbook_bytes([source_row(9410, "Checksum Student")]),
+        "checksum.xlsx",
+        "admin",
+    )
+    row = db.query(AttendanceImportRow).filter_by(batch_id=batch.id).one()
+
+    with pytest.raises(HTTPException) as exc_info:
+        commit_attendance_preview(
+            db,
+            batch.id,
+            [row.id],
+            ATTENDANCE_IMPORT_CONFIRMATION,
+            "admin",
+            "0" * 64,
+        )
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["code"] == "ATTENDANCE_PREVIEW_SOURCE_MISMATCH"
+    assert db.query(Attendance).filter_by(student_id=9410).count() == 0
+
+
 def test_commit_is_atomic_idempotent_and_writes_upload_history(preview_db):
     db = preview_db
     add_device_identity(db, 9501, "Committed")
