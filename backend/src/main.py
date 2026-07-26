@@ -31,6 +31,7 @@ from api.teacher_class_assignments import router as teacher_class_assignments_ro
 from api.scoped_attendance import router as scoped_attendance_router
 from api.early_departure import router as early_departure_router
 from api.attendance_followups import router as attendance_followups_router
+from api.operator_work_queue import router as operator_work_queue_router
 from api.readiness import router as readiness_router
 from core.database import init_db
 from core.schema_guard import validate_database_startup
@@ -93,6 +94,7 @@ app.include_router(teacher_class_assignments_router, prefix="/api/teacher-class-
 app.include_router(scoped_attendance_router, prefix="/api/attendance", tags=["scoped-attendance"])
 app.include_router(early_departure_router, tags=["early-departure"])
 app.include_router(attendance_followups_router)
+app.include_router(operator_work_queue_router, prefix="/api/operator", tags=["operator-work-queue"])
 app.include_router(grades_router, prefix="/api/grades", tags=["grades"])
 app.include_router(academic_config_router, prefix="/api/academic-config", tags=["academic-config"])
 app.include_router(academic_interventions_router, prefix="/api/academic-interventions", tags=["academic-interventions"])
