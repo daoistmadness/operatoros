@@ -39,10 +39,28 @@ REQUIRED_SESSION_COLUMNS = {"id", "user_id", "token_hash", "created_at", "last_u
 
 
 class RestoreError(BackupError):
-    def __init__(self, message: str, *, status_code: int = 400, reason: str = "restore_invalid"):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int = 400,
+        reason: str = "restore_invalid",
+        operation_status: str = "FAILED",
+        rollback_attempted: bool = False,
+        rollback_succeeded: bool | None = None,
+        active_data_restored: bool | None = None,
+        safety_backup_filename: str | None = None,
+        support_reference: str | None = None,
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.reason = reason
+        self.operation_status = operation_status
+        self.rollback_attempted = rollback_attempted
+        self.rollback_succeeded = rollback_succeeded
+        self.active_data_restored = active_data_restored
+        self.safety_backup_filename = safety_backup_filename
+        self.support_reference = support_reference
 
 
 def _now_text() -> str:
@@ -312,17 +330,36 @@ def restore_backup(
             return result
         except Exception as exc:
             engine.dispose()
+            rollback_attempted = replaced
+            rollback_succeeded: bool | None = None
+            active_data_restored: bool | None = None
             if replaced and rollback.exists():
-                live_path.unlink(missing_ok=True)
-                _replace_with_retry(rollback, live_path)
-                _remove_sidecars(live_path)
-                engine.dispose()
-                validate_backup(live_path, current_tables)
-                append_restore_audit(target_dir, _audit_entry(filename, "restore_rolled_back", "rollback_succeeded", snapshot_name, False, actor, request_context))
+                try:
+                    live_path.unlink(missing_ok=True)
+                    _replace_with_retry(rollback, live_path)
+                    _remove_sidecars(live_path)
+                    engine.dispose()
+                    validate_backup(live_path, current_tables)
+                    rollback_succeeded = True
+                    active_data_restored = True
+                    append_restore_audit(target_dir, _audit_entry(filename, "restore_rolled_back", "rollback_succeeded", snapshot_name, False, actor, request_context))
+                except Exception:
+                    rollback_succeeded = False
+                    active_data_restored = False
             reason = str(exc) if isinstance(exc, (BackupError, RestoreError)) else "Restore failed during isolated replacement."
             category = exc.reason if isinstance(exc, RestoreError) else "replacement_failed"
             append_restore_audit(target_dir, _audit_entry(filename, "restore_failed", category, snapshot_name, False, actor, request_context))
-            raise RestoreError(reason, status_code=500) from exc
+            raise RestoreError(
+                reason,
+                status_code=500,
+                reason=category,
+                operation_status="ROLLED_BACK" if rollback_succeeded else "FAILED",
+                rollback_attempted=rollback_attempted,
+                rollback_succeeded=rollback_succeeded,
+                active_data_restored=active_data_restored,
+                safety_backup_filename=snapshot_name,
+                support_reference=(request_context or {}).get("operation_id"),
+            ) from exc
         finally:
             candidate.unlink(missing_ok=True)
             rollback.unlink(missing_ok=True)
