@@ -67,6 +67,9 @@ def _client(module, username=None, password=None):
         ("get", "/api/admin/backups/status"),
         ("get", "/api/admin/backups"),
         ("post", "/api/admin/backups"),
+        ("get", "/api/admin/backups/history"),
+        ("get", "/api/admin/backups/recovery-history"),
+        ("post", "/api/admin/backups/backup_2026-01-01T00-00-00Z.sqlite3/restore-preflight"),
     ],
 )
 def test_anonymous_backup_management_is_rejected(authorization_app, method, path):
@@ -84,6 +87,9 @@ def test_anonymous_backup_management_is_rejected(authorization_app, method, path
         ("get", "/api/admin/backups/status"),
         ("get", "/api/admin/backups"),
         ("post", "/api/admin/backups"),
+        ("get", "/api/admin/backups/history"),
+        ("get", "/api/admin/backups/recovery-history"),
+        ("post", "/api/admin/backups/backup_2026-01-01T00-00-00Z.sqlite3/restore-preflight"),
     ],
 )
 def test_staff_backup_management_is_forbidden_and_audited(authorization_app, method, path):
