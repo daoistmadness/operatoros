@@ -875,10 +875,11 @@ def get_absence_reasons_summary(
 
 
 @router.get("/deployment-mode")
-def get_deployment_mode():
+def get_deployment_mode(
+    _user: User = Depends(get_current_user),
+):
     from core.config import settings
     return {
         "deployment_mode": settings.resolved_deployment_mode,
-        "is_single_user": settings.resolved_deployment_mode == "single_user_offline",
     }
 
