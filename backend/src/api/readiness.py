@@ -26,7 +26,6 @@ class ReadinessStepResponse(BaseModel):
 class ReadinessResponse(BaseModel):
     overall_status: str
     steps: list[ReadinessStepResponse]
-    deployment_mode: str = "single_user_offline"
 
 
 @router.get("", response_model=ReadinessResponse)
@@ -34,13 +33,11 @@ def get_readiness(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    from core.config import settings
     try:
         overall, steps = build_setup_readiness(db, role=user.role)
         return ReadinessResponse(
             overall_status=overall,
             steps=[ReadinessStepResponse(**step.__dict__) for step in steps],
-            deployment_mode=settings.resolved_deployment_mode,
         )
     except SQLAlchemyError as exc:
         raise_internal_error("Setup readiness could not be checked. Retry or contact the system administrator.", exc)
