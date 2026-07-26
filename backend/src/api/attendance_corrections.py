@@ -58,6 +58,13 @@ class ReopenRequest(FinalizeRequest):
     expected_version: int = Field(gt=0)
 
 
+class SelfConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_version: int = Field(gt=0)
+    confirmation: str
+    confirmation_note: str = Field(min_length=3, max_length=1000)
+
+
 def serialize_request(db, row):
     return {
         "id": row.id, "attendance_id": row.attendance_id, "original_snapshot": row.original_snapshot,
@@ -168,6 +175,72 @@ def approve_request(request_id: int, body: Confirmation, db: Session = Depends(g
     prior = row.state; row.state = "APPROVED"; row.active_key = None; row.approver = user.username
     row.decided_at = datetime.utcnow(); row.resulting_override_id = override.id; row.version += 1
     append_correction_audit(db, row, "APPROVE", prior, user.username)
+    db.commit()
+    return serialize_request(db, row)
+
+
+@router.post("/{request_id:int}/self-confirm")
+def self_confirm_request(
+    request_id: int,
+    body: SelfConfirmRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_capability("approve_attendance_correction")),
+):
+    from core.config import settings
+    if settings.resolved_deployment_mode != "single_user_offline":
+        raise safe_error(403, "CORRECTION_SELF_CONFIRMATION_DISABLED", "Self-confirmation is disabled in multi-user deployment mode.")
+
+    if body.confirmation != "CONFIRM_CORRECTION":
+        raise safe_error(400, "CORRECTION_CONFIRMATION_REQUIRED", "Exact confirmation phrase is required.")
+
+    note_clean = body.confirmation_note.strip()
+    if len(note_clean) < 3:
+        raise safe_error(400, "CORRECTION_CONFIRMATION_NOTE_REQUIRED", "Confirmation note is required.")
+
+    row = db.query(AttendanceCorrectionRequest).filter(
+        AttendanceCorrectionRequest.id == request_id
+    ).with_for_update().one_or_none()
+
+    if row is None:
+        raise safe_error(404, "ATTENDANCE_CORRECTION_NOT_FOUND", "Correction request was not found.")
+
+    if row.version != body.expected_version:
+        raise safe_error(409, "CORRECTION_STALE_VERSION", "Correction request version has changed.")
+
+    if row.state not in ("SUBMITTED", "DRAFT"):
+        raise safe_error(409, "CORRECTION_NOT_CONFIRMABLE", "Correction request is not in a confirmable state.")
+
+    attendance = db.query(Attendance).filter(
+        Attendance.id == row.attendance_id
+    ).with_for_update().one_or_none()
+
+    if attendance is None:
+        raise safe_error(404, "ATTENDANCE_NOT_FOUND", "Associated attendance record was not found.")
+
+    period = db.query(AttendancePeriod).filter_by(attendance_date=attendance.date).first()
+    if period and period.status == "FINALIZED" and user.role != "admin":
+        raise safe_error(409, "CORRECTION_PERIOD_FINALIZED", "Attendance period is finalized.")
+
+    current = effective_snapshot(db, attendance)
+    if fingerprint(current) != row.original_fingerprint:
+        prior = row.state; row.state = "STALE"; row.active_key = None; row.version += 1
+        append_correction_audit(db, row, "MARK_STALE", prior, user.username, "Effective attendance changed after submission")
+        db.commit()
+        raise safe_error(409, "CORRECTION_STALE_VERSION", "Attendance changed after the request was created.")
+
+    override = apply_approved_override(
+        db, attendance, status=row.proposed_status, check_in=row.proposed_check_in,
+        check_out=row.proposed_check_out, note=f"{row.explanation}\n\n[Self-Confirmed]: {note_clean}", actor=user.username,
+    )
+    prior = row.state
+    row.state = "APPROVED"
+    row.active_key = None
+    row.approver = user.username
+    row.decided_at = datetime.utcnow()
+    row.resulting_override_id = override.id
+    row.version += 1
+
+    append_correction_audit(db, row, "SELF_CONFIRM", prior, user.username, f"single_user_self_confirmation=true; note={note_clean}")
     db.commit()
     return serialize_request(db, row)
 

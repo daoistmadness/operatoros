@@ -29,9 +29,11 @@ import TeacherClassAssignments from './pages/TeacherClassAssignments.tsx';
 import ClassAttendanceEntry from './pages/ClassAttendanceEntry.tsx';
 import { DismissalPolicies } from './pages/DismissalPolicies.tsx';
 import { ClassEarlyDeparture } from './pages/ClassEarlyDeparture.tsx';
+import OperatorWorkQueue from './pages/OperatorWorkQueue';
 import SidebarNav from './components/SidebarNav';
 import Login from './pages/Login.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { DeploymentModeProvider } from './context/DeploymentModeContext';
 import { RequireAuth, RequireCapability, RequireRole } from './components/auth/RouteGuards.tsx';
 import { SetupBoundary } from './components/auth/SetupBoundary.tsx';
 
@@ -113,45 +115,48 @@ function App() {
     <Router>
       <SetupBoundary>
         <AuthProvider>
-          <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route element={<RequireAuth />}>
-            <Route element={<AppShell />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/upload" element={<RequireRole role="admin"><UploadCenter /></RequireRole>} />
-              <Route path="/upload-history" element={<RequireRole role="admin"><UploadHistory /></RequireRole>} />
-              <Route path="/mapping" element={<Navigate to="/enrollment" replace />} />
-              <Route path="/analytics" element={<ManagementAnalytics />} />
-              <Route path="/reports" element={<Navigate to="/reports/monthly" replace />} />
-              <Route path="/reports/monthly" element={<ExecutiveReports reportType="monthly" />} />
-              <Route path="/reports/annual" element={<ExecutiveReports reportType="annual" />} />
-              <Route path="/reports/management/monthly" element={<MonthlyManagementReport />} />
-              <Route path="/reports/attendance" element={<AttendanceReport />} />
-              <Route path="/reports/tardiness" element={<TardinessReport />} />
-              <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
-              <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
-              <Route path="/attendance-corrections" element={<RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>} />
-              <Route path="/attendance/followups" element={<RequireCapability capability="view_attendance_followups"><AttendanceFollowUpQueue /></RequireCapability>} />
-              <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
-              <Route path="/teacher-class-assignments" element={<RequireRole role="admin"><TeacherClassAssignments /></RequireRole>} />
-              <Route path="/attendance/class-entry" element={<RequireCapability capability="enter_assigned_class_attendance"><ClassAttendanceEntry /></RequireCapability>} />
-              <Route path="/attendance/departure-policies" element={<RequireRole role="admin"><DismissalPolicies /></RequireRole>} />
-              <Route path="/attendance/class-departures" element={<RequireCapability capability="view_early_departure"><ClassEarlyDeparture /></RequireCapability>} />
-              <Route path="/enrollment" element={<RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>} />
-              <Route path="/grades" element={<RequireRole role="admin"><GradeLedger /></RequireRole>} />
-              <Route path="/config/jenjang" element={<JenjangConfig />} />
-              <Route path="/config/heb" element={<RequireRole role="admin"><HebConfig /></RequireRole>} />
-              <Route path="/config/absence-reasons" element={<RequireRole role="admin"><AbsenceReasons /></RequireRole>} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/settings/backups" element={<RequireRole role="admin"><BackupManagement /></RequireRole>} />
-              <Route path="/students" element={<RequireCapability capability="view_student"><StudentManagement /></RequireCapability>} />
-              <Route path="/students/operations" element={<RequireCapability capability="view_student_audit"><OperationsAudit /></RequireCapability>} />
-              <Route path="/students/:id" element={<RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>} />
-              <Route path="/attendance/students/:id" element={<RequireCapability capability="view_student"><StudentProfile /></RequireCapability>} />
-              <Route path="*" element={<div role="alert" className="mx-auto mt-16 max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center"><h1 className="text-2xl font-black text-slate-900">Page not found</h1><p className="mt-2 text-sm font-semibold text-slate-500">The requested route does not exist.</p></div>} />
-            </Route>
-          </Route>
-          </Routes>
+          <DeploymentModeProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route element={<RequireAuth />}>
+                <Route element={<AppShell />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/operator/work-queue" element={<RequireCapability capability="view_attendance_followups"><OperatorWorkQueue /></RequireCapability>} />
+                  <Route path="/upload" element={<RequireRole role="admin"><UploadCenter /></RequireRole>} />
+                  <Route path="/upload-history" element={<RequireRole role="admin"><UploadHistory /></RequireRole>} />
+                  <Route path="/mapping" element={<Navigate to="/enrollment" replace />} />
+                  <Route path="/analytics" element={<ManagementAnalytics />} />
+                  <Route path="/reports" element={<Navigate to="/reports/monthly" replace />} />
+                  <Route path="/reports/monthly" element={<ExecutiveReports reportType="monthly" />} />
+                  <Route path="/reports/annual" element={<ExecutiveReports reportType="annual" />} />
+                  <Route path="/reports/management/monthly" element={<MonthlyManagementReport />} />
+                  <Route path="/reports/attendance" element={<AttendanceReport />} />
+                  <Route path="/reports/tardiness" element={<TardinessReport />} />
+                  <Route path="/reports/rekap-absensi" element={<RekapAbsensi />} />
+                  <Route path="/attendance-review" element={<RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>} />
+                  <Route path="/attendance-corrections" element={<RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>} />
+                  <Route path="/attendance/followups" element={<RequireCapability capability="view_attendance_followups"><AttendanceFollowUpQueue /></RequireCapability>} />
+                  <Route path="/academic-management" element={<RequireRole role="admin"><AcademicManagement /></RequireRole>} />
+                  <Route path="/teacher-class-assignments" element={<RequireRole role="admin"><TeacherClassAssignments /></RequireRole>} />
+                  <Route path="/attendance/class-entry" element={<RequireCapability capability="enter_assigned_class_attendance"><ClassAttendanceEntry /></RequireCapability>} />
+                  <Route path="/attendance/departure-policies" element={<RequireRole role="admin"><DismissalPolicies /></RequireRole>} />
+                  <Route path="/attendance/class-departures" element={<RequireCapability capability="view_early_departure"><ClassEarlyDeparture /></RequireCapability>} />
+                  <Route path="/enrollment" element={<RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>} />
+                  <Route path="/grades" element={<RequireRole role="admin"><GradeLedger /></RequireRole>} />
+                  <Route path="/config/jenjang" element={<JenjangConfig />} />
+                  <Route path="/config/heb" element={<RequireRole role="admin"><HebConfig /></RequireRole>} />
+                  <Route path="/config/absence-reasons" element={<RequireRole role="admin"><AbsenceReasons /></RequireRole>} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/backups" element={<RequireRole role="admin"><BackupManagement /></RequireRole>} />
+                  <Route path="/students" element={<RequireCapability capability="view_student"><StudentManagement /></RequireCapability>} />
+                  <Route path="/students/operations" element={<RequireCapability capability="view_student_audit"><OperationsAudit /></RequireCapability>} />
+                  <Route path="/students/:id" element={<RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>} />
+                  <Route path="/attendance/students/:id" element={<RequireCapability capability="view_student"><StudentProfile /></RequireCapability>} />
+                  <Route path="*" element={<div role="alert" className="mx-auto mt-16 max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center"><h1 className="text-2xl font-black text-slate-900">Page not found</h1><p className="mt-2 text-sm font-semibold text-slate-500">The requested route does not exist.</p></div>} />
+                </Route>
+              </Route>
+            </Routes>
+          </DeploymentModeProvider>
         </AuthProvider>
       </SetupBoundary>
     </Router>
