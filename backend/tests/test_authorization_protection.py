@@ -278,17 +278,30 @@ def test_restore_authorization_and_phase6_safety_chain(authorization_app):
 
     admin = _client(module, "admin", "admin authorization pass")
     created = admin.post("/api/admin/backups").json()["filename"]
+    payload = {
+        "current_password": "admin authorization pass",
+        "confirmation_filename": created,
+        "confirmation_phrase": "RESTORE_DATABASE",
+        "acknowledge_complete_replacement": True,
+        "acknowledge_session_revocation": True,
+        "acknowledge_restart_required": True,
+        "acknowledge_safety_backup": True,
+        "expected_source_sha256": "0" * 64,
+        "expected_active_sha256": "0" * 64,
+    }
     disabled = admin.post(
-        f"/api/admin/backups/{created}/restore", json={"confirmation": created}
+        f"/api/admin/backups/{created}/restore", json=payload
     )
-    assert disabled.status_code == 403 and disabled.json()["detail"] == "Destructive operations are disabled."
+    assert disabled.status_code == 403
+    assert disabled.json()["detail"]["message"] == "Destructive operations are disabled."
 
     module.settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
     typed_confirmation = admin.post(
-        f"/api/admin/backups/{created}/restore", json={"confirmation": "wrong"}
+        f"/api/admin/backups/{created}/restore",
+        json={**payload, "confirmation_filename": "wrong"},
     )
     assert typed_confirmation.status_code == 400
-    assert "exactly match" in typed_confirmation.json()["detail"]
+    assert typed_confirmation.json()["detail"]["code"] == "RESTORE_CONFIRMATION_FILENAME_MISMATCH"
     admin.close()
 
 
