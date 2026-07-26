@@ -12,12 +12,15 @@ vi.mock("../api/students", () => ({
 vi.mock("../api", () => ({ default: { post: vi.fn() } }));
 
 describe("Data Import Center", () => {
-  it("presents three unambiguous import types and preserves attendance guidance", () => {
+  it("presents distinct import modes and preview safety guidance", () => {
     const html = renderToStaticMarkup(<QueryClientProvider client={createTestQueryClient()}><MemoryRouter><UploadCenter /></MemoryRouter></QueryClientProvider>);
     expect(html).toContain("Data Import Center");
-    expect(html).toContain("Attendance Data");
-    expect(html).toContain("Student Roster");
+    expect(html).toContain("Attendance Upload");
+    expect(html).toContain("Student Roster Upload");
     expect(html).toContain("Student Data Update");
-    expect(html).toContain("Import Attendance Data");
+    expect(html).toContain("Preview does not update the database");
+    expect(html).toContain("Choose file");
+    expect(html).toContain("Resolve issues");
+    expect(html).toContain("Device IDs must already be linked to active students");
   });
 });

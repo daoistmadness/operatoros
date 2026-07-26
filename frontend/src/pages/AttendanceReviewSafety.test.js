@@ -27,10 +27,11 @@ describe("attendance import UI safety contract", () => {
     expect(source).not.toContain('"/api/uploads/upload"');
   });
 
-  it("exposes unresolved identities and blocks duplicate submission", () => {
-    expect(source).toContain("Unmatched device identities");
-    expect(source).toContain("!COMMITTABLE.has(row.classification)");
-    expect(source).toContain("if (!preview || selected.length === 0 || busy) return");
-    expect(source).toContain("disabled={busy || selected.length === 0}");
+  it("exposes unresolved rows and commits only safe selected IDs", () => {
+    expect(source).toContain("blocked row(s) cannot be selected");
+    expect(source).toContain("safeSelectedIds");
+    expect(source).toContain("if (!preview || safeSelected.length === 0 || busy) return");
+    expect(source).toContain("disabled={busy || !safeSelected.length}");
+    expect(source).toContain("preview_checksum: previewChecksum");
   });
 });
