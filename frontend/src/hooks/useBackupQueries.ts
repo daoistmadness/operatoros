@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBackup, getBackupScheduler, listBackupHistory, getBackupStatus, listBackups, restoreBackup, updateBackupScheduler, type BackupSchedulerConfig } from "../api/backups";
+import { createBackup, deleteBackup, getBackupScheduler, listBackupHistory, listRecoveryHistory, getBackupStatus, listBackups, preflightRestore, restoreBackup, updateBackupScheduler, type BackupSchedulerConfig, type RestoreRequest } from "../api/backups";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export const useBackupStatus = () => useQuery({ queryKey: queryKeys.backups.status, queryFn: getBackupStatus });
 export const useBackupList = () => useQuery({ queryKey: queryKeys.backups.list, queryFn: listBackups });
 export const useBackupScheduler = () => useQuery({ queryKey: queryKeys.backups.scheduler, queryFn: getBackupScheduler });
 export const useBackupHistory = () => useQuery({ queryKey: queryKeys.backups.history, queryFn: listBackupHistory });
+export const useRecoveryHistory = () => useQuery({ queryKey: queryKeys.backups.recoveryHistory, queryFn: listRecoveryHistory });
 
 export function useUpdateBackupSchedulerMutation() {
   const client = useQueryClient();
@@ -23,15 +24,16 @@ export function useCreateBackupMutation() {
 export function useRestoreBackupMutation() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({ filename, confirmation }: { filename: string; confirmation: string }) => restoreBackup(filename, confirmation),
-    onSuccess: (result) => {
-      if (!result.reauthentication_required) return client.invalidateQueries({ queryKey: queryKeys.backups.all });
-      client.clear();
-    },
+    mutationFn: ({ filename, body }: { filename: string; body: RestoreRequest }) => restoreBackup(filename, body),
+    onSuccess: () => client.clear(),
   });
 }
 
+export const useRestorePreflightMutation = () => useMutation({
+  mutationFn: (filename: string) => preflightRestore(filename),
+});
+
 export function useDeleteBackupMutation() {
   const client = useQueryClient();
-  return useMutation({ mutationFn: (filename: string) => import('../api/backups').then(m => m.deleteBackup(filename)), onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.backups.all }) });
+  return useMutation({ mutationFn: deleteBackup, onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.backups.all }) });
 }
