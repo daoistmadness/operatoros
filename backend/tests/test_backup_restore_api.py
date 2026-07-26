@@ -4,6 +4,7 @@ import sqlite3
 import sys
 import threading
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -361,6 +362,17 @@ def api_context(monkeypatch, tmp_path):
     db.add(User(username="backup-admin", password_hash=hash_password("backup admin passphrase"), role="admin"))
     db.commit()
     db.close()
+    connection = sqlite3.connect(database)
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS operatoros_schema_migrations "
+        "(version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)"
+    )
+    connection.execute(
+        "INSERT OR REPLACE INTO operatoros_schema_migrations(version, applied_at) "
+        "VALUES ('api-test-schema', '2026-07-26T00:00:00Z')"
+    )
+    connection.commit()
+    connection.close()
     client = TestClient(module.app)
     login = client.post(
         "/api/auth/login",
@@ -391,11 +403,22 @@ def test_status_list_and_create_endpoints_return_safe_canonical_values(api_conte
 def test_api_restore_disabled_and_boolean_confirmation_invalid(api_context):
     client, _ = api_context
     filename = client.post("/api/admin/backups").json()["filename"]
-    assert client.post(f"/api/admin/backups/{filename}/restore", json={"confirmation": filename}).status_code == 403
-    assert client.post(f"/api/admin/backups/{filename}/restore", json={"confirmation": True}).status_code == 422
+    payload = {
+        "current_password": "backup admin passphrase",
+        "confirmation_filename": filename,
+        "confirmation_phrase": "RESTORE_DATABASE",
+        "acknowledge_complete_replacement": True,
+        "acknowledge_session_revocation": True,
+        "acknowledge_restart_required": True,
+        "acknowledge_safety_backup": True,
+        "expected_source_sha256": "0" * 64,
+        "expected_active_sha256": "0" * 64,
+    }
+    assert client.post(f"/api/admin/backups/{filename}/restore", json=payload).status_code == 403
+    assert client.post(f"/api/admin/backups/{filename}/restore", json={**payload, "confirmation_filename": True}).status_code == 422
 
 
-def test_api_restore_suspends_and_restarts_scheduler_on_failure(api_context, monkeypatch):
+def test_disabled_restore_does_not_interrupt_scheduler(api_context, monkeypatch):
     client, _ = api_context
     from api import backups as backups_api
 
@@ -404,13 +427,20 @@ def test_api_restore_suspends_and_restarts_scheduler_on_failure(api_context, mon
     monkeypatch.setattr(backups_api.backup_scheduler, "start", lambda: events.append("start"))
     filename = client.post("/api/admin/backups").json()["filename"]
 
-    response = client.post(
-        f"/api/admin/backups/{filename}/restore",
-        json={"confirmation": filename},
-    )
+    response = client.post(f"/api/admin/backups/{filename}/restore", json={
+        "current_password": "backup admin passphrase",
+        "confirmation_filename": filename,
+        "confirmation_phrase": "RESTORE_DATABASE",
+        "acknowledge_complete_replacement": True,
+        "acknowledge_session_revocation": True,
+        "acknowledge_restart_required": True,
+        "acknowledge_safety_backup": True,
+        "expected_source_sha256": "0" * 64,
+        "expected_active_sha256": "0" * 64,
+    })
 
     assert response.status_code == 403
-    assert events == ["stop", "start"]
+    assert events == []
 
 def test_api_delete_backup(api_context):
     client, tmp_path = api_context
@@ -440,3 +470,190 @@ def test_api_download_backup(api_context):
     assert len(downloaded.content) > 0
     
     assert client.get("/api/admin/backups/invalid_name/download").status_code == 404
+
+
+def _guided_restore_payload(client, tmp_path, filename, **changes):
+    connection = sqlite3.connect(tmp_path / "api.db")
+    connection.execute("CREATE TABLE active_change_marker (id INTEGER PRIMARY KEY)")
+    connection.commit()
+    connection.close()
+    preflight = client.post(
+        f"/api/admin/backups/{filename}/restore-preflight"
+    )
+    assert preflight.status_code == 200
+    body = preflight.json()
+    assert body["impact_classification"] != "SCHEMA_INCOMPATIBLE", body
+    payload = {
+        "current_password": "backup admin passphrase",
+        "confirmation_filename": filename,
+        "confirmation_phrase": "RESTORE_DATABASE",
+        "acknowledge_complete_replacement": True,
+        "acknowledge_session_revocation": True,
+        "acknowledge_restart_required": True,
+        "acknowledge_safety_backup": True,
+        "expected_source_sha256": body["source"]["sha256"],
+        "expected_active_sha256": body["active"]["active_sha256"],
+    }
+    payload.update(changes)
+    return payload
+
+
+@pytest.mark.parametrize(
+    ("change", "expected_code"),
+    [
+        ({"current_password": "wrong password"}, "RESTORE_REAUTHENTICATION_FAILED"),
+        ({"confirmation_filename": "wrong"}, "RESTORE_CONFIRMATION_FILENAME_MISMATCH"),
+        ({"confirmation_phrase": "RESTORE"}, "RESTORE_CONFIRMATION_PHRASE_INVALID"),
+        ({"acknowledge_complete_replacement": False}, "RESTORE_ACKNOWLEDGEMENT_REQUIRED"),
+        ({"acknowledge_session_revocation": False}, "RESTORE_ACKNOWLEDGEMENT_REQUIRED"),
+        ({"acknowledge_restart_required": False}, "RESTORE_ACKNOWLEDGEMENT_REQUIRED"),
+        ({"acknowledge_safety_backup": False}, "RESTORE_ACKNOWLEDGEMENT_REQUIRED"),
+        ({"expected_source_sha256": "0" * 64}, "RESTORE_SOURCE_CHANGED"),
+        ({"expected_active_sha256": "0" * 64}, "RESTORE_ACTIVE_DATABASE_CHANGED"),
+    ],
+)
+def test_guided_restore_security_gates(api_context, change, expected_code):
+    client, tmp_path = api_context
+    from api import backups as backups_api
+
+    backups_api.settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+    filename = client.post("/api/admin/backups").json()["filename"]
+    payload = _guided_restore_payload(client, tmp_path, filename, **change)
+    response = client.post(f"/api/admin/backups/{filename}/restore", json=payload)
+    assert response.status_code in {400, 401, 409}
+    assert response.json()["detail"]["code"] == expected_code
+    serialized = response.text + (
+        (tmp_path / "backups" / "backup_restore_audit.jsonl").read_text()
+        if (tmp_path / "backups" / "backup_restore_audit.jsonl").exists()
+        else ""
+    )
+    assert payload["current_password"] not in serialized
+
+
+def test_guided_restore_requires_hashes_and_strict_syntax(api_context):
+    client, _ = api_context
+    filename = client.post("/api/admin/backups").json()["filename"]
+    response = client.post(
+        f"/api/admin/backups/{filename}/restore",
+        json={
+            "current_password": "backup admin passphrase",
+            "confirmation_filename": filename,
+            "confirmation_phrase": "RESTORE_DATABASE",
+            "acknowledge_complete_replacement": True,
+            "acknowledge_session_revocation": True,
+            "acknowledge_restart_required": True,
+            "acknowledge_safety_backup": True,
+            "expected_source_sha256": "ABC",
+        },
+    )
+    assert response.status_code == 422
+    assert "backup admin passphrase" not in response.text
+
+
+def test_guided_restore_success_is_sanitized_and_session_derived(api_context):
+    client, tmp_path = api_context
+    from api import backups as backups_api
+
+    backups_api.settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+    filename = client.post("/api/admin/backups").json()["filename"]
+    payload = _guided_restore_payload(
+        client,
+        tmp_path,
+        filename,
+        username="spoofed-operator",
+    )
+    source = tmp_path / "backups" / filename
+    before_source = calculate_sha256(source)
+    response = client.post(f"/api/admin/backups/{filename}/restore", json=payload)
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["status"] == "COMPLETED"
+    assert result["sessions_revoked"] is True
+    assert result["restart_required"] is True
+    assert result["rollback_attempted"] is False
+    assert result["post_restore_integrity"] == "ok"
+    assert result["safety_backup_filename"]
+    assert calculate_sha256(source) == before_source
+    serialized = response.text + (
+        tmp_path / "backups" / "backup_restore_audit.jsonl"
+    ).read_text()
+    assert "backup admin passphrase" not in serialized
+    assert "spoofed-operator" not in serialized
+    assert "backup-admin" in serialized
+
+
+def test_manual_backup_is_blocked_during_restore(api_context):
+    client, _ = api_context
+    from services.backup_service import DESTRUCTIVE_OPERATION_LOCK
+
+    DESTRUCTIVE_OPERATION_LOCK.acquire()
+    try:
+        response = client.post("/api/admin/backups")
+    finally:
+        DESTRUCTIVE_OPERATION_LOCK.release()
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "SYSTEM_MAINTENANCE_OPERATION_ACTIVE"
+
+
+def test_guided_restore_rejects_insufficient_disk_space(api_context, monkeypatch):
+    client, tmp_path = api_context
+    from api import backups as backups_api
+
+    backups_api.settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+    filename = client.post("/api/admin/backups").json()["filename"]
+    payload = _guided_restore_payload(client, tmp_path, filename)
+    monkeypatch.setattr(
+        backups_api.shutil,
+        "disk_usage",
+        lambda _path: SimpleNamespace(free=0),
+    )
+    response = client.post(f"/api/admin/backups/{filename}/restore", json=payload)
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "RESTORE_INSUFFICIENT_SPACE"
+
+
+@pytest.mark.parametrize(
+    ("operation_status", "rollback_succeeded", "expected_high_severity"),
+    [
+        ("ROLLED_BACK", True, False),
+        ("FAILED", False, True),
+    ],
+)
+def test_guided_restore_reports_rollback_truthfully(
+    api_context,
+    monkeypatch,
+    operation_status,
+    rollback_succeeded,
+    expected_high_severity,
+):
+    client, tmp_path = api_context
+    from api import backups as backups_api
+
+    backups_api.settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+    filename = client.post("/api/admin/backups").json()["filename"]
+    payload = _guided_restore_payload(client, tmp_path, filename)
+
+    def fail_restore(**_kwargs):
+        raise backups_api.RestoreError(
+            "raw publication exception",
+            status_code=500,
+            reason="publication_failed",
+            operation_status=operation_status,
+            rollback_attempted=True,
+            rollback_succeeded=rollback_succeeded,
+            active_data_restored=rollback_succeeded,
+            safety_backup_filename=filename,
+            support_reference="safe-reference",
+        )
+
+    monkeypatch.setattr(backups_api, "restore_backup", fail_restore)
+    response = client.post(f"/api/admin/backups/{filename}/restore", json=payload)
+    assert response.status_code == 500
+    detail = response.json()["detail"]
+    assert detail["status"] == operation_status
+    assert detail["rollback_attempted"] is True
+    assert detail["rollback_succeeded"] is rollback_succeeded
+    assert detail["active_data_restored"] is rollback_succeeded
+    assert detail["high_severity"] is expected_high_severity
+    assert detail["support_reference"] == "safe-reference"
+    assert "raw publication exception" not in response.text
