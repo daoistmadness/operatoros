@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Navigate, Outlet, Routes, Route, useLocation }
 import { Menu, X } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import UploadCenter from './pages/UploadCenter.tsx';
+import DataPortability from './pages/DataPortability.tsx';
 import UploadHistory from './pages/UploadHistory';
 import AttendanceReport from './pages/AttendanceReport';
 import AttendanceReview from './pages/AttendanceReview';
@@ -123,6 +124,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/operator/work-queue" element={<RequireCapability capability="view_attendance_followups"><OperatorWorkQueue /></RequireCapability>} />
                   <Route path="/upload" element={<RequireRole role="admin"><UploadCenter /></RequireRole>} />
+                  <Route path="/data-portability" element={<RequireRole role="admin"><DataPortability /></RequireRole>} />
                   <Route path="/upload-history" element={<RequireRole role="admin"><UploadHistory /></RequireRole>} />
                   <Route path="/mapping" element={<Navigate to="/enrollment" replace />} />
                   <Route path="/analytics" element={<ManagementAnalytics />} />
