@@ -263,7 +263,11 @@ def test_upload_preview_validation_does_not_commit_attendance(authenticated):
     assert unresolved["validation_error"].startswith("DEVICE_IDENTITY_UNMATCHED")
     rejected = authenticated.post(
         f"/api/uploads/preview/{unmatched.json()['batch_id']}/commit",
-        json={"selected_row_ids": [unresolved["id"]], "confirmation": "COMMIT_ATTENDANCE_IMPORT"},
+        json={
+            "selected_row_ids": [unresolved["id"]],
+            "confirmation": "COMMIT_ATTENDANCE_IMPORT",
+            "preview_checksum": unmatched.json()["checksum"],
+        },
     )
     assert rejected.status_code == 409
     assert rejected.json()["detail"]["code"] == "UNRESOLVED_IMPORT_ROWS"
@@ -272,7 +276,11 @@ def test_upload_preview_validation_does_not_commit_attendance(authenticated):
     selected = [row["id"] for row in valid.json()["rows"] if row["classification"] in {"NEW", "DIFFERENCE", "UNCHANGED"}]
     committed = authenticated.post(
         f"/api/uploads/preview/{valid.json()['batch_id']}/commit",
-        json={"selected_row_ids": selected, "confirmation": "COMMIT_ATTENDANCE_IMPORT"},
+        json={
+            "selected_row_ids": selected,
+            "confirmation": "COMMIT_ATTENDANCE_IMPORT",
+            "preview_checksum": valid.json()["checksum"],
+        },
     )
     assert committed.status_code == 200, committed.text
     assert database_count("attendance") == attendance_before + 1

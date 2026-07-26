@@ -34,6 +34,7 @@ _ACCEPTED_MIMES = {_XLSX_MIME, _XLS_MIME, "application/octet-stream", "applicati
 class AttendanceImportCommitRequest(BaseModel):
     selected_row_ids: list[int] = Field(min_length=1)
     confirmation: str
+    preview_checksum: str = Field(min_length=64, max_length=64)
 
 
 def _validate_excel_upload(file: UploadFile) -> None:
@@ -127,6 +128,7 @@ def commit_previewed_attendance_import(
         request.selected_row_ids,
         request.confirmation,
         current_user.username,
+        request.preview_checksum,
     )
 
 @router.post("/upload", deprecated=True)
