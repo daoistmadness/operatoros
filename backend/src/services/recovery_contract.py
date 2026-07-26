@@ -98,7 +98,9 @@ def _aware(value: str | datetime | None) -> datetime | None:
 
 
 def _readonly(path: Path) -> sqlite3.Connection:
-    return sqlite3.connect(f"file:{path}?mode=ro&immutable=1", uri=True)
+    # Read-only mode includes committed WAL content; immutable mode would ignore it
+    # and can make active-database preflight comparisons stale.
+    return sqlite3.connect(f"file:{path}?mode=ro", uri=True)
 
 
 def _metadata_path(database_path: Path) -> Path:
@@ -692,6 +694,7 @@ def restore_preflight(
             "created_at": metadata["created_at"],
             "age_seconds": age_seconds,
             "size_bytes": metadata["sqlite_file_size_bytes"],
+            "sha256": source_checksum,
             "checksum_matches_manifest": checksum_matches,
             "integrity_check": source["integrity_check"],
             "quick_check": source["quick_check"],
@@ -708,6 +711,7 @@ def restore_preflight(
             "warning_reasons": sorted(set(warnings)),
         },
         "active": {
+            "active_sha256": calculate_sha256(active_path),
             "active_schema_version": active["schema_version"],
             "active_students": active_counts["students"],
             "active_attendance": active_counts["attendance"],
