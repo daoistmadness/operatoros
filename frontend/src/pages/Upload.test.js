@@ -18,7 +18,7 @@ describe('attendance upload errors', () => {
     });
 
     await previewAttendanceFile(file);
-    await commitAttendancePreview('batch-1', [7, 8]);
+    await commitAttendancePreview('batch-1', [7, 8, 8], 'a'.repeat(64));
 
     expect(api.post).toHaveBeenCalledTimes(2);
     const [path, body] = api.post.mock.calls[0];
@@ -28,6 +28,7 @@ describe('attendance upload errors', () => {
     expect(api.post).toHaveBeenLastCalledWith('/api/uploads/preview/batch-1/commit', {
       selected_row_ids: [7, 8],
       confirmation: 'COMMIT_ATTENDANCE_IMPORT',
+      preview_checksum: 'a'.repeat(64),
     });
     expect(api.post.mock.calls.flat()).not.toContain('/api/uploads/upload');
   });
