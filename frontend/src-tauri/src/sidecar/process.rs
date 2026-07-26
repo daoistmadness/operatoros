@@ -34,6 +34,7 @@ impl ManagedProcess {
             .env("OPERATOROS_LOG_DIR", &runtime.log_dir)
             .env("OPERATOROS_RUNTIME_DIR", &runtime.runtime_dir)
             .env("OPERATOROS_VERSION", &runtime.version)
+            .env("OPERATOROS_DEPLOYMENT_MODE", "single_user_offline")
             .stdin(Stdio::null())
             .stdout(Stdio::from(stdout))
             .stderr(Stdio::from(stderr));

@@ -104,7 +104,7 @@ cp backups/operatoros_v0.9.0_production_20260716_135924.db backend/attendance.db
 # 4. Verify restored database
 python3 -c "
 import sqlite3
-conn = sqlite3.connect('backend/attendance.db')
+conn = sqlite3.connect('file:backend/attendance.db?mode=ro&immutable=1', uri=True)
 c = conn.cursor()
 print('Integrity:', c.execute('PRAGMA integrity_check').fetchone()[0])
 for t in ['students', 'student_masters', 'student_device_identities', 'attendance', 'student_enrollments']:
@@ -122,7 +122,7 @@ After rollback, verify:
 ```bash
 python3 -c "
 import sqlite3
-conn = sqlite3.connect('backend/attendance.db')
+conn = sqlite3.connect('file:backend/attendance.db?mode=ro&immutable=1', uri=True)
 c = conn.cursor()
 checks = {
     'students': 117,
