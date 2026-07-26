@@ -55,7 +55,7 @@ def app_env():
     test_app.dependency_overrides[get_current_user] = lambda: operator_user
 
     client = TestClient(test_app)
-    yield client, db, operator_user
+    yield client, db, operator_user, test_app
     client.close()
     db.close()
     Base.metadata.drop_all(engine)
@@ -69,7 +69,10 @@ def test_deployment_mode_parsing():
     assert s2.resolved_deployment_mode == "multi_user"
 
     s3 = Settings(OPERATOROS_DEPLOYMENT_MODE="unknown_mode_123")
-    assert s3.resolved_deployment_mode == "single_user_offline"
+    assert s3.resolved_deployment_mode == "multi_user"
+
+    s4 = Settings(OPERATOROS_DEPLOYMENT_MODE="")
+    assert s4.resolved_deployment_mode == "multi_user"
 
 
 def test_derive_due_state_rules():
@@ -90,25 +93,43 @@ def test_derive_due_state_rules():
     assert derive_due_state(future_date, "OPEN") == "DUE_LATER"
 
 
-def test_config_deployment_mode_endpoint(app_env):
-    client, _, _ = app_env
+def test_config_deployment_mode_requires_authentication(app_env):
+    _, _, _, test_app = app_env
+    orig_override = test_app.dependency_overrides.pop(get_current_user, None)
+    try:
+        unauth_client = TestClient(test_app)
+        res_unauth = unauth_client.get("/api/config/deployment-mode")
+        assert res_unauth.status_code == 401
+        unauth_client.close()
+    finally:
+        if orig_override is not None:
+            test_app.dependency_overrides[get_current_user] = orig_override
+
+
+def test_config_deployment_mode_endpoint_contains_no_secrets(app_env):
+    client, _, _, _ = app_env
     res = client.get("/api/config/deployment-mode")
     assert res.status_code == 200
     data = res.json()
     assert "deployment_mode" in data
-    assert "is_single_user" in data
+    assert len(data) == 1
+    text = str(data).lower()
+    assert "secret" not in text
+    assert "password" not in text
+    assert "db" not in text
+    assert "path" not in text
 
 
-def test_readiness_deployment_mode(app_env):
-    client, _, _ = app_env
+def test_readiness_endpoint_does_not_expose_deployment_mode(app_env):
+    client, _, _, _ = app_env
     res = client.get("/api/readiness")
     assert res.status_code == 200
     data = res.json()
-    assert "deployment_mode" in data
+    assert "deployment_mode" not in data
 
 
 def test_work_queue_authenticated(app_env):
-    client, _, _ = app_env
+    client, _, _, _ = app_env
     res = client.get("/api/operator/work-queue")
     assert res.status_code == 200
     items = res.json()
@@ -122,7 +143,7 @@ def test_work_queue_authenticated(app_env):
 
 
 def test_self_confirmation_workflow(app_env):
-    client, db, _ = app_env
+    client, db, _, _ = app_env
     s = Student(name="Test Student", class_name="10A", jenjang="SMA")
     db.add(s)
     db.flush()
@@ -148,46 +169,46 @@ def test_self_confirmation_workflow(app_env):
     assert res_sub.status_code == 200
     submitted_version = res_sub.json()["version"]
 
-    res_bad_token = client.post(
-        f"/api/attendance-corrections/{corr_id}/self-confirm",
-        json={
-            "expected_version": submitted_version,
-            "confirmation": "WRONG_TOKEN",
-            "confirmation_note": "Catatan konfirmasi mandiri.",
-        },
-    )
-    assert res_bad_token.status_code == 400
-    assert res_bad_token.json()["detail"]["code"] == "CORRECTION_CONFIRMATION_REQUIRED"
+    with patch("core.config.settings.OPERATOROS_DEPLOYMENT_MODE", "single_user_offline"):
+        res_bad_token = client.post(
+            f"/api/attendance-corrections/{corr_id}/self-confirm",
+            json={
+                "expected_version": submitted_version,
+                "confirmation": "WRONG_TOKEN",
+                "confirmation_note": "Catatan konfirmasi mandiri.",
+            },
+        )
+        assert res_bad_token.status_code == 400
+        assert res_bad_token.json()["detail"]["code"] == "CORRECTION_CONFIRMATION_REQUIRED"
 
-    res_bad_note = client.post(
-        f"/api/attendance-corrections/{corr_id}/self-confirm",
-        json={
-            "expected_version": submitted_version,
-            "confirmation": "CONFIRM_CORRECTION",
-            "confirmation_note": "ab",
-        },
-    )
-    assert res_bad_note.status_code in (400, 422)
+        res_bad_note = client.post(
+            f"/api/attendance-corrections/{corr_id}/self-confirm",
+            json={
+                "expected_version": submitted_version,
+                "confirmation": "CONFIRM_CORRECTION",
+                "confirmation_note": "ab",
+            },
+        )
+        assert res_bad_note.status_code in (400, 422)
 
-    res_confirm = client.post(
-        f"/api/attendance-corrections/{corr_id}/self-confirm",
-        json={
-            "expected_version": submitted_version,
-            "confirmation": "CONFIRM_CORRECTION",
-            "confirmation_note": "Dikonfirmasi mandiri oleh operator sekolah.",
-        },
-    )
-    print("CONFIRM DETAIL:", res_confirm.status_code, res_confirm.json())
-    assert res_confirm.status_code == 200
-    conf_data = res_confirm.json()
-    assert conf_data["state"] == "APPROVED"
+        res_confirm = client.post(
+            f"/api/attendance-corrections/{corr_id}/self-confirm",
+            json={
+                "expected_version": submitted_version,
+                "confirmation": "CONFIRM_CORRECTION",
+                "confirmation_note": "Dikonfirmasi mandiri oleh operator sekolah.",
+            },
+        )
+        assert res_confirm.status_code == 200
+        conf_data = res_confirm.json()
+        assert conf_data["state"] == "APPROVED"
 
     eff = effective_snapshot(db, att)
     assert eff["status"] == "on-time"
 
 
 def test_self_confirmation_disabled_in_multi_user_mode(app_env):
-    client, db, _ = app_env
+    client, db, _, _ = app_env
     s = Student(name="Test Student 2", class_name="10B", jenjang="SMA")
     db.add(s)
     db.flush()
@@ -220,3 +241,11 @@ def test_self_confirmation_disabled_in_multi_user_mode(app_env):
         )
         assert res_disabled.status_code == 403
         assert res_disabled.json()["detail"]["code"] == "CORRECTION_SELF_CONFIRMATION_DISABLED"
+
+
+def test_protected_database_access_guard():
+    import sqlite3
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent.parent
+    protected_db = root / "backend" / "attendance.db"
+    assert protected_db.is_file()
