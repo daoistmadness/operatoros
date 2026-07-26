@@ -30,6 +30,7 @@ export const NAV_GROUPS = [
       { name: 'Follow-Up Queue', path: '/attendance/followups', icon: ShieldCheck, capability: 'view_attendance_followups' },
       { name: 'Students', path: '/students', icon: UsersIcon, capability: 'view_student', nested: true, exclude: ['/students/operations'] },
       { name: 'Data Import Center', path: '/upload', icon: UploadCloud, role: 'admin' },
+      { name: 'Data Import & Export', path: '/data-portability', icon: UploadCloud, role: 'admin' },
       { name: 'Import History', path: '/upload-history', icon: History, role: 'admin' },
       { name: 'Academic Management', path: '/academic-management', icon: Layers3, role: 'admin' },
       { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck, capability: 'manage_enrollment' },
