@@ -10,6 +10,7 @@ export const queryKeys = {
     list: ["backups", "list"] as const,
     scheduler: ["backups", "scheduler"] as const,
     history: ["backups", "history"] as const,
+    recoveryHistory: ["backups", "recovery-history"] as const,
   },
   reports: {
     all: ["reports"] as const,
