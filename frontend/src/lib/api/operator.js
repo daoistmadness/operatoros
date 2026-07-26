@@ -5,9 +5,9 @@ export async function fetchDeploymentMode() {
     const response = await apiRequest({
       path: '/api/config/deployment-mode',
     });
-    return response.data || { deployment_mode: 'single_user_offline', is_single_user: true };
+    return response.data || { deployment_mode: 'multi_user' };
   } catch (err) {
-    return { deployment_mode: 'single_user_offline', is_single_user: true };
+    return { deployment_mode: 'multi_user' };
   }
 }
 
