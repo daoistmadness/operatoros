@@ -10,6 +10,7 @@ import {
 import { cn } from '../lib/cn';
 import { getServerStatus } from '../lib/api/endpoints';
 import { useAuth } from '../context/AuthContext';
+import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
@@ -21,6 +22,7 @@ export const NAV_GROUPS = [
   {
     id: 'workflows', title: 'Daily Workflows',
     items: [
+      { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck, capability: 'view_attendance_followups' },
       { name: 'Input Absensi Kelas', path: '/attendance/class-entry', icon: CalendarDays, capability: 'enter_assigned_class_attendance' },
       { name: 'Kepulangan Awal Kelas', path: '/attendance/class-departures', icon: Clock3, capability: 'view_early_departure' },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
@@ -72,10 +74,14 @@ export function navigationItemIsActive(item, pathname) {
   return pathname === item.path || Boolean(item.nested && pathname.startsWith(`${item.path}/`));
 }
 
-export function visibleNavigationGroups(user, can) {
+export function visibleNavigationGroups(user, can, isSingleUserMode = false) {
   return NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => canAccessNavigationItem(item, user, can)),
+    items: group.items.filter((item) => {
+      if (!canAccessNavigationItem(item, user, can)) return false;
+      if (isSingleUserMode && item.path === '/teacher-class-assignments') return false;
+      return true;
+    }),
   })).filter((group) => group.items.length > 0);
 }
 
@@ -83,8 +89,9 @@ function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleColla
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState('checking');
   const { user, can, logout } = useAuth();
+  const { isSingleUserMode } = useDeploymentMode();
   const [loggingOut, setLoggingOut] = useState(false);
-  const groups = useMemo(() => visibleNavigationGroups(user, can), [user, can]);
+  const groups = useMemo(() => visibleNavigationGroups(user, can, isSingleUserMode), [user, can, isSingleUserMode]);
   const activeGroupId = groups.find((group) => group.items.some((item) => navigationItemIsActive(item, location.pathname)))?.id;
   const [expanded, setExpanded] = useState(() => new Set(NAV_GROUPS.map((group) => group.id)));
 

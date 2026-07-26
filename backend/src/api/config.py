@@ -872,3 +872,13 @@ def get_absence_reasons_summary(
             summary["classes_entered"] += 1
 
     return [summary_by_jenjang[key] for key in sorted(summary_by_jenjang.keys())]
+
+
+@router.get("/deployment-mode")
+def get_deployment_mode():
+    from core.config import settings
+    return {
+        "deployment_mode": settings.resolved_deployment_mode,
+        "is_single_user": settings.resolved_deployment_mode == "single_user_offline",
+    }
+

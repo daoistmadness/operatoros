@@ -38,6 +38,16 @@ class Settings(BaseSettings):
     RESTORE_SINGLE_WORKER_REQUIRED: bool = Field(True, env="RESTORE_SINGLE_WORKER_REQUIRED")
     ASTRYX_SETUP_TOKEN: str | None = Field(default=None, env="ASTRYX_SETUP_TOKEN")
     OPERATOROS_MANAGED_DEV_SETUP: bool = Field(False, env="OPERATOROS_MANAGED_DEV_SETUP")
+    OPERATOROS_DEPLOYMENT_MODE: str = Field("single_user_offline", env="OPERATOROS_DEPLOYMENT_MODE")
+
+    @property
+    def resolved_deployment_mode(self) -> str:
+        mode = (self.OPERATOROS_DEPLOYMENT_MODE or "").strip().lower()
+        if mode in ("single_user_offline", "single_user", "offline"):
+            return "single_user_offline"
+        if mode in ("multi_user", "multi_tenant"):
+            return "multi_user"
+        return "single_user_offline"
 
     @model_validator(mode="after")
     def validate_session_lifetimes(self):
