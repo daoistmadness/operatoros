@@ -24,6 +24,7 @@ from api.student_progression import router as student_progression_router
 from api.student_import_sessions import router as student_import_sessions_router
 from api.student_exports import router as student_exports_router
 from api.uploads import router as uploads_router
+from api.upload_conflicts import router as upload_conflicts_router
 from api.system import router as system_router
 from api.review import router as review_router
 from api.attendance_corrections import router as attendance_corrections_router
@@ -88,6 +89,7 @@ app.include_router(student_progression_router, prefix="/api/student-progression"
 app.include_router(student_import_sessions_router, prefix="", tags=["student-import-sessions"])
 app.include_router(student_exports_router, prefix="", tags=["student-exports"])
 app.include_router(uploads_router, prefix="/api/uploads", tags=["uploads"])
+app.include_router(upload_conflicts_router, prefix="/api/upload-conflicts", tags=["upload-conflicts"])
 app.include_router(system_router, prefix="/api/system", tags=["system"])
 app.include_router(review_router, prefix="/api/review", tags=["review"])
 app.include_router(attendance_corrections_router, prefix="/api/attendance-corrections", tags=["attendance-corrections"])
