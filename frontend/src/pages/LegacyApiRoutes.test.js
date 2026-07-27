@@ -14,7 +14,7 @@ describe("legacy page API contracts", () => {
       'api.post("/api/students"',
       'api.patch("/api/students/assign-class"',
     ]],
-    ["UploadHistory.js", ['api.get("/api/uploads/history")']],
+    ["../api/uploadHistory.ts", ['api.get("/api/uploads/history",']],
     ["JenjangConfig.jsx", [
       'api.get("/api/config/jenjang")',
       'api.get("/api/config/jenjang/available")',
