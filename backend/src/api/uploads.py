@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -22,6 +22,14 @@ from services.attendance_import_preview import (
     serialize_preview,
 )
 from services.attendance_metrics import calculate_heb, derive_jenjang_from_class_name, month_year_filters
+from services.upload_history import (
+    evidence_csv,
+    evidence_json,
+    get_upload_record,
+    list_upload_history,
+    upload_rows,
+    upload_timeline,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 logger = logging.getLogger(__name__)
@@ -148,10 +156,99 @@ async def upload_file(
 
 @router.get("/history")
 def get_upload_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    workflow_type: str | None = Query(None, max_length=20),
+    status: str | None = Query(None, max_length=32),
+    reconciliation_state: str | None = Query(None, max_length=32),
+    actor: str | None = Query(None, max_length=100),
+    filename: str | None = Query(None, max_length=100),
+    checksum_prefix: str | None = Query(None, min_length=4, max_length=64),
+    unresolved_only: bool = False,
+    retry_activity: bool = False,
+    date_from: date | None = None,
+    date_to: date | None = None,
     db: Session = Depends(get_db),
-    _user: User = Depends(require_capability("import_attendance")),
+    _user: User = Depends(require_capability("view_student_audit")),
 ):
-    return db.query(UploadLog).order_by(UploadLog.uploaded_at.desc()).limit(20).all()
+    return list_upload_history(
+        db,
+        page=page,
+        page_size=page_size,
+        workflow_type=workflow_type,
+        status=status,
+        reconciliation_state=reconciliation_state,
+        actor=actor,
+        filename=filename,
+        checksum_prefix=checksum_prefix,
+        unresolved_only=unresolved_only,
+        retry_activity=retry_activity,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+@router.get("/history/{upload_id}")
+def get_upload_history_detail(
+    upload_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    return get_upload_record(db, upload_id)
+
+
+@router.get("/history/{upload_id}/timeline")
+def get_upload_history_timeline(
+    upload_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    return {"items": upload_timeline(db, upload_id)}
+
+
+@router.get("/history/{upload_id}/rows")
+def get_upload_history_rows(
+    upload_id: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    outcome: str | None = Query(None, max_length=24),
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    return upload_rows(db, upload_id, page=page, page_size=page_size, outcome=outcome)
+
+
+def _evidence_name(upload_id: str, extension: str) -> str:
+    safe_id = "".join(character if character.isalnum() or character in "-_" else "-" for character in upload_id)
+    return f"operatoros-upload-evidence-{safe_id}.{extension}"
+
+
+@router.get("/history/{upload_id}/export.csv")
+def export_upload_history_csv(
+    upload_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    content = evidence_csv(db, upload_id)
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{_evidence_name(upload_id, "csv")}"'},
+    )
+
+
+@router.get("/history/{upload_id}/export.json")
+def export_upload_history_json(
+    upload_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student_audit")),
+):
+    content = evidence_json(db, upload_id)
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{_evidence_name(upload_id, "json")}"'},
+    )
 
 
 @router.get("/missing-records")
