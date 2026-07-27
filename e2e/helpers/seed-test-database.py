@@ -4,13 +4,134 @@
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import sqlite3
 import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+from openpyxl import Workbook
+
 BASELINE_ID = "20260722_s38"
+
+
+def seed_upload_conflicts(backend_src: Path) -> None:
+    from core.database import SessionLocal
+    from models.academic_roster import AcademicRosterImportBatch
+    from models.academic_master import AcademicClass
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.student import Student
+    from models.student_enrollment import StudentEnrollment
+    from models.student_master import StudentDeviceIdentity, StudentMaster
+    from services.academic_roster import roster_preview_checksum
+    from services.attendance_import_preview import create_attendance_preview
+    from services.excel_parser import REQUIRED_COLUMNS
+    from services.student_import_sessions import create_preview_session, mark_preview_ready
+    from services.upload_conflicts import list_upload_conflicts
+
+    assert "Pengecualian" in REQUIRED_COLUMNS
+    assert "week" in REQUIRED_COLUMNS
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(REQUIRED_COLUMNS)
+    sheet.append(["991001", "E2E Conflict Alpha", "01/07/2026", "07:05", "14:00", "", "", "", "Wednesday"])
+    sheet.append(["991002", "E2E Conflict Beta", "01/07/2026", "07:06", "14:01", "", "", "", "Wednesday"])
+    stream = io.BytesIO()
+    workbook.save(stream)
+
+    db = SessionLocal()
+    try:
+        targets = (
+            StudentMaster(id="20000000-0000-4000-8000-000000000001", full_name="E2E Conflict Alpha", normalized_name="e2e conflict alpha", nipd="RESOLVE-001", student_status="active"),
+            StudentMaster(id="20000000-0000-4000-8000-000000000002", full_name="E2E Conflict Beta", normalized_name="e2e conflict beta", nipd="RESOLVE-002", student_status="active"),
+        )
+        db.add_all(targets)
+        for index, target in enumerate(targets, start=1):
+            legacy = Student(id=991000 + index, name=target.full_name, jenjang="Primary", class_name="Primary 1A")
+            db.add(legacy)
+            db.flush()
+            db.add(StudentDeviceIdentity(
+                student_master_id=target.id,
+                legacy_student_id=legacy.id,
+                device_identifier=f"E2E-RESOLUTION-HISTORY-{index}",
+                device_source="E2E_FIXTURE",
+                effective_from=date(2026, 1, 1),
+                effective_to=date(2026, 6, 30),
+                is_active=False,
+                created_by="operatoros_e2e_admin",
+            ))
+            year = db.query(AcademicYear).filter_by(status="active").one()
+            jenjang = db.query(Jenjang).filter_by(name="Primary").one()
+            academic_class = db.query(AcademicClass).filter_by(
+                academic_year_id=year.id, class_name="Primary 1A"
+            ).one()
+            db.add(StudentEnrollment(
+                student_id=legacy.id,
+                student_master_id=target.id,
+                academic_year_id=year.id,
+                jenjang_id=jenjang.id,
+                academic_class_id=academic_class.id,
+                class_name=academic_class.class_name,
+                class_assigned=True,
+                effective_from=date(2026, 7, 1),
+            ))
+        db.commit()
+        attendance = create_attendance_preview(db, stream.getvalue(), "e2e-upload-conflicts.xlsx", "operatoros_e2e_admin")
+
+        session = create_preview_session(
+            db,
+            import_type="STUDENT_ROSTER",
+            filename="e2e-roster-conflict.xlsx",
+            file_checksum="a" * 64,
+            actor="operatoros_e2e_admin",
+        )
+        rows = [{
+            "preview_row_id": 1,
+            "source_sheet": "Roster",
+            "source_row": 2,
+            "classification": "POSSIBLE_DUPLICATE",
+            "matched_student_master_id": None,
+            "match_rule": "ambiguous_name_birth_date",
+            "payload": {
+                "student_identifier": "RESOLVE-001",
+                "student_name": targets[0].full_name,
+                "student_master_id": None,
+                "nipd": targets[0].nipd,
+                "nisn": None,
+                "nik": None,
+                "academic_year": "2026/2027",
+                "jenjang": "Primary",
+                "class_name": "Primary 1A",
+                "program": "MAIN",
+                "status": "active",
+            },
+            "errors": ["Identity match is ambiguous"],
+        }]
+        batch = AcademicRosterImportBatch(
+            session_id=session.id,
+            filename="e2e-roster-conflict.xlsx",
+            checksum="a" * 64,
+            source_owner="E2E",
+            date_received=date(2026, 7, 1),
+            created_by="operatoros_e2e_admin",
+            rows=rows,
+            summary={"total": 1, "possible_duplicate": 1},
+        )
+        db.add(batch)
+        db.flush()
+        mark_preview_ready(session, checksum=roster_preview_checksum(rows), row_count=1)
+        db.commit()
+
+        queue = list_upload_conflicts(db, page=1, page_size=20)
+        devices = {item["affected_identifiers"].get("device_identifier") for item in queue["items"]}
+        assert {"991001", "991002"} <= devices
+        assert any(item["technical_code"] == "POSSIBLE_DUPLICATE" for item in queue["items"])
+        assert attendance.checksum and all(item["source_row_number"] for item in queue["items"])
+        print("FIXTURE_PREFLIGHT_PASSED")
+    finally:
+        db.close()
 
 
 def main() -> int:
@@ -183,6 +304,7 @@ def main() -> int:
             (student_ids[0], master_ids[0], year_id, jenjang_id, active_class_id),
         )
     connection.close()
+    seed_upload_conflicts(backend_src)
     return 0
 
 
