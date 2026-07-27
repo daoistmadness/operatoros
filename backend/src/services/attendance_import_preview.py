@@ -50,6 +50,18 @@ def _duration_seconds(value) -> int | None:
     return None
 
 
+def _retry_source_payload(entry: dict) -> dict:
+    """Persist only normalized machine-event fields needed for a safe retry."""
+    return {
+        "check_in": _time_text(entry.get("check_in")),
+        "check_out": _time_text(entry.get("check_out")),
+        "terlambat_seconds": _duration_seconds(entry.get("terlambat")),
+        "overtime_seconds": _duration_seconds(entry.get("overtime")),
+        "exception": entry.get("exception"),
+        "week": entry.get("week"),
+    }
+
+
 def _attendance_payload(row: Attendance) -> dict:
     return {
         "check_in": _time_text(row.check_in),
@@ -209,7 +221,11 @@ def create_attendance_preview(
             if existing and db.query(AttendanceOverride).filter_by(attendance_id=existing.id).first():
                 warning_parts.append("Administrative override exists and remains authoritative")
 
-        proposed = None if classification == "CONFLICT" else _proposed_payload(entry, student, existing, cutoff_map)
+        proposed = (
+            {"_retry_source": _retry_source_payload(entry)}
+            if classification == "CONFLICT"
+            else _proposed_payload(entry, student, existing, cutoff_map)
+        )
         before = _attendance_payload(existing) if existing else None
         counts[classification] += 1
         db.add(AttendanceImportRow(
@@ -391,6 +407,7 @@ def commit_attendance_preview(
                 updated += 1
             else:
                 unchanged += 1
+            row.selected_for_commit = True
             status = row.proposed_change.get("status") if row.proposed_change else None
             late_entries += status == "late"
             incomplete_entries += status == "incomplete"

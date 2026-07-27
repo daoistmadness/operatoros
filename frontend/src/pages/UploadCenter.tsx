@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, History, Loader2, Users } from "lucide-react";
+import { AlertTriangle, BellRing, CheckCircle2, Download, FileSpreadsheet, History, Loader2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import AttendanceUpload, { WorkflowIndicator } from "./Upload";
 import { useRosterCommit, useRosterPreview, useStudentTemplateExport, useStudentUpdateCommit, useStudentUpdatePreview } from "../hooks/useStudentQueries";
@@ -15,6 +15,7 @@ import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableH
 import { Checkbox } from "../components/ui/checkbox";
 import { buildApiUrl } from "../lib/api/client";
 import { eligibleIds, rosterRowView, safeSelectedIds, selectionState } from "../lib/uploadWorkflow";
+import { NeedsAttentionPanel } from "../components/upload/NeedsAttentionPanel";
 
 const today = new Date().toISOString().slice(0, 10);
 const ROSTER_COLUMNS = ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"];
@@ -141,5 +142,5 @@ function StudentUpdatePanel() {
 
 export default function UploadCenter() {
   const [mode, setMode] = useState("attendance");
-  return <div className="space-y-6"><PageHeader eyebrow="Guarded imports" title="Data Import Center" description="Choose Attendance Upload or Student Roster Upload. Every workflow previews first and commits only explicitly selected eligible rows." /><Tabs value={mode} onValueChange={setMode}><TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3"><TabsTrigger value="attendance"><FileSpreadsheet className="mr-2 inline size-4" />Attendance Upload</TabsTrigger><TabsTrigger value="roster"><Users className="mr-2 inline size-4" />Student Roster Upload</TabsTrigger><TabsTrigger value="student-update"><CheckCircle2 className="mr-2 inline size-4" />Student Data Update</TabsTrigger></TabsList><TabsContent value="attendance"><AttendanceUpload key={`attendance-${mode}`} embedded /></TabsContent><TabsContent value="roster"><RosterImportPanel key={`roster-${mode}`} /></TabsContent><TabsContent value="student-update"><StudentUpdatePanel key={`student-update-${mode}`} /></TabsContent></Tabs></div>;
+  return <div className="space-y-6"><PageHeader eyebrow="Guarded imports" title="Data Import Center" description="Upload data, resolve blocked rows, and review history without bypassing backend validation." /><Tabs value={mode} onValueChange={setMode}><TabsList className="grid h-auto w-full grid-cols-2 lg:grid-cols-4"><TabsTrigger value="attendance"><FileSpreadsheet className="mr-2 inline size-4" />Attendance Upload</TabsTrigger><TabsTrigger value="roster"><Users className="mr-2 inline size-4" />Student Roster Upload</TabsTrigger><TabsTrigger value="attention"><BellRing className="mr-2 inline size-4" />Needs Attention</TabsTrigger><TabsTrigger value="student-update"><CheckCircle2 className="mr-2 inline size-4" />Student Data Update</TabsTrigger></TabsList><TabsContent value="attendance"><AttendanceUpload key={`attendance-${mode}`} embedded /></TabsContent><TabsContent value="roster"><RosterImportPanel key={`roster-${mode}`} /></TabsContent><TabsContent value="attention"><NeedsAttentionPanel /></TabsContent><TabsContent value="student-update"><StudentUpdatePanel key={`student-update-${mode}`} /></TabsContent></Tabs></div>;
 }
