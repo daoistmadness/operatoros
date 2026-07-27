@@ -72,6 +72,7 @@ MODEL_MODULES = (
     "models.heb_override",
     "models.jenjang",
     "models.jenjang_config",
+    "models.operations_audit",
     "models.report_builder",
     "models.student",
     "models.student_enrollment",

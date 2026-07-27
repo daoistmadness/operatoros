@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from core.database import Base
+from core.schema_migrations import initialize_fresh_sqlite_database
 from models.academic_roster import AcademicRosterImportBatch
 from models.attendance import Attendance
 from models.attendance_import import AttendanceImportRow
@@ -133,6 +134,46 @@ def test_queue_derives_safe_attendance_provenance_and_filters(conflict_db):
     assert item["retry_eligible"] is False
     assert "path" not in item
     assert "student_name" not in item["affected_identifiers"]
+
+
+def test_fresh_database_bootstrap_supports_upload_conflict_queue(tmp_path):
+    target = (tmp_path / "fresh-upload-conflicts.db").resolve()
+    assert initialize_fresh_sqlite_database(target) == "MIGRATION_COMPLETE"
+
+    engine = create_engine(f"sqlite:///{target}")
+    Session = sessionmaker(bind=engine)
+    db = Session()
+    try:
+        columns = {
+            row[1]
+            for row in db.connection().exec_driver_sql(
+                "PRAGMA table_info(operations_audit_events)"
+            )
+        }
+        assert {
+            "id",
+            "event_id",
+            "occurred_at",
+            "actor_id",
+            "entity_type",
+            "entity_reference",
+            "operation",
+            "metadata",
+        } <= columns
+        indexes = {
+            row[1]
+            for row in db.connection().exec_driver_sql(
+                "PRAGMA index_list(operations_audit_events)"
+            )
+        }
+        assert "ix_ops_audit_operation_occurred" in indexes
+        _, row = create_unmatched(db, identifier=991001, name="Fresh Queue Student")
+        result = list_upload_conflicts(db, page=1, page_size=10)
+        assert result["total"] == 1
+        assert result["items"][0]["resolution_item_id"] == attendance_item_id(row.id)
+    finally:
+        db.close()
+        engine.dispose()
 
 
 def test_student_search_uses_explicit_stable_result_and_masks_identifiers(conflict_db):
