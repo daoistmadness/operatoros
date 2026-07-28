@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -13,22 +13,39 @@ import {
   UserCheck,
   XCircle,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import {
   createFollowUpCase,
   fetchFollowUpCandidates,
   fetchFollowUpCases,
   fetchFollowUpMetrics,
+  type FollowUpCandidate,
+  type FollowUpCase,
+  type FollowUpMetrics,
 } from '../lib/api/followups';
 import AttendanceFollowUpDetailModal from '../components/AttendanceFollowUpDetailModal';
 
-export default function AttendanceFollowUpQueue() {
-  const { user } = useAuth();
+function getFollowUpError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== 'object') return fallback;
+  const candidate = error as {
+    message?: unknown;
+    response?: {
+      data?: {
+        detail?: {
+          message?: unknown;
+        };
+      };
+    };
+  };
+  const detailMessage = candidate.response?.data?.detail?.message;
+  if (typeof detailMessage === 'string' && detailMessage) return detailMessage;
+  return typeof candidate.message === 'string' && candidate.message ? candidate.message : fallback;
+}
 
-  const [activeTab, setActiveTab] = useState('candidates'); // 'candidates' | 'cases'
-  const [candidates, setCandidates] = useState([]);
-  const [cases, setCases] = useState([]);
-  const [metrics, setMetrics] = useState({});
+export default function AttendanceFollowUpQueue() {
+  const [activeTab, setActiveTab] = useState<'candidates' | 'cases'>('candidates');
+  const [candidates, setCandidates] = useState<FollowUpCandidate[]>([]);
+  const [cases, setCases] = useState<FollowUpCase[]>([]);
+  const [metrics, setMetrics] = useState<FollowUpMetrics>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -39,7 +56,7 @@ export default function AttendanceFollowUpQueue() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Selected Detail Modal
-  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [submittingKey, setSubmittingKey] = useState('');
 
   const loadData = useCallback(async () => {
@@ -55,11 +72,11 @@ export default function AttendanceFollowUpQueue() {
         }),
         fetchFollowUpMetrics(),
       ]);
-      setCandidates(candRes);
-      setCases(caseRes);
+      setCandidates(Array.isArray(candRes) ? candRes : candRes.items);
+      setCases(Array.isArray(caseRes) ? caseRes : caseRes.items);
       setMetrics(metricRes);
-    } catch (err) {
-      setError(err?.response?.data?.detail?.message || err?.message || 'Gagal memuat data antrean pengecualian.');
+    } catch (err: unknown) {
+      setError(getFollowUpError(err, 'Gagal memuat data antrean pengecualian.'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +86,7 @@ export default function AttendanceFollowUpQueue() {
     void loadData();
   }, [loadData]);
 
-  const handleMaterializeCandidate = async (candidate) => {
+  const handleMaterializeCandidate = async (candidate: FollowUpCandidate) => {
     setSubmittingKey(candidate.exception_key);
     setError('');
     try {
@@ -83,8 +100,8 @@ export default function AttendanceFollowUpQueue() {
       });
       await loadData();
       setSelectedCaseId(created.id);
-    } catch (err) {
-      setError(err?.response?.data?.detail?.message || err?.message || 'Gagal membuat kasus follow-up.');
+    } catch (err: unknown) {
+      setError(getFollowUpError(err, 'Gagal membuat kasus follow-up.'));
     } finally {
       setSubmittingKey('');
     }
@@ -301,7 +318,7 @@ export default function AttendanceFollowUpQueue() {
                       <td className="p-3.5 text-right">
                         {cand.materialized_case ? (
                           <button
-                            onClick={() => setSelectedCaseId(cand.materialized_case.id)}
+                            onClick={() => setSelectedCaseId(cand.materialized_case?.id ?? null)}
                             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium inline-flex items-center space-x-1"
                           >
                             <Eye className="w-3.5 h-3.5" />
