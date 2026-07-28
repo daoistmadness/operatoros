@@ -10,6 +10,7 @@ type JsonCompatibilityConfig = {
   params?: QueryParams;
   headers?: ApiHeaders;
   timeout?: number;
+  signal?: AbortSignal;
   responseType?: 'json';
   data?: unknown;
 };
@@ -32,6 +33,7 @@ function requestCompatibility<T>(
     params: config.params,
     headers: config.headers,
     timeout: config.timeout,
+    signal: config.signal,
   };
   if (config.responseType === 'blob') {
     return apiRequest({ ...common, body, responseType: 'blob' });
