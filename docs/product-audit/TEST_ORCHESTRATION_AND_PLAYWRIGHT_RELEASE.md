@@ -138,6 +138,9 @@ Measured post-change timings:
 | PR frontend-only | 194.32s | 89.68% |
 | PR backend change | 1,044.26s | 44.54% |
 | RELEASE ordinary frontend change | 1,098.58s | 41.66% |
+| RELEASE schema/test-infrastructure change | 1,943.38s | -3.21% |
 
-The schema-sensitive two-pass release timing is recorded in the merge report.
-Durations are observations, not brittle pass/fail thresholds.
+The high-risk release remains intentionally comparable to the baseline: its
+60.38s increase is explained by the new classifier validation, explicit
+protected-path checks, and complete tagged browser release coverage. Durations
+are observations, not brittle pass/fail thresholds.
