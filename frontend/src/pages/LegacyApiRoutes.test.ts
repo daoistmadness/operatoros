@@ -15,7 +15,7 @@ describe("legacy page API contracts", () => {
       'api.patch<AssignClassResponse>("/api/students/assign-class"',
     ]],
     ["../api/uploadHistory.ts", ['api.get("/api/uploads/history",']],
-    ["JenjangConfig.tsx", [
+    ["../features/jenjang-config/pages/JenjangConfig.tsx", [
       '"/api/config/jenjang"',
       '"/api/config/jenjang/available"',
       'api.put(`/api/config/jenjang/',
