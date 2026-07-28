@@ -78,7 +78,11 @@ backend_status=0
 (cd "$repo_root/backend" && "$repo_root/backend/.venv/bin/python" -m pytest -q -c "$repo_root/backend/pytest.ini" "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
 
 web_status=0
-(cd "$repo_root/frontend" && PATH="$node22_bin:/usr/bin:/bin" npx playwright test --config playwright.config.ts) >"$logs/web-smoke.log" 2>&1 || web_status=$?
+playwright_args=(playwright test --config playwright.config.ts)
+if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
+  playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
+fi
+(cd "$repo_root/frontend" && PATH="$node22_bin:/usr/bin:/bin" npx "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT
@@ -117,4 +121,10 @@ duration=$((SECONDS - started_at))
   --duration "$((duration / 60))m $((duration % 60))s" \
   "${failed_args[@]}" "${evidence_args[@]}"
 cat "$results/summary.txt"
-[[ "$status" == PASS ]]
+if [[ "$status" == PASS ]]; then
+  bash "$repo_root/e2e/clean.sh"
+  echo "successful_run_artifacts=removed"
+else
+  echo "failure_artifacts=$results"
+  exit 1
+fi

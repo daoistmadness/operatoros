@@ -77,7 +77,7 @@ test.afterEach(async ({ page }) => {
 });
 
 for (const vp of VIEWPORTS) {
-  test(`responsive audit at ${vp.width}x${vp.height}`, async ({ page }) => {
+  test(`@error-recovery @release responsive audit at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await login(page);
 
@@ -127,7 +127,7 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test('mobile navigation manages focus, dismissal, history, and route state', async ({ page }) => {
+test('@error-recovery @release mobile navigation manages focus, dismissal, history, and route state', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page);
 
