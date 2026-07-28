@@ -1,4 +1,7 @@
-.PHONY: e2e-smoke e2e-full e2e-clean e2e-validate
+.PHONY: e2e-smoke e2e-full e2e-clean e2e-validate fresh-db-parity
+
+fresh-db-parity:
+	@bash scripts/fresh-db-parity.sh
 
 e2e-smoke:
 	@bash e2e/run-smoke.sh

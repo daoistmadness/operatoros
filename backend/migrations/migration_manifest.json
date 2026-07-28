@@ -1,13 +1,14 @@
 {
   "manifest_version": 1,
-  "current_schema": "20260722_s41",
+  "baseline_schema": "20260724_s42",
+  "current_schema": "20260725_s43",
   "startup_is_migration_runner": false,
   "states": [
     {
       "state": "fresh_empty",
       "detection": "configured absolute path does not exist",
       "schema_fingerprint": "empty",
-      "migration_id": "fresh_to_20260722_s41",
+      "migration_id": "fresh_to_20260724_s42_then_registered_migrations",
       "outcome": "MIGRATION_COMPLETE",
       "business_data_behavior": "creates schema only; inserts no students, identities, attendance, or enrollments",
       "manual_approval": false
@@ -50,7 +51,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260722_s41",
+      "detection": "ledger head and immutable schema fingerprint equal 20260725_s43",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -78,13 +79,13 @@
   ],
   "migrations": [
     {
-      "id": "fresh_to_20260722_s41",
-      "description": "Atomically create the current empty SQLite schema",
+      "id": "fresh_to_20260724_s42_then_registered_migrations",
+      "description": "Atomically create the S4.2 empty baseline, then apply registered incremental migrations",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260722_s41",
+      "resulting_schema": "20260725_s43",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
-      "upgrade_entry_point": "core.schema_migrations.initialize_fresh_sqlite_database",
+      "upgrade_entry_point": "core.schema_migrations.bootstrap_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
       "rollback_policy": "delete only the uncommitted .migrating temporary file; automatic downgrade forbidden"
     },
@@ -152,6 +153,28 @@
       "validation_queries": ["isolated path approval", "preserved table fingerprints unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy or roll back PostgreSQL transaction",
       "protected_data_expectation": "no enrollment, class history, lifecycle audit, grade, attendance, intervention, report, identity, or import row is modified"
+    },
+    {
+      "id": "20260722_s41_to_20260724_s42",
+      "description": "Add attendance correction requests, audit history, and review periods",
+      "predecessor": "20260722_s41",
+      "supported_source_schema": "ledger-validated 20260722_s41",
+      "resulting_schema": "20260724_s42",
+      "upgrade_entry_point": "core.attendance_correction_migration.migrate_attendance_corrections_sqlite",
+      "schema_objects": ["attendance_correction_requests", "attendance_correction_audit", "attendance_periods", "attendance_period_audit"],
+      "validation_queries": ["source revision exactly S4.1", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
+      "downgrade_policy": "automatic downgrade forbidden"
+    },
+    {
+      "id": "20260724_s42_to_20260725_s43",
+      "description": "Add the attendance exception follow-up workflow queue",
+      "predecessor": "20260724_s42",
+      "supported_source_schema": "ledger-validated 20260724_s42",
+      "resulting_schema": "20260725_s43",
+      "upgrade_entry_point": "core.attendance_followup_migration.migrate_attendance_followup_sqlite",
+      "schema_objects": ["attendance_follow_ups", "attendance_follow_up_notes", "attendance_follow_up_audit", "append-only attendance follow-up audit triggers"],
+      "validation_queries": ["source revision exactly S4.2", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
+      "downgrade_policy": "automatic downgrade forbidden"
     }
   ]
 }
