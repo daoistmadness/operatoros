@@ -88,12 +88,12 @@ describe("EnrollmentPanel ledger lifecycle", () => {
     expect(view.textContent).toContain("Graduate");
     expect(view.textContent).toContain("Reactivate");
     expect(view.textContent).toContain("Delete unavailable: history is preserved.");
-    expect([...view.querySelectorAll("button")].some((button) => button.textContent?.includes("Delete draft"))).toBe(false);
+    expect(Array.from(view.querySelectorAll("button")).some((button) => button.textContent?.includes("Delete draft"))).toBe(false);
   });
 
   it("opens an accessible effective-dated confirmation without losing the selected row", async () => {
     const view = await renderPanel();
-    const withdraw = [...view.querySelectorAll("button")].find((button) => button.textContent === "Withdraw") as HTMLButtonElement;
+    const withdraw = Array.from(view.querySelectorAll("button")).find((button) => button.textContent === "Withdraw") as HTMLButtonElement;
     await act(async () => withdraw.click());
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
     expect(document.querySelector("#enrollment-lifecycle-date")).not.toBeNull();

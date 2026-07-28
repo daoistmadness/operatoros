@@ -21,9 +21,9 @@ interface AuditItem {
   export_scope?: string;
   success: boolean;
   failure_code?: string;
-  changed_fields?: any;
+  changed_fields?: unknown;
   request_correlation_id?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface AuditResponse {
@@ -56,7 +56,12 @@ export default function OperationsAudit() {
 
   const { data, isLoading, isError, error, refetch } = useQuery<AuditResponse>({
     queryKey: ["operations-audit", page, actor, operation, entityType, riskLevel, highRiskOnly, rollbackOnly],
-    queryFn: () => apiRequest(`/api/students/operations?${queryParams.toString()}`),
+    queryFn: async () => {
+      const response = await apiRequest<AuditResponse>({
+        path: `/api/students/operations?${queryParams.toString()}`,
+      });
+      return response.data;
+    },
   });
 
   return (
