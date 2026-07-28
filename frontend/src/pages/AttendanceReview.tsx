@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api";
@@ -9,7 +9,40 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTit
 
 const STATUS_OPTIONS = ["on-time", "late", "incomplete", "absent"];
 
-const getStatusBadgeClass = (status, effective = false) => {
+type AttendanceStatus = "on-time" | "late" | "incomplete" | "absent";
+type AcademicYear = { id: number; label: string; is_default?: boolean };
+type AcademicClass = { id: number; name: string };
+type AttendanceReviewRow = {
+  attendance_id: number;
+  student_name: string;
+  scan_in?: string | null;
+  scan_out?: string | null;
+  original_status: AttendanceStatus;
+  effective_status: AttendanceStatus;
+  override_status?: AttendanceStatus | null;
+  override_note?: string | null;
+};
+type AttendanceHistoryItem = {
+  id: number;
+  new_status: AttendanceStatus;
+  previous_status?: AttendanceStatus | null;
+  timestamp: string;
+  note?: string | null;
+  reviewed_by?: string | null;
+};
+type ClassesResponse = { classes?: AcademicClass[] };
+type AttendanceRowsResponse = { items?: AttendanceReviewRow[] };
+type AttendanceHistoryResponse = { items?: AttendanceHistoryItem[] };
+type MassOverrideResponse = { overridden: number; reviewed_by: string };
+
+function getAttendanceReviewError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== "object") return fallback;
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  return typeof detail === "string" && detail ? detail : fallback;
+}
+
+const getStatusBadgeClass = (status: AttendanceStatus, effective = false) => {
   const base = "inline-flex items-center px-3 py-1 rounded-[9999px] text-xs font-bold tracking-wide uppercase";
   const strong = effective
     ? {
@@ -31,12 +64,12 @@ const getStatusBadgeClass = (status, effective = false) => {
 function AttendanceReview() {
   const { user, can } = useAuth();
   const canManageAttendance = can("manage_attendance");
-  const [classes, setClasses] = useState([]);
-  const [academicYears, setAcademicYears] = useState([]);
+  const [classes, setClasses] = useState<AcademicClass[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState("");
   const [selectedAcademicClassId, setSelectedAcademicClassId] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<AttendanceReviewRow[]>([]);
 
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingRows, setLoadingRows] = useState(false);
@@ -45,12 +78,12 @@ function AttendanceReview() {
   const [error, setError] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeRow, setActiveRow] = useState(null);
-  const [overrideStatus, setOverrideStatus] = useState("on-time");
+  const [activeRow, setActiveRow] = useState<AttendanceReviewRow | null>(null);
+  const [overrideStatus, setOverrideStatus] = useState<AttendanceStatus>("on-time");
   const [overrideNote, setOverrideNote] = useState("");
 
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyItems, setHistoryItems] = useState([]);
+  const [historyItems, setHistoryItems] = useState<AttendanceHistoryItem[]>([]);
 
   const [massModalOpen, setMassModalOpen] = useState(false);
   const [massSubmitting, setMassSubmitting] = useState(false);
@@ -59,14 +92,14 @@ function AttendanceReview() {
 
   const fetchAcademicYears = useCallback(async () => {
     try {
-      const response = await api.get("/api/academic-masters/academic-years");
+      const response = await api.get<AcademicYear[]>("/api/academic-masters/academic-years");
       setAcademicYears(response.data || []);
       const defaultYear = response.data.find(y => y.is_default) || response.data[0];
       if (defaultYear) {
-        setSelectedAcademicYearId(defaultYear.id);
+        setSelectedAcademicYearId(String(defaultYear.id));
       }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to load academic years.");
+    } catch (err: unknown) {
+      setError(getAttendanceReviewError(err, "Failed to load academic years."));
     }
   }, []);
 
@@ -74,17 +107,18 @@ function AttendanceReview() {
     if (!selectedAcademicYearId) return;
     setLoadingClasses(true);
     try {
-      const response = await api.get("/api/review/classes", {
+      const response = await api.get<ClassesResponse>("/api/review/classes", {
         params: { academic_year_id: selectedAcademicYearId }
       });
-      setClasses(response.data.classes || []);
-      if (response.data.classes?.length > 0) {
-        setSelectedAcademicClassId(response.data.classes[0].id);
+      const availableClasses = response.data.classes || [];
+      setClasses(availableClasses);
+      if (availableClasses.length > 0) {
+        setSelectedAcademicClassId(String(availableClasses[0].id));
       } else {
         setSelectedAcademicClassId("");
       }
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to load classes.");
+    } catch (err: unknown) {
+      setError(getAttendanceReviewError(err, "Failed to load classes."));
     } finally {
       setLoadingClasses(false);
     }
@@ -98,7 +132,7 @@ function AttendanceReview() {
     setLoadingRows(true);
     setError("");
     try {
-      const response = await api.get("/api/review/attendance", {
+      const response = await api.get<AttendanceRowsResponse>("/api/review/attendance", {
         params: {
           date: selectedDate,
           academic_year_id: selectedAcademicYearId,
@@ -106,9 +140,9 @@ function AttendanceReview() {
         },
       });
       setRows(response.data.items || []);
-    } catch (err) {
+    } catch (err: unknown) {
       setRows([]);
-      setError(err.response?.data?.detail || "Failed to load attendance records.");
+      setError(getAttendanceReviewError(err, "Failed to load attendance records."));
     } finally {
       setLoadingRows(false);
     }
@@ -122,7 +156,7 @@ function AttendanceReview() {
     fetchClasses();
   }, [fetchClasses]);
 
-  const openOverrideModal = (row) => {
+  const openOverrideModal = (row: AttendanceReviewRow) => {
     setActiveRow(row);
     setOverrideStatus(row.effective_status || row.original_status);
     setOverrideNote(row.override_note || "");
@@ -153,8 +187,8 @@ function AttendanceReview() {
       });
       closeOverrideModal();
       await loadAttendance();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to submit override.");
+    } catch (err: unknown) {
+      setError(getAttendanceReviewError(err, "Failed to submit override."));
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +205,7 @@ function AttendanceReview() {
     setMassSuccessMsg("");
 
     try {
-      const response = await api.post("/api/review/attendance/mass-override-incomplete", {
+      const response = await api.post<MassOverrideResponse>("/api/review/attendance/mass-override-incomplete", {
         override_status: "on-time",
         note: trimmedNote,
       });
@@ -181,24 +215,24 @@ function AttendanceReview() {
       setMassModalOpen(false);
       setMassOverrideNote("Mass override: student consistently does not scan out");
       await loadAttendance();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to submit mass override.");
+    } catch (err: unknown) {
+      setError(getAttendanceReviewError(err, "Failed to submit mass override."));
     } finally {
       setMassSubmitting(false);
     }
   };
 
-  const openHistoryDrawer = async (row) => {
+  const openHistoryDrawer = async (row: AttendanceReviewRow) => {
     setActiveRow(row);
     setHistoryOpen(true);
     setHistoryItems([]);
     setHistoryLoading(true);
     setError("");
     try {
-      const response = await api.get(`/api/review/attendance/${row.attendance_id}/history`);
+      const response = await api.get<AttendanceHistoryResponse>(`/api/review/attendance/${row.attendance_id}/history`);
       setHistoryItems(response.data.items || []);
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to load override history.");
+    } catch (err: unknown) {
+      setError(getAttendanceReviewError(err, "Failed to load override history."));
     } finally {
       setHistoryLoading(false);
     }
@@ -414,7 +448,7 @@ function AttendanceReview() {
               <select
                 aria-label="New attendance status"
                 value={overrideStatus}
-                onChange={(e) => setOverrideStatus(e.target.value)}
+                onChange={(e) => setOverrideStatus(e.target.value as AttendanceStatus)}
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
                 {STATUS_OPTIONS.map((status) => (

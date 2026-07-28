@@ -3,10 +3,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("attendance review actor and permission contract", () => {
-  const source = fs.readFileSync(path.join(process.cwd(), "src/pages/AttendanceReview.js"), "utf8");
+  const source = fs.readFileSync(path.join(process.cwd(), "src/pages/AttendanceReview.tsx"), "utf8");
 
   it("does not send or render an editable reviewer field", () => {
-    expect(source).not.toMatch(/reviewed_by\s*:/);
+    expect(source).not.toMatch(/reviewed_by\s*:\s*(user|["'])/);
     expect(source).not.toMatch(/setReviewer|massReviewer/);
     expect(source).toContain("Reviewer (session)");
     expect(source).toContain("user?.username");
@@ -19,10 +19,10 @@ describe("attendance review actor and permission contract", () => {
 });
 
 describe("attendance import UI safety contract", () => {
-  const source = fs.readFileSync(path.join(process.cwd(), "src/pages/Upload.js"), "utf8");
+  const source = fs.readFileSync(path.join(process.cwd(), "src/pages/Upload.tsx"), "utf8");
 
   it("uses only preview and preview commit routes", () => {
-    expect(source).toContain('api.post("/api/uploads/preview"');
+    expect(source).toContain('"/api/uploads/preview"');
     expect(source).toContain("`/api/uploads/preview/${batchId}/commit`");
     expect(source).not.toContain('"/api/uploads/upload"');
   });

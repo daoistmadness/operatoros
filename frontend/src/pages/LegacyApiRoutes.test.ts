@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-function pageSource(filename) {
+function pageSource(filename: string): string {
   return fs.readFileSync(path.resolve(process.cwd(), "src/pages", filename), "utf8");
 }
 
@@ -15,15 +15,15 @@ describe("legacy page API contracts", () => {
       'api.patch("/api/students/assign-class"',
     ]],
     ["../api/uploadHistory.ts", ['api.get("/api/uploads/history",']],
-    ["JenjangConfig.jsx", [
-      'api.get("/api/config/jenjang")',
-      'api.get("/api/config/jenjang/available")',
+    ["JenjangConfig.tsx", [
+      '"/api/config/jenjang"',
+      '"/api/config/jenjang/available"',
       'api.put(`/api/config/jenjang/',
       'api.delete(`/api/config/jenjang/',
     ]],
-    ["HebConfig.jsx", [
-      'api.get("/api/config/jenjang/available")',
-      'api.get("/api/analytics/heb"',
+    ["HebConfig.tsx", [
+      '"/api/config/jenjang/available"',
+      '"/api/analytics/heb"',
       'api.put(`/api/config/heb/',
       'api.delete(`/api/config/heb/',
     ]],
