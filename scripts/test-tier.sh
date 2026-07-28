@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+tier="${1:?tier required}"
+python="$repo/backend/.venv/bin/python"
+node_bin="/home/mikhailryu/.nvm/versions/node/v22.23.1/bin"
+bun="/home/mikhailryu/.bun/bin/bun"
+export PATH="$node_bin:/home/mikhailryu/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
+export SHELL=/bin/bash
+hash -r
+started=$SECONDS
+scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
+protected_database="$repo/backend/attendance.db"
+protected_before="$(sha256sum "$protected_database" | awk '{print $1}')"
+protected_expected="a657108e8c15d62cc91962326d57c4cdd1f25fba4dceb5828d519076bc1c6274"
+[[ "$protected_before" == "$protected_expected" ]]
+
+verify_protected() {
+  local protected_after
+  protected_after="$(sha256sum "$protected_database" | awk '{print $1}')"
+  [[ "$protected_after" == "$protected_before" ]]
+  ! compgen -G "$protected_database-*" >/dev/null
+  echo "protected_database_checksum=unchanged"
+  echo "protected_database_sidecars=none"
+}
+cleanup() {
+  local status=$?
+  rm -f -- "$scope_file"
+  verify_protected || status=1
+  exit "$status"
+}
+trap cleanup EXIT
+
+scope_args=()
+if [[ -n "${TEST_CHANGED_FILES:-}" ]]; then
+  while IFS= read -r path; do [[ -n "$path" ]] && scope_args+=(--changed-file "$path"); done <<<"$TEST_CHANGED_FILES"
+elif [[ -n "${TEST_BASE_REVISION:-}" ]]; then
+  scope_args+=(--base "$TEST_BASE_REVISION" --head "${TEST_HEAD_REVISION:-HEAD}")
+fi
+"$python" "$repo/scripts/test_scope.py" "${scope_args[@]}" >"$scope_file"
+
+"$python" - "$scope_file" <<'PY'
+import json, sys
+s=json.load(open(sys.argv[1]))
+print("changed_paths=" + ",".join(s["changed_paths"]))
+print("risk_categories=" + ",".join(s["risk_categories"]))
+print("focused_tests=" + ",".join(s["focused_tests"]))
+print("browser_scenarios=" + ",".join(s["browser_scenarios"]))
+for key in ("frontend_changed","backend_changed","schema_sensitive","full_backend_required","api_drift_required","frontend_build_required","documentation_only"):
+    print(f"{key}={'yes' if s[key] else 'no'}")
+print(f"backend_full_passes_required={s['backend_full_passes_required']}")
+for item in s["selection_reasons"]:
+    print(f"reason={item['path']} -> {','.join(item['categories']) or 'ignored'}")
+PY
+printf 'tier=%s\n' "$tier"
+
+json_value() {
+  "$python" - "$scope_file" "$1" <<'PY'
+import json,sys
+value=json.load(open(sys.argv[1]))[sys.argv[2]]
+print("yes" if value is True else "no" if value is False else value)
+PY
+}
+
+frontend_changed="$(json_value frontend_changed)"
+backend_changed="$(json_value backend_changed)"
+schema_sensitive="$(json_value schema_sensitive)"
+documentation_only="$(json_value documentation_only)"
+api_drift_required="$(json_value api_drift_required)"
+frontend_build_required="$(json_value frontend_build_required)"
+
+frontend_static() {
+  (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run boundaries:check && npm run api:check && npm run typecheck)
+}
+backend_full() {
+  (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests -q)
+}
+
+case "$tier" in
+  fast)
+    if [[ "$documentation_only" == yes ]]; then
+      echo "selected_suites=documentation-static-only"
+    elif [[ "$schema_sensitive" == yes ]]; then
+      echo "selected_suites=classifier-tests,fresh-db-parity"
+      "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
+      make -C "$repo" fresh-db-parity
+    else
+      if [[ "$frontend_changed" == yes ]]; then
+        frontend_static
+        mapfile -t frontend_tests < <("$python" - "$scope_file" <<'PY'
+import json, sys
+for path in json.load(open(sys.argv[1]))["focused_tests"]:
+    if path.startswith("src/"):
+        print(path)
+PY
+)
+        if ((${#frontend_tests[@]})); then
+          (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run "${frontend_tests[@]}")
+        fi
+        if [[ "$frontend_build_required" == yes ]]; then
+          (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run build)
+        fi
+      fi
+      if [[ "$backend_changed" == yes ]]; then
+        mapfile -t backend_tests < <("$python" - "$scope_file" <<'PY'
+import json, sys
+for path in json.load(open(sys.argv[1]))["focused_tests"]:
+    if path.startswith("backend/"):
+        print(path)
+PY
+)
+        ((${#backend_tests[@]})) || backend_tests=("$repo/backend/tests/test_readiness_api.py")
+        (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest -q "${backend_tests[@]}")
+      fi
+    fi
+    ;;
+  pr)
+    echo "selected_suites=classifier,boundaries,api-drift,typecheck,node-tests,node-build,backend,focused-browser"
+    frontend_static
+    (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run && npm run build)
+    "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
+    if [[ "$backend_changed" == yes || "$schema_sensitive" == yes ]]; then
+      backend_full
+    else
+      (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests/test_readiness_api.py -q)
+    fi
+    if [[ "$frontend_build_required" == yes ]]; then
+      echo "selected_suite=bun-build reason=frontend runtime/import/build classification"
+      (cd "$repo/frontend" && "$bun" run build)
+    else
+      echo "omitted_suite=bun-build reason=no frontend runtime/import/build classification"
+    fi
+    scenario_grep="$("$python" - "$scope_file" <<'PY'
+import json,sys
+items=json.load(open(sys.argv[1]))["browser_scenarios"]
+print("|".join("@" + item for item in items) if items else "@release")
+PY
+)"
+    OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
+    ;;
+  release)
+    echo "selected_suites=fresh-db-parity,backend-full,node-tests,node-build,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    make -C "$repo" fresh-db-parity
+    passes=1
+    reliable_change_context=no
+    [[ -n "${TEST_BASE_REVISION:-}" || -n "${TEST_CHANGED_FILES:-}" ]] && reliable_change_context=yes
+    [[ "$schema_sensitive" == yes || "$reliable_change_context" == no || "${RELEASE_DOUBLE_BACKEND:-0}" == 1 ]] && passes=2
+    echo "backend_full_passes_required=$passes"
+    if [[ "${RELEASE_DOUBLE_BACKEND:-0}" == 1 ]]; then
+      echo "reason=explicit RELEASE_DOUBLE_BACKEND=1"
+    elif [[ "$reliable_change_context" == no ]]; then
+      echo "reason=no reliable git comparison"
+    elif [[ "$schema_sensitive" == yes ]]; then
+      echo "reason=schema/startup/test-infrastructure-sensitive classification"
+    else
+      echo "reason=ordinary release change"
+    fi
+    for ((pass=1; pass<=passes; pass++)); do echo "backend_full_pass=$pass"; backend_full; done
+    frontend_static
+    (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run && npm run build)
+    (cd "$repo/frontend" && "$bun" run test --run && "$bun" run build)
+    make -C "$repo" e2e-validate
+    make -C "$repo" e2e-smoke
+    make -C "$repo" e2e-clean
+    ;;
+  *) echo "unknown tier: $tier" >&2; exit 2 ;;
+esac
+
+echo "tier_result=passed"
+echo "elapsed_seconds=$((SECONDS-started))"

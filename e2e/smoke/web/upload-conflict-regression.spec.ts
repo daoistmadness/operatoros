@@ -17,7 +17,7 @@ async function openConflict(page: Page, device: string) {
   await expect(page.getByLabel("NIPD, NISN, student ID, device ID, or name")).toBeVisible();
 }
 
-test("resets sequential conflict state and supports explicit retry commit and roster review", async ({ page }) => {
+test("@uploads @error-recovery @release resets sequential conflict state and supports explicit retry commit and roster review", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page);
   await page.goto("/upload");
