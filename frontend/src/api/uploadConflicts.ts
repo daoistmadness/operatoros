@@ -76,14 +76,15 @@ export type RosterComparison = {
   allowed_plans: string[];
 };
 
-export async function fetchUploadConflicts(params: Record<string, string | number | boolean | undefined>) {
-  return (await apiRequest<ConflictQueue>({ path: "/api/upload-conflicts", params })).data;
+export async function fetchUploadConflicts(params: Record<string, string | number | boolean | undefined>, signal?: AbortSignal) {
+  return (await apiRequest<ConflictQueue>({ path: "/api/upload-conflicts", params, signal })).data;
 }
 
-export async function fetchStudentCandidates(itemId: string, query: string) {
+export async function fetchStudentCandidates(itemId: string, query: string, signal?: AbortSignal) {
   return (await apiRequest<{ items: StudentCandidate[] }>({
     path: `/api/upload-conflicts/${encodeURIComponent(itemId)}/student-candidates`,
     params: { query },
+    signal,
   })).data.items;
 }
 
@@ -131,10 +132,11 @@ export async function commitConflictRetry(item: ConflictItem, preview: RetryPrev
   })).data;
 }
 
-export async function fetchRosterComparison(itemId: string, studentMasterId: string) {
+export async function fetchRosterComparison(itemId: string, studentMasterId: string, signal?: AbortSignal) {
   return (await apiRequest<RosterComparison>({
     path: `/api/upload-conflicts/${encodeURIComponent(itemId)}/roster-comparison`,
     params: { student_master_id: studentMasterId },
+    signal,
   })).data;
 }
 
