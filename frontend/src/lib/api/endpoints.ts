@@ -1,7 +1,7 @@
 import { API_BLOB_TYPES, apiRequest, type ApiResponse, type QueryParams } from './client';
 
 type JsonObject = Record<string, unknown>;
-type ReportQuery = QueryParams & {
+export type ReportQuery = QueryParams & {
   month?: number;
   year?: number;
   term?: number;
@@ -9,20 +9,50 @@ type ReportQuery = QueryParams & {
   date_to?: string;
   jenjang?: string;
 };
-export type RekapReport = JsonObject & {
-  jenjang: unknown[];
-  global_summary: JsonObject & {
-    percentages?: {
-      hadir_pct?: number;
-      sakit_pct?: number;
-      izin_pct?: number;
-      alfa_pct?: number;
-    };
+export type AttendancePercentages = {
+  hadir_pct?: number | null;
+  sakit_pct?: number | null;
+  izin_pct?: number | null;
+  alfa_pct?: number | null;
+  total_pct?: number | null;
+};
+
+export type RekapClassRow = {
+  class_name: string;
+  percentages: AttendancePercentages;
+  warning_flags: {
+    excluded_unclassified?: boolean;
+    data_quality_issue?: boolean;
+    lain2_count?: number;
   };
-  global_flags: JsonObject;
-  chart_data: unknown[];
+};
+
+export type RekapJenjangRow = {
+  name: string;
+  summary: { percentages: AttendancePercentages };
+  classes: RekapClassRow[];
+};
+
+export type RekapChartRow = {
+  label: 'Hadir' | 'Sakit' | 'Izin' | 'Alfa' | string;
+  value: number;
+};
+
+export type RekapReport = JsonObject & {
+  report_title: string;
+  school_name: string;
+  jenjang: RekapJenjangRow[];
+  global_summary: JsonObject & { percentages?: AttendancePercentages };
+  global_flags: JsonObject & {
+    heb_missing?: boolean;
+    sia_missing?: boolean;
+    has_data_quality_issue?: boolean;
+    affected_classes?: number;
+  };
+  chart_data: RekapChartRow[];
   warning_flags: JsonObject;
-  period: JsonObject;
+  period: JsonObject & { label?: string };
+  heb_by_jenjang?: Record<string, number | null>;
 };
 type TardinessReport = JsonObject & {
   breakdown_by_jenjang: unknown[];
@@ -106,13 +136,13 @@ function ensureRekapReportShape(data: unknown): RekapReport {
   const report = ensureObject(data, 'Format data rekap absensi tidak valid.');
   return {
     ...report,
-    jenjang: ensureArray(report.jenjang),
-    global_summary: ensureObject(report.global_summary || {}, 'Ringkasan tidak valid.'),
-    global_flags: ensureObject(report.global_flags || {}, 'Flags tidak valid.'),
-    chart_data: ensureArray(report.chart_data),
+    jenjang: ensureArray<RekapJenjangRow>(report.jenjang),
+    global_summary: ensureObject(report.global_summary || {}, 'Ringkasan tidak valid.') as RekapReport['global_summary'],
+    global_flags: ensureObject(report.global_flags || {}, 'Flags tidak valid.') as RekapReport['global_flags'],
+    chart_data: ensureArray<RekapChartRow>(report.chart_data),
     warning_flags: ensureObject(report.warning_flags || {}, 'Penanda peringatan rekap absensi tidak valid.'),
-    period: ensureObject(report.period || {}, 'Periode laporan rekap absensi tidak valid.'),
-  };
+    period: ensureObject(report.period || {}, 'Periode laporan rekap absensi tidak valid.') as RekapReport['period'],
+  } as RekapReport;
 }
 
 function ensureTardinessReportShape(data: unknown): TardinessReport {

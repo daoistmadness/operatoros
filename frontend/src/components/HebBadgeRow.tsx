@@ -1,7 +1,7 @@
 import { BookOpen } from "lucide-react";
 
 type HebBadgeRowProps = {
-  hebByJenjang?: Record<string, number | string> | null;
+  hebByJenjang?: Record<string, number | string | null> | null;
 };
 
 export function HebBadgeRow({ hebByJenjang }: HebBadgeRowProps) {

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -18,8 +18,14 @@ import { cn } from '../lib/cn';
 import { createDownloadUrl, revokeDownloadUrl } from '../lib/api/client';
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState } from "../components/common/state-message";
-import { downloadRekapAbsensiExcel, getRekapAbsensiReport } from '../lib/api/endpoints';
-import { TERM_OPTIONS, getAcademicYearLabel, getTermAcademicYearLabel } from '../lib/reportPeriods';
+import {
+  downloadRekapAbsensiExcel,
+  getRekapAbsensiReport,
+  type RekapChartRow,
+  type RekapReport,
+  type ReportQuery,
+} from '../lib/api/endpoints';
+import { TERM_OPTIONS, getAcademicYearLabel, getTermAcademicYearLabel, type ReportTerm } from '../lib/reportPeriods';
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 
@@ -44,11 +50,21 @@ const MONTH_OPTIONS = [
   { value: 12, label: 'Desember' },
 ];
 
-function formatLocalDate(year, monthIndex, day) {
+type FilterMode = 'month' | 'date_range' | 'term';
+type ReportFilters = {
+  filterMode: FilterMode;
+  month: number;
+  year: number;
+  term: ReportTerm;
+  dateFrom: string;
+  dateTo: string;
+};
+
+function formatLocalDate(year: number, monthIndex: number, day: number): string {
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function buildParams({ filterMode, month, year, term, dateFrom, dateTo }) {
+function buildParams({ filterMode, month, year, term, dateFrom, dateTo }: ReportFilters): ReportQuery {
   if (filterMode === 'date_range') {
     return { date_from: dateFrom, date_to: dateTo };
   }
@@ -60,14 +76,14 @@ function buildParams({ filterMode, month, year, term, dateFrom, dateTo }) {
   return { month, year };
 }
 
-function sanitizePeriodLabel(label) {
+function sanitizePeriodLabel(label?: string): string {
   return (label || 'periode')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
 }
 
-function getAcademicYearPreview({ filterMode, month, year, term, dateFrom, dateTo }) {
+function getAcademicYearPreview({ filterMode, month, year, term, dateFrom, dateTo }: ReportFilters): string {
   if (filterMode === 'month') {
     return getAcademicYearLabel(year, month);
   }
@@ -76,15 +92,23 @@ function getAcademicYearPreview({ filterMode, month, year, term, dateFrom, dateT
     return getTermAcademicYearLabel(term, year);
   }
 
-  const anchor = new Date(dateTo || dateFrom || `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`);
+  const anchor = new Date(dateTo || dateFrom || new Date().toISOString().slice(0, 10));
   return getAcademicYearLabel(anchor.getFullYear(), anchor.getMonth() + 1);
 }
 
-function formatPercent(value) {
+function formatPercent(value?: number | null): string {
   return value === null || value === undefined ? '—' : `${value}%`;
 }
 
-function WarningBanner({ children, linkTo, linkLabel }) {
+function WarningBanner({
+  children,
+  linkTo,
+  linkLabel,
+}: {
+  children: ReactNode;
+  linkTo?: string;
+  linkLabel?: string;
+}) {
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 flex items-start gap-3 no-print">
       <TriangleAlert className="mt-0.5 text-amber-600" size={20} />
@@ -124,7 +148,7 @@ function LoadingSkeleton() {
   );
 }
 
-function RekapAbsensiChart({ data, title }) {
+function RekapAbsensiChart({ data, title }: { data: RekapChartRow[]; title: string }) {
   if (!data.length) {
     return null;
   }
@@ -139,7 +163,7 @@ function RekapAbsensiChart({ data, title }) {
   const maxValue = 100;
 
   const axisTicks = [0, 25, 50, 75, 100];
-  const colors = {
+  const colors: Record<string, string> = {
     Hadir: '#2E7D32',
     Sakit: '#81C784',
     Izin: '#A5D6A7',
@@ -213,6 +237,17 @@ function RekapAbsensiChart({ data, title }) {
   );
 }
 
+function getRekapError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== 'object') return fallback;
+  const candidate = error as {
+    message?: unknown;
+    response?: { data?: { detail?: unknown } };
+  };
+  const detail = candidate.response?.data?.detail;
+  if (typeof detail === 'string' && detail) return detail;
+  return typeof candidate.message === 'string' && candidate.message ? candidate.message : fallback;
+}
+
 function RekapAbsensi() {
   const today = useMemo(() => new Date(), []);
   const currentMonth = today.getMonth() + 1;
@@ -223,21 +258,21 @@ function RekapAbsensi() {
     [currentYear, today]
   );
 
-  const [filterMode, setFilterMode] = useState('month');
+  const [filterMode, setFilterMode] = useState<FilterMode>('month');
   const [month, setMonth] = useState(currentMonth);
   const [year, setYear] = useState(currentYear);
-  const [term, setTerm] = useState(1);
+  const [term, setTerm] = useState<ReportTerm>(1);
   const [dateFrom, setDateFrom] = useState(currentMonthStart);
   const [dateTo, setDateTo] = useState(currentMonthEnd);
   const [loading, setLoading] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState('');
-  const [report, setReport] = useState(null);
+  const [report, setReport] = useState<RekapReport | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [expandedJenjangs, setExpandedJenjangs] = useState({});
+  const [expandedJenjangs, setExpandedJenjangs] = useState<Record<string, boolean>>({});
 
-  const toggleJenjang = (jenjangName) => {
+  const toggleJenjang = (jenjangName: string) => {
     setExpandedJenjangs((prev) => ({
       ...prev,
       [jenjangName]: !prev[jenjangName],
@@ -267,14 +302,14 @@ function RekapAbsensi() {
       setReport(nextReport);
       
       // Default all jenjang to collapsed
-      const initialExpandedState = {};
+      const initialExpandedState: Record<string, boolean> = {};
       (nextReport?.jenjang || []).forEach(j => {
         initialExpandedState[j.name] = false;
       });
       setExpandedJenjangs(initialExpandedState);
-    } catch (requestError) {
+    } catch (requestError: unknown) {
       setReport(null);
-      setError(requestError.response?.data?.detail || requestError.message || 'Gagal memuat rekap absensi.');
+      setError(getRekapError(requestError, 'Gagal memuat rekap absensi.'));
     } finally {
       setLoading(false);
     }
@@ -294,8 +329,8 @@ function RekapAbsensi() {
       link.download = `rekap_absensi_${sanitizePeriodLabel(report.period?.label)}.xlsx`;
       link.click();
       revokeDownloadUrl(url);
-    } catch (downloadError) {
-      setError(downloadError.response?.data?.detail || downloadError.message || 'Gagal mengunduh file Excel.');
+    } catch (downloadError: unknown) {
+      setError(getRekapError(downloadError, 'Gagal mengunduh file Excel.'));
     } finally {
       setExportingExcel(false);
     }
@@ -352,7 +387,7 @@ function RekapAbsensi() {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setFilterMode(option.value)}
+                  onClick={() => setFilterMode(option.value as FilterMode)}
                   className={cn(
                     'rounded-xl px-3 py-2 text-sm font-semibold transition-colors',
                     filterMode === option.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
@@ -415,7 +450,7 @@ function RekapAbsensi() {
                 <select
                   aria-label="Term akademik"
                   value={term}
-                  onChange={(event) => setTerm(Number(event.target.value))}
+                  onChange={(event) => setTerm(Number(event.target.value) as ReportTerm)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
                 >
                   {TERM_OPTIONS.map((option) => (
@@ -544,7 +579,7 @@ function RekapAbsensi() {
                       const isExpanded = expandedJenjangs[j.name];
                       const jPcts = j.summary.percentages;
                       return (
-                        <React.Fragment key={j.name}>
+                        <Fragment key={j.name}>
                           {/* Jenjang Header Row */}
                           <tr 
                             className="bg-emerald-50 hover:bg-emerald-100 cursor-pointer transition-colors border-b border-emerald-200"
@@ -588,7 +623,7 @@ function RekapAbsensi() {
                               </tr>
                             );
                           })}
-                        </React.Fragment>
+                        </Fragment>
                       );
                     })}
                     

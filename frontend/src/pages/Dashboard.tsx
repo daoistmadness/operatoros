@@ -469,7 +469,7 @@ export default function Dashboard() {
 
 // ─── Minimal Subcomponents ───────────────────────────────────────────────────
 
-function MetricBlock({ label, value, color }: { label: string; value?: number; color: string }) {
+function MetricBlock({ label, value, color }: { label: string; value?: number | null; color: string }) {
   return (
     <div>
       <div className="text-xs font-bold text-slate-400 uppercase mb-1">{label}</div>
