@@ -8,6 +8,7 @@ import {
   reportBuilderApiPath,
   updateReportBranding,
 } from "./reportBuilder";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../lib/api/client", () => ({
   API_BASE_URL: "http://localhost:8000",
@@ -22,7 +23,7 @@ import { apiRequest } from "../lib/api/client";
 
 describe("report builder API wrappers", () => {
   beforeEach(() => {
-    apiRequest.mockResolvedValue({
+    vi.mocked(apiRequest).mockResolvedValue({
       data: new Blob(["report"]),
       status: 200,
       headers: {},
@@ -30,7 +31,7 @@ describe("report builder API wrappers", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("builds the canonical API path", () => {
@@ -140,4 +141,3 @@ describe("report builder API wrappers", () => {
     );
   });
 });
-
