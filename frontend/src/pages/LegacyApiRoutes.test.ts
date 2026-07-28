@@ -27,10 +27,10 @@ describe("legacy page API contracts", () => {
       'api.put(`/api/config/heb/',
       'api.delete(`/api/config/heb/',
     ]],
-    ["AbsenceReasons.jsx", [
-      'api.get("/api/config/absence-reasons"',
-      'api.get("/api/analytics/attendance-date-range")',
-      'api.post("/api/config/absence-reasons/bulk"',
+    ["AbsenceReasons.tsx", [
+      'api.get<ApiAbsenceRow[]>("/api/config/absence-reasons"',
+      'api.get<DateRangeResponse>("/api/analytics/attendance-date-range")',
+      'api.post<SaveResponse>("/api/config/absence-reasons/bulk"',
     ]],
   ])("uses canonical load and mutation routes in %s", (filename, expectedCalls) => {
     const source = pageSource(filename);
