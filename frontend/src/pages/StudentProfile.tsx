@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -21,6 +22,8 @@ import {
   Tooltip,
   Legend,
   Filler,
+  type ChartOptions,
+  type TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import api from '../api';
@@ -47,8 +50,57 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+type AttendanceBreakdownRow = {
+  date: string;
+  status: 'on-time' | 'late' | 'absent' | 'incomplete' | string;
+  scan_masuk?: string | null;
+  terlambat?: string | null;
+};
+
+type MonthlyHistoryRow = {
+  year: number;
+  month: number;
+  month_label: string;
+  attendance_rate: number | null;
+  late: number;
+};
+
+type StudentMonthlyHistory = {
+  nama?: string | null;
+  class_name?: string | null;
+  jenjang?: string | null;
+  history: MonthlyHistoryRow[];
+};
+
+type StudentAttendanceSummary = {
+  nama?: string | null;
+  class_name?: string | null;
+  jenjang?: string | null;
+  attendance_rate?: number | null;
+  heb?: number | null;
+  total_present?: number | null;
+  total_late?: number | null;
+  sakit: number;
+  izin: number;
+  alfa: number;
+  breakdown: AttendanceBreakdownRow[];
+};
+
+type SelectedMonth = {
+  year: number;
+  month: number;
+};
+
+type StatCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+  color: 'green' | 'amber' | 'red' | 'brand';
+};
+
 // ─── Stat Card ────────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value, sub, color }) {
+function StatCard({ icon: Icon, label, value, sub, color }: StatCardProps) {
   return (
     <Card className={cn(
       'rounded-2xl p-5 flex items-start gap-4 border-l-4 transition-all duration-200 ease-out hover:border-brand/20 hover:shadow-md',
@@ -76,9 +128,17 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
 }
 
 // ─── Calendar Heatmap ─────────────────────────────────────────────────────────
-function CalendarHeatmap({ breakdown, year, month }) {
+function CalendarHeatmap({
+  breakdown,
+  year,
+  month,
+}: {
+  breakdown: AttendanceBreakdownRow[];
+  year: number;
+  month: number;
+}) {
   const byDate = useMemo(() => {
-    const map = {};
+    const map: Record<string, AttendanceBreakdownRow> = {};
     for (const row of breakdown) {
       if (row.date) map[row.date] = row;
     }
@@ -88,7 +148,7 @@ function CalendarHeatmap({ breakdown, year, month }) {
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0=Sun
 
-  const cells = [];
+  const cells: Array<{ day: number; date: string; record: AttendanceBreakdownRow | null } | null> = [];
   for (let i = 0; i < firstDayOfWeek; i++) {
     cells.push(null);
   }
@@ -97,7 +157,7 @@ function CalendarHeatmap({ breakdown, year, month }) {
     cells.push({ day: d, date: dateStr, record: byDate[dateStr] || null });
   }
 
-  function cellColor(record) {
+  function cellColor(record: AttendanceBreakdownRow | null) {
     if (!record) return 'bg-slate-100 text-slate-300';
     if (record.status === 'on-time')   return 'bg-emerald-100 text-emerald-700';
     if (record.status === 'late')      return 'bg-amber-100 text-amber-700';
@@ -106,7 +166,7 @@ function CalendarHeatmap({ breakdown, year, month }) {
     return 'bg-slate-100 text-slate-400';
   }
 
-  function cellLabel(record) {
+  function cellLabel(record: AttendanceBreakdownRow | null) {
     if (!record) return '';
     if (record.status === 'on-time')   return '✓';
     if (record.status === 'late')      return '⏱';
@@ -159,25 +219,32 @@ function CalendarHeatmap({ breakdown, year, month }) {
   );
 }
 
+function getStudentProfileError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== 'object') return fallback;
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  return typeof detail === 'string' && detail ? detail : fallback;
+}
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [summary, setSummary] = useState(null);
-  const [history, setHistory] = useState(null);
+  const [summary, setSummary] = useState<StudentAttendanceSummary | null>(null);
+  const [history, setHistory] = useState<StudentMonthlyHistory | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [error, setError] = useState('');
 
   // Month selector state — derived from history once loaded
-  const [selectedMonth, setSelectedMonth] = useState(null); // { year, month }
+  const [selectedMonth, setSelectedMonth] = useState<SelectedMonth | null>(null);
 
   // ── Fetch monthly-history (for trend chart + month selector) ──────────────
   const fetchHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await api.get(`/api/students/${id}/monthly-history`);
+      const res = await api.get<StudentMonthlyHistory>(`/api/students/${id}/monthly-history`);
       const data = res.data;
       setHistory(data);
       // Default to the last/most recent month
@@ -185,8 +252,8 @@ export default function StudentProfile() {
         const last = data.history[data.history.length - 1];
         setSelectedMonth({ year: last.year, month: last.month });
       }
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load attendance history.');
+    } catch (err: unknown) {
+      setError(getStudentProfileError(err, 'Failed to load attendance history.'));
     } finally {
       setLoadingHistory(false);
     }
@@ -197,12 +264,12 @@ export default function StudentProfile() {
     if (!selectedMonth) return;
     setLoadingSummary(true);
     try {
-      const res = await api.get(`/api/students/${id}/attendance-summary`, {
+      const res = await api.get<StudentAttendanceSummary>(`/api/students/${id}/attendance-summary`, {
         params: { month: selectedMonth.month, year: selectedMonth.year },
       });
       setSummary(res.data);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load attendance summary.');
+    } catch (err: unknown) {
+      setError(getStudentProfileError(err, 'Failed to load attendance summary.'));
     } finally {
       setLoadingSummary(false);
     }
@@ -251,7 +318,7 @@ export default function StudentProfile() {
     };
   }, [history]);
 
-  const chartOptions = useMemo(() => ({
+  const chartOptions = useMemo<ChartOptions<'line'>>(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
@@ -262,7 +329,7 @@ export default function StudentProfile() {
       },
       tooltip: {
         callbacks: {
-          label: (ctx) =>
+          label: (ctx: TooltipItem<'line'>) =>
             ctx.dataset.label === 'Attendance Rate %'
               ? ` ${ctx.raw ?? '—'}%`
               : ` ${ctx.raw ?? '—'} days`,
@@ -280,7 +347,7 @@ export default function StudentProfile() {
         min: 0,
         max: 100,
         grid: { color: 'rgba(0,0,0,0.04)' },
-        ticks: { callback: (v) => `${v}%`, font: { size: 11 }, color: '#94a3b8' },
+        ticks: { callback: (v: string | number) => `${v}%`, font: { size: 11 }, color: '#94a3b8' },
       },
       y1: {
         type: 'linear',
@@ -301,9 +368,10 @@ export default function StudentProfile() {
     ? `${Math.round(summary.attendance_rate * 100)}%`
     : '—';
 
-  const rateColor =
-    summary?.attendance_rate >= 0.9 ? 'green'
-    : summary?.attendance_rate >= 0.75 ? 'amber'
+  const attendanceRate = summary?.attendance_rate ?? 0;
+  const rateColor: StatCardProps['color'] =
+    attendanceRate >= 0.9 ? 'green'
+    : attendanceRate >= 0.75 ? 'amber'
     : 'red';
 
   const allMonths = history?.history ?? [];
