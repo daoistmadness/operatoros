@@ -38,6 +38,7 @@ from core.schema_migrations import (
 from core.enrollment_ledger_migration import migrate_enrollment_ledger_sqlite
 from core.student_progression_migration import migrate_student_progression_sqlite
 from core.attendance_correction_migration import migrate_attendance_corrections_sqlite
+from core.attendance_followup_migration import migrate_attendance_followup_sqlite
 
 LOGGER = logging.getLogger("operatoros.operational_recovery")
 
@@ -274,7 +275,10 @@ def run_operational_recovery(
         # Step E: S4.1 -> S4.2 migration
         migrate_attendance_corrections_sqlite(temporary_path)
 
-        # Step F: Import all ORM models explicitly to ensure metadata table registration
+        # Step F: S4.2 -> S4.3 migration
+        migrate_attendance_followup_sqlite(temporary_path)
+
+        # Step G: Import all ORM models explicitly to ensure metadata table registration
         from sqlalchemy import create_engine
         from sqlalchemy.pool import NullPool
         from core.database import Base
@@ -318,7 +322,7 @@ def run_operational_recovery(
         finally:
             recovery_engine.dispose()
 
-        # Step G: Update ledger fingerprint to exact current schema fingerprint
+        # Step H: Update ledger fingerprint to exact current schema fingerprint
         conn = sqlite3.connect(temporary_path)
         try:
             actual_fp = _schema_fingerprint(conn)
@@ -326,12 +330,12 @@ def run_operational_recovery(
                 f"UPDATE {LEDGER_TABLE} SET schema_fingerprint=? WHERE version=?",
                 (actual_fp, CURRENT_SCHEMA_VERSION),
             )
-            conn.execute("PRAGMA journal_mode=DELETE")
             conn.commit()
+            conn.execute("PRAGMA journal_mode=DELETE")
         finally:
             conn.close()
 
-        # Step H: Post-recovery verification on temporary database
+        # Step I: Post-recovery verification on temporary database
         conn = sqlite3.connect(temporary_path)
         try:
             conn.execute("PRAGMA foreign_keys=ON")
