@@ -2,8 +2,10 @@ import {
   createAcademicInterventionFromAlert,
   fetchAcademicInterventions,
   updateAcademicIntervention,
+  type AcademicInterventionPayload,
 } from "./academicInterventions";
 import { apiRequest } from "../lib/api/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../lib/api/client", () => ({
   API_BASE_URL: "http://localhost:8000",
@@ -12,15 +14,15 @@ vi.mock("../lib/api/client", () => ({
 
 describe("academic interventions API", () => {
   beforeEach(() => {
-    apiRequest.mockResolvedValue({ data: {}, status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValue({ data: {}, status: 200, headers: {} });
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("creates an intervention from a Below-KKM alert through the canonical route", async () => {
-    const payload = {
+    const payload: AcademicInterventionPayload = {
       student_id: 11,
       enrollment_id: 21,
       academic_year_id: 7,
