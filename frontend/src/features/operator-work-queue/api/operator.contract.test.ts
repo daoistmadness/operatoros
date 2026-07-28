@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiRequest } from './client';
+import { apiRequest } from '../../../lib/api/client';
 import {
   fetchDeploymentMode,
   fetchOperatorWorkQueue,
   selfConfirmCorrection,
 } from './operator';
 
-vi.mock('./client', () => ({ apiRequest: vi.fn() }));
+vi.mock('../../../lib/api/client', () => ({ apiRequest: vi.fn() }));
 
 describe('operator API', () => {
   beforeEach(() => vi.clearAllMocks());
