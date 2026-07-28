@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { AlertCircle, CheckCircle, ShieldCheck, X } from 'lucide-react';
-import { selfConfirmCorrection } from '../lib/api/operator';
+import { selfConfirmCorrection } from '../features/operator-work-queue';
 
 type Correction = {
   id: number;
