@@ -5,10 +5,13 @@ import App from './App';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/query/queryClient';
 
-const container = document.getElementById('root');
-const root = createRoot(container);
+const rootElement = document.getElementById('root');
 
-root.render(
+if (!rootElement) {
+  throw new Error('Application root element was not found.');
+}
+
+createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
