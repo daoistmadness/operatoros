@@ -6,13 +6,35 @@ export type DeploymentModeResponse = {
   deployment_mode: DeploymentMode;
 };
 
-export type OperatorWorkQueueItem = Record<string, unknown> & {
-  item_type: 'FOLLOWUP_CASE' | 'FOLLOWUP_CANDIDATE' | 'CORRECTION_REQUEST' | 'UNMATCHED_DEVICE';
+type OperatorWorkQueueCommon = Record<string, unknown> & {
   source_id: string;
   deduplication_key: string;
+  student_display_label: string;
+  class_reference: string | null;
+  event_date: string | null;
+  title: string;
+  evidence_summary: string;
+  workflow_status: string;
+  derived_due_state: string;
   available_actions: string[];
   source_route: string;
 };
+
+export type OperatorWorkQueueItem = OperatorWorkQueueCommon &
+  (
+    | {
+        item_type: 'CORRECTION_REQUEST';
+        metadata: {
+          id: number;
+          version: number;
+          requester: string;
+        };
+      }
+    | {
+        item_type: 'FOLLOWUP_CASE' | 'FOLLOWUP_CANDIDATE' | 'UNMATCHED_DEVICE';
+        metadata: Record<string, unknown>;
+      }
+  );
 
 export type AttendanceCorrectionRequestId = number;
 

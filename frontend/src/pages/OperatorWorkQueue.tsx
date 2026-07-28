@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -14,13 +14,20 @@ import {
 } from 'lucide-react';
 import CorrectionSelfConfirmModal from '../components/CorrectionSelfConfirmModal';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
-import { fetchOperatorWorkQueue } from '../lib/api/operator';
+import { fetchOperatorWorkQueue, type OperatorWorkQueueItem } from '../lib/api/operator';
+
+type SelectedCorrection = {
+  id: number;
+  version: number;
+  proposed_status: string;
+  explanation: string;
+};
 
 export default function OperatorWorkQueue() {
   const { isSingleUserMode } = useDeploymentMode();
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<OperatorWorkQueueItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,7 +35,7 @@ export default function OperatorWorkQueue() {
   const [dueStateFilter, setDueStateFilter] = useState('ALL');
 
   // Selected correction for self-confirm modal
-  const [selectedCorrection, setSelectedCorrection] = useState(null);
+  const [selectedCorrection, setSelectedCorrection] = useState<SelectedCorrection | null>(null);
 
   const loadQueue = async () => {
     setIsLoading(true);
@@ -36,7 +43,7 @@ export default function OperatorWorkQueue() {
     try {
       const data = await fetchOperatorWorkQueue();
       setItems(data);
-    } catch (err) {
+    } catch (_error: unknown) {
       setErrorMessage('Gagal memuat antrean kerja operator. Silakan coba lagi.');
     } finally {
       setIsLoading(false);
@@ -74,7 +81,7 @@ export default function OperatorWorkQueue() {
     return { overdue, dueToday, dueLater, noDueDate, completed };
   }, [filteredItems]);
 
-  const renderDueStateBadge = (dueState) => {
+  const renderDueStateBadge = (dueState: string) => {
     switch (dueState) {
       case 'OVERDUE':
         return (
@@ -109,7 +116,7 @@ export default function OperatorWorkQueue() {
     }
   };
 
-  const renderItemCard = (item) => (
+  const renderItemCard = (item: OperatorWorkQueueItem) => (
     <div
       key={item.source_id}
       className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
