@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, Clock3, Pencil, Trash2, XCircle } from "lucide-react";
 
@@ -16,23 +16,66 @@ import {
 
 export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-function responseStatus(error) {
-  return Number(error?.status || error?.response?.status || 0);
+type ApiErrorShape = {
+  status?: unknown;
+  response?: {
+    status?: unknown;
+    data?: unknown;
+  };
+};
+
+type JenjangConfigItem = {
+  jenjang: string;
+  cutoff_time: string;
+  updated_at?: string | null;
+};
+
+type JenjangConfigPayload = {
+  configured: JenjangConfigItem[];
+  unconfigured: string[];
+};
+
+type AvailableJenjangPayload = {
+  jenjang_list: string[];
+};
+
+type NormalizedJenjangConfig = {
+  availableJenjangs: string[];
+  configuredMap: Record<string, JenjangConfigItem>;
+  unconfigured: string[];
+  partial: boolean;
+};
+
+type JenjangRow = JenjangConfigItem & {
+  isConfigured: boolean;
+};
+
+function apiErrorShape(error: unknown): ApiErrorShape {
+  return error && typeof error === "object" ? error as ApiErrorShape : {};
 }
 
-export function getJenjangConfigError(error, fallback) {
+function responseStatus(error: unknown): number {
+  const candidate = apiErrorShape(error);
+  return Number(candidate.status || candidate.response?.status || 0);
+}
+
+export function getJenjangConfigError(error: unknown, fallback: string): string {
   const status = responseStatus(error);
   if (status === 401) return "Sesi Anda telah berakhir. Masuk kembali lalu coba lagi.";
   if (status === 403) return "Akun Anda tidak memiliki izin untuk melakukan tindakan ini.";
   if (status === 409) return "Konfigurasi berubah di server. Muat ulang data sebelum menyimpan kembali.";
   if (status === 400 || status === 422) return "Nilai cutoff tidak valid. Gunakan format waktu HH:MM.";
+  const candidate = apiErrorShape(error);
   return getPageApiError(
-    { ...error, response: error?.response ? { ...error.response, data: undefined } : undefined },
+    { ...candidate, response: candidate.response ? { ...candidate.response, data: undefined } : undefined },
     fallback,
   );
 }
 
-export function normalizeJenjangPayload(configPayload, availablePayload) {
+export function normalizeJenjangPayload(
+  configPayload: JenjangConfigPayload,
+  availablePayload: AvailableJenjangPayload,
+): NormalizedJenjangConfig {
   if (!Array.isArray(configPayload?.configured) || !Array.isArray(configPayload?.unconfigured)) {
     throw new Error("INVALID_CONFIG_RESPONSE");
   }
@@ -44,8 +87,8 @@ export function normalizeJenjangPayload(configPayload, availablePayload) {
   if (available.some((item) => typeof item !== "string" || !item.trim())) {
     throw new Error("INVALID_AVAILABLE_ITEM");
   }
-  const availableJenjangs = [...new Set(available.map((item) => item.trim()))].sort((a, b) => a.localeCompare(b));
-  const configuredMap = {};
+  const availableJenjangs = Array.from(new Set(available.map((item) => item.trim()))).sort((a, b) => a.localeCompare(b));
+  const configuredMap: Record<string, JenjangConfigItem> = {};
   for (const item of configPayload.configured) {
     if (!item || typeof item.jenjang !== "string" || !item.jenjang.trim() || !TIME_PATTERN.test(item.cutoff_time || "")) {
       throw new Error("INVALID_CONFIG_ITEM");
@@ -67,7 +110,7 @@ export function normalizeJenjangPayload(configPayload, availablePayload) {
 function JenjangConfig() {
   const { user } = useAuth();
   const canEdit = user?.role === "admin";
-  const [data, setData] = useState({ availableJenjangs: [], configuredMap: {}, unconfigured: [], partial: false });
+  const [data, setData] = useState<NormalizedJenjangConfig>({ availableJenjangs: [], configuredMap: {}, unconfigured: [], partial: false });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -80,17 +123,17 @@ function JenjangConfig() {
   const [fieldError, setFieldError] = useState("");
   const requestIdRef = useRef(0);
   const mutationInFlightRef = useRef(false);
-  const cutoffRef = useRef(null);
+  const cutoffRef = useRef<HTMLInputElement>(null);
 
-  const loadData = useCallback(async ({ background = false } = {}) => {
+  const loadData = useCallback(async ({ background = false }: { background?: boolean } = {}) => {
     const requestId = ++requestIdRef.current;
     if (!background) setLoading(true);
     setError("");
     setPermissionRestricted(false);
     try {
       const [configResponse, availableResponse] = await Promise.all([
-        api.get("/api/config/jenjang"),
-        api.get("/api/config/jenjang/available"),
+        api.get<JenjangConfigPayload>("/api/config/jenjang"),
+        api.get<AvailableJenjangPayload>("/api/config/jenjang/available"),
       ]);
       const normalized = normalizeJenjangPayload(configResponse.data, availableResponse.data);
       if (requestId === requestIdRef.current) setData(normalized);
@@ -123,7 +166,7 @@ function JenjangConfig() {
     setFieldError("");
   }, []);
 
-  const openInlineForm = useCallback((row) => {
+  const openInlineForm = useCallback((row: JenjangRow) => {
     const cutoff = row.cutoff_time || "07:00";
     setMessage("");
     setError("");
@@ -138,7 +181,7 @@ function JenjangConfig() {
   const isDirty = Boolean(editingJenjang) && cutoff !== initialCutoff;
   const isValid = TIME_PATTERN.test(cutoff);
 
-  const updateCutoff = (value) => {
+  const updateCutoff = (value: string) => {
     setForm({ cutoff_time: value });
     if (TIME_PATTERN.test(value.trim())) setFieldError("");
   };
@@ -177,7 +220,7 @@ function JenjangConfig() {
     }
   }, [canEdit, editingJenjang, form.cutoff_time, initialCutoff, loadData, resetInlineForm, submitting]);
 
-  const handleDelete = useCallback(async (jenjang) => {
+  const handleDelete = useCallback(async (jenjang: string) => {
     if (!canEdit || mutationInFlightRef.current) return;
     mutationInFlightRef.current = true;
     setSubmitting(true);
@@ -248,7 +291,7 @@ function JenjangConfig() {
               <thead><tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500"><th className="py-3 pr-4 text-left">Jenjang</th><th className="py-3 pr-4 text-left">Status</th><th className="py-3 pr-4 text-left">Cutoff</th><th className="py-3 pr-4 text-left">Terakhir diubah</th>{canEdit && <th className="py-3 text-right">Aksi</th>}</tr></thead>
               <tbody>
                 {rows.map((row) => (
-                  <React.Fragment key={row.jenjang}>
+                  <Fragment key={row.jenjang}>
                     <tr className="border-b border-slate-100">
                       <td className="py-3 pr-4 font-semibold text-slate-800 break-words">{row.jenjang}</td>
                       <td className="py-3 pr-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${row.isConfigured ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{row.isConfigured ? "Cutoff aktif" : "Cutoff belum diatur"}</span></td>
@@ -258,8 +301,8 @@ function JenjangConfig() {
                         {deleteConfirmJenjang === row.jenjang ? <div className="inline-flex items-center gap-2 text-xs"><span className="font-semibold text-rose-700">Hapus cutoff khusus? Data historis tidak dihapus.</span><button type="button" onClick={() => handleDelete(row.jenjang)} disabled={submitting} className="rounded-md bg-rose-600 px-2.5 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{submitting ? "Menghapus…" : "Konfirmasi"}</button><button type="button" onClick={() => setDeleteConfirmJenjang("")} disabled={submitting} className="rounded-md bg-slate-100 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">Batal</button></div> : <div className="inline-flex items-center gap-2"><button type="button" onClick={() => openInlineForm(row)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/20 disabled:opacity-50">{row.isConfigured ? <><Pencil size={13} aria-hidden="true" /> Ubah</> : <><CheckCircle2 size={13} aria-hidden="true" /> Atur Cutoff</>}</button>{row.isConfigured && <button type="button" onClick={() => setDeleteConfirmJenjang(row.jenjang)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"><Trash2 size={13} aria-hidden="true" /> Hapus</button>}</div>}
                       </td>}
                     </tr>
-                    {canEdit && editingJenjang === row.jenjang && <tr className="border-b border-slate-100 bg-slate-50"><td colSpan="5" className="p-4"><div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="grid grid-cols-1 items-end gap-4 md:grid-cols-[minmax(0,1fr)_auto]"><div className="space-y-2"><label htmlFor={`cutoff-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Cutoff untuk {row.jenjang}</label><input ref={cutoffRef} id={`cutoff-${row.jenjang}`} type="time" value={form.cutoff_time} onChange={(event) => updateCutoff(event.target.value)} disabled={submitting} aria-invalid={Boolean(fieldError)} aria-describedby={fieldError ? `cutoff-error-${row.jenjang}` : `cutoff-help-${row.jenjang}`} className="w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30" /><p id={`cutoff-help-${row.jenjang}`} className="text-xs text-slate-500">Waktu 24 jam; status terlambat dihitung setelah batas ini.</p>{fieldError && <p id={`cutoff-error-${row.jenjang}`} className="text-xs font-semibold text-rose-700">{fieldError}</p>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={handleSave} disabled={submitting || !isDirty || !isValid || data.partial} title={!isDirty ? "Ubah waktu cutoff untuk mengaktifkan Simpan." : data.partial ? "Muat ulang data yang tidak konsisten sebelum menyimpan." : undefined} className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={16} aria-hidden="true" /> {submitting ? "Menyimpan…" : "Simpan"}</button><button type="button" onClick={resetInlineForm} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"><XCircle size={16} aria-hidden="true" /> Batal</button></div></div></div></td></tr>}
-                  </React.Fragment>
+                    {canEdit && editingJenjang === row.jenjang && <tr className="border-b border-slate-100 bg-slate-50"><td colSpan={5} className="p-4"><div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="grid grid-cols-1 items-end gap-4 md:grid-cols-[minmax(0,1fr)_auto]"><div className="space-y-2"><label htmlFor={`cutoff-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Cutoff untuk {row.jenjang}</label><input ref={cutoffRef} id={`cutoff-${row.jenjang}`} type="time" value={form.cutoff_time} onChange={(event) => updateCutoff(event.target.value)} disabled={submitting} aria-invalid={Boolean(fieldError)} aria-describedby={fieldError ? `cutoff-error-${row.jenjang}` : `cutoff-help-${row.jenjang}`} className="w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30" /><p id={`cutoff-help-${row.jenjang}`} className="text-xs text-slate-500">Waktu 24 jam; status terlambat dihitung setelah batas ini.</p>{fieldError && <p id={`cutoff-error-${row.jenjang}`} className="text-xs font-semibold text-rose-700">{fieldError}</p>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={handleSave} disabled={submitting || !isDirty || !isValid || data.partial} title={!isDirty ? "Ubah waktu cutoff untuk mengaktifkan Simpan." : data.partial ? "Muat ulang data yang tidak konsisten sebelum menyimpan." : undefined} className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={16} aria-hidden="true" /> {submitting ? "Menyimpan…" : "Simpan"}</button><button type="button" onClick={resetInlineForm} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"><XCircle size={16} aria-hidden="true" /> Batal</button></div></div></div></td></tr>}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
