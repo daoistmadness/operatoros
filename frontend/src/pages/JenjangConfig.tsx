@@ -24,18 +24,18 @@ type ApiErrorShape = {
   };
 };
 
-type JenjangConfigItem = {
+export type JenjangConfigItem = {
   jenjang: string;
   cutoff_time: string;
   updated_at?: string | null;
 };
 
-type JenjangConfigPayload = {
+export type JenjangConfigPayload = {
   configured: JenjangConfigItem[];
   unconfigured: string[];
 };
 
-type AvailableJenjangPayload = {
+export type AvailableJenjangPayload = {
   jenjang_list: string[];
 };
 
