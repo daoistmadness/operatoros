@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import api from '../api';
 import { classifyUploadError, commitAttendancePreview, previewAttendanceFile } from './Upload';
 
+const { postMock } = vi.hoisted(() => ({ postMock: vi.fn() }));
+
 vi.mock('../api', () => ({
-  default: { post: vi.fn() },
+  default: { post: postMock },
 }));
 
 describe('attendance upload errors', () => {
@@ -12,7 +14,7 @@ describe('attendance upload errors', () => {
   });
 
   it('uses preview and explicit commit without calling the legacy upload route', async () => {
-    api.post.mockResolvedValue({ data: {} });
+    postMock.mockResolvedValue({ data: {} });
     const file = new File(['workbook'], 'attendance export.xls.xlsx', {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
@@ -21,7 +23,7 @@ describe('attendance upload errors', () => {
     await commitAttendancePreview('batch-1', [7, 8, 8], 'a'.repeat(64));
 
     expect(api.post).toHaveBeenCalledTimes(2);
-    const [path, body] = api.post.mock.calls[0];
+    const [path, body] = postMock.mock.calls[0];
     expect(path).toBe('/api/uploads/preview');
     expect(body).toBeInstanceOf(FormData);
     expect(body.get('file')).toBe(file);
@@ -30,7 +32,7 @@ describe('attendance upload errors', () => {
       confirmation: 'COMMIT_ATTENDANCE_IMPORT',
       preview_checksum: 'a'.repeat(64),
     });
-    expect(api.post.mock.calls.flat()).not.toContain('/api/uploads/upload');
+    expect(postMock.mock.calls.flat()).not.toContain('/api/uploads/upload');
   });
 
   it.each([
