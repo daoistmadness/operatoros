@@ -31,7 +31,7 @@ vi.mock("../api/reportBuilder", () => ({
 }));
 
 const adminAuth: AuthContextValue = {
-  user: { id: 1, name: "Admin", role: "admin", capabilities: ["view_student", "import_student_roster"] },
+  user: { id: 1, username: "Admin", role: "admin", capabilities: ["view_student", "import_student_roster"] },
   loading: false,
   authenticated: true,
   can: () => true,
@@ -41,7 +41,7 @@ const adminAuth: AuthContextValue = {
 
 const restrictedAuth: AuthContextValue = {
   ...adminAuth,
-  user: { id: 2, name: "Staff", role: "staff", capabilities: [] },
+  user: { id: 2, username: "Staff", role: "staff", capabilities: [] },
   can: () => false,
 };
 
@@ -49,7 +49,7 @@ const filters = {
   academic_years: [{ id: 10, label: "2025/2026", is_default: true }],
   jenjangs: [{ id: 1, name: "SD", code: "SD" }],
   class_names: ["1A"],
-  subjects: [{ id: 101, name: "Matematika", code: "MATH" }],
+  subjects: [{ id: 101, name: "Matematika", jenjang_id: 1 }],
 };
 
 let container: HTMLDivElement;

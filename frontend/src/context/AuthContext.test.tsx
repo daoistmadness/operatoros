@@ -11,7 +11,7 @@ import { createTestQueryClient } from "../lib/query/queryClient";
 vi.mock("../api/auth", () => ({ getCurrentUser: vi.fn(), login: vi.fn(), logout: vi.fn() }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const admin = { id: 1, username: "admin", role: "admin" as const };
+const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student"] };
 let container: HTMLDivElement;
 let root: Root;
 

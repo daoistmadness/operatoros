@@ -63,24 +63,27 @@ export interface HistoryItem {
 }
 
 export async function fetchDatasets(): Promise<DatasetInfo[]> {
-  return apiRequest('/api/data-portability/datasets');
+  const response = await apiRequest<DatasetInfo[]>({ path: '/api/data-portability/datasets' });
+  return response.data;
 }
 
 export async function previewExport(data: {
   dataset: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   include_sensitive_fields?: boolean;
 }): Promise<ExportPreviewResult> {
-  return apiRequest('/api/data-portability/exports/preview', {
+  const response = await apiRequest<ExportPreviewResult>({
+    path: '/api/data-portability/exports/preview',
     method: 'POST',
     body: JSON.stringify(data),
   });
+  return response.data;
 }
 
 export async function downloadExport(data: {
   dataset: string;
   format_type: 'csv' | 'csv_bundle';
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   include_sensitive_fields?: boolean;
 }): Promise<Blob> {
   const response = await fetch('/api/data-portability/exports', {
@@ -112,13 +115,15 @@ export async function previewImport(dataset: string, file: File): Promise<Import
 }
 
 export async function commitImport(batch_id: string, confirmation: string = 'CONFIRM_IMPORT'): Promise<{ success: boolean; committed_count: number; message: string }> {
-  return apiRequest('/api/data-portability/imports/commit', {
+  const response = await apiRequest<{ success: boolean; committed_count: number; message: string }>({
+    path: '/api/data-portability/imports/commit',
     method: 'POST',
     body: JSON.stringify({ batch_id, confirmation }),
   });
+  return response.data;
 }
 
-export async function downloadErrorFile(errors: any[]): Promise<Blob> {
+export async function downloadErrorFile(errors: unknown[]): Promise<Blob> {
   const response = await fetch('/api/data-portability/imports/error-file', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -131,5 +136,6 @@ export async function downloadErrorFile(errors: any[]): Promise<Blob> {
 }
 
 export async function fetchPortabilityHistory(): Promise<HistoryItem[]> {
-  return apiRequest('/api/data-portability/history');
+  const response = await apiRequest<HistoryItem[]>({ path: '/api/data-portability/history' });
+  return response.data;
 }

@@ -60,7 +60,7 @@ describe("SetupOverview", () => {
 
   it("orders dependencies and distinguishes requirement types", async () => {
     const view = await renderOverview();
-    const items = [...view.querySelectorAll("li")];
+    const items = Array.from(view.querySelectorAll("li"));
     expect(items).toHaveLength(6);
     expect(items[0].textContent).toContain("Configure an academic year");
     expect(items[2].textContent).toContain("Assign students to active classes");

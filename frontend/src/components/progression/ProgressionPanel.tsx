@@ -26,9 +26,16 @@ const destinationOutcomes = new Set<ProgressionOutcome>(["PROMOTE", "RETAIN", "C
 
 function safeError(error: unknown): string {
   if (error instanceof ApiError) {
-    const detail = error.data?.detail;
+    const detail = error.data && typeof error.data === "object" && "detail" in error.data
+      ? error.data.detail
+      : undefined;
     if (error.status === 403) return "Permission restricted: an administrator with progression authority must complete this action.";
-    if (detail && typeof detail === "object" && typeof detail.message === "string") return detail.message;
+    if (
+      detail &&
+      typeof detail === "object" &&
+      "message" in detail &&
+      typeof detail.message === "string"
+    ) return detail.message;
     if (error.status === 409) return "The progression preview changed or contains unresolved conflicts. Reload and review it before trying again.";
   }
   return "The progression request could not be completed safely. No partial rollover was applied.";

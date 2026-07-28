@@ -42,6 +42,25 @@ export type HistoryPage = {
   pages: number;
 };
 
+export type UploadTimelineItem = {
+  reference_id: string;
+  timestamp: string | null;
+  event: string;
+  message: string;
+  actor: string | null;
+};
+export type UploadRow = {
+  stable_row_reference: string;
+  source_row_number: number | null;
+  preview_classification: string;
+  selection_state: string;
+  commit_outcome: string;
+  retry_outcome: string;
+  masked_identifier: string | null;
+  explanation: string;
+  recommended_action: string;
+};
+
 export function getUploadHistory(params: Record<string, string | number | boolean | undefined>) {
   return api.get("/api/uploads/history", { params }).then((response) => response.data as HistoryPage);
 }
@@ -51,13 +70,15 @@ export function getUploadDetail(uploadId: string) {
 }
 
 export function getUploadTimeline(uploadId: string) {
-  return api.get(`/api/uploads/history/${encodeURIComponent(uploadId)}/timeline`).then((response) => response.data.items as any[]);
+  return api.get<{ items: UploadTimelineItem[] }>(
+    `/api/uploads/history/${encodeURIComponent(uploadId)}/timeline`,
+  ).then((response) => response.data.items);
 }
 
 export function getUploadRows(uploadId: string, page: number, outcome?: string) {
   return api.get(`/api/uploads/history/${encodeURIComponent(uploadId)}/rows`, {
     params: { page, page_size: 25, outcome: outcome || undefined },
-  }).then((response) => response.data as any);
+  }).then((response) => response.data as { items: UploadRow[]; page: number; pages: number; total: number });
 }
 
 export function downloadUploadEvidence(uploadId: string, format: "csv" | "json") {
