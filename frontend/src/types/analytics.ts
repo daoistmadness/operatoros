@@ -89,6 +89,10 @@ export interface TermContext {
 }
 
 export interface ManagementSummaryResponse {
+  total_students?: number;
+  tardiness_summary?: {
+    total_late_records: number;
+  };
   filters: {
     academic_year_id: number;
     academic_year_label?: string;

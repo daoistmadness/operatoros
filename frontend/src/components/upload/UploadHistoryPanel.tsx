@@ -7,7 +7,7 @@ import { downloadUploadEvidence, getUploadDetail, getUploadHistory, getUploadRow
 import { getPageApiError } from "../../lib/api/errors";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -102,7 +102,7 @@ function HistoryDetail({ uploadId, onBack }: { uploadId: string; onBack: () => v
     </Card>
 
     <div className="grid gap-5 lg:grid-cols-2">
-      <Card><CardHeader><CardTitle>Related Conflicts</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">{number(item.unresolved_total)} rows remain unresolved. Resolution always uses the current canonical workflow.</p><Button asChild variant="outline"><Link to="/upload"><History className="size-4" />Open Needs Attention</Link></Button></CardContent></Card>
+      <Card><CardHeader><CardTitle>Related Conflicts</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">{number(item.unresolved_total)} rows remain unresolved. Resolution always uses the current canonical workflow.</p><Link to="/upload" className={buttonVariants({ variant: "outline" })}><History className="size-4" />Open Needs Attention</Link></CardContent></Card>
       <Card><CardHeader><CardTitle>Export Evidence</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">Downloads are sanitized and exclude original files, raw private audit metadata, full paths, and unmasked identifiers.</p><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={Boolean(downloading)} onClick={() => download("csv")}>{downloading === "csv" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}CSV evidence</Button><Button variant="outline" disabled={Boolean(downloading)} onClick={() => download("json")}>{downloading === "json" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}JSON evidence</Button></div></CardContent></Card>
     </div>
   </div>;

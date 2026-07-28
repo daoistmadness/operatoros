@@ -73,7 +73,7 @@ it("keeps a destructive error readable and prevents duplicate pending submission
   await act(async () => root.render(<Harness />));
   const action = document.querySelector('button[disabled]') as HTMLButtonElement | null;
   expect(action).toBeNull();
-  const deleteButton = [...document.querySelectorAll("button")].find(button => button.textContent === "Delete threshold") as HTMLButtonElement;
+  const deleteButton = Array.from(document.querySelectorAll("button")).find(button => button.textContent === "Delete threshold") as HTMLButtonElement;
   await act(async () => deleteButton.click());
   expect(deleteButton.disabled).toBe(true);
   await act(async () => deleteButton.click());

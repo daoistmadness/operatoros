@@ -1032,12 +1032,12 @@ export default function ManagementAnalytics() {
           }
         />
       ) : summaryData &&
-        summaryData.total_students > 0 &&
+        (summaryData.total_students ?? -1) > 0 &&
         summaryData.grade_by_class.length === 0 &&
         summaryData.grade_by_subject.length === 0 &&
         (summaryData.below_kkm_alerts?.length ?? 0) === 0 &&
         summaryData.grade_by_student.length === 0 &&
-        summaryData.tardiness_summary.total_late_records === 0 ? (
+        (summaryData.tardiness_summary?.total_late_records ?? 0) === 0 ? (
         <FilteredEmptyState
           title="Tidak Ada Data Sesuai Filter"
           description="Filter yang Anda pilih tidak menghasilkan data. Coba ubah atau sesuaikan pilihan filter."

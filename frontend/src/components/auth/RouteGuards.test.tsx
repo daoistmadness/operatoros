@@ -7,7 +7,7 @@ import { RequireAuth, RequireCapability, RequireRole } from "./RouteGuards";
 
 const noop = vi.fn();
 const auth = (role?: "admin" | "staff", loading = false): AuthContextValue => ({
-  user: role ? { id: 1, username: role, role } : null,
+  user: role ? { id: 1, username: role, role, capabilities: role === "admin" ? ["*"] : ["view_student"] } : null,
   loading,
   authenticated: Boolean(role),
   can: (capability) => role === "admin" || (role === "staff" && capability === "view_student"),

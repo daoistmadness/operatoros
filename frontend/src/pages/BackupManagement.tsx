@@ -350,7 +350,6 @@ export function RestoreWizard({
   const [confirmationFilename, setConfirmationFilename] = useState("");
   const [confirmationPhrase, setConfirmationPhrase] = useState("");
   const [result, setResult] = useState<RestoreResult | null>(null);
-  const [createdBackup, setCreatedBackup] = useState<BackupEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const busy = restoreMutation.isPending;
   const eligible = Boolean(preflight?.source.restore_eligible && destructiveEnabled);
@@ -570,6 +569,7 @@ export default function BackupManagement() {
   const [selected, setSelected] = useState<BackupEntry | null>(null);
   const [deleteSelected, setDeleteSelected] = useState<BackupEntry | null>(null);
   const [result, setResult] = useState<RestoreResult | null>(null);
+  const [createdBackup, setCreatedBackup] = useState<BackupEntry | null>(null);
   const status = statusQuery.data;
   const busy = createMutation.isPending || deleteMutation.isPending;
   const error = statusQuery.error || backupsQuery.error || schedulerQuery.error || backupHistoryQuery.error || recoveryHistoryQuery.error || createMutation.error || deleteMutation.error;

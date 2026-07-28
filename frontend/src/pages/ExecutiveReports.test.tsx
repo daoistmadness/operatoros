@@ -7,7 +7,7 @@ import {
   ReportFeedback, selectFilterDefaults, staleReport, StudentDistributionSection,
 } from "./ExecutiveReports";
 import type { ExecutiveReport, ReportFiltersResponse } from "../api/reports";
-import appSource from "../App.js?raw";
+import appSource from "../App.tsx?raw";
 
 vi.mock("react-chartjs-2", () => ({
   Bar: ({ data }: { data: { labels: string[] } }) => <div data-chart="bar">{data.labels.join("|")}</div>,

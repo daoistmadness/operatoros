@@ -54,7 +54,10 @@ export async function getDeparturePolicies(jenjang?: string, activeOnly = false)
   if (jenjang) params.append('jenjang', jenjang);
   if (activeOnly) params.append('active_only', 'true');
   const qs = params.toString();
-  return apiRequest<DismissalPolicyItem[]>(`/api/attendance/departure-policies${qs ? `?${qs}` : ''}`);
+  const response = await apiRequest<DismissalPolicyItem[]>({
+    path: `/api/attendance/departure-policies${qs ? `?${qs}` : ''}`,
+  });
+  return response.data;
 }
 
 export async function createDeparturePolicy(payload: {
@@ -67,19 +70,23 @@ export async function createDeparturePolicy(payload: {
   change_reason?: string;
   jenjang_id?: number;
 }): Promise<DismissalPolicyItem> {
-  return apiRequest<DismissalPolicyItem>('/api/attendance/departure-policies', {
+  const response = await apiRequest<DismissalPolicyItem>({
+    path: '/api/attendance/departure-policies',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+  return response.data;
 }
 
-export async function deactivateDeparturePolicy(policyId: number, changeReason?: string): Promise<any> {
-  return apiRequest(`/api/attendance/departure-policies/${policyId}/deactivate`, {
+export async function deactivateDeparturePolicy(policyId: number, changeReason?: string): Promise<unknown> {
+  const response = await apiRequest({
+    path: `/api/attendance/departure-policies/${policyId}/deactivate`,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ change_reason: changeReason }),
   });
+  return response.data;
 }
 
 export async function getClassDateDepartures(classId: string, dateVal: string): Promise<{
@@ -87,32 +94,42 @@ export async function getClassDateDepartures(classId: string, dateVal: string): 
   date: string;
   departures: DepartureResolutionItem[];
 }> {
-  return apiRequest(`/api/attendance/classes/${encodeURIComponent(classId)}/dates/${dateVal}/departures`);
+  const response = await apiRequest<{
+    class_id: string;
+    date: string;
+    departures: DepartureResolutionItem[];
+  }>({ path: `/api/attendance/classes/${encodeURIComponent(classId)}/dates/${dateVal}/departures` });
+  return response.data;
 }
 
 export async function recordDepartureExcuse(
   attendanceId: number,
   payload: { reason_code: string; explanation?: string }
-): Promise<any> {
-  return apiRequest(`/api/attendance/${attendanceId}/departure-excuses`, {
+): Promise<unknown> {
+  const response = await apiRequest({
+    path: `/api/attendance/${attendanceId}/departure-excuses`,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+  return response.data;
 }
 
 export async function revokeDepartureExcuse(
   attendanceId: number,
   excuseId: number,
   payload: { revocation_reason: string }
-): Promise<any> {
-  return apiRequest(`/api/attendance/${attendanceId}/departure-excuses/${excuseId}/revoke`, {
+): Promise<unknown> {
+  const response = await apiRequest({
+    path: `/api/attendance/${attendanceId}/departure-excuses/${excuseId}/revoke`,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+  return response.data;
 }
 
-export async function getDepartureHistory(attendanceId: number): Promise<any> {
-  return apiRequest(`/api/attendance/${attendanceId}/departure-history`);
+export async function getDepartureHistory(attendanceId: number): Promise<unknown> {
+  const response = await apiRequest({ path: `/api/attendance/${attendanceId}/departure-history` });
+  return response.data;
 }
