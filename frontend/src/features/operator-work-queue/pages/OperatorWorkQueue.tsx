@@ -12,11 +12,11 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
-import CorrectionSelfConfirmModal from '../components/CorrectionSelfConfirmModal';
-import { useDeploymentMode } from '../context/DeploymentModeContext';
-import { useOperatorWorkQueueQuery } from '../hooks/useOperatorQueries';
-import { getApiErrorMessage } from '../lib/api/errors';
-import type { OperatorWorkQueueItem } from '../lib/api/operator';
+import CorrectionSelfConfirmModal from '../../../components/CorrectionSelfConfirmModal';
+import { useDeploymentMode } from '../../../context/DeploymentModeContext';
+import { getApiErrorMessage } from '../../../lib/api/errors';
+import type { OperatorWorkQueueItem } from '../api/operator';
+import { useOperatorWorkQueueQuery } from '../queries/useOperatorQueries';
 
 type SelectedCorrection = {
   id: number;

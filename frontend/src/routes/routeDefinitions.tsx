@@ -33,7 +33,7 @@ const TeacherClassAssignments = lazy(() => import('../pages/TeacherClassAssignme
 const ClassAttendanceEntry = lazy(() => import('../pages/ClassAttendanceEntry'));
 const DismissalPolicies = lazyNamedRoute(() => import('../pages/DismissalPolicies'), 'DismissalPolicies');
 const ClassEarlyDeparture = lazyNamedRoute(() => import('../pages/ClassEarlyDeparture'), 'ClassEarlyDeparture');
-const OperatorWorkQueue = lazy(() => import('../pages/OperatorWorkQueue'));
+const OperatorWorkQueue = lazy(() => import('../features/operator-work-queue'));
 
 export type AppRouteDefinition = {
   path: string;
