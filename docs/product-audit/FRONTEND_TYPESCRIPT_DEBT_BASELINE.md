@@ -2,11 +2,15 @@
 
 ## Status
 
-Classification: `PRE_EXISTING_GLOBAL_TYPESCRIPT_DEBT_NO_ROUTE_REGRESSION`
+Classification: `FULLY_RESOLVED`
 
-Required limitation: `GLOBAL_TYPESCRIPT_ZERO_ERROR_GATE_DEFERRED_TO_TYPESCRIPT_COMPLETION`
+Required gate: `GLOBAL_TYPESCRIPT_ZERO_ERROR_GATE_PERMANENT`
 
-The accepted baseline is commit `2b2f1cfddcc376a4bc076636e585a2579d77ae5a`. Both the baseline and route-foundation feature were checked with TypeScript 5.9.3, the same installed dependency tree, strict project configuration, `--noEmit`, and plain diagnostics. Strictness was not weakened.
+The historical baseline was accepted at commit
+`2b2f1cfddcc376a4bc076636e585a2579d77ae5a`. Both that baseline and the
+route-foundation feature were checked with TypeScript 5.9.3, the same installed
+dependency tree, strict project configuration, `--noEmit`, and plain diagnostics.
+Strictness was not weakened.
 
 ## Differential result
 
@@ -22,7 +26,7 @@ The comparison normalized each diagnostic by frontend-relative file path, TypeSc
 
 The accepted main revision predates the `typecheck` package script. For a reliable baseline comparison, both trees were therefore invoked with the same feature-installed TypeScript executable and the identical strict command arguments (`--noEmit --pretty false`) while each tree retained its own unchanged `tsconfig.json`. The feature keeps the normal `npm run typecheck` command, and that command is not redefined to accept failures.
 
-## Existing debt
+## Historical debt
 
 The unchanged diagnostics are concentrated in:
 
@@ -32,8 +36,19 @@ The unchanged diagnostics are concentrated in:
 - existing `BackupManagement` references to undeclared `createdBackup` state;
 - existing ES5 down-level iteration diagnostics.
 
-This milestone does not repair those unrelated areas. Global `npm run typecheck` still exits nonzero and must not be reported as passed.
+Those diagnostics have now been resolved as part of the complete frontend
+TypeScript migration. Global `npm run typecheck` exits zero with no diagnostics.
+The frontend contains 75 `.ts` files, 105 `.tsx` files, and no `.js` or `.jsx`
+source files.
 
-## Removal condition
+## Resolution
 
-The differential allowance is transitional. The Complete Frontend TypeScript and TSX Migration milestone must remove remaining `.js`/`.jsx` source files, resolve the complete 47-diagnostic baseline, make `npm run typecheck` exit zero, and retire differential-gate documentation or tooling.
+The transitional differential allowance is retired. The completion milestone:
+
+- removed all remaining `.js` and `.jsx` source files;
+- resolved the complete 47-diagnostic historical baseline;
+- made the strict `npm run typecheck` command exit zero;
+- removed `allowJs` and `checkJs` from the project configuration; and
+- established zero diagnostics as the permanent acceptance gate.
+
+See `FRONTEND_TYPESCRIPT_MIGRATION.md` for the complete verification record.

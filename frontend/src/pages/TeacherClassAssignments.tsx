@@ -89,7 +89,11 @@ export default function TeacherClassAssignments() {
     queryFn: async () => {
       try {
         const res = await apiRequest({ path: "/api/users" });
-        return Array.isArray(res.data) ? res.data : res.data?.items || [];
+        if (Array.isArray(res.data)) return res.data as UserOption[];
+        if (res.data && typeof res.data === "object" && "items" in res.data && Array.isArray(res.data.items)) {
+          return res.data.items as UserOption[];
+        }
+        return [];
       } catch {
         return [];
       }
