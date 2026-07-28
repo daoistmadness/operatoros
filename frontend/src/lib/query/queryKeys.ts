@@ -1,5 +1,22 @@
 import type { ReportQuery, ReportScope, ReportType } from "../../api/reports";
 
+type QueryPrimitive = string | number | boolean | null;
+type CanonicalQueryValue = QueryPrimitive | readonly QueryPrimitive[];
+
+export function canonicalizeQueryFilters(
+  filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>,
+): Readonly<Record<string, CanonicalQueryValue>> {
+  return Object.fromEntries(
+    Object.entries(filters)
+      .filter((entry): entry is [string, QueryPrimitive | readonly QueryPrimitive[]] => entry[1] !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, value]) => [
+        key,
+        Array.isArray(value) ? [...value].sort((left, right) => String(left).localeCompare(String(right))) : value,
+      ]),
+  );
+}
+
 export const queryKeys = {
   setup: { all: ["setup"] as const, status: ["setup", "status"] as const },
   auth: { all: ["auth"] as const, me: ["auth", "me"] as const },
@@ -34,5 +51,30 @@ export const queryKeys = {
     enrollments: (id: string) => ["students", "enrollments", id] as const,
     importSessions: ["students", "imports"] as const,
     importSession: (id: string) => ["students", "imports", id] as const,
+  },
+  uploads: {
+    all: ["uploads"] as const,
+    history: {
+      all: ["uploads", "history"] as const,
+      list: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) =>
+        ["uploads", "history", "list", canonicalizeQueryFilters(filters)] as const,
+      detail: (uploadId: string) => ["uploads", "history", "detail", uploadId] as const,
+      timeline: (uploadId: string) => ["uploads", "history", "timeline", uploadId] as const,
+      rows: (uploadId: string, page: number, outcome?: string) =>
+        ["uploads", "history", "rows", uploadId, canonicalizeQueryFilters({ page, outcome })] as const,
+    },
+    conflicts: {
+      all: ["uploads", "conflicts"] as const,
+      list: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) =>
+        ["uploads", "conflicts", "list", canonicalizeQueryFilters(filters)] as const,
+      candidates: (itemId: string, search: string) =>
+        ["uploads", "conflicts", "candidates", itemId, search] as const,
+      comparison: (itemId: string, studentId: string) =>
+        ["uploads", "conflicts", "comparison", itemId, studentId] as const,
+    },
+  },
+  operator: {
+    all: ["operator"] as const,
+    workQueue: ["operator", "work-queue"] as const,
   },
 };

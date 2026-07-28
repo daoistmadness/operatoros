@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, Download, FileClock, Filter, History, Loader2, RotateCcw, Search, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { downloadUploadEvidence, getUploadDetail, getUploadHistory, getUploadRows, getUploadTimeline, type UploadRecord } from "../../api/uploadHistory";
+import { downloadUploadEvidence, type UploadRecord } from "../../api/uploadHistory";
+import {
+  useUploadHistoryDetailQuery,
+  useUploadHistoryListQuery,
+  useUploadRowsQuery,
+  useUploadTimelineQuery,
+} from "../../hooks/useUploadQueries";
 import { getPageApiError } from "../../lib/api/errors";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
@@ -37,13 +42,13 @@ function Metric({ title, value }: { title: string; value: number | null | undefi
   return <div className="rounded-xl border border-border bg-surface-muted/50 p-3"><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</dt><dd className="mt-1 text-xl font-black text-foreground">{number(value)}</dd></div>;
 }
 
-function HistoryDetail({ uploadId, onBack }: { uploadId: string; onBack: () => void }) {
+function HistoryDetail({ uploadId, onBack, enabled = true }: { uploadId: string; onBack: () => void; enabled?: boolean }) {
   const [rowPage, setRowPage] = useState(1);
   const [outcome, setOutcome] = useState("");
   const [downloading, setDownloading] = useState<"" | "csv" | "json">("");
-  const detail = useQuery({ queryKey: ["upload-history-detail", uploadId], queryFn: () => getUploadDetail(uploadId) });
-  const timeline = useQuery({ queryKey: ["upload-history-timeline", uploadId], queryFn: () => getUploadTimeline(uploadId) });
-  const rows = useQuery({ queryKey: ["upload-history-rows", uploadId, rowPage, outcome], queryFn: () => getUploadRows(uploadId, rowPage, outcome) });
+  const detail = useUploadHistoryDetailQuery(uploadId, enabled);
+  const timeline = useUploadTimelineQuery(uploadId, enabled);
+  const rows = useUploadRowsQuery(uploadId, rowPage, outcome, enabled);
 
   const download = async (format: "csv" | "json") => {
     if (downloading) return;
@@ -108,19 +113,23 @@ function HistoryDetail({ uploadId, onBack }: { uploadId: string; onBack: () => v
   </div>;
 }
 
-export function UploadHistoryPanel() {
+export function UploadHistoryPanel({ enabled = true }: { enabled?: boolean }) {
   const [page, setPage] = useState(1);
   const [workflow, setWorkflow] = useState("");
   const [reconciliation, setReconciliation] = useState("");
   const [filename, setFilename] = useState("");
   const [unresolvedOnly, setUnresolvedOnly] = useState(false);
   const [selected, setSelected] = useState("");
-  const history = useQuery({
-    queryKey: ["upload-history", page, workflow, reconciliation, filename, unresolvedOnly],
-    queryFn: () => getUploadHistory({ page, page_size: 20, workflow_type: workflow || undefined, reconciliation_state: reconciliation || undefined, filename: filename || undefined, unresolved_only: unresolvedOnly }),
-  });
+  const history = useUploadHistoryListQuery({
+    page,
+    page_size: 20,
+    workflow_type: workflow || undefined,
+    reconciliation_state: reconciliation || undefined,
+    filename: filename || undefined,
+    unresolved_only: unresolvedOnly,
+  }, enabled);
 
-  if (selected) return <HistoryDetail uploadId={selected} onBack={() => setSelected("")} />;
+  if (selected) return <HistoryDetail uploadId={selected} onBack={() => setSelected("")} enabled={enabled} />;
 
   return <div className="space-y-5">
     <Card>

@@ -1,5 +1,19 @@
 # OperatorOS Frontend
 
+## Server-state and error conventions
+
+- Normalize runtime failures at `src/lib/api/client.ts`; UI code consumes the
+  typed helpers from `src/lib/api/errors.ts` and never renders raw causes.
+- Define deterministic domain keys in `src/lib/query/queryKeys.ts`. Omit
+  undefined filters and preserve textual identifiers.
+- Prefer feature hooks named `useXxxQuery` or `useXxxMutation`. Query functions
+  must forward TanStack Query's `AbortSignal`.
+- Keep hooks unconditional and use `enabled` for inactive tabs or missing IDs.
+- Mutations use exact domain invalidation; never call `invalidateQueries()`
+  without a key.
+- Keep local drafts, selections, modal state, browser effects, and explicit file
+  downloads outside TanStack Query.
+
 ## Responsibilities
 This React app provides the staff-facing UI for uploading attendance files, mapping students to classes, configuring HEB and jenjang rules, reviewing attendance overrides, and viewing reports and charts.
 
