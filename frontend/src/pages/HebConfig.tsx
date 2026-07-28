@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../api";
@@ -22,12 +22,54 @@ const MONTH_OPTIONS = [
   { value: 12, label: "Desember" },
 ];
 
-function getMonthLabel(month) {
+type HebApiRow = {
+  jenjang: string;
+  heb?: number | null;
+  auto_heb?: number | null;
+  override_heb?: number | null;
+  source?: string | null;
+  override_note?: string | null;
+  note?: string | null;
+  auto_median?: number | null;
+  override_set_by?: string | null;
+  override_set_at?: string | null;
+};
+
+type HebRow = {
+  month: number;
+  year: number;
+  jenjang: string;
+  heb: number;
+  auto_heb: number;
+  override_heb: number | null;
+  source: string;
+  note: string;
+  auto_median: number;
+  override_set_by: string;
+  override_set_at: string | null;
+};
+
+type HebSummaryRow = {
+  jenjang: string;
+  total_heb: number;
+};
+
+type HebResponse = { heb_by_jenjang?: HebApiRow[] };
+type AvailableJenjangResponse = { jenjang_list?: string[] };
+
+function getMonthLabel(month: number): string {
   return MONTH_OPTIONS.find((item) => item.value === Number(month))?.label || `Bulan ${month}`;
 }
 
-function buildRowKey(month, jenjang) {
+function buildRowKey(month: number, jenjang: string): string {
   return `${month}:${jenjang}`;
+}
+
+function getHebMutationError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== "object") return fallback;
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  return typeof detail === "string" && detail ? detail : fallback;
 }
 
 function HebConfig() {
@@ -36,7 +78,7 @@ function HebConfig() {
   const [activeYear, setActiveYear] = useState(today.getFullYear());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<HebRow[]>([]);
   const [editingKey, setEditingKey] = useState("");
   const [deleteConfirmKey, setDeleteConfirmKey] = useState("");
   const [form, setForm] = useState({ heb_value: "", note: "", set_by: "" });
@@ -48,16 +90,14 @@ function HebConfig() {
     setError("");
 
     try {
-      const requests = [
-        api.get("/api/config/jenjang/available"),
-        ...MONTH_OPTIONS.map((month) =>
-          api.get("/api/analytics/heb", {
+      const [jenjangResponse, hebResponses] = await Promise.all([
+        api.get<AvailableJenjangResponse>("/api/config/jenjang/available"),
+        Promise.all(MONTH_OPTIONS.map((month) =>
+          api.get<HebResponse>("/api/analytics/heb", {
             params: { month: month.value, year: targetYear },
           })
-        ),
-      ];
-
-      const [jenjangResponse, ...hebResponses] = await Promise.all(requests);
+        )),
+      ]);
       const availableJenjangs = Array.isArray(jenjangResponse.data?.jenjang_list)
         ? jenjangResponse.data.jenjang_list
         : [];
@@ -72,7 +112,7 @@ function HebConfig() {
         new Set([...availableJenjangs, ...responseRows.map((item) => item.jenjang).filter(Boolean)])
       ).sort((left, right) => left.localeCompare(right));
 
-      const responseMap = responseRows.reduce((accumulator, item) => {
+      const responseMap = responseRows.reduce<Record<string, HebApiRow & { month: number; year: number }>>((accumulator, item) => {
         accumulator[buildRowKey(item.month, item.jenjang)] = item;
         return accumulator;
       }, {});
@@ -110,7 +150,7 @@ function HebConfig() {
   }, [activeYear, loadData]);
 
   const summaryRows = useMemo(() => {
-    return rows.reduce((accumulator, row) => {
+    return rows.reduce<Record<string, HebSummaryRow>>((accumulator, row) => {
       if (!accumulator[row.jenjang]) {
         accumulator[row.jenjang] = { jenjang: row.jenjang, total_heb: 0 };
       }
@@ -124,7 +164,7 @@ function HebConfig() {
     [summaryRows]
   );
 
-  const openForm = useCallback((row, options = {}) => {
+  const openForm = useCallback((row: HebRow, options: { openDeleteConfirm?: boolean } = {}) => {
     setEditingKey(buildRowKey(row.month, row.jenjang));
     setDeleteConfirmKey(options.openDeleteConfirm ? buildRowKey(row.month, row.jenjang) : "");
     setMessage("");
@@ -156,7 +196,7 @@ function HebConfig() {
     setError("");
   };
 
-  const handleSave = async (row) => {
+  const handleSave = async (row: HebRow) => {
     const hebValue = Number(form.heb_value);
     if (!Number.isInteger(hebValue) || hebValue < 1 || hebValue > 31) {
       setError("Nilai HEB harus berupa angka 1 sampai 31.");
@@ -181,14 +221,14 @@ function HebConfig() {
       await loadData(activeYear);
       setMessage(`Override ${row.jenjang} untuk ${getMonthLabel(row.month)} ${row.year} disimpan.`);
       closeForm();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Gagal menyimpan override HEB.");
+    } catch (err: unknown) {
+      setError(getHebMutationError(err, "Gagal menyimpan override HEB."));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (row) => {
+  const handleDelete = async (row: HebRow) => {
     setSubmitting(true);
     setMessage("");
     setError("");
@@ -198,8 +238,8 @@ function HebConfig() {
       await loadData(activeYear);
       setMessage(`Override ${row.jenjang} dihapus — kembali ke kalkulasi otomatis.`);
       closeForm();
-    } catch (err) {
-      setError(err.response?.data?.detail || "Gagal menghapus override HEB.");
+    } catch (err: unknown) {
+      setError(getHebMutationError(err, "Gagal menghapus override HEB."));
     } finally {
       setSubmitting(false);
     }
@@ -277,7 +317,7 @@ function HebConfig() {
                   const isDeleteConfirming = deleteConfirmKey === rowKey;
 
                   return (
-                    <React.Fragment key={rowKey}>
+                    <Fragment key={rowKey}>
                       <tr className="hover:bg-slate-50/60 transition-colors">
                         <td className="px-6 py-4 font-medium text-slate-700">{getMonthLabel(row.month)} {row.year}</td>
                         <td className="px-6 py-4 font-semibold text-slate-900">{row.jenjang}</td>
@@ -321,7 +361,7 @@ function HebConfig() {
 
                       {isEditing && (
                         <tr className="bg-slate-50 border-b border-slate-100">
-                          <td colSpan="6" className="px-4 py-4">
+                          <td colSpan={6} className="px-4 py-4">
                             <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
                               <div>
                                 <h3 className="text-base font-bold text-slate-900">
@@ -430,7 +470,7 @@ function HebConfig() {
                           </td>
                         </tr>
                       )}
-                    </React.Fragment>
+                    </Fragment>
                   );
                 })}
               </tbody>
