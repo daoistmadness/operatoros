@@ -9,9 +9,16 @@ type ReportQuery = QueryParams & {
   date_to?: string;
   jenjang?: string;
 };
-type RekapReport = JsonObject & {
+export type RekapReport = JsonObject & {
   jenjang: unknown[];
-  global_summary: JsonObject;
+  global_summary: JsonObject & {
+    percentages?: {
+      hadir_pct?: number;
+      sakit_pct?: number;
+      izin_pct?: number;
+      alfa_pct?: number;
+    };
+  };
   global_flags: JsonObject;
   chart_data: unknown[];
   warning_flags: JsonObject;
@@ -28,12 +35,56 @@ type TardinessReport = JsonObject & {
 type TardinessSummary = JsonObject & { rows: unknown[]; period: JsonObject };
 type HebOverridePayload = { heb_value: number; note?: string; set_by?: string };
 type StudentClassAssignmentPayload = { student_id: number | string; class_name: string; jenjang: string };
-type AbsenceTotalRow = {
+export type AbsenceTotalRow = {
   total_sakit?: unknown;
   total_izin?: unknown;
   total_alfa?: unknown;
   classes_entered?: unknown;
   classes_total?: unknown;
+};
+
+export type DashboardMonthlyRow = {
+  month: string;
+  late_count: number;
+};
+
+export type DashboardClassRow = {
+  class_name: string;
+  punctuality_score: number;
+};
+
+export type DashboardOffender = {
+  name: string;
+  class_name?: string | null;
+  late_count: number;
+};
+
+export type DashboardPendingStudent = {
+  id: number | string;
+  name: string;
+};
+
+export type DashboardSummary = {
+  total_late: number;
+  total_incomplete: number;
+  total_offenders: number;
+};
+
+export type DashboardIncompleteSummary = {
+  total_incomplete?: number;
+};
+
+export type DashboardSnapshot = {
+  monthlyData: DashboardMonthlyRow[];
+  classData: DashboardClassRow[];
+  offenders: DashboardOffender[];
+  pending: DashboardPendingStudent[];
+  summary: DashboardSummary;
+  existingClasses: string[];
+  incompleteSummary: DashboardIncompleteSummary | null;
+  absenceSummary: AbsenceTotalRow[];
+  rekapAbsensiSummary: RekapReport | null;
+  mappingWarning: string;
 };
 
 function ensureObject(value: unknown, message: string): JsonObject {
@@ -149,19 +200,19 @@ export async function getJenjangs(): Promise<unknown[]> {
   return ensureArray(response.data);
 }
 
-export async function getDashboardSnapshot(currentDate: Date) {
+export async function getDashboardSnapshot(currentDate: Date): Promise<DashboardSnapshot> {
   const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
 
   const requests = await Promise.allSettled([
-    apiRequest({ path: '/api/analytics/monthly' }),
-    apiRequest({ path: '/api/analytics/class-leaderboard' }),
-    apiRequest({ path: '/api/analytics/frequent-offenders' }),
-    apiRequest({ path: '/api/analytics/pending-categorization' }),
-    apiRequest({ path: '/api/analytics/summary' }),
-    apiRequest({ path: '/api/students/classes' }),
-    apiRequest({ path: '/api/analytics/incomplete-summary' }),
-    apiRequest({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
+    apiRequest<DashboardMonthlyRow[]>({ path: '/api/analytics/monthly' }),
+    apiRequest<DashboardClassRow[]>({ path: '/api/analytics/class-leaderboard' }),
+    apiRequest<DashboardOffender[]>({ path: '/api/analytics/frequent-offenders' }),
+    apiRequest<DashboardPendingStudent[]>({ path: '/api/analytics/pending-categorization' }),
+    apiRequest<DashboardSummary>({ path: '/api/analytics/summary' }),
+    apiRequest<string[]>({ path: '/api/students/classes' }),
+    apiRequest<DashboardIncompleteSummary>({ path: '/api/analytics/incomplete-summary' }),
+    apiRequest<AbsenceTotalRow[]>({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
     apiRequest({ path: '/api/analytics/v2/rekap-absensi', params: { month, year } }),
   ]);
 
@@ -173,7 +224,7 @@ export async function getDashboardSnapshot(currentDate: Date) {
     classData: classes.status === 'fulfilled' && Array.isArray(classes.value.data) ? classes.value.data : [],
     offenders: freq.status === 'fulfilled' && Array.isArray(freq.value.data) ? freq.value.data : [],
     pending: pendingRows,
-    summary: summ.status === 'fulfilled' ? ensureObject(summ.value.data || {}, 'Ringkasan dashboard tidak valid.') : { total_late: 0, total_incomplete: 0, total_offenders: 0 },
+    summary: summ.status === 'fulfilled' ? summ.value.data : { total_late: 0, total_incomplete: 0, total_offenders: 0 },
     existingClasses: cls.status === 'fulfilled' && Array.isArray(cls.value.data) ? cls.value.data : [],
     incompleteSummary: incSumm.status === 'fulfilled' ? incSumm.value.data : null,
     absenceSummary: absenceSumm.status === 'fulfilled' && Array.isArray(absenceSumm.value.data) ? absenceSumm.value.data : [],
