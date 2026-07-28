@@ -23,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 
 test.afterEach(async ({ page }) => expect((page as any).__failures).toEqual([]));
 
-test("representative form dialog and destructive alert dialog preserve keyboard focus", async ({ page }) => {
+test("@error-recovery @release representative form dialog and destructive alert dialog preserve keyboard focus", async ({ page }) => {
   await login(page);
   await page.goto("/attendance-review");
   await page.locator('input[type="date"]').fill(new Date().toISOString().slice(0, 10));
@@ -62,7 +62,7 @@ for (const report of [
   { name: "Tardiness", path: "/reports/tardiness", button: "Generate Report", bodyClass: "printing-tardiness-report" },
   { name: "Rekap", path: "/reports/rekap-absensi", button: "Buat Laporan", bodyClass: "printing-rekap-absensi" },
 ]) {
-  test(`${report.name} populated report paginates safely`, async ({ page, browserName }) => {
+  test(`@reports @release ${report.name} populated report paginates safely`, async ({ page, browserName }) => {
     test.skip(browserName !== "chromium", "PDF pagination is Chromium-only");
     await login(page);
     await page.goto(report.path);
