@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { operatorWorkQueueOptions } from "./useOperatorQueries";
-import * as operatorApi from "../lib/api/operator";
+import * as operatorApi from "../api/operator";
 
-vi.mock("../lib/api/operator", () => ({ fetchOperatorWorkQueue: vi.fn() }));
+vi.mock("../api/operator", () => ({ fetchOperatorWorkQueue: vi.fn() }));
 
 describe("operator work-queue query", () => {
   it("uses the deterministic operator key", () => {
