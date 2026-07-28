@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { 
-  Settings as SettingsIcon, 
-  Trash2, 
-  AlertTriangle, 
-  ShieldAlert, 
-  CheckCircle2, 
-  X, 
-  ArrowLeft 
+import {
+  Settings as SettingsIcon,
+  Trash2,
+  AlertTriangle,
+  ShieldAlert,
+  CheckCircle2,
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "../api";
@@ -66,10 +66,10 @@ function Settings() {
 
   const handleResetData = async () => {
     if (confirmText !== RESET_CONFIRMATION) return;
-    
+
     setIsResetting(true);
     setError("");
-    
+
     try {
       await api.post("/api/system/clear-data", {
         mode: resetMode,
@@ -242,8 +242,8 @@ function Settings() {
             <div className="p-8 space-y-6">
               <div className={cn(
                 "p-5 rounded-2xl border text-sm font-medium leading-relaxed transition-colors duration-500",
-                resetMode === "full" 
-                  ? "bg-rose-50 border-rose-100 text-rose-800" 
+                resetMode === "full"
+                  ? "bg-rose-50 border-rose-100 text-rose-800"
                   : "bg-amber-50 border-amber-100 text-amber-800"
               )}>
                 {resetMode === "full"
