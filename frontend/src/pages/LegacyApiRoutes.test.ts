@@ -8,11 +8,11 @@ function pageSource(filename: string): string {
 
 describe("legacy page API contracts", () => {
   it.each([
-    ["ClassMapping.js", [
-      'api.get("/api/students/classes")',
-      'api.get("/api/students"',
+    ["ClassMapping.tsx", [
+      'api.get<string[]>("/api/students/classes")',
+      'api.get<StudentListResponse>("/api/students"',
       'api.post("/api/students"',
-      'api.patch("/api/students/assign-class"',
+      'api.patch<AssignClassResponse>("/api/students/assign-class"',
     ]],
     ["../api/uploadHistory.ts", ['api.get("/api/uploads/history",']],
     ["JenjangConfig.tsx", [

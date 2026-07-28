@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -22,10 +22,42 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../compon
 
 const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
+type ClassMappingStudent = {
+  id: number;
+  name: string;
+  jenjang?: string | null;
+  class_name?: string | null;
+};
+
+type StudentListResponse = {
+  students?: ClassMappingStudent[];
+  total?: number;
+  total_pages?: number;
+};
+
+type StudentQueryParams = {
+  page: number;
+  page_size: number;
+  search?: string;
+  jenjang?: string;
+  class_name?: string;
+};
+
+type CreateStudentPayload = {
+  name: string;
+  jenjang: string | null;
+  class_name: string | null;
+  id?: number;
+};
+
+type AssignClassResponse = {
+  updated?: number;
+};
+
 function ClassMapping() {
   const navigate = useNavigate();
-  const [students, setStudents] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState<ClassMappingStudent[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +72,7 @@ function ClassMapping() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const [selectedStudents, setSelectedStudents] = useState({});
+  const [selectedStudents, setSelectedStudents] = useState<Record<number, ClassMappingStudent>>({});
   const [bulkJenjang, setBulkJenjang] = useState("");
   const [bulkClassName, setBulkClassName] = useState("");
 
@@ -55,7 +87,7 @@ function ClassMapping() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const response = await api.get("/api/students/classes");
+      const response = await api.get<string[]>("/api/students/classes");
       setClasses(Array.isArray(response.data) ? response.data : []);
     } catch (_error) {
       setClasses([]);
@@ -67,7 +99,7 @@ function ClassMapping() {
     setError("");
 
     try {
-      const params = {
+      const params: StudentQueryParams = {
         page,
         page_size: pageSize,
       };
@@ -82,7 +114,7 @@ function ClassMapping() {
         params.class_name = classFilter;
       }
 
-      const response = await api.get("/api/students", { params });
+      const response = await api.get<StudentListResponse>("/api/students", { params });
       setStudents(response.data?.students || []);
       setTotal(response.data?.total || 0);
       setTotalPages(response.data?.total_pages || 0);
@@ -96,7 +128,7 @@ function ClassMapping() {
     }
   }, [page, pageSize, search, jenjangFilter, classFilter]);
 
-  const handleCreateStudent = async (e) => {
+  const handleCreateStudent = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!studentName.trim()) {
       setAddStudentError("Student name is required.");
@@ -108,7 +140,7 @@ function ClassMapping() {
     setAddStudentSuccess("");
 
     try {
-      const payload = {
+      const payload: CreateStudentPayload = {
         name: studentName.trim(),
         jenjang: studentJenjang ? studentJenjang : null,
         class_name: studentClassName.trim() ? studentClassName.trim() : null,
@@ -138,7 +170,7 @@ function ClassMapping() {
         fetchClasses();
       }, 1000);
     } catch (saveError) {
-      setAddStudentError(saveError.response?.data?.detail || "Failed to create student.");
+      setAddStudentError(getPageApiError(saveError, "Failed to create student."));
     } finally {
       setAddingStudent(false);
     }
@@ -171,7 +203,7 @@ function ClassMapping() {
     [selectedStudents]
   );
 
-  const handleToggleStudent = useCallback((student) => {
+  const handleToggleStudent = useCallback((student: ClassMappingStudent) => {
     setSelectedStudents((prev) => {
       if (prev[student.id]) {
         const next = { ...prev };
@@ -217,7 +249,7 @@ function ClassMapping() {
     setSelectedStudents({});
   }, []);
 
-  const handleUnselectStudent = useCallback((id) => {
+  const handleUnselectStudent = useCallback((id: number) => {
     setSelectedStudents((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -243,7 +275,7 @@ function ClassMapping() {
     setSuccessMessage("");
 
     try {
-      const response = await api.patch("/api/students/assign-class", {
+      const response = await api.patch<AssignClassResponse>("/api/students/assign-class", {
         student_ids: selectedList.map((student) => student.id),
         class_name: className,
         jenjang,
@@ -257,7 +289,7 @@ function ClassMapping() {
       setPage(1);
       await Promise.all([fetchStudents(), fetchClasses()]);
     } catch (assignError) {
-      setError(assignError.response?.data?.detail || "Failed to assign class in bulk.");
+      setError(getPageApiError(assignError, "Failed to assign class in bulk."));
     } finally {
       setAssigning(false);
     }
