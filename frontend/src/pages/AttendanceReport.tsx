@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import {
   Calendar,
   Download,
@@ -39,8 +39,45 @@ const MONTHS = [
 const currentYear = new Date().getFullYear();
 const YEARS = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
 
+type PeriodType = "monthly" | "bimonthly" | "term" | "semester" | "yearly";
+
+type AttendanceReportRow = {
+  student_id: string;
+  name: string;
+  jenjang?: string | null;
+  class_name?: string | null;
+  present_count: number;
+  late_count: number;
+  total_late_time_str?: string | null;
+  absent_count: number;
+  incomplete_count: number;
+  sakit?: number | null;
+  izin?: number | null;
+  alfa?: number | null;
+  total_days: number;
+  attendance_percentage: number;
+};
+
+type AttendanceReportSummary = {
+  heb_days?: number | null;
+  avg_late_time_str?: string | null;
+};
+
+type AttendanceReportResponse = {
+  results?: AttendanceReportRow[];
+  summary?: AttendanceReportSummary;
+};
+
+type StatCardProps = {
+  title: string;
+  value: ReactNode;
+  subtext?: string;
+  icon: ReactNode;
+  color: string;
+};
+
 // Generate period options based on type
-const getPeriodOptions = (type) => {
+const getPeriodOptions = (type: PeriodType) => {
   switch (type) {
     case "monthly":
       return MONTHS.map((m, i) => ({ value: i, label: m }));
@@ -72,8 +109,8 @@ const getPeriodOptions = (type) => {
   }
 };
 
-const getDateRange = (type, periodValue, year) => {
-  let startMonth = parseInt(periodValue, 10);
+const getDateRange = (type: PeriodType, periodValue: number, year: number) => {
+  let startMonth = periodValue;
   let endMonth = startMonth;
   let startYear = year;
   let endYear = year;
@@ -104,7 +141,7 @@ const getDateRange = (type, periodValue, year) => {
   // Last day of endMonth
   const endDate = new Date(endYear, endMonth + 1, 0);
 
-  const format = (d) => {
+  const format = (d: Date) => {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -114,7 +151,7 @@ const getDateRange = (type, periodValue, year) => {
   return { start_date: format(startDate), end_date: format(endDate) };
 };
 
-const StatCard = ({ title, value, subtext, icon, color }) => (
+const StatCard = ({ title, value, subtext, icon, color }: StatCardProps) => (
   <Card className="rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
     <div className="flex items-start justify-between">
       <div>
@@ -129,16 +166,23 @@ const StatCard = ({ title, value, subtext, icon, color }) => (
   </Card>
 );
 
+function getAttendanceReportError(error: unknown): string {
+  if (!error || typeof error !== "object") return "Failed to generate report.";
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  return typeof detail === "string" && detail ? detail : "Failed to generate report.";
+}
+
 function AttendanceReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [classes, setClasses] = useState([]);
-  const [reportData, setReportData] = useState([]);
-  const [summaryMetadata, setSummaryMetadata] = useState({});
+  const [classes, setClasses] = useState<string[]>([]);
+  const [reportData, setReportData] = useState<AttendanceReportRow[]>([]);
+  const [summaryMetadata, setSummaryMetadata] = useState<AttendanceReportSummary>({});
 
 
   // Filters state
-  const [periodType, setPeriodType] = useState("monthly");
+  const [periodType, setPeriodType] = useState<PeriodType>("monthly");
   const [selectedPeriod, setSelectedPeriod] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [jenjangFilter, setJenjangFilter] = useState("all");
@@ -146,7 +190,7 @@ function AttendanceReport() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const response = await api.get("/api/students/classes");
+      const response = await api.get<string[]>("/api/students/classes");
       setClasses(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error(err);
@@ -158,17 +202,17 @@ function AttendanceReport() {
     setError("");
     try {
       const { start_date, end_date } = getDateRange(periodType, selectedPeriod, selectedYear);
-      const params = { start_date, end_date };
+      const params: { start_date: string; end_date: string; jenjang?: string; class_name?: string } = { start_date, end_date };
       
       if (jenjangFilter !== "all") params.jenjang = jenjangFilter;
       if (classFilter !== "all") params.class_name = classFilter;
 
-      const response = await api.get("/api/analytics/attendance-report", { params });
+      const response = await api.get<AttendanceReportResponse>("/api/analytics/attendance-report", { params });
       setReportData(response.data.results || []);
       setSummaryMetadata(response.data.summary || {});
 
-    } catch (err) {
-      setError(err.response?.data?.detail || "Failed to generate report.");
+    } catch (err: unknown) {
+      setError(getAttendanceReportError(err));
     } finally {
       setLoading(false);
     }
@@ -268,7 +312,7 @@ function AttendanceReport() {
             <FieldLabel>Period Type</FieldLabel>
             <NativeSelect
               value={periodType}
-              onChange={(e) => setPeriodType(e.target.value)}
+              onChange={(e) => setPeriodType(e.target.value as PeriodType)}
             >
               {PERIOD_TYPES.map(pt => <option key={pt.id} value={pt.id}>{pt.label}</option>)}
             </NativeSelect>
