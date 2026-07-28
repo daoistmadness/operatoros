@@ -91,8 +91,7 @@ export function checkBoundarySources(sources, sourceRoot = "/virtual/src") {
       if (targetIsGenerated && !importerIsGenerated) {
         const approvedAdapter = importerFeature &&
           importerRelative.startsWith(`features/${importerFeature}/api/`);
-        const transitionalReadinessAdapter = importerRelative === "api/readiness.ts";
-        if (!approvedAdapter && !transitionalReadinessAdapter) {
+        if (!approvedAdapter) {
           addViolation(violations, "NO_DIRECT_GENERATED_IMPORTS", importerRelative, targetRelative);
         }
       }
