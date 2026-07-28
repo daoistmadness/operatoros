@@ -43,6 +43,8 @@
   "scripts": {
     "api:check": "node ../scripts/openapi-contracts.mjs check",
     "api:generate": "node ../scripts/openapi-contracts.mjs generate",
+    "boundaries:check": "node ../scripts/frontend-boundaries.mjs",
+    "boundaries:test": "node --test ../scripts/frontend-boundaries.test.mjs",
     "dev": "vite",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
