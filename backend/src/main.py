@@ -35,7 +35,7 @@ from api.attendance_followups import router as attendance_followups_router
 from api.operator_work_queue import router as operator_work_queue_router
 from api.readiness import router as readiness_router
 from api.data_portability import router as data_portability_router
-from core.database import init_db
+from core.database import engine, init_db
 from core.schema_guard import validate_database_startup
 
 from core.config import settings
@@ -52,6 +52,7 @@ async def lifespan(_app: FastAPI):
         yield
     finally:
         backup_scheduler.stop()
+        engine.dispose()
 
 app = FastAPI(
     title="School Attendance Analytics",
