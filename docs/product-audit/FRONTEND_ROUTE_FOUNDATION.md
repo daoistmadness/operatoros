@@ -55,12 +55,17 @@ Browser asset inspection on the sign-in URL observed only the initial entry scri
 - Isolated E2E smoke passed 7 backend and 14 web checks. Desktop was skipped because existing desktop infrastructure is unavailable; no Tauri files changed.
 - The protected attendance database was inspected only through immutable SQLite and retained its checksum and expected counts.
 
-## TypeScript differential
+## TypeScript completion
 
-Classification: `PRE_EXISTING_GLOBAL_TYPESCRIPT_DEBT_NO_ROUTE_REGRESSION`.
+Classification: `GLOBAL_TYPESCRIPT_ZERO_ERROR_GATE_RESOLVED`.
 
-Baseline and feature strict checks each produce 47 pre-existing diagnostics across the same 22 files. The feature introduces zero new diagnostics, and changed route-milestone files produce zero diagnostics. Compiler options remain unchanged and strict. Global typecheck is not reported as passed.
+The route-foundation milestone originally retained 47 pre-existing diagnostics
+across 22 files under a temporary differential gate. The complete frontend
+TypeScript migration resolved that debt, removed every JavaScript and JSX source
+file under `frontend/src`, and removed JavaScript source support from the strict
+project configuration.
 
-Required limitation: `GLOBAL_TYPESCRIPT_ZERO_ERROR_GATE_DEFERRED_TO_TYPESCRIPT_COMPLETION`.
-
-The full JavaScript-to-TypeScript migration remains separate because it must resolve existing API, page, test, and state-model debt while removing all remaining JavaScript and JSX files. See `FRONTEND_TYPESCRIPT_DEBT_BASELINE.md`.
+The normal project-wide `npm run typecheck` command now exits zero with no
+diagnostics and is the permanent acceptance gate. Compiler strictness was not
+weakened. See `FRONTEND_TYPESCRIPT_MIGRATION.md` and
+`FRONTEND_TYPESCRIPT_DEBT_BASELINE.md` for completion evidence.
