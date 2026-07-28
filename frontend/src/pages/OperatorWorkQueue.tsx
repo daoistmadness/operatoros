@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 import CorrectionSelfConfirmModal from '../components/CorrectionSelfConfirmModal';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
-import { fetchOperatorWorkQueue, type OperatorWorkQueueItem } from '../lib/api/operator';
+import { useOperatorWorkQueueQuery } from '../hooks/useOperatorQueries';
+import { getApiErrorMessage } from '../lib/api/errors';
+import type { OperatorWorkQueueItem } from '../lib/api/operator';
 
 type SelectedCorrection = {
   id: number;
@@ -25,9 +27,12 @@ type SelectedCorrection = {
 
 export default function OperatorWorkQueue() {
   const { isSingleUserMode } = useDeploymentMode();
-  const [items, setItems] = useState<OperatorWorkQueueItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const queue = useOperatorWorkQueueQuery();
+  const items = queue.data ?? [];
+  const isLoading = queue.isLoading;
+  const errorMessage = queue.error
+    ? getApiErrorMessage(queue.error, 'Gagal memuat antrean kerja operator. Silakan coba lagi.')
+    : null;
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,22 +42,7 @@ export default function OperatorWorkQueue() {
   // Selected correction for self-confirm modal
   const [selectedCorrection, setSelectedCorrection] = useState<SelectedCorrection | null>(null);
 
-  const loadQueue = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const data = await fetchOperatorWorkQueue();
-      setItems(data);
-    } catch (_error: unknown) {
-      setErrorMessage('Gagal memuat antrean kerja operator. Silakan coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadQueue();
-  }, []);
+  const loadQueue = () => void queue.refetch();
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {

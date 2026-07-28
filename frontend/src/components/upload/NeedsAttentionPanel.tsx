@@ -1,18 +1,21 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, History, Loader2, Search, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   ConflictItem,
   commitConflictRetry,
-  fetchRosterComparison,
-  fetchStudentCandidates,
-  fetchUploadConflicts,
   linkConflictDevice,
   resolveRosterConflict,
   retryConflictPreview,
   StudentCandidate,
 } from "../../api/uploadConflicts";
+import {
+  useRosterComparisonQuery,
+  useUploadConflictCandidatesQuery,
+  useUploadConflictListQuery,
+} from "../../hooks/useUploadQueries";
+import { queryKeys } from "../../lib/query/queryKeys";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -22,8 +25,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { NativeSelect } from "../ui/native-select";
-
-const queueKey = ["upload-conflicts"];
 
 function statusVariant(status: string) {
   if (status === "RESOLVED_PENDING_RETRY") return "information";
@@ -38,36 +39,36 @@ function ResolutionDialog({ item, onClose }: { item: ConflictItem | null; onClos
   const [selected, setSelected] = useState<StudentCandidate | null>(null);
   const [selectedRetryRows, setSelectedRetryRows] = useState<number[]>([]);
   const [showCommitSummary, setShowCommitSummary] = useState(false);
-  const candidates = useQuery({
-    queryKey: ["upload-conflict-candidates", item?.resolution_item_id, submittedQuery],
-    queryFn: () => fetchStudentCandidates(item!.resolution_item_id, submittedQuery),
-    enabled: Boolean(item && submittedQuery.length >= 2),
-  });
+  const candidates = useUploadConflictCandidatesQuery(
+    item?.resolution_item_id ?? "",
+    submittedQuery,
+    Boolean(item),
+  );
   const linkDevice = useMutation({
     mutationFn: () => linkConflictDevice(item!, selected!),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: queueKey });
+      await client.invalidateQueries({ queryKey: queryKeys.uploads.conflicts.all });
     },
   });
   const retry = useMutation({
     mutationFn: () => retryConflictPreview(item!),
     onSuccess: async (data) => {
       setSelectedRetryRows(data.outcomes.filter((row) => row.outcome === "NOW_ELIGIBLE").map((row) => row.retry_row_id));
-      await client.invalidateQueries({ queryKey: queueKey });
+      await client.invalidateQueries({ queryKey: queryKeys.uploads.conflicts.all });
     },
   });
   const commit = useMutation({
     mutationFn: () => commitConflictRetry(item!, retry.data!, selectedRetryRows),
-    onSuccess: async () => client.invalidateQueries({ queryKey: queueKey }),
+    onSuccess: async () => client.invalidateQueries({ queryKey: queryKeys.uploads.conflicts.all }),
   });
-  const comparison = useQuery({
-    queryKey: ["upload-conflict-roster-comparison", item?.resolution_item_id, selected?.id],
-    queryFn: () => fetchRosterComparison(item!.resolution_item_id, selected!.id),
-    enabled: item?.workflow_type === "ROSTER" && Boolean(selected),
-  });
+  const comparison = useRosterComparisonQuery(
+    item?.resolution_item_id ?? "",
+    selected?.id ?? "",
+    item?.workflow_type === "ROSTER" && Boolean(selected),
+  );
   const resolveRoster = useMutation({
     mutationFn: () => resolveRosterConflict(item!, selected!),
-    onSuccess: async () => client.invalidateQueries({ queryKey: queueKey }),
+    onSuccess: async () => client.invalidateQueries({ queryKey: queryKeys.uploads.conflicts.all }),
   });
   const canLink = item?.workflow_type === "ATTENDANCE" && selected?.student_status === "active" && !selected.has_active_device;
   const retryReady = Boolean(item?.retry_eligible || item?.resolution_status === "RESOLVED_PENDING_RETRY" || linkDevice.isSuccess);
@@ -138,15 +139,17 @@ function ResolutionDialog({ item, onClose }: { item: ConflictItem | null; onClos
   );
 }
 
-export function NeedsAttentionPanel() {
+export function NeedsAttentionPanel({ enabled = true }: { enabled?: boolean }) {
   const [workflow, setWorkflow] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [activeItem, setActiveItem] = useState<ConflictItem | null>(null);
-  const queue = useQuery({
-    queryKey: [...queueKey, workflow, status, page],
-    queryFn: () => fetchUploadConflicts({ workflow_type: workflow || undefined, resolution_status: status || undefined, page, page_size: 20 }),
-  });
+  const queue = useUploadConflictListQuery({
+    workflow_type: workflow || undefined,
+    resolution_status: status || undefined,
+    page,
+    page_size: 20,
+  }, enabled);
 
   return (
     <div className="space-y-5">

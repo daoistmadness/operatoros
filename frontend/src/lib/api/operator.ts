@@ -55,9 +55,10 @@ export async function fetchDeploymentMode(): Promise<DeploymentModeResponse> {
   }
 }
 
-export async function fetchOperatorWorkQueue(): Promise<OperatorWorkQueueItem[]> {
+export async function fetchOperatorWorkQueue(signal?: AbortSignal): Promise<OperatorWorkQueueItem[]> {
   const response = await apiRequest<OperatorWorkQueueItem[]>({
     path: '/api/operator/work-queue',
+    ...(signal ? { signal } : {}),
   });
   return response.data || [];
 }
