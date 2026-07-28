@@ -13,10 +13,20 @@ from core.config import settings
 from core.database import engine, validate_student_linking_gate
 
 
-CURRENT_SCHEMA_VERSION = "20260724_s42"
-PREVIOUS_SCHEMA_VERSION = "20260722_s41"
-LEGACY_SCHEMA_VERSION = "20260722_s40"
+BASELINE_SCHEMA_VERSION = "20260724_s42"
+CURRENT_SCHEMA_VERSION = "20260725_s43"
+PREVIOUS_SCHEMA_VERSION = BASELINE_SCHEMA_VERSION
+LEGACY_SCHEMA_VERSION = "20260722_s41"
 LEDGER_TABLE = "operatoros_schema_migrations"
+CURRENT_SCHEMA_TABLES = {
+    "attendance_follow_ups",
+    "attendance_follow_up_notes",
+    "attendance_follow_up_audit",
+}
+CURRENT_SCHEMA_TRIGGERS = {
+    "trg_attendance_follow_up_audit_no_update",
+    "trg_attendance_follow_up_audit_no_delete",
+}
 
 
 class DatabaseStartupError(RuntimeError):
@@ -73,6 +83,11 @@ def _validate_sqlite_file(path: Path) -> None:
         required_tables = {"student_import_sessions", "student_import_applied_actions"}
         if not required_tables.issubset(tables):
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance tables missing")
+        if not CURRENT_SCHEMA_TABLES.issubset(tables):
+            missing = sorted(CURRENT_SCHEMA_TABLES - tables)
+            raise DatabaseStartupError(
+                "DATABASE_SCHEMA_INVALID: S4.3 tables missing: " + ", ".join(missing)
+            )
         if "student_enrollment_lifecycle_audit" not in tables:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
         progression_tables = {
@@ -99,6 +114,11 @@ def _validate_sqlite_file(path: Path) -> None:
         }
         if not required_triggers.issubset(triggers):
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: S3.9 provenance triggers missing")
+        if not CURRENT_SCHEMA_TRIGGERS.issubset(triggers):
+            missing = sorted(CURRENT_SCHEMA_TRIGGERS - triggers)
+            raise DatabaseStartupError(
+                "DATABASE_SCHEMA_INVALID: S4.3 triggers missing: " + ", ".join(missing)
+            )
         for table in ("student_import_batches", "academic_roster_import_batches"):
             session_column = next(
                 (item for item in connection.execute(f"PRAGMA table_info({table})") if item[1] == "session_id"),
@@ -133,4 +153,11 @@ def validate_sqlite_startup(database_url: str, engine_arg) -> None:
 
 
 def validate_database_startup() -> None:
+    url = make_url(settings.database_url)
+    if url.drivername.startswith("sqlite") and url.database and url.database != ":memory:":
+        configured = Path(url.database)
+        if configured.is_absolute() and not configured.resolve(strict=False).exists():
+            from core.schema_migrations import bootstrap_fresh_sqlite_database
+
+            bootstrap_fresh_sqlite_database(configured.resolve(strict=False))
     validate_sqlite_startup(settings.database_url, engine)

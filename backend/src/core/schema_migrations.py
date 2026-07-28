@@ -19,7 +19,11 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from core.database import Base
-from core.schema_guard import CURRENT_SCHEMA_VERSION, LEDGER_TABLE
+from core.schema_guard import (
+    BASELINE_SCHEMA_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    LEDGER_TABLE,
+)
 
 
 S38_SCHEMA_VERSION = "20260722_s38"
@@ -85,6 +89,12 @@ MODEL_MODULES = (
     "models.user",
     "models.user_session",
 )
+
+POST_BASELINE_MODEL_TABLES = frozenset({
+    "attendance_follow_ups",
+    "attendance_follow_up_notes",
+    "attendance_follow_up_audit",
+})
 
 
 @dataclass(frozen=True)
@@ -265,8 +275,8 @@ def adopt_current_sqlite_schema(
         connection.close()
 
 
-def initialize_fresh_sqlite_database(path: Path) -> str:
-    """Create a fresh current schema explicitly and atomically, without seed data."""
+def initialize_s42_baseline_sqlite_database(path: Path) -> str:
+    """Create only the approved S4.2 baseline, atomically and without seed data."""
     if not path.is_absolute():
         raise RuntimeError("DATABASE_PATH_INVALID: path must be absolute")
     target = path.resolve(strict=False)
@@ -277,7 +287,7 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
                 row = connection.execute(
                     f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC LIMIT 1"
                 ).fetchone()
-                if row == (CURRENT_SCHEMA_VERSION,):
+                if row == (BASELINE_SCHEMA_VERSION,):
                     return "MIGRATION_COMPLETE"
         raise RuntimeError("DATABASE_ALREADY_EXISTS")
     if not target.parent.exists() or not target.parent.is_dir():
@@ -287,9 +297,19 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
         raise RuntimeError("MIGRATION_RECOVERY_REQUIRED: interrupted temporary database exists")
     for module in MODEL_MODULES:
         importlib.import_module(module)
+    unknown_exclusions = POST_BASELINE_MODEL_TABLES - set(Base.metadata.tables)
+    if unknown_exclusions:
+        raise RuntimeError(
+            "BASELINE_MODEL_CLASSIFICATION_INVALID: " + ", ".join(sorted(unknown_exclusions))
+        )
+    baseline_tables = [
+        table
+        for table in Base.metadata.sorted_tables
+        if table.name not in POST_BASELINE_MODEL_TABLES
+    ]
     migration_engine = create_engine(f"sqlite:///{temporary}")
     try:
-        Base.metadata.create_all(migration_engine)
+        Base.metadata.create_all(migration_engine, tables=baseline_tables)
         migration_engine.dispose()
         with sqlite3.connect(temporary) as connection:
             connection.execute(
@@ -335,7 +355,7 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
                 f"INSERT INTO {LEDGER_TABLE} "
                 "(version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (CURRENT_SCHEMA_VERSION, None, fingerprint,
+                (BASELINE_SCHEMA_VERSION, None, fingerprint,
                  json.dumps(protected, sort_keys=True, separators=(",", ":")),
                  "FRESH_INSTALL", datetime.now(timezone.utc).isoformat()),
             )
@@ -363,6 +383,46 @@ def initialize_fresh_sqlite_database(path: Path) -> str:
         if target.exists():
             target.unlink()
         raise
+
+
+def migrate_database_to_current(path: Path) -> str:
+    """Apply every registered migration after the S4.2 fresh baseline."""
+    from core.attendance_followup_migration import migrate_attendance_followup_sqlite
+
+    target = path.resolve(strict=True)
+    with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
+        row = connection.execute(
+            f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
+        ).fetchone()
+    if row == (CURRENT_SCHEMA_VERSION,):
+        return "MIGRATION_ALREADY_CURRENT"
+    if row != (BASELINE_SCHEMA_VERSION,):
+        actual = row[0] if row else "missing"
+        raise RuntimeError(
+            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION}, found {actual}"
+        )
+    return migrate_attendance_followup_sqlite(target)
+
+
+def bootstrap_fresh_sqlite_database(path: Path) -> str:
+    """Create the S4.2 baseline, then run registered migrations to S4.3."""
+    target = path.resolve(strict=False)
+    if target.exists():
+        with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
+            row = connection.execute(
+                f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
+            ).fetchone()
+        if row == (CURRENT_SCHEMA_VERSION,):
+            return "MIGRATION_COMPLETE"
+        raise RuntimeError("DATABASE_ALREADY_EXISTS")
+    initialize_s42_baseline_sqlite_database(target)
+    migrate_database_to_current(target)
+    return "MIGRATION_COMPLETE"
+
+
+# Backward-compatible public name: fresh initialization now means a ready,
+# current database rather than the intermediate S4.2 baseline.
+initialize_fresh_sqlite_database = bootstrap_fresh_sqlite_database
 
 
 def _rebuild_batch_with_session(connection: sqlite3.Connection, table: str) -> None:
@@ -555,11 +615,18 @@ def main(argv: list[str] | None = None) -> int:
     upgrade_s41.add_argument("--database", required=True, type=Path)
     upgrade_s42 = commands.add_parser("upgrade-s42")
     upgrade_s42.add_argument("--database", required=True, type=Path)
+    upgrade_s43 = commands.add_parser("upgrade-s43")
+    upgrade_s43.add_argument("--database", required=True, type=Path)
+    baseline = commands.add_parser("initialize-s42-baseline")
+    baseline.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
         adopt.add_argument(f"--expected-{table.replace('_', '-')}", required=True, type=int)
     arguments = parser.parse_args(argv)
     if arguments.command == "initialize-fresh":
         print(json.dumps({"status": initialize_fresh_sqlite_database(arguments.database)}))
+        return 0
+    if arguments.command == "initialize-s42-baseline":
+        print(json.dumps({"status": initialize_s42_baseline_sqlite_database(arguments.database)}))
         return 0
     if arguments.command == "upgrade-s39":
         print(json.dumps({"status": migrate_s38_to_s39_sqlite(arguments.database)}))
@@ -575,6 +642,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s42":
         from core.attendance_correction_migration import migrate_attendance_corrections_sqlite
         print(json.dumps({"status": migrate_attendance_corrections_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s43":
+        from core.attendance_followup_migration import migrate_attendance_followup_sqlite
+        print(json.dumps({"status": migrate_attendance_followup_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")
