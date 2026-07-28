@@ -1,36 +1,81 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle, CheckCircle2, Clock, LockKeyhole, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { Card } from "../components/ui/card";
 
-const safeError = (error) => {
-  const code = error?.response?.data?.detail?.code;
+type CorrectionAuditEvent = {
+  action: string;
+  actor: string;
+  new_state: string;
+};
+
+type AttendanceSnapshot = {
+  status: string;
+  check_in?: string | null;
+  check_out?: string | null;
+};
+
+type CorrectionRequest = {
+  id: number;
+  state: string;
+  requester: string;
+  original_snapshot: AttendanceSnapshot;
+  proposed_status: string;
+  proposed_check_in?: string | null;
+  proposed_check_out?: string | null;
+  explanation: string;
+  audit: CorrectionAuditEvent[];
+};
+
+type AttendancePeriod = {
+  status: string;
+  version: number;
+  finalized_by?: string | null;
+  reopened_by?: string | null;
+  audit: CorrectionAuditEvent[];
+};
+
+function errorResponse(error: unknown): { status?: number; data?: unknown } | undefined {
+  if (!error || typeof error !== "object" || !("response" in error)) return undefined;
+  const response = error.response;
+  if (!response || typeof response !== "object") return undefined;
+  return {
+    status: "status" in response && typeof response.status === "number" ? response.status : undefined,
+    data: "data" in response ? response.data : undefined,
+  };
+}
+
+const safeError = (error: unknown): string => {
+  const response = errorResponse(error);
+  const data = response?.data;
+  const detail = data && typeof data === "object" && "detail" in data ? data.detail : undefined;
+  const code = detail && typeof detail === "object" && "code" in detail ? detail.code : undefined;
   if (code === "ATTENDANCE_CORRECTION_STALE") return "This request is stale. Refresh before taking another action.";
   if (code === "ATTENDANCE_PERIOD_FINALIZED") return "This attendance date is finalized. An authorized administrator must reopen it.";
-  if (error?.response?.status === 403) return "Your account does not have permission for this action.";
+  if (response?.status === 403) return "Your account does not have permission for this action.";
   return "The attendance correction could not be completed. Your entered values have been preserved.";
 };
 
 export default function AttendanceCorrections() {
   const { user, can } = useAuth();
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState<CorrectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().slice(0, 10));
-  const [period, setPeriod] = useState({ status: "OPEN", version: 0, audit: [] });
+  const [period, setPeriod] = useState<AttendancePeriod>({ status: "OPEN", version: 0, audit: [] });
   const [form, setForm] = useState({ attendance_id: "", proposed_status: "late", proposed_check_in: "", proposed_check_out: "", reason_code: "SCAN_REVIEW", explanation: "" });
-  const [rejecting, setRejecting] = useState(null);
+  const [rejecting, setRejecting] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [queue, status] = await Promise.all([
-        api.get("/api/attendance-corrections"),
-        api.get("/api/attendance-corrections/periods/status", { params: { attendance_date: attendanceDate } }),
+        api.get<CorrectionRequest[]>("/api/attendance-corrections"),
+        api.get<AttendancePeriod>("/api/attendance-corrections/periods/status", { params: { attendance_date: attendanceDate } }),
       ]);
       setRequests(queue.data || []);
       setPeriod(status.data);
@@ -40,7 +85,7 @@ export default function AttendanceCorrections() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const run = async (key, action) => {
+  const run = async (key: string, action: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(key); setError("");
     try { await action(); await load(); }
@@ -48,10 +93,10 @@ export default function AttendanceCorrections() {
     finally { setBusy(""); }
   };
 
-  const submitNew = async (event) => {
+  const submitNew = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await run("create", async () => {
-      const response = await api.post("/api/attendance-corrections", {
+      const response = await api.post<{ id: number }>("/api/attendance-corrections", {
         ...form, attendance_id: Number(form.attendance_id),
         proposed_check_in: form.proposed_check_in || null, proposed_check_out: form.proposed_check_out || null,
       });
