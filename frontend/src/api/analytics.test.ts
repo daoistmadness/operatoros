@@ -3,6 +3,7 @@ import {
   downloadManagementSummaryPdf,
 } from "./analytics";
 import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../lib/api/client", () => ({
   API_BASE_URL: "http://localhost:8000",
@@ -15,7 +16,7 @@ vi.mock("../lib/api/client", () => ({
 
 describe("management analytics exports", () => {
   beforeEach(() => {
-    apiRequest.mockResolvedValue({
+    vi.mocked(apiRequest).mockResolvedValue({
       data: new Blob(["report"]),
       status: 200,
       headers: {},
@@ -23,7 +24,7 @@ describe("management analytics exports", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("includes active filters when downloading the PDF export", async () => {
