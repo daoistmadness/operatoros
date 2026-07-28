@@ -8,9 +8,10 @@ describe("cookie-session client boundary", () => {
     localStorage.setItem("authToken", "must-not-be-sent");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } }));
     await apiRequest({ path: "/api/auth/me" });
-    const init = fetchMock.mock.calls[0][1];
+    const init = fetchMock.mock.calls[0]?.[1];
+    if (!init) throw new Error("Expected fetch request options.");
     expect(init.credentials).toBe("include");
-    expect(init.headers.get("Authorization")).toBeNull();
+    expect(new Headers(init.headers).get("Authorization")).toBeNull();
   });
 
   it("broadcasts 401 but not 403 as a session-loss event", async () => {
