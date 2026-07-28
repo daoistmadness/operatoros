@@ -161,7 +161,7 @@ export function safeSelectedIds(
   adapter: (row: any) => UploadRowViewModel,
 ): number[] {
   const allowed = new Set(eligibleIds(rows, adapter));
-  return [...new Set(selected)].filter((id) => allowed.has(id));
+  return Array.from(new Set(selected)).filter((id) => allowed.has(id));
 }
 
 export function selectionState(eligible: number[], selected: number[]) {
