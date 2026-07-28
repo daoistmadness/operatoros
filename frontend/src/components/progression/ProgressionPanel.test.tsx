@@ -72,7 +72,7 @@ async function renderPanel(preview = batch()) {
   api.commitProgressionPreview.mockResolvedValue({ status: "COMMITTED", batch_id: "batch-1", preview_version: 1, applied: preview.rows.length, destination_enrollments_created: 3, graduated: 1, retained: 1, cross_jenjang: 1, withdrawn: 0, excluded: 0, skipped: 0 });
   container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
   await act(async () => { root?.render(<ProgressionPanel />); await new Promise((resolve) => setTimeout(resolve, 20)); });
-  const generate = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes("Generate Preview")) as HTMLButtonElement;
+  const generate = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Generate Preview")) as HTMLButtonElement;
   await act(async () => { generate.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
   return container;
 }
@@ -101,24 +101,24 @@ describe("ProgressionPanel", () => {
     expect(view.querySelector("#progression-class-filter")).not.toBeNull();
     expect(view.textContent).toContain("Bulk destination class for filtered rows");
     expect(view.textContent).toContain("DESTINATION_CLASS_REQUIRED");
-    expect([...view.querySelectorAll("button")].filter((button) => button.textContent === "Apply row")).toHaveLength(2);
-    const confirm = [...view.querySelectorAll("button")].find((button) => button.textContent?.includes("Confirm & Apply")) as HTMLButtonElement;
+    expect(Array.from(view.querySelectorAll("button")).filter((button) => button.textContent === "Apply row")).toHaveLength(2);
+    const confirm = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Confirm & Apply")) as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
   });
 
   it("opens an accessible confirmation summary and prevents duplicate commit submission", async () => {
     const view = await renderPanel(batch([row(1, "PROMOTE")]));
-    const confirm = [...view.querySelectorAll("button")].find((button) => button.textContent?.includes("Confirm & Apply")) as HTMLButtonElement;
+    const confirm = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Confirm & Apply")) as HTMLButtonElement;
     await act(async () => confirm.click());
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
     expect(document.body.textContent).toContain("Apply progression batch?");
-    const cancel = [...document.querySelectorAll("button")].find((button) => button.textContent === "Cancel") as HTMLButtonElement;
+    const cancel = Array.from(document.querySelectorAll("button")).find((button) => button.textContent === "Cancel") as HTMLButtonElement;
     expect(document.activeElement).toBe(cancel);
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(document.querySelector('[role="dialog"]')).toBeNull();
     confirm.focus();
     await act(async () => confirm.click());
-    const apply = [...document.querySelectorAll("button")].find((button) => button.textContent === "Apply entire batch") as HTMLButtonElement;
+    const apply = Array.from(document.querySelectorAll("button")).find((button) => button.textContent === "Apply entire batch") as HTMLButtonElement;
     let resolveCommit: (value: unknown) => void = () => undefined;
     api.commitProgressionPreview.mockReturnValue(new Promise((resolve) => { resolveCommit = resolve; }));
     await act(async () => apply.click());
@@ -133,7 +133,7 @@ describe("ProgressionPanel", () => {
       status: 409,
       data: { detail: { code: "PROGRESSION_PREVIEW_STALE", message: "The preview changed; reload before revalidation." } },
     }));
-    const revalidate = [...view.querySelectorAll("button")].find((button) => button.textContent?.includes("Revalidate")) as HTMLButtonElement;
+    const revalidate = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Revalidate")) as HTMLButtonElement;
     await act(async () => { revalidate.click(); await new Promise((resolve) => setTimeout(resolve, 20)); });
     expect(view.textContent).toContain("The preview changed; reload before revalidation.");
     expect(view.textContent).not.toContain("database revision leaked");

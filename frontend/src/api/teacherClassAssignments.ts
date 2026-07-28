@@ -94,47 +94,71 @@ export async function fetchTeacherClassAssignments(params?: {
   if (params?.is_active !== undefined) query.append("is_active", String(params.is_active));
 
   const queryString = query.toString() ? `?${query.toString()}` : "";
-  return apiRequest(`/api/teacher-class-assignments${queryString}`, { method: "GET" });
+  const response = await apiRequest<TeacherClassAssignment[]>({
+    path: `/api/teacher-class-assignments${queryString}`,
+    method: "GET",
+  });
+  return response.data;
 }
 
 export async function createTeacherClassAssignment(
   payload: TeacherClassAssignmentCreatePayload
 ): Promise<TeacherClassAssignment> {
-  return apiRequest("/api/teacher-class-assignments", {
+  const response = await apiRequest<TeacherClassAssignment>({
+    path: "/api/teacher-class-assignments",
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  return response.data;
 }
 
 export async function updateTeacherClassAssignment(
   id: number,
   payload: TeacherClassAssignmentUpdatePayload
 ): Promise<TeacherClassAssignment> {
-  return apiRequest(`/api/teacher-class-assignments/${id}`, {
+  const response = await apiRequest<TeacherClassAssignment>({
+    path: `/api/teacher-class-assignments/${id}`,
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  return response.data;
 }
 
 export async function deactivateTeacherClassAssignment(id: number): Promise<TeacherClassAssignment> {
-  return apiRequest(`/api/teacher-class-assignments/${id}/deactivate`, { method: "POST" });
+  const response = await apiRequest<TeacherClassAssignment>({
+    path: `/api/teacher-class-assignments/${id}/deactivate`,
+    method: "POST",
+  });
+  return response.data;
 }
 
 export async function reactivateTeacherClassAssignment(id: number): Promise<TeacherClassAssignment> {
-  return apiRequest(`/api/teacher-class-assignments/${id}/reactivate`, { method: "POST" });
+  const response = await apiRequest<TeacherClassAssignment>({
+    path: `/api/teacher-class-assignments/${id}/reactivate`,
+    method: "POST",
+  });
+  return response.data;
 }
 
 export async function fetchAssignedClasses(): Promise<AssignedClassSummary[]> {
-  return apiRequest("/api/attendance/classes/assigned", { method: "GET" });
+  const response = await apiRequest<AssignedClassSummary[]>({
+    path: "/api/attendance/classes/assigned",
+    method: "GET",
+  });
+  return response.data;
 }
 
 export async function fetchClassAttendanceForDate(
   classId: number,
   dateVal: string
 ): Promise<ClassDateAttendanceResponse> {
-  return apiRequest(`/api/attendance/classes/${classId}/dates/${dateVal}`, { method: "GET" });
+  const response = await apiRequest<ClassDateAttendanceResponse>({
+    path: `/api/attendance/classes/${classId}/dates/${dateVal}`,
+    method: "GET",
+  });
+  return response.data;
 }
 
 export async function submitClassAttendanceEntries(
@@ -142,9 +166,11 @@ export async function submitClassAttendanceEntries(
   dateVal: string,
   entries: AttendanceEntryPayload[]
 ): Promise<{ success: boolean; total_submitted: number }> {
-  return apiRequest(`/api/attendance/classes/${classId}/dates/${dateVal}/entries`, {
+  const response = await apiRequest<{ success: boolean; total_submitted: number }>({
+    path: `/api/attendance/classes/${classId}/dates/${dateVal}/entries`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ entries }),
   });
+  return response.data;
 }
