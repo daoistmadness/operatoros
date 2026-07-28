@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import sqlite3
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,10 +17,17 @@ from core.schema_guard import LEDGER_TABLE
 
 S43_VERSION = "20260725_s43"
 S43_PREDECESSOR = "20260724_s42"
+ROOT = Path(__file__).resolve().parents[3]
+PROTECTED_DATABASES = {
+    (ROOT / "backend" / "attendance.db").resolve(),
+    (ROOT / "attendance.db").resolve(),
+}
 
 
 def migrate_attendance_followup_sqlite(path: Path) -> str:
     source = path.resolve(strict=True)
+    if source in PROTECTED_DATABASES:
+        raise RuntimeError("PROTECTED_DATABASE_PATH_REJECTED")
     temporary = source.with_name(f".{source.name}.s43-migrating")
     if temporary.exists():
         temporary.unlink()
@@ -82,6 +90,12 @@ def migrate_attendance_followup_sqlite(path: Path) -> str:
                 raise RuntimeError("MIGRATION_VALIDATION_FAILED: attendance changed")
             if connection.execute("PRAGMA foreign_key_check").fetchall():
                 raise RuntimeError("MIGRATION_VALIDATION_FAILED: foreign keys")
+            objects = connection.execute(
+                "SELECT type,name,tbl_name,COALESCE(sql,'') FROM sqlite_master "
+                "WHERE name NOT LIKE 'sqlite_%' AND name != ? ORDER BY type,name",
+                (LEDGER_TABLE,),
+            ).fetchall()
+            fingerprint = hashlib.sha256(repr(objects).encode("utf-8")).hexdigest()
             connection.execute(
                 f"INSERT INTO {LEDGER_TABLE} "
                 "(version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) "
@@ -89,7 +103,7 @@ def migrate_attendance_followup_sqlite(path: Path) -> str:
                 (
                     S43_VERSION,
                     S43_PREDECESSOR,
-                    "S43_ATTENDANCE_FOLLOWUP",
+                    fingerprint,
                     json.dumps({"students": student_count, "attendance": attendance_count}),
                     "S43_MIGRATION",
                     datetime.now(timezone.utc).isoformat(),
