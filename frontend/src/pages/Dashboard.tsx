@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, type SVGProps } from "react";
 import { Link } from "react-router-dom";
 import ChartMonthly from "../components/ChartMonthly";
 import ChartClass from "../components/ChartClass";
@@ -37,7 +37,7 @@ import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableH
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
 import { SetupOverview } from "../components/onboarding/SetupOverview";
-import { useAuth } from "../context/AuthContext.tsx";
+import { useAuth } from "../context/AuthContext";
 import { useReadinessQuery } from "../hooks/useReadinessQuery";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
@@ -48,6 +48,14 @@ import {
   getHebOverview,
   normalizeAbsenceTotals,
   saveHebOverride,
+  type AbsenceTotalRow,
+  type DashboardClassRow,
+  type DashboardIncompleteSummary,
+  type DashboardMonthlyRow,
+  type DashboardOffender,
+  type DashboardPendingStudent,
+  type DashboardSummary,
+  type RekapReport,
 } from "../lib/api/endpoints";
 
 const MONTH_OPTIONS = [
@@ -65,7 +73,7 @@ const MONTH_OPTIONS = [
   { value: 12, label: "Desember" },
 ];
 
-function formatMonthYearLabel(month, year) {
+function formatMonthYearLabel(month: string, year: string): string {
   return `${MONTH_OPTIONS.find((item) => item.value === Number(month))?.label || "Bulan"} ${year}`;
 }
 
@@ -77,15 +85,15 @@ export default function Dashboard() {
   const today = useMemo(() => new Date(), []);
   const [loading, setLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState("");
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [classData, setClassData] = useState([]);
-  const [offenders, setOffenders] = useState([]);
-  const [pending, setPending] = useState([]);
-  const [summary, setSummary] = useState({ total_late: 0, total_incomplete: 0, total_offenders: 0 });
-  const [incompleteSummary, setIncompleteSummary] = useState(null);
-  const [absenceSummary, setAbsenceSummary] = useState([]);
-  const [rekapAbsensiSummary, setRekapAbsensiSummary] = useState(null);
-  const [existingClasses, setExistingClasses] = useState([]);
+  const [monthlyData, setMonthlyData] = useState<DashboardMonthlyRow[]>([]);
+  const [classData, setClassData] = useState<DashboardClassRow[]>([]);
+  const [offenders, setOffenders] = useState<DashboardOffender[]>([]);
+  const [pending, setPending] = useState<DashboardPendingStudent[]>([]);
+  const [summary, setSummary] = useState<DashboardSummary>({ total_late: 0, total_incomplete: 0, total_offenders: 0 });
+  const [incompleteSummary, setIncompleteSummary] = useState<DashboardIncompleteSummary | null>(null);
+  const [absenceSummary, setAbsenceSummary] = useState<AbsenceTotalRow[]>([]);
+  const [rekapAbsensiSummary, setRekapAbsensiSummary] = useState<RekapReport | null>(null);
+  const [existingClasses, setExistingClasses] = useState<string[]>([]);
   const [mappingWarning, setMappingWarning] = useState("");
 
   // Filters state (visual only for now per spec design)
@@ -94,7 +102,7 @@ export default function Dashboard() {
   const [selectedJenjang, setSelectedJenjang] = useState("All Jenjang");
 
   // Class mapping modal state
-  const [modalStudent, setModalStudent] = useState(null);
+  const [modalStudent, setModalStudent] = useState<DashboardPendingStudent | null>(null);
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -122,7 +130,7 @@ export default function Dashboard() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  const handleOpenMapping = (student) => setModalStudent(student);
+  const handleOpenMapping = (student: DashboardPendingStudent) => setModalStudent(student);
 
   const openFirstPendingForMapping = () => {
     if (pending.length > 0) {
@@ -132,7 +140,7 @@ export default function Dashboard() {
     document.getElementById('pending-categorization')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleMapped = async (mappedStudentId) => {
+  const handleMapped = async (_mappedStudentId: number | string) => {
     setModalStudent(null);
     await loadDashboardData();
   };
@@ -210,7 +218,7 @@ export default function Dashboard() {
         </div>
         <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
         <div className="flex items-center gap-2">
-          <AlertTriangle size={18} className={incompleteSummary?.total_incomplete > 0 ? "text-amber-500" : "text-emerald-500"} />
+          <AlertTriangle size={18} className={(incompleteSummary?.total_incomplete ?? 0) > 0 ? "text-amber-500" : "text-emerald-500"} />
           <div className="text-slate-600 font-medium">
             <span className="text-slate-900 font-bold">{incompleteSummary?.total_incomplete || 0}</span> data quality issues
           </div>
@@ -404,7 +412,7 @@ export default function Dashboard() {
                   </DataTableRow>
                 ))}
                 {offenders.length === 0 && (
-                  <DataTableRow><DataTableCell colSpan="3"><SharedEmptyState title="No late records found." /></DataTableCell></DataTableRow>
+                  <DataTableRow><DataTableCell colSpan={3}><SharedEmptyState title="No late records found." /></DataTableCell></DataTableRow>
                 )}
               </DataTableBody>
             </DataTable>
@@ -461,7 +469,7 @@ export default function Dashboard() {
 
 // ─── Minimal Subcomponents ───────────────────────────────────────────────────
 
-function MetricBlock({ label, value, color }) {
+function MetricBlock({ label, value, color }: { label: string; value?: number; color: string }) {
   return (
     <div>
       <div className="text-xs font-bold text-slate-400 uppercase mb-1">{label}</div>
@@ -471,7 +479,7 @@ function MetricBlock({ label, value, color }) {
 }
 
 
-const EmptyState = ({ message, onMapClick }) => (
+const EmptyState = ({ message }: { message: string }) => (
   <div className="flex flex-col items-center justify-center text-center">
     <div className="w-12 h-12 bg-slate-100 rounded-[9999px] flex items-center justify-center mb-3">
       <AlertTriangle className="text-slate-400" size={20} />
@@ -480,9 +488,9 @@ const EmptyState = ({ message, onMapClick }) => (
   </div>
 );
 
-function UsersIcon(props) {
+function UsersIcon({ size = 24, ...props }: SVGProps<SVGSVGElement> & { size?: number }) {
   return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -491,15 +499,32 @@ function UsersIcon(props) {
   );
 }
 
+function getDashboardMutationError(error: unknown): string {
+  if (!error || typeof error !== "object") return "Failed to save.";
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  return typeof detail === "string" && detail ? detail : "Failed to save.";
+}
+
 // ─── Class Mapping Modal (Kept clean & isolated) ──────────────────────────────
 
-const MapModal = ({ student, existingClasses, onSave, onClose }) => {
+const MapModal = ({
+  student,
+  existingClasses,
+  onSave,
+  onClose,
+}: {
+  student: DashboardPendingStudent;
+  existingClasses: string[];
+  onSave: (studentId: number | string) => void | Promise<void>;
+  onClose: () => void;
+}) => {
   const [jenjang, setJenjang] = useState("");
   const [className, setClassName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const jenjangOptions = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
 
@@ -519,8 +544,8 @@ const MapModal = ({ student, existingClasses, onSave, onClose }) => {
     try {
       await assignStudentClass({ student_id: student.id, class_name: className.trim(), jenjang: jenjang });
       onSave(student.id);
-    } catch (e) {
-      setError(e.response?.data?.detail || "Failed to save.");
+    } catch (e: unknown) {
+      setError(getDashboardMutationError(e));
       setSaving(false);
     }
   };
