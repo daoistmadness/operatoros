@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, FileText, History, Loader2, UploadCloud } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -14,15 +14,60 @@ import {
   selectionState,
 } from "../lib/uploadWorkflow";
 
+type UploadError = {
+  status?: number;
+  response?: {
+    status?: number;
+    data?: {
+      detail?: string | {
+        message?: string;
+      };
+    };
+  };
+};
+
+type AttendancePreviewRow = {
+  id: number;
+  classification: string;
+  source_row: number;
+  student_identifier?: string | null;
+  student?: string | null;
+  validation_error?: string | null;
+  warning?: string | null;
+};
+
+type AttendancePreview = {
+  batch_id: string;
+  checksum: string;
+  filename: string;
+  rows: AttendancePreviewRow[];
+  summary: {
+    invalid_rows?: number;
+  };
+};
+
+type AttendanceCommitResult = {
+  batch_id?: string;
+  rows_inserted?: number;
+  rows_updated?: number;
+  rows_unchanged?: number;
+  completed_at: string;
+};
+
+type WorkflowIndicatorProps = {
+  stage: string;
+};
+
 const CONFIRMATION = "COMMIT_ATTENDANCE_IMPORT";
 const REQUIRED_COLUMNS = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"];
 
-export function classifyUploadError(err) {
+export function classifyUploadError(err: UploadError): string {
   const status = Number(err?.status || err?.response?.status || 0);
   const detail = err?.response?.data?.detail;
+  const detailMessage = typeof detail === "object" ? detail.message : undefined;
   if ((status === 400 || status === 409 || status === 410 || status === 422) && typeof detail === "string") return detail;
-  if (status === 409 || status === 410) return detail?.message || "This preview is stale or no longer eligible. Preview the workbook again.";
-  if (status === 400 || status === 422) return detail?.message || "The workbook could not be validated. Review the preview details and source data.";
+  if (status === 409 || status === 410) return detailMessage || "This preview is stale or no longer eligible. Preview the workbook again.";
+  if (status === 400 || status === 422) return detailMessage || "The workbook could not be validated. Review the preview details and source data.";
   if (status === 401) return "Your session has expired. Sign in again before importing.";
   if (status === 403) return "Your account does not have permission to import attendance data.";
   if (status === 413) return "The workbook is larger than the server upload limit.";
@@ -31,21 +76,21 @@ export function classifyUploadError(err) {
   return "The attendance import could not be completed. Retry or contact the system administrator.";
 }
 
-export function previewAttendanceFile(file) {
+export function previewAttendanceFile(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  return api.post("/api/uploads/preview", formData);
+  return api.post<AttendancePreview>("/api/uploads/preview", formData);
 }
 
-export function commitAttendancePreview(batchId, selectedRowIds, previewChecksum) {
-  return api.post(`/api/uploads/preview/${batchId}/commit`, {
-    selected_row_ids: [...new Set(selectedRowIds)],
+export function commitAttendancePreview(batchId: string, selectedRowIds: number[], previewChecksum: string) {
+  return api.post<Omit<AttendanceCommitResult, "completed_at">>(`/api/uploads/preview/${batchId}/commit`, {
+    selected_row_ids: Array.from(new Set(selectedRowIds)),
     confirmation: CONFIRMATION,
     preview_checksum: previewChecksum,
   });
 }
 
-export function WorkflowIndicator({ stage }) {
+export function WorkflowIndicator({ stage }: WorkflowIndicatorProps) {
   const stages = ["Choose file", "Preview", "Resolve issues", "Commit"];
   const current = stages.indexOf(stage);
   return (
@@ -62,15 +107,15 @@ export function WorkflowIndicator({ stage }) {
   );
 }
 
-function Upload({ embedded = false }) {
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [selected, setSelected] = useState([]);
+function Upload({ embedded = false }: { embedded?: boolean }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<AttendancePreview | null>(null);
+  const [selected, setSelected] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<AttendanceCommitResult | null>(null);
   const [error, setError] = useState("");
   const [showSummary, setShowSummary] = useState(false);
-  const headerCheckbox = useRef(null);
+  const headerCheckbox = useRef<HTMLInputElement>(null);
 
   const viewRows = useMemo(() => (preview?.rows || []).map((row) => ({ source: row, view: attendanceRowView(row) })), [preview]);
   const eligible = useMemo(() => eligibleIds(preview?.rows || [], attendanceRowView), [preview]);
@@ -90,9 +135,9 @@ function Upload({ embedded = false }) {
       const response = await previewAttendanceFile(file);
       setPreview(response.data);
       setSelected([]);
-    } catch (err) {
+    } catch (err: unknown) {
       setPreview(null);
-      setError(classifyUploadError(err));
+      setError(classifyUploadError(err as UploadError));
     } finally {
       setBusy(false);
     }
@@ -105,8 +150,8 @@ function Upload({ embedded = false }) {
       const response = await commitAttendancePreview(preview.batch_id, safeSelected, preview.checksum);
       setResult({ ...response.data, completed_at: new Date().toLocaleString() });
       setShowSummary(false);
-    } catch (err) {
-      setError(classifyUploadError(err));
+    } catch (err: unknown) {
+      setError(classifyUploadError(err as UploadError));
     } finally {
       setBusy(false);
     }
@@ -116,7 +161,8 @@ function Upload({ embedded = false }) {
     setFile(null); setPreview(null); setSelected([]); setResult(null); setError(""); setShowSummary(false);
   };
 
-  const selectOne = (id, checked) => {
+  const selectOne = (id: number, checked: boolean) => {
+    if (!preview) return;
     const next = checked ? [...safeSelected, id] : safeSelected.filter((value) => value !== id);
     setSelected(safeSelectedIds(preview.rows, next, attendanceRowView));
     setShowSummary(false);
