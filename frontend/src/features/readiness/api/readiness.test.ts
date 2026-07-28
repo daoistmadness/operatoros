@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiRequest } from "../lib/api/client";
-import { ApiError } from "../lib/api/errors";
+import { apiRequest } from "../../../lib/api/client";
+import { ApiError } from "../../../lib/api/errors";
 import { getReadiness } from "./readiness";
 
-vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn() }));
+vi.mock("../../../lib/api/client", () => ({ apiRequest: vi.fn() }));
 
 describe("readiness API", () => {
   beforeEach(() => vi.clearAllMocks());

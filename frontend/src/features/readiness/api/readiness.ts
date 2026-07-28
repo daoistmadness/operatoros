@@ -1,6 +1,6 @@
-import { apiRequest } from "../lib/api/client";
-import { ApiError } from "../lib/api/errors";
-import type { paths } from "../generated/openapi/schema";
+import { apiRequest } from "../../../lib/api/client";
+import { ApiError } from "../../../lib/api/errors";
+import type { paths } from "../../../generated/openapi/schema";
 
 export type ReadinessStatus = "FIRST_RUN" | "SETUP_PARTIAL" | "READY_WITH_RECOMMENDATIONS" | "OPERATIONALLY_READY" | "READ_ONLY_GUIDANCE";
 export type ReadinessStepStatus = "NOT_STARTED" | "COMPLETE" | "OPTIONAL";

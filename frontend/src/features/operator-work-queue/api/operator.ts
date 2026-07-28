@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { apiRequest } from '../../../lib/api/client';
 
 export type DeploymentMode = 'single_user_offline' | 'multi_user';
 

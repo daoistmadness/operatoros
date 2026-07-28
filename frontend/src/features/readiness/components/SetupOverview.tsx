@@ -1,11 +1,11 @@
 import React from "react";
 import { CheckCircle2, Circle, Lock, RefreshCw, Settings2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { ReadinessResponse, ReadinessStep } from "../../api/readiness";
-import { Badge } from "../ui/badge";
-import { Button, buttonVariants } from "../ui/button";
-import { Card } from "../ui/card";
-import { cn } from "../../lib/cn";
+import type { ReadinessResponse, ReadinessStep } from "../api/readiness";
+import { Badge } from "../../../components/ui/badge";
+import { Button, buttonVariants } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { cn } from "../../../lib/cn";
 
 const overallCopy: Record<ReadinessResponse["overall_status"], { title: string; description: string }> = {
   FIRST_RUN: { title: "Initial setup is required", description: "Complete the required foundations below. You can leave this page and resume setup at any time." },

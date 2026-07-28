@@ -14,7 +14,7 @@ const AttendanceCorrections = lazy(() => import('../pages/AttendanceCorrections'
 const AttendanceFollowUpQueue = lazy(() => import('../pages/AttendanceFollowUpQueue'));
 const AbsenceReasons = lazy(() => import('../pages/AbsenceReasons'));
 const HebConfig = lazy(() => import('../pages/HebConfig'));
-const JenjangConfig = lazy(() => import('../pages/JenjangConfig'));
+const JenjangConfig = lazy(() => import('../features/jenjang-config'));
 const Settings = lazy(() => import('../pages/Settings'));
 const TardinessReport = lazy(() => import('../pages/TardinessReport'));
 const RekapAbsensi = lazy(() => import('../pages/RekapAbsensi'));
@@ -33,7 +33,7 @@ const TeacherClassAssignments = lazy(() => import('../pages/TeacherClassAssignme
 const ClassAttendanceEntry = lazy(() => import('../pages/ClassAttendanceEntry'));
 const DismissalPolicies = lazyNamedRoute(() => import('../pages/DismissalPolicies'), 'DismissalPolicies');
 const ClassEarlyDeparture = lazyNamedRoute(() => import('../pages/ClassEarlyDeparture'), 'ClassEarlyDeparture');
-const OperatorWorkQueue = lazy(() => import('../pages/OperatorWorkQueue'));
+const OperatorWorkQueue = lazy(() => import('../features/operator-work-queue'));
 
 export type AppRouteDefinition = {
   path: string;

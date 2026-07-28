@@ -36,9 +36,8 @@ import { NativeSelect } from "../components/ui/native-select";
 import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableHead, DataTableHeader, DataTableRow } from "../components/common/data-table";
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
-import { SetupOverview } from "../components/onboarding/SetupOverview";
+import { SetupOverview, useReadinessQuery } from "../features/readiness";
 import { useAuth } from "../context/AuthContext";
-import { useReadinessQuery } from "../hooks/useReadinessQuery";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
