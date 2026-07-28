@@ -27,6 +27,13 @@ export type FollowUpCandidate = Record<string, unknown> & {
   student_master_id?: number | null;
   academic_class_id?: number | null;
   exception_date?: string | null;
+  student_name?: string | null;
+  class_name?: string | null;
+  severity?: string;
+  evidence_summary?: string | null;
+  materialized_case?: {
+    id: FollowUpCaseId;
+  } | null;
 };
 
 export type FollowUpCase = Record<string, unknown> & {
@@ -40,7 +47,15 @@ export type FollowUpCase = Record<string, unknown> & {
   class_name?: string | null;
   exception_date?: string | null;
   evidence_summary?: string | null;
+  assigned_to_user_id?: number | null;
   notes?: FollowUpNote[];
+};
+
+export type FollowUpMetrics = {
+  open_cases?: number;
+  in_progress_count?: number;
+  resolved_count?: number;
+  active_cases?: number;
 };
 
 export type FollowUpNote = {
@@ -166,8 +181,8 @@ export async function fetchFollowUpHistory(
   return response.data?.history || [];
 }
 
-export async function fetchFollowUpMetrics(): Promise<Record<string, unknown>> {
-  const response = await apiRequest<Record<string, unknown>>({
+export async function fetchFollowUpMetrics(): Promise<FollowUpMetrics> {
+  const response = await apiRequest<FollowUpMetrics>({
     path: '/api/attendance/followups/metrics/summary',
   });
   return response.data || {};
