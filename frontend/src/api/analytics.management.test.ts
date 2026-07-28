@@ -4,6 +4,7 @@
 
 import { fetchInterventionImpact, fetchManagementSummary, downloadManagementSummaryExcel, downloadManagementSummaryPdf } from "./analytics";
 import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../lib/api/client", () => ({
   // Non-proxy mode: API_BASE_URL is a plain backend URL, not ending with /api.
@@ -23,10 +24,10 @@ const EXCEL_PATH = "/api/analytics/management-summary/export/excel";
 const PDF_PATH = "/api/analytics/management-summary/export/pdf";
 
 describe("fetchManagementSummary", () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it("passes all active filters to the canonical JSON endpoint", async () => {
-    apiRequest.mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
     await fetchManagementSummary({ academic_year_id: 3, jenjang_id: 2, class_name: "P1A", subject_id: 5, term: "term_2" });
     expect(apiRequest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -38,9 +39,10 @@ describe("fetchManagementSummary", () => {
   });
 
   it("omits null filters - does not pass undefined to params", async () => {
-    apiRequest.mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
     await fetchManagementSummary({ academic_year_id: 3, jenjang_id: null, class_name: null, subject_id: null, term: null });
-    const call = apiRequest.mock.calls[0][0];
+    const call = vi.mocked(apiRequest).mock.calls[0]?.[0];
+    if (!call?.params) throw new Error("Expected management summary request parameters.");
     expect(call.params.jenjang_id).toBeUndefined();
     expect(call.params.class_name).toBeUndefined();
     expect(call.params.subject_id).toBeUndefined();
@@ -49,17 +51,17 @@ describe("fetchManagementSummary", () => {
 
   it("returns the data payload from the response", async () => {
     const mockData = { attendance_summary: { status_counts: { hadir: 42 } } };
-    apiRequest.mockResolvedValueOnce({ data: mockData, status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: mockData, status: 200, headers: {} });
     const result = await fetchManagementSummary({ academic_year_id: 1, jenjang_id: null, class_name: null, subject_id: null, term: null });
     expect(result.attendance_summary.status_counts.hadir).toBe(42);
   });
 });
 
 describe("fetchInterventionImpact", () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it("passes drilldown filters to the canonical impact endpoint", async () => {
-    apiRequest.mockResolvedValueOnce({ data: { impact_rows: [] }, status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: { impact_rows: [] }, status: 200, headers: {} });
     await fetchInterventionImpact({
       academic_year_id: 3,
       jenjang_id: 2,
@@ -92,10 +94,10 @@ describe("fetchInterventionImpact", () => {
 });
 
 describe("downloadManagementSummaryExcel", () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it("sends active filters to Excel export endpoint with blob response type", async () => {
-    apiRequest.mockResolvedValueOnce({ data: new Blob(["xls"]), status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: new Blob(["xls"]), status: 200, headers: {} });
     await downloadManagementSummaryExcel({ academic_year_id: 3, jenjang_id: 2, class_name: "P1A", subject_id: 5, term: "term_3" });
     expect(apiRequest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -109,19 +111,20 @@ describe("downloadManagementSummaryExcel", () => {
   });
 
   it("omits null filter values in Excel export params", async () => {
-    apiRequest.mockResolvedValueOnce({ data: new Blob(["xls"]), status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: new Blob(["xls"]), status: 200, headers: {} });
     await downloadManagementSummaryExcel({ academic_year_id: 7, jenjang_id: null, class_name: null, subject_id: null, term: null });
-    const call = apiRequest.mock.calls[0][0];
+    const call = vi.mocked(apiRequest).mock.calls[0]?.[0];
+    if (!call?.params) throw new Error("Expected Excel export request parameters.");
     expect(call.params.jenjang_id).toBeUndefined();
     expect(call.params.class_name).toBeUndefined();
   });
 });
 
 describe("downloadManagementSummaryPdf", () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => vi.clearAllMocks());
 
   it("sends active filters to PDF export endpoint with blob response type", async () => {
-    apiRequest.mockResolvedValueOnce({ data: new Blob(["pdf"]), status: 200, headers: {} });
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: new Blob(["pdf"]), status: 200, headers: {} });
     await downloadManagementSummaryPdf({ academic_year_id: 3, jenjang_id: 2, class_name: "P1B", subject_id: null, term: "term_1" });
     expect(apiRequest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -151,7 +154,7 @@ describe("Executive Insights data shape contract", () => {
   };
 
   it("insights are ordered critical > warning > info", () => {
-    const order = { critical: 0, warning: 1, info: 2 };
+    const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
     const vals = sampleSummary.executive_insights.map((i) => order[i.severity] ?? 3);
     expect(vals).toEqual([...vals].sort((a, b) => a - b));
   });
@@ -171,17 +174,20 @@ describe("Executive Insights data shape contract", () => {
   it("below-KKM alert with open intervention has status and priority", () => {
     const withIntervention = sampleSummary.below_kkm_alerts.find((a) => a.intervention_status === "open");
     expect(withIntervention).not.toBeUndefined();
+    if (!withIntervention) throw new Error("Expected open intervention alert.");
     expect(withIntervention.intervention_priority).toBe("high");
   });
 
   it("below-KKM alert links custom KKM source with threshold 80", () => {
     const bob = sampleSummary.below_kkm_alerts.find((a) => a.student_name === "Bob");
+    if (!bob) throw new Error("Expected Bob alert.");
     expect(bob.kkm_threshold).toBe(80);
     expect(bob.threshold_source).toBe("kkm_configured");
   });
 
   it("below-KKM alert with no intervention has null status", () => {
     const dave = sampleSummary.below_kkm_alerts.find((a) => a.student_name === "Dave");
+    if (!dave) throw new Error("Expected Dave alert.");
     expect(dave.intervention_status).toBeNull();
   });
 
