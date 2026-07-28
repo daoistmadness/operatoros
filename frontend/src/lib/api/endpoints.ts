@@ -54,15 +54,55 @@ export type RekapReport = JsonObject & {
   period: JsonObject & { label?: string };
   heb_by_jenjang?: Record<string, number | null>;
 };
-type TardinessReport = JsonObject & {
-  breakdown_by_jenjang: unknown[];
-  summary_by_jenjang: unknown[];
-  breakdown_by_class: unknown[];
-  totals: JsonObject;
-  management_summary: JsonObject;
-  period: JsonObject;
+export type TardinessClassRow = {
+  jenjang: string;
+  class_name: string;
+  total_late_duration_str: string;
+  late_duration_pct: number;
+  total_days_late: number;
+  days_late_pct: number;
+  late_student_count: number;
+  sakit?: number | null;
+  izin?: number | null;
+  alfa?: number | null;
+  total_absence_reasons?: number | null;
 };
-type TardinessSummary = JsonObject & { rows: unknown[]; period: JsonObject };
+export type TardinessJenjangSummaryRow = {
+  jenjang: string;
+  total_kejadian: number;
+  percentage_of_total: number;
+  hari_efektif_terlambat: number;
+  rata_rata_siswa_terlambat_per_hari: number;
+};
+export type TardinessTotals = {
+  total_late_duration_str: string;
+  total_days_late: number;
+  total_late_incidents: number;
+  unique_late_days: number;
+  tracked_school_days: number;
+  school_impact_rate_pct: number;
+  average_lateness_density: number;
+  total_students_ever_late: number;
+};
+export type TardinessManagementSummary = Pick<
+  TardinessTotals,
+  'total_late_incidents' | 'unique_late_days' | 'tracked_school_days' | 'school_impact_rate_pct' | 'average_lateness_density'
+>;
+export type TardinessReport = JsonObject & {
+  report_title: string;
+  school_name: string;
+  breakdown_by_jenjang: TardinessJenjangSummaryRow[];
+  summary_by_jenjang: TardinessJenjangSummaryRow[];
+  breakdown_by_class: TardinessClassRow[];
+  totals: TardinessTotals;
+  management_summary: TardinessManagementSummary;
+  period: JsonObject & { label?: string };
+  heb_by_jenjang?: Record<string, number | null>;
+};
+export type TardinessSummary = JsonObject & {
+  rows: TardinessJenjangSummaryRow[];
+  period: JsonObject & { label?: string };
+};
 type HebOverridePayload = { heb_value: number; note?: string; set_by?: string };
 type StudentClassAssignmentPayload = { student_id: number | string; class_name: string; jenjang: string };
 export type AbsenceTotalRow = {
@@ -149,21 +189,21 @@ function ensureTardinessReportShape(data: unknown): TardinessReport {
   const report = ensureObject(data, 'Format data laporan keterlambatan tidak valid.');
   return {
     ...report,
-    breakdown_by_jenjang: ensureArray(report.breakdown_by_jenjang),
-    summary_by_jenjang: ensureArray(report.summary_by_jenjang),
-    breakdown_by_class: ensureArray(report.breakdown_by_class),
-    totals: ensureObject(report.totals || {}, 'Ringkasan keterlambatan tidak valid.'),
-    management_summary: ensureObject(report.management_summary || {}, 'Ringkasan manajemen keterlambatan tidak valid.'),
-    period: ensureObject(report.period || {}, 'Periode laporan keterlambatan tidak valid.'),
-  };
+    breakdown_by_jenjang: ensureArray<TardinessJenjangSummaryRow>(report.breakdown_by_jenjang),
+    summary_by_jenjang: ensureArray<TardinessJenjangSummaryRow>(report.summary_by_jenjang),
+    breakdown_by_class: ensureArray<TardinessClassRow>(report.breakdown_by_class),
+    totals: ensureObject(report.totals || {}, 'Ringkasan keterlambatan tidak valid.') as TardinessTotals,
+    management_summary: ensureObject(report.management_summary || {}, 'Ringkasan manajemen keterlambatan tidak valid.') as TardinessManagementSummary,
+    period: ensureObject(report.period || {}, 'Periode laporan keterlambatan tidak valid.') as TardinessReport['period'],
+  } as TardinessReport;
 }
 
 function ensureTardinessSummaryByJenjangShape(data: unknown): TardinessSummary {
   const payload = ensureObject(data, 'Format ringkasan keterlambatan per jenjang tidak valid.');
   return {
     ...payload,
-    rows: ensureArray(payload.rows),
-    period: ensureObject(payload.period || {}, 'Periode ringkasan keterlambatan tidak valid.'),
+    rows: ensureArray<TardinessJenjangSummaryRow>(payload.rows),
+    period: ensureObject(payload.period || {}, 'Periode ringkasan keterlambatan tidak valid.') as TardinessSummary['period'],
   };
 }
 
@@ -225,9 +265,9 @@ export async function getSystemHealth(): Promise<JsonObject> {
   return response.data;
 }
 
-export async function getJenjangs(): Promise<unknown[]> {
-  const response = await apiRequest<unknown[]>({ path: '/api/analytics/jenjangs' });
-  return ensureArray(response.data);
+export async function getJenjangs(): Promise<string[]> {
+  const response = await apiRequest<string[]>({ path: '/api/analytics/jenjangs' });
+  return ensureArray<string>(response.data);
 }
 
 export async function getDashboardSnapshot(currentDate: Date): Promise<DashboardSnapshot> {

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Activity,
   CalendarDays,
@@ -22,6 +22,10 @@ import {
   getTardinessReport,
   getTardinessSummaryByJenjang,
   getJenjangs,
+  type ReportQuery,
+  type TardinessClassRow,
+  type TardinessJenjangSummaryRow,
+  type TardinessReport as TardinessReportData,
 } from '../lib/api/endpoints';
 import { TERM_OPTIONS } from '../lib/reportPeriods';
 import { HebBadgeRow } from '../components/HebBadgeRow';
@@ -49,12 +53,31 @@ const MONTH_OPTIONS = [
   { value: 12, label: 'December' },
 ];
 
-function formatLocalDate(year, monthIndex, day) {
+type FilterMode = 'month' | 'date_range' | 'term';
+type FilterValues = {
+  filterMode: FilterMode;
+  month: number;
+  year: number;
+  term: number;
+  dateFrom: string;
+  dateTo: string;
+  jenjang: string;
+};
+
+function getTardinessError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== 'object') return fallback;
+  const candidate = error as { message?: unknown; response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  if (typeof detail === 'string' && detail) return detail;
+  return typeof candidate.message === 'string' && candidate.message ? candidate.message : fallback;
+}
+
+function formatLocalDate(year: number, monthIndex: number, day: number) {
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang }) {
-  let params = {};
+function buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang }: FilterValues): ReportQuery {
+  let params: ReportQuery = {};
   if (filterMode === 'date_range') {
     params = { date_from: dateFrom, date_to: dateTo };
   } else if (filterMode === 'term') {
@@ -70,14 +93,14 @@ function buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang 
   return params;
 }
 
-function sanitizePeriodLabel(label) {
+function sanitizePeriodLabel(label?: string) {
   return (label || 'period')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
 }
 
-function SummaryCard({ title, value, icon, tone }) {
+function SummaryCard({ title, value, icon, tone }: { title: string; value: ReactNode; icon: ReactNode; tone: string }) {
   return (
     <Card className="rounded-2xl p-6 print:border print:shadow-none print:rounded-none">
       <div className="flex items-start justify-between gap-3">
@@ -112,7 +135,7 @@ function LoadingSkeleton() {
   );
 }
 
-function TardinessBarChart({ data }) {
+function TardinessBarChart({ data }: { data: TardinessJenjangSummaryRow[] }) {
   const chartData = data.slice(0, 12);
   const maxValue = Math.max(...chartData.map((item) => item.total_kejadian), 0);
 
@@ -195,24 +218,24 @@ function TardinessReport() {
     [currentYear, today]
   );
 
-  const [filterMode, setFilterMode] = useState('month');
+  const [filterMode, setFilterMode] = useState<FilterMode>('month');
   const [month, setMonth] = useState(currentMonth);
   const [year, setYear] = useState(currentYear);
   const [term, setTerm] = useState(1);
   const [dateFrom, setDateFrom] = useState(currentMonthStart);
   const [dateTo, setDateTo] = useState(currentMonthEnd);
-  const [jenjangs, setJenjangs] = useState([]);
+  const [jenjangs, setJenjangs] = useState<string[]>([]);
   const [selectedJenjang, setSelectedJenjang] = useState('All');
   const [loading, setLoading] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingManagementExcel, setExportingManagementExcel] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState('');
-  const [report, setReport] = useState(null);
-  const [jenjangSummaryRows, setJenjangSummaryRows] = useState([]);
+  const [report, setReport] = useState<TardinessReportData | null>(null);
+  const [jenjangSummaryRows, setJenjangSummaryRows] = useState<TardinessJenjangSummaryRow[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getJenjangs().then(setJenjangs).catch(console.error);
   }, []);
 
@@ -224,7 +247,7 @@ function TardinessReport() {
       }
       accumulator[row.jenjang].push(row);
       return accumulator;
-    }, {});
+    }, {} as Record<string, TardinessClassRow[]>);
   }, [report]);
 
   const totals = report?.totals || {
@@ -269,7 +292,7 @@ function TardinessReport() {
     } catch (requestError) {
       setReport(null);
       setJenjangSummaryRows([]);
-      setError(requestError.response?.data?.detail || requestError.message || 'Gagal memuat laporan keterlambatan.');
+      setError(getTardinessError(requestError, 'Gagal memuat laporan keterlambatan.'));
     } finally {
       setLoading(false);
     }
@@ -291,7 +314,7 @@ function TardinessReport() {
       link.click();
       revokeDownloadUrl(url);
     } catch (downloadError) {
-      setError(downloadError.response?.data?.detail || downloadError.message || 'Gagal mengunduh file Excel.');
+      setError(getTardinessError(downloadError, 'Gagal mengunduh file Excel.'));
     } finally {
       setExportingExcel(false);
     }
@@ -331,7 +354,7 @@ function TardinessReport() {
       link.click();
       revokeDownloadUrl(url);
     } catch (downloadError) {
-      setError(downloadError.response?.data?.detail || downloadError.message || 'Gagal mengunduh file Excel eksekutif.');
+      setError(getTardinessError(downloadError, 'Gagal mengunduh file Excel eksekutif.'));
     } finally {
       setExportingManagementExcel(false);
     }
@@ -369,7 +392,7 @@ function TardinessReport() {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setFilterMode(option.value)}
+                  onClick={() => setFilterMode(option.value as FilterMode)}
                   className={cn(
                     'rounded-xl px-3 py-2 text-sm font-semibold transition-colors',
                     filterMode === option.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
@@ -669,7 +692,7 @@ function TardinessReport() {
                 </thead>
                 <tbody>
                   {Object.entries(groupedClasses).map(([jenjang, rows]) => (
-                    <React.Fragment key={jenjang}>
+                    <Fragment key={jenjang}>
                       <tr className="bg-emerald-50 border-b border-emerald-100">
                         <td colSpan={11} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
                           {jenjang}
@@ -690,7 +713,7 @@ function TardinessReport() {
                           <td className="py-3 font-semibold text-slate-900">{row.total_absence_reasons ?? 0}</td>
                         </tr>
                       ))}
-                    </React.Fragment>
+                    </Fragment>
                   ))}
                   <tr className="bg-slate-100 font-bold text-slate-900">
                     <td className="py-3 pr-4">TOTAL</td>
