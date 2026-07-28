@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { AlertTriangle, CalendarDays, CheckCircle2, ChevronRight, Copy, Loader2, Save, Wand2 } from "lucide-react";
 
 import api from "../api";
@@ -24,25 +24,56 @@ const MONTH_OPTIONS = [
 
 const ENTERED_BY_STORAGE_KEY = "absence-reasons-entered-by";
 
-function getMonthLabel(month) {
+type AbsenceField = "sakit" | "izin" | "alfa";
+type EditableField = AbsenceField | "note";
+type AbsenceValues = Record<AbsenceField, number> & { note: string };
+type AbsenceRow = AbsenceValues & {
+  class_name: string;
+  jenjang: string;
+  dirty: boolean;
+  has_data?: boolean;
+  entry_mode?: string | null;
+};
+type ApiAbsenceRow = Omit<AbsenceRow, "dirty">;
+type MonthPoint = { month: number; year: number };
+type CoverageRow = MonthPoint & {
+  totalClasses: number;
+  missingCount: number;
+  enteredCount: number;
+};
+type DateRangeResponse = { earliest_date?: string | null; latest_date?: string | null };
+type SaveResponse = { inserted?: number; updated?: number; total?: number };
+type ValidationDetail = { class_name?: string; errors: string[] };
+type ToastState = { visible: boolean; type: "success" | "error"; text: string };
+
+function getAbsenceDetail(error: unknown): string | ValidationDetail[] | undefined {
+  if (!error || typeof error !== "object") return undefined;
+  const candidate = error as { response?: { data?: { detail?: unknown } } };
+  const detail = candidate.response?.data?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) return detail as ValidationDetail[];
+  return undefined;
+}
+
+function getMonthLabel(month: number) {
   return MONTH_OPTIONS.find((item) => item.value === Number(month))?.label || `Bulan ${month}`;
 }
 
-function getMonthKey(month, year) {
+function getMonthKey(month: number, year: number) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
-function shiftMonth(month, year, delta) {
+function shiftMonth(month: number, year: number, delta: number): MonthPoint {
   const anchor = new Date(year, month - 1 + delta, 1);
   return { month: anchor.getMonth() + 1, year: anchor.getFullYear() };
 }
 
-function buildMonthRange(earliestDate, latestDate) {
+function buildMonthRange(earliestDate: Date | null, latestDate: Date | null): MonthPoint[] {
   if (!earliestDate || !latestDate) {
     return [];
   }
 
-  const result = [];
+  const result: MonthPoint[] = [];
   const current = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
   const end = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
 
@@ -59,20 +90,20 @@ function AbsenceReasons() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
   const [enteredBy, setEnteredBy] = useState(() => window.localStorage.getItem(ENTERED_BY_STORAGE_KEY) || "");
-  const [rows, setRows] = useState([]);
-  const [originalRows, setOriginalRows] = useState({});
-  const [coverageRows, setCoverageRows] = useState([]);
+  const [rows, setRows] = useState<AbsenceRow[]>([]);
+  const [originalRows, setOriginalRows] = useState<Record<string, AbsenceValues>>({});
+  const [coverageRows, setCoverageRows] = useState<CoverageRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [toast, setToast] = useState({ visible: false, type: "success", text: "" });
-  const [recentlySavedClasses, setRecentlySavedClasses] = useState([]);
+  const [toast, setToast] = useState<ToastState>({ visible: false, type: "success", text: "" });
+  const [recentlySavedClasses, setRecentlySavedClasses] = useState<string[]>([]);
   const [quickFillJenjang, setQuickFillJenjang] = useState("");
   const [quickFillForm, setQuickFillForm] = useState({ sakit: 0, izin: 0, alfa: 0 });
-  const feedbackRef = useRef(null);
-  const tableSectionRef = useRef(null);
-  const inputRefs = useRef({});
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const tableSectionRef = useRef<HTMLElement>(null);
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     window.localStorage.setItem(ENTERED_BY_STORAGE_KEY, enteredBy);
@@ -95,7 +126,7 @@ function AbsenceReasons() {
     setError("");
 
     try {
-      const response = await api.get("/api/config/absence-reasons", {
+      const response = await api.get<ApiAbsenceRow[]>("/api/config/absence-reasons", {
         params: { month: targetMonth, year: targetYear },
       });
       const nextRows = (Array.isArray(response.data) ? response.data : []).map((row) => ({
@@ -117,7 +148,7 @@ function AbsenceReasons() {
             note: row.note || "",
           };
           return accumulator;
-        }, {})
+        }, {} as Record<string, AbsenceValues>)
       );
     } catch (err) {
       setRows([]);
@@ -130,7 +161,7 @@ function AbsenceReasons() {
 
   const fetchCoverage = useCallback(async () => {
     try {
-      const rangeResponse = await api.get("/api/analytics/attendance-date-range");
+      const rangeResponse = await api.get<DateRangeResponse>("/api/analytics/attendance-date-range");
       const earliestText = rangeResponse.data?.earliest_date;
       const latestText = rangeResponse.data?.latest_date;
 
@@ -147,7 +178,7 @@ function AbsenceReasons() {
 
       const results = await Promise.all(
         range.map(async (item) => {
-          const response = await api.get("/api/config/absence-reasons", {
+          const response = await api.get<ApiAbsenceRow[]>("/api/config/absence-reasons", {
             params: { month: item.month, year: item.year },
           });
           const data = Array.isArray(response.data) ? response.data : [];
@@ -175,7 +206,7 @@ function AbsenceReasons() {
     fetchCoverage();
   }, [fetchCoverage]);
 
-  const updateRow = useCallback((className, field, value) => {
+  const updateRow = useCallback((className: string, field: EditableField, value: string) => {
     setRows((previousRows) =>
       previousRows.map((row) => {
         if (row.class_name !== className) {
@@ -206,7 +237,7 @@ function AbsenceReasons() {
       }
       accumulator[row.jenjang].push(row);
       return accumulator;
-    }, {});
+    }, {} as Record<string, AbsenceRow[]>);
   }, [rows]);
 
   const modifiedRows = useMemo(() => rows.filter((row) => row.dirty), [rows]);
@@ -232,7 +263,7 @@ function AbsenceReasons() {
 
     try {
       const savedClassNames = modifiedRows.map((row) => row.class_name);
-      const response = await api.post("/api/config/absence-reasons/bulk", {
+      const response = await api.post<SaveResponse>("/api/config/absence-reasons/bulk", {
         entries: modifiedRows.map((row) => ({
           class_name: row.class_name,
           month,
@@ -265,7 +296,7 @@ function AbsenceReasons() {
         setRecentlySavedClasses([]);
       }, 6000);
     } catch (err) {
-      const detail = err.response?.data?.detail;
+      const detail = getAbsenceDetail(err);
       if (Array.isArray(detail)) {
         const errorText = detail.map((item) => `${item.class_name || "(tanpa kelas)"}: ${item.errors.join(", ")}`).join(" | ");
         setError(errorText);
@@ -285,14 +316,14 @@ function AbsenceReasons() {
     setMessage("");
 
     try {
-      const response = await api.get("/api/config/absence-reasons", {
+      const response = await api.get<ApiAbsenceRow[]>("/api/config/absence-reasons", {
         params: { month: previousMonth.month, year: previousMonth.year },
       });
       const previousRows = Array.isArray(response.data) ? response.data : [];
       const previousMap = previousRows.reduce((accumulator, row) => {
         accumulator[row.class_name] = row;
         return accumulator;
-      }, {});
+      }, {} as Record<string, ApiAbsenceRow>);
 
       const hasAnyData = previousRows.some((row) => row.has_data);
       if (!hasAnyData) {
@@ -327,11 +358,11 @@ function AbsenceReasons() {
       );
       setMessage(`Nilai dari ${getMonthLabel(previousMonth.month)} ${previousMonth.year} disalin ke tabel saat ini.`);
     } catch (err) {
-      setError(err.response?.data?.detail || "Gagal menyalin data bulan sebelumnya.");
+      setError(getPageApiError(err, "Gagal menyalin data bulan sebelumnya."));
     }
   };
 
-  const handleOpenQuickFill = (jenjang) => {
+  const handleOpenQuickFill = (jenjang: string) => {
     setQuickFillJenjang(jenjang);
     setQuickFillForm({ sakit: 0, izin: 0, alfa: 0 });
   };
@@ -374,7 +405,7 @@ function AbsenceReasons() {
     }, 150);
   };
 
-  const handleNumericKeyDown = (event, rowIndex, fieldIndex) => {
+  const handleNumericKeyDown = (event: KeyboardEvent<HTMLInputElement>, rowIndex: number, fieldIndex: number) => {
     if (event.key !== "Tab" || event.shiftKey) {
       return;
     }
@@ -589,7 +620,7 @@ function AbsenceReasons() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {Object.entries(groupedRows).map(([jenjang, groupRows]) => (
-                  <React.Fragment key={jenjang}>
+                  <Fragment key={jenjang}>
                     <tr className="bg-slate-50/70">
                       <td colSpan={6} className="px-6 py-3">
                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -628,7 +659,7 @@ function AbsenceReasons() {
                               {row.entry_mode === "class" ? "Mode catch-up kelas" : "Agregasi dari input siswa"}
                             </div>
                           </td>
-                          {["sakit", "izin", "alfa"].map((field, fieldIndex) => (
+                          {(["sakit", "izin", "alfa"] as const).map((field, fieldIndex) => (
                             <td key={field} className="px-6 py-4">
                               <input
                                 ref={(node) => {
@@ -672,7 +703,7 @@ function AbsenceReasons() {
                         </tr>
                       );
                     })}
-                  </React.Fragment>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -690,18 +721,18 @@ function AbsenceReasons() {
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              {["Sakit", "Izin", "Alfa"].map((label) => (
-                <div key={label} className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-slate-400">{label}</label>
+              {(["sakit", "izin", "alfa"] as const).map((field) => (
+                <div key={field} className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-slate-400">{field}</label>
                   <input
                     type="number"
-                    aria-label={`${label} untuk semua kelas ${quickFillJenjang}`}
+                    aria-label={`${field} untuk semua kelas ${quickFillJenjang}`}
                     min="0"
-                    value={quickFillForm[label.toLowerCase()]}
+                    value={quickFillForm[field]}
                     onChange={(event) =>
                       setQuickFillForm((prev) => ({
                         ...prev,
-                        [label.toLowerCase()]: Math.max(0, Number(event.target.value || 0)),
+                        [field]: Math.max(0, Number(event.target.value || 0)),
                       }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-center text-lg font-bold"
