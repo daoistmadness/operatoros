@@ -1,0 +1,21 @@
+{
+  "groups": [
+    "auth",
+    "readiness",
+    "configuration",
+    "attendance",
+    "corrections",
+    "operator-queue",
+    "uploads",
+    "reports",
+    "error-recovery",
+    "fresh-install"
+  ],
+  "command": "npm run e2e:release -- --grep @<group>",
+  "isolation": {
+    "workers": 1,
+    "database": "fresh disposable database per invocation",
+    "ports": "dynamically allocated",
+    "storage": "fresh browser context per test"
+  }
+}

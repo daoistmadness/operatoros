@@ -52,12 +52,12 @@ test.afterEach(async ({ page }) => {
   expect((page as any).__operatorosFailures).toEqual([]);
 });
 
-test("admin login exposes a healthy dashboard", async ({ page }) => {
+test("@auth @readiness @fresh-install @release admin login exposes a healthy dashboard", async ({ page }) => {
   await login(page);
   await expect(page.getByText("Attendance Health: GOOD")).toBeVisible();
 });
 
-test("academic hierarchy reaches candidates without enrollment mutation", async ({ page, request }) => {
+test("@configuration @release academic hierarchy reaches candidates without enrollment mutation", async ({ page, request }) => {
   await login(page);
   const enrollmentBefore = await enrollmentFingerprint(page);
   const before = await request.get("/api/academic-masters/academic-years");
@@ -76,7 +76,7 @@ test("academic hierarchy reaches candidates without enrollment mutation", async 
   expect(await enrollmentFingerprint(page)).toBe(enrollmentBefore);
 });
 
-test("progression management generates a responsive non-mutating preview", async ({ page }) => {
+test("@configuration @release progression management generates a responsive non-mutating preview", async ({ page }) => {
   await login(page);
   const enrollmentBefore = await enrollmentFingerprint(page);
   await page.goto("/academic-management");
@@ -92,7 +92,7 @@ test("progression management generates a responsive non-mutating preview", async
   expect(await enrollmentFingerprint(page)).toBe(enrollmentBefore);
 });
 
-test("attendance review filters disposable attendance", async ({ page }) => {
+test("@attendance @corrections @release attendance review filters disposable attendance", async ({ page }) => {
   await login(page);
   await page.goto("/attendance-review");
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
@@ -102,7 +102,7 @@ test("attendance review filters disposable attendance", async ({ page }) => {
   await expect(page.getByText(/\d+ records/)).toBeVisible();
 });
 
-test("student management creates edits and links a synthetic canonical profile", async ({ page }) => {
+test("@operator-queue @release student management creates edits and links a synthetic canonical profile", async ({ page }) => {
   await login(page);
   await page.goto("/students");
   await expect(page.getByRole("heading", { name: "Student Management" })).toBeVisible();
