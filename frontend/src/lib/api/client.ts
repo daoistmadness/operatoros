@@ -2,13 +2,15 @@
 // HTTP API client — configurable base URL, no Portless domain mapping.
 // Tech Stack: Vite / React 19
 
+import { ApiError, normalizeApiError, type ApiHeaders } from "./errors";
+
 const DEFAULT_TIMEOUT_MS = 30000;
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const PDF_MIME = 'application/pdf';
 
 export type QueryValue = string | number | boolean | null | undefined;
 export type QueryParams = Record<string, QueryValue | QueryValue[]>;
-export type ApiHeaders = Record<string, string>;
+export type { ApiHeaders } from "./errors";
 export type ApiResponse<T> = {
   data: T;
   status: number;
@@ -25,6 +27,7 @@ export type ApiRequestOptions = {
   timeout?: number;
   responseType?: 'json' | 'blob';
   expectedBlobTypes?: string[];
+  signal?: AbortSignal;
 };
 
 /**
@@ -61,31 +64,7 @@ function getApiBaseUrl(): string {
 
 export const API_BASE_URL = getApiBaseUrl();
 
-export class ApiError extends Error {
-  readonly status: number;
-  readonly data: unknown;
-  readonly headers: ApiHeaders;
-  readonly url: string;
-  readonly response: { data: unknown; status: number; headers: ApiHeaders };
-
-  constructor(
-    message: string,
-    { status = 0, data = null, headers = {}, url = '' }: {
-      status?: number;
-      data?: unknown;
-      headers?: ApiHeaders;
-      url?: string;
-    } = {},
-  ) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.data = data;
-    this.headers = headers;
-    this.url = url;
-    this.response = { data, status, headers };
-  }
-}
+export { ApiError } from "./errors";
 
 export const AUTH_UNAUTHORIZED_EVENT = 'astryx:auth-unauthorized';
 
@@ -216,9 +195,17 @@ export async function apiRequest({
   timeout = DEFAULT_TIMEOUT_MS,
   responseType = 'json',
   expectedBlobTypes = [],
+  signal,
 }: ApiRequestOptions): Promise<ApiResponse<unknown>> {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), timeout);
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abortFromCaller();
+  else signal?.addEventListener("abort", abortFromCaller, { once: true });
+  const timeoutId = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeout);
   const requestHeaders = new Headers({
     Accept: responseType === 'blob' ? `${EXCEL_MIME}, ${PDF_MIME}` : 'application/json',
     ...headers,
@@ -283,14 +270,31 @@ export async function apiRequest({
       throw error;
     }
 
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ApiError('Permintaan melebihi batas waktu.', { url: url.toString() });
+    if (controller.signal.aborted) {
+      throw new ApiError(
+        timedOut ? "The request took too long. Please try again." : "Request cancelled.",
+        {
+          kind: timedOut ? "timeout" : "cancelled",
+          retryable: timedOut,
+          url: url.toString(),
+          cause: error,
+        },
+      );
     }
 
-    const message = error instanceof Error ? error.message : '';
-    throw new ApiError(message || 'Terjadi kesalahan jaringan.', { url: url.toString() });
+    const normalized = normalizeApiError(error, "The server could not be reached. Check the connection and try again.");
+    throw new ApiError(normalized.message, {
+      kind: normalized.kind === "unknown" ? "network" : normalized.kind,
+      retryable: normalized.kind === "unknown" ? true : normalized.retryable,
+      status: normalized.status,
+      data: normalized.data,
+      headers: normalized.headers,
+      url: url.toString(),
+      cause: error,
+    });
   } finally {
     window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", abortFromCaller);
   }
 }
 
