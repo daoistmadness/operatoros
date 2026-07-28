@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApiError } from "../api/client";
+import { ApiError } from "../api/errors";
 import { shouldRetry } from "./queryConfig";
 
 describe("query retry policy", () => {
@@ -9,7 +9,7 @@ describe("query retry policy", () => {
   });
 
   it("allows only one retry for network and server failures", () => {
-    expect(shouldRetry(0, new ApiError("Network"))).toBe(true);
+    expect(shouldRetry(0, new ApiError("Network", { kind: "network" }))).toBe(true);
     expect(shouldRetry(0, new ApiError("Server", { status: 500 }))).toBe(true);
     expect(shouldRetry(1, new ApiError("Server", { status: 500 }))).toBe(false);
   });
