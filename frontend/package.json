@@ -50,6 +50,7 @@
     "tauri:dev": "tauri dev",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
+    "e2e:release": "playwright test --config playwright.config.ts --grep @release",
     "preview": "vite preview",
     "test": "vitest run"
   },
