@@ -2,17 +2,17 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { Link } from "react-router-dom";
 import { AlertTriangle, CheckCircle2, Clock3, Pencil, Trash2, XCircle } from "lucide-react";
 
-import api from "../api";
-import { useAuth } from "../context/AuthContext";
-import { getPageApiError } from "../lib/api/errors";
-import { PageHeader } from "../components/common/page-header";
-import { Card } from "../components/ui/card";
+import api from "../../../api";
+import { useAuth } from "../../../context/AuthContext";
+import { getPageApiError } from "../../../lib/api/errors";
+import { PageHeader } from "../../../components/common/page-header";
+import { Card } from "../../../components/ui/card";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
   PermissionRestrictedState,
-} from "../components/common/state-message";
+} from "../../../components/common/state-message";
 
 export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
