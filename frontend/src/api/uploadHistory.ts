@@ -61,23 +61,25 @@ export type UploadRow = {
   recommended_action: string;
 };
 
-export function getUploadHistory(params: Record<string, string | number | boolean | undefined>) {
-  return api.get("/api/uploads/history", { params }).then((response) => response.data as HistoryPage);
+export function getUploadHistory(params: Record<string, string | number | boolean | undefined>, signal?: AbortSignal) {
+  return api.get("/api/uploads/history", { params, signal }).then((response) => response.data as HistoryPage);
 }
 
-export function getUploadDetail(uploadId: string) {
-  return api.get(`/api/uploads/history/${encodeURIComponent(uploadId)}`).then((response) => response.data as UploadRecord);
+export function getUploadDetail(uploadId: string, signal?: AbortSignal) {
+  return api.get(`/api/uploads/history/${encodeURIComponent(uploadId)}`, { signal }).then((response) => response.data as UploadRecord);
 }
 
-export function getUploadTimeline(uploadId: string) {
+export function getUploadTimeline(uploadId: string, signal?: AbortSignal) {
   return api.get<{ items: UploadTimelineItem[] }>(
     `/api/uploads/history/${encodeURIComponent(uploadId)}/timeline`,
+    { signal },
   ).then((response) => response.data.items);
 }
 
-export function getUploadRows(uploadId: string, page: number, outcome?: string) {
+export function getUploadRows(uploadId: string, page: number, outcome?: string, signal?: AbortSignal) {
   return api.get(`/api/uploads/history/${encodeURIComponent(uploadId)}/rows`, {
     params: { page, page_size: 25, outcome: outcome || undefined },
+    signal,
   }).then((response) => response.data as { items: UploadRow[]; page: number; pages: number; total: number });
 }
 
