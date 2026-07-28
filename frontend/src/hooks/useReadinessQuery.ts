@@ -5,7 +5,7 @@ import { queryKeys } from "../lib/query/queryKeys";
 export function useReadinessQuery(userId: number | null) {
   return useQuery({
     queryKey: queryKeys.readiness.status(userId),
-    queryFn: getReadiness,
+    queryFn: ({ signal }) => getReadiness(signal),
     enabled: userId !== null,
     staleTime: 0,
     refetchOnMount: "always",
