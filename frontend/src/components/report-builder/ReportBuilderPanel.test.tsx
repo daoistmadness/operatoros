@@ -1,11 +1,13 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 import ReportBuilderPanel, { moveSection } from "./ReportBuilderPanel";
 
 const mockReact = React;
 
 vi.mock("lucide-react", () => {
-  const MockIcon = (props) => React.createElement("span", { ...props, "data-icon": "mock" });
+  const MockIcon = (props: React.HTMLAttributes<HTMLSpanElement>) =>
+    React.createElement("span", { ...props, "data-icon": "mock" });
   return {
     ArrowDown: MockIcon,
     ArrowUp: MockIcon,
