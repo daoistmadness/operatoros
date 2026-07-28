@@ -1,4 +1,3 @@
-import React from "react";
 import { UploadHistoryPanel } from "../components/upload/UploadHistoryPanel";
 import { PageHeader } from "../components/common/page-header";
 
