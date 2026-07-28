@@ -14,6 +14,21 @@
 - Keep local drafts, selections, modal state, browser effects, and explicit file
   downloads outside TanStack Query.
 
+## Feature ownership
+
+- Migrated domains live under `src/features/<feature>/` and expose one narrow
+  public surface from `index.ts`.
+- Routes and other domains import a feature through that public entry point;
+  they do not import its `api/`, `pages/`, `queries/`, or component internals.
+- Feature internals may import their own files and domain-neutral infrastructure
+  from the existing shared roots. Shared code must never import a feature.
+- Generated OpenAPI contracts remain under `src/generated/openapi/`. Only an
+  approved feature API adapter may import them.
+- Keep route page exports lazy-safe. Do not create a root feature barrel or
+  eagerly import every feature page.
+- Run `npm run boundaries:check` after changing imports, and
+  `npm run boundaries:test` after changing the enforcement rules.
+
 ## Responsibilities
 This React app provides the staff-facing UI for uploading attendance files, mapping students to classes, configuring HEB and jenjang rules, reviewing attendance overrides, and viewing reports and charts.
 

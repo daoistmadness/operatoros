@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getReadiness } from "../api/readiness";
-import { queryKeys } from "../lib/query/queryKeys";
+import { queryKeys } from "../../../lib/query/queryKeys";
 
 export function useReadinessQuery(userId: number | null) {
   return useQuery({

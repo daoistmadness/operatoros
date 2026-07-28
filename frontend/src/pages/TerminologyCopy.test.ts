@@ -21,7 +21,7 @@ describe("terminology harmonization copy", () => {
   });
 
   it("uses the canonical Jenjang column label", () => {
-    const source = readSibling("JenjangConfig.tsx");
+    const source = readSibling("../features/jenjang-config/pages/JenjangConfig.tsx");
     expect(source).toContain(">Jenjang<");
     expect(source).not.toContain("Jenjang siswa");
   });

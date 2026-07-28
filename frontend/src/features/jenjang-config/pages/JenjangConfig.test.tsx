@@ -3,8 +3,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import api from "../api";
-import { AuthContext, type AuthContextValue } from "../context/AuthContext";
+import api from "../../../api";
+import { AuthContext, type AuthContextValue } from "../../../context/AuthContext";
 import JenjangConfig, {
   getJenjangConfigError,
   normalizeJenjangPayload,
@@ -12,7 +12,7 @@ import JenjangConfig, {
   type JenjangConfigPayload,
 } from "./JenjangConfig";
 
-vi.mock("../api", () => ({ default: { get: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
+vi.mock("../../../api", () => ({ default: { get: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
 
 const admin: AuthContextValue = { user: { id: 1, username: "admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const staff: AuthContextValue = { ...admin, user: { id: 2, username: "staff", role: "staff", capabilities: [] }, can: () => false };
