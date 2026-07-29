@@ -116,4 +116,3 @@ def test_sqlite_ledger_triggers_reject_delete_and_immutable_update(tmp_path):
         connection.execute("UPDATE student_import_applied_actions SET rollback_state='BLOCKED' WHERE id=?", (action_id,))
         with pytest.raises(sqlite3.IntegrityError, match="append-only"):
             connection.execute("DELETE FROM student_import_applied_actions WHERE id=?", (action_id,))
-
