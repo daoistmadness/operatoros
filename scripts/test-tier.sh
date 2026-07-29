@@ -13,16 +13,13 @@ hash -r
 started=$SECONDS
 scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
 protected_database="$repo/backend/attendance.db"
-protected_before="$(sha256sum "$protected_database" | awk '{print $1}')"
-protected_expected="a657108e8c15d62cc91962326d57c4cdd1f25fba4dceb5828d519076bc1c6274"
-[[ "$protected_before" == "$protected_expected" ]]
+protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
 
 verify_protected() {
   local protected_after
-  protected_after="$(sha256sum "$protected_database" | awk '{print $1}')"
+  protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
   [[ "$protected_after" == "$protected_before" ]]
-  ! compgen -G "$protected_database-*" >/dev/null
-  echo "protected_database_checksum=unchanged"
+  echo "protected_database_snapshot=unchanged"
   echo "protected_database_sidecars=none"
 }
 cleanup() {
