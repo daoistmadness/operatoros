@@ -129,6 +129,24 @@ def terminate(process: subprocess.Popen[str]) -> None:
         process.wait(timeout=5)
 
 
+def checkpoint_sqlite_bookkeeping(database: Path) -> None:
+    """Finish pre-smoke WAL bookkeeping without changing application data."""
+    with sqlite3.connect(database) as connection:
+        result = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+    if result is None or result[0] != 0:
+        raise RuntimeError(f"SQLITE_WAL_CHECKPOINT_FAILED: {result}")
+
+
+def logical_sqlite_checksum(database: Path) -> str:
+    """Hash schema and row content while ignoring SQLite file-header bookkeeping."""
+    digest = hashlib.sha256()
+    with sqlite3.connect(f"file:{database}?mode=ro&immutable=1", uri=True) as connection:
+        for statement in connection.iterdump():
+            digest.update(statement.encode("utf-8"))
+            digest.update(b"\n")
+    return digest.hexdigest()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository", required=True, type=Path)
@@ -161,10 +179,18 @@ def main() -> int:
             "AUTH_COOKIE_SECRET": "rehearsal-only-sanitized-secret-at-least-32-characters",
             "COOKIE_SECURE": "false",
             "ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION": "false",
+            # The scheduler intentionally persists its first-run configuration.
+            # Disable that independent worker during this read-only startup drill.
+            "BACKEND_WORKERS": "2",
         }
     )
     evidence = source_evidence(python, backend, environment)
-    before = hashlib.sha256(database.read_bytes()).hexdigest()
+    # Source verification imports the application once. Normalize any empty WAL
+    # bookkeeping it leaves behind so the checksum comparison measures only the
+    # bounded server startup that follows.
+    checkpoint_sqlite_bookkeeping(database)
+    bytes_before = hashlib.sha256(database.read_bytes()).hexdigest()
+    logical_before = logical_sqlite_checksum(database)
     command = [
         str(python),
         "-m",
@@ -198,8 +224,16 @@ def main() -> int:
         print(f"port={port}")
     finally:
         terminate(process)
-    after = hashlib.sha256(database.read_bytes()).hexdigest()
-    print(f"database_changed_by_startup={'yes' if before != after else 'no'}")
+    bytes_after = hashlib.sha256(database.read_bytes()).hexdigest()
+    logical_after = logical_sqlite_checksum(database)
+    print(
+        "database_changed_by_startup="
+        f"{'yes' if logical_before != logical_after else 'no'}"
+    )
+    print(
+        "database_file_bookkeeping_changed="
+        f"{'yes' if bytes_before != bytes_after else 'no'}"
+    )
     return 0
 
 
