@@ -49,7 +49,6 @@ if ($LASTEXITCODE -ne 0) { throw "Sidecar dependency installation failed with ex
     --hidden-import "uvicorn.lifespan.on" `
     --hidden-import "multipart" `
     --hidden-import "argon2" `
-    --hidden-import "asyncpg" `
     --distpath $LocalDist `
     --workpath $Work `
     --specpath $Spec `
