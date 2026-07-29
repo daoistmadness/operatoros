@@ -41,7 +41,6 @@ class StudentEnrollment(Base):
             "academic_year_id",
             unique=True,
             sqlite_where=student_master_id.isnot(None),
-            postgresql_where=student_master_id.isnot(None),
         ),
         CheckConstraint("effective_to IS NULL OR effective_from IS NULL OR effective_to >= effective_from", name="ck_student_enrollment_effective_dates"),
         CheckConstraint(
