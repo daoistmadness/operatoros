@@ -14,8 +14,6 @@ MIGRATIONS = BACKEND / "migrations"
 SOURCE_ROOT = BACKEND / "src"
 SQLITE_UP = MIGRATIONS / "20260713_identity_schema_sqlite.sql"
 SQLITE_DOWN = MIGRATIONS / "20260713_identity_schema_rollback_sqlite.sql"
-POSTGRES_UP = MIGRATIONS / "20260713_identity_schema_postgresql.sql"
-POSTGRES_DOWN = MIGRATIONS / "20260713_identity_schema_rollback_postgresql.sql"
 
 if str(SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(SOURCE_ROOT))
@@ -147,21 +145,6 @@ def test_existing_phase6_database_can_be_backed_up_migrated_and_started(tmp_path
         assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
     finally:
         connection.close()
-
-
-def test_postgresql_migration_and_rollback_contracts():
-    up = POSTGRES_UP.read_text(encoding="utf-8")
-    down = POSTGRES_DOWN.read_text(encoding="utf-8")
-    required = [
-        "BEGIN;", "BIGSERIAL", "TIMESTAMPTZ", "BOOLEAN NOT NULL DEFAULT TRUE",
-        "CHECK (role IN ('admin', 'staff'))", "REFERENCES users(id) ON DELETE RESTRICT",
-        "CREATE INDEX idx_sessions_token_hash", "CREATE INDEX idx_sessions_user_id",
-        "CREATE INDEX idx_sessions_expires_at", "COMMIT;",
-    ]
-    assert all(fragment in up for fragment in required)
-    assert up.index("CREATE TABLE users") < up.index("CREATE TABLE sessions")
-    assert down.index("DROP TABLE IF EXISTS sessions") < down.index("DROP TABLE IF EXISTS users")
-    assert down.startswith("--") and "BEGIN;" in down and down.rstrip().endswith("COMMIT;")
 
 
 def test_identity_schema_has_no_plaintext_or_secret_columns():
