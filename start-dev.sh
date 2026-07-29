@@ -87,7 +87,7 @@ PY
 
 prepare_local_environment() {
   local launcher_owns_database=0
-  if [[ -z "${DATABASE_URL:-}" ]] && [[ -z "${POSTGRES_USER:-}${POSTGRES_PASSWORD:-}${POSTGRES_DB:-}${POSTGRES_HOST:-}${POSTGRES_PORT:-}" ]]; then
+  if [[ -z "${DATABASE_URL:-}" ]]; then
     [[ -n "$SESSION_ID" && -n "$SESSION_DIR" ]] || fail_preflight "Development session state is unavailable" "A managed session must exist before database initialization."
     DEV_STATE_DIR="$SESSION_DIR/state"
     DEV_DATABASE="$DEV_STATE_DIR/operatoros-development.db"

@@ -50,8 +50,6 @@ def main() -> None:
             "ENABLE_DESTRUCTIVE_OPERATIONS": "false",
         }
     )
-    for name in ("POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_HOST", "POSTGRES_PORT"):
-        os.environ.pop(name, None)
 
     sys.path.insert(0, str(BACKEND_SOURCE))
     from main import app  # pylint: disable=import-outside-toplevel

@@ -33,31 +33,11 @@ _AUDIT_TRIGGER_NAMES = (
 
 
 def _drop_attendance_audit_triggers(db: Session) -> None:
-    dialect = db.get_bind().dialect.name
     for trigger_name in _AUDIT_TRIGGER_NAMES:
-        if dialect == "postgresql":
-            db.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name} ON attendance_override_history"))
-        else:
-            db.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name}"))
+        db.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name}"))
 
 
 def _recreate_attendance_audit_triggers(db: Session) -> None:
-    dialect = db.get_bind().dialect.name
-    if dialect == "postgresql":
-        db.execute(text("""
-            CREATE OR REPLACE FUNCTION prevent_operatoros_append_only_mutation()
-            RETURNS trigger AS $$ BEGIN
-                RAISE EXCEPTION 'append-only history cannot be modified';
-            END; $$ LANGUAGE plpgsql
-        """))
-        for action in ("UPDATE", "DELETE"):
-            db.execute(text(
-                f"CREATE TRIGGER trg_attendance_override_history_no_{action.lower()} "
-                f"BEFORE {action} ON attendance_override_history FOR EACH ROW "
-                "EXECUTE FUNCTION prevent_operatoros_append_only_mutation()"
-            ))
-        return
-
     for action in ("UPDATE", "DELETE"):
         db.execute(text(
             f"CREATE TRIGGER trg_attendance_override_history_no_{action.lower()} "
