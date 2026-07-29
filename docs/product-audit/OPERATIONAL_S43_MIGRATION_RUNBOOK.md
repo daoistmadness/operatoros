@@ -21,6 +21,36 @@ the verified rollback backup until the approved retention period expires.
 The readiness phase must not mutate `backend/attendance.db`. The authorized
 event is the only time the protected path may be supplied to the migration.
 
+## Operational-path context repair
+
+The 2026-07-29 authorized event stopped before opening the database for
+migration. The wrapper imported configuration and migration modules before it
+had established operational authority, so normal protected-path validation
+correctly rejected the path. The operational checksum remained unchanged.
+
+The wrapper now performs immutable preflight first, acquires its exclusive
+lock, and then establishes a process-local `ContextVar` access context before
+lazily importing migration code. Environment variables alone never grant this
+access. The context is limited to the exact operational path, verified source
+checksum and S4.2 head, verified rollback backup, and held lock; it is cleared
+on both success and failure. Normal application startup and direct migration
+calls continue to reject the protected path.
+
+Before a future authorized event, run the operational preflight without a
+final confirmation:
+
+```bash
+PYTHONPATH=backend/src backend/.venv/bin/python scripts/s43_migration.py \
+  --database /absolute/path/to/attendance.db \
+  --backup /absolute/path/to/verified-s42-backup.db \
+  --dry-run
+```
+
+The previous authorization is consumed. Retain the existing backup at
+`/home/mikhailryu/.local/share/operatoros/rollback-backups/s43-20260729T061811Z/attendance-s42.db`
+with checksum `a657108e8c15d62cc91962326d57c4cdd1f25fba4dceb5828d519076bc1c6274`,
+but create a new timestamped verified backup for the next authorized event.
+
 The historical base has a deployment-gate defect: it rejects the legitimate
 S4.2 state where all eligible legacy students are still untouched and
 unlinked. PR #30 applies a bounded, read-only correction on the rollback-only
