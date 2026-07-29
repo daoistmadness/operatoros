@@ -1,6 +1,6 @@
 # Commands
 
-Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, `docker-compose.yml`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
+Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
 
 ## Install
 - `cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
@@ -19,7 +19,6 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 ## Build
 - `cd frontend && npm run build`
 - `cd frontend && npm run tauri -- build --no-bundle`  # Windows desktop executable, without an installer
-- `docker compose up --build`
 
 ## Test / Validation
 - `cd backend && python3 -m pytest -q` (or with venv-backed execution: `DATABASE_URL=sqlite:///./attendance.db PYTHONPATH=backend backend/.venv/bin/pytest backend/tests/ -q`)
@@ -28,7 +27,6 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `cd frontend/src-tauri && cargo check`  # run from a Windows Rust toolchain for the Windows shell
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
-- `docker compose config`
 - `curl http://localhost:8000/docs`
 - `PYTHONPATH=backend:backend/src python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # deterministic optional-engine pilot; never point output at a database
 
@@ -42,9 +40,6 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - Schema updates/patches are programmatically run on startup via database patches (e.g. `run_grade_ledger_patches` in `backend/src/core/database.py`).
 - Raw SQL files in `backend/migrations/` represent the repository's migration history.
 
-## Database / Ops / Logs
-- `docker compose logs -f backend`
-- `docker compose logs -f frontend`
-- `docker compose logs -f db`
-- `docker compose down`
-- `docker compose down -v`  # destructive: removes the PostgreSQL volume
+## Database / Ops
+- `./scripts/backup.sh`  # SQLite backup
+- `./scripts/restore.sh <backup-file>`  # guarded SQLite restore
