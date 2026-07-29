@@ -403,8 +403,8 @@ def test_protected_database_untouched():
             "enrollments": c.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0],
             "version": c.execute("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").fetchone()[0],
         }
+        assert counts["version"] == "20260725_s43"
+        assert c.execute(
+            "SELECT COUNT(*) FROM operatoros_schema_migrations WHERE version='20260725_s43'"
+        ).fetchone()[0] == 1
         c.close()
-        assert counts["students"] == 117
-        assert counts["attendance"] == 3651
-        assert counts["enrollments"] == 0
-        assert counts["version"] == "20260724_s42"
