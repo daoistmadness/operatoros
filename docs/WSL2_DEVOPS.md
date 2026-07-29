@@ -70,58 +70,19 @@ All backend canonical routes begin with `/api/<domain>/...`. Do not use bare pat
 - Install browser binaries with `agent-browser install`, or `agent-browser install --with-deps` on Linux/WSL2.
 - Browser artifacts are written under `.artifacts/browser/`.
 
-## Docker Compose
-```bash
-cp .env.example .env
-# Set a non-example POSTGRES_PASSWORD and generate AUTH_COOKIE_SECRET
-# plus a separate ASTRYX_SETUP_TOKEN
-# with: python -c "import secrets; print(secrets.token_urlsafe(48))"
-docker compose config
-docker compose up --build
-```
+## Runtime model
 
-All three values are required by Compose. Keep `.env` outside version control, reuse the same authentication secret across restarts, and remove `ASTRYX_SETUP_TOKEN` from deployed secrets after first-admin provisioning succeeds.
+OperatorOS uses direct FastAPI/Vite processes during WSL2 development and a
+local FastAPI sidecar in the Tauri desktop target. SQLite is the only supported
+database. Docker, Compose, Nginx, and PostgreSQL are not required or supported
+runtime dependencies.
 
-Ports and services:
-- Frontend: `http://localhost`
-- Backend: `http://localhost:8000`
-- Database service: `db` on PostgreSQL 16
-- Containerized browser requests use `/api/*`; Nginx forwards them to `http://backend:8000/*`
-
-Compose uses a named volume, `db_data`, for database persistence.
-The `backend_data` volume persists application-created backup and audit artifacts under `/app/data/backups`.
-
-On a brand-new `db_data` volume, PostgreSQL runs the read-only identity, backup-scheduler, and first-admin setup initialization migrations before becoming healthy. Existing volumes are not automatically altered; back them up and follow `backend/migrations/README.md` when a new migration must be applied.
-
-## Logs, Rebuilds, and Health Checks
-```bash
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose logs -f db
-docker compose build backend
-docker compose build frontend
-```
-
-- Backend health is available at `GET /health` and `GET /api/system/health`.
-- Frontend Docker builds use empty `VITE_API_BASE_URL`; the Nginx proxy handles `/api/` forwarding.
-- Compose waits for PostgreSQL readiness, then backend health, before declaring the Nginx frontend ready.
-
-## Resetting State
-> Warning: the following commands can destroy data.
-
-```bash
-docker compose down
-docker compose down -v
-```
-
-- `down` stops containers but keeps the volume.
-- `down -v` also removes the PostgreSQL volume and erases database contents.
-- The app also exposes a destructive reset action at `POST /api/system/clear-data`, but it stays disabled unless `ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
+Backend health is available at `GET /health` and `GET /api/system/health`.
+The destructive reset action remains disabled unless
+`ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
 
 ## Networking Notes
 - In direct local development, the Vite proxy forwards `/api/*` to `http://127.0.0.1:8000`. No separate CORS configuration is needed.
-- In Docker, the browser uses same-origin `/api` requests and Nginx forwards them to the backend container.
-- The frontend Docker image includes an Nginx config that preserves canonical `/api/` paths while proxying them to the backend.
 
 ## File Permission and Line Ending Issues
 - Use LF line endings for shell scripts and config files.
