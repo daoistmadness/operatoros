@@ -1,5 +1,8 @@
 # Test Orchestration and Playwright Release Scenarios
 
+> **Historical audit record.** For current tier selection, see
+> [Test strategy](../testing/TEST_STRATEGY.md) and [AGENTS.md](../../AGENTS.md).
+
 ## Decision
 
 `ESTABLISH_DETERMINISTIC_RELEASE_SCENARIOS_WHILE_SEPARATING_FAST_PR_AND_RELEASE_TEST_GATES`

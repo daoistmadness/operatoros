@@ -1,10 +1,14 @@
 # OperatorOS
 
-Current completed milestone: **Phase 10 — Incremental Design-System Modernization**. See the [Phase 10 release notes](docs/releases/phase-10-design-system-modernization.md), [design-system review](docs/phase10-design-system-review.md), and [current roadmap](docs/project-status/current-roadmap.md).
+OperatorOS is an offline-first school attendance and academic analytics system.
+Current developer and operational guidance is indexed in [docs/README.md](docs/README.md);
+[AGENTS.md](AGENTS.md) is the authoritative execution contract.
 
 The prior **`v0.9.0-platform-foundation`** inventory, security review, and release notes remain the historical Phase 9 baseline. Phase 9.6 still requires the documented clean-Windows external acceptance run before the platform foundation is fully closed.
 
-OperatorOS is an offline-first full-stack system for importing school attendance spreadsheets, reviewing and correcting attendance data, configuring lateness rules, and generating operational and executive reports.
+The current runtime schema is S4.3 (`20260725_s43`); S4.2 is the fresh-bootstrap
+baseline. Local development uses a disposable configured database—never
+`backend/attendance.db`, which is protected operational data.
 
 ## What It Does
 - Imports `.xlsx` attendance exports into a backend database.
@@ -65,6 +69,22 @@ Only the backend grants access. Frontend identity and role state are navigation 
 - Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
 - [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and FastAPI backend
 - [`scripts/verify-browser.sh`](scripts/verify-browser.sh): Agent Browser smoke test
+
+## Core validation
+
+```bash
+make test-fast
+make test-pr
+make test-release
+make fresh-db-parity
+```
+
+`test-fast` is changed-path-aware; `test-pr` is the ordinary PR gate; and
+`test-release` is for release/schema/startup-sensitive work. OpenAPI contracts
+are generated and drift-checked through the frontend package scripts. See
+[Contributing](CONTRIBUTING.md), [test strategy](docs/testing/TEST_STRATEGY.md),
+[frontend architecture](docs/architecture/FRONTEND_ARCHITECTURE.md), and
+[database operations](docs/operations/DATABASE_OPERATIONS.md).
 
 ## Prerequisites
 - Python 3.12
@@ -187,7 +207,8 @@ For `./start-dev.sh`, absent database and authentication settings are supplied b
 
 ## Database and Migrations
 - Database restore requires an authenticated administrator, an identity-compatible backup with an active administrator, exact confirmation, and single-worker runtime. Successful restore revokes every restored session and requires all operators to sign in again. Multi-worker deployments fail closed because the repository has no approved cross-process restore lock.
-- The backend creates tables on startup with SQLAlchemy metadata.
+- Fresh, absent databases bootstrap through the explicit S4.2-to-S4.3 sequence;
+  existing databases are validated and are never silently migrated at startup.
 - SQLite connections enable foreign keys, WAL mode, and related pragmas in `backend/src/core/database.py`.
 - Historical schema changes live in `backend/migrations/` as raw SQL for SQLite and PostgreSQL.
 - When PostgreSQL fields are set, the backend builds a SQLAlchemy URL from the separate connection parts instead of string-concatenating credentials.

@@ -1,5 +1,8 @@
 # S4.3 Schema-Head Architecture
 
+> **Historical audit record.** For current rules, see [AGENTS.md](../../AGENTS.md)
+> and [Database schema architecture](../architecture/DATABASE_SCHEMA_ARCHITECTURE.md).
+
 ## Decision
 
 OperatorOS uses `BASELINE_BOOTSTRAP_PLUS_INCREMENTAL_MIGRATIONS_IS_AUTHORITATIVE`.
@@ -51,4 +54,3 @@ S4.2 and was not opened through application configuration or migrated.
 - API runtime contract change: none.
 - Startup schema-head policy: corrected.
 - Existing S4.2 compatibility: explicit migration required before startup.
-
