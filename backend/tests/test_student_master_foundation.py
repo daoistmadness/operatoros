@@ -212,4 +212,3 @@ def test_sqlite_migration_is_additive_and_idempotent(tmp_path):
     with pytest.raises(sqlite3.IntegrityError, match="append-only"):
         database.execute("DELETE FROM attendance_override_history WHERE id=1")
     database.close()
-
