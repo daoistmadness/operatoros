@@ -129,6 +129,20 @@ def seed_upload_conflicts(backend_src: Path) -> None:
         assert {"991001", "991002"} <= devices
         assert any(item["technical_code"] == "POSSIBLE_DUPLICATE" for item in queue["items"])
         assert attendance.checksum and all(item["source_row_number"] for item in queue["items"])
+        # Keep the synthetic database valid for the deployment gate after the
+        # historical inactive mappings have served the conflict-preview case.
+        for index, target in enumerate(targets, start=1):
+            legacy_id = 991000 + index
+            db.add(StudentDeviceIdentity(
+                student_master_id=target.id,
+                legacy_student_id=legacy_id,
+                device_identifier=str(legacy_id),
+                device_source="E2E_GATE_ONLY",
+                effective_from=date(2026, 7, 1),
+                is_active=True,
+                created_by="operatoros_e2e_admin",
+            ))
+        db.commit()
         print("FIXTURE_PREFLIGHT_PASSED")
     finally:
         db.close()
