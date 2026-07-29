@@ -50,7 +50,11 @@ export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-charact
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 node22_executable="${OPERATOROS_NODE22_EXECUTABLE:-$(command -v node 2>/dev/null || true)}"
-if [[ -z "$node22_executable" || "$($node22_executable --version 2>/dev/null || true)" != v22.* ]]; then
+if [[
+  -z "$node22_executable"
+  || "$($node22_executable --version 2>/dev/null || true)" != v22.*
+  || ! -x "$(dirname "$node22_executable")/npx"
+]]; then
   current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
   node22_executable="$current_user_home/.nvm/versions/node/v22.23.1/bin/node"
 fi
@@ -76,6 +80,19 @@ export OPERATOROS_E2E_FRONTEND_URL="$($repo_root/backend/.venv/bin/python -c 'im
 
 backend_status=0
 (cd "$repo_root/backend" && "$repo_root/backend/.venv/bin/python" -m pytest -q -c "$repo_root/backend/pytest.ini" "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
+
+# These two identities exist solely to make the synthetic fixture valid at
+# process startup. Remove them after readiness so the conflict UI can exercise
+# its intended explicit-link workflow.
+"$repo_root/backend/.venv/bin/python" - "$database" <<'PY'
+import sqlite3
+import sys
+
+with sqlite3.connect(sys.argv[1]) as connection:
+    connection.execute(
+        "DELETE FROM student_device_identities WHERE device_source='E2E_GATE_ONLY'"
+    )
+PY
 
 web_status=0
 playwright_args=(playwright test --config playwright.config.ts)
