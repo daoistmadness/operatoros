@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import os
 import subprocess
@@ -9,22 +10,19 @@ from pathlib import Path
 import pytest
 
 from core.config import Settings
-from core.database_access_context import (
-    DatabaseAccessMode,
-    active_database_access_context,
-    operational_migration_access_context,
-)
-
-
 ROOT = Path(__file__).resolve().parents[2]
 PROTECTED = (ROOT / "backend" / "attendance.db").resolve()
 SCRIPT = ROOT / "scripts" / "s43_migration.py"
 
 
 def _context(tmp_path):
+    # Several legacy test modules intentionally evict ``core.*`` from
+    # sys.modules. Resolve the context module at use time so this test uses
+    # the same module instance that Settings.database_url imports.
+    database_access_context = importlib.import_module("core.database_access_context")
     backup = tmp_path / "backup.db"
     backup.write_bytes(b"synthetic")
-    return operational_migration_access_context(
+    return database_access_context.operational_migration_access_context(
         database_path=PROTECTED,
         expected_source_sha256="f" * 64,
         expected_source_head="20260724_s42",
@@ -70,15 +68,18 @@ def test_complete_operational_context_permits_matching_protected_path(tmp_path):
     settings = Settings(DATABASE_URL=f"sqlite:///{PROTECTED}", AUTH_COOKIE_SECRET="x" * 32)
     with _context(tmp_path):
         assert settings.database_url == f"sqlite:///{PROTECTED}"
-        assert active_database_access_context().mode is DatabaseAccessMode.OPERATIONAL_MIGRATION
-    assert active_database_access_context().mode is DatabaseAccessMode.NORMAL_RUNTIME
+        context = importlib.import_module("core.database_access_context")
+        assert context.active_database_access_context().mode is context.DatabaseAccessMode.OPERATIONAL_MIGRATION
+    context = importlib.import_module("core.database_access_context")
+    assert context.active_database_access_context().mode is context.DatabaseAccessMode.NORMAL_RUNTIME
 
 
 def test_context_is_cleared_after_exception(tmp_path):
     with pytest.raises(RuntimeError, match="expected"):
         with _context(tmp_path):
             raise RuntimeError("expected")
-    assert active_database_access_context().mode is DatabaseAccessMode.NORMAL_RUNTIME
+    context = importlib.import_module("core.database_access_context")
+    assert context.active_database_access_context().mode is context.DatabaseAccessMode.NORMAL_RUNTIME
 
 
 def test_nested_operational_context_is_rejected(tmp_path):
@@ -91,8 +92,9 @@ def test_nested_operational_context_is_rejected(tmp_path):
 def test_incomplete_operational_context_is_rejected(tmp_path):
     backup = tmp_path / "backup.db"
     backup.write_bytes(b"synthetic")
+    context = importlib.import_module("core.database_access_context")
     with pytest.raises(RuntimeError, match="CONTEXT_INCOMPLETE"):
-        with operational_migration_access_context(
+        with context.operational_migration_access_context(
             database_path=PROTECTED,
             expected_source_sha256="f" * 64,
             expected_source_head="20260724_s42",
