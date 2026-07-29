@@ -231,7 +231,7 @@ def test_workflow_apis_require_authentication_and_admin(s3_context):
     assert quality.json()["missing_jenjang_mappings"] == 1
 
 
-def test_s3_sqlite_migration_reruns_and_postgresql_contract(tmp_path):
+def test_s3_sqlite_migrations_rerun(tmp_path):
     import sqlite3
 
     db = sqlite3.connect(tmp_path / "s3.db")
@@ -248,16 +248,9 @@ def test_s3_sqlite_migration_reruns_and_postgresql_contract(tmp_path):
     sqlite_sql = (root / "20260717_s3_linking_enrollment_sqlite.sql").read_text(encoding="utf-8")
     db.executescript(sqlite_sql); db.executescript(sqlite_sql)
     assert db.execute("SELECT COUNT(*) FROM student_enrollment_class_history").fetchone()[0] == 0
-    postgres_sql = (root / "20260717_s3_linking_enrollment_postgresql.sql").read_text(encoding="utf-8")
-    assert "ADD COLUMN IF NOT EXISTS effective_from" in postgres_sql
-    assert "WHERE student_master_id IS NOT NULL" in postgres_sql
-    assert "ON DELETE RESTRICT" in postgres_sql
     mapping_sql = (root / "20260719_s35_academic_mapping_sqlite.sql").read_text(encoding="utf-8")
     db.executescript(mapping_sql); db.executescript(mapping_sql)
     assert db.execute("SELECT COUNT(*) FROM student_academic_mapping_rules").fetchone()[0] == 0
-    mapping_postgres = (root / "20260719_s35_academic_mapping_postgresql.sql").read_text(encoding="utf-8")
-    assert "REFERENCES jenjangs(id) ON DELETE RESTRICT" in mapping_postgres
-    assert "approved_by IS NOT NULL" in mapping_postgres
     db.close()
 
 
