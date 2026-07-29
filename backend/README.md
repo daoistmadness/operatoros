@@ -109,12 +109,13 @@ Upload smoke test:
 curl -F "file=@sample_attendance.xlsx" http://localhost:8000/uploads/upload
 ```
 
-## Production and Container Notes
-- `backend/Dockerfile` runs `uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 1`.
-- Compose intentionally uses one worker so the in-process scheduler and guarded restore policy remain valid. PostgreSQL data and application backup/audit artifacts use separate named volumes.
-- `docker-compose.yml` connects the backend to PostgreSQL through `POSTGRES_*` variables.
-- The backend container should connect to the database service as `db`, not `localhost`.
-- `frontend/nginx.conf` is separate from backend deployment; it only matters when the frontend is containerized.
+## Runtime Notes
+
+- The supported database is SQLite.
+- PostgreSQL URLs and legacy PostgreSQL environment variables are rejected.
+- The packaged target is the local Tauri sidecar; containers are not required.
+- Keep the backend at one worker so the in-process scheduler and guarded restore
+  policy remain valid.
 
 ## Known Limitations
 - Authentication includes one-time first-admin web setup and an interactive recovery/headless CLI. It still has no MFA, SSO, OAuth, LDAP, general user-management UI, password-change UI, or multi-user provisioning CLI.

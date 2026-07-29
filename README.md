@@ -17,7 +17,7 @@ baseline. Local development uses a disposable configured database—never
 - Provides Management Analytics with PDF/Excel export for attendance, lateness, grade, and Below-KKM review.
 - Supports database-backed KKM thresholds and custom academic term date ranges.
 - Tracks academic interventions created from Below-KKM alerts.
-- Runs locally with SQLite or PostgreSQL and also through Docker Compose.
+- Runs locally as a SQLite-backed desktop/local application.
 
 ## Architecture
 ```mermaid
@@ -25,7 +25,7 @@ flowchart LR
   Browser[Browser / staff user]
   FE[React frontend]
   API[FastAPI backend]
-  DB[(SQLite or PostgreSQL)]
+  DB[(SQLite)]
   SVC[Excel import and reporting services]
 
   Browser --> FE
@@ -58,8 +58,8 @@ Only the backend grants access. Frontend identity and role state are navigation 
 ## Stack
 - Backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
 - Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
-- Database: SQLite for local files, PostgreSQL 16 in `docker-compose.yml`
-- Infrastructure: Docker, Docker Compose, Nginx, Agent Browser, WSL2-friendly shell scripts
+- Database: SQLite
+- Runtime: local FastAPI sidecar and React/Tauri desktop UI
 
 ## Repository Layout
 - [`backend/`](backend/): API routers, settings, ORM models, services, and raw SQL migrations
@@ -91,10 +91,11 @@ are generated and drift-checked through the frontend package scripts. See
 - Node.js 20+
 - npm
 - Agent Browser on the PATH if you want browser verification
-- Docker and Docker Compose for containerized development
 
 ## Quick Start
-Direct Node.js/Vite and Python/FastAPI processes are the primary local-development workflow. Docker Compose is a supported secondary workflow for containerized deployment, PostgreSQL provisioning, Nginx routing, and operational verification.
+Direct Node.js/Vite and Python/FastAPI processes are the local-development
+workflow. The packaged target is a Tauri desktop application with a local
+FastAPI sidecar and SQLite database. Containers are not required.
 
 ### Local Development Launcher
 ```bash
@@ -159,46 +160,22 @@ Open:
 - OpenAPI docs: `http://127.0.0.1:8000/docs`
 - Redoc: `http://127.0.0.1:8000/redoc`
 
-## Docker Compose
-```bash
-cp .env.example .env
-# Set POSTGRES_PASSWORD, AUTH_COOKIE_SECRET, and ASTRYX_SETUP_TOKEN as instructed in .env.
-docker compose config
-docker compose up --build
-```
-
-Compose starts:
-- Backend on `http://localhost:8000`
-- Frontend on `http://localhost`
-- PostgreSQL on the internal `db` service
-
-Compose fails before startup unless `.env` supplies `POSTGRES_PASSWORD`, a persistent `AUTH_COOKIE_SECRET` of at least 32 characters, and a high-entropy `ASTRYX_SETUP_TOKEN`. Generate each application secret independently with `python -c "import secrets; print(secrets.token_urlsafe(48))"`; never commit or log the resulting values. The setup token is required only by the one-time web bootstrap and should be removed from deployed secrets after the first administrator is created.
-
-The containerized frontend bundle uses `/api` as its browser API base. Nginx proxies `/api/` requests to the backend container.
-
-Fresh PostgreSQL volumes apply the identity, backup-scheduler, and first-admin setup migrations through read-only initialization scripts before the database reports ready. Existing volumes are never re-migrated automatically; follow [`backend/migrations/README.md`](backend/migrations/README.md) and take a verified backup before applying a new forward migration. PostgreSQL data persists in `db_data`; application backup and audit artifacts persist in `backend_data` at `/app/data/backups`.
-
 ## Environment Variables
 
 For `./start-dev.sh`, absent database and authentication settings are supplied by launcher-owned files under the gitignored `backend/.local-dev/` directory. The launcher uses an absolute SQLite URL, creates one persistent local authentication secret, and applies the approved SQLite identity migration only when creating its own fresh disposable database. Explicit `DATABASE_URL`, `POSTGRES_*`, and `AUTH_COOKIE_SECRET` values always take precedence.
 
 | Variable | Service | Required | Default | Description | Example |
 | --- | --- | ---: | --- | --- | --- |
-| `DATABASE_URL` | Backend | No | unset | SQLite or external PostgreSQL URL used when `POSTGRES_*` is not provided. | `sqlite:///./attendance.db` |
-| `POSTGRES_USER` | Backend / Compose | No | `postgres` | PostgreSQL user for the Compose database service. | `postgres` |
-| `POSTGRES_PASSWORD` | Backend / Compose | Yes for Compose | unset | PostgreSQL password supplied through the gitignored `.env`; Compose refuses to start when absent. | *(secret value)* |
-| `POSTGRES_DB` | Backend / Compose | No | `absensi` | PostgreSQL database name for Compose. | `absensi` |
-| `POSTGRES_HOST` | Backend / Compose | No | `db` | Compose hostname for the PostgreSQL service. | `db` |
-| `POSTGRES_PORT` | Backend / Compose | No | `5432` | PostgreSQL port used by the backend container. | `5432` |
+| `DATABASE_URL` | Backend | Yes outside launcher-owned development | unset | SQLite URL. PostgreSQL URLs and legacy `POSTGRES_*` settings are rejected. | `sqlite:///./operatoros.db` |
 | `ENABLE_DESTRUCTIVE_OPERATIONS` | Backend | No | `false` | Enables guarded reset actions such as `POST /api/system/clear-data`. | `true` |
 | `AUTH_COOKIE_SECRET` | Backend | Yes | unset | Persistent secret used to derive server-side session token digests. Must contain at least 32 characters; store only in protected backend configuration and share across workers. | *(secret value)* |
-| `ASTRYX_SETUP_TOKEN` | Setup API / Compose | Required by Compose | unset | High-entropy external token protecting first-run web provisioning. Direct loopback setup and the trusted interactive CLI may omit it. | *(secret value)* |
+| `ASTRYX_SETUP_TOKEN` | Setup API | No for direct loopback | unset | Optional high-entropy external token protecting first-run web provisioning. | *(secret value)* |
 | `COOKIE_SECURE` | Backend | No | `false` | Sets the authentication cookie Secure attribute; use `false` for localhost HTTP and `true` for HTTPS. | `true` |
 | `SESSION_IDLE_TIMEOUT_HOURS` | Backend | No | `6` | Idle session lifetime for the offline deployment profile. | `6` |
 | `SESSION_ABSOLUTE_TIMEOUT_HOURS` | Backend | No | `24` | Absolute session lifetime. | `24` |
 | `MAX_FAILED_LOGIN_ATTEMPTS` | Backend | No | `5` | Consecutive failed logins allowed before account lock. | `5` |
 | `ACCOUNT_LOCK_MINUTES` | Backend | No | `30` | Account lock duration after the failed-login threshold. | `30` |
-| `BACKEND_WORKERS` | Backend | No | `1` | Declares the backend worker count used by scheduler and restore safety checks. Compose intentionally uses one worker. | `1` |
+| `BACKEND_WORKERS` | Backend | No | `1` | Declares the backend worker count used by scheduler and restore safety checks. | `1` |
 | `RESTORE_SINGLE_WORKER_REQUIRED` | Backend | No | `true` | Rejects restore unless `BACKEND_WORKERS=1`; keep enabled until approved cross-process locking exists. | `true` |
 | `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS origins for development. | `http://localhost:5173,http://127.0.0.1:5173` |
 | `HOST` | Backend | No | `0.0.0.0` | Bind host used by the backend runtime. | `0.0.0.0` |
@@ -210,8 +187,9 @@ For `./start-dev.sh`, absent database and authentication settings are supplied b
 - Fresh, absent databases bootstrap through the explicit S4.2-to-S4.3 sequence;
   existing databases are validated and are never silently migrated at startup.
 - SQLite connections enable foreign keys, WAL mode, and related pragmas in `backend/src/core/database.py`.
-- Historical schema changes live in `backend/migrations/` as raw SQL for SQLite and PostgreSQL.
-- When PostgreSQL fields are set, the backend builds a SQLAlchemy URL from the separate connection parts instead of string-concatenating credentials.
+- Historical schema changes, including retired PostgreSQL evaluation artifacts,
+  remain in `backend/migrations/` as audit evidence. Only SQLite migrations are
+  part of the supported runtime.
 
 ## Management Analytics and Academic Config
 - Management Analytics is available at `/analytics`.
@@ -261,7 +239,7 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 - Backend tests: `cd backend && pytest`
 - Frontend build: `cd frontend && npm run build`
 - Browser smoke: `./scripts/verify-browser.sh`
-- Compose config validation: `docker compose config`
+- SQLite-only runtime contract: `backend/.venv/bin/python -m pytest -q backend/tests/test_sqlite_only_runtime.py`
 
 ## Troubleshooting
 - If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && npm install` if needed.
