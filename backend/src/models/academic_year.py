@@ -22,6 +22,5 @@ class AcademicYear(Base):
             "is_default",
             unique=True,
             sqlite_where=(is_default == 1),
-            postgresql_where=(is_default == True),
         ),
     )

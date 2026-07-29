@@ -3,6 +3,9 @@
 ## Purpose and precedence
 
 OperatorOS is an offline-first school attendance and academic analytics system.
+Its active runtime contract is `SQLITE_ONLY_SUPPORTED`,
+`TAURI_DESKTOP_LOCAL`, `POSTGRESQL_NOT_SUPPORTED`, and
+`CONTAINER_RUNTIME_NOT_REQUIRED`; desktop packaging remains experimental.
 This file is the authoritative execution contract for coding agents. A nested
 `AGENTS.md` may add local refinements but cannot weaken this contract. Current
 detail lives in [docs/README.md](docs/README.md); product-audit documents are
@@ -50,8 +53,9 @@ historical evidence unless they explicitly identify a current procedure.
   database with `c06a6220c2c0c2059521c1a396d1b914635aacff` from
   `maintenance/s42-rollback`. The historical
   `b47632c4210720f81804212544452c7c900c928c` is audit-only and must not run.
-- New migrations require SQLite/PostgreSQL compatibility, current-schema and
-  fresh-parity tests, and must not bypass schema guards or audit triggers.
+- New migrations require SQLite compatibility, current-schema and fresh-parity
+  tests, and must not bypass schema guards or audit triggers. PostgreSQL
+  reconsideration requires a new ADR and separate authorization.
 
 ## Testing and reporting
 

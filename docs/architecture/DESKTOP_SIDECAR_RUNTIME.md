@@ -23,3 +23,18 @@ schemas without silent migration. A ready classification requires an onedir
 packaged build, packaged startup/login/import/report smoke, resource checks,
 clean shutdown, and clean-machine execution without developer environment
 fallbacks. Onefile is not recommended until onedir evidence exists.
+
+## Database path contract
+
+Runtime paths are classified as `PROTECTED_REPOSITORY_OPERATIONAL`,
+`DEVELOPMENT_TEMPORARY`, `TEST_TEMPORARY`, `DESKTOP_USER_DATA`, or
+`ROLLBACK_BACKUP`. Only an explicit `DESKTOP_USER_DATA` path may be used by a
+packaged writable runtime. Rollback backups are restore inputs, never live
+runtime databases.
+
+Tauri must resolve and pass an absolute database path beneath its application
+data directory. Conceptually this is the Tauri application-data directory on
+Windows, the XDG application-data directory on Linux, and Application Support
+on macOS. The sidecar must not derive a packaged database from its working
+directory or fall back to a repository path. Final cross-platform Tauri path
+bridging remains part of the separate packaged-sidecar milestone.

@@ -58,12 +58,8 @@ def _validate_token(*, supplied: str | None, configuration: Settings, required_f
         raise ProvisioningError("SETUP_TOKEN_INVALID", "A valid setup token is required.", 403)
 
 
-def _begin_locked_transaction(db: Session) -> str:
-    dialect = db.get_bind().dialect.name
-    if dialect == "sqlite":
-        db.connection().exec_driver_sql("BEGIN IMMEDIATE")
-    else:
-        db.begin()
+def _begin_locked_transaction(db: Session) -> None:
+    db.connection().exec_driver_sql("BEGIN IMMEDIATE")
     db.execute(
         text(
             "INSERT INTO first_admin_setup_state (id, completed) "
@@ -71,7 +67,6 @@ def _begin_locked_transaction(db: Session) -> str:
         ),
         {"completed": False},
     )
-    return dialect
 
 
 def provision_first_admin(
@@ -100,10 +95,8 @@ def provision_first_admin(
     setup_already_completed = False
     with _PROCESS_PROVISIONING_LOCK:
         try:
-            dialect = _begin_locked_transaction(db)
+            _begin_locked_transaction(db)
             state_query = db.query(FirstAdminSetupState).filter(FirstAdminSetupState.id == 1)
-            if dialect == "postgresql":
-                state_query = state_query.with_for_update()
             state = state_query.one()
             existing_user = db.query(User).order_by(User.id).first()
             if state.completed or existing_user is not None:

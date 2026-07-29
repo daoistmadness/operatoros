@@ -17,6 +17,29 @@ def test_missing_database_url_raises_error():
         _ = s.database_url
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql://operator:secret@localhost/operatoros",
+        "postgresql+asyncpg://operator:secret@localhost/operatoros",
+    ],
+)
+def test_postgresql_urls_are_rejected_without_exposing_credentials(url):
+    s = Settings(DATABASE_URL=url, AUTH_COOKIE_SECRET="a" * 32)
+    with pytest.raises(ValueError) as error:
+        _ = s.database_url
+    assert str(error.value) == "OperatorOS desktop supports SQLite databases only."
+    assert "operator" not in str(error.value)
+    assert "secret" not in str(error.value)
+
+
+def test_legacy_postgresql_environment_is_rejected(monkeypatch):
+    monkeypatch.setenv("POSTGRES_HOST", "database.internal")
+    s = Settings(DATABASE_URL="sqlite:///:memory:", AUTH_COOKIE_SECRET="a" * 32)
+    with pytest.raises(ValueError, match="supports SQLite databases only"):
+        _ = s.database_url
+
+
 def test_explicit_protected_path_rejected():
     """Ensure explicit path to backend/attendance.db is rejected by config."""
     root = Path(__file__).resolve().parents[2]

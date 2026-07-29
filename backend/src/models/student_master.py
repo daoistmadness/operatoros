@@ -41,9 +41,9 @@ class StudentMaster(Base):
     device_identities = relationship("StudentDeviceIdentity", back_populates="student_master")
 
     __table_args__ = (
-        Index("uq_student_masters_nipd", "nipd", unique=True, sqlite_where=nipd.isnot(None), postgresql_where=nipd.isnot(None)),
-        Index("uq_student_masters_nisn", "nisn", unique=True, sqlite_where=nisn.isnot(None), postgresql_where=nisn.isnot(None)),
-        Index("uq_student_masters_nik", "nik", unique=True, sqlite_where=nik.isnot(None), postgresql_where=nik.isnot(None)),
+        Index("uq_student_masters_nipd", "nipd", unique=True, sqlite_where=nipd.isnot(None)),
+        Index("uq_student_masters_nisn", "nisn", unique=True, sqlite_where=nisn.isnot(None)),
+        Index("uq_student_masters_nik", "nik", unique=True, sqlite_where=nik.isnot(None)),
         CheckConstraint("student_status IN ('pending_review','active','inactive','transferred','withdrawn','graduated','archived')", name="ck_student_master_status"),
     )
 
@@ -65,7 +65,7 @@ class StudentDeviceIdentity(Base):
     student_master = relationship("StudentMaster", back_populates="device_identities")
 
     __table_args__ = (
-        Index("uq_active_student_device_identity", "device_source", "device_identifier", unique=True, sqlite_where=is_active.is_(True), postgresql_where=is_active.is_(True)),
+        Index("uq_active_student_device_identity", "device_source", "device_identifier", unique=True, sqlite_where=is_active.is_(True)),
         UniqueConstraint("student_master_id", "device_source", "device_identifier", "effective_from", name="uq_student_device_history"),
         CheckConstraint("effective_to IS NULL OR effective_to >= effective_from", name="ck_student_device_effective_dates"),
         CheckConstraint("NOT is_active OR effective_to IS NULL", name="ck_active_device_has_no_end"),

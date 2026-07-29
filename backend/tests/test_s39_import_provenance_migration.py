@@ -116,11 +116,3 @@ def test_sqlite_ledger_triggers_reject_delete_and_immutable_update(tmp_path):
         connection.execute("UPDATE student_import_applied_actions SET rollback_state='BLOCKED' WHERE id=?", (action_id,))
         with pytest.raises(sqlite3.IntegrityError, match="append-only"):
             connection.execute("DELETE FROM student_import_applied_actions WHERE id=?", (action_id,))
-
-
-def test_postgresql_migration_is_transactional_and_uses_uuidv5():
-    sql = (ROOT / "backend/migrations/20260722_s39_student_import_provenance_postgresql.sql").read_text()
-    assert sql.startswith("BEGIN;") and sql.rstrip().endswith("COMMIT;")
-    assert "uuid_generate_v5" in sql
-    assert "ALTER COLUMN session_id SET NOT NULL" in sql
-    assert "enforce_student_import_action_append_only" in sql

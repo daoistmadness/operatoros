@@ -20,13 +20,7 @@ if [ -n "$ENV_FILE" ]; then
     export $(grep -v '^#' "$ENV_FILE" | xargs)
 fi
 
-# Detect DB type
-DB_TYPE="sqlite"
 DB_URL="${DATABASE_URL:-}"
-
-if [[ "$DB_URL" == postgresql* ]] || [ -n "${POSTGRES_HOST:-}" ]; then
-    DB_TYPE="postgres"
-fi
 
 # Locate backups
 if [ ! -d "$BACKUP_DIR" ] || [ -z "$(find "$BACKUP_DIR" -type f -name "backup_*" 2>/dev/null)" ]; then
@@ -71,68 +65,33 @@ if [[ ! "$confirm" =~ ^[yY]$ ]]; then
     exit 0
 fi
 
-if [ "$DB_TYPE" = "sqlite" ]; then
-    SQLITE_PATH=""
-    if [[ "$DB_URL" =~ sqlite:\/\/\/(.+) ]]; then
-        RAW_PATH="${BASH_REMATCH[1]}"
-        RAW_PATH="${RAW_PATH#./}"
-        if [ -f "$PROJECT_ROOT/backend/$RAW_PATH" ]; then
-            SQLITE_PATH="$PROJECT_ROOT/backend/$RAW_PATH"
-        elif [ -f "$PROJECT_ROOT/$RAW_PATH" ]; then
-            SQLITE_PATH="$PROJECT_ROOT/$RAW_PATH"
-        fi
+SQLITE_PATH=""
+if [[ "$DB_URL" =~ sqlite:\/\/\/(.+) ]]; then
+    RAW_PATH="${BASH_REMATCH[1]}"
+    RAW_PATH="${RAW_PATH#./}"
+    if [ -f "$PROJECT_ROOT/backend/$RAW_PATH" ]; then
+        SQLITE_PATH="$PROJECT_ROOT/backend/$RAW_PATH"
+    elif [ -f "$PROJECT_ROOT/$RAW_PATH" ]; then
+        SQLITE_PATH="$PROJECT_ROOT/$RAW_PATH"
     fi
-    
-    if [ -z "$SQLITE_PATH" ] || [ ! -f "$SQLITE_PATH" ]; then
-        if [ -f "$PROJECT_ROOT/backend/attendance.db" ]; then
-            SQLITE_PATH="$PROJECT_ROOT/backend/attendance.db"
-        elif [ -f "$PROJECT_ROOT/attendance.db" ]; then
-            SQLITE_PATH="$PROJECT_ROOT/attendance.db"
-        fi
-    fi
-
-    if [ -z "$SQLITE_PATH" ]; then
-        echo "Error: SQLite database target path not found!"
-        exit 1
-    fi
-
-    echo "Restoring SQLite database to $SQLITE_PATH..."
-    
-    # SQLite backups are gzipped
-    TEMP_SQLITE=$(mktemp)
-    gunzip -c "$SELECTED_BACKUP" > "$TEMP_SQLITE"
-    
-    # Use python's sqlite3 backup API to do a safe restore (handles WAL/active locks) without relying on the sqlite3 CLI binary
-    python3 -c "import sqlite3, sys; src=sqlite3.connect(sys.argv[1]); dest=sqlite3.connect(sys.argv[2]); src.backup(dest); dest.close(); src.close()" "$TEMP_SQLITE" "$SQLITE_PATH"
-    rm -f "$TEMP_SQLITE"
-    echo "SQLite restore completed successfully."
-
-elif [ "$DB_TYPE" = "postgres" ]; then
-    PG_USER="${POSTGRES_USER:-postgres}"
-    PG_DB="${POSTGRES_DB:-absensi}"
-
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -Eq "^attendance_db$"; then
-        echo "Docker container attendance_db found. Restoring via docker exec..."
-        docker exec -t attendance_db dropdb -U "$PG_USER" --if-exists "$PG_DB"
-        docker exec -t attendance_db createdb -U "$PG_USER" "$PG_DB"
-        
-        if [ -n "${POSTGRES_PASSWORD:-}" ]; then
-            gunzip -c "$SELECTED_BACKUP" | docker exec -i -e PGPASSWORD="$POSTGRES_PASSWORD" attendance_db psql -U "$PG_USER" -d "$PG_DB"
-        else
-            gunzip -c "$SELECTED_BACKUP" | docker exec -i attendance_db psql -U "$PG_USER" -d "$PG_DB"
-        fi
-    else
-        echo "Docker container attendance_db not running. Attempting local restore..."
-        PG_HOST="${POSTGRES_HOST:-localhost}"
-        PG_PORT="${POSTGRES_PORT:-5432}"
-        if [ -n "${POSTGRES_PASSWORD:-}" ]; then
-            export PGPASSWORD="$POSTGRES_PASSWORD"
-        fi
-        
-        dropdb -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" --if-exists "$PG_DB"
-        createdb -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" "$PG_DB"
-        gunzip -c "$SELECTED_BACKUP" | psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB"
-    fi
-
-    echo "PostgreSQL restore completed successfully."
 fi
+
+if [ -z "$SQLITE_PATH" ] || [ ! -f "$SQLITE_PATH" ]; then
+    if [ -f "$PROJECT_ROOT/backend/attendance.db" ]; then
+        SQLITE_PATH="$PROJECT_ROOT/backend/attendance.db"
+    elif [ -f "$PROJECT_ROOT/attendance.db" ]; then
+        SQLITE_PATH="$PROJECT_ROOT/attendance.db"
+    fi
+fi
+
+if [ -z "$SQLITE_PATH" ]; then
+    echo "Error: SQLite database target path not found!"
+    exit 1
+fi
+
+echo "Restoring SQLite database to $SQLITE_PATH..."
+TEMP_SQLITE=$(mktemp)
+trap 'rm -f "$TEMP_SQLITE"' EXIT
+gunzip -c "$SELECTED_BACKUP" > "$TEMP_SQLITE"
+python3 -c "import sqlite3, sys; src=sqlite3.connect(sys.argv[1]); dest=sqlite3.connect(sys.argv[2]); src.backup(dest); dest.close(); src.close()" "$TEMP_SQLITE" "$SQLITE_PATH"
+echo "SQLite restore completed successfully."

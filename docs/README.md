@@ -14,7 +14,8 @@
 
 - [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.3 runtime model.
 - [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
-- [Platform portability](architecture/PLATFORM_PORTABILITY.md) — current SQLite/PostgreSQL evidence and expansion contract.
+- [Platform portability](architecture/PLATFORM_PORTABILITY.md) — current SQLite-only desktop runtime contract.
+- [SQLite-only desktop ADR](architecture/decisions/SQLITE_ONLY_DESKTOP_RUNTIME.md) — accepted database and deployment decision.
 - [Desktop sidecar runtime](architecture/DESKTOP_SIDECAR_RUNTIME.md) — experimental packaging and lifecycle contract.
 - [Ingestion dependency strategy](architecture/INGESTION_DEPENDENCY_STRATEGY.md) — current pandas/openpyxl decision and benchmark criteria.
 
