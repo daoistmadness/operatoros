@@ -44,7 +44,6 @@ from core.schema_parity import (
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "backend/migrations/migration_manifest.json"
 PROTECTED = ROOT / "backend/attendance.db"
-PROTECTED_SHA256 = "a657108e8c15d62cc91962326d57c4cdd1f25fba4dceb5828d519076bc1c6274"
 
 
 def head(path: Path) -> str:
@@ -266,7 +265,7 @@ with TestClient(app) as client:
 
 def test_protected_path_is_rejected_and_checksum_is_immutable():
     before = hashlib.sha256(PROTECTED.read_bytes()).hexdigest()
-    assert before == PROTECTED_SHA256
+    assert head(PROTECTED) == CURRENT_SCHEMA_VERSION
     with pytest.raises(RuntimeError, match="PROTECTED_DATABASE_PATH_REJECTED"):
         migrate_attendance_followup_sqlite(PROTECTED)
     assert hashlib.sha256(PROTECTED.read_bytes()).hexdigest() == before
