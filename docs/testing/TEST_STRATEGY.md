@@ -1,5 +1,10 @@
 # Test strategy
 
+Ordinary tiers run against disposable SQLite databases and require neither
+Docker nor PostgreSQL. Database configuration, startup, path-safety, and schema
+changes escalate through the classifier to the PR or release tier; migration
+sensitivity also selects fresh parity and duplicate backend passes.
+
 `make test-fast` is the iterative, changed-path-aware gate. It is the normal
 gate for documentation-only work. `make test-pr` is the ordinary PR gate.
 `make test-release` adds complete release coverage, fresh parity, deterministic
