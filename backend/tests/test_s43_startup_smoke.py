@@ -58,6 +58,19 @@ def test_s42_is_rejected_by_s43_smoke_without_mutation(tmp_path):
     assert selected.read_bytes() == before
 
 
+def test_logical_checksum_detects_data_but_ignores_header_bookkeeping(tmp_path):
+    selected = ledger_database(tmp_path / "logical.db")
+    checksum = smoke.logical_sqlite_checksum(selected)
+    smoke.checkpoint_sqlite_bookkeeping(selected)
+    assert smoke.logical_sqlite_checksum(selected) == checksum
+    with sqlite3.connect(selected) as connection:
+        connection.execute(
+            "INSERT INTO operatoros_schema_migrations VALUES (?,?)",
+            ("changed", "2026-07-29T01:00:00+00:00"),
+        )
+    assert smoke.logical_sqlite_checksum(selected) != checksum
+
+
 def test_port_conflict_is_reported():
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
