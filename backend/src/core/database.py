@@ -380,6 +380,62 @@ def validate_student_linking_gate(engine_arg: Engine, *, bypass: bool = False) -
             return
         students_count = connection.execute(text("SELECT COUNT(*) FROM students")).scalar() or 0
         masters_count = connection.execute(text("SELECT COUNT(*) FROM student_masters")).scalar() or 0
+        if "student_device_identities" not in tables:
+            linked_students_count = 0
+            inconsistent_links_count = int(students_count > 0 or masters_count > 0)
+        else:
+            linked_students_count = connection.execute(text("""
+                SELECT COUNT(*)
+                FROM (
+                    SELECT s.id
+                    FROM students AS s
+                    JOIN student_device_identities AS identity
+                      ON identity.legacy_student_id = s.id
+                     AND identity.is_active = TRUE
+                    JOIN student_masters AS master
+                      ON master.id = identity.student_master_id
+                    GROUP BY s.id
+                    HAVING COUNT(DISTINCT identity.student_master_id) = 1
+                ) AS valid_links
+            """)).scalar() or 0
+            inconsistent_links_count = connection.execute(text("""
+                SELECT
+                    (
+                        SELECT COUNT(*)
+                        FROM student_device_identities AS identity
+                        LEFT JOIN students AS student
+                          ON student.id = identity.legacy_student_id
+                        LEFT JOIN student_masters AS master
+                          ON master.id = identity.student_master_id
+                        WHERE identity.is_active = TRUE
+                          AND identity.legacy_student_id IS NOT NULL
+                          AND (student.id IS NULL OR master.id IS NULL)
+                    )
+                    +
+                    (
+                        SELECT COUNT(*)
+                        FROM (
+                            SELECT identity.legacy_student_id
+                            FROM student_device_identities AS identity
+                            WHERE identity.is_active = TRUE
+                              AND identity.legacy_student_id IS NOT NULL
+                            GROUP BY identity.legacy_student_id
+                            HAVING COUNT(DISTINCT identity.student_master_id) > 1
+                        ) AS ambiguous_students
+                    )
+                    +
+                    (
+                        SELECT COUNT(*)
+                        FROM (
+                            SELECT identity.student_master_id
+                            FROM student_device_identities AS identity
+                            WHERE identity.is_active = TRUE
+                              AND identity.legacy_student_id IS NOT NULL
+                            GROUP BY identity.student_master_id
+                            HAVING COUNT(DISTINCT identity.legacy_student_id) > 1
+                        ) AS ambiguous_masters
+                    )
+            """)).scalar() or 0
 
     if bypass:
         LOGGER.warning(
@@ -390,12 +446,29 @@ def validate_student_linking_gate(engine_arg: Engine, *, bypass: bool = False) -
         )
         return
 
-    # An empty database is the approved first-time deployment state. Once legacy
-    # students exist, every student must have a restored master before startup.
-    if students_count > 0 and masters_count != students_count:
+    if inconsistent_links_count:
+        raise RuntimeError(
+            "Deployment Gate Violation: legacy student linking is inconsistent "
+            f"(students={students_count}, linked_students={linked_students_count}, "
+            f"inconsistent_links={inconsistent_links_count})."
+        )
+
+    # All-unlinked is a legitimate pre-migration deployment state. Once linking
+    # begins, a partial population is unsafe, so the gate must continue failing
+    # closed until every eligible legacy student has one valid canonical link.
+    if students_count > 0 and linked_students_count == 0:
+        LOGGER.warning(
+            "STUDENT LINKING PENDING: legacy students remain unlinked "
+            "(students=%d, linked_students=0, student_masters=%d).",
+            students_count,
+            masters_count,
+        )
+        return
+    if linked_students_count != students_count:
         raise RuntimeError(
             "Deployment Gate Violation: legacy student linking is incomplete "
-            f"(students={students_count}, student_masters={masters_count})."
+            f"(students={students_count}, linked_students={linked_students_count}, "
+            f"student_masters={masters_count})."
         )
 
 
