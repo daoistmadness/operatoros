@@ -105,13 +105,25 @@ class Settings(BaseSettings):
             from sqlalchemy.engine import make_url
             url_obj = make_url(self.DATABASE_URL)
             if url_obj.drivername.startswith("sqlite") and url_obj.database and url_obj.database != ":memory:":
-                resolved_db = Path(url_obj.database).resolve()
+                raw_database = Path(url_obj.database)
+                resolved_db = raw_database.resolve()
                 root = Path(__file__).resolve().parent.parent.parent.parent
                 protected_paths = {
                     (root / "backend" / "attendance.db").resolve(),
                     (root / "attendance.db").resolve(),
                 }
-                if resolved_db in protected_paths or (resolved_db.name == "attendance.db" and resolved_db.parent == root):
+                is_relative_protected_name = (
+                    not raw_database.is_absolute()
+                    and raw_database.as_posix() in {"attendance.db", "backend/attendance.db"}
+                )
+                is_protected = is_relative_protected_name or resolved_db in protected_paths or (
+                    resolved_db.name == "attendance.db" and resolved_db.parent == root
+                )
+                if is_protected:
+                    from core.database_access_context import protected_path_is_permitted
+
+                    if protected_path_is_permitted(resolved_db):
+                        return self.DATABASE_URL
                     raise ValueError(f"PROTECTED_DATABASE_PATH_REJECTED: Direct access or fallbacks to protected database ({resolved_db}) are strictly prohibited.")
             return self.DATABASE_URL
 

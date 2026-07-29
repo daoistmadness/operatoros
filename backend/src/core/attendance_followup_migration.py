@@ -13,6 +13,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from core.database import Base
+from core.database_access_context import protected_path_is_permitted
 from core.schema_guard import LEDGER_TABLE
 
 S43_VERSION = "20260725_s43"
@@ -26,7 +27,7 @@ PROTECTED_DATABASES = {
 
 def migrate_attendance_followup_sqlite(path: Path) -> str:
     source = path.resolve(strict=True)
-    if source in PROTECTED_DATABASES:
+    if source in PROTECTED_DATABASES and not protected_path_is_permitted(source):
         raise RuntimeError("PROTECTED_DATABASE_PATH_REJECTED")
     temporary = source.with_name(f".{source.name}.s43-migrating")
     if temporary.exists():
