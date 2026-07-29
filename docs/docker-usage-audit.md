@@ -1,5 +1,11 @@
 # Docker Usage Audit
 
+> **Historical PR #35 audit evidence.** This document records the state before
+> the SQLite-only desktop decision. It is intentionally preserved, but its
+> `ACTIVE` classification is superseded by
+> [Platform portability](architecture/PLATFORM_PORTABILITY.md):
+> `CONTAINER_RUNTIME_NOT_REQUIRED` and `POSTGRESQL_NOT_SUPPORTED`.
+
 Date: 2026-07-14
 
 ## 1. Executive Conclusion

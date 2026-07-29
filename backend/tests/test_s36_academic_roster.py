@@ -201,13 +201,10 @@ def test_roster_endpoints_require_admin(roster_db):
     assert client.post("/api/student-enrollments/roster-preview", files=files, data=data).status_code == 403
 
 
-def test_s36_migrations_are_rerunnable_and_dual_dialect(tmp_path):
+def test_s36_sqlite_migration_is_rerunnable(tmp_path):
     root = Path(__file__).resolve().parents[1] / "migrations"
     sqlite_sql = (root / "20260720_s36_academic_roster_sqlite.sql").read_text(encoding="utf-8")
     connection = sqlite3.connect(tmp_path / "roster.db")
     connection.executescript(sqlite_sql); connection.executescript(sqlite_sql)
     assert connection.execute("SELECT COUNT(*) FROM academic_roster_import_batches").fetchone()[0] == 0
-    postgres_sql = (root / "20260720_s36_academic_roster_postgresql.sql").read_text(encoding="utf-8")
-    assert "JSONB NOT NULL" in postgres_sql
-    assert "CREATE TABLE IF NOT EXISTS" in postgres_sql
     connection.close()

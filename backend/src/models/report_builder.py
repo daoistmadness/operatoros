@@ -33,7 +33,6 @@ class ReportTemplate(Base):
             "output_format",
             unique=True,
             sqlite_where=(is_default == 1),
-            postgresql_where=(is_default.is_(True)),
         ),
     )
 
@@ -63,6 +62,5 @@ class ReportBrandingConfig(Base):
             "is_default",
             unique=True,
             sqlite_where=(is_default == 1),
-            postgresql_where=(is_default.is_(True)),
         ),
     )

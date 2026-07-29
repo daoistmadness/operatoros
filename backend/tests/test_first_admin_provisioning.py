@@ -243,13 +243,13 @@ def test_cli_uses_shared_service_and_never_prints_password(monkeypatch, capsys):
     assert "correct horse battery" not in output.out + output.err
 
 
-def test_postgresql_migration_and_service_lock_contract_are_present():
+def test_sqlite_provisioning_uses_immediate_transaction_lock():
     root = Path(__file__).resolve().parents[2]
-    migration = (root / "backend/migrations/20260714_first_admin_setup_postgresql.sql").read_text()
+    migration = (root / "backend/migrations/20260714_first_admin_setup_sqlite.sql").read_text()
     service = (root / "backend/src/services/first_admin_provisioning.py").read_text()
-    assert "ON CONFLICT (id) DO NOTHING" in migration
+    assert "INSERT OR IGNORE" in migration
     assert "ON DELETE RESTRICT" in migration
-    assert "with_for_update()" in service
+    assert 'exec_driver_sql("BEGIN IMMEDIATE")' in service
 
 
 def test_sqlite_setup_migration_is_repeatable_after_identity_schema():

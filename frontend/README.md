@@ -39,14 +39,12 @@ frontend/
 │   ├── components/   # Shared UI and navigation
 │   ├── lib/          # API client and helpers
 │   ├── pages/        # Route-level screens
-│   ├── App.js        # Router definition
-│   ├── index.js
+│   ├── App.tsx       # Router definition
+│   ├── main.tsx
 │   ├── index.css     # Tailwind source
-│   └── tailwind.css  # Generated stylesheet imported by the app
+│   └── vite-env.d.ts
 ├── public/
-├── package.json
-├── Dockerfile
-└── nginx.conf
+└── package.json
 ```
 
 ## Requirements
@@ -81,14 +79,15 @@ npm run build
 The production bundle is served from `frontend/build/`.
 
 ## API Configuration
-- [`src/lib/api/client.js`](src/lib/api/client.js) centralizes URL building.
+- [`src/lib/api/client.ts`](src/lib/api/client.ts) centralizes URL building.
 - `VITE_API_BASE_URL` is the only build-time browser API base variable.
-- The default empty value keeps requests same-origin; Vite proxies them in development and Nginx proxies them in Compose.
+- The default empty value keeps requests same-origin; Vite proxies them during
+  development and the local Tauri sidecar owns the packaged API lifecycle.
 - The client sends JSON requests, multipart uploads, and file downloads through the shared request helper in `frontend/src/lib/api/`.
 - Authentication uses the backend's HttpOnly session cookie rather than browser-stored bearer tokens.
 
 ## Routes and Pages
-Routes are defined in [`src/App.js`](src/App.js):
+Routes are defined in [`src/App.tsx`](src/App.tsx):
 - `/` Dashboard
 - `/upload` Upload file import screen
 - `/upload-history` Latest upload attempts
@@ -105,12 +104,11 @@ Routes are defined in [`src/App.js`](src/App.js):
 
 The `Settings` page hides destructive reset controls unless the backend explicitly reports that destructive operations are enabled.
 
-## Docker and Nginx
-- [`Dockerfile`](Dockerfile) builds the React app and serves it with Nginx.
-- The image accepts only the Vite build argument `VITE_API_BASE_URL`; Compose leaves it empty for same-origin requests.
-- [`nginx.conf`](nginx.conf) serves the SPA shell and proxies `/api/*` to the backend container.
-- `location ^~ /api/` preserves the canonical `/api` prefix when proxying to `http://backend:8000`.
-- `client_max_body_size` is set high enough for workbook uploads, and the SPA fallback keeps client-side routes working.
+## Desktop packaging
+
+Tauri is the supported packaged target. It launches a local FastAPI sidecar and
+uses SQLite; Docker, Nginx, Compose, and PostgreSQL are not runtime
+dependencies.
 
 ## Verification
 ```bash

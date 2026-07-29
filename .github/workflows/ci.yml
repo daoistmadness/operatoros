@@ -51,24 +51,6 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  compose:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate Docker/application configuration contract
-        run: python .github/scripts/check_docker_contract.py
-      - name: Validate Compose configuration
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci-compose-validation-only
-          POSTGRES_DB: absensi
-          POSTGRES_HOST: db
-          POSTGRES_PORT: "5432"
-          AUTH_COOKIE_SECRET: ci-compose-validation-secret-not-used-at-runtime
-          ASTRYX_SETUP_TOKEN: ci-compose-setup-token-not-used-at-runtime
-          VITE_API_BASE_URL: ""
-        run: docker compose config
-
   docs:
     runs-on: ubuntu-latest
     steps:

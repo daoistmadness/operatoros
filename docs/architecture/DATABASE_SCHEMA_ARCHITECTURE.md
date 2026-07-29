@@ -1,5 +1,10 @@
 # Database schema architecture
 
+OperatorOS supports SQLite only. SQLAlchemy remains the persistence abstraction;
+PostgreSQL contracts are not maintained. S4.2 is the fresh-bootstrap baseline
+and S4.3 is the current runtime/operational head. Existing outdated databases
+are rejected rather than silently migrated.
+
 `20260724_s42` is the immutable fresh-bootstrap baseline. `20260725_s43` is
 the current source, runtime, and protected operational schema. Fresh bootstrap
 creates and records S4.2, then applies and records the registered S4.3

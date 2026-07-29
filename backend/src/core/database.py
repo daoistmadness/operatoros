@@ -109,16 +109,10 @@ def _ensure_student_foundation_compatibility() -> None:
         if "student_enrollments" in tables:
             enrollment_columns = {column["name"] for column in inspector.get_columns("student_enrollments")}
             if "student_master_id" not in enrollment_columns:
-                if engine.dialect.name == "postgresql":
-                    connection.execute(text(
-                        "ALTER TABLE student_enrollments ADD COLUMN student_master_id VARCHAR(36) NULL "
-                        "REFERENCES student_masters(id) ON DELETE RESTRICT"
-                    ))
-                else:
-                    connection.execute(text(
-                        "ALTER TABLE student_enrollments ADD COLUMN student_master_id VARCHAR(36) NULL "
-                        "REFERENCES student_masters(id) ON DELETE RESTRICT"
-                    ))
+                connection.execute(text(
+                    "ALTER TABLE student_enrollments ADD COLUMN student_master_id VARCHAR(36) NULL "
+                    "REFERENCES student_masters(id) ON DELETE RESTRICT"
+                ))
                 connection.execute(text(
                     "CREATE INDEX IF NOT EXISTS idx_student_enrollments_master_id "
                     "ON student_enrollments(student_master_id)"
@@ -148,68 +142,29 @@ def _ensure_student_foundation_compatibility() -> None:
             )
             if table_name in tables
         ]
-        if engine.dialect.name == "sqlite":
-            for table_name in protected_tables:
-                if table_name == "student_enrollment_class_history":
-                    connection.execute(text("DROP TRIGGER IF EXISTS trg_student_enrollment_class_history_no_update"))
-                    immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
-                    same = " AND ".join(f"OLD.{column} IS NEW.{column}" for column in immutable)
-                    connection.execute(text(
-                        "CREATE TRIGGER trg_student_enrollment_class_history_no_update "
-                        "BEFORE UPDATE ON student_enrollment_class_history WHEN NOT ("
-                        f"{same} AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL "
-                        "AND NEW.effective_to >= OLD.effective_from) BEGIN "
-                        "SELECT RAISE(FAIL, 'class history permits only one-way interval closure'); END"
-                    ))
-                else:
-                    connection.execute(text(
-                        f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_update "
-                        f"BEFORE UPDATE ON {table_name} BEGIN "
-                        f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
-                    ))
-                connection.execute(text(
-                    f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_delete "
-                    f"BEFORE DELETE ON {table_name} BEGIN "
-                    f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
-                ))
-        elif engine.dialect.name == "postgresql":
-            connection.execute(text("""
-                CREATE OR REPLACE FUNCTION prevent_operatoros_append_only_mutation()
-                RETURNS trigger AS $$ BEGIN
-                    RAISE EXCEPTION 'append-only history cannot be modified';
-                END; $$ LANGUAGE plpgsql
-            """))
-            for table_name in protected_tables:
-                for action in ("UPDATE", "DELETE"):
-                    trigger_name = f"trg_{table_name}_no_{action.lower()}"
-                    connection.execute(text(f"DROP TRIGGER IF EXISTS {trigger_name} ON {table_name}"))
-                    connection.execute(text(
-                        f"CREATE TRIGGER {trigger_name} BEFORE {action} ON {table_name} "
-                        "FOR EACH ROW EXECUTE FUNCTION prevent_operatoros_append_only_mutation()"
-                    ))
-            if "student_enrollment_class_history" in protected_tables:
-                connection.execute(text("DROP TRIGGER IF EXISTS trg_student_enrollment_class_history_no_update ON student_enrollment_class_history"))
-                connection.execute(text("""
-                    CREATE OR REPLACE FUNCTION permit_enrollment_history_interval_closure()
-                    RETURNS trigger AS $$ BEGIN
-                        IF OLD.id IS NOT DISTINCT FROM NEW.id
-                           AND OLD.enrollment_id IS NOT DISTINCT FROM NEW.enrollment_id
-                           AND OLD.class_name IS NOT DISTINCT FROM NEW.class_name
-                           AND OLD.effective_from IS NOT DISTINCT FROM NEW.effective_from
-                           AND OLD.changed_by IS NOT DISTINCT FROM NEW.changed_by
-                           AND OLD.changed_at IS NOT DISTINCT FROM NEW.changed_at
-                           AND OLD.source IS NOT DISTINCT FROM NEW.source
-                           AND OLD.import_batch_id IS NOT DISTINCT FROM NEW.import_batch_id
-                           AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL
-                           AND NEW.effective_to >= OLD.effective_from THEN RETURN NEW; END IF;
-                        RAISE EXCEPTION 'class history permits only one-way interval closure';
-                    END; $$ LANGUAGE plpgsql
-                """))
+        for table_name in protected_tables:
+            if table_name == "student_enrollment_class_history":
+                connection.execute(text("DROP TRIGGER IF EXISTS trg_student_enrollment_class_history_no_update"))
+                immutable = ("id", "enrollment_id", "class_name", "effective_from", "changed_by", "changed_at", "source", "import_batch_id")
+                same = " AND ".join(f"OLD.{column} IS NEW.{column}" for column in immutable)
                 connection.execute(text(
                     "CREATE TRIGGER trg_student_enrollment_class_history_no_update "
-                    "BEFORE UPDATE ON student_enrollment_class_history FOR EACH ROW "
-                    "EXECUTE FUNCTION permit_enrollment_history_interval_closure()"
+                    "BEFORE UPDATE ON student_enrollment_class_history WHEN NOT ("
+                    f"{same} AND OLD.effective_to IS NULL AND NEW.effective_to IS NOT NULL "
+                    "AND NEW.effective_to >= OLD.effective_from) BEGIN "
+                    "SELECT RAISE(FAIL, 'class history permits only one-way interval closure'); END"
                 ))
+            else:
+                connection.execute(text(
+                    f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_update "
+                    f"BEFORE UPDATE ON {table_name} BEGIN "
+                    f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
+                ))
+            connection.execute(text(
+                f"CREATE TRIGGER IF NOT EXISTS trg_{table_name}_no_delete "
+                f"BEFORE DELETE ON {table_name} BEGIN "
+                f"SELECT RAISE(FAIL, '{table_name} is append-only'); END"
+            ))
 
 
 def _ensure_academic_master_compatibility() -> None:
@@ -224,8 +179,7 @@ def _ensure_academic_master_compatibility() -> None:
             if "level" not in columns:
                 connection.execute(text("ALTER TABLE jenjangs ADD COLUMN level INTEGER NULL"))
             if "active" not in columns:
-                default = "TRUE" if engine.dialect.name == "postgresql" else "1"
-                connection.execute(text(f"ALTER TABLE jenjangs ADD COLUMN active BOOLEAN NOT NULL DEFAULT {default}"))
+                connection.execute(text("ALTER TABLE jenjangs ADD COLUMN active BOOLEAN NOT NULL DEFAULT 1"))
             if "created_at" not in columns:
                 connection.execute(text("ALTER TABLE jenjangs ADD COLUMN created_at TIMESTAMP NULL"))
             if "updated_at" not in columns:
