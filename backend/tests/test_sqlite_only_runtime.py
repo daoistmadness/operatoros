@@ -14,7 +14,10 @@ def test_sqlite_database_url_is_supported(tmp_path: Path, monkeypatch: pytest.Mo
     assert Settings(_env_file=None).database_url.startswith("sqlite:///")
 
 
-@pytest.mark.parametrize("scheme", ["postgresql", "postgresql+asyncpg"])
+@pytest.mark.parametrize(
+    "scheme",
+    ["postgres", "postgresql", "postgresql+asyncpg", "postgresql+psycopg", "mysql+pymysql"],
+)
 def test_postgresql_database_urls_are_rejected_safely(
     scheme: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -41,3 +44,13 @@ def test_runtime_has_no_postgresql_driver_or_container_contract() -> None:
     assert not (ROOT / "docker-compose.yml").exists()
     assert not (ROOT / "backend" / "Dockerfile").exists()
     assert not (ROOT / "frontend" / "Dockerfile").exists()
+
+
+def test_startup_does_not_import_asyncpg(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+
+    _ = Settings(_env_file=None).database_url
+
+    import sys
+
+    assert "asyncpg" not in sys.modules
