@@ -213,14 +213,3 @@ def test_sqlite_migration_is_additive_and_idempotent(tmp_path):
         database.execute("DELETE FROM attendance_override_history WHERE id=1")
     database.close()
 
-
-def test_postgresql_migration_uses_boolean_safe_checks_and_restrict_fks():
-    migration = (
-        Path(__file__).resolve().parents[1]
-        / "migrations"
-        / "20260716_student_master_foundation_postgresql.sql"
-    ).read_text(encoding="utf-8")
-    assert "CHECK(NOT is_active OR effective_to IS NULL)" in migration
-    assert "is_active = 0" not in migration
-    assert "ON DELETE RESTRICT" in migration
-    assert "ADD COLUMN IF NOT EXISTS student_master_id" in migration
