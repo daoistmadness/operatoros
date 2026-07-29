@@ -54,6 +54,10 @@ def migrate_attendance_followup_sqlite(path: Path) -> str:
         attendance_count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
         connection.close()
 
+        # Import referenced model tables so SQLAlchemy can resolve the foreign
+        # keys while creating only the three new S4.3 tables below.
+        from models import academic_roster, academic_year, attendance, attendance_review
+        from models import early_departure_excuse, student_enrollment, student_master, user
         from models.attendance_followup import (
             AttendanceFollowUp,
             AttendanceFollowUpAudit,
