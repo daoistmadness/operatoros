@@ -264,6 +264,12 @@ with TestClient(app) as client:
 
 
 def test_protected_path_is_rejected_and_checksum_is_immutable():
+    if not PROTECTED.exists():
+        assert not any(
+            Path(str(PROTECTED) + suffix).exists()
+            for suffix in ("-wal", "-shm", "-journal")
+        )
+        return
     before = hashlib.sha256(PROTECTED.read_bytes()).hexdigest()
     assert head(PROTECTED) == CURRENT_SCHEMA_VERSION
     with pytest.raises(RuntimeError, match="PROTECTED_DATABASE_PATH_REJECTED"):

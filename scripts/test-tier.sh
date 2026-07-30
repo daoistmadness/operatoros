@@ -11,15 +11,30 @@ export SHELL=/bin/bash
 hash -r
 started=$SECONDS
 scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
-protected_database="$repo/backend/attendance.db"
-protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+IFS=$'\t' read -r protected_mode protected_database < <("$python" "$repo/scripts/protected_db_snapshot.py" select "$repo")
+protected_before=""
+if [[ "$protected_mode" == snapshot ]]; then
+  protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+  echo "protected_database_mode=immutable_snapshot"
+elif [[ "$protected_mode" == absent ]]; then
+  "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
+  echo "protected_database_mode=PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE"
+else
+  echo "unknown protected database mode: $protected_mode" >&2
+  exit 2
+fi
 
 verify_protected() {
   local protected_after
-  protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
-  [[ "$protected_after" == "$protected_before" ]]
-  echo "protected_database_snapshot=unchanged"
-  echo "protected_database_sidecars=none"
+  if [[ "$protected_mode" == snapshot ]]; then
+    protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+    [[ "$protected_after" == "$protected_before" ]]
+    echo "protected_database_snapshot=unchanged"
+    echo "protected_database_sidecars=none"
+  else
+    "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
+    echo "protected_database_absent=verified"
+  fi
 }
 cleanup() {
   local status=$?
