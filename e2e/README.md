@@ -33,7 +33,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 5. Initializes a fresh database with the current schema and approved baseline ledger.
 6. Seeds deterministic synthetic users, students, attendance, academic metadata, and one intentional enrollment.
 7. Records disposable database counts, checksum, and a deterministic enrollment fingerprint.
-8. Starts the backend and frontend through `start-dev.sh` using Bun and runtime-selected ports.
+8. Starts the backend and frontend through `start-dev.sh` using Node.js 22 and runtime-selected ports.
 9. Copies the ready launcher state into the invocation workspace and exports its backend and frontend URLs.
 10. Runs the backend smoke tests with the backend virtual environment.
 11. Runs Playwright browser tests with genuine Node.js 22.
@@ -43,9 +43,9 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 
 ## 4. Runtime responsibilities
 
-The OperatorOS application stack uses the pinned Bun 1.3.14 runtime. Playwright 1.55.1 collection in this project must use genuine Node.js 22.23.1; Bun 1.3.14 is unsupported for Playwright collection because collection hangs when real specifications are present. `OPERATOROS_NODE22_EXECUTABLE` may identify the approved Node binary when it is not the active `node`.
+The OperatorOS application stack uses genuine Node.js 22.23.1 with npm and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime. `OPERATOROS_NODE22_EXECUTABLE` may identify the approved Node binary when it is not the active `node`.
 
-The smoke runner narrows `PATH` for Playwright so the selected Node 22 binary owns `node` and `npx`. Bun continues to own the application frontend launched by `start-dev.sh`.
+The smoke runner narrows `PATH` for Playwright so the selected Node 22 binary owns `node`, npm, and the local Playwright CLI. Node/npm also own the application frontend launched by `start-dev.sh`.
 
 ## 5. Ports and process ownership
 
@@ -95,11 +95,10 @@ Run native Tauri tooling from an NTFS Windows worktree, not a WSL UNC path. The 
 .\scripts\start-tauri-dev.ps1 `
   -WslRepositoryPath /home/<user>/projects/absensi/school-attendance-analytics `
   -WindowsSourcePath C:\path\to\school-attendance-analytics `
-  -JavaScriptRuntime bun `
   -PortStrategy fixed
 ```
 
-The launcher verifies Bun 1.3.14 (or Node 22 when explicitly selected), starts the WSL application stack, waits for synchronized runtime state, verifies Windows-to-WSL reachability, generates a temporary Tauri override under `%LOCALAPPDATA%\OperatorOS\dev\<session-id>`, and runs Tauri from the Windows worktree. Its `finally` block stops only the session it started. This is a manual development workflow and does not change the automated desktop status.
+The launcher verifies Node 22 and npm, starts the WSL application stack, waits for synchronized runtime state, verifies Windows-to-WSL reachability, generates a temporary Tauri override under `%LOCALAPPDATA%\OperatorOS\dev\<session-id>`, and runs Tauri from the Windows worktree. Its `finally` block stops only the session it started. This is a manual development workflow and does not change the automated desktop status.
 
 ## 9. Generated directories
 

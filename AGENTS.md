@@ -14,8 +14,9 @@ historical evidence unless they explicitly identify a current procedure.
 ## Environment and dependencies
 
 - Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
-- `npm` and `frontend/package-lock.json` are authoritative for frontend
-  installation. Bun may test/build but must not install dependencies.
+- Node.js 22, `npm`, and `frontend/package-lock.json` are the only supported
+  frontend runtime, package manager, and lockfile authority. Bun is not a
+  project dependency or validation gate.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
 

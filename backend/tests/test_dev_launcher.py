@@ -16,7 +16,12 @@ def _launcher_environment(tmp_path: Path, vite_body: str) -> tuple[dict[str, str
     tools = tmp_path / "tools"
     tools.mkdir()
     node = tools / "node"
-    node.write_text("#!/bin/sh\necho v22.0.0\n", encoding="utf-8")
+    node.write_text(
+        "#!/bin/sh\n"
+        "if [ \"${1:-}\" = \"-p\" ]; then echo node; exit 0; fi\n"
+        "echo v22.0.0\n",
+        encoding="utf-8",
+    )
     npm = tools / "npm"
     npm.write_text(
         """#!/bin/sh
