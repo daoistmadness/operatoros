@@ -5,22 +5,40 @@ repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tier="${1:?tier required}"
 python="$repo/backend/.venv/bin/python"
 node_bin="/home/mikhailryu/.nvm/versions/node/v22.23.1/bin"
-bun="/home/mikhailryu/.bun/bin/bun"
-export PATH="$node_bin:/home/mikhailryu/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH="$node_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
 export SHELL=/bin/bash
 hash -r
 started=$SECONDS
 scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
-protected_database="$repo/backend/attendance.db"
-protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+IFS=$'\t' read -r protected_mode protected_database < <("$python" "$repo/scripts/protected_db_snapshot.py" select "$repo")
+protected_before=""
+if [[ "$protected_mode" == snapshot ]]; then
+  protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+  echo "protected_database_mode=immutable_snapshot"
+elif [[ "$protected_mode" == absent ]]; then
+  "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
+  echo "protected_database_mode=PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE"
+else
+  echo "unknown protected database mode: $protected_mode" >&2
+  exit 2
+fi
+
+# The selected protected path is guard-only metadata.  Child test and runtime
+# processes must never inherit it as an application configuration value.
+unset PROTECTED_DB_PATH
 
 verify_protected() {
   local protected_after
-  protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
-  [[ "$protected_after" == "$protected_before" ]]
-  echo "protected_database_snapshot=unchanged"
-  echo "protected_database_sidecars=none"
+  if [[ "$protected_mode" == snapshot ]]; then
+    protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
+    [[ "$protected_after" == "$protected_before" ]]
+    echo "protected_database_snapshot=unchanged"
+    echo "protected_database_sidecars=none"
+  else
+    "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
+    echo "protected_database_absent=verified"
+  fi
 }
 cleanup() {
   local status=$?
@@ -123,12 +141,6 @@ PY
     else
       (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests/test_readiness_api.py -q)
     fi
-    if [[ "$frontend_build_required" == yes ]]; then
-      echo "selected_suite=bun-build reason=frontend runtime/import/build classification"
-      (cd "$repo/frontend" && "$bun" run build)
-    else
-      echo "omitted_suite=bun-build reason=no frontend runtime/import/build classification"
-    fi
     scenario_grep="$("$python" - "$scope_file" <<'PY'
 import json,sys
 items=json.load(open(sys.argv[1]))["browser_scenarios"]
@@ -138,7 +150,7 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,backend-full,node-tests,node-build,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,backend-full,node-tests,node-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
     passes=1
     reliable_change_context=no
@@ -157,7 +169,6 @@ PY
     for ((pass=1; pass<=passes; pass++)); do echo "backend_full_pass=$pass"; backend_full; done
     frontend_static
     (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run && npm run build)
-    (cd "$repo/frontend" && "$bun" run test --run && "$bun" run build)
     make -C "$repo" e2e-validate
     make -C "$repo" e2e-smoke
     make -C "$repo" e2e-clean

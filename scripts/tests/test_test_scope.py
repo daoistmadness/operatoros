@@ -153,7 +153,6 @@ def test_release_runner_retains_required_gates_and_double_run_policy():
         "backend_full",
         "npm run test",
         "npm run build",
-        '"$bun" run test',
         "e2e-validate",
         "e2e-smoke",
         "e2e-clean",
@@ -162,6 +161,13 @@ def test_release_runner_retains_required_gates_and_double_run_policy():
     assert "passes=2" in release_section
     assert "schema_sensitive" in release_section
     assert "RELEASE_DOUBLE_BACKEND" in release_section
+
+
+def test_test_tier_supports_database_absence_in_linked_worktrees():
+    runner = (ROOT / "scripts/test-tier.sh").read_text()
+    assert "protected_db_snapshot.py\" select \"$repo\"" in runner
+    assert "PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE" in runner
+    assert "protected_database_absent=verified" in runner
 
 
 def test_protected_database_path_is_rejected():

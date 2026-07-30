@@ -14,15 +14,9 @@ mkdir -p "$runtime" "$state" "$logs"
 
 export ASTRYX_DEV_STATE_DIR="$state"
 export OPERATOROS_RUNTIME_DIR="$runtime"
-if [[ -z "${OPERATOROS_BUN_EXECUTABLE:-}" ]]; then
-  OPERATOROS_BUN_EXECUTABLE="$(command -v bun 2>/dev/null || true)"
-  current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-  [[ -n "$OPERATOROS_BUN_EXECUTABLE" ]] || OPERATOROS_BUN_EXECUTABLE="$current_user_home/.bun/bin/bun"
-fi
-export OPERATOROS_BUN_EXECUTABLE
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 
-"$repo_root/start-dev.sh" --auto-port --no-clean-stale --runtime bun >"$logs/stack-launcher.log" 2>&1 &
+"$repo_root/start-dev.sh" --auto-port --no-clean-stale >"$logs/stack-launcher.log" 2>&1 &
 launcher_pid=$!
 printf '%s\n' "$launcher_pid" > "$workspace/launcher.pid"
 
