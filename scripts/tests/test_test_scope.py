@@ -163,6 +163,13 @@ def test_release_runner_retains_required_gates_and_double_run_policy():
     assert "RELEASE_DOUBLE_BACKEND" in release_section
 
 
+def test_test_tier_supports_database_absence_in_linked_worktrees():
+    runner = (ROOT / "scripts/test-tier.sh").read_text()
+    assert "protected_db_snapshot.py\" select \"$repo\"" in runner
+    assert "PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE" in runner
+    assert "protected_database_absent=verified" in runner
+
+
 def test_protected_database_path_is_rejected():
     import importlib.util
 
