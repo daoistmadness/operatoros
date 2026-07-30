@@ -95,11 +95,11 @@ with sqlite3.connect(sys.argv[1]) as connection:
 PY
 
 web_status=0
-playwright_args=(playwright test --config playwright.config.ts)
+playwright_args=(run test:e2e -- --config playwright.config.ts)
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$node22_bin:/usr/bin:/bin" npx "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/frontend" && PATH="$node22_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT

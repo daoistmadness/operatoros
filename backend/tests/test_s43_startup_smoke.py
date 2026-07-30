@@ -34,11 +34,16 @@ def test_explicit_s43_rehearsal_path_is_accepted(tmp_path):
     assert smoke.validate_rehearsal_database(selected, ROOT, "20260725_s43") == selected
 
 
-def test_protected_database_path_is_rejected():
+def test_repository_local_attendance_path_is_rejected(tmp_path):
+    repository = tmp_path / "repository"
+    protected = repository / "backend" / "attendance.db"
+    protected.parent.mkdir(parents=True)
+    ledger_database(protected, "20260724_s42")
     with pytest.raises(ValueError, match="REHEARSAL_DATABASE_PATH_REJECTED"):
         smoke.validate_rehearsal_database(
-            ROOT / "backend/attendance.db", ROOT, "20260724_s42"
+            protected, repository, "20260724_s42"
         )
+    assert protected.exists()
 
 
 def test_repository_local_fallback_is_rejected(tmp_path):

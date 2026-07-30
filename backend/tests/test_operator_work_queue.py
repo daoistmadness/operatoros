@@ -243,9 +243,9 @@ def test_self_confirmation_disabled_in_multi_user_mode(app_env):
         assert res_disabled.json()["detail"]["code"] == "CORRECTION_SELF_CONFIRMATION_DISABLED"
 
 
-def test_protected_database_access_guard():
-    import sqlite3
-    from pathlib import Path
-    root = Path(__file__).resolve().parent.parent.parent
-    protected_db = root / "backend" / "attendance.db"
-    assert protected_db.is_file()
+def test_work_queue_uses_synthetic_fixture_database():
+    """The functional fixture, not a repository database, owns queue state."""
+    from core.config import settings
+
+    assert "/tmp/" in settings.database_url
+    assert "attendance.db" not in settings.database_url

@@ -29,9 +29,8 @@ CHECK_ONLY=0
 CLEAN_STALE=1
 AUTO_PORT=0
 MODE=browser
-JS_RUNTIME="${OPERATOROS_JS_RUNTIME:-bun}"
+JS_RUNTIME="node"
 JS_RUNTIME_VERSION=""
-BUN_EXECUTABLE="${OPERATOROS_BUN_EXECUTABLE:-}"
 BACKEND_PID=""
 FRONTEND_PID=""
 SESSION_ID=""
@@ -50,8 +49,6 @@ Usage: ./start-dev.sh [options]
   --mode browser      Fixed-port browser mode (default)
   --mode tauri        Automatic-port mode for Windows Tauri coordination
   --tauri-fixed       Dedicated Tauri ports 5174/8002
-  --runtime bun       Pinned Bun runtime (default)
-  --runtime node      Genuine Node.js 22 fallback
   --help              Show this help
 EOF
 }
@@ -147,49 +144,29 @@ run_preflight() {
   [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
   "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
   [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and package-lock.json."
-  if [[ "$JS_RUNTIME" == bun ]]; then
-    if [[ -z "$BUN_EXECUTABLE" ]]; then
-      BUN_EXECUTABLE="$(command -v bun 2>/dev/null || true)"
+  current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
+  existing_node="$(command -v node 2>/dev/null || true)"
+  existing_version="$(node --version 2>/dev/null || true)"
+  if [[ ! "$existing_version" =~ ^v22[.] ]] || [[ "$(node -p 'process.release.name' 2>/dev/null || true)" != node ]]; then
+    node_manager_dir="${OPERATOROS_NVM_DIR:-$current_user_home/.nvm}"
+    if [[ ! -s "$node_manager_dir/nvm.sh" ]]; then
+      fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
     fi
-    if [[ -z "$BUN_EXECUTABLE" ]]; then
-      current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-      [[ -x "$current_user_home/.bun/bin/bun" ]] && BUN_EXECUTABLE="$current_user_home/.bun/bin/bun"
-    fi
-    if [[ -z "$BUN_EXECUTABLE" && -x "$(readlink -f "$(command -v node 2>/dev/null || printf /nonexistent)")" ]]; then
-      candidate="$(readlink -f "$(command -v node)")"
-      [[ "$(basename "$candidate")" == bun ]] && BUN_EXECUTABLE="$candidate"
-    fi
-    [[ -x "$BUN_EXECUTABLE" ]] || fail_preflight "BUN_RUNTIME_NOT_FOUND" "Set OPERATOROS_BUN_EXECUTABLE to the pinned Bun binary; Node 22 remains the fallback."
-    JS_RUNTIME_VERSION="$($BUN_EXECUTABLE --version)"
-    [[ "$JS_RUNTIME_VERSION" == "$(<"$PROJECT_ROOT/.bun-version")" ]] || fail_preflight "BUN_VERSION_MISMATCH" "Use the version pinned in .bun-version."
-    printf '  [ok] Bun %s\n' "$JS_RUNTIME_VERSION"
-  else
-    current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-    existing_node="$(command -v node 2>/dev/null || true)"
-    existing_version="$(node --version 2>/dev/null || true)"
-    if [[ ! "$existing_version" =~ ^v22[.] ]] || [[ -n "$existing_node" && "$(readlink -f "$existing_node")" == *"/.bun/bin/bun" ]]; then
-      node_manager_dir="${OPERATOROS_NVM_DIR:-$current_user_home/.nvm}"
-      if [[ ! -s "$node_manager_dir/nvm.sh" ]]; then
-        fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-      fi
-      export NVM_DIR="$node_manager_dir"
-      # shellcheck disable=SC1090
-      source "$NVM_DIR/nvm.sh"
-      nvm use "$(<"$PROJECT_ROOT/.nvmrc")" >/dev/null
-    fi
-    command -v node >/dev/null 2>&1 || fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-    command -v npm >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate the npm paired with Node.js 22."
-    if [[ "$(readlink -f "$(command -v node)")" == *"/.bun/bin/bun" ]]; then
-      fail_preflight "NODE_COMMAND_RESOLVES_TO_BUN" "Activate genuine Node.js 22 through NVM."
-    fi
-    local node_version node_major
-    node_version="$(node --version 2>/dev/null)" || fail_preflight "Frontend prerequisite is not usable: node failed its version check" "Install Node.js 22 with npm."
-    node_major="${node_version#v}"; node_major="${node_major%%.*}"
-    [[ "$node_major" == 22 ]] || fail_preflight "NODE_22_REQUIRED" "Detected $node_version; activate Node.js 22 through NVM."
-    npm --version >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate npm paired with Node.js 22."
-    JS_RUNTIME_VERSION="${node_version#v}"
-    printf '  [ok] Node.js %s\n' "$node_version"
+    export NVM_DIR="$node_manager_dir"
+    # shellcheck disable=SC1090
+    source "$NVM_DIR/nvm.sh"
+    nvm use "$(<"$PROJECT_ROOT/.nvmrc")" >/dev/null
   fi
+  command -v node >/dev/null 2>&1 || fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
+  command -v npm >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate the npm paired with Node.js 22."
+  [[ "$(node -p 'process.release.name' 2>/dev/null || true)" == node ]] || fail_preflight "NODE_22_REQUIRED" "Activate genuine Node.js 22 through NVM."
+  local node_version node_major
+  node_version="$(node --version 2>/dev/null)" || fail_preflight "Frontend prerequisite is not usable: node failed its version check" "Install Node.js 22 with npm."
+  node_major="${node_version#v}"; node_major="${node_major%%.*}"
+  [[ "$node_major" == 22 ]] || fail_preflight "NODE_22_REQUIRED" "Detected $node_version; activate Node.js 22 through NVM."
+  npm --version >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate npm paired with Node.js 22."
+  JS_RUNTIME_VERSION="${node_version#v}"
+  printf '  [ok] Node.js %s\n' "$node_version"
   [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && npm ci"
   printf '  [ok] Backend and frontend dependencies\n'
 }
@@ -304,7 +281,6 @@ while (( $# )); do
     --auto-port) AUTO_PORT=1; shift ;;
     --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser || "$MODE" == tauri ]] || { usage >&2; exit 2; }; if [[ "$MODE" == tauri ]]; then AUTO_PORT=1; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8001; fi ;;
     --tauri-fixed) MODE=tauri; AUTO_PORT=0; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8002; shift ;;
-    --runtime|--js-runtime) JS_RUNTIME="${2:-}"; shift 2; [[ "$JS_RUNTIME" == node || "$JS_RUNTIME" == bun ]] || { usage >&2; exit 2; } ;;
     --help|-h) usage; exit 0 ;;
     *) usage >&2; printf '\nUnknown option: %s\n' "$1" >&2; exit 2 ;;
   esac
@@ -407,11 +383,7 @@ BACKEND_PID=$!
 VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
 (
   cd "$FRONTEND_DIR"
-  if [[ "$JS_RUNTIME" == bun ]]; then
-    exec setsid bash -c 'exec "$1" x --bun vite --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$BUN_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
-  else
-    exec setsid bash -c 'exec "$1" --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$VITE_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
-  fi
+  exec setsid bash -c 'exec "$1" --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$VITE_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 "$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true

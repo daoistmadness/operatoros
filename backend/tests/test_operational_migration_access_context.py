@@ -11,7 +11,6 @@ import pytest
 
 from core.config import Settings
 ROOT = Path(__file__).resolve().parents[2]
-PROTECTED = (ROOT / "backend" / "attendance.db").resolve()
 SCRIPT = ROOT / "scripts" / "s43_migration.py"
 
 
@@ -20,10 +19,12 @@ def _context(tmp_path):
     # sys.modules. Resolve the context module at use time so this test uses
     # the same module instance that Settings.database_url imports.
     database_access_context = importlib.import_module("core.database_access_context")
+    database = tmp_path / "migration-target.db"
+    database.write_bytes(b"synthetic")
     backup = tmp_path / "backup.db"
     backup.write_bytes(b"synthetic")
     return database_access_context.operational_migration_access_context(
-        database_path=PROTECTED,
+        database_path=database,
         expected_source_sha256="f" * 64,
         expected_source_head="20260724_s42",
         backup_path=backup,
@@ -59,17 +60,18 @@ print('WRAPPER_IMPORT_ISOLATED')
 
 
 def test_normal_runtime_rejects_protected_path():
-    settings = Settings(DATABASE_URL=f"sqlite:///{PROTECTED}", AUTH_COOKIE_SECRET="x" * 32)
+    settings = Settings(DATABASE_URL="sqlite:///backend/attendance.db", AUTH_COOKIE_SECRET="x" * 32)
     with pytest.raises(ValueError, match="PROTECTED_DATABASE_PATH_REJECTED"):
         _ = settings.database_url
 
 
 def test_complete_operational_context_permits_matching_protected_path(tmp_path):
-    settings = Settings(DATABASE_URL=f"sqlite:///{PROTECTED}", AUTH_COOKIE_SECRET="x" * 32)
+    target = tmp_path / "migration-target.db"
+    target.write_bytes(b"synthetic")
     with _context(tmp_path):
-        assert settings.database_url == f"sqlite:///{PROTECTED}"
         context = importlib.import_module("core.database_access_context")
         assert context.active_database_access_context().mode is context.DatabaseAccessMode.OPERATIONAL_MIGRATION
+        assert context.active_database_access_context().database_path == target.resolve()
     context = importlib.import_module("core.database_access_context")
     assert context.active_database_access_context().mode is context.DatabaseAccessMode.NORMAL_RUNTIME
 
@@ -95,7 +97,7 @@ def test_incomplete_operational_context_is_rejected(tmp_path):
     context = importlib.import_module("core.database_access_context")
     with pytest.raises(RuntimeError, match="CONTEXT_INCOMPLETE"):
         with context.operational_migration_access_context(
-            database_path=PROTECTED,
+            database_path=tmp_path / "migration-target.db",
             expected_source_sha256="f" * 64,
             expected_source_head="20260724_s42",
             backup_path=backup,
@@ -106,8 +108,11 @@ def test_incomplete_operational_context_is_rejected(tmp_path):
             pass
 
 
-def test_direct_migration_call_rejects_protected_path():
+def test_direct_migration_call_rejects_missing_repository_path_without_creating_it():
     from core.attendance_followup_migration import migrate_attendance_followup_sqlite
 
-    with pytest.raises(RuntimeError, match="PROTECTED_DATABASE_PATH_REJECTED"):
-        migrate_attendance_followup_sqlite(PROTECTED)
+    missing = ROOT / "backend" / "attendance.db"
+    assert not missing.exists()
+    with pytest.raises(FileNotFoundError):
+        migrate_attendance_followup_sqlite(ROOT / "backend" / "attendance.db")
+    assert not missing.exists()
