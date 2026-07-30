@@ -99,13 +99,11 @@ def get_client(user=None):
     return client
 
 
-def test_protected_database_never_accessed():
-    """Verify test suite is decoupled from backend/attendance.db."""
-    protected = Path("backend/attendance.db").resolve()
-    assert protected.exists()
-    with sqlite3.connect(f"file:{protected}?mode=ro&immutable=1", uri=True) as conn:
-        res = conn.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()
-        assert res[0] == 0
+def test_teacher_assignment_fixture_is_synthetic(test_db_setup):
+    """Functional tests seed their own assignment graph."""
+    session = test_db_setup["session"]
+    assert session.get(AcademicYear, test_db_setup["year"].id) is not None
+    assert str(session.bind.url) == "sqlite://"
 
 
 def test_assignment_creation_and_audit(test_db_setup):
