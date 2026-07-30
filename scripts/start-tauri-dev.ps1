@@ -3,12 +3,10 @@ param(
     [Parameter(Mandatory)][string]$WslRepositoryPath,
     [Parameter(Mandatory)][string]$WindowsSourcePath,
     [string]$Distribution = "Ubuntu",
-    [ValidateSet("bun", "node")][string]$JavaScriptRuntime = "bun",
     [ValidateSet("fixed", "auto")][string]$PortStrategy = "fixed"
 )
 
 $ErrorActionPreference = "Stop"
-$expectedBun = "1.3.14"
 $expectedNodeMajor = 22
 
 if ($WindowsSourcePath -match '^\\\\wsl(?:\$|\.localhost)\\') {
@@ -28,21 +26,14 @@ if ($windowsStatus) { throw "SOURCE_WORKTREE_DIRTY: Windows worktree contains un
 if ($wslCommit -ne $windowsCommit) { throw "SOURCE_COMMIT_MISMATCH: WSL=$wslCommit Windows=$windowsCommit" }
 Write-Host "SOURCE_COMMITS_MATCH $wslCommit"
 
-$bunExecutable = Join-Path $env:USERPROFILE ".bun\bin\bun.exe"
-if ($JavaScriptRuntime -eq "bun") {
-    if (-not (Test-Path -LiteralPath $bunExecutable)) { throw "BUN_RUNTIME_NOT_FOUND" }
-    $bunVersion = (& $bunExecutable --version).Trim()
-    if ($bunVersion -ne $expectedBun) { throw "BUN_VERSION_MISMATCH: expected $expectedBun, found $bunVersion" }
-} else {
-    $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
-    if (-not $nodeCommand) { throw "NODE_22_REQUIRED" }
-    $nodeVersion = (& $nodeCommand.Source --version).Trim()
-    if ($nodeVersion -notmatch "^v$expectedNodeMajor\.") { throw "NODE_22_REQUIRED: found $nodeVersion" }
-    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw "NPM_UNAVAILABLE" }
-}
+$nodeCommand = Get-Command node -ErrorAction SilentlyContinue
+if (-not $nodeCommand) { throw "NODE_22_REQUIRED" }
+$nodeVersion = (& $nodeCommand.Source --version).Trim()
+if ($nodeVersion -notmatch "^v$expectedNodeMajor\.") { throw "NODE_22_REQUIRED: found $nodeVersion" }
+if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw "NPM_UNAVAILABLE" }
 
 $portArgument = if ($PortStrategy -eq "fixed") { "--tauri-fixed" } else { "--mode tauri" }
-$shellCommand = "cd '$WslRepositoryPath' && ./start-dev.sh $portArgument --runtime $JavaScriptRuntime"
+$shellCommand = "cd '$WslRepositoryPath' && ./start-dev.sh $portArgument"
 $previousSessionId = (& wsl.exe -d $Distribution -- bash -lc "test -s '$WslRepositoryPath/.runtime/operatoros-dev/active-session' && cat '$WslRepositoryPath/.runtime/operatoros-dev/active-session'" 2>$null).Trim()
 $job = Start-Job -ScriptBlock {
     param($distro, $command)
@@ -86,13 +77,8 @@ $overridePath = Join-Path $sessionRuntime "tauri.dev.override.json"
 
 $env:OPERATOROS_TAURI_DEV_URL = $ports.frontend_url
     Push-Location $windowsRoot
-    if ($JavaScriptRuntime -eq "bun") {
-        Push-Location (Join-Path $windowsRoot "frontend")
-        try { & $bunExecutable run tauri -- dev --config $overridePath } finally { Pop-Location }
-    } else {
-        Push-Location (Join-Path $windowsRoot "frontend")
-        try { & npm run tauri -- dev --config $overridePath } finally { Pop-Location }
-    }
+    Push-Location (Join-Path $windowsRoot "frontend")
+    try { & npm run tauri -- dev --config $overridePath } finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw "Tauri exited with code $LASTEXITCODE" }
     $completed = $true
 } finally {
