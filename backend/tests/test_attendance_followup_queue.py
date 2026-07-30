@@ -393,18 +393,6 @@ def test_sqlite_migration_idempotence(tmp_path: Path):
     assert res2 == "MIGRATION_ALREADY_CURRENT"
 
 
-def test_protected_database_untouched():
-    p = Path("backend/attendance.db").resolve()
-    if p.exists():
-        c = sqlite3.connect(f"file:{p}?mode=ro&immutable=1", uri=True)
-        counts = {
-            "students": c.execute("SELECT COUNT(*) FROM students").fetchone()[0],
-            "attendance": c.execute("SELECT COUNT(*) FROM attendance").fetchone()[0],
-            "enrollments": c.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0],
-            "version": c.execute("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").fetchone()[0],
-        }
-        assert counts["version"] == "20260725_s43"
-        assert c.execute(
-            "SELECT COUNT(*) FROM operatoros_schema_migrations WHERE version='20260725_s43'"
-        ).fetchone()[0] == 1
-        c.close()
+def test_followup_fixture_is_synthetic(synthetic_db):
+    """Queue coverage is populated entirely from the local synthetic fixture."""
+    assert synthetic_db.query(StudentEnrollment).count() == 2

@@ -24,6 +24,10 @@ else
   exit 2
 fi
 
+# The selected protected path is guard-only metadata.  Child test and runtime
+# processes must never inherit it as an application configuration value.
+unset PROTECTED_DB_PATH
+
 verify_protected() {
   local protected_after
   if [[ "$protected_mode" == snapshot ]]; then
