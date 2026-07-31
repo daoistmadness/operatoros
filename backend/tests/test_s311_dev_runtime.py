@@ -92,6 +92,24 @@ def test_cleanup_stops_only_validated_stale_session(tmp_path):
             process.wait()
 
 
+def test_status_reports_sanitized_session_classifications(tmp_path):
+    missing = subprocess.run(
+        [sys.executable, str(HELPER), "status", "--runtime", str(tmp_path / "runtime"), "--repo", str(ROOT)],
+        capture_output=True, text=True, check=False,
+    )
+    assert missing.returncode == 0
+    assert json.loads(missing.stdout) == {"state": "NO_ACTIVE_SESSION"}
+
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    (runtime / "active-session").write_text("corrupt\n", encoding="utf-8")
+    corrupt = subprocess.run(
+        [sys.executable, str(HELPER), "status", "--runtime", str(runtime), "--repo", str(ROOT)],
+        capture_output=True, text=True, check=False,
+    )
+    assert json.loads(corrupt.stdout) == {"state": "UNVERIFIED_ACTIVE_SESSION"}
+
+
 def test_vite_configuration_is_strict_and_port_synchronized():
     config = (ROOT / "frontend" / "vite.config.js").read_text(encoding="utf-8")
     assert "process.env.FRONTEND_PORT ?? 5173" in config
