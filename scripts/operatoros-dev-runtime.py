@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import signal
+import shutil
 import socket
 import subprocess
 import sys
@@ -35,6 +36,14 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def contained(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
 def proc_value(pid: int, name: str) -> str | None:
     try:
         return (Path("/proc") / str(pid) / name).read_text(encoding="utf-8", errors="replace")
@@ -49,12 +58,14 @@ def process_info(pid: int) -> dict | None:
     try:
         closing = stat.rfind(")")
         fields = stat[closing + 2 :].split()
+        state = fields[0]
         start_ticks = fields[19]
         parent_pid = int(fields[1])
+        process_group = int(fields[2])
         cwd = str((Path("/proc") / str(pid) / "cwd").resolve())
         command = (Path("/proc") / str(pid) / "cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace").strip()
         user = (Path("/proc") / str(pid)).stat().st_uid
-        return {"pid": pid, "parent_pid": parent_pid, "start_ticks": start_ticks, "cwd": cwd, "command": command, "uid": user}
+        return {"pid": pid, "parent_pid": parent_pid, "pgid": process_group, "start_ticks": start_ticks, "cwd": cwd, "command": command, "uid": user, "state": state}
     except (OSError, IndexError, ValueError):
         return None
 
@@ -104,6 +115,8 @@ def valid_record(record: dict, repo: Path, role: str | None = None) -> tuple[boo
     info = process_info(pid)
     if not info or str(record.get("start_ticks")) != info["start_ticks"]:
         return False, info
+    if info.get("state", "").startswith("Z"):
+        return False, info
     repo_text = str(repo.resolve())
     owned = info["cwd"] == repo_text or info["cwd"].startswith(repo_text + os.sep) or repo_text in info["command"]
     same_user = info["uid"] == os.getuid()
@@ -147,10 +160,27 @@ def classify(runtime: Path, repo: Path, port: int) -> list[dict]:
 def wait_dead(pid: int, seconds: float) -> bool:
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        if process_info(pid) is None:
+        info = process_info(pid)
+        if info is None or info.get("state", "").startswith("Z"):
             return True
         time.sleep(0.1)
-    return process_info(pid) is None
+    info = process_info(pid)
+    return info is None or info.get("state", "").startswith("Z")
+
+
+def process_alive(pid: int) -> bool:
+    info = process_info(pid)
+    return bool(info and not info.get("state", "").startswith("Z"))
+
+
+def group_alive(pgid: int) -> bool:
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        info = process_info(int(entry.name))
+        if info and info.get("pgid") == pgid and not info.get("state", "").startswith("Z"):
+            return True
+    return False
 
 
 def stop_pid(pid: int, timeout: float, label: str) -> None:
@@ -167,6 +197,90 @@ def stop_pid(pid: int, timeout: float, label: str) -> None:
     os.killpg(pid, signal.SIGKILL)
     print(f"[cleanup] Sent SIGKILL to positively identified stale {label} PID {pid}")
     wait_dead(pid, timeout)
+
+
+def stop_owned_session(args: argparse.Namespace) -> int:
+    """Stop all verified child groups against one shared monotonic deadline."""
+    runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
+    directory = (runtime / "sessions" / args.session).resolve(strict=True)
+    if directory.parent != runtime / "sessions" or directory.name != args.session or directory.is_symlink():
+        raise RuntimeError("SESSION_PATH_ESCAPE_REJECTED")
+    ownership = json.loads((directory / "ownership.json").read_text(encoding="utf-8"))
+    if ownership.get("application") != "OperatorOS" or ownership.get("session_id") != args.session:
+        raise RuntimeError("SESSION_OWNERSHIP_UNVERIFIED")
+    owned: list[tuple[str, int]] = []
+    for role in ("frontend", "backend"):
+        path = directory / f"{role}.pid"
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        valid, _ = valid_record(record, repo, role)
+        if valid:
+            owned.append((role, int(record["pid"])))
+
+    # A signal can arrive after a child is spawned but before its durable PID
+    # record is written. Accept only launcher-supplied fallback PIDs whose live
+    # identity independently proves ownership, using this same shared deadline.
+    fallback = (("frontend", args.frontend_pid), ("backend", args.backend_pid))
+    for role, raw_pid in fallback:
+        if raw_pid is None:
+            continue
+        pid = int(raw_pid)
+        if any(existing_pid == pid for _, existing_pid in owned):
+            continue
+        info = process_info(pid)
+        role_root = repo / role
+        role_command = "vite" if role == "frontend" else "uvicorn"
+        if (
+            info
+            and info["uid"] == os.getuid()
+            and (info["cwd"] == str(role_root) or info["cwd"].startswith(str(role_root) + os.sep))
+            and role_command in info["command"]
+            and str(repo) in info["command"]
+        ):
+            owned.append((role, pid))
+
+    deadline = time.monotonic() + max(0.1, float(args.timeout))
+    phase = max(0.1, float(args.timeout) / 3.0)
+    for role, pid in owned:
+        try:
+            os.killpg(pid, signal.SIGINT)
+            print(f"[cleanup] Sent SIGINT to {role} group {pid}")
+        except ProcessLookupError:
+            pass
+    survivors = {pid for _, pid in owned}
+    phase_deadline = min(deadline, time.monotonic() + phase)
+    while survivors and time.monotonic() < phase_deadline:
+        survivors = {pid for pid in survivors if group_alive(pid)}
+        if survivors:
+            time.sleep(0.1)
+    for role, pid in owned:
+        if pid in survivors:
+            try:
+                os.killpg(pid, signal.SIGTERM)
+                print(f"[cleanup] Sent SIGTERM to {role} group {pid}")
+            except ProcessLookupError:
+                survivors.discard(pid)
+    phase_deadline = min(deadline, time.monotonic() + phase)
+    while survivors and time.monotonic() < phase_deadline:
+        survivors = {pid for pid in survivors if group_alive(pid)}
+        if survivors:
+            time.sleep(0.1)
+    for role, pid in owned:
+        if pid in survivors:
+            try:
+                os.killpg(pid, signal.SIGKILL)
+                print(f"[cleanup] Sent SIGKILL to verified {role} group {pid}")
+            except ProcessLookupError:
+                pass
+    while survivors and time.monotonic() < deadline:
+        survivors = {pid for pid in survivors if group_alive(pid)}
+        if survivors:
+            time.sleep(0.05)
+    final = {pid for _, pid in owned if group_alive(pid)}
+    print(json.dumps({"session": args.session, "owned_groups": len(owned), "remaining_groups": len(final), "deadline_seconds": float(args.timeout)}, sort_keys=True))
+    return 0 if not final else 3
 
 
 def cleanup_port(args: argparse.Namespace) -> int:
@@ -227,11 +341,100 @@ def init_session(args: argparse.Namespace) -> int:
         "status": "starting",
     }
     atomic_json(session_dir / "session.json", common)
+    atomic_json(session_dir / "ownership.json", {"application": "OperatorOS", "session_id": args.session, "format_version": 1})
     atomic_json(session_dir / "ports.json", common)
     atomic_json(runtime / "ports.json", common)
     write_record(session_dir / "launcher.pid", args.launcher_pid, "launcher", repo, args.token, session_id=args.session)
     (runtime / "active-session").write_text(args.session + "\n", encoding="utf-8")
     print(session_dir)
+    return 0
+
+
+def finalize_session(args: argparse.Namespace) -> int:
+    """Remove one exact, stopped owned session directory; never its database path."""
+    runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
+    directory = (runtime / "sessions" / args.session).resolve(strict=True)
+    if directory.parent != runtime / "sessions" or directory.name != args.session or directory.is_symlink():
+        raise RuntimeError("SESSION_PATH_ESCAPE_REJECTED")
+    ownership = json.loads((directory / "ownership.json").read_text(encoding="utf-8"))
+    if ownership.get("application") != "OperatorOS" or ownership.get("session_id") != args.session:
+        raise RuntimeError("CORRUPT_OWNERSHIP_MARKER")
+    for role in ("backend", "frontend"):
+        path = directory / f"{role}.pid"
+        if path.exists():
+            record = json.loads(path.read_text(encoding="utf-8"))
+            valid, info = valid_record(record, repo, role)
+            if valid:
+                raise RuntimeError(f"ACTIVE_OWNED_SESSION:{role}")
+    session = json.loads((directory / "session.json").read_text(encoding="utf-8"))
+    database = Path(session.get("database_path", "")).resolve(strict=False)
+    if contained(database, directory):
+        raise RuntimeError("SESSION_DATABASE_OWNERSHIP_FORBIDDEN")
+    shutil.rmtree(directory)
+    active = runtime / "active-session"
+    if active.exists() and active.read_text(encoding="utf-8").strip() == args.session:
+        active.unlink()
+    ports = runtime / "ports.json"
+    if ports.exists():
+        try:
+            if json.loads(ports.read_text(encoding="utf-8")).get("session_id") == args.session:
+                ports.unlink()
+        except json.JSONDecodeError:
+            pass
+    return 0
+
+
+def require_no_active_session(args: argparse.Namespace) -> int:
+    runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
+    active = runtime / "active-session"
+    if not active.exists():
+        return 0
+    session_id = active.read_text(encoding="utf-8").strip()
+    directory = runtime / "sessions" / session_id
+    if not session_id or not directory.is_dir():
+        raise RuntimeError("ACTIVE_SESSION_RECORD_UNVERIFIED")
+    for role in ("backend", "frontend"):
+        path = directory / f"{role}.pid"
+        try:
+            valid, _ = valid_record(json.loads(path.read_text(encoding="utf-8")), repo, role)
+        except (OSError, json.JSONDecodeError):
+            valid = False
+        if valid:
+            print(session_id)
+            return 3
+    # Only a current-format owned stale session is eligible for automatic cleanup.
+    try:
+        finalize_session(argparse.Namespace(runtime=str(runtime), repo=str(repo), session=session_id))
+    except (OSError, ValueError, json.JSONDecodeError, RuntimeError):
+        raise RuntimeError("STALE_SESSION_UNVERIFIED")
+    return 0
+
+
+def status_command(args: argparse.Namespace) -> int:
+    """Print a sanitized, read-only active-session classification."""
+    runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
+    active = runtime / "active-session"
+    if not active.exists():
+        print(json.dumps({"state": "NO_ACTIVE_SESSION"}, sort_keys=True))
+        return 0
+    try:
+        session_id = active.read_text(encoding="utf-8").strip()
+        directory = runtime / "sessions" / session_id
+        ownership = json.loads((directory / "ownership.json").read_text(encoding="utf-8"))
+        if not session_id or not directory.is_dir() or ownership.get("application") != "OperatorOS" or ownership.get("session_id") != session_id:
+            raise RuntimeError("unverified")
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        print(json.dumps({"state": "UNVERIFIED_ACTIVE_SESSION"}, sort_keys=True))
+        return 0
+    for role in ("backend", "frontend"):
+        try:
+            valid, _ = valid_record(json.loads((directory / f"{role}.pid").read_text(encoding="utf-8")), repo, role)
+        except (OSError, json.JSONDecodeError):
+            valid = False
+        if valid:
+            print(json.dumps({"state": "ACTIVE_OWNED_SESSION"}, sort_keys=True))
+            return 0
+    print(json.dumps({"state": "STALE_VERIFIED_SESSION"}, sort_keys=True))
     return 0
 
 
@@ -329,9 +532,23 @@ def parser() -> argparse.ArgumentParser:
     marker = sub.add_parser("mark")
     marker.add_argument("--runtime", required=True); marker.add_argument("--session", required=True); marker.add_argument("--status", required=True)
     marker.set_defaults(func=mark)
+    finalize = sub.add_parser("finalize-session")
+    finalize.add_argument("--runtime", required=True); finalize.add_argument("--repo", required=True); finalize.add_argument("--session", required=True)
+    finalize.set_defaults(func=finalize_session)
+    active = sub.add_parser("require-no-active-session")
+    active.add_argument("--runtime", required=True); active.add_argument("--repo", required=True)
+    active.set_defaults(func=require_no_active_session)
+    status = sub.add_parser("status")
+    status.add_argument("--runtime", required=True); status.add_argument("--repo", required=True)
+    status.set_defaults(func=status_command)
     stop = sub.add_parser("stop")
     stop.add_argument("--runtime", required=True); stop.add_argument("--repo", required=True); stop.add_argument("--session"); stop.add_argument("--all", action="store_true"); stop.add_argument("--timeout", type=float, default=2)
     stop.set_defaults(func=stop_command)
+    owned_stop = sub.add_parser("stop-owned-session")
+    owned_stop.add_argument("--runtime", required=True); owned_stop.add_argument("--repo", required=True); owned_stop.add_argument("--session", required=True); owned_stop.add_argument("--timeout", type=float, default=10)
+    owned_stop.add_argument("--frontend-pid", type=int)
+    owned_stop.add_argument("--backend-pid", type=int)
+    owned_stop.set_defaults(func=stop_owned_session)
     return root
 
 
