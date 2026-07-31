@@ -14,7 +14,7 @@ results="$repo_root/e2e-results"
 runtime_root="$repo_root/.runtime/operatoros-e2e"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 workspace="$runtime_root/$run_id"
-database="$workspace/state/astryx-development.db"
+database="$workspace/state/operatoros-development.db"
 production_database="$repo_root/backend/attendance.db"
 logs="$results/logs"
 junit="$results/junit"
@@ -23,6 +23,7 @@ mkdir -p "$workspace/state" "$logs" "$junit"
 export OPERATOROS_E2E_ADMIN_USERNAME="${OPERATOROS_E2E_ADMIN_USERNAME:-operatoros_e2e_admin}"
 export OPERATOROS_E2E_ADMIN_PASSWORD="${OPERATOROS_E2E_ADMIN_PASSWORD:-E2E-Admin-2026-Secure!}"
 export OPERATOROS_E2E_DATABASE="$database"
+export OPERATOROS_DEV_DATA_DIR="$workspace/state"
 export BACKUP_DIR="$workspace/backups"
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
 
@@ -60,6 +61,7 @@ if [[
 fi
 [[ -x "$node22_executable" && "$($node22_executable --version)" == v22.* ]] || exit 2
 node22_bin="$(dirname "$node22_executable")"
+export PATH="$node22_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
