@@ -73,6 +73,29 @@ fail_preflight() {
   exit 2
 }
 
+report_configuration_drift() {
+  EXPECTED_PERSISTENT_DB="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" \
+    || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+
+  if [[ "${DATABASE_URL+x}" == x ]]; then
+    printf '[warning] DATABASE_URL is set in the current shell.\n'
+    printf '[warning] Managed OperatorOS development uses: %s\n' "$EXPECTED_PERSISTENT_DB"
+    printf '[warning] The inherited value will not silently select another development DB.\n'
+  fi
+
+  if [[ -n "${OPERATOROS_DEV_DATA_DIR:-}" ]]; then
+    printf '[warning] OPERATOROS_DEV_DATA_DIR is set for managed development.\n'
+    printf '          Resolved data root: %s\n' "$(dirname "$EXPECTED_PERSISTENT_DB")"
+    printf '          Resolved database: %s\n' "$EXPECTED_PERSISTENT_DB"
+  fi
+
+  if [[ -f "$BACKEND_DIR/.env" ]] && [[ "$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" dotenv-database-url --env-file "$BACKEND_DIR/.env")" == true ]]; then
+    printf '[warning] backend/.env defines DATABASE_URL.\n'
+    printf '[warning] Managed OperatorOS development uses the canonical persistent database instead.\n'
+    printf '[warning] The backend/.env value may be stale or intended for another execution context.\n'
+  fi
+}
+
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail_preflight "$2 prerequisite missing: $1 was not found" "$3"
 }
@@ -89,14 +112,13 @@ PY
 }
 
 prepare_local_environment() {
+  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" \
+    || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
+  [[ "$DEV_DATABASE" == "$EXPECTED_PERSISTENT_DB" ]] \
+    || fail_preflight "DEVELOPMENT_DATABASE_RESOLUTION_DRIFT" "The resolved development database changed during startup."
   DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
   DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-  if [[ -z "${DATABASE_URL:-}" ]]; then
-    DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
-    DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
-    DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-    export DATABASE_URL="sqlite:///$DEV_DATABASE"
-  fi
+  export DATABASE_URL="sqlite:///$DEV_DATABASE"
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
     [[ -n "$DEV_SECRET_FILE" ]] || { DEV_STATE_DIR="$SESSION_DIR/state"; DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"; }
     mkdir -p "$DEV_STATE_DIR"
@@ -312,6 +334,7 @@ while (( $# )); do
   esac
 done
 
+report_configuration_drift
 run_preflight
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
   fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" "Active session: ${active_session:-unverified}. Stop it with ./stop-dev.sh --session <id>."
@@ -320,72 +343,7 @@ allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
-if [[ "${DATABASE_URL:-}" == sqlite:* ]]; then
-  if [[ "${DATABASE_URL}" != sqlite:/* ]]; then
-    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "Explicit database overrides must be absolute SQLite paths (sqlite:////path/to/db)."
-  fi
-
-  # Validate with Python against isolation requirements
-  db_validation_error="$("$VENV/bin/python" - "$PROJECT_ROOT" "$DATABASE_URL" <<'PY' || true
-import sys
-import os
-from pathlib import Path
-
-try:
-    project = Path(sys.argv[1]).resolve()
-    url = sys.argv[2]
-
-    if not url.startswith("sqlite:///"):
-        print("DATABASE_URL must start with sqlite:///")
-        sys.exit(1)
-
-    db_path_str = url[len("sqlite:///")]
-
-    db_path = Path(url[len("sqlite:///"):])
-    if not db_path.is_absolute():
-        print("Database path must be absolute")
-        sys.exit(1)
-
-    resolved_db = db_path.resolve()
-    protected = {
-        project / "backend" / "attendance.db",
-        project / "attendance.db",
-    }
-    if resolved_db in protected or project / "backend" / ".local-dev" in resolved_db.parents:
-        print("Database path is protected")
-        sys.exit(1)
-
-    if resolved_db.name == "attendance.db" and resolved_db.parent == project:
-        print("Database path is protected")
-        sys.exit(1)
-
-    # Must be inside .runtime/operatoros-dev or .runtime/operatoros-e2e
-    dev_root = (project / ".runtime" / "operatoros-dev").resolve()
-    e2e_root = (project / ".runtime" / "operatoros-e2e").resolve()
-
-    def is_subpath(p: Path, parent: Path) -> bool:
-        try:
-            p.relative_to(parent)
-            return True
-        except ValueError:
-            return False
-
-    if not (is_subpath(resolved_db, dev_root) or is_subpath(resolved_db, e2e_root)):
-        print("Database path must reside inside .runtime/operatoros-dev or .runtime/operatoros-e2e")
-        sys.exit(1)
-
-except Exception as e:
-    print(f"Validation error: {e}")
-    sys.exit(1)
-PY
-)"
-  if [[ -n "$db_validation_error" ]]; then
-    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "$db_validation_error"
-  fi
-  DEV_DATABASE="${DATABASE_URL#sqlite:///}"
-else
-  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
-fi
+DEV_DATABASE="$EXPECTED_PERSISTENT_DB"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 prepare_local_environment
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
@@ -424,7 +382,7 @@ else
   exit "$readiness_rc"
 fi
 
-VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
+VITE_EXECUTABLE="$(realpath -e "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}")"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 LAUNCHER_STATE=STARTING_FRONTEND
 (
