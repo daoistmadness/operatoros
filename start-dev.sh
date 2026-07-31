@@ -10,6 +10,7 @@ FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
 VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
+DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
@@ -37,6 +38,11 @@ SESSION_ID=""
 SESSION_TOKEN=""
 CLEANUP_STARTED=0
 LOCK_HELD=0
+FINALIZATION_STARTED=0
+LAUNCHER_STATE=INITIALIZING
+SHUTDOWN_REQUESTED=0
+REQUESTED_SIGNAL=""
+REQUESTED_EXIT_CODE=0
 
 usage() {
   cat <<'EOF'
@@ -83,35 +89,13 @@ PY
 }
 
 prepare_local_environment() {
-  local launcher_owns_database=0
+  DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
+  DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
   if [[ -z "${DATABASE_URL:-}" ]]; then
-    [[ -n "$SESSION_ID" && -n "$SESSION_DIR" ]] || fail_preflight "Development session state is unavailable" "A managed session must exist before database initialization."
-    DEV_STATE_DIR="$SESSION_DIR/state"
-    DEV_DATABASE="$DEV_STATE_DIR/operatoros-development.db"
+    DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
+    DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
     DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-    mkdir -p "$DEV_STATE_DIR"
-    chmod 700 "$DEV_STATE_DIR"
-    "$VENV/bin/python" - "$PROJECT_ROOT" "$RUNTIME_DIR" "$SESSION_DIR" "$DEV_DATABASE" <<'PY'
-import sys
-from pathlib import Path
-
-project, runtime, session, database = (Path(value).resolve() for value in sys.argv[1:])
-expected_state = session / "state"
-protected = {
-    project / "backend" / "attendance.db",
-    project / "attendance.db",
-}
-if not Path(sys.argv[4]).is_absolute():
-    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: path must be absolute")
-if session.parent != runtime / "sessions" or database.parent != expected_state:
-    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: path must be inside the managed session state")
-if database in protected or project / "backend" / ".local-dev" in database.parents:
-    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: protected database path")
-if database.exists():
-    raise SystemExit("DEVELOPMENT_DATABASE_PATH_REJECTED: session database already exists")
-PY
     export DATABASE_URL="sqlite:///$DEV_DATABASE"
-    launcher_owns_database=1
   fi
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
     [[ -n "$DEV_SECRET_FILE" ]] || { DEV_STATE_DIR="$SESSION_DIR/state"; DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"; }
@@ -124,14 +108,6 @@ PY
     export AUTH_COOKIE_SECRET="$(<"$DEV_SECRET_FILE")"
   fi
   export COOKIE_SECURE="${COOKIE_SECURE:-false}"
-  if [[ "$launcher_owns_database" == 1 && ! -e "$DEV_DATABASE" ]]; then
-    (
-      cd "$BACKEND_DIR"
-      export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-      "$VENV/bin/python" -m core.schema_migrations initialize-fresh --database "$DEV_DATABASE"
-    )
-    printf 'Development DB: %s\n' "${DEV_DATABASE#"$PROJECT_ROOT/"}"
-  fi
 }
 
 run_preflight() {
@@ -215,7 +191,12 @@ allocate_ports() {
 }
 
 group_is_running() {
-  [[ -n "$1" ]] && kill -0 "$1" 2>/dev/null && [[ "$(ps -o stat= -p "$1" 2>/dev/null | tr -d ' ')" != Z* ]]
+  local group="$1"
+  [[ -n "$group" ]] || return 1
+  # A reloading Uvicorn process owns workers in its own session.  Looking only
+  # at its leader can treat a live worker as stopped (or a zombie leader as
+  # live), which leaves a listener behind after launcher cleanup.
+  ps -eo pgid=,stat= | awk -v group="$group" '$1 == group && $2 !~ /^Z/ { live=1 } END { exit(live ? 0 : 1) }'
 }
 
 stop_group() {
@@ -223,41 +204,80 @@ stop_group() {
   [[ -n "$pid" ]] || return 0
   kill -INT -- "-$pid" 2>/dev/null || true
   local elapsed=0
-  while kill -0 -- "-$pid" 2>/dev/null && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
+  while group_is_running "$pid" && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
   kill -TERM -- "-$pid" 2>/dev/null || true
   elapsed=0
-  while kill -0 -- "-$pid" 2>/dev/null && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
-  kill -KILL -- "-$pid" 2>/dev/null || true
-  wait "$pid" 2>/dev/null || true
+  while group_is_running "$pid" && (( elapsed < SHUTDOWN_TIMEOUT_SECONDS * 10 )); do sleep 0.1; ((elapsed += 1)); done
+  if group_is_running "$pid"; then kill -KILL -- "-$pid" 2>/dev/null || true; fi
+  # Group liveness above is the ownership-safe completion condition. Do not
+  # block on a reloader leader here: it can remain unreaped while the entire
+  # owned group has already stopped, preventing session finalization forever.
   printf '  [ok] %s stopped\n' "$name"
 }
 
 cleanup() {
   (( CLEANUP_STARTED == 0 )) || return 0
   CLEANUP_STARTED=1
+  LAUNCHER_STATE=STOPPING
   if [[ -n "$FRONTEND_PID" || -n "$BACKEND_PID" ]]; then
     printf '\nStopping OperatorOS development stack...\n'
-    stop_group Frontend "$FRONTEND_PID"
-    stop_group Backend "$BACKEND_PID"
+    if [[ -n "$SESSION_ID" ]]; then
+      cleanup_status=0
+      cleanup_pid_args=()
+      [[ -n "$FRONTEND_PID" ]] && cleanup_pid_args+=(--frontend-pid "$FRONTEND_PID")
+      [[ -n "$BACKEND_PID" ]] && cleanup_pid_args+=(--backend-pid "$BACKEND_PID")
+      cleanup_result="$(setsid "$VENV/bin/python" "$RUNTIME_HELPER" stop-owned-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${cleanup_pid_args[@]}")" || cleanup_status=$?
+      printf '%s\n' "$cleanup_result"
+      if (( cleanup_status == 0 )); then
+        [[ -n "$FRONTEND_PID" ]] && printf '  [ok] Frontend stopped\n'
+        [[ -n "$BACKEND_PID" ]] && printf '  [ok] Backend stopped\n'
+      fi
+    else
+      stop_group Frontend "$FRONTEND_PID"
+      stop_group Backend "$BACKEND_PID"
+    fi
+  elif [[ -n "$SESSION_ID" ]]; then
+    printf 'No OperatorOS services were started.\n'
   fi
-  if [[ -n "$SESSION_ID" ]]; then "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status stopped 2>/dev/null || true; fi
+  if [[ -n "$SESSION_ID" && "$FINALIZATION_STARTED" == 0 ]]; then
+    FINALIZATION_STARTED=1
+    setsid "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status stopped || true
+    setsid "$VENV/bin/python" "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
+  fi
   if (( LOCK_HELD == 1 )); then flock -u 9 || true; LOCK_HELD=0; fi
 }
 
-handle_signal() {
-  if [[ -n "$FRONTEND_PID" || -n "$BACKEND_PID" ]]; then cleanup
-  else printf '\nStartup cancelled. No OperatorOS services were started.\n'
+request_shutdown() {
+  local signal_name="$1" exit_code="$2"
+  if (( SHUTDOWN_REQUESTED == 0 )); then
+    SHUTDOWN_REQUESTED=1
+    REQUESTED_SIGNAL="$signal_name"
+    REQUESTED_EXIT_CODE="$exit_code"
+    LAUNCHER_STATE=STOPPING
   fi
-  exit 0
 }
-trap handle_signal INT TERM
-trap cleanup EXIT
+
+on_exit() {
+  local status=$?
+  trap - EXIT
+  cleanup
+  if (( SHUTDOWN_REQUESTED == 1 )); then status="$REQUESTED_EXIT_CODE"; fi
+  exit "$status"
+}
+trap 'request_shutdown INT 130' INT
+trap 'request_shutdown TERM 143' TERM
+trap 'request_shutdown HUP 129' HUP
+trap on_exit EXIT
 
 wait_until_ready() {
   local service="$1" url="$2" pid="$3" log="$4" elapsed=0
+  LAUNCHER_STATE="WAITING_FOR_${service^^}"
   while (( elapsed < READINESS_TIMEOUT_SECONDS )); do
+    (( SHUTDOWN_REQUESTED == 1 )) && return "$REQUESTED_EXIT_CODE"
     if curl --fail --silent --max-time 2 --output /dev/null "$url" 2>/dev/null; then printf '  [ok] %s ready\n' "$service"; return 0; fi
+    (( SHUTDOWN_REQUESTED == 1 )) && return "$REQUESTED_EXIT_CODE"
     if ! group_is_running "$pid"; then
+      (( SHUTDOWN_REQUESTED == 1 )) && return "$REQUESTED_EXIT_CODE"
       local status=0
       wait "$pid" || status=$?
       error_box "$service stopped during startup (exit $status)"
@@ -265,8 +285,14 @@ wait_until_ready() {
       tail -n 20 "$log" 2>/dev/null || true
       return 1
     fi
-    sleep 1; ((elapsed += 1))
+    # Keep the polling interval bounded and portable across the Bash versions
+    # used by supported development environments.  A signal trap records the
+    # request while this sleep is interrupted; the next loop iteration checks
+    # SHUTDOWN_REQUESTED before probing again.
+    sleep 1 || true
+    ((elapsed += 1))
   done
+  (( SHUTDOWN_REQUESTED == 1 )) && return "$REQUESTED_EXIT_CODE"
   error_box "$service readiness timed out after ${READINESS_TIMEOUT_SECONDS}s"
   printf 'Recent %s output (%s):\n' "${service,,}" "$log"
   tail -n 20 "$log" 2>/dev/null || true
@@ -287,6 +313,9 @@ while (( $# )); do
 done
 
 run_preflight
+if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
+  fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" "Active session: ${active_session:-unverified}. Stop it with ./stop-dev.sh --session <id>."
+fi
 allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
@@ -355,12 +384,14 @@ PY
   fi
   DEV_DATABASE="${DATABASE_URL#sqlite:///}"
 else
-  DEV_DATABASE="$SESSION_DIR/state/operatoros-development.db"
+  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
 fi
+(( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
+prepare_local_environment
+(( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
+SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 "$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
 
-prepare_local_environment
-SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
   printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
   exit 0
@@ -369,32 +400,60 @@ BACKEND_LOG="$RUNTIME_DIR/backend.log"
 FRONTEND_LOG="$RUNTIME_DIR/frontend.log"
 : >"$BACKEND_LOG"; : >"$FRONTEND_LOG"
 printf '\nStarting services (session %s)...\n' "$SESSION_ID"
+LAUNCHER_STATE=STARTING_BACKEND
 (
   cd "$BACKEND_DIR"
   export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
   export ASTRYX_SETUP_TOKEN="$SETUP_TOKEN"
   export OPERATOROS_MANAGED_DEV_SETUP=true
   # Canonical command remains: "$VENV/bin/uvicorn" src.main:app
-  exec setsid bash -c 'exec "$1" src.main:app --host "$2" --port "$3" --reload' "$SESSION_TOKEN" "$VENV/bin/uvicorn" "$BACKEND_HOST" "$BACKEND_PORT"
+  exec setsid "$VENV/bin/uvicorn" src.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" --reload --reload-dir "$BACKEND_DIR/src"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
+(( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 "$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role backend --token "$SESSION_TOKEN" --pid "$BACKEND_PID" --port "$BACKEND_PORT" || true
 
+# A first-run persistent database has no administrator yet, but that is still
+# a healthy backend.  Establish backend readiness before the frontend starts
+# so launcher failure attribution and lifecycle cleanup stay deterministic.
+if wait_until_ready Backend "$OPERATOROS_BACKEND_URL/health" "$BACKEND_PID" "$BACKEND_LOG"; then
+  :
+else
+  readiness_rc=$?
+  (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
+  exit "$readiness_rc"
+fi
+
 VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
+(( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
+LAUNCHER_STATE=STARTING_FRONTEND
 (
   cd "$FRONTEND_DIR"
-  exec setsid bash -c 'exec "$1" --host "$2" --port "$3" --strictPort' "$SESSION_TOKEN" "$VITE_EXECUTABLE" "$FRONTEND_HOST" "$FRONTEND_PORT"
+  exec setsid "$VITE_EXECUTABLE" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
+(( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 "$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true
 
-wait_until_ready Backend "$OPERATOROS_BACKEND_URL/health" "$BACKEND_PID" "$BACKEND_LOG" || exit 1
-wait_until_ready Frontend "$OPERATOROS_FRONTEND_URL" "$FRONTEND_PID" "$FRONTEND_LOG" || exit 1
+if wait_until_ready Frontend "$OPERATOROS_FRONTEND_URL" "$FRONTEND_PID" "$FRONTEND_LOG"; then
+  :
+else
+  readiness_rc=$?
+  (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
+  exit "$readiness_rc"
+fi
 "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
-printf '\nOperatorOS Development Stack\nStatus    Ready\nFrontend  %s\nBackend   %s\nSession   %s\nRuntime   %s\nPress Ctrl+C to stop.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$SESSION_ID" "$RUNTIME_DIR"
-while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do sleep 1; done
+printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s\nSession   %s\nDatabase  %s\nSchema    20260725_s43\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$SESSION_ID" "$DEV_DATABASE"
+LAUNCHER_STATE=RUNNING
+while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
+  (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
+  # Keep the launcher itself in an interruptible Bash wait. An external sleep
+  # joins the launcher's process group and can defer the INT trap when a real
+  # terminal delivers Ctrl-C to that whole group under load.
+  wait -n -t 1 "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+done
 if ! group_is_running "$BACKEND_PID"; then error_box "Backend stopped unexpectedly"
 else error_box "Frontend stopped unexpectedly"
 fi
