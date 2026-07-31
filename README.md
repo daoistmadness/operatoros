@@ -162,7 +162,7 @@ Open:
 
 ## Environment Variables
 
-For `./start-dev.sh`, absent database and authentication settings are supplied by launcher-owned files under the gitignored `backend/.local-dev/` directory. The launcher uses an absolute SQLite URL, creates one persistent local authentication secret, and applies the approved SQLite identity migration only when creating its own fresh disposable database. Explicit `DATABASE_URL`, `POSTGRES_*`, and `AUTH_COOKIE_SECRET` values always take precedence.
+For `./start-dev.sh`, the persistent database path is resolved from the repository identity and `XDG_DATA_HOME` (or `OPERATOROS_DEV_DATA_DIR` when intentionally configured). The launcher exports that canonical SQLite URL for every managed session, warns when inherited `DATABASE_URL` or `backend/.env` configuration could drift, and creates one persistent local authentication secret. Outside managed development, explicit `DATABASE_URL`, `POSTGRES_*`, and `AUTH_COOKIE_SECRET` values retain their established behavior.
 
 | Variable | Service | Required | Default | Description | Example |
 | --- | --- | ---: | --- | --- | --- |
