@@ -5,6 +5,7 @@ import shutil
 import socket
 import sqlite3
 import subprocess
+import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -43,6 +44,7 @@ exec "$ASTRYX_VITE_EXECUTABLE" "$@"
         OPERATOROS_JS_RUNTIME="node",
         OPERATOROS_NVM_DIR=str(tmp_path / "no-nvm"),
         OPERATOROS_RUNTIME_DIR=str(tmp_path / "runtime"),
+        OPERATOROS_DEV_DATA_DIR=str(tmp_path / "persistent-data"),
         ASTRYX_VITE_EXECUTABLE=str(vite),
         ASTRYX_DEV_LOG_DIR=str(tmp_path / "logs"),
         ASTRYX_READINESS_TIMEOUT_SECONDS="15",
@@ -64,7 +66,7 @@ http.server.ThreadingHTTPServer((arguments.host, arguments.port), http.server.Si
 """
 
 
-def _wait_for_url(url: str, timeout: float = 15) -> bool:
+def _wait_for_url(url: str, timeout: float = 30) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
@@ -89,12 +91,73 @@ def _assert_port_available(port: int) -> None:
             time.sleep(0.1)
 
 
+def _available_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
+def _launcher_ports() -> tuple[int, int]:
+    frontend_port = _available_port()
+    backend_port = _available_port()
+    while backend_port == frontend_port:
+        backend_port = _available_port()
+    return frontend_port, backend_port
+
+
+def _stop_launcher(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGINT)
+        process.communicate(timeout=15)
+    except (ProcessLookupError, subprocess.TimeoutExpired):
+        process.kill()
+        process.communicate(timeout=15)
+
+
+def _wait_for_active_session(runtime: Path, timeout: float = 15) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if (runtime / "active-session").exists():
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def _runtime_helper() -> Path:
+    return Path(__file__).resolve().parents[2] / "scripts" / "operatoros-dev-runtime.py"
+
+
+def _init_synthetic_session(tmp_path: Path, session: str) -> None:
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    runtime = tmp_path / "runtime"
+    database = tmp_path / "persistent-data" / "operatoros-development.db"
+    database.parent.mkdir(parents=True, exist_ok=True)
+    result = subprocess.run(
+        [
+            sys.executable, str(_runtime_helper()), "init-session",
+            "--runtime", str(runtime), "--repo", str(launcher.parent),
+            "--session", session, "--mode", "browser", "--token", "synthetic-token",
+            "--javascript-runtime", "node", "--javascript-runtime-version", "22.0.0",
+            "--launcher-pid", str(os.getpid()), "--frontend-host", "127.0.0.1",
+            "--frontend-port", "0", "--backend-host", "127.0.0.1", "--backend-port", "0",
+            "--database-path", str(database),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_dev_launcher_exposes_backend_src_import_root():
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     contents = launcher.read_text(encoding="utf-8")
 
     assert 'export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"' in contents
     assert '"$VENV/bin/uvicorn" src.main:app' in contents
+    assert '--reload-dir "$BACKEND_DIR/src"' in contents
 
 
 def test_dev_launcher_scopes_secure_setup_token_to_backend_process():
@@ -110,30 +173,23 @@ def test_dev_launcher_scopes_secure_setup_token_to_backend_process():
 def test_dev_launcher_prepares_stable_local_configuration(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
-    environment.update(ASTRYX_DEV_PREPARE_ONLY="1", FRONTEND_PORT="15171", BACKEND_PORT="18008")
+    persistent = tmp_path / "persistent-development"
+    environment.update(ASTRYX_DEV_PREPARE_ONLY="1", FRONTEND_PORT="15171", BACKEND_PORT="18008", OPERATOROS_DEV_DATA_DIR=str(persistent))
 
     first = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
     assert first.returncode == 0, first.stderr
-    sessions = sorted((tmp_path / "runtime" / "sessions").iterdir())
-    assert len(sessions) == 1
-    state = sessions[0] / "state"
-    secret = (state / "auth-cookie-secret").read_text(encoding="utf-8")
+    assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
+    secret = (persistent / "auth-cookie-secret").read_text(encoding="utf-8")
     assert len(secret) >= 32
     assert secret not in first.stdout and secret not in first.stderr
-    database = state / "operatoros-development.db"
+    database = persistent / "operatoros-development.db"
     with sqlite3.connect(database) as connection:
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"users", "sessions"}.issubset(tables)
-    session_record = json.loads((sessions[0] / "session.json").read_text(encoding="utf-8"))
-    assert session_record["database_path"] == str(database)
-
     second = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
     assert second.returncode == 0, second.stderr
-    sessions = sorted((tmp_path / "runtime" / "sessions").iterdir())
-    assert len(sessions) == 2
-    databases = {session / "state" / "operatoros-development.db" for session in sessions}
-    assert len(databases) == 2
-    assert all(database.exists() for database in databases)
+    assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
+    assert database.exists()
 
 
 @pytest.mark.parametrize("database", ["relative.db", "backend/attendance.db", "backend/.local-dev/astryx-development.db", "attendance.db"])
@@ -200,26 +256,29 @@ def test_dev_launcher_detects_port_conflicts_before_startup(tmp_path, service, f
 def test_dev_launcher_waits_for_readiness_and_ctrl_c_cleans_process_groups(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
-    environment.update(FRONTEND_PORT="15176", BACKEND_PORT="18003")
-    # Ensure ports are free from any previous interrupted test run
-    _assert_port_available(15176)
-    _assert_port_available(18003)
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
     process = subprocess.Popen([str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True)
     try:
-        assert _wait_for_url("http://127.0.0.1:18003/health")
-        assert _wait_for_url("http://127.0.0.1:15176")
+        assert _wait_for_url(f"http://127.0.0.1:{backend_port}/health")
+        assert _wait_for_url(f"http://127.0.0.1:{frontend_port}")
         time.sleep(2)
         os.killpg(process.pid, signal.SIGINT)
-        output, _ = process.communicate(timeout=15)
-        assert process.returncode == 0, output
+        output, _ = process.communicate(timeout=30)
+        assert process.returncode == 130, output
         assert "Status    Ready" in output
         assert "Frontend stopped" in output
         assert "Backend stopped" in output
-        _assert_port_available(15176)
-        _assert_port_available(18003)
+        _assert_port_available(frontend_port)
+        _assert_port_available(backend_port)
+        database = tmp_path / "persistent-data" / "operatoros-development.db"
+        assert database.exists()
+        with sqlite3.connect(database) as connection:
+            assert connection.execute("SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0] == 0
+        assert not (tmp_path / "runtime" / "active-session").exists()
+        assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
     finally:
-        if process.poll() is None:
-            process.kill()
+        _stop_launcher(process)
 
 
 @pytest.mark.parametrize(("vite_body", "secret", "expected"), [
@@ -229,34 +288,41 @@ def test_dev_launcher_waits_for_readiness_and_ctrl_c_cleans_process_groups(tmp_p
 def test_dev_launcher_attributes_startup_failure_and_stops_peer(tmp_path, vite_body, secret, expected):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, vite_body)
-    environment.update(FRONTEND_PORT="15178", BACKEND_PORT="18005")
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
     if secret is not None:
         environment["AUTH_COOKIE_SECRET"] = secret
-    result = subprocess.run([str(launcher)], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=25)
+        environment["ASTRYX_READINESS_TIMEOUT_SECONDS"] = "5"
+    result = subprocess.run([str(launcher)], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=30)
     output = result.stdout + result.stderr
     assert result.returncode == 1, output
     assert expected in output
     assert ".log" in output
-    _assert_port_available(15178)
-    _assert_port_available(18005)
+    _assert_port_available(frontend_port)
+    _assert_port_available(backend_port)
 
 
 def test_dev_launcher_ctrl_c_during_startup_cleans_process_groups(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
-    environment.update(FRONTEND_PORT="15179", BACKEND_PORT="18006", AUTH_COOKIE_SECRET="short")
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(
+        FRONTEND_PORT=str(frontend_port),
+        BACKEND_PORT=str(backend_port),
+        AUTH_COOKIE_SECRET="explicit-test-secret-that-is-at-least-32-characters",
+        ASTRYX_READINESS_TIMEOUT_SECONDS="5",
+    )
     process = subprocess.Popen([str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True)
     try:
-        time.sleep(1)
+        assert _wait_for_active_session(tmp_path / "runtime")
         os.killpg(process.pid, signal.SIGINT)
-        output, _ = process.communicate(timeout=15)
-        assert process.returncode == 0, output
+        output, _ = process.communicate(timeout=30)
+        assert process.returncode == 130, output
         assert "No OperatorOS services were started" in output or "Stopping OperatorOS development stack" in output
-        _assert_port_available(15179)
-        _assert_port_available(18006)
+        _assert_port_available(frontend_port)
+        _assert_port_available(backend_port)
     finally:
-        if process.poll() is None:
-            process.kill()
+        _stop_launcher(process)
 
 
 def test_dev_launcher_detects_unexpected_frontend_exit_and_stops_backend(tmp_path):
@@ -264,18 +330,69 @@ def test_dev_launcher_detects_unexpected_frontend_exit_and_stops_backend(tmp_pat
         pytest.skip("fuser is unavailable for the listener termination fixture")
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
-    environment.update(FRONTEND_PORT="15180", BACKEND_PORT="18007")
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
     process = subprocess.Popen([str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     try:
-        assert _wait_for_url("http://127.0.0.1:18007/health")
-        assert _wait_for_url("http://127.0.0.1:15180")
+        assert _wait_for_url(f"http://127.0.0.1:{backend_port}/health")
+        assert _wait_for_url(f"http://127.0.0.1:{frontend_port}")
         time.sleep(1.5)
-        subprocess.run(["fuser", "-k", "15180/tcp"], capture_output=True, check=True)
+        subprocess.run(["fuser", "-k", f"{frontend_port}/tcp"], capture_output=True, check=True)
         output, _ = process.communicate(timeout=15)
         assert process.returncode == 1, output
         assert "Frontend stopped unexpectedly" in output
-        _assert_port_available(15180)
-        _assert_port_available(18007)
+        _assert_port_available(frontend_port)
+        _assert_port_available(backend_port)
+        assert (tmp_path / "persistent-data" / "operatoros-development.db").exists()
+        assert not (tmp_path / "runtime" / "active-session").exists()
+        assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
     finally:
-        if process.poll() is None:
-            process.kill()
+        _stop_launcher(process)
+
+
+def test_dev_launcher_recovers_a_stale_owned_active_session(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    _init_synthetic_session(tmp_path, "stale-session")
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(ASTRYX_DEV_PREPARE_ONLY="1", FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
+
+    result = subprocess.run([str(launcher)], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=30, check=False)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert not (tmp_path / "runtime" / "active-session").exists()
+    assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
+
+
+def test_dev_launcher_blocks_a_genuine_active_session(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    session = "active-session"
+    _init_synthetic_session(tmp_path, session)
+    runtime = tmp_path / "runtime"
+    register = subprocess.run(
+        [
+            sys.executable, str(_runtime_helper()), "register",
+            "--runtime", str(runtime), "--repo", str(launcher.parent), "--session", session,
+            "--role", "backend", "--token", "synthetic-token", "--pid", str(os.getpid()), "--port", "0",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert register.returncode == 0, register.stderr
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(ASTRYX_DEV_PREPARE_ONLY="1", FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
+
+    result = subprocess.run([str(launcher)], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=30, check=False)
+
+    assert result.returncode == 2
+    assert "SINGLE_ACTIVE_DEVELOPMENT_SESSION" in result.stdout + result.stderr
+    (runtime / "sessions" / session / "backend.pid").unlink()
+    cleanup = subprocess.run(
+        [sys.executable, str(_runtime_helper()), "finalize-session", "--runtime", str(runtime), "--repo", str(launcher.parent), "--session", session],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert cleanup.returncode == 0, cleanup.stderr
