@@ -13,6 +13,7 @@ logs="${2:?log directory required}"
 mkdir -p "$runtime" "$state" "$logs"
 
 export ASTRYX_DEV_STATE_DIR="$state"
+export OPERATOROS_DEV_DATA_DIR="$state"
 export OPERATOROS_RUNTIME_DIR="$runtime"
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 

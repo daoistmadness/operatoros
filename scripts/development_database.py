@@ -11,150 +11,46 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sqlite3
-import stat
-import subprocess
 import sys
 import tempfile
 from datetime import datetime, timezone
-from dataclasses import dataclass
 from pathlib import Path
-
-from sqlalchemy.engine import make_url
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend" / "src"))
 
+from core.development_database import (  # noqa: E402
+    DATABASE_NAME,
+    DevelopmentDatabaseResolutionError,
+    common_directory as _common_directory,
+    resolve_data_directory,
+)
+
 SCHEMA_HEAD = "20260725_s43"
-DATABASE_NAME = "operatoros-development.db"
-
-
-@dataclass(frozen=True)
-class DatabaseResolution:
-    """The single resolved database choice used by development tooling."""
-
-    path: Path
-    persistent_path: Path
-    url: str
-    overridden: bool
 
 
 def fail(code: str) -> None:
     raise SystemExit(code)
 
 
-def contained(path: Path, root: Path) -> bool:
-    try:
-        path.relative_to(root)
-        return True
-    except ValueError:
-        return False
-
-
-def no_symlink_components(path: Path) -> None:
-    current = Path(path.anchor)
-    for part in path.parts[1:]:
-        current /= part
-        if current.is_symlink():
-            fail("DEVELOPMENT_DATA_SYMLINK_REJECTED")
-
-
 def common_directory(repo: Path) -> Path:
-    result = subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "--git-common-dir"],
-        text=True, capture_output=True, check=False,
-    )
-    if result.returncode:
-        fail("DEVELOPMENT_REPOSITORY_ID_UNAVAILABLE")
-    raw = Path(result.stdout.strip())
-    return (repo / raw).resolve() if not raw.is_absolute() else raw.resolve()
+    try:
+        return _common_directory(repo)
+    except DevelopmentDatabaseResolutionError as exc:
+        fail(exc.code)
 
 
 def data_directory(repo: Path, override: str | None = None) -> tuple[Path, str, Path]:
-    repo = repo.resolve(strict=True)
-    common = common_directory(repo)
-    digest = hashlib.sha256(str(common).encode()).hexdigest()[:16]
-    source = override or os.environ.get("OPERATOROS_DEV_DATA_DIR")
-    if source:
-        supplied = Path(source)
-        if not supplied.is_absolute():
-            fail("DEVELOPMENT_DATA_PATH_NOT_ABSOLUTE")
-        no_symlink_components(supplied)
-        target = supplied.resolve(strict=False)
-    else:
-        root = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share")))
-        no_symlink_components(root)
-        target = root.resolve(strict=False) / "operatoros" / "development" / digest
-    runtime_sessions = repo / ".runtime" / "operatoros-dev" / "sessions"
-    protected_parent = repo / "backend"
-    if contained(target, runtime_sessions) or contained(target, protected_parent):
-        fail("DEVELOPMENT_DATA_PATH_REJECTED")
-    if target.name == "attendance.db" or target == protected_parent:
-        fail("DEVELOPMENT_DATA_PATH_REJECTED")
-    return target, digest, common
-
-
-def resolve_database(repo: Path, database_url: str | None = None) -> DatabaseResolution:
-    """Resolve the development database, including an explicit safe override.
-
-    This is intentionally the only place that decides whether a development
-    database URL points at the persistent database or an approved disposable
-    location.  Shell launchers and backend settings both delegate here.
-    """
-    data_root, _, _ = data_directory(repo)
-    persistent = data_root / DATABASE_NAME
-    supplied = os.environ.get("DATABASE_URL") if database_url is None else database_url
-    if not supplied:
-        return DatabaseResolution(
-            path=persistent,
-            persistent_path=persistent,
-            url=f"sqlite:///{persistent}",
-            overridden=False,
-        )
-
     try:
-        parsed = make_url(supplied)
-    except Exception:
-        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
-    if not parsed.drivername.startswith("sqlite") or not parsed.database or parsed.database == ":memory:":
-        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
-    raw_path = Path(parsed.database)
-    if not raw_path.is_absolute():
-        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
-    resolved = raw_path.resolve()
-
-    project = repo.resolve()
-    protected = {
-        (project / "backend" / "attendance.db").resolve(),
-        (project / "attendance.db").resolve(),
-    }
-    local_dev = (project / "backend" / ".local-dev").resolve()
-    if resolved in protected or contained(resolved, local_dev):
-        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
-
-    runtime_override = os.environ.get("OPERATOROS_RUNTIME_DIR")
-    dev_root = Path(runtime_override).resolve() if runtime_override else (project / ".runtime" / "operatoros-dev").resolve()
-    e2e_root = (project / ".runtime" / "operatoros-e2e").resolve()
-    data_dir_override = os.environ.get("OPERATOROS_DEV_DATA_DIR")
-    dev_data_root = (
-        Path(data_dir_override).resolve()
-        if data_dir_override
-        else (Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")).resolve() / "operatoros" / "development")
-    )
-    allowed = (
-        resolved == persistent.resolve()
-        or contained(resolved, dev_root)
-        or contained(resolved, e2e_root)
-        or contained(resolved, dev_data_root)
-    )
-    if not allowed:
-        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
-    return DatabaseResolution(
-        path=resolved,
-        persistent_path=persistent.resolve(),
-        url=supplied,
-        overridden=resolved != persistent.resolve(),
-    )
+        return resolve_data_directory(
+            repo,
+            override,
+            common_directory_resolver=common_directory,
+        )
+    except DevelopmentDatabaseResolutionError as exc:
+        fail(exc.code)
 
 
 def metadata(directory: Path, repository_id: str, common: Path) -> dict:
@@ -168,6 +64,16 @@ def metadata(directory: Path, repository_id: str, common: Path) -> dict:
         "schema_expectation": SCHEMA_HEAD,
         "persistence_classification": "PERSISTENT_LOCAL_DEVELOPMENT_DATABASE",
     }
+
+
+def dotenv_defines_database_url(path: Path) -> bool:
+    """Detect an active DATABASE_URL assignment without evaluating its value."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return False
+    assignment = re.compile(r"^(?:export\s+)?DATABASE_URL\s*=")
+    return any(assignment.match(line.strip()) for line in lines if line.strip() and not line.lstrip().startswith("#"))
 
 
 def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
@@ -188,7 +94,9 @@ def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
 def inspect(database: Path) -> dict:
     if not database.exists():
         return {"exists": False, "schema_head": None, "ledger": "absent", "integrity": "absent", "administrator_configured": False, "users_count": 0, "file_size": 0}
-    uri = f"file:{database.as_posix()}?mode=ro&immutable=1"
+    # Read-only mode still observes a live SQLite WAL during managed startup;
+    # immutable mode would report stale pre-provisioning state.
+    uri = f"file:{database.as_posix()}?mode=ro"
     try:
         with sqlite3.connect(uri, uri=True) as connection:
             head = connection.execute("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").fetchone()
@@ -264,10 +172,6 @@ def adopt(repo: Path, runtime: Path, session: str, override: str | None) -> Path
 
 
 def command(args: argparse.Namespace) -> int:
-    if args.command == "resolve":
-        resolution = resolve_database(Path(args.repo))
-        print(resolution.path)
-        return 0
     directory, database = prepare(Path(args.repo), getattr(args, "data_dir", None))
     if args.command == "path":
         print(database)
@@ -290,15 +194,21 @@ def command(args: argparse.Namespace) -> int:
     return 0
 
 
+def dotenv_database_url_command(args: argparse.Namespace) -> int:
+    print("true" if dotenv_defines_database_url(Path(args.env_file)) else "false")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser()
     commands = root.add_subparsers(dest="command", required=True)
-    for name in ("path", "ensure", "status", "reset", "resolve"):
+    for name in ("path", "ensure", "status", "reset"):
         item = commands.add_parser(name); item.add_argument("--repo", required=True); item.add_argument("--data-dir")
         if name == "reset": item.add_argument("--confirm", default="")
         item.set_defaults(func=command)
     candidate = commands.add_parser("candidates"); candidate.add_argument("--repo", required=True); candidate.add_argument("--runtime", required=True); candidate.add_argument("--data-dir"); candidate.set_defaults(func=command)
     adopt_command = commands.add_parser("adopt"); adopt_command.add_argument("--repo", required=True); adopt_command.add_argument("--runtime", required=True); adopt_command.add_argument("--session", required=True); adopt_command.add_argument("--data-dir"); adopt_command.set_defaults(func=command)
+    dotenv = commands.add_parser("dotenv-database-url"); dotenv.add_argument("--env-file", required=True); dotenv.set_defaults(func=dotenv_database_url_command)
     return root
 
 

@@ -16,14 +16,6 @@ DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
 
-# Surface database configuration drift before any setup/preflight logging.
-if [[ -n "${DATABASE_URL+x}" ]]; then
-  printf 'WARNING: DATABASE_URL is set in this shell; start-dev.sh will validate it and may supersede the persistent development database.\n'
-fi
-if [[ -f "$BACKEND_DIR/.env" ]] && grep -Eq '^[[:space:]]*DATABASE_URL[[:space:]]*=' "$BACKEND_DIR/.env"; then
-  printf 'WARNING: backend/.env sets DATABASE_URL; in the dev launcher this value is superseded by the resolved persistent path and is likely stale/unused.\n'
-fi
-
 BACKEND_PORT_CONFIGURED=0
 FRONTEND_PORT_CONFIGURED=0
 [[ -n "${BACKEND_PORT+x}" ]] && BACKEND_PORT_CONFIGURED=1
@@ -82,6 +74,29 @@ fail_preflight() {
   exit 2
 }
 
+report_configuration_drift() {
+  EXPECTED_PERSISTENT_DB="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" \
+    || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+
+  if [[ "${DATABASE_URL+x}" == x ]]; then
+    printf '[warning] DATABASE_URL is set in the current shell.\n'
+    printf '[warning] Managed OperatorOS development uses: %s\n' "$EXPECTED_PERSISTENT_DB"
+    printf '[warning] The inherited value will not silently select another development DB.\n'
+  fi
+
+  if [[ -n "${OPERATOROS_DEV_DATA_DIR:-}" ]]; then
+    printf '[warning] OPERATOROS_DEV_DATA_DIR is set for managed development.\n'
+    printf '          Resolved data root: %s\n' "$(dirname "$EXPECTED_PERSISTENT_DB")"
+    printf '          Resolved database: %s\n' "$EXPECTED_PERSISTENT_DB"
+  fi
+
+  if [[ -f "$BACKEND_DIR/.env" ]] && [[ "$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" dotenv-database-url --env-file "$BACKEND_DIR/.env")" == true ]]; then
+    printf '[warning] backend/.env defines DATABASE_URL.\n'
+    printf '[warning] Managed OperatorOS development uses the canonical persistent database instead.\n'
+    printf '[warning] The backend/.env value may be stale or intended for another execution context.\n'
+  fi
+}
+
 require_command() {
   command -v "$1" >/dev/null 2>&1 || fail_preflight "$2 prerequisite missing: $1 was not found" "$3"
 }
@@ -98,16 +113,13 @@ PY
 }
 
 prepare_local_environment() {
-  EXPECTED_PERSISTENT_DB="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
-  if [[ -z "${DATABASE_URL:-}" || "${DEV_DATABASE:-}" == "$EXPECTED_PERSISTENT_DB" ]]; then
-    DEV_DATABASE="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
-    DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
-    DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-    export DATABASE_URL="sqlite:///$DEV_DATABASE"
-  else
-    DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
-    DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-  fi
+  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" \
+    || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
+  [[ "$DEV_DATABASE" == "$EXPECTED_PERSISTENT_DB" ]] \
+    || fail_preflight "DEVELOPMENT_DATABASE_RESOLUTION_DRIFT" "The resolved development database changed during startup."
+  DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
+  DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
+  export DATABASE_URL="sqlite:///$DEV_DATABASE"
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
     [[ -n "$DEV_SECRET_FILE" ]] || { DEV_STATE_DIR="$SESSION_DIR/state"; DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"; }
     mkdir -p "$DEV_STATE_DIR"
@@ -308,6 +320,7 @@ while (( $# )); do
   esac
 done
 
+report_configuration_drift
 run_preflight
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
   session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
@@ -323,13 +336,7 @@ allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
-EXPECTED_PERSISTENT_DB="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
-DEV_DATABASE="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" resolve --repo "$PROJECT_ROOT" 2>&1)" || fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "$DEV_DATABASE"
-if [[ -n "${DATABASE_URL:-}" && "$DEV_DATABASE" != "$EXPECTED_PERSISTENT_DB" ]]; then
-  error_box "WARNING: DATABASE_URL IS OVERRIDING PERSISTENT DEV DB"
-  printf '  Active target:     %s\n' "$DEV_DATABASE"
-  printf '  Persistent target: %s\n\n' "$EXPECTED_PERSISTENT_DB"
-fi
+DEV_DATABASE="$EXPECTED_PERSISTENT_DB"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 prepare_local_environment
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
@@ -368,7 +375,7 @@ else
   exit "$readiness_rc"
 fi
 
-VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
+VITE_EXECUTABLE="$(realpath -e "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}")"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 LAUNCHER_STATE=STARTING_FRONTEND
 (

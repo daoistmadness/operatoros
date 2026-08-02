@@ -35,6 +35,7 @@ from api.attendance_followups import router as attendance_followups_router
 from api.operator_work_queue import router as operator_work_queue_router
 from api.readiness import router as readiness_router
 from api.data_portability import router as data_portability_router
+from api.staff import router as staff_router
 from core.database import engine, init_db
 from core.schema_guard import validate_database_startup
 
@@ -110,6 +111,7 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(setup_router, prefix="/api/setup", tags=["setup"])
 app.include_router(readiness_router, prefix="/api/readiness", tags=["readiness"])
 app.include_router(data_portability_router, prefix="/api/data-portability", tags=["data-portability"])
+app.include_router(staff_router, prefix="/api/staff", tags=["staff"])
 
 
 
