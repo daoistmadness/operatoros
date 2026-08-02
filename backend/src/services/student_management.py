@@ -1,6 +1,8 @@
 import hashlib
 import json
 from datetime import date, datetime, timezone
+import csv
+import io
 
 from fastapi import HTTPException
 from sqlalchemy import func, inspect, or_, text
@@ -16,7 +18,9 @@ from models.student_master import (
     StudentAddress,
     StudentContact,
     StudentDeviceIdentity,
+    StudentDocumentStatus,
     StudentEnrollmentClassHistory,
+    StudentHealthProfile,
     StudentMaster,
     StudentMasterChangeHistory,
     StudentParentGuardian,
@@ -49,6 +53,13 @@ CONTACT_FIELDS = (
     "student_phone", "student_email", "emergency_contact_name",
     "emergency_contact_relationship", "emergency_contact_phone",
 )
+
+
+def calculate_age(birth_date: date | None, as_of: date | None = None) -> int | None:
+    if birth_date is None:
+        return None
+    today = as_of or date.today()
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
 
 def record_version(student: StudentMaster) -> str:
@@ -233,8 +244,12 @@ def create_student(db: Session, body, actor: str) -> StudentMaster:
                 db.add(StudentAddress(student_master_id=student.id, **address_values))
             if any(value is not None for value in contact_values.values()):
                 db.add(StudentContact(student_master_id=student.id, **contact_values))
+        if body.health:
+            db.add(StudentHealthProfile(student_master_id=student.id, **body.health.model_dump()))
+        if body.document_status:
+            db.add(StudentDocumentStatus(student_master_id=student.id, **body.document_status.model_dump()))
         for guardian in body.guardians:
-            db.add(StudentParentGuardian(student_master_id=student.id, **guardian.model_dump()))
+            db.add(StudentParentGuardian(student_master_id=student.id, **guardian.model_dump(exclude={"id"})))
         if body.device_identity:
             device = body.device_identity.model_dump(); device["actor"] = actor
             _create_legacy_identity(db, student, device)
@@ -280,10 +295,22 @@ def update_student(db: Session, student: StudentMaster, body, actor: str):
             for field in CONTACT_FIELDS:
                 if field in values and hasattr(contact, field) and getattr(contact, field) != values[field]:
                     _audit(db, student.id, "profile_updated", actor, "manual_edit", field, getattr(contact, field), values[field]); setattr(contact, field, values[field])
+        if body.health is not None:
+            health = db.query(StudentHealthProfile).filter_by(student_master_id=student.id).first()
+            if health is None:
+                health = StudentHealthProfile(student_master_id=student.id); db.add(health)
+            for field, value in body.health.model_dump().items():
+                setattr(health, field, value)
+        if body.document_status is not None:
+            docs = db.query(StudentDocumentStatus).filter_by(student_master_id=student.id).first()
+            if docs is None:
+                docs = StudentDocumentStatus(student_master_id=student.id); db.add(docs)
+            for field, value in body.document_status.model_dump().items():
+                setattr(docs, field, value)
         if body.guardians is not None:
             db.query(StudentParentGuardian).filter_by(student_master_id=student.id).delete()
             for guardian in body.guardians:
-                db.add(StudentParentGuardian(student_master_id=student.id, **guardian.model_dump()))
+                db.add(StudentParentGuardian(student_master_id=student.id, **guardian.model_dump(exclude={"id"})))
             _audit(db, student.id, "guardians_updated", actor, "manual_edit", "guardians", "previous", f"{len(body.guardians)} guardian(s)")
         db.commit(); db.refresh(student); return student
     except HTTPException:
@@ -531,6 +558,8 @@ def serialize_student_detail(db: Session, student: StudentMaster, *, include_sen
     address = db.query(StudentAddress).filter_by(student_master_id=student.id).first()
     contact = db.query(StudentContact).filter_by(student_master_id=student.id).first()
     guardians = db.query(StudentParentGuardian).filter_by(student_master_id=student.id).order_by(StudentParentGuardian.id).all()
+    health = db.query(StudentHealthProfile).filter_by(student_master_id=student.id).first()
+    documents = db.query(StudentDocumentStatus).filter_by(student_master_id=student.id).first()
     devices = db.query(StudentDeviceIdentity).filter_by(student_master_id=student.id).order_by(StudentDeviceIdentity.effective_from.desc(), StudentDeviceIdentity.id.desc()).all()
     enrollments = (
         db.query(StudentEnrollment, AcademicYear, AcademicClass, AcademicGrade, AcademicProgram, Jenjang)
@@ -544,7 +573,7 @@ def serialize_student_detail(db: Session, student: StudentMaster, *, include_sen
     )
     identity = {field: getattr(student, field) for field in IDENTITY_FIELDS}
     contact_values = {**({field: getattr(address, field) for field in ("address", "kelurahan", "kecamatan", "city_regency", "province", "postal_code")} if address else {}), **({field: getattr(contact, field) for field in CONTACT_FIELDS if hasattr(contact, field)} if contact else {})}
-    guardian_values = [{field: getattr(row, field) for field in ("guardian_type", "name", "phone", "email", "occupation", "education", "address")} for row in guardians]
+    guardian_values = [{"id": row.id, **{field: getattr(row, field) for field in ("guardian_type", "name", "phone", "email", "occupation", "education", "address")}} for row in guardians]
     if not include_sensitive:
         for field in ("nipd", "nisn", "nik"):
             identity[field] = mask_identifier(identity[field])
@@ -559,15 +588,18 @@ def serialize_student_detail(db: Session, student: StudentMaster, *, include_sen
     return {
         "id": student.id, "record_version": record_version(student),
         "identity": identity,
+        "age_years": calculate_age(student.birth_date),
         "contact": contact_values,
         "guardians": guardian_values,
+        "health": {field: getattr(health, field) for field in ("allergy", "medical_condition", "special_needs")} if health and include_sensitive else ({"allergy": None, "medical_condition": None, "special_needs": None} if health else None),
+        "document_status": {field: getattr(documents, field) for field in ("family_card_received", "birth_certificate_received", "parent_id_received", "school_agreement_received", "publication_consent_received")} if documents else None,
         "device_identities": [{"id": row.id, "device_identifier": row.device_identifier if include_sensitive else mask_identifier(row.device_identifier), "device_source": row.device_source, "effective_from": row.effective_from, "effective_to": row.effective_to, "is_active": row.is_active} for row in devices],
         "enrollments": [{"id": row.id, "academic_year_id": year.id, "academic_year": year.label, "jenjang_id": jenjang.id, "jenjang": jenjang.name, "program": program.name if program else None, "grade": grade.name if grade else None, "academic_class_id": academic_class.id if academic_class else None, "class_name": academic_class.class_name if academic_class else row.class_name, "effective_from": row.effective_from, "effective_to": row.effective_to, "active": row.class_assigned and row.effective_to is None} for row, year, academic_class, grade, program, jenjang in enrollments],
         "updated_at": student.updated_at,
     }
 
 
-def list_students(db: Session, *, search: str | None, academic_year_id: int | None, jenjang_id: int | None, class_id: int | None, status: str | None, device_linked: bool | None, enrollment_status: str | None, page: int, page_size: int) -> dict:
+def list_students(db: Session, *, search: str | None, academic_year_id: int | None, jenjang_id: int | None, program_id: int | None = None, grade_id: int | None = None, class_id: int | None, status: str | None, device_linked: bool | None, enrollment_status: str | None, page: int, page_size: int) -> dict:
     query = db.query(StudentMaster)
     if search and search.strip():
         pattern = f"%{search.strip().casefold()}%"
@@ -578,8 +610,12 @@ def list_students(db: Session, *, search: str | None, academic_year_id: int | No
     enrollment_filter = db.query(StudentEnrollment.student_master_id).filter(StudentEnrollment.student_master_id.isnot(None))
     if academic_year_id: enrollment_filter = enrollment_filter.filter(StudentEnrollment.academic_year_id == academic_year_id)
     if jenjang_id: enrollment_filter = enrollment_filter.filter(StudentEnrollment.jenjang_id == jenjang_id)
+    if program_id:
+        enrollment_filter = enrollment_filter.join(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id).join(AcademicGrade, AcademicGrade.id == AcademicClass.grade_id).filter(AcademicGrade.program_id == program_id)
+    if grade_id:
+        enrollment_filter = enrollment_filter.join(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id).filter(AcademicClass.grade_id == grade_id)
     if class_id: enrollment_filter = enrollment_filter.filter(StudentEnrollment.academic_class_id == class_id)
-    if academic_year_id or jenjang_id or class_id or enrollment_status == "enrolled": query = query.filter(StudentMaster.id.in_(enrollment_filter))
+    if academic_year_id or jenjang_id or program_id or grade_id or class_id or enrollment_status == "enrolled": query = query.filter(StudentMaster.id.in_(enrollment_filter))
     if enrollment_status == "not_enrolled": query = query.filter(~StudentMaster.id.in_(enrollment_filter))
     device_filter = db.query(StudentDeviceIdentity.student_master_id).filter(StudentDeviceIdentity.is_active.is_(True))
     if device_linked is True: query = query.filter(StudentMaster.id.in_(device_filter))
@@ -589,9 +625,11 @@ def list_students(db: Session, *, search: str | None, academic_year_id: int | No
     items = []
     for student in rows:
         enrollment = (
-            db.query(StudentEnrollment, AcademicYear, AcademicClass, Jenjang)
+            db.query(StudentEnrollment, AcademicYear, AcademicClass, AcademicGrade, AcademicProgram, Jenjang)
             .join(AcademicYear, AcademicYear.id == StudentEnrollment.academic_year_id)
             .outerjoin(AcademicClass, AcademicClass.id == StudentEnrollment.academic_class_id)
+            .outerjoin(AcademicGrade, AcademicGrade.id == AcademicClass.grade_id)
+            .outerjoin(AcademicProgram, AcademicProgram.id == AcademicGrade.program_id)
             .join(Jenjang, Jenjang.id == StudentEnrollment.jenjang_id)
             .filter(StudentEnrollment.student_master_id == student.id)
             .order_by(AcademicYear.start_date.desc()).first()
@@ -608,13 +646,27 @@ def list_students(db: Session, *, search: str | None, academic_year_id: int | No
             "id": student.id, "full_name": student.full_name, "preferred_name": student.preferred_name,
             "nipd_masked": mask_identifier(student.nipd), "nisn_masked": mask_identifier(student.nisn),
             "student_status": student.student_status,
-            "current_jenjang": enrollment[3].name if enrollment else None,
+            "current_jenjang": enrollment[5].name if enrollment else None,
+            "current_programme": enrollment[4].name if enrollment and enrollment[4] else None,
+            "current_grade": enrollment[3].name if enrollment and enrollment[3] else None,
             "current_class": (enrollment[2].class_name if enrollment and enrollment[2] else enrollment[0].class_name if enrollment else None),
             "academic_year": enrollment[1].label if enrollment else None,
             "device_identifier_masked": mask_identifier(device.device_identifier) if device else None,
-            "profile_completeness": completeness, "quality_flags": flags, "updated_at": student.updated_at,
+            "profile_completeness": completeness, "quality_flags": flags, "updated_at": student.updated_at, "age_years": calculate_age(student.birth_date),
         })
-    return {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size}
+    counts = {key: db.query(StudentMaster).filter(StudentMaster.student_status == key).count() for key in ("active", "graduated", "withdrawn")}
+    counts["all"] = db.query(StudentMaster).count()
+    return {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size, "status_counts": counts}
+
+
+def export_students_csv(db: Session, **filters) -> bytes:
+    result = list_students(db, page=1, page_size=10000, **filters)
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(["Student ID", "Name", "NIPD", "NISN", "Status", "Age", "Jenjang", "Programme", "Grade", "Class", "Academic Year"])
+    for row in result["items"]:
+        writer.writerow([row["id"], row["full_name"], row["nipd_masked"] or "", row["nisn_masked"] or "", row["student_status"], row.get("age_years") or "", row.get("current_jenjang") or "", row.get("current_programme") or "", row.get("current_grade") or "", row.get("current_class") or "", row.get("academic_year") or ""])
+    return output.getvalue().encode("utf-8-sig")
 
 
 def quality_summary(db: Session) -> dict:

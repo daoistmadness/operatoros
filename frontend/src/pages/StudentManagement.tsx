@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
 import { Download, Plus, Search, Upload } from "lucide-react";
 import type { ManagedStudent, StudentFilters } from "../api/students";
-import { useCreateStudent, useStudentQuality, useStudents, useStudentTemplateExport } from "../hooks/useStudentQueries";
+import { fetchAcademicClasses, fetchAcademicGrades, fetchAcademicPrograms, fetchJenjangs } from "../api/enrollment";
+import { fetchAcademicYears } from "../api/grades";
+import { useCreateStudent, useStudentQuality, useStudents, useStudentTemplateExport, useStudentsCsvExport } from "../hooks/useStudentQueries";
 import { PageHeader } from "../components/common/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -111,17 +114,33 @@ export default function StudentManagement() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [device, setDevice] = useState("");
+  const [jenjangId, setJenjangId] = useState("");
+  const [programId, setProgramId] = useState("");
+  const [gradeId, setGradeId] = useState("");
+  const [academicYearId, setAcademicYearId] = useState("");
+  const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
-  const filters: StudentFilters = { search: search || undefined, status: status || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
+  const filters: StudentFilters = { search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
   const students = useStudents(filters);
   const quality = useStudentQuality();
   const exporter = useStudentTemplateExport();
+  const csvExporter = useStudentsCsvExport();
+  const jenjangs = useQuery({ queryKey: ["academic-masters", "jenjangs"], queryFn: fetchJenjangs });
+  const programs = useQuery({ queryKey: ["academic-masters", "programs"], queryFn: fetchAcademicPrograms });
+  const grades = useQuery({ queryKey: ["academic-masters", "grades"], queryFn: fetchAcademicGrades });
+  const years = useQuery({ queryKey: ["academic-masters", "years"], queryFn: fetchAcademicYears });
+  const classes = useQuery({ queryKey: ["academic-masters", "classes"], queryFn: fetchAcademicClasses });
+  const visiblePrograms = (programs.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)));
+  const visibleGrades = (grades.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)) && (!programId || item.program_id === Number(programId)));
+  const visibleClasses = (classes.data || []).filter((item) => item.active && (!academicYearId || item.academic_year_id === Number(academicYearId)) && (!gradeId || item.grade_id === Number(gradeId)));
   const columns = useMemo(() => [
     column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-black text-brand hover:underline" to={`/students/${row.original.id}`}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
     column.accessor("nipd_masked", { header: "NIPD", cell: (info) => info.getValue() || "—" }),
     column.accessor("nisn_masked", { header: "NISN", cell: (info) => info.getValue() || "—" }),
     column.accessor("current_jenjang", { header: "Jenjang", cell: (info) => info.getValue() || "—" }),
+    column.accessor("current_programme", { header: "Programme", cell: (info) => info.getValue() || "—" }),
+    column.accessor("current_grade", { header: "Grade", cell: (info) => info.getValue() || "—" }),
     column.accessor("current_class", { header: "Class", cell: ({ row }) => <div>{row.original.current_class || "—"}<p className="text-xs text-muted-foreground">{row.original.academic_year || "No enrollment"}</p></div> }),
     column.accessor("device_identifier_masked", { header: "Device ID", cell: (info) => info.getValue() || <Badge variant="warning">Unlinked</Badge> }),
     column.accessor("profile_completeness", { header: "Profile", cell: (info) => `${info.getValue()}%` }),
@@ -131,16 +150,22 @@ export default function StudentManagement() {
   ], []);
   const table = useReactTable({ data: students.data?.items || [], columns, getCoreRowModel: getCoreRowModel(), manualPagination: true, pageCount: students.data?.total_pages || 0 });
   const exportTemplate = async () => { const blob = await exporter.mutateAsync(); saveBlob(blob, "operatoros-student-update.xlsx"); };
+  const exportCsv = async () => { const blob = await csvExporter.mutateAsync(filters); saveBlob(blob, "operatoros-students.csv"); };
 
   return <div className="space-y-6">
-    <PageHeader eyebrow="Student information" title="Student Management" description="Manage canonical student profiles, attendance device identities, academic enrollment, and guarded imports." actions={can("create_student") ? <><Button variant="outline" onClick={exportTemplate} disabled={exporter.isPending}><Download className="size-4" />{exporter.isPending ? "Exporting…" : "Export update template"}</Button>{can("import_student_roster") && <Button variant="outline" onClick={() => { window.location.href = "/upload"; }}><Upload className="size-4" />Import students</Button>}<Button onClick={() => setAddOpen(true)}><Plus className="size-4" />Add student</Button></> : undefined} />
+    <PageHeader eyebrow="Student information" title="Student Management" description="Manage canonical student profiles, current academic placement, and historical enrollment without changing attendance identity." actions={can("create_student") ? <><Button variant="outline" onClick={exportCsv} disabled={csvExporter.isPending}><Download className="size-4" />Export CSV</Button><Button variant="outline" onClick={exportTemplate} disabled={exporter.isPending}><Download className="size-4" />Export update template</Button>{can("import_student_roster") && <Button variant="outline" onClick={() => { window.location.href = "/upload"; }}><Upload className="size-4" />Import students</Button>}<Button onClick={() => setAddOpen(true)}><Plus className="size-4" />Add student</Button></> : undefined} />
     <Tabs defaultValue="all">
       <TabsList className="max-w-full overflow-x-auto"><TabsTrigger value="all">All Students</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="history">Import / Update History</TabsTrigger></TabsList>
       <TabsContent value="all" className="space-y-4">
-        <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-3">
+        <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
           <div className="relative"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Label className="sr-only" htmlFor="student-search">Search students</Label><Input id="student-search" className="pl-9" placeholder="Search name, NIPD, NISN, or Device ID" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div>
           <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setDevice(event.target.value); setPage(1); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-year-filter">Academic year</Label><NativeSelect id="student-year-filter" value={academicYearId} onChange={(event) => { setAcademicYearId(event.target.value); setClassId(""); setPage(1); }}><option value="">All academic years</option>{(years.data || []).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-jenjang-filter">Jenjang</Label><NativeSelect id="student-jenjang-filter" value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setProgramId(""); setGradeId(""); setPage(1); }}><option value="">All Jenjang</option>{(jenjangs.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-program-filter">Programme</Label><NativeSelect id="student-program-filter" value={programId} onChange={(event) => { setProgramId(event.target.value); setGradeId(""); setPage(1); }}><option value="">All programmes</option>{visiblePrograms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-grade-filter">Grade</Label><NativeSelect id="student-grade-filter" value={gradeId} onChange={(event) => { setGradeId(event.target.value); setPage(1); }}><option value="">All grades</option>{visibleGrades.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-class-filter">Class</Label><NativeSelect id="student-class-filter" value={classId} onChange={(event) => { setClassId(event.target.value); setPage(1); }}><option value="">All classes</option>{visibleClasses.map((item) => <option key={item.id} value={item.id}>{item.class_name}</option>)}</NativeSelect></div>
         </CardContent></Card>
         {students.isPending ? <LoadingState title="Loading students" /> : students.isError ? <ErrorState title="Students could not be loaded" description={students.error.message} /> : !students.data?.items.length ? <EmptyState title="No students found" description={can("create_student") ? "Adjust the filters or add a canonical student." : "Adjust the filters, or ask an administrator to add or import students."} /> : <>
           <DataTableContainer><DataTable><DataTableHeader>{table.getHeaderGroups().map((group) => <DataTableRow key={group.id}>{group.headers.map((header) => <DataTableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</DataTableHead>)}</DataTableRow>)}</DataTableHeader><DataTableBody>{table.getRowModel().rows.map((row) => <DataTableRow key={row.id}>{row.getVisibleCells().map((cell) => <DataTableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</DataTableCell>)}</DataTableRow>)}</DataTableBody></DataTable></DataTableContainer>
