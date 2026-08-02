@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from core.database import get_db
-from models.student_master import StudentDeviceIdentity, StudentImportBatch, StudentMaster
+from models.student_master import StudentDeviceIdentity, StudentDocumentStatus, StudentHealthProfile, StudentImportBatch, StudentMaster, StudentParentGuardian
 from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.jenjang import Jenjang
@@ -33,7 +33,7 @@ from services.student_linking import (
 )
 from services.student_management import (
     add_or_replace_device, create_student, list_students, quality_summary,
-    reassign_device, retire_device, serialize_student_detail, update_student,
+    reassign_device, retire_device, serialize_student_detail, update_student, export_students_csv,
 )
 from services.student_workbook import (
     commit_update_preview, create_update_preview, export_student_workbook,
@@ -108,6 +108,8 @@ def list_managed_students(
     academic_year_id: int | None = Query(default=None, gt=0),
     jenjang_id: int | None = Query(default=None, gt=0),
     class_id: int | None = Query(default=None, gt=0),
+    program_id: int | None = Query(default=None, gt=0),
+    grade_id: int | None = Query(default=None, gt=0),
     status: str | None = None,
     device_linked: bool | None = None,
     enrollment_status: str | None = None,
@@ -117,10 +119,27 @@ def list_managed_students(
     _user: User = Depends(require_capability("view_student")),
 ):
     return list_students(
-        db, search=search, academic_year_id=academic_year_id, jenjang_id=jenjang_id,
+        db, search=search, academic_year_id=academic_year_id, jenjang_id=jenjang_id, program_id=program_id, grade_id=grade_id,
         class_id=class_id, status=status, device_linked=device_linked,
         enrollment_status=enrollment_status, page=page, page_size=page_size,
     )
+
+
+@router.get("/management/export.csv")
+def export_managed_students_csv(
+    search: str | None = None,
+    academic_year_id: int | None = Query(default=None, gt=0),
+    jenjang_id: int | None = Query(default=None, gt=0),
+    program_id: int | None = Query(default=None, gt=0),
+    grade_id: int | None = Query(default=None, gt=0),
+    class_id: int | None = Query(default=None, gt=0),
+    status: str | None = None,
+    device_linked: bool | None = None,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("export_student_data")),
+):
+    content = export_students_csv(db, search=search, academic_year_id=academic_year_id, jenjang_id=jenjang_id, program_id=program_id, grade_id=grade_id, class_id=class_id, status=status, device_linked=device_linked, enrollment_status=None)
+    return Response(content=content, media_type="text/csv", headers={"Content-Disposition": 'attachment; filename="operatoros-students.csv"'})
 
 
 @router.get("/management/quality")
@@ -371,6 +390,61 @@ def patch_student_profile(
     if sensitive_changed and "edit_sensitive_identifiers" not in capabilities_for_role(user.role):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     return serialize_student_detail(db, update_student(db, student, body, user.username))
+
+
+@router.patch("/{student_master_id}/health")
+def patch_student_health(student_master_id: str, body: dict, db: Session = Depends(get_db), user: User = Depends(require_capability("edit_student"))):
+    student = db.get(StudentMaster, student_master_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student master not found")
+    row = db.query(StudentHealthProfile).filter_by(student_master_id=student_master_id).first()
+    if row is None:
+        row = StudentHealthProfile(student_master_id=student_master_id); db.add(row)
+    for key in ("allergy", "medical_condition", "special_needs"):
+        if key in body: setattr(row, key, body[key])
+    student.updated_by = user.username; db.commit()
+    return serialize_student_detail(db, student)
+
+
+@router.patch("/{student_master_id}/documents")
+def patch_student_documents(student_master_id: str, body: dict, db: Session = Depends(get_db), user: User = Depends(require_capability("edit_student"))):
+    student = db.get(StudentMaster, student_master_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student master not found")
+    row = db.query(StudentDocumentStatus).filter_by(student_master_id=student_master_id).first()
+    if row is None:
+        row = StudentDocumentStatus(student_master_id=student_master_id); db.add(row)
+    for key in ("family_card_received", "birth_certificate_received", "parent_id_received", "school_agreement_received", "publication_consent_received"):
+        if key in body: setattr(row, key, bool(body[key]))
+    student.updated_by = user.username; db.commit()
+    return serialize_student_detail(db, student)
+
+
+@router.post("/{student_master_id}/guardians", status_code=201)
+def add_student_guardian(student_master_id: str, body: dict, db: Session = Depends(get_db), user: User = Depends(require_capability("edit_student"))):
+    if db.get(StudentMaster, student_master_id) is None:
+        raise HTTPException(status_code=404, detail="Student master not found")
+    values = {key: body.get(key) for key in ("guardian_type", "name", "phone", "email", "occupation", "education", "address") if key in body}
+    if not values.get("name"): raise HTTPException(status_code=422, detail="Guardian name is required")
+    row = StudentParentGuardian(student_master_id=student_master_id, **values); db.add(row); db.commit(); db.refresh(row)
+    return {"id": row.id, **values}
+
+
+@router.patch("/{student_master_id}/guardians/{guardian_id}")
+def update_student_guardian(student_master_id: str, guardian_id: int, body: dict, db: Session = Depends(get_db), user: User = Depends(require_capability("edit_student"))):
+    row = db.query(StudentParentGuardian).filter_by(id=guardian_id, student_master_id=student_master_id).first()
+    if row is None: raise HTTPException(status_code=404, detail="Guardian not found")
+    for key in ("guardian_type", "name", "phone", "email", "occupation", "education", "address"):
+        if key in body: setattr(row, key, body[key])
+    db.commit(); db.refresh(row)
+    return serialize_student_detail(db, db.get(StudentMaster, student_master_id))["guardians"]
+
+
+@router.delete("/{student_master_id}/guardians/{guardian_id}", status_code=204)
+def delete_student_guardian(student_master_id: str, guardian_id: int, db: Session = Depends(get_db), _user: User = Depends(require_capability("edit_student"))):
+    row = db.query(StudentParentGuardian).filter_by(id=guardian_id, student_master_id=student_master_id).first()
+    if row is None: raise HTTPException(status_code=404, detail="Guardian not found")
+    db.delete(row); db.commit(); return Response(status_code=204)
 
 
 @router.get("/{student_master_id}/history")

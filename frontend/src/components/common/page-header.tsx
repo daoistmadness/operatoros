@@ -11,7 +11,7 @@ type PageHeaderProps = React.HTMLAttributes<HTMLElement> & {
 export function PageHeader({ title, description, actions, eyebrow, className, ...props }: PageHeaderProps) {
   const titleId = React.useId();
   return (
-    <header aria-labelledby={titleId} className={cn("flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between", className)} {...props}>
+    <header aria-labelledby={titleId} className={cn("flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between", className)} {...props}>
       <div className="min-w-0">
         {eyebrow && <p className="text-xs font-black uppercase tracking-[0.18em] text-brand">{eyebrow}</p>}
         <h1 id={titleId} className="mt-1 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{title}</h1>

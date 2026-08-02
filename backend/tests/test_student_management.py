@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from io import BytesIO
 
 import pytest
@@ -17,7 +17,7 @@ from models.student import Student
 from models.student_enrollment import StudentEnrollment
 from models.student_enrollment import StudentEnrollmentLifecycleAudit
 from models.student_master import (
-    StudentDeviceIdentity, StudentEnrollmentClassHistory, StudentImportBatch,
+    StudentDeviceIdentity, StudentDocumentStatus, StudentEnrollmentClassHistory, StudentHealthProfile, StudentImportBatch,
     StudentMaster, StudentMasterChangeHistory,
 )
 from models.student_import_session import StudentImportAppliedAction, StudentImportSession
@@ -31,7 +31,7 @@ from services.student_management import (
     ENROLLMENT_DELETE_CONFIRMATION, ENROLLMENT_TRANSFER_CONFIRMATION,
     add_or_replace_device, create_student, enrollment_deletion_status, hard_delete_enrollment,
     reassign_device, record_version, retire_device, serialize_student_detail,
-    transfer_enrollment, transition_enrollment, update_student,
+    transfer_enrollment, transition_enrollment, update_student, calculate_age, list_students, export_students_csv,
 )
 from services.spreadsheet_security import validate_xlsx_upload
 from services.student_workbook import (
@@ -317,3 +317,25 @@ def test_xlsx_security_rejects_malformed_and_formula_workbooks():
     with pytest.raises(HTTPException) as formula:
         validate_xlsx_upload(output.getvalue(), "formula.xlsx")
     assert formula.value.detail == "Formula cells are not accepted"
+
+
+def test_student_profile_age_health_documents_placement_and_csv(student_db):
+    db, year, first_class, _second = student_db
+    profile_birth_date = date.today().replace(year=date.today().year - 15) - timedelta(days=1)
+    body = StudentCreateRequest.model_validate({
+        "identity": {"full_name": "Profile Student", "birth_date": profile_birth_date.isoformat(), "student_status": "active"},
+        "health": {"allergy": "pollen", "medical_condition": "none", "special_needs": None},
+        "document_status": {"family_card_received": True, "birth_certificate_received": True},
+        "enrollment": {"academic_year_id": year.id, "academic_class_id": first_class.id, "effective_from": "2026-07-01"},
+    })
+    student = create_student(db, body, "admin")
+    assert calculate_age(profile_birth_date, date.today()) == 15
+    detail = serialize_student_detail(db, student)
+    assert detail["age_years"] == 15
+    assert detail["health"]["allergy"] == "pollen"
+    assert detail["document_status"]["family_card_received"] is True
+    assert detail["enrollments"][0]["class_name"] == "Synthetic 1A"
+    listed = list_students(db, search=None, academic_year_id=None, jenjang_id=None, program_id=None, grade_id=None, class_id=None, status="active", device_linked=None, enrollment_status=None, page=1, page_size=10)
+    assert listed["status_counts"]["active"] == 1
+    csv_bytes = export_students_csv(db, search="Profile", academic_year_id=None, jenjang_id=None, program_id=None, grade_id=None, class_id=None, status=None, device_linked=None, enrollment_status=None)
+    assert b"Profile Student" in csv_bytes and b"Synthetic Primary" in csv_bytes
