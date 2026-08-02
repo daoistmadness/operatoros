@@ -106,13 +106,12 @@ The destructive reset action remains disabled unless
 
 ### WSL Node/npm drift
 
-Check the active WSL toolchain:
+Check the active WSL toolchain with the repository validator. It resolves the
+executable paths first and only runs version checks after those paths pass the
+WSL safety checks:
 
 ```bash
-command -v node
-command -v npm
-node --version
-npm --version
+bash scripts/validate-wsl-node-npm.sh --probe "$PWD"
 ```
 
 Expected executable paths are under `~/.nvm/versions/node/<version>/bin/`.

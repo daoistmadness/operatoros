@@ -1,6 +1,9 @@
 import os
+import shlex
 import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -46,10 +49,55 @@ def _run_helper(environment: dict[str, str], script: str) -> subprocess.Complete
     )
 
 
+def _counting_toolchain_fixture(tmp_path: Path):
+    environment, tools = _toolchain_fixture(tmp_path)
+    invocations = tmp_path / "toolchain-invocations.log"
+    log_path = shlex.quote(str(invocations))
+    _write_executable(
+        tools / "node",
+        "#!/bin/sh\n"
+        f"printf 'node:%s\\n' \"$*\" >> {log_path}\n"
+        "if [ \"${1:-}\" = \"-p\" ]; then echo node; exit 0; fi\n"
+        "if [ \"${1:-}\" = \"--version\" ]; then echo v22.0.0; exit 0; fi\n"
+        "exit 1\n",
+    )
+    _write_executable(
+        tools / "npm",
+        "#!/bin/sh\n"
+        f"printf 'npm:%s\\n' \"$*\" >> {log_path}\n"
+        "if [ \"${1:-}\" = \"--version\" ]; then echo 10.0.0; exit 0; fi\n"
+        "exit 1\n",
+    )
+    return environment, tools, invocations
+
+
 def test_linux_node_22_and_paired_linux_npm_pass(tmp_path):
     environment, _ = _toolchain_fixture(tmp_path)
     result = _run_helper(environment, "operatoros_wsl_validate_node_npm \"$PWD\"")
     assert result.returncode == 0, result.stderr
+
+
+def test_direct_probe_reports_valid_linux_toolchain(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path)
+    result = _run_helper(environment, "operatoros_wsl_probe_node_npm \"$PWD\"")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "WSL Node/npm probe: PASS" in result.stdout
+    assert "node version: v22.0.0" in result.stdout
+    assert "npm version: 10.0.0" in result.stdout
+
+
+def test_direct_probe_entrypoint_reports_valid_linux_toolchain(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path)
+    result = subprocess.run(
+        ["bash", str(HELPER), "--probe", str(ROOT)],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "WSL Node/npm probe: PASS" in result.stdout
 
 
 def test_windows_mount_and_extensions_are_rejected_without_execution():
@@ -81,6 +129,38 @@ def test_node_shim_resolving_to_windows_target_is_rejected(tmp_path):
     result = _run_helper(environment, script)
     assert result.returncode != 0
     assert "/mnt/c/nvm4w/nodejs/node.exe" in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "windows_target"),
+    [
+        ("node", "/mnt/c/nvm4w/nodejs/node.exe"),
+        ("npm", "/mnt/d/Program Files/node/npm.cmd"),
+        ("npm", "/mnt/c/nvm4w/nodejs/npm"),
+    ],
+)
+def test_direct_probe_rejects_unsafe_resolved_path_before_execution(tmp_path, tool_name, windows_target):
+    environment, tools, invocations = _counting_toolchain_fixture(tmp_path)
+    target_tool = shlex.quote(str(tools / tool_name))
+    target_path = shlex.quote(windows_target)
+    log_path = shlex.quote(str(invocations))
+    script = (
+        "readlink() { "
+        f"case \"${{@: -1}}\" in {target_tool}) echo {target_path};; "
+        "*) command readlink \"$@\";; esac; "
+        "}; "
+        "operatoros_wsl_probe_node_npm \"$PWD\" || status=$?; "
+        "test \"${status:-0}\" -ne 0; "
+        f"test ! -e {log_path}"
+    )
+    result = _run_helper(environment, script)
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, output
+    assert "WSL Node/npm probe: FAIL" in output
+    assert "version checks: not run" in output
+    assert windows_target in output
+    assert ". ~/.nvm/nvm.sh" in output
+    assert "nvm use 22" in output
 
 
 def test_existing_pinned_nvm_auto_recovers_invalid_linux_environment(tmp_path):
