@@ -12,6 +12,7 @@ OPERATOROS_NODE_VERSION=""
 OPERATOROS_NPM_VERSION=""
 OPERATOROS_WSL_TOOLCHAIN_REASON=""
 OPERATOROS_WSL_TOOLCHAIN_ERROR=""
+OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="not-run"
 
 operatoros_wsl_path_is_rejected() {
   local candidate="${1:-}"
@@ -70,6 +71,9 @@ operatoros_wsl_paths_are_safe() {
 operatoros_wsl_validate_node_npm() {
   local project_root="${1:?repository root is required}"
   local resolved_root
+  OPERATOROS_NODE_VERSION=""
+  OPERATOROS_NPM_VERSION=""
+  OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="not-run"
   resolved_root="$(readlink -f -- "$project_root" 2>/dev/null || true)"
   if [[ "$(uname -s 2>/dev/null || true)" != Linux ]]; then
     OPERATOROS_WSL_TOOLCHAIN_REASON="the launcher is not running under a Linux WSL kernel"
@@ -86,6 +90,7 @@ operatoros_wsl_validate_node_npm() {
 
   # Only execute commands after both lexical and resolved paths have passed
   # the Windows-runtime checks above.
+  OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="executed"
   local release_name node_version node_major npm_version
   release_name="$("$OPERATOROS_NODE_PATH" -p 'process.release.name' 2>/dev/null || true)"
   if [[ "$release_name" != node ]]; then
@@ -180,3 +185,58 @@ operatoros_wsl_prepare_node_npm() {
   operatoros_wsl_toolchain_failure "$pinned_version"
   return 1
 }
+
+operatoros_wsl_probe_node_npm() {
+  local project_root="${1:-$PWD}"
+  local pinned_version="${2:-22}"
+
+  if operatoros_wsl_validate_node_npm "$project_root"; then
+    printf 'WSL Node/npm probe: PASS\n'
+    printf '  node: %s\n' "$OPERATOROS_NODE_PATH"
+    printf '  node resolved: %s\n' "$OPERATOROS_NODE_REALPATH"
+    printf '  node version: %s\n' "$OPERATOROS_NODE_VERSION"
+    printf '  npm: %s\n' "$OPERATOROS_NPM_PATH"
+    printf '  npm resolved: %s\n' "$OPERATOROS_NPM_REALPATH"
+    printf '  npm version: %s\n' "$OPERATOROS_NPM_VERSION"
+    return 0
+  fi
+
+  printf 'WSL Node/npm probe: FAIL\n'
+  printf '  node: %s\n' "${OPERATOROS_NODE_PATH:-<not found>}"
+  printf '  node resolved: %s\n' "${OPERATOROS_NODE_REALPATH:-<unresolved>}"
+  printf '  npm: %s\n' "${OPERATOROS_NPM_PATH:-<not found>}"
+  printf '  npm resolved: %s\n' "${OPERATOROS_NPM_REALPATH:-<unresolved>}"
+  if [[ "$OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS" == not-run ]]; then
+    printf '  version checks: not run because executable paths failed WSL safety validation\n'
+  fi
+  operatoros_wsl_toolchain_failure "$pinned_version"
+  printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
+  return 1
+}
+
+operatoros_wsl_usage() {
+  printf 'Usage: %s --probe [repository-root]\n' "${0##*/}"
+  printf '  Resolve and validate the active WSL Node.js/npm toolchain without NVM recovery.\n'
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  case "${1:-}" in
+    --probe)
+      shift
+      if [[ "$#" -gt 1 ]]; then
+        operatoros_wsl_usage >&2
+        exit 2
+      fi
+      operatoros_wsl_probe_node_npm "${1:-$PWD}"
+      exit $?
+      ;;
+    -h|--help)
+      operatoros_wsl_usage
+      exit 0
+      ;;
+    *)
+      operatoros_wsl_usage >&2
+      exit 2
+      ;;
+  esac
+fi
