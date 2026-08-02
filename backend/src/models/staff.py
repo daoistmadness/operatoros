@@ -8,6 +8,7 @@ from sqlalchemy import CheckConstraint, Column, Date, DateTime, ForeignKey, Inde
 from sqlalchemy.orm import relationship
 
 from core.database import Base
+from models.jenjang import Jenjang
 
 
 def new_staff_id() -> str:
@@ -27,6 +28,7 @@ class StaffMember(Base):
     job_title_raw = Column(String(255), nullable=True)
     job_title_normalized = Column(String(255), nullable=True)
     employment_start_date = Column(Date, nullable=True)
+    employment_end_date = Column(Date, nullable=True)
     dapodik_status_raw = Column(String(64), nullable=True)
     dapodik_status_normalized = Column(String(64), nullable=False, default="UNKNOWN", server_default="UNKNOWN")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
@@ -35,10 +37,46 @@ class StaffMember(Base):
     identifiers = relationship("StaffIdentifier", back_populates="staff_member", cascade="all, delete-orphan")
     contact = relationship("StaffContactDetail", back_populates="staff_member", uselist=False, cascade="all, delete-orphan")
     import_rows = relationship("StaffImportRow", back_populates="staff_member")
+    jenjang_assignments = relationship("StaffJenjangAssignment", back_populates="staff_member", cascade="all, delete-orphan")
+    education_history = relationship("StaffEducation", back_populates="staff_member", cascade="all, delete-orphan", order_by="StaffEducation.graduation_year")
 
     __table_args__ = (
         CheckConstraint("employment_status IN ('ACTIVE','FORMER','UNKNOWN','REVIEW_REQUIRED')", name="ck_staff_employment_status"),
         CheckConstraint("dapodik_status_normalized IN ('ACTIVE','NOT_REGISTERED','SUBMITTED_OR_COMPLETED','UNKNOWN')", name="ck_staff_dapodik_status"),
+        CheckConstraint("employment_end_date IS NULL OR employment_start_date IS NULL OR employment_end_date >= employment_start_date", name="ck_staff_employment_dates"),
+    )
+
+
+class StaffJenjangAssignment(Base):
+    __tablename__ = "staff_jenjang_assignments"
+
+    staff_member_id = Column(String(36), ForeignKey("staff_members.id", ondelete="CASCADE"), primary_key=True)
+    jenjang_id = Column(Integer, ForeignKey("jenjangs.id", ondelete="RESTRICT"), primary_key=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    staff_member = relationship("StaffMember", back_populates="jenjang_assignments")
+    jenjang = relationship("Jenjang")
+
+
+class StaffEducation(Base):
+    __tablename__ = "staff_education"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    staff_member_id = Column(String(36), ForeignKey("staff_members.id", ondelete="CASCADE"), nullable=False, index=True)
+    education_level = Column(String(8), nullable=False)
+    institution_name = Column(String(255), nullable=False)
+    major = Column(String(255), nullable=True)
+    graduation_year = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    staff_member = relationship("StaffMember", back_populates="education_history")
+
+    __table_args__ = (
+        CheckConstraint("education_level IN ('SD','SMP','SMA','SMK','D1','D2','D3','D4','S1','S2','S3')", name="ck_staff_education_level"),
+        CheckConstraint("graduation_year IS NULL OR (graduation_year >= 1900 AND graduation_year <= 2200)", name="ck_staff_education_year"),
     )
 
 class StaffIdentifier(Base):

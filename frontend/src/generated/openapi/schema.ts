@@ -3163,6 +3163,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Staff */
+        get: operations["export_staff_api_staff_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/imports/history": {
         parameters: {
             query?: never;
@@ -3207,6 +3224,60 @@ export interface paths {
         /** Staff Detail */
         get: operations["staff_detail_api_staff__staff_id__get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Staff Employment */
+        patch: operations["update_staff_employment_api_staff__staff_id__patch"];
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/education": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Staff Education */
+        get: operations["list_staff_education_api_staff__staff_id__education_get"];
+        put?: never;
+        /** Create Staff Education */
+        post: operations["create_staff_education_api_staff__staff_id__education_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/education/{education_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Staff Education */
+        delete: operations["delete_staff_education_api_staff__staff_id__education__education_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Staff Education */
+        patch: operations["update_staff_education_api_staff__staff_id__education__education_id__patch"];
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/jenjangs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace Staff Jenjangs */
+        put: operations["replace_staff_jenjangs_api_staff__staff_id__jenjangs_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5596,6 +5667,24 @@ export interface components {
             /** Version */
             version?: number | null;
         };
+        /** EducationBody */
+        EducationBody: {
+            /** Education Level */
+            education_level: string;
+            /** Graduation Year */
+            graduation_year?: number | null;
+            /** Institution Name */
+            institution_name: string;
+            /** Major */
+            major?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** EmploymentDatesBody */
+        EmploymentDatesBody: {
+            /** Employment End Date */
+            employment_end_date?: string | null;
+        };
         /** EnrollmentBulkRequest */
         EnrollmentBulkRequest: {
             /** Academic Class Id */
@@ -5890,6 +5979,11 @@ export interface components {
             note?: string | null;
             /** Set By */
             set_by: string;
+        };
+        /** JenjangAssignmentsBody */
+        JenjangAssignmentsBody: {
+            /** Jenjang Ids */
+            jenjang_ids?: number[];
         };
         /** JenjangBody */
         JenjangBody: {
@@ -13912,10 +14006,50 @@ export interface operations {
         parameters: {
             query?: {
                 search?: string | null;
-                status?: string | null;
+                status?: string;
+                employment_status?: string | null;
                 job_title?: string | null;
+                dapodik_status?: string | null;
+                jenjang_id?: number | null;
                 page?: number;
                 page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_staff_api_staff_export_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                status?: string;
+                job_title?: string | null;
+                dapodik_status?: string | null;
+                jenjang_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -14021,6 +14155,220 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_staff_employment_api_staff__staff_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmploymentDatesBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_staff_education_api_staff__staff_id__education_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_staff_education_api_staff__staff_id__education_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EducationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_staff_education_api_staff__staff_id__education__education_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                education_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_staff_education_api_staff__staff_id__education__education_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                education_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EducationBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_staff_jenjangs_api_staff__staff_id__jenjangs_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JenjangAssignmentsBody"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

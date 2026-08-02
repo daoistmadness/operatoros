@@ -26,3 +26,7 @@ def test_staff_validation_is_redacted_and_ignores_derived_formulas(tmp_path):
     assert "Synthetic address" not in str(summary)
     assert "MISSING_BIRTH_DATE" not in summary["issue_counts"]
     assert result["rows"][0]["normalized"]["birth_date"] == "1990-01-02"
+    assert "jenjang" not in result["rows"][0]["normalized"]
+    assert "education" not in result["rows"][0]["normalized"]
+    assert "Umur" not in result["rows"][0]["normalized"]
+    assert "Masa Kerja" not in result["rows"][0]["normalized"]
