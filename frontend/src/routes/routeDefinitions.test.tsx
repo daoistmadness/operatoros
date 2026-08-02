@@ -35,6 +35,7 @@ const expectedPaths = [
   '/settings/backups',
   '/students',
   '/staff',
+  '/staff/:id',
   '/students/operations',
   '/students/:id',
   '/attendance/students/:id',
