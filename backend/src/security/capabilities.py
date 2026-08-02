@@ -30,6 +30,8 @@ STUDENT_CAPABILITIES: Final[frozenset[str]] = frozenset({
     "view_staff_audit",
     "import_staff",
     "review_staff_import",
+    "manage_staff",
+    "export_staff",
     "rollback_import_session",
     "view_progression_preview",
     "create_progression_preview",
