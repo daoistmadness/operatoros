@@ -59,7 +59,7 @@ def require_role(role: str):
 
 def require_capability(capability: str):
     if capability not in STUDENT_CAPABILITIES:
-        raise ValueError("Unsupported student-management capability")
+        raise ValueError("Unsupported application capability")
 
     def capability_dependency(request: Request, user: User = Depends(get_current_user)) -> User:
         if capability not in capabilities_for_role(user.role):
