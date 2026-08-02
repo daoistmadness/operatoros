@@ -392,7 +392,7 @@ def require_no_active_session(args: argparse.Namespace) -> int:
     session_id = active.read_text(encoding="utf-8").strip()
     directory = runtime / "sessions" / session_id
     if not session_id or not directory.is_dir():
-        raise RuntimeError("ACTIVE_SESSION_RECORD_UNVERIFIED")
+        raise RuntimeError("STALE_SESSION_UNVERIFIED")
     for role in ("backend", "frontend"):
         path = directory / f"{role}.pid"
         try:
@@ -424,7 +424,7 @@ def status_command(args: argparse.Namespace) -> int:
         if not session_id or not directory.is_dir() or ownership.get("application") != "OperatorOS" or ownership.get("session_id") != session_id:
             raise RuntimeError("unverified")
     except (OSError, json.JSONDecodeError, RuntimeError):
-        print(json.dumps({"state": "UNVERIFIED_ACTIVE_SESSION"}, sort_keys=True))
+        print(json.dumps({"state": "STALE_SESSION_UNVERIFIED"}, sort_keys=True))
         return 0
     for role in ("backend", "frontend"):
         try:
@@ -432,9 +432,9 @@ def status_command(args: argparse.Namespace) -> int:
         except (OSError, json.JSONDecodeError):
             valid = False
         if valid:
-            print(json.dumps({"state": "ACTIVE_OWNED_SESSION"}, sort_keys=True))
+            print(json.dumps({"state": "ACTIVE_VERIFIED"}, sort_keys=True))
             return 0
-    print(json.dumps({"state": "STALE_VERIFIED_SESSION"}, sort_keys=True))
+    print(json.dumps({"state": "STALE_VERIFIED"}, sort_keys=True))
     return 0
 
 
@@ -554,4 +554,8 @@ def parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     arguments = parser().parse_args()
-    raise SystemExit(arguments.func(arguments))
+    try:
+        raise SystemExit(arguments.func(arguments))
+    except RuntimeError as error:
+        print(str(error), file=sys.stderr)
+        raise SystemExit(2) from error

@@ -32,3 +32,9 @@ session databases are not adopted automatically.
 
 The protected `backend/attendance.db` is never a development or test runtime
 database. Packaged desktop user-data storage remains a separate future scope.
+
+## If the setup/admin-creation screen reappears unexpectedly
+
+1. Run `env | grep DATABASE_URL` and check for a stale shell override.
+2. Check `backend/.env` for a stale `DATABASE_URL`.
+3. Run `make dev-db-path` and `make dev-db-status`; confirm the path is the expected persistent path and `administrator_configured` is `true`.

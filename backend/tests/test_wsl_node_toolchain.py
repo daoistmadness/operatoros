@@ -1,0 +1,140 @@
+import os
+import subprocess
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+HELPER = ROOT / "scripts" / "validate-wsl-node-npm.sh"
+
+
+def _write_executable(path: Path, body: str) -> None:
+    path.write_text(body, encoding="utf-8")
+    path.chmod(0o755)
+
+
+def _toolchain_fixture(tmp_path: Path, *, node_version: str = "v22.0.0", release: str = "node", npm_usable: bool = True):
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    _write_executable(
+        tools / "node",
+        f"#!/bin/sh\n"
+        f"if [ \"${{1:-}}\" = \"-p\" ]; then echo {release}; exit 0; fi\n"
+        f"if [ \"${{1:-}}\" = \"--version\" ]; then echo {node_version}; exit 0; fi\n"
+        "exit 1\n",
+    )
+    npm_exit = "0" if npm_usable else "3"
+    _write_executable(
+        tools / "npm",
+        f"#!/bin/sh\n"
+        f"if [ \"${{1:-}}\" = \"--version\" ]; then echo 10.0.0; exit {npm_exit}; fi\n"
+        "exit 3\n",
+    )
+    environment = os.environ.copy()
+    environment["PATH"] = f"{tools}:{environment['PATH']}"
+    environment["OPERATOROS_NVM_DIR"] = str(tmp_path / "missing-nvm")
+    return environment, tools
+
+
+def _run_helper(environment: dict[str, str], script: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["bash", "-c", f"source {HELPER}; {script}"],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_linux_node_22_and_paired_linux_npm_pass(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path)
+    result = _run_helper(environment, "operatoros_wsl_validate_node_npm \"$PWD\"")
+    assert result.returncode == 0, result.stderr
+
+
+def test_windows_mount_and_extensions_are_rejected_without_execution():
+    result = _run_helper(
+        os.environ.copy(),
+        "operatoros_wsl_path_is_rejected /mnt/c/nvm4w/nodejs/node.exe && "
+        "operatoros_wsl_path_is_rejected /mnt/d/Program\\ Files/node/npm.cmd",
+    )
+    assert result.returncode == 0
+
+
+def test_npm_windows_path_is_rejected():
+    result = _run_helper(os.environ.copy(), "operatoros_wsl_path_is_rejected /mnt/c/nvm4w/nodejs/npm")
+    assert result.returncode == 0
+
+
+def test_node_shim_resolving_to_windows_target_is_rejected(tmp_path):
+    environment, tools = _toolchain_fixture(tmp_path)
+    shim = tools / "node"
+    script = (
+        "readlink() { "
+        f"if [ \"${{@: -1}}\" = \"{shim}\" ]; then echo /mnt/c/nvm4w/nodejs/node.exe; "
+        "else command readlink \"$@\"; fi; "
+        "}; "
+        "operatoros_wsl_resolve_toolchain_paths; "
+        "operatoros_wsl_paths_are_safe || { operatoros_wsl_toolchain_failure 22.23.1; "
+        "printf '%s\\n' \"$OPERATOROS_WSL_TOOLCHAIN_ERROR\"; exit 1; }"
+    )
+    result = _run_helper(environment, script)
+    assert result.returncode != 0
+    assert "/mnt/c/nvm4w/nodejs/node.exe" in result.stdout + result.stderr
+
+
+def test_existing_pinned_nvm_auto_recovers_invalid_linux_environment(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path, node_version="v20.0.0")
+    nvm_dir = tmp_path / "nvm"
+    version_bin = nvm_dir / "versions" / "node" / "v22.23.1" / "bin"
+    version_bin.mkdir(parents=True)
+    _write_executable(version_bin / "node", "#!/bin/sh\nif [ \"${1:-}\" = \"-p\" ]; then echo node; else echo v22.23.1; fi\n")
+    _write_executable(version_bin / "npm", "#!/bin/sh\necho 10.9.2\n")
+    nvm_dir.joinpath("nvm.sh").write_text(
+        "nvm() {\n"
+        "  [ \"${1:-}\" = use ] || return 1\n"
+        "  export PATH=\"$NVM_DIR/versions/node/v22.23.1/bin:$PATH\"\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    environment["OPERATOROS_NVM_DIR"] = str(nvm_dir)
+    nvmrc = tmp_path / ".nvmrc"
+    nvmrc.write_text("22.23.1\n", encoding="utf-8")
+    result = _run_helper(
+        environment,
+        f"operatoros_wsl_prepare_node_npm \"$PWD\" \"{nvmrc}\" && "
+        "printf '%s %s\\n' \"$OPERATOROS_NODE_VERSION\" \"$OPERATOROS_NPM_VERSION\"",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "v22.23.1 10.9.2" in result.stdout
+
+
+def test_invalid_windows_environment_without_nvm_fails_actionably(tmp_path):
+    environment, tools = _toolchain_fixture(tmp_path)
+    script = (
+        "readlink() { "
+        f"case \"${{@: -1}}\" in \"{tools}/node\") echo /mnt/c/nvm4w/nodejs/node.exe;; "
+        f"\"{tools}/npm\") echo /mnt/c/nvm4w/nodejs/npm;; *) command readlink \"$@\";; esac; "
+        "}; "
+        f"operatoros_wsl_prepare_node_npm \"$PWD\" \"{ROOT / '.nvmrc'}\" || "
+        "{ printf '%s\\n' \"$OPERATOROS_WSL_TOOLCHAIN_ERROR\"; exit 1; }"
+    )
+    result = _run_helper(environment, script)
+    output = result.stdout + result.stderr
+    assert result.returncode != 0
+    assert "NODE_RUNTIME_INVALID_FOR_WSL" not in output
+    assert "/mnt/c/nvm4w/nodejs/node.exe" in output
+    assert ". ~/.nvm/nvm.sh" in output
+    assert "nvm use 22.23.1" in output
+
+
+def test_bun_masquerading_as_node_is_rejected(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path, release="bun")
+    result = _run_helper(environment, "operatoros_wsl_validate_node_npm \"$PWD\"")
+    assert result.returncode != 0
+
+
+def test_usable_node_22_with_unusable_npm_fails_closed(tmp_path):
+    environment, _ = _toolchain_fixture(tmp_path, npm_usable=False)
+    result = _run_helper(environment, "operatoros_wsl_validate_node_npm \"$PWD\"")
+    assert result.returncode != 0

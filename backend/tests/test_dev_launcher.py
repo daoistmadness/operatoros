@@ -403,7 +403,7 @@ def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
     result = subprocess.run([str(launcher), "--check"], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=20)
     output = result.stdout + result.stderr
     assert result.returncode == 2
-    assert "NODE_22_REQUIRED" in output
+    assert "NODE_RUNTIME_INVALID_FOR_WSL" in output
     assert "No OperatorOS services were started" in output
 
 
