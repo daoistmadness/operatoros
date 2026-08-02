@@ -11,6 +11,7 @@ VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
+WSL_NODE_NPM_HELPER="$PROJECT_ROOT/scripts/validate-wsl-node-npm.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
@@ -142,29 +143,14 @@ run_preflight() {
   [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
   "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
   [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and package-lock.json."
-  current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-  existing_node="$(command -v node 2>/dev/null || true)"
-  existing_version="$(node --version 2>/dev/null || true)"
-  if [[ ! "$existing_version" =~ ^v22[.] ]] || [[ "$(node -p 'process.release.name' 2>/dev/null || true)" != node ]]; then
-    node_manager_dir="${OPERATOROS_NVM_DIR:-$current_user_home/.nvm}"
-    if [[ ! -s "$node_manager_dir/nvm.sh" ]]; then
-      fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-    fi
-    export NVM_DIR="$node_manager_dir"
-    # shellcheck disable=SC1090
-    source "$NVM_DIR/nvm.sh"
-    nvm use "$(<"$PROJECT_ROOT/.nvmrc")" >/dev/null
+  [[ -s "$WSL_NODE_NPM_HELPER" ]] || fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_NODE_NPM_HELPER"
+  # shellcheck disable=SC1090
+  source "$WSL_NODE_NPM_HELPER"
+  if ! operatoros_wsl_prepare_node_npm "$PROJECT_ROOT" "$PROJECT_ROOT/.nvmrc"; then
+    fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
   fi
-  command -v node >/dev/null 2>&1 || fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-  command -v npm >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate the npm paired with Node.js 22."
-  [[ "$(node -p 'process.release.name' 2>/dev/null || true)" == node ]] || fail_preflight "NODE_22_REQUIRED" "Activate genuine Node.js 22 through NVM."
-  local node_version node_major
-  node_version="$(node --version 2>/dev/null)" || fail_preflight "Frontend prerequisite is not usable: node failed its version check" "Install Node.js 22 with npm."
-  node_major="${node_version#v}"; node_major="${node_major%%.*}"
-  [[ "$node_major" == 22 ]] || fail_preflight "NODE_22_REQUIRED" "Detected $node_version; activate Node.js 22 through NVM."
-  npm --version >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate npm paired with Node.js 22."
-  JS_RUNTIME_VERSION="${node_version#v}"
-  printf '  [ok] Node.js %s\n' "$node_version"
+  JS_RUNTIME_VERSION="${OPERATOROS_NODE_VERSION#v}"
+  printf '  [ok] Linux Node.js %s with paired npm %s\n' "$OPERATOROS_NODE_VERSION" "$OPERATOROS_NPM_VERSION"
   [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && npm ci"
   printf '  [ok] Backend and frontend dependencies\n'
 }
@@ -337,7 +323,14 @@ done
 report_configuration_drift
 run_preflight
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
-  fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" "Active session: ${active_session:-unverified}. Stop it with ./stop-dev.sh --session <id>."
+  session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
+  [[ -n "$session_status" ]] || session_status='{"state":"STALE_SESSION_UNVERIFIED"}'
+  fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" \
+    "Session state: $session_status" \
+    "If ACTIVE_VERIFIED, stop the owned session with: ./stop-dev.sh --session ${active_session:-<id>}" \
+    "Safe remediation: ./stop-dev.sh" \
+    "Inspect the exact state with: make dev-sessions-status" \
+    "Unverified session records are never deleted and unverified processes are never terminated automatically."
 fi
 allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
