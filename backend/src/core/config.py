@@ -3,32 +3,37 @@
 # Tech Stack: FastAPI / Python 3.12
 
 import os
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
+# Load .env from the backend root (two levels above this file: src/core/ -> src/ -> backend/).
+# Managed development replaces only DATABASE_URL after dotenv loading so that a
+# stale backend/.env assignment cannot select a different database while other
+# non-database local settings retain their established behavior.
+if not os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("OPERATOROS_ISOLATED_TEST"):
+    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+
+from core.development_database import (  # noqa: E402
+    DevelopmentDatabaseResolutionError,
+    resolve_database_path,
+    sqlite_url,
+)
+
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
 
-def _resolve_managed_dev_database_url(database_url: str | None = None) -> str:
-    """Delegate managed development DB selection to the lifecycle resolver."""
-    repository = str(REPOSITORY_ROOT)
-    if repository not in sys.path:
-        sys.path.insert(0, repository)
-    from scripts.development_database import resolve_database
-
-    return resolve_database(REPOSITORY_ROOT, database_url).url
+def managed_development_database_url() -> str:
+    try:
+        return sqlite_url(resolve_database_path(REPOSITORY_ROOT))
+    except DevelopmentDatabaseResolutionError as exc:
+        raise ValueError(f"Managed development database resolution failed: {exc.code}") from exc
 
 
-# The launcher owns DATABASE_URL in managed development.  Resolve it before
-# dotenv loading so a stale backend/.env cannot become an independent fallback.
-if os.environ.get("OPERATOROS_MANAGED_DEV_SETUP", "").lower() == "true":
-    os.environ["DATABASE_URL"] = _resolve_managed_dev_database_url(os.environ.get("DATABASE_URL"))
-elif not os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("OPERATOROS_ISOLATED_TEST"):
-    # Load .env from the backend root (two levels above this file: src/core/ -> src/ -> backend/)
-    load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+if os.environ.get("OPERATOROS_MANAGED_DEV_SETUP", "").strip().lower() in {"1", "true", "yes", "on"}:
+    os.environ["DATABASE_URL"] = managed_development_database_url()
 
 
 class Settings(BaseSettings):
@@ -88,8 +93,8 @@ class Settings(BaseSettings):
         )):
             raise ValueError("OperatorOS desktop supports SQLite databases only.")
 
-        if os.environ.get("OPERATOROS_MANAGED_DEV_SETUP", "").lower() == "true":
-            return _resolve_managed_dev_database_url(self.DATABASE_URL)
+        if self.OPERATOROS_MANAGED_DEV_SETUP:
+            return managed_development_database_url()
 
         if self.DATABASE_URL:
             # Enforce protected path guard on self.DATABASE_URL
