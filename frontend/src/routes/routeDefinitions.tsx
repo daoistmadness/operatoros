@@ -21,6 +21,7 @@ const RekapAbsensi = lazy(() => import('../pages/RekapAbsensi'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const StudentManagement = lazy(() => import('../pages/StudentManagement'));
 const StaffManagement = lazy(() => import('../pages/StaffManagement'));
+const StaffDetail = lazy(() => import('../pages/StaffDetail'));
 const CanonicalStudentProfile = lazy(() => import('../pages/CanonicalStudentProfile'));
 const GradeLedger = lazy(() => import('../pages/GradeLedger'));
 const Enrollment = lazy(() => import('../pages/Enrollment'));
@@ -83,6 +84,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   { path: '/settings/backups', element: <RequireRole role="admin"><BackupManagement /></RequireRole>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'admin' },
   { path: '/students', element: <RequireCapability capability="view_student"><StudentManagement /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
   { path: '/staff', element: <RequireCapability capability="view_staff"><StaffManagement /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
+  { path: '/staff/:id', element: <RequireCapability capability="view_staff"><StaffDetail /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
   { path: '/students/operations', element: <RequireCapability capability="view_student_audit"><OperationsAudit /></RequireCapability>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'capability' },
   { path: '/students/:id', element: <RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
   { path: '/attendance/students/:id', element: <RequireCapability capability="view_student"><StudentProfile /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },

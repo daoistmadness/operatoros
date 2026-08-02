@@ -76,6 +76,7 @@ export const NAV_GROUPS: NavigationGroup[] = [
       { name: 'HEB Overrides', path: '/config/heb', icon: Clock3, role: 'admin' },
       { name: 'Absence Reasons', path: '/config/absence-reasons', icon: CalendarDays, role: 'admin' },
       { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck, capability: 'view_student_audit' },
+      { name: 'Employee Directory', path: '/staff', icon: UsersIcon, capability: 'view_staff' },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
     ],
   },

@@ -2549,6 +2549,83 @@
         "title": "DismissRequest",
         "type": "object"
       },
+      "EducationBody": {
+        "properties": {
+          "education_level": {
+            "maxLength": 8,
+            "minLength": 2,
+            "title": "Education Level",
+            "type": "string"
+          },
+          "graduation_year": {
+            "anyOf": [
+              {
+                "maximum": 2200.0,
+                "minimum": 1900.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graduation Year"
+          },
+          "institution_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "major": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Major"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "education_level",
+          "institution_name"
+        ],
+        "title": "EducationBody",
+        "type": "object"
+      },
+      "EmploymentDatesBody": {
+        "properties": {
+          "employment_end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment End Date"
+          }
+        },
+        "title": "EmploymentDatesBody",
+        "type": "object"
+      },
       "EnrollmentBulkRequest": {
         "properties": {
           "academic_class_id": {
@@ -3355,6 +3432,20 @@
           "set_by"
         ],
         "title": "HebOverrideBody",
+        "type": "object"
+      },
+      "JenjangAssignmentsBody": {
+        "properties": {
+          "jenjang_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "title": "Jenjang Ids",
+            "type": "array"
+          }
+        },
+        "title": "JenjangAssignmentsBody",
         "type": "object"
       },
       "JenjangBody": {
@@ -20875,16 +20966,27 @@
             "name": "status",
             "required": false,
             "schema": {
+              "default": "ACTIVE",
+              "pattern": "^(ACTIVE|FORMER|UNKNOWN|REVIEW_REQUIRED|ALL)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "employment_status",
+            "required": false,
+            "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(ACTIVE|FORMER|UNKNOWN|REVIEW_REQUIRED)$",
+                  "pattern": "^(ACTIVE|FORMER|UNKNOWN|REVIEW_REQUIRED|ALL)$",
                   "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Status"
+              "title": "Employment Status"
             }
           },
           {
@@ -20901,6 +21003,40 @@
                 }
               ],
               "title": "Job Title"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dapodik_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(ACTIVE|NOT_REGISTERED|SUBMITTED_OR_COMPLETED|UNKNOWN|ALL)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dapodik Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "jenjang_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Jenjang Id"
             }
           },
           {
@@ -20964,6 +21100,130 @@
           }
         },
         "summary": "List Staff",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/export": {
+      "get": {
+        "operationId": "export_staff_api_staff_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "ACTIVE",
+              "pattern": "^(ACTIVE|FORMER|UNKNOWN|REVIEW_REQUIRED|ALL)$",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "job_title",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Job Title"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dapodik_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(ACTIVE|NOT_REGISTERED|SUBMITTED_OR_COMPLETED|UNKNOWN|ALL)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dapodik Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "jenjang_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Jenjang Id"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Staff",
         "tags": [
           "staff"
         ]
@@ -21123,6 +21383,389 @@
           }
         },
         "summary": "Staff Detail",
+        "tags": [
+          "staff"
+        ]
+      },
+      "patch": {
+        "operationId": "update_staff_employment_api_staff__staff_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmploymentDatesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Staff Employment",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/{staff_id}/education": {
+      "get": {
+        "operationId": "list_staff_education_api_staff__staff_id__education_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Staff Education",
+        "tags": [
+          "staff"
+        ]
+      },
+      "post": {
+        "operationId": "create_staff_education_api_staff__staff_id__education_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EducationBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Staff Education",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/{staff_id}/education/{education_id}": {
+      "delete": {
+        "operationId": "delete_staff_education_api_staff__staff_id__education__education_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "education_id",
+            "required": true,
+            "schema": {
+              "title": "Education Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Staff Education",
+        "tags": [
+          "staff"
+        ]
+      },
+      "patch": {
+        "operationId": "update_staff_education_api_staff__staff_id__education__education_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "education_id",
+            "required": true,
+            "schema": {
+              "title": "Education Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EducationBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Staff Education",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/staff/{staff_id}/jenjangs": {
+      "put": {
+        "operationId": "replace_staff_jenjangs_api_staff__staff_id__jenjangs_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staff_id",
+            "required": true,
+            "schema": {
+              "title": "Staff Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JenjangAssignmentsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Staff Jenjangs",
         "tags": [
           "staff"
         ]
