@@ -11,14 +11,14 @@ from core.database import Base
 from models.user import User  # noqa: F401 - resolve the batch actor FK
 from models.staff import (
     StaffContactDetail, StaffIdentifier, StaffImportBatch, StaffImportIssue,
-    StaffImportRow, StaffJobTitleMapping, StaffMember,
+    StaffEducation, StaffImportRow, StaffJenjangAssignment, StaffJobTitleMapping, StaffMember,
 )
 
-STAFF_SCHEMA_VERSION = "20260801_staff_v1"
+STAFF_SCHEMA_VERSION = "20260802_staff_v2"
 STAFF_TABLES = (
     StaffMember.__table__, StaffIdentifier.__table__, StaffContactDetail.__table__,
     StaffImportBatch.__table__, StaffImportRow.__table__, StaffImportIssue.__table__,
-    StaffJobTitleMapping.__table__,
+    StaffJobTitleMapping.__table__, StaffJenjangAssignment.__table__, StaffEducation.__table__,
 )
 
 
@@ -58,6 +58,10 @@ def ensure_staff_schema(database: str | Path) -> str:
             raise ValueError("UNSUPPORTED_SCHEMA_REQUIRES_S43")
     engine = create_engine(f"sqlite:///{path}")
     try:
+        inspector = inspect(engine)
+        if "staff_members" in inspector.get_table_names() and "employment_end_date" not in {column["name"] for column in inspector.get_columns("staff_members")}:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE staff_members ADD COLUMN employment_end_date DATE NULL"))
         Base.metadata.create_all(bind=engine, tables=STAFF_TABLES)
         with engine.begin() as connection:
             connection.execute(text(
