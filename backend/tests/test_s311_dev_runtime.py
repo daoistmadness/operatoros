@@ -107,7 +107,61 @@ def test_status_reports_sanitized_session_classifications(tmp_path):
         [sys.executable, str(HELPER), "status", "--runtime", str(runtime), "--repo", str(ROOT)],
         capture_output=True, text=True, check=False,
     )
-    assert json.loads(corrupt.stdout) == {"state": "UNVERIFIED_ACTIVE_SESSION"}
+    assert json.loads(corrupt.stdout) == {"state": "STALE_SESSION_UNVERIFIED"}
+
+
+def test_stale_session_unverified_never_triggers_broad_cleanup(tmp_path):
+    runtime = tmp_path / "runtime"
+    session = runtime / "sessions" / "unverified"
+    session.mkdir(parents=True)
+    (runtime / "active-session").write_text("unverified\n", encoding="utf-8")
+    (session / "session.json").write_text(json.dumps({"session_id": "unverified"}), encoding="utf-8")
+
+    status = subprocess.run(
+        [sys.executable, str(HELPER), "status", "--runtime", str(runtime), "--repo", str(ROOT)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert json.loads(status.stdout) == {"state": "STALE_SESSION_UNVERIFIED"}
+
+    result = subprocess.run(
+        [sys.executable, str(HELPER), "require-no-active-session", "--runtime", str(runtime), "--repo", str(ROOT)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert "STALE_SESSION_UNVERIFIED" in result.stderr
+    assert (runtime / "active-session").exists()
+    assert session.exists()
+
+
+def test_verified_stale_session_cleanup_preserves_persistent_database(tmp_path):
+    runtime = tmp_path / "runtime"
+    session = runtime / "sessions" / "verified-stale"
+    session.mkdir(parents=True)
+    persistent_db = tmp_path / "persistent" / "operatoros-development.db"
+    persistent_db.parent.mkdir()
+    persistent_db.write_bytes(b"synthetic persistent database")
+    (runtime / "active-session").write_text("verified-stale\n", encoding="utf-8")
+    (session / "ownership.json").write_text(
+        json.dumps({"application": "OperatorOS", "session_id": "verified-stale"}), encoding="utf-8"
+    )
+    (session / "session.json").write_text(
+        json.dumps({"session_id": "verified-stale", "database_path": str(persistent_db)}), encoding="utf-8"
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(HELPER), "require-no-active-session", "--runtime", str(runtime), "--repo", str(ROOT)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert not session.exists()
+    assert not (runtime / "active-session").exists()
+    assert persistent_db.read_bytes() == b"synthetic persistent database"
 
 
 def test_vite_configuration_is_strict_and_port_synchronized():
