@@ -1,4 +1,5 @@
 import json
+import http.cookiejar
 import os
 import signal
 import shutil
@@ -192,6 +193,93 @@ def test_dev_launcher_prepares_stable_local_configuration(tmp_path):
     assert database.exists()
 
 
+def test_dev_launcher_clean_shell_persists_admin_across_restart(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    assert "DATABASE_URL" not in environment
+    frontend_port, backend_port = _launcher_ports()
+    environment.update(FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
+
+    path_result = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parents[2] / "scripts" / "development_database.py"), "path", "--repo", str(launcher.parent)],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert path_result.returncode == 0, path_result.stderr
+    resolved_path = Path(path_result.stdout.strip())
+
+    def status() -> dict:
+        result = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve().parents[2] / "scripts" / "development_database.py"), "status", "--repo", str(launcher.parent)],
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+        return json.loads(result.stdout)
+
+    first = subprocess.Popen(
+        [str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT, text=True, start_new_session=True,
+    )
+    second = None
+    try:
+        assert _wait_for_url(f"http://127.0.0.1:{backend_port}/health")
+        assert _wait_for_url(f"http://127.0.0.1:{frontend_port}")
+
+        cookies = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
+        bootstrap = urllib.request.Request(
+            f"http://127.0.0.1:{backend_port}/api/setup/bootstrap",
+            method="POST",
+            headers={"Origin": "http://127.0.0.1:5173"},
+        )
+        with opener.open(bootstrap, timeout=5) as response:
+            assert response.status == 204
+        body = json.dumps({
+            "username": "admin",
+            "password": "correct horse battery",
+            "password_confirmation": "correct horse battery",
+        }).encode()
+        admin = urllib.request.Request(
+            f"http://127.0.0.1:{backend_port}/api/setup/admin",
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with opener.open(admin, timeout=5) as response:
+            assert response.status == 201
+
+        _stop_launcher(first)
+        first = None
+
+        first_status = status()
+        assert Path(first_status["path"]).resolve() == resolved_path.resolve()
+        assert first_status["administrator_configured"] is True
+        assert first_status["users_count"] == 1
+
+        frontend_port, backend_port = _launcher_ports()
+        environment.update(FRONTEND_PORT=str(frontend_port), BACKEND_PORT=str(backend_port))
+        second = subprocess.Popen(
+            [str(launcher)], cwd=tmp_path, env=environment, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, text=True, start_new_session=True,
+        )
+        assert _wait_for_url(f"http://127.0.0.1:{backend_port}/health")
+        assert _wait_for_url(f"http://127.0.0.1:{frontend_port}")
+        second_status = status()
+        assert Path(second_status["path"]).resolve() == resolved_path.resolve()
+        assert second_status["administrator_configured"] is True
+        assert second_status["users_count"] == 1
+    finally:
+        if first is not None:
+            _stop_launcher(first)
+        if second is not None:
+            _stop_launcher(second)
+
+
 @pytest.mark.parametrize("database", ["relative.db", "backend/attendance.db", "backend/.local-dev/astryx-development.db", "attendance.db"])
 def test_dev_launcher_rejects_explicit_sqlite_database(tmp_path, database):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
@@ -206,6 +294,43 @@ def test_dev_launcher_rejects_explicit_sqlite_database(tmp_path, database):
     result = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
     assert result.returncode == 2
     assert "DEVELOPMENT_DATABASE_PATH_REJECTED" in result.stdout + result.stderr
+
+
+def test_dev_launcher_accepts_explicit_persistent_database_url(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    persistent = tmp_path / "persistent-data"
+    persistent_db = persistent / "operatoros-development.db"
+    persistent_db.parent.mkdir(parents=True, exist_ok=True)
+    environment.update(
+        ASTRYX_DEV_PREPARE_ONLY="1",
+        FRONTEND_PORT="15173",
+        BACKEND_PORT="18010",
+        OPERATOROS_DEV_DATA_DIR=str(persistent),
+        DATABASE_URL=f"sqlite:///{persistent_db.resolve()}",
+        AUTH_COOKIE_SECRET="explicit-test-secret-that-is-at-least-32-characters",
+    )
+    result = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "WARNING: DATABASE_URL IS OVERRIDING PERSISTENT DEV DB" not in result.stdout + result.stderr
+
+
+def test_dev_launcher_warns_on_disposable_database_url_override(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    disposable_db = tmp_path / "runtime" / "operatoros-dev" / "disposable.db"
+    disposable_db.parent.mkdir(parents=True, exist_ok=True)
+    environment.update(
+        ASTRYX_DEV_PREPARE_ONLY="1",
+        FRONTEND_PORT="15174",
+        BACKEND_PORT="18011",
+        DATABASE_URL=f"sqlite:///{disposable_db.resolve()}",
+        AUTH_COOKIE_SECRET="explicit-test-secret-that-is-at-least-32-characters",
+    )
+    result = subprocess.run([str(launcher)], env=environment, capture_output=True, text=True, timeout=30, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "WARNING: DATABASE_URL IS OVERRIDING PERSISTENT DEV DB" in result.stdout + result.stderr
+
 
 
 def test_dev_launcher_reports_missing_vite_before_starting_services(tmp_path):
@@ -230,7 +355,7 @@ def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
     result = subprocess.run([str(launcher), "--check"], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=20)
     output = result.stdout + result.stderr
     assert result.returncode == 2
-    assert "NODE_22_REQUIRED" in output
+    assert "NODE_RUNTIME_INVALID_FOR_WSL" in output
     assert "No OperatorOS services were started" in output
 
 

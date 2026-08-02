@@ -108,11 +108,11 @@ def test_incomplete_operational_context_is_rejected(tmp_path):
             pass
 
 
-def test_direct_migration_call_rejects_missing_repository_path_without_creating_it():
+def test_direct_migration_call_rejects_missing_disposable_path_without_creating_it(tmp_path):
     from core.attendance_followup_migration import migrate_attendance_followup_sqlite
 
-    missing = ROOT / "backend" / "attendance.db"
+    missing = tmp_path / "attendance.db"
     assert not missing.exists()
     with pytest.raises(FileNotFoundError):
-        migrate_attendance_followup_sqlite(ROOT / "backend" / "attendance.db")
+        migrate_attendance_followup_sqlite(missing)
     assert not missing.exists()

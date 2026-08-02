@@ -3,12 +3,31 @@
 # Tech Stack: FastAPI / Python 3.12
 
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
-# Load .env from the backend root (two levels above this file: src/core/ -> src/ -> backend/)
-if not os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("OPERATOROS_ISOLATED_TEST"):
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _resolve_managed_dev_database_url(database_url: str | None = None) -> str:
+    """Delegate managed development DB selection to the lifecycle resolver."""
+    repository = str(REPOSITORY_ROOT)
+    if repository not in sys.path:
+        sys.path.insert(0, repository)
+    from scripts.development_database import resolve_database
+
+    return resolve_database(REPOSITORY_ROOT, database_url).url
+
+
+# The launcher owns DATABASE_URL in managed development.  Resolve it before
+# dotenv loading so a stale backend/.env cannot become an independent fallback.
+if os.environ.get("OPERATOROS_MANAGED_DEV_SETUP", "").lower() == "true":
+    os.environ["DATABASE_URL"] = _resolve_managed_dev_database_url(os.environ.get("DATABASE_URL"))
+elif not os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("OPERATOROS_ISOLATED_TEST"):
+    # Load .env from the backend root (two levels above this file: src/core/ -> src/ -> backend/)
     load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 
@@ -68,6 +87,9 @@ class Settings(BaseSettings):
             "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_HOST", "POSTGRES_PORT"
         )):
             raise ValueError("OperatorOS desktop supports SQLite databases only.")
+
+        if os.environ.get("OPERATOROS_MANAGED_DEV_SETUP", "").lower() == "true":
+            return _resolve_managed_dev_database_url(self.DATABASE_URL)
 
         if self.DATABASE_URL:
             # Enforce protected path guard on self.DATABASE_URL

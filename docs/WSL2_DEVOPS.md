@@ -8,7 +8,7 @@ Direct Node.js/Vite and Python/FastAPI processes are the primary local-developme
 - WSL2 with a Linux distribution installed
 - Docker Desktop with WSL integration enabled
 - Python 3.12+
-- Node.js 20+
+- Node.js 22
 - npm
 - Agent Browser on the PATH if you want browser smoke testing
 
@@ -103,6 +103,29 @@ The destructive reset action remains disabled unless
 - Set `VITE_API_BASE_URL` to the public backend URL if the frontend is served separately from the backend.
 
 ## Troubleshooting
+
+### WSL Node/npm drift
+
+Check the active WSL toolchain:
+
+```bash
+command -v node
+command -v npm
+node --version
+npm --version
+```
+
+Expected executable paths are under `~/.nvm/versions/node/<version>/bin/`.
+Recover the pinned version in the current shell with:
+
+```bash
+. ~/.nvm/nvm.sh
+nvm use
+hash -r
+```
+
+Do not use `node.exe` or `npm.cmd` from `/mnt/c` for OperatorOS development.
+
 - If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `cd frontend && rm -rf node_modules && npm ci`.
 - If `npm ci` reports a registry/network failure, restore connectivity and rerun the same npm command. The launcher intentionally does not install dependencies automatically.
 - If a port is occupied, `./start-dev.sh --check` reports the affected service and process information when `lsof` or `ss` can provide it. Stop that process or select a different `BACKEND_PORT`/`FRONTEND_PORT`.

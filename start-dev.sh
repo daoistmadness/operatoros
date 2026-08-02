@@ -11,9 +11,18 @@ VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
+WSL_NODE_NPM_HELPER="$PROJECT_ROOT/scripts/validate-wsl-node-npm.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
+
+# Surface database configuration drift before any setup/preflight logging.
+if [[ -n "${DATABASE_URL+x}" ]]; then
+  printf 'WARNING: DATABASE_URL is set in this shell; start-dev.sh will validate it and may supersede the persistent development database.\n'
+fi
+if [[ -f "$BACKEND_DIR/.env" ]] && grep -Eq '^[[:space:]]*DATABASE_URL[[:space:]]*=' "$BACKEND_DIR/.env"; then
+  printf 'WARNING: backend/.env sets DATABASE_URL; in the dev launcher this value is superseded by the resolved persistent path and is likely stale/unused.\n'
+fi
 
 BACKEND_PORT_CONFIGURED=0
 FRONTEND_PORT_CONFIGURED=0
@@ -89,13 +98,15 @@ PY
 }
 
 prepare_local_environment() {
-  DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
-  DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
-  if [[ -z "${DATABASE_URL:-}" ]]; then
-    DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
+  EXPECTED_PERSISTENT_DB="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+  if [[ -z "${DATABASE_URL:-}" || "${DEV_DATABASE:-}" == "$EXPECTED_PERSISTENT_DB" ]]; then
+    DEV_DATABASE="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
     DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
     DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
     export DATABASE_URL="sqlite:///$DEV_DATABASE"
+  else
+    DEV_STATE_DIR="$(dirname "$DEV_DATABASE")"
+    DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"
   fi
   if [[ -z "${AUTH_COOKIE_SECRET:-}" ]]; then
     [[ -n "$DEV_SECRET_FILE" ]] || { DEV_STATE_DIR="$SESSION_DIR/state"; DEV_SECRET_FILE="$DEV_STATE_DIR/auth-cookie-secret"; }
@@ -120,29 +131,14 @@ run_preflight() {
   [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
   "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
   [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and package-lock.json."
-  current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-  existing_node="$(command -v node 2>/dev/null || true)"
-  existing_version="$(node --version 2>/dev/null || true)"
-  if [[ ! "$existing_version" =~ ^v22[.] ]] || [[ "$(node -p 'process.release.name' 2>/dev/null || true)" != node ]]; then
-    node_manager_dir="${OPERATOROS_NVM_DIR:-$current_user_home/.nvm}"
-    if [[ ! -s "$node_manager_dir/nvm.sh" ]]; then
-      fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-    fi
-    export NVM_DIR="$node_manager_dir"
-    # shellcheck disable=SC1090
-    source "$NVM_DIR/nvm.sh"
-    nvm use "$(<"$PROJECT_ROOT/.nvmrc")" >/dev/null
+  [[ -s "$WSL_NODE_NPM_HELPER" ]] || fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_NODE_NPM_HELPER"
+  # shellcheck disable=SC1090
+  source "$WSL_NODE_NPM_HELPER"
+  if ! operatoros_wsl_prepare_node_npm "$PROJECT_ROOT" "$PROJECT_ROOT/.nvmrc"; then
+    fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
   fi
-  command -v node >/dev/null 2>&1 || fail_preflight "NODE_22_REQUIRED" "Install Node.js 22 through NVM."
-  command -v npm >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate the npm paired with Node.js 22."
-  [[ "$(node -p 'process.release.name' 2>/dev/null || true)" == node ]] || fail_preflight "NODE_22_REQUIRED" "Activate genuine Node.js 22 through NVM."
-  local node_version node_major
-  node_version="$(node --version 2>/dev/null)" || fail_preflight "Frontend prerequisite is not usable: node failed its version check" "Install Node.js 22 with npm."
-  node_major="${node_version#v}"; node_major="${node_major%%.*}"
-  [[ "$node_major" == 22 ]] || fail_preflight "NODE_22_REQUIRED" "Detected $node_version; activate Node.js 22 through NVM."
-  npm --version >/dev/null 2>&1 || fail_preflight "NPM_UNAVAILABLE" "Activate npm paired with Node.js 22."
-  JS_RUNTIME_VERSION="${node_version#v}"
-  printf '  [ok] Node.js %s\n' "$node_version"
+  JS_RUNTIME_VERSION="${OPERATOROS_NODE_VERSION#v}"
+  printf '  [ok] Linux Node.js %s with paired npm %s\n' "$OPERATOROS_NODE_VERSION" "$OPERATOROS_NPM_VERSION"
   [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && npm ci"
   printf '  [ok] Backend and frontend dependencies\n'
 }
@@ -314,77 +310,25 @@ done
 
 run_preflight
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
-  fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" "Active session: ${active_session:-unverified}. Stop it with ./stop-dev.sh --session <id>."
+  session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
+  [[ -n "$session_status" ]] || session_status='{"state":"STALE_SESSION_UNVERIFIED"}'
+  fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" \
+    "Session state: $session_status" \
+    "If ACTIVE_VERIFIED, stop the owned session with: ./stop-dev.sh --session ${active_session:-<id>}" \
+    "Safe remediation: ./stop-dev.sh" \
+    "Inspect the exact state with: make dev-sessions-status" \
+    "Unverified session records are never deleted and unverified processes are never terminated automatically."
 fi
 allocate_ports
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
-if [[ "${DATABASE_URL:-}" == sqlite:* ]]; then
-  if [[ "${DATABASE_URL}" != sqlite:/* ]]; then
-    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "Explicit database overrides must be absolute SQLite paths (sqlite:////path/to/db)."
-  fi
-
-  # Validate with Python against isolation requirements
-  db_validation_error="$("$VENV/bin/python" - "$PROJECT_ROOT" "$DATABASE_URL" <<'PY' || true
-import sys
-import os
-from pathlib import Path
-
-try:
-    project = Path(sys.argv[1]).resolve()
-    url = sys.argv[2]
-
-    if not url.startswith("sqlite:///"):
-        print("DATABASE_URL must start with sqlite:///")
-        sys.exit(1)
-
-    db_path_str = url[len("sqlite:///")]
-
-    db_path = Path(url[len("sqlite:///"):])
-    if not db_path.is_absolute():
-        print("Database path must be absolute")
-        sys.exit(1)
-
-    resolved_db = db_path.resolve()
-    protected = {
-        project / "backend" / "attendance.db",
-        project / "attendance.db",
-    }
-    if resolved_db in protected or project / "backend" / ".local-dev" in resolved_db.parents:
-        print("Database path is protected")
-        sys.exit(1)
-
-    if resolved_db.name == "attendance.db" and resolved_db.parent == project:
-        print("Database path is protected")
-        sys.exit(1)
-
-    # Must be inside .runtime/operatoros-dev or .runtime/operatoros-e2e
-    dev_root = (project / ".runtime" / "operatoros-dev").resolve()
-    e2e_root = (project / ".runtime" / "operatoros-e2e").resolve()
-
-    def is_subpath(p: Path, parent: Path) -> bool:
-        try:
-            p.relative_to(parent)
-            return True
-        except ValueError:
-            return False
-
-    if not (is_subpath(resolved_db, dev_root) or is_subpath(resolved_db, e2e_root)):
-        print("Database path must reside inside .runtime/operatoros-dev or .runtime/operatoros-e2e")
-        sys.exit(1)
-
-except Exception as e:
-    print(f"Validation error: {e}")
-    sys.exit(1)
-PY
-)"
-  if [[ -n "$db_validation_error" ]]; then
-    fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "$db_validation_error"
-  fi
-  DEV_DATABASE="${DATABASE_URL#sqlite:///}"
-else
-  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+EXPECTED_PERSISTENT_DB="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+DEV_DATABASE="$("$VENV/bin/python" "$DEVELOPMENT_DATABASE_HELPER" resolve --repo "$PROJECT_ROOT" 2>&1)" || fail_preflight "DEVELOPMENT_DATABASE_PATH_REJECTED" "$DEV_DATABASE"
+if [[ -n "${DATABASE_URL:-}" && "$DEV_DATABASE" != "$EXPECTED_PERSISTENT_DB" ]]; then
+  error_box "WARNING: DATABASE_URL IS OVERRIDING PERSISTENT DEV DB"
+  printf '  Active target:     %s\n' "$DEV_DATABASE"
+  printf '  Persistent target: %s\n\n' "$EXPECTED_PERSISTENT_DB"
 fi
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 prepare_local_environment

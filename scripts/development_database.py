@@ -17,13 +17,26 @@ import subprocess
 import sys
 import tempfile
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
+
+from sqlalchemy.engine import make_url
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend" / "src"))
 
 SCHEMA_HEAD = "20260725_s43"
 DATABASE_NAME = "operatoros-development.db"
+
+
+@dataclass(frozen=True)
+class DatabaseResolution:
+    """The single resolved database choice used by development tooling."""
+
+    path: Path
+    persistent_path: Path
+    url: str
+    overridden: bool
 
 
 def fail(code: str) -> None:
@@ -81,6 +94,69 @@ def data_directory(repo: Path, override: str | None = None) -> tuple[Path, str, 
     return target, digest, common
 
 
+def resolve_database(repo: Path, database_url: str | None = None) -> DatabaseResolution:
+    """Resolve the development database, including an explicit safe override.
+
+    This is intentionally the only place that decides whether a development
+    database URL points at the persistent database or an approved disposable
+    location.  Shell launchers and backend settings both delegate here.
+    """
+    data_root, _, _ = data_directory(repo)
+    persistent = data_root / DATABASE_NAME
+    supplied = os.environ.get("DATABASE_URL") if database_url is None else database_url
+    if not supplied:
+        return DatabaseResolution(
+            path=persistent,
+            persistent_path=persistent,
+            url=f"sqlite:///{persistent}",
+            overridden=False,
+        )
+
+    try:
+        parsed = make_url(supplied)
+    except Exception:
+        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
+    if not parsed.drivername.startswith("sqlite") or not parsed.database or parsed.database == ":memory:":
+        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
+    raw_path = Path(parsed.database)
+    if not raw_path.is_absolute():
+        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
+    resolved = raw_path.resolve()
+
+    project = repo.resolve()
+    protected = {
+        (project / "backend" / "attendance.db").resolve(),
+        (project / "attendance.db").resolve(),
+    }
+    local_dev = (project / "backend" / ".local-dev").resolve()
+    if resolved in protected or contained(resolved, local_dev):
+        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
+
+    runtime_override = os.environ.get("OPERATOROS_RUNTIME_DIR")
+    dev_root = Path(runtime_override).resolve() if runtime_override else (project / ".runtime" / "operatoros-dev").resolve()
+    e2e_root = (project / ".runtime" / "operatoros-e2e").resolve()
+    data_dir_override = os.environ.get("OPERATOROS_DEV_DATA_DIR")
+    dev_data_root = (
+        Path(data_dir_override).resolve()
+        if data_dir_override
+        else (Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")).resolve() / "operatoros" / "development")
+    )
+    allowed = (
+        resolved == persistent.resolve()
+        or contained(resolved, dev_root)
+        or contained(resolved, e2e_root)
+        or contained(resolved, dev_data_root)
+    )
+    if not allowed:
+        fail("DEVELOPMENT_DATABASE_PATH_REJECTED")
+    return DatabaseResolution(
+        path=resolved,
+        persistent_path=persistent.resolve(),
+        url=supplied,
+        overridden=resolved != persistent.resolve(),
+    )
+
+
 def metadata(directory: Path, repository_id: str, common: Path) -> dict:
     return {
         "format_version": 1,
@@ -111,16 +187,17 @@ def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
 
 def inspect(database: Path) -> dict:
     if not database.exists():
-        return {"exists": False, "schema_head": None, "ledger": "absent", "integrity": "absent", "administrator_configured": False, "file_size": 0}
+        return {"exists": False, "schema_head": None, "ledger": "absent", "integrity": "absent", "administrator_configured": False, "users_count": 0, "file_size": 0}
     uri = f"file:{database.as_posix()}?mode=ro&immutable=1"
     try:
         with sqlite3.connect(uri, uri=True) as connection:
             head = connection.execute("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").fetchone()
             ledger_count = connection.execute("SELECT COUNT(*) FROM operatoros_schema_migrations WHERE version=?", (SCHEMA_HEAD,)).fetchone()[0]
             users = connection.execute("SELECT COUNT(*) FROM users WHERE role='admin' AND is_active=1").fetchone()[0]
-            return {"exists": True, "schema_head": head[0] if head else None, "ledger": "valid" if ledger_count == 1 else "invalid", "integrity": connection.execute("PRAGMA integrity_check").fetchone()[0], "quick_check": connection.execute("PRAGMA quick_check").fetchone()[0], "foreign_key_violations": len(connection.execute("PRAGMA foreign_key_check").fetchall()), "administrator_configured": bool(users), "file_size": database.stat().st_size}
+            users_count = connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            return {"exists": True, "schema_head": head[0] if head else None, "ledger": "valid" if ledger_count == 1 else "invalid", "integrity": connection.execute("PRAGMA integrity_check").fetchone()[0], "quick_check": connection.execute("PRAGMA quick_check").fetchone()[0], "foreign_key_violations": len(connection.execute("PRAGMA foreign_key_check").fetchall()), "administrator_configured": bool(users), "users_count": users_count, "file_size": database.stat().st_size}
     except sqlite3.Error:
-        return {"exists": True, "schema_head": None, "ledger": "invalid", "integrity": "unreadable", "administrator_configured": False, "file_size": database.stat().st_size}
+        return {"exists": True, "schema_head": None, "ledger": "invalid", "integrity": "unreadable", "administrator_configured": False, "users_count": 0, "file_size": database.stat().st_size}
 
 
 def initialize(database: Path) -> None:
@@ -187,6 +264,10 @@ def adopt(repo: Path, runtime: Path, session: str, override: str | None) -> Path
 
 
 def command(args: argparse.Namespace) -> int:
+    if args.command == "resolve":
+        resolution = resolve_database(Path(args.repo))
+        print(resolution.path)
+        return 0
     directory, database = prepare(Path(args.repo), getattr(args, "data_dir", None))
     if args.command == "path":
         print(database)
@@ -212,7 +293,7 @@ def command(args: argparse.Namespace) -> int:
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser()
     commands = root.add_subparsers(dest="command", required=True)
-    for name in ("path", "ensure", "status", "reset"):
+    for name in ("path", "ensure", "status", "reset", "resolve"):
         item = commands.add_parser(name); item.add_argument("--repo", required=True); item.add_argument("--data-dir")
         if name == "reset": item.add_argument("--confirm", default="")
         item.set_defaults(func=command)
