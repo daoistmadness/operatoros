@@ -27,13 +27,18 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
-      - run: python -m pip install -r requirements.txt
+      - name: Create canonical backend virtualenv
+        run: python -m venv .venv
+      - name: Install backend dependencies
+        run: |
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
       - name: Prepare isolated CI database
         run: |
           mkdir -p "${{ github.workspace }}/.runtime/operatoros-ci"
-          python -m core.schema_migrations initialize-fresh --database "${{ github.workspace }}/.runtime/operatoros-ci/ci-test.db"
-      - run: python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/api/system/clear-data' in routes; assert '/api/system/health' in routes"
-      - run: python -m pytest -q
+          .venv/bin/python -m core.schema_migrations initialize-fresh --database "${{ github.workspace }}/.runtime/operatoros-ci/ci-test.db"
+      - run: .venv/bin/python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/api/system/clear-data' in routes; assert '/api/system/health' in routes"
+      - run: .venv/bin/python -m pytest -q
 
   frontend:
     runs-on: ubuntu-latest
