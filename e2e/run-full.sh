@@ -18,9 +18,13 @@ logs="$results/logs"
 junit="$results/junit"
 mkdir -p "$logs" "$junit"
 started_at=$SECONDS
-node22_executable="${OPERATOROS_NODE22_EXECUTABLE:-$(command -v node 2>/dev/null || true)}"
-[[ -x "$node22_executable" && "$($node22_executable --version)" == v22.* ]] || { printf '%s\n' "Genuine Node.js 22 is required" >&2; exit 2; }
-node22_bin="$(dirname "$node22_executable")"
+source "$repo_root/scripts/validate-wsl-node-npm.sh"
+if [[ -n "${OPERATOROS_NODE24_EXECUTABLE:-}" ]]; then
+  node24_bin="$(dirname -- "$OPERATOROS_NODE24_EXECUTABLE")"
+  export PATH="$node24_bin:$PATH"
+fi
+operatoros_wsl_validate_node_npm "$repo_root" || { printf '%s\n' "Genuine Linux Node.js 24/npm 11 are required" >&2; exit 2; }
+node24_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
 
 smoke_status=0
 bash "$repo_root/e2e/run-smoke.sh" >"$logs/full-smoke.log" 2>&1 || smoke_status=$?
@@ -34,13 +38,13 @@ backend_status=0
 frontend_status=0
 (
   cd "$repo_root/frontend"
-  PATH="$node22_bin:$PATH" npm run test -- --reporter=junit --outputFile="$junit/frontend-full.xml"
+  PATH="$node24_bin:$PATH" npm run test -- --reporter=junit --outputFile="$junit/frontend-full.xml"
 ) >"$logs/frontend-full.log" 2>&1 || frontend_status=$?
 
 build_status=0
 (
   cd "$repo_root/frontend"
-  PATH="$node22_bin:$PATH" npm run build
+  PATH="$node24_bin:$PATH" npm run build
 ) >"$logs/frontend-build.log" 2>&1 || build_status=$?
 
 duration=$((SECONDS - started_at))

@@ -7,7 +7,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$expectedNodeMajor = 22
+$expectedNodeMajor = 24
 
 if ($WindowsSourcePath -match '^\\\\wsl(?:\$|\.localhost)\\') {
     throw "SOURCE_NOT_AVAILABLE: Windows Tauri tools must not execute from a WSL UNC path."
@@ -27,9 +27,9 @@ if ($wslCommit -ne $windowsCommit) { throw "SOURCE_COMMIT_MISMATCH: WSL=$wslComm
 Write-Host "SOURCE_COMMITS_MATCH $wslCommit"
 
 $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
-if (-not $nodeCommand) { throw "NODE_22_REQUIRED" }
+if (-not $nodeCommand) { throw "NODE_24_REQUIRED" }
 $nodeVersion = (& $nodeCommand.Source --version).Trim()
-if ($nodeVersion -notmatch "^v$expectedNodeMajor\.") { throw "NODE_22_REQUIRED: found $nodeVersion" }
+if ($nodeVersion -notmatch "^v$expectedNodeMajor\.") { throw "NODE_24_REQUIRED: found $nodeVersion" }
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw "NPM_UNAVAILABLE" }
 
 $portArgument = if ($PortStrategy -eq "fixed") { "--tauri-fixed" } else { "--mode tauri" }
