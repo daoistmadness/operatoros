@@ -33,19 +33,19 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 5. Initializes a fresh database with the current schema and approved baseline ledger.
 6. Seeds deterministic synthetic users, students, attendance, academic metadata, and one intentional enrollment.
 7. Records disposable database counts, checksum, and a deterministic enrollment fingerprint.
-8. Starts the backend and frontend through `start-dev.sh` using Node.js 22 and runtime-selected ports.
+8. Starts the backend and frontend through `start-dev.sh` using Node.js 24.13.0 and runtime-selected ports.
 9. Copies the ready launcher state into the invocation workspace and exports its backend and frontend URLs.
 10. Runs the backend smoke tests with the backend virtual environment.
-11. Runs Playwright browser tests with genuine Node.js 22.
+11. Runs Playwright browser tests with genuine Node.js 24.13.0.
 12. Stops only the recorded OperatorOS session and waits for its launcher.
 13. Recomputes production checksum and disposable enrollment fingerprint, failing if either protected value changed.
 14. Writes `e2e-results/summary.txt`; detailed logs, JUnit XML, screenshots, and traces are retained only where configured or needed for diagnosis.
 
 ## 4. Runtime responsibilities
 
-The OperatorOS application stack uses genuine Node.js 22.23.1 with npm and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime. `OPERATOROS_NODE22_EXECUTABLE` may identify the approved Node binary when it is not the active `node`.
+The OperatorOS application stack uses genuine Linux Node.js 24.13.0 with npm 11.x and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime. `OPERATOROS_NODE24_EXECUTABLE` may identify the approved Node binary when it is not the active `node`.
 
-The smoke runner narrows `PATH` for Playwright so the selected Node 22 binary owns `node`, npm, and the local Playwright CLI. Node/npm also own the application frontend launched by `start-dev.sh`.
+The smoke runner narrows `PATH` for Playwright so the selected Node 24 binary owns `node`, npm, and the local Playwright CLI. Node/npm also own the application frontend launched by `start-dev.sh`.
 
 ## 5. Ports and process ownership
 
@@ -98,7 +98,7 @@ Run native Tauri tooling from an NTFS Windows worktree, not a WSL UNC path. The 
   -PortStrategy fixed
 ```
 
-The launcher verifies Node 22 and npm, starts the WSL application stack, waits for synchronized runtime state, verifies Windows-to-WSL reachability, generates a temporary Tauri override under `%LOCALAPPDATA%\OperatorOS\dev\<session-id>`, and runs Tauri from the Windows worktree. Its `finally` block stops only the session it started. This is a manual development workflow and does not change the automated desktop status.
+The launcher verifies Node 24 and npm, starts the WSL application stack, waits for synchronized runtime state, verifies Windows-to-WSL reachability, generates a temporary Tauri override under `%LOCALAPPDATA%\OperatorOS\dev\<session-id>`, and runs Tauri from the Windows worktree. Its `finally` block stops only the session it started. This is a manual development workflow and does not change the automated desktop status.
 
 ## 9. Generated directories
 
@@ -110,7 +110,7 @@ These paths are generated evidence and must not be committed.
 
 ## 10. Failure behavior
 
-The smoke command fails on backend or web test failure, startup failure, an unavailable genuine Node 22 runtime, a production checksum change, or a changed disposable enrollment fingerprint. Expected unauthenticated `/api/auth/me` detection may return 401; unexpected 401/403 and other unexpected 4xx/5xx responses remain failures.
+The smoke command fails on backend or web test failure, startup failure, an unavailable genuine Node 24 runtime, a production checksum change, or a changed disposable enrollment fingerprint. Expected unauthenticated `/api/auth/me` detection may return 401; unexpected 401/403 and other unexpected 4xx/5xx responses remain failures.
 
 Normal output is the terse summary. Diagnose failures using `e2e-results/summary.txt`, `e2e-results/logs/`, `e2e-results/junit/`, `e2e-results/playwright/`, and the before/after database metadata. Do not reinterpret a missing desktop prerequisite as a desktop pass.
 

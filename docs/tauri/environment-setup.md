@@ -6,7 +6,7 @@ OperatorOS Phase 11.0 targets a Windows Tauri v2 process. Run Tauri and Cargo fr
 
 | Tool | Supported baseline | Audited on 2026-07-14 | Notes |
 | --- | --- | --- | --- |
-| Node.js | 22 LTS or newer | 24.13.1 | Installed through nvm-windows. Node 22 is the project baseline; Node 24 also passed the package workflow. |
+| Node.js | 24.13.0 | 24.13.0 | Installed through nvm-windows and aligned with the repository Node 24 baseline. |
 | npm | Version supplied with Node | 11.10.0 | Existing `npm run dev`, `npm test`, and `npm run build` commands are unchanged. |
 | Rust | Stable MSVC toolchain | rustc 1.97.0 | `stable-x86_64-pc-windows-msvc` is installed. |
 | Cargo | Supplied by Rust | cargo 1.97.0 | Add `%USERPROFILE%\.cargo\bin` to `PATH` before running Tauri. |
@@ -16,7 +16,7 @@ OperatorOS Phase 11.0 targets a Windows Tauri v2 process. Run Tauri and Cargo fr
 
 ## Installation
 
-1. Install Node 22 LTS with nvm-windows, or use a newer compatible Node release.
+1. Install Node 24.13.0 with nvm-windows.
 2. From `frontend`, run `npm ci`.
 3. Install Rust with rustup and select the Windows MSVC toolchain:
 

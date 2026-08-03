@@ -48,8 +48,8 @@ frontend/
 ```
 
 ## Requirements
-- Node.js 22+
-- npm
+- Node.js 24.13.0
+- npm 11.x
 
 ## Setup
 ```bash

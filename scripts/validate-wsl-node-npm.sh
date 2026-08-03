@@ -103,8 +103,8 @@ operatoros_wsl_validate_node_npm() {
     return 1
   fi
   node_major="${BASH_REMATCH[1]}"
-  if [[ "$node_major" != 22 ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="Node.js major version must be 22 (detected ${node_version})"
+  if [[ "$node_major" != 24 ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="Node.js major version must be 24 (detected ${node_version})"
     return 1
   fi
   if ! npm_version="$("$OPERATOROS_NPM_PATH" --version 2>/dev/null)"; then
@@ -122,7 +122,7 @@ operatoros_wsl_validate_node_npm() {
 }
 
 operatoros_wsl_toolchain_failure() {
-  local pinned_version="${1:-22}"
+  local pinned_version="${1:-24}"
   local node_display="${OPERATOROS_NODE_PATH:-<not found>}"
   local npm_display="${OPERATOROS_NPM_PATH:-<not found>}"
   local node_resolved="${OPERATOROS_NODE_REALPATH:-<unresolved>}"
@@ -134,7 +134,7 @@ operatoros_wsl_toolchain_failure() {
   npm: $npm_display
     resolved: $npm_resolved
 
-OperatorOS requires Linux Node.js 22 and npm inside WSL.
+OperatorOS requires Linux Node.js 24 and npm 11 inside WSL.
 Reason: ${OPERATOROS_WSL_TOOLCHAIN_REASON:-toolchain validation failed}
 
 Activate:
@@ -174,7 +174,7 @@ operatoros_wsl_prepare_node_npm() {
   local nvmrc="${2:?.nvmrc path is required}"
   local pinned_version
   pinned_version="$(tr -d '[:space:]' < "$nvmrc" 2>/dev/null || true)"
-  pinned_version="${pinned_version:-22}"
+  pinned_version="${pinned_version:-24}"
 
   if operatoros_wsl_validate_node_npm "$project_root"; then
     return 0
@@ -188,7 +188,7 @@ operatoros_wsl_prepare_node_npm() {
 
 operatoros_wsl_probe_node_npm() {
   local project_root="${1:-$PWD}"
-  local pinned_version="${2:-22}"
+  local pinned_version="${2:-24}"
 
   if operatoros_wsl_validate_node_npm "$project_root"; then
     printf 'WSL Node/npm probe: PASS\n'
