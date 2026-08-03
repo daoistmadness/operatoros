@@ -26,7 +26,7 @@ def _launcher_environment(tmp_path: Path, vite_body: str) -> tuple[dict[str, str
     npm = tools / "npm"
     npm.write_text(
         """#!/bin/sh
-if [ "${1:-}" = "--version" ]; then echo 10.0.0; exit 0; fi
+if [ "${1:-}" = "--version" ]; then echo 11.0.0; exit 0; fi
 shift 2
 if [ "${1:-}" = "--" ]; then shift; fi
 exec "$ASTRYX_VITE_EXECUTABLE" "$@"
@@ -38,11 +38,26 @@ exec "$ASTRYX_VITE_EXECUTABLE" "$@"
     for executable in (node, npm, vite):
         executable.chmod(0o755)
 
+    nvm_dir = tmp_path / "nvm"
+    version_bin = nvm_dir / "versions" / "node" / "v24.13.0" / "bin"
+    version_bin.mkdir(parents=True)
+    (version_bin / "node").write_text(node.read_text(encoding="utf-8"), encoding="utf-8")
+    (version_bin / "npm").write_text(npm.read_text(encoding="utf-8"), encoding="utf-8")
+    (version_bin / "node").chmod(0o755)
+    (version_bin / "npm").chmod(0o755)
+    nvm_dir.joinpath("nvm.sh").write_text(
+        "nvm() {\n"
+        "  [ \"${1:-}\" = use ] || return 1\n"
+        "  export PATH=\"$NVM_DIR/versions/node/v24.13.0/bin:$PATH\"\n"
+        "}\n",
+        encoding="utf-8",
+    )
+
     environment = os.environ.copy()
     environment.update(
         PATH=f"{tools}:{environment['PATH']}",
         OPERATOROS_JS_RUNTIME="node",
-        OPERATOROS_NVM_DIR=str(tmp_path / "no-nvm"),
+        OPERATOROS_NVM_DIR=str(nvm_dir),
         OPERATOROS_RUNTIME_DIR=str(tmp_path / "runtime"),
         OPERATOROS_DEV_DATA_DIR=str(tmp_path / "persistent-data"),
         ASTRYX_VITE_EXECUTABLE=str(vite),
@@ -58,10 +73,25 @@ exec "$ASTRYX_VITE_EXECUTABLE" "$@"
 FAKE_VITE_SERVER = """#!/usr/bin/env python3
 import argparse
 import http.server
+import json
+import os
+import shutil
+import subprocess
+from pathlib import Path
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--host", default="127.0.0.1")
 parser.add_argument("--port", type=int, default=5173)
 arguments, _ = parser.parse_known_args()
+runtime_record = os.environ.get("ASTRYX_FRONTEND_RUNTIME_RECORD")
+if runtime_record:
+    record = {
+        "path_first": os.environ["PATH"].split(os.pathsep)[0],
+        "node": shutil.which("node"),
+        "npm": shutil.which("npm"),
+        "node_version": subprocess.check_output(["node", "--version"], text=True).strip(),
+        "npm_version": subprocess.check_output(["npm", "--version"], text=True).strip(),
+    }
+    Path(runtime_record).write_text(json.dumps(record), encoding="utf-8")
 http.server.ThreadingHTTPServer((arguments.host, arguments.port), http.server.SimpleHTTPRequestHandler).serve_forever()
 """
 
@@ -396,9 +426,13 @@ def test_dev_launcher_reports_missing_vite_before_starting_services(tmp_path):
 def test_dev_launcher_reports_unusable_node_before_starting_services(tmp_path):
     launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
     environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
-    node = Path(environment["PATH"].split(os.pathsep, 1)[0]) / "node"
-    node.write_text("#!/bin/sh\nexit 3\n", encoding="utf-8")
-    node.chmod(0o755)
+    unusable_node = "#!/bin/sh\nexit 3\n"
+    for node in (
+        Path(environment["PATH"].split(os.pathsep, 1)[0]) / "node",
+        tmp_path / "nvm" / "versions" / "node" / "v24.13.0" / "bin" / "node",
+    ):
+        node.write_text(unusable_node, encoding="utf-8")
+        node.chmod(0o755)
 
     result = subprocess.run([str(launcher), "--check"], cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=20)
     output = result.stdout + result.stderr
@@ -450,6 +484,39 @@ def test_dev_launcher_waits_for_readiness_and_ctrl_c_cleans_process_groups(tmp_p
             assert connection.execute("SELECT COUNT(*) FROM users WHERE role='admin'").fetchone()[0] == 0
         assert not (tmp_path / "runtime" / "active-session").exists()
         assert list((tmp_path / "runtime" / "sessions").iterdir()) == []
+    finally:
+        _stop_launcher(process)
+
+
+def test_dev_launcher_frontend_child_inherits_pinned_node_npm_path(tmp_path):
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    environment, _ = _launcher_environment(tmp_path, FAKE_VITE_SERVER)
+    frontend_port, backend_port = _launcher_ports()
+    runtime_record = tmp_path / "frontend-runtime.json"
+    environment.update(
+        FRONTEND_PORT=str(frontend_port),
+        BACKEND_PORT=str(backend_port),
+        ASTRYX_FRONTEND_RUNTIME_RECORD=str(runtime_record),
+    )
+    process = subprocess.Popen(
+        [str(launcher)],
+        cwd=tmp_path,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        assert _wait_for_url(f"http://127.0.0.1:{backend_port}/health")
+        assert _wait_for_url(f"http://127.0.0.1:{frontend_port}")
+        record = json.loads(runtime_record.read_text(encoding="utf-8"))
+        expected_bin = str(tmp_path / "nvm" / "versions" / "node" / "v24.13.0" / "bin")
+        assert record["path_first"] == expected_bin
+        assert record["node"] == str(Path(expected_bin) / "node")
+        assert record["npm"] == str(Path(expected_bin) / "npm")
+        assert record["node_version"].startswith("v24.")
+        assert record["npm_version"].startswith("11.")
     finally:
         _stop_launcher(process)
 

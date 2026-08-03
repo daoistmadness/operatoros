@@ -19,12 +19,8 @@ junit="$results/junit"
 mkdir -p "$logs" "$junit"
 started_at=$SECONDS
 source "$repo_root/scripts/validate-wsl-node-npm.sh"
-if [[ -n "${OPERATOROS_NODE24_EXECUTABLE:-}" ]]; then
-  node24_bin="$(dirname -- "$OPERATOROS_NODE24_EXECUTABLE")"
-  export PATH="$node24_bin:$PATH"
-fi
-operatoros_wsl_validate_node_npm "$repo_root" || { printf '%s\n' "Genuine Linux Node.js 24/npm 11 are required" >&2; exit 2; }
-node24_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
+operatoros_wsl_prepare_node_npm "$repo_root" "$repo_root/.nvmrc" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
+node_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
 
 smoke_status=0
 bash "$repo_root/e2e/run-smoke.sh" >"$logs/full-smoke.log" 2>&1 || smoke_status=$?
@@ -38,13 +34,13 @@ backend_status=0
 frontend_status=0
 (
   cd "$repo_root/frontend"
-  PATH="$node24_bin:$PATH" npm run test -- --reporter=junit --outputFile="$junit/frontend-full.xml"
+  PATH="$node_bin:$PATH" npm run test -- --reporter=junit --outputFile="$junit/frontend-full.xml"
 ) >"$logs/frontend-full.log" 2>&1 || frontend_status=$?
 
 build_status=0
 (
   cd "$repo_root/frontend"
-  PATH="$node24_bin:$PATH" npm run build
+  PATH="$node_bin:$PATH" npm run build
 ) >"$logs/frontend-build.log" 2>&1 || build_status=$?
 
 duration=$((SECONDS - started_at))
