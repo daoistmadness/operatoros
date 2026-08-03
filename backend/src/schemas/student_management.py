@@ -87,8 +87,25 @@ class StudentContactInput(BaseModel):
         return value
 
 
+class HealthProfileInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    allergy: str | None = Field(default=None, max_length=4000)
+    medical_condition: str | None = Field(default=None, max_length=4000)
+    special_needs: str | None = Field(default=None, max_length=4000)
+
+
+class DocumentStatusInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    family_card_received: bool = False
+    birth_certificate_received: bool = False
+    parent_id_received: bool = False
+    school_agreement_received: bool = False
+    publication_consent_received: bool = False
+
+
 class GuardianInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    id: int | None = Field(default=None, gt=0)
     guardian_type: Literal["father", "mother", "guardian"] = "guardian"
     name: str = Field(min_length=1, max_length=255)
     phone: str | None = Field(default=None, max_length=64)
@@ -128,6 +145,8 @@ class StudentCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     identity: StudentIdentityInput
     contact: StudentContactInput | None = None
+    health: HealthProfileInput | None = None
+    document_status: DocumentStatusInput | None = None
     guardians: list[GuardianInput] = Field(default_factory=list, max_length=3)
     device_identity: DeviceIdentityInput | None = None
     enrollment: EnrollmentInput | None = None
@@ -139,6 +158,8 @@ class StudentProfilePatch(BaseModel):
     record_version: str = Field(min_length=64, max_length=64)
     identity: StudentIdentityInput
     contact: StudentContactInput | None = None
+    health: HealthProfileInput | None = None
+    document_status: DocumentStatusInput | None = None
     guardians: list[GuardianInput] | None = Field(default=None, max_length=3)
     reason: str = Field(min_length=3, max_length=1000)
     sensitive_confirmation: str | None = None
@@ -203,3 +224,6 @@ class StudentSummaryResponse(BaseModel):
     profile_completeness: int
     quality_flags: list[str]
     updated_at: datetime
+    age_years: int | None = None
+    current_programme: str | None = None
+    current_grade: str | None = None

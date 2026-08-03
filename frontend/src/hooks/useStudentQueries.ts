@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   commitRoster, commitStudentUpdate, createEnrollment, createStudent, endEnrollment, exportStudentTemplate,
-  fetchStudent, fetchStudentEnrollments, fetchStudentHistory, fetchStudentQuality, fetchStudents,
+  fetchStudent, fetchStudentEnrollments, fetchStudentHistory, fetchStudentQuality, fetchStudents, exportStudentsCsv, updateStudentHealth, updateStudentDocuments, addStudentGuardian, updateStudentGuardian, deleteStudentGuardian,
   previewRoster, previewStudentUpdate, reassignDeviceIdentity, replaceDeviceIdentity, retireDeviceIdentity, StudentFilters, transferEnrollment,
   updateStudent,
 } from "../api/students";
@@ -39,3 +39,9 @@ export function useRosterCommit() { const invalidate = useStudentDomainInvalidat
 export function useStudentUpdatePreview() { return useMutation({ mutationFn: previewStudentUpdate }); }
 export function useStudentUpdateCommit() { const invalidate = useStudentDomainInvalidation(); return useMutation({ mutationFn: ({ batchId, payload }: { batchId: string; payload: unknown }) => commitStudentUpdate(batchId, payload), onSuccess: invalidate }); }
 export function useStudentTemplateExport() { return useMutation({ mutationFn: exportStudentTemplate }); }
+export function useStudentsCsvExport() { return useMutation({ mutationFn: exportStudentsCsv }); }
+export function useUpdateStudentHealth(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (payload: unknown) => updateStudentHealth(id, payload), onSuccess: invalidate }); }
+export function useUpdateStudentDocuments(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (payload: unknown) => updateStudentDocuments(id, payload), onSuccess: invalidate }); }
+export function useAddStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (payload: unknown) => addStudentGuardian(id, payload), onSuccess: invalidate }); }
+export function useUpdateStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: ({ guardianId, payload }: { guardianId: number; payload: unknown }) => updateStudentGuardian(id, guardianId, payload), onSuccess: invalidate }); }
+export function useDeleteStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (guardianId: number) => deleteStudentGuardian(id, guardianId), onSuccess: invalidate }); }
