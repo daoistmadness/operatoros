@@ -33,6 +33,9 @@ class StudentMaster(Base):
     admission_date = Column(Date, nullable=True)
     admission_type = Column(String(64), nullable=True)
     previous_school = Column(String(255), nullable=True)
+    dapodik_peserta_didik_id = Column(String(64), nullable=True, index=True)
+    dapodik_sekolah_id = Column(String(64), nullable=True, index=True)
+    dapodik_last_update_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     created_by = Column(String(255), nullable=True)
@@ -44,6 +47,7 @@ class StudentMaster(Base):
         Index("uq_student_masters_nipd", "nipd", unique=True, sqlite_where=nipd.isnot(None)),
         Index("uq_student_masters_nisn", "nisn", unique=True, sqlite_where=nisn.isnot(None)),
         Index("uq_student_masters_nik", "nik", unique=True, sqlite_where=nik.isnot(None)),
+        Index("uq_student_masters_dapodik_peserta_didik_id", "dapodik_peserta_didik_id", unique=True, sqlite_where=dapodik_peserta_didik_id.isnot(None)),
         CheckConstraint("student_status IN ('pending_review','active','inactive','transferred','withdrawn','graduated','archived')", name="ck_student_master_status"),
     )
 

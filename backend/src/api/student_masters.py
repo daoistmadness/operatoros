@@ -28,6 +28,8 @@ from services.student_linking import (
     build_legacy_link_rows,
     commit_legacy_preview,
     create_legacy_preview,
+    legacy_link_status,
+    link_legacy_student,
     resolve_legacy_student,
     summarize,
 )
@@ -55,6 +57,26 @@ class LegacyLinkResolutionRequest(BaseModel):
     student_master_id: str | None = None
     reason: str = Field(min_length=3, max_length=1000)
     confirmation: str
+
+
+class CanonicalLegacyLinkRequest(BaseModel):
+    legacy_student_id: int = Field(gt=0)
+    reason: str = Field(min_length=3, max_length=1000)
+    confirmation: str
+
+
+class CanonicalLegacyCandidate(BaseModel):
+    legacy_student_id: int
+    name: str
+    jenjang: str | None = None
+    class_name: str | None = None
+    attendance_count: int
+
+
+class CanonicalLegacyLinkStatus(BaseModel):
+    status: Literal["LINKED", "NOT_LINKED", "REVIEW_REQUIRED"]
+    legacy_student_id: int | None = None
+    candidates: list[CanonicalLegacyCandidate]
 
 
 def _student_summary(student: StudentMaster) -> StudentMasterSummary:
@@ -346,6 +368,33 @@ def resolve_legacy_student_link(
     )
 
 
+@router.get("/{student_master_id}/legacy-link", response_model=CanonicalLegacyLinkStatus)
+def get_canonical_legacy_link(
+    student_master_id: str,
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_capability("view_student")),
+):
+    student = db.get(StudentMaster, student_master_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student master not found")
+    return legacy_link_status(db, student)
+
+
+@router.post("/{student_master_id}/legacy-link", response_model=CanonicalLegacyLinkStatus)
+def post_canonical_legacy_link(
+    student_master_id: str,
+    body: CanonicalLegacyLinkRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_capability("resolve_student_duplicates")),
+):
+    if body.confirmation != "LINK_LEGACY_STUDENT":
+        raise HTTPException(status_code=400, detail="Invalid legacy-link confirmation")
+    student = db.get(StudentMaster, student_master_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student master not found")
+    return link_legacy_student(db, student, body.legacy_student_id, body.reason, user.username)
+
+
 @router.get("/{student_master_id}", response_model=StudentMasterSummary)
 def get_student_master(
     student_master_id: str,
@@ -367,10 +416,12 @@ def get_student_profile(
     student = db.get(StudentMaster, student_master_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student master not found")
-    return serialize_student_detail(
+    detail = serialize_student_detail(
         db, student,
         include_sensitive="view_sensitive_student_fields" in capabilities_for_role(user.role),
     )
+    detail["attendance_identity"] = legacy_link_status(db, student)
+    return detail
 
 
 @router.patch("/{student_master_id}/profile")

@@ -3989,6 +3989,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/student-masters/{student_master_id}/legacy-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Canonical Legacy Link */
+        get: operations["get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get"];
+        put?: never;
+        /** Post Canonical Legacy Link */
+        post: operations["post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student-masters/{student_master_id}/profile": {
         parameters: {
             query?: never;
@@ -5446,6 +5464,40 @@ export interface components {
             resolution_code: string;
             /** Resolution Note */
             resolution_note?: string | null;
+        };
+        /** CanonicalLegacyCandidate */
+        CanonicalLegacyCandidate: {
+            /** Attendance Count */
+            attendance_count: number;
+            /** Class Name */
+            class_name?: string | null;
+            /** Jenjang */
+            jenjang?: string | null;
+            /** Legacy Student Id */
+            legacy_student_id: number;
+            /** Name */
+            name: string;
+        };
+        /** CanonicalLegacyLinkRequest */
+        CanonicalLegacyLinkRequest: {
+            /** Confirmation */
+            confirmation: string;
+            /** Legacy Student Id */
+            legacy_student_id: number;
+            /** Reason */
+            reason: string;
+        };
+        /** CanonicalLegacyLinkStatus */
+        CanonicalLegacyLinkStatus: {
+            /** Candidates */
+            candidates: components["schemas"]["CanonicalLegacyCandidate"][];
+            /** Legacy Student Id */
+            legacy_student_id?: number | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "LINKED" | "NOT_LINKED" | "REVIEW_REQUIRED";
         };
         /** ClassAttendanceEntryItem */
         ClassAttendanceEntryItem: {
@@ -16081,6 +16133,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CanonicalLegacyLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
                 };
             };
             /** @description Validation Error */
