@@ -4,11 +4,13 @@ import {
   fetchStudent, fetchStudentEnrollments, fetchStudentHistory, fetchStudentQuality, fetchStudents, exportStudentsCsv, updateStudentHealth, updateStudentDocuments, addStudentGuardian, updateStudentGuardian, deleteStudentGuardian,
   previewRoster, previewStudentUpdate, reassignDeviceIdentity, replaceDeviceIdentity, retireDeviceIdentity, StudentFilters, transferEnrollment,
   updateStudent,
+  fetchLegacyLinkStatus, linkLegacyStudent,
 } from "../api/students";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export const useStudents = (filters: StudentFilters) => useQuery({ queryKey: queryKeys.students.list(filters), queryFn: () => fetchStudents(filters), placeholderData: (previous) => previous });
 export const useStudent = (id?: string) => useQuery({ queryKey: queryKeys.students.detail(id || ""), queryFn: () => fetchStudent(id!), enabled: Boolean(id) });
+export const useLegacyLinkStatus = (id?: string) => useQuery({ queryKey: queryKeys.students.legacyLink(id || ""), queryFn: () => fetchLegacyLinkStatus(id!), enabled: Boolean(id) });
 export const useStudentQuality = () => useQuery({ queryKey: queryKeys.students.quality, queryFn: fetchStudentQuality });
 export const useStudentHistory = (id?: string) => useQuery({ queryKey: queryKeys.students.history(id || ""), queryFn: () => fetchStudentHistory(id!), enabled: Boolean(id) });
 export const useStudentEnrollments = (id?: string) => useQuery({ queryKey: queryKeys.students.enrollments(id || ""), queryFn: () => fetchStudentEnrollments(id!), enabled: Boolean(id) });
@@ -22,6 +24,7 @@ function useStudentDomainInvalidation(id?: string) {
       await client.invalidateQueries({ queryKey: queryKeys.students.detail(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.history(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.enrollments(id) });
+      await client.invalidateQueries({ queryKey: queryKeys.students.legacyLink(id) });
     }
   };
 }
@@ -45,3 +48,7 @@ export function useUpdateStudentDocuments(id: string) { const invalidate = useSt
 export function useAddStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (payload: unknown) => addStudentGuardian(id, payload), onSuccess: invalidate }); }
 export function useUpdateStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: ({ guardianId, payload }: { guardianId: number; payload: unknown }) => updateStudentGuardian(id, guardianId, payload), onSuccess: invalidate }); }
 export function useDeleteStudentGuardian(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (guardianId: number) => deleteStudentGuardian(id, guardianId), onSuccess: invalidate }); }
+export function useLinkLegacyStudent(id: string) {
+  const invalidate = useStudentDomainInvalidation(id);
+  return useMutation({ mutationFn: (payload: { legacy_student_id: number; reason: string; confirmation: "LINK_LEGACY_STUDENT" }) => linkLegacyStudent(id, payload), onSuccess: invalidate });
+}
