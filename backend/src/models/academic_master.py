@@ -41,11 +41,16 @@ class AcademicClass(Base):
     class_name = Column(String(255), nullable=False)
     section_code = Column(String(32), nullable=False, default="", server_default="")
     active = Column(Boolean, nullable=False, default=True, server_default="1", index=True)
+    dapodik_rombongan_belajar_id = Column(String(64), nullable=True, index=True)
+    dapodik_sekolah_id = Column(String(64), nullable=True, index=True)
+    dapodik_semester_id = Column(String(32), nullable=True, index=True)
+    dapodik_last_update_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     __table_args__ = (
         UniqueConstraint("academic_year_id", "grade_id", "class_name", name="uq_academic_class_year_grade_name"),
         UniqueConstraint("academic_year_id", "grade_id", "section_code", name="uq_academic_class_year_grade_section"),
+        Index("uq_academic_classes_dapodik_rombongan_belajar_id", "dapodik_rombongan_belajar_id", unique=True, sqlite_where=dapodik_rombongan_belajar_id.isnot(None)),
     )
 
 

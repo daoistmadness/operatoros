@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { commitStudentUpdate, createStudent, fetchStudents, previewRoster, previewStudentUpdate, replaceDeviceIdentity, updateStudent } from "./students";
+import { commitStudentUpdate, createStudent, fetchLegacyLinkStatus, fetchStudents, linkLegacyStudent, previewRoster, previewStudentUpdate, replaceDeviceIdentity, updateStudent } from "./students";
 import { queryKeys } from "../lib/query/queryKeys";
 
 describe("student management API domain", () => {
@@ -13,6 +13,7 @@ describe("student management API domain", () => {
     expect(queryKeys.students.detail("uuid-1")).toEqual(["students", "detail", "uuid-1"]);
     expect(queryKeys.students.deviceIdentities("uuid-1")).toEqual(["students", "devices", "uuid-1"]);
     expect(queryKeys.students.enrollments("uuid-1")).toEqual(["students", "enrollments", "uuid-1"]);
+    expect(queryKeys.students.legacyLink("uuid-1")).toEqual(["students", "legacy-link", "uuid-1"]);
   });
 
   it("uses canonical student routes and server filters", async () => {
@@ -41,5 +42,13 @@ describe("student management API domain", () => {
     expect(String((fetch as any).mock.calls[2][0])).toContain("/api/student-masters/management/update-preview");
     await commitStudentUpdate("batch-1", { selected_row_ids: [1], confirmation: "COMMIT_STUDENT_DATA_UPDATE", preview_checksum: "a".repeat(64) });
     expect(String((fetch as any).mock.calls[3][0])).toContain("/api/student-masters/management/update-commit/batch-1");
+  });
+
+  it("uses the canonical admin legacy-link endpoints", async () => {
+    await fetchLegacyLinkStatus("uuid-1");
+    expect(String((fetch as any).mock.calls[0][0])).toContain("/api/student-masters/uuid-1/legacy-link");
+    await linkLegacyStudent("uuid-1", { legacy_student_id: 7, reason: "Reviewed synthetic candidate", confirmation: "LINK_LEGACY_STUDENT" });
+    expect(String((fetch as any).mock.calls[1][0])).toContain("/api/student-masters/uuid-1/legacy-link");
+    expect((fetch as any).mock.calls[1][1].method).toBe("POST");
   });
 });
