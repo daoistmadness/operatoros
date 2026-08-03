@@ -4,6 +4,8 @@ export type StudentFilters = {
   search?: string;
   academic_year_id?: number;
   jenjang_id?: number;
+  program_id?: number;
+  grade_id?: number;
   class_id?: number;
   status?: string;
   device_linked?: boolean;
@@ -25,6 +27,9 @@ export type ManagedStudent = {
   profile_completeness: number;
   student_status: string;
   quality_flags: string[];
+  age_years?: number | null;
+  current_programme?: string | null;
+  current_grade?: string | null;
 };
 
 export type StudentListResponse = {
@@ -44,6 +49,9 @@ export type StudentProfile = {
   device_identities: Array<{ id: number; device_identifier: string; device_source: string; effective_from: string; effective_to?: string | null; is_active: boolean }>;
   enrollments: Array<{ id: number; academic_year_id: number; academic_year: string; jenjang: string; program?: string | null; grade?: string | null; academic_class_id?: number | null; class_name?: string | null; effective_from?: string | null; effective_to?: string | null; active: boolean }>;
   updated_at: string;
+  age_years?: number | null;
+  health?: Record<string, string | null> | null;
+  document_status?: Record<string, boolean> | null;
 };
 
 export async function fetchStudents(filters: StudentFilters): Promise<StudentListResponse> {
@@ -122,3 +130,13 @@ export async function exportStudentTemplate(): Promise<Blob> {
     expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
   })).data;
 }
+
+export async function exportStudentsCsv(filters: StudentFilters): Promise<Blob> {
+  return (await apiRequest<Blob>({ path: "/api/student-masters/management/export.csv", responseType: "blob", params: filters, expectedBlobTypes: ["text/csv"] })).data;
+}
+
+export async function updateStudentHealth(id: string, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/health`, method: "PATCH", body })).data; }
+export async function updateStudentDocuments(id: string, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/documents`, method: "PATCH", body })).data; }
+export async function addStudentGuardian(id: string, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians`, method: "POST", body })).data; }
+export async function updateStudentGuardian(id: string, guardianId: number, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians/${guardianId}`, method: "PATCH", body })).data; }
+export async function deleteStudentGuardian(id: string, guardianId: number) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians/${guardianId}`, method: "DELETE" })).data; }

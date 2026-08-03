@@ -3698,6 +3698,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/student-masters/management/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Managed Students Csv */
+        get: operations["export_managed_students_csv_api_student_masters_management_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student-masters/management/import-history": {
         parameters: {
             query?: never;
@@ -3884,6 +3901,75 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Student Documents */
+        patch: operations["patch_student_documents_api_student_masters__student_master_id__documents_patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/guardians": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Student Guardian */
+        post: operations["add_student_guardian_api_student_masters__student_master_id__guardians_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/guardians/{guardian_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Student Guardian */
+        delete: operations["delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Student Guardian */
+        patch: operations["update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Student Health */
+        patch: operations["patch_student_health_api_student_masters__student_master_id__health_patch"];
         trace?: never;
     };
     "/api/student-masters/{student_master_id}/history": {
@@ -5667,6 +5753,34 @@ export interface components {
             /** Version */
             version?: number | null;
         };
+        /** DocumentStatusInput */
+        DocumentStatusInput: {
+            /**
+             * Birth Certificate Received
+             * @default false
+             */
+            birth_certificate_received: boolean;
+            /**
+             * Family Card Received
+             * @default false
+             */
+            family_card_received: boolean;
+            /**
+             * Parent Id Received
+             * @default false
+             */
+            parent_id_received: boolean;
+            /**
+             * Publication Consent Received
+             * @default false
+             */
+            publication_consent_received: boolean;
+            /**
+             * School Agreement Received
+             * @default false
+             */
+            school_agreement_received: boolean;
+        };
         /** EducationBody */
         EducationBody: {
             /** Education Level */
@@ -5959,6 +6073,8 @@ export interface components {
              * @enum {string}
              */
             guardian_type: "father" | "mother" | "guardian";
+            /** Id */
+            id?: number | null;
             /** Name */
             name: string;
             /** Occupation */
@@ -5970,6 +6086,15 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HealthProfileInput */
+        HealthProfileInput: {
+            /** Allergy */
+            allergy?: string | null;
+            /** Medical Condition */
+            medical_condition?: string | null;
+            /** Special Needs */
+            special_needs?: string | null;
         };
         /** HebOverrideBody */
         HebOverrideBody: {
@@ -6850,11 +6975,13 @@ export interface components {
         StudentCreateRequest: {
             contact?: components["schemas"]["StudentContactInput"] | null;
             device_identity?: components["schemas"]["DeviceIdentityInput"] | null;
+            document_status?: components["schemas"]["DocumentStatusInput"] | null;
             /** Duplicate Override Reason */
             duplicate_override_reason?: string | null;
             enrollment?: components["schemas"]["EnrollmentInput"] | null;
             /** Guardians */
             guardians?: components["schemas"]["GuardianInput"][];
+            health?: components["schemas"]["HealthProfileInput"] | null;
             identity: components["schemas"]["StudentIdentityInput"];
         };
         /** StudentDistribution */
@@ -6954,8 +7081,10 @@ export interface components {
         /** StudentProfilePatch */
         StudentProfilePatch: {
             contact?: components["schemas"]["StudentContactInput"] | null;
+            document_status?: components["schemas"]["DocumentStatusInput"] | null;
             /** Guardians */
             guardians?: components["schemas"]["GuardianInput"][] | null;
+            health?: components["schemas"]["HealthProfileInput"] | null;
             identity: components["schemas"]["StudentIdentityInput"];
             /** Reason */
             reason: string;
@@ -15287,6 +15416,46 @@ export interface operations {
             };
         };
     };
+    export_managed_students_csv_api_student_masters_management_export_csv_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                program_id?: number | null;
+                grade_id?: number | null;
+                class_id?: number | null;
+                status?: string | null;
+                device_linked?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     student_update_import_history_api_student_masters_management_import_history_get: {
         parameters: {
             query?: {
@@ -15394,6 +15563,8 @@ export interface operations {
                 academic_year_id?: number | null;
                 jenjang_id?: number | null;
                 class_id?: number | null;
+                program_id?: number | null;
+                grade_id?: number | null;
                 status?: string | null;
                 device_linked?: boolean | null;
                 enrollment_status?: string | null;
@@ -15686,6 +15857,187 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DeviceRetireRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_student_documents_api_student_masters__student_master_id__documents_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_student_guardian_api_student_masters__student_master_id__guardians_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                guardian_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                guardian_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_student_health_api_student_masters__student_master_id__health_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
             };
         };
         responses: {
