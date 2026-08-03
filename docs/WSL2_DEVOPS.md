@@ -8,8 +8,8 @@ Direct Node.js/Vite and Python/FastAPI processes are the primary local-developme
 - WSL2 with a Linux distribution installed
 - Docker Desktop with WSL integration enabled
 - Python 3.12+
-- Node.js 22
-- npm
+- Node.js 24.13.0
+- npm 11.x
 - Agent Browser on the PATH if you want browser smoke testing
 
 ## Repository Location
@@ -119,7 +119,7 @@ Recover the pinned version in the current shell with:
 
 ```bash
 . ~/.nvm/nvm.sh
-nvm use
+nvm use 24.13.0
 hash -r
 ```
 
