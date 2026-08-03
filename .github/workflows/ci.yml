@@ -50,13 +50,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "24.13.0"
+          node-version-file: '.nvmrc'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Verify Node 24 and npm 11
+      - name: Verify repository Node and npm contract
         run: |
-          test "$(node --version)" = "v24.13.0"
-          npm --version | grep -Eq '^11\.'
+          expected_node_major="$(sed -nE 's/^v?([0-9]+)\..*/\1/p' ../.nvmrc)"
+          expected_npm_major="$(sed -nE 's/^[[:space:]]*\"npm\"[[:space:]]*:[[:space:]]*\">=([0-9]+).*/\1/p' package.json | head -n1)"
+          node --version | grep -Eq "^v${expected_node_major}\."
+          npm --version | grep -Eq "^${expected_npm_major}\."
       - run: npm ci
       - run: npm run build
 
