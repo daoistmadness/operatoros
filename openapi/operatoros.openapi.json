@@ -2549,6 +2549,38 @@
         "title": "DismissRequest",
         "type": "object"
       },
+      "DocumentStatusInput": {
+        "additionalProperties": false,
+        "properties": {
+          "birth_certificate_received": {
+            "default": false,
+            "title": "Birth Certificate Received",
+            "type": "boolean"
+          },
+          "family_card_received": {
+            "default": false,
+            "title": "Family Card Received",
+            "type": "boolean"
+          },
+          "parent_id_received": {
+            "default": false,
+            "title": "Parent Id Received",
+            "type": "boolean"
+          },
+          "publication_consent_received": {
+            "default": false,
+            "title": "Publication Consent Received",
+            "type": "boolean"
+          },
+          "school_agreement_received": {
+            "default": false,
+            "title": "School Agreement Received",
+            "type": "boolean"
+          }
+        },
+        "title": "DocumentStatusInput",
+        "type": "object"
+      },
       "EducationBody": {
         "properties": {
           "education_level": {
@@ -3355,6 +3387,18 @@
             "title": "Guardian Type",
             "type": "string"
           },
+          "id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
           "name": {
             "maxLength": 255,
             "minLength": 1,
@@ -3403,6 +3447,49 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthProfileInput": {
+        "additionalProperties": false,
+        "properties": {
+          "allergy": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allergy"
+          },
+          "medical_condition": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Medical Condition"
+          },
+          "special_needs": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Needs"
+          }
+        },
+        "title": "HealthProfileInput",
         "type": "object"
       },
       "HebOverrideBody": {
@@ -6185,6 +6272,16 @@
               }
             ]
           },
+          "document_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DocumentStatusInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "duplicate_override_reason": {
             "anyOf": [
               {
@@ -6215,6 +6312,16 @@
             "maxItems": 3,
             "title": "Guardians",
             "type": "array"
+          },
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HealthProfileInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "identity": {
             "$ref": "#/components/schemas/StudentIdentityInput"
@@ -6621,6 +6728,16 @@
               }
             ]
           },
+          "document_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DocumentStatusInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "guardians": {
             "anyOf": [
               {
@@ -6635,6 +6752,16 @@
               }
             ],
             "title": "Guardians"
+          },
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HealthProfileInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "identity": {
             "$ref": "#/components/schemas/StudentIdentityInput"
@@ -23312,6 +23439,186 @@
         ]
       }
     },
+    "/api/student-masters/management/export.csv": {
+      "get": {
+        "operationId": "export_managed_students_csv_api_student_masters_management_export_csv_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "academic_year_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Academic Year Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "jenjang_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Jenjang Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "program_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Program Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "grade_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Grade Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Class Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "device_linked",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Device Linked"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Managed Students Csv",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
     "/api/student-masters/management/import-history": {
       "get": {
         "operationId": "student_update_import_history_api_student_masters_management_import_history_get",
@@ -23563,6 +23870,40 @@
                 }
               ],
               "title": "Class Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "program_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Program Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "grade_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Grade Id"
             }
           },
           {
@@ -24169,6 +24510,341 @@
           }
         },
         "summary": "Retire Student Device Identity",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
+    "/api/student-masters/{student_master_id}/documents": {
+      "patch": {
+        "operationId": "patch_student_documents_api_student_masters__student_master_id__documents_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Student Documents",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
+    "/api/student-masters/{student_master_id}/guardians": {
+      "post": {
+        "operationId": "add_student_guardian_api_student_masters__student_master_id__guardians_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Student Guardian",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
+    "/api/student-masters/{student_master_id}/guardians/{guardian_id}": {
+      "delete": {
+        "operationId": "delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "guardian_id",
+            "required": true,
+            "schema": {
+              "title": "Guardian Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Student Guardian",
+        "tags": [
+          "student-masters"
+        ]
+      },
+      "patch": {
+        "operationId": "update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "guardian_id",
+            "required": true,
+            "schema": {
+              "title": "Guardian Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Student Guardian",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
+    "/api/student-masters/{student_master_id}/health": {
+      "patch": {
+        "operationId": "patch_student_health_api_student_masters__student_master_id__health_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Student Health",
         "tags": [
           "student-masters"
         ]
