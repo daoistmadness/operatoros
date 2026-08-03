@@ -20,7 +20,7 @@ def _launcher_environment(tmp_path: Path, vite_body: str) -> tuple[dict[str, str
     node.write_text(
         "#!/bin/sh\n"
         "if [ \"${1:-}\" = \"-p\" ]; then echo node; exit 0; fi\n"
-        "echo v22.0.0\n",
+        "echo v24.0.0\n",
         encoding="utf-8",
     )
     npm = tools / "npm"
@@ -217,7 +217,7 @@ def _init_synthetic_session(tmp_path: Path, session: str) -> None:
             sys.executable, str(_runtime_helper()), "init-session",
             "--runtime", str(runtime), "--repo", str(launcher.parent),
             "--session", session, "--mode", "browser", "--token", "synthetic-token",
-            "--javascript-runtime", "node", "--javascript-runtime-version", "22.0.0",
+            "--javascript-runtime", "node", "--javascript-runtime-version", "24.0.0",
             "--launcher-pid", str(os.getpid()), "--frontend-host", "127.0.0.1",
             "--frontend-port", "0", "--backend-host", "127.0.0.1", "--backend-port", "0",
             "--database-path", str(database),

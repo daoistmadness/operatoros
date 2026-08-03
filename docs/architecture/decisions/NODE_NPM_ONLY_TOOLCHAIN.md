@@ -1,18 +1,18 @@
-# ADR: Node.js 22 and npm-only frontend toolchain
+# ADR: Node.js 24 and npm-only frontend toolchain
 
 **Status:** Accepted
 
 ## Context
 
 The Bun feasibility audit at `feef852b3c27bfc5b910899804f9d24d4ec9c23a`
-found that the current E2E and Playwright workflow requires genuine Node.js 22
+found that the current E2E and Playwright workflow requires genuine Node.js 24
 and npm/npx. It also found that direct `bun test` is not compatible with the
 configured Vitest suite and that a generated Bun lock resolves a different
 dependency graph from the authoritative npm lock.
 
 ## Decision
 
-OperatorOS supports Node.js 22, npm, and `frontend/package-lock.json` as its
+OperatorOS supports Node.js 24.13.0, npm 11.x, and `frontend/package-lock.json` as its
 only JavaScript runtime, package manager, and lockfile authority. Vitest is the
 authoritative unit-test framework; Vite is the production build tool; and
 Playwright runs through Node/npm, with npx retained only where no equivalent

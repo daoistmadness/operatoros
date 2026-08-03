@@ -4,7 +4,13 @@ set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tier="${1:?tier required}"
 python="$repo/backend/.venv/bin/python"
-node_bin="/home/mikhailryu/.nvm/versions/node/v22.23.1/bin"
+source "$repo/scripts/validate-wsl-node-npm.sh"
+if ! operatoros_wsl_prepare_node_npm "$repo" "$repo/.nvmrc"; then
+  printf '%s\n' "Node/npm toolchain validation failed" >&2
+  printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
+  exit 1
+fi
+node_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
 export PATH="$node_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
 export SHELL=/bin/bash
