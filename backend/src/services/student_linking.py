@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from models.attendance import Attendance
 from models.student import Student
+from models.student_enrollment import StudentEnrollment
 from models.student_master import (
     LegacyLinkPreviewBatch,
     LegacyLinkResolution,
@@ -117,6 +118,17 @@ def create_legacy_preview(db: Session, username: str) -> LegacyLinkPreviewBatch:
 
 
 def _create_mapping(db: Session, student: Student, master: StudentMaster, username: str) -> bool:
+    conflicting = (
+        db.query(StudentDeviceIdentity)
+        .filter(
+            StudentDeviceIdentity.legacy_student_id == student.id,
+            StudentDeviceIdentity.is_active.is_(True),
+            StudentDeviceIdentity.student_master_id != master.id,
+        )
+        .first()
+    )
+    if conflicting:
+        raise HTTPException(status_code=409, detail={"code": "LEGACY_LINK_CONFLICT", "student_master_id": conflicting.student_master_id})
     existing = (
         db.query(StudentDeviceIdentity)
         .filter(
@@ -139,6 +151,78 @@ def _create_mapping(db: Session, student: Student, master: StudentMaster, userna
         created_by=username,
     ))
     return True
+
+
+def legacy_link_status(db: Session, master: StudentMaster) -> dict:
+    active = (
+        db.query(StudentDeviceIdentity)
+        .filter(StudentDeviceIdentity.student_master_id == master.id, StudentDeviceIdentity.is_active.is_(True))
+        .order_by(StudentDeviceIdentity.id.asc())
+        .all()
+    )
+    if active:
+        return {
+            "status": "LINKED",
+            "legacy_student_id": active[0].legacy_student_id,
+            "candidates": [],
+        }
+    normalized = normalize_name(master.full_name)
+    candidates = (
+        db.query(Student)
+        .filter(Student.name.isnot(None))
+        .order_by(Student.id.asc())
+        .all()
+    )
+    matching = [student for student in candidates if normalize_name(student.name) == normalized]
+    return {
+        "status": "REVIEW_REQUIRED" if matching else "NOT_LINKED",
+        "legacy_student_id": None,
+        "candidates": [
+            {
+                "legacy_student_id": student.id,
+                "name": student.name,
+                "jenjang": student.jenjang,
+                "class_name": student.class_name,
+                "attendance_count": db.query(func.count(Attendance.id)).filter(Attendance.student_id == student.id).scalar() or 0,
+            }
+            for student in matching[:10]
+        ],
+    }
+
+
+def link_legacy_student(db: Session, master: StudentMaster, legacy_student_id: int, reason: str, username: str) -> dict:
+    student = db.get(Student, legacy_student_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Legacy student not found")
+    active = (
+        db.query(StudentDeviceIdentity)
+        .filter(StudentDeviceIdentity.legacy_student_id == legacy_student_id, StudentDeviceIdentity.is_active.is_(True))
+        .all()
+    )
+    if any(mapping.student_master_id != master.id for mapping in active):
+        raise HTTPException(status_code=409, detail={"code": "LEGACY_LINK_CONFLICT"})
+    if normalize_name(student.name) != normalize_name(master.full_name):
+        raise HTTPException(status_code=409, detail={"code": "LEGACY_IDENTITY_CONFLICT"})
+    mapping_created = _create_mapping(db, student, master, username)
+    enrollments = db.query(StudentEnrollment).filter(StudentEnrollment.student_master_id == master.id).all()
+    for enrollment in enrollments:
+        if enrollment.student_id not in (None, legacy_student_id):
+            raise HTTPException(status_code=409, detail={"code": "ENROLLMENT_LEGACY_LINK_CONFLICT"})
+        enrollment.student_id = legacy_student_id
+    db.add(StudentMasterChangeHistory(
+        student_master_id=master.id, action="manual_legacy_resolution",
+        field_name="legacy_student_id", new_value=str(legacy_student_id), source="manual_resolution",
+        changed_by=username,
+    ))
+    db.add(LegacyLinkResolution(
+        legacy_student_id=legacy_student_id, resolution="linked", student_master_id=master.id,
+        reason=reason, resolved_by=username,
+    ))
+    db.commit()
+    return {
+        "status": "LINKED", "legacy_student_id": legacy_student_id,
+        "student_master_id": master.id, "created": mapping_created, "candidates": [],
+    }
 
 
 def commit_legacy_preview(
@@ -236,6 +320,9 @@ def resolve_legacy_student(
             db.add(master)
             db.flush()
             resolution = "created"
+        if action == "link_existing":
+            db.rollback()
+            return link_legacy_student(db, master, legacy_student_id, reason, username)
         _create_mapping(db, student, master, username)
         db.add(StudentMasterChangeHistory(
             student_master_id=master.id, action="manual_legacy_resolution",

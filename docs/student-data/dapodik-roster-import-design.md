@@ -1,6 +1,36 @@
 # Dapodik roster import design
 
-Status: design only; no implementation is authorized by this document.
+Status: resolved first-release contract; the CLI importer and safe legacy-linking
+implementation are tracked in the canonical student import feature.
+
+## Resolved first-release contract
+
+The first release is single-school and XLSX-only. Operators run the validator
+with an explicit absolute disposable SQLite path, then run `upgrade-schema` and
+`apply` only after reviewing the sanitized report and explicitly approving each
+new source row. Validation is read-only; apply reruns validation and commits one
+atomic batch. The protected operational database and ephemeral runtime session
+databases are rejected before opening.
+
+Identity resolution is limited to exact Dapodik student ID, unique NISN,
+canonical NIPD/NIS, or an explicit reviewed legacy mapping. Name plus birth date
+is review-only and name alone never merges. Existing nonblank canonical values
+are never overwritten by the source. Academic classes, jenjang, programmes,
+grades, and years must already exist; unknown or ambiguous references are
+review errors and are never auto-created.
+
+The supported commands are:
+
+```text
+python -m core.student_master_import validate --file roster.xlsx --database /absolute/disposable.sqlite --academic-year 2026/2027 --report validation.json
+python -m core.student_master_import upgrade-schema --database /absolute/disposable.sqlite
+python -m core.student_master_import apply --file roster.xlsx --database /absolute/disposable.sqlite --academic-year 2026/2027 --approve-row 2 --confirm-import APPLY_CANONICAL_STUDENT_IMPORT --source-owner "School registrar" --date-received 2026-08-03
+```
+
+Optional guardian, address, contact, health, PTK, CSV, multi-school, and
+automatic deletion/synchronization writes remain deferred. Legacy linking is
+explicit and admin-only; it updates only the compatibility enrollment pointer
+when safe and never rewrites attendance, absence-reason, or device history.
 
 ## Scope and source contract
 
@@ -333,7 +363,7 @@ Even if these columns appear in an export, their values are discarded before
 preview persistence, fixtures, logs, telemetry, or error reports. This follows
 data minimization: no functional need means no collection or retention.
 
-## Decisions required before implementation
+## Historical design questions resolved for this first release
 
 1. Is OperatorOS permanently single-school, or must this design support
    multiple schools/tenants? Multi-school support requires a school/source
