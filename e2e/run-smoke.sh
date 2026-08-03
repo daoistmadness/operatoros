@@ -51,13 +51,12 @@ export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-charact
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 source "$repo_root/scripts/validate-wsl-node-npm.sh"
-if [[ -n "${OPERATOROS_NODE24_EXECUTABLE:-}" ]]; then
-  node24_bin="$(dirname -- "$OPERATOROS_NODE24_EXECUTABLE")"
-  export PATH="$node24_bin:$PATH"
-fi
-operatoros_wsl_validate_node_npm "$repo_root" || exit 2
-node24_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
-export PATH="$node24_bin:/usr/bin:/bin"
+operatoros_wsl_prepare_node_npm "$repo_root" "$repo_root/.nvmrc" || {
+  printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
+  exit 2
+}
+node_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
+export PATH="$node_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
@@ -97,7 +96,7 @@ playwright_args=(run test:e2e -- --config playwright.config.ts)
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$node24_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/frontend" && PATH="$node_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT
