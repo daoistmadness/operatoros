@@ -50,18 +50,14 @@ export DATABASE_URL="sqlite:///$database"
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
-node22_executable="${OPERATOROS_NODE22_EXECUTABLE:-$(command -v node 2>/dev/null || true)}"
-if [[
-  -z "$node22_executable"
-  || "$($node22_executable --version 2>/dev/null || true)" != v22.*
-  || ! -x "$(dirname "$node22_executable")/npx"
-]]; then
-  current_user_home="$(getent passwd "$(id -u)" | cut -d: -f6)"
-  node22_executable="$current_user_home/.nvm/versions/node/v22.23.1/bin/node"
+source "$repo_root/scripts/validate-wsl-node-npm.sh"
+if [[ -n "${OPERATOROS_NODE24_EXECUTABLE:-}" ]]; then
+  node24_bin="$(dirname -- "$OPERATOROS_NODE24_EXECUTABLE")"
+  export PATH="$node24_bin:$PATH"
 fi
-[[ -x "$node22_executable" && "$($node22_executable --version)" == v22.* ]] || exit 2
-node22_bin="$(dirname "$node22_executable")"
-export PATH="$node22_bin:/usr/bin:/bin"
+operatoros_wsl_validate_node_npm "$repo_root" || exit 2
+node24_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
+export PATH="$node24_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
@@ -101,7 +97,7 @@ playwright_args=(run test:e2e -- --config playwright.config.ts)
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$node22_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/frontend" && PATH="$node24_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT
