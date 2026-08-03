@@ -1662,6 +1662,114 @@
         "title": "BulkResolveRequest",
         "type": "object"
       },
+      "CanonicalLegacyCandidate": {
+        "properties": {
+          "attendance_count": {
+            "title": "Attendance Count",
+            "type": "integer"
+          },
+          "class_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Name"
+          },
+          "jenjang": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jenjang"
+          },
+          "legacy_student_id": {
+            "title": "Legacy Student Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "legacy_student_id",
+          "name",
+          "attendance_count"
+        ],
+        "title": "CanonicalLegacyCandidate",
+        "type": "object"
+      },
+      "CanonicalLegacyLinkRequest": {
+        "properties": {
+          "confirmation": {
+            "title": "Confirmation",
+            "type": "string"
+          },
+          "legacy_student_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Legacy Student Id",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "legacy_student_id",
+          "reason",
+          "confirmation"
+        ],
+        "title": "CanonicalLegacyLinkRequest",
+        "type": "object"
+      },
+      "CanonicalLegacyLinkStatus": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CanonicalLegacyCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "legacy_student_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Student Id"
+          },
+          "status": {
+            "enum": [
+              "LINKED",
+              "NOT_LINKED",
+              "REVIEW_REQUIRED"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "candidates"
+        ],
+        "title": "CanonicalLegacyLinkStatus",
+        "type": "object"
+      },
       "ClassAttendanceEntryItem": {
         "additionalProperties": false,
         "properties": {
@@ -24901,6 +25009,130 @@
           }
         },
         "summary": "Get Student Change History",
+        "tags": [
+          "student-masters"
+        ]
+      }
+    },
+    "/api/student-masters/{student_master_id}/legacy-link": {
+      "get": {
+        "operationId": "get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CanonicalLegacyLinkStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Canonical Legacy Link",
+        "tags": [
+          "student-masters"
+        ]
+      },
+      "post": {
+        "operationId": "post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CanonicalLegacyLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CanonicalLegacyLinkStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Canonical Legacy Link",
         "tags": [
           "student-masters"
         ]

@@ -49,6 +49,7 @@ export const queryKeys = {
     history: (id: string) => ["students", "history", id] as const,
     deviceIdentities: (id: string) => ["students", "devices", id] as const,
     enrollments: (id: string) => ["students", "enrollments", id] as const,
+    legacyLink: (id: string) => ["students", "legacy-link", id] as const,
     importSessions: ["students", "imports"] as const,
     importSession: (id: string) => ["students", "imports", id] as const,
   },

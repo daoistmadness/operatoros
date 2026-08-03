@@ -52,6 +52,21 @@ export type StudentProfile = {
   age_years?: number | null;
   health?: Record<string, string | null> | null;
   document_status?: Record<string, boolean> | null;
+  attendance_identity?: LegacyLinkStatus;
+};
+
+export type LegacyLinkCandidate = {
+  legacy_student_id: number;
+  name: string;
+  jenjang?: string | null;
+  class_name?: string | null;
+  attendance_count: number;
+};
+
+export type LegacyLinkStatus = {
+  status: "LINKED" | "NOT_LINKED" | "REVIEW_REQUIRED";
+  legacy_student_id?: number | null;
+  candidates: LegacyLinkCandidate[];
 };
 
 export async function fetchStudents(filters: StudentFilters): Promise<StudentListResponse> {
@@ -60,6 +75,14 @@ export async function fetchStudents(filters: StudentFilters): Promise<StudentLis
 
 export async function fetchStudent(id: string): Promise<StudentProfile> {
   return (await apiRequest<StudentProfile>({ path: `/api/student-masters/${id}/profile` })).data;
+}
+
+export async function fetchLegacyLinkStatus(id: string): Promise<LegacyLinkStatus> {
+  return (await apiRequest<LegacyLinkStatus>({ path: `/api/student-masters/${id}/legacy-link` })).data;
+}
+
+export async function linkLegacyStudent(id: string, payload: { legacy_student_id: number; reason: string; confirmation: "LINK_LEGACY_STUDENT" }) {
+  return (await apiRequest<LegacyLinkStatus>({ path: `/api/student-masters/${id}/legacy-link`, method: "POST", body: payload })).data;
 }
 
 export async function createStudent(payload: unknown): Promise<StudentProfile> {

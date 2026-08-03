@@ -25,6 +25,10 @@ class StudentEnrollment(Base):
     lifecycle_effective_date = Column(Date, nullable=True)
     lifecycle_reason_code = Column(String(64), nullable=True)
     lifecycle_reason = Column(String(1000), nullable=True)
+    dapodik_registrasi_id = Column(String(64), nullable=True, index=True)
+    dapodik_anggota_rombel_id = Column(String(64), nullable=True, index=True)
+    dapodik_sekolah_id = Column(String(64), nullable=True, index=True)
+    dapodik_semester_id = Column(String(32), nullable=True, index=True)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
@@ -42,6 +46,8 @@ class StudentEnrollment(Base):
             unique=True,
             sqlite_where=student_master_id.isnot(None),
         ),
+        Index("uq_student_enrollments_dapodik_registrasi_id", "dapodik_registrasi_id", unique=True, sqlite_where=dapodik_registrasi_id.isnot(None)),
+        Index("uq_student_enrollments_dapodik_anggota_rombel_id", "dapodik_anggota_rombel_id", unique=True, sqlite_where=dapodik_anggota_rombel_id.isnot(None)),
         CheckConstraint("effective_to IS NULL OR effective_from IS NULL OR effective_to >= effective_from", name="ck_student_enrollment_effective_dates"),
         CheckConstraint(
             "lifecycle_state IN ('DRAFT','ACTIVE','ENDED','WITHDRAWN','GRADUATED','VOIDED')",
