@@ -9,7 +9,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `Makefile` exposes the supported entry points.
 - `e2e/run-smoke.sh` orchestrates the blocking smoke run and its safety checks.
 - `e2e/run-full.sh` guards and orchestrates the full regression run.
-- `e2e/start-test-stack.sh` starts an E2E-owned Bun application stack.
+- `e2e/start-test-stack.sh` starts an E2E-owned Node.js/npm application stack.
 - `e2e/stop-test-stack.sh` stops only the session recorded for that invocation.
 - `e2e/clean.sh` removes only `.runtime/operatoros-e2e/` and `e2e-results/`.
 - `e2e/helpers/create-test-workspace.py` defines the isolated database-path contract.
@@ -43,7 +43,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 
 ## 4. Runtime responsibilities
 
-The OperatorOS application stack uses genuine Linux Node.js 24.13.0 with npm 11.x and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime. `OPERATOROS_NODE24_EXECUTABLE` may identify the approved Node binary when it is not the active `node`.
+The OperatorOS application stack uses the `.nvmrc`-pinned genuine Linux Node.js 24.13.0 with npm 11.x and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime after the repository WSL runtime preparation step.
 
 The smoke runner narrows `PATH` for Playwright so the selected Node 24 binary owns `node`, npm, and the local Playwright CLI. Node/npm also own the application frontend launched by `start-dev.sh`.
 
