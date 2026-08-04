@@ -42,8 +42,29 @@ export type AppRouteDefinition = {
   element: ReactElement;
   group: RouteGroup;
   redirectTo?: string;
-  authorization?: 'authenticated' | 'admin' | 'capability';
+  authorization: RouteAuthorization;
 };
+
+export type RouteAuthorization =
+  | { type: 'authenticated' }
+  | { type: 'role'; role: 'admin' | 'staff' }
+  | { type: 'capability'; capability: string };
+
+function protectRoute(element: ReactElement, authorization: RouteAuthorization): ReactElement {
+  if (authorization.type === 'role') return <RequireRole role={authorization.role}>{element}</RequireRole>;
+  if (authorization.type === 'capability') return <RequireCapability capability={authorization.capability}>{element}</RequireCapability>;
+  return element;
+}
+
+function defineRoute(
+  route: Omit<AppRouteDefinition, 'element' | 'authorization'> & { element: ReactElement; authorization: RouteAuthorization },
+): AppRouteDefinition {
+  return { ...route, element: protectRoute(route.element, route.authorization) };
+}
+
+const authenticated = (): RouteAuthorization => ({ type: 'authenticated' });
+const adminOnly = (): RouteAuthorization => ({ type: 'role', role: 'admin' });
+const capability = (name: string): RouteAuthorization => ({ type: 'capability', capability: name });
 
 const notFound = (
   <div role="alert" className="mx-auto mt-16 max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center">
@@ -53,40 +74,40 @@ const notFound = (
 );
 
 export const authenticatedRoutes: readonly AppRouteDefinition[] = [
-  { path: '/', element: <Dashboard />, group: ROUTE_GROUPS.CORE, authorization: 'authenticated' },
-  { path: '/operator/work-queue', element: <RequireCapability capability="view_attendance_followups"><OperatorWorkQueue /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/upload', element: <RequireRole role="admin"><UploadCenter /></RequireRole>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'admin' },
-  { path: '/data-portability', element: <RequireRole role="admin"><DataPortability /></RequireRole>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'admin' },
-  { path: '/upload-history', element: <RequireRole role="admin"><UploadHistory /></RequireRole>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'admin' },
-  { path: '/mapping', element: <Navigate to="/enrollment" replace />, group: ROUTE_GROUPS.ACADEMIC, redirectTo: '/enrollment', authorization: 'authenticated' },
-  { path: '/analytics', element: <ManagementAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports', element: <Navigate to="/reports/monthly" replace />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/reports/monthly', authorization: 'authenticated' },
-  { path: '/reports/monthly', element: <ExecutiveReports reportType="monthly" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports/annual', element: <ExecutiveReports reportType="annual" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports/management/monthly', element: <MonthlyManagementReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports/attendance', element: <AttendanceReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports/tardiness', element: <TardinessReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/reports/rekap-absensi', element: <RekapAbsensi />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: 'authenticated' },
-  { path: '/attendance-review', element: <RequireCapability capability="view_attendance"><AttendanceReview /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/attendance-corrections', element: <RequireCapability capability="view_attendance_corrections"><AttendanceCorrections /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/attendance/followups', element: <RequireCapability capability="view_attendance_followups"><AttendanceFollowUpQueue /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/academic-management', element: <RequireRole role="admin"><AcademicManagement /></RequireRole>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'admin' },
-  { path: '/teacher-class-assignments', element: <RequireRole role="admin"><TeacherClassAssignments /></RequireRole>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'admin' },
-  { path: '/attendance/class-entry', element: <RequireCapability capability="enter_assigned_class_attendance"><ClassAttendanceEntry /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/attendance/departure-policies', element: <RequireRole role="admin"><DismissalPolicies /></RequireRole>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'admin' },
-  { path: '/attendance/class-departures', element: <RequireCapability capability="view_early_departure"><ClassEarlyDeparture /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '/enrollment', element: <RequireCapability capability="manage_enrollment"><Enrollment /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
-  { path: '/grades', element: <RequireRole role="admin"><GradeLedger /></RequireRole>, group: ROUTE_GROUPS.GRADES, authorization: 'admin' },
-  { path: '/config/jenjang', element: <JenjangConfig />, group: ROUTE_GROUPS.ACADEMIC, authorization: 'authenticated' },
-  { path: '/config/heb', element: <RequireRole role="admin"><HebConfig /></RequireRole>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'admin' },
-  { path: '/config/absence-reasons', element: <RequireRole role="admin"><AbsenceReasons /></RequireRole>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'admin' },
-  { path: '/settings', element: <Settings />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'authenticated' },
-  { path: '/settings/backups', element: <RequireRole role="admin"><BackupManagement /></RequireRole>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'admin' },
-  { path: '/students', element: <RequireCapability capability="view_student"><StudentManagement /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
-  { path: '/staff', element: <RequireCapability capability="view_staff"><StaffManagement /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
-  { path: '/staff/:id', element: <RequireCapability capability="view_staff"><StaffDetail /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
-  { path: '/students/operations', element: <RequireCapability capability="view_student_audit"><OperationsAudit /></RequireCapability>, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: 'capability' },
-  { path: '/students/:id', element: <RequireCapability capability="view_student"><CanonicalStudentProfile /></RequireCapability>, group: ROUTE_GROUPS.ACADEMIC, authorization: 'capability' },
-  { path: '/attendance/students/:id', element: <RequireCapability capability="view_student"><StudentProfile /></RequireCapability>, group: ROUTE_GROUPS.ATTENDANCE, authorization: 'capability' },
-  { path: '*', element: notFound, group: ROUTE_GROUPS.CORE, authorization: 'authenticated' },
+  defineRoute({ path: '/', element: <Dashboard />, group: ROUTE_GROUPS.CORE, authorization: authenticated() }),
+  defineRoute({ path: '/operator/work-queue', element: <OperatorWorkQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),
+  defineRoute({ path: '/upload', element: <UploadCenter />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
+  defineRoute({ path: '/data-portability', element: <DataPortability />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
+  defineRoute({ path: '/upload-history', element: <UploadHistory />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
+  defineRoute({ path: '/mapping', element: <Navigate to="/enrollment" replace />, group: ROUTE_GROUPS.ACADEMIC, redirectTo: '/enrollment', authorization: authenticated() }),
+  defineRoute({ path: '/analytics', element: <ManagementAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports', element: <Navigate to="/reports/monthly" replace />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/reports/monthly', authorization: authenticated() }),
+  defineRoute({ path: '/reports/monthly', element: <ExecutiveReports reportType="monthly" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/annual', element: <ExecutiveReports reportType="annual" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/management/monthly', element: <MonthlyManagementReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/attendance', element: <AttendanceReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/tardiness', element: <TardinessReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/rekap-absensi', element: <RekapAbsensi />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/attendance-review', element: <AttendanceReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
+  defineRoute({ path: '/attendance-corrections', element: <AttendanceCorrections />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
+  defineRoute({ path: '/attendance/followups', element: <AttendanceFollowUpQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),
+  defineRoute({ path: '/academic-management', element: <AcademicManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
+  defineRoute({ path: '/teacher-class-assignments', element: <TeacherClassAssignments />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
+  defineRoute({ path: '/attendance/class-entry', element: <ClassAttendanceEntry />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('enter_assigned_class_attendance') }),
+  defineRoute({ path: '/attendance/departure-policies', element: <DismissalPolicies />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
+  defineRoute({ path: '/attendance/class-departures', element: <ClassEarlyDeparture />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_early_departure') }),
+  defineRoute({ path: '/enrollment', element: <Enrollment />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('manage_enrollment') }),
+  defineRoute({ path: '/grades', element: <GradeLedger />, group: ROUTE_GROUPS.GRADES, authorization: adminOnly() }),
+  defineRoute({ path: '/config/jenjang', element: <JenjangConfig />, group: ROUTE_GROUPS.ACADEMIC, authorization: authenticated() }),
+  defineRoute({ path: '/config/heb', element: <HebConfig />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
+  defineRoute({ path: '/config/absence-reasons', element: <AbsenceReasons />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
+  defineRoute({ path: '/settings', element: <Settings />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: authenticated() }),
+  defineRoute({ path: '/settings/backups', element: <BackupManagement />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
+  defineRoute({ path: '/students', element: <StudentManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),
+  defineRoute({ path: '/staff', element: <StaffManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_staff') }),
+  defineRoute({ path: '/staff/:id', element: <StaffDetail />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_staff') }),
+  defineRoute({ path: '/students/operations', element: <OperationsAudit />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: capability('view_student_audit') }),
+  defineRoute({ path: '/students/:id', element: <CanonicalStudentProfile />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),
+  defineRoute({ path: '/attendance/students/:id', element: <StudentProfile />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_student') }),
+  defineRoute({ path: '*', element: notFound, group: ROUTE_GROUPS.CORE, authorization: authenticated() }),
 ];
