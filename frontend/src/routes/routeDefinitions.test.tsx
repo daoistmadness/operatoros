@@ -56,8 +56,9 @@ describe('route definitions', () => {
 
   it('keeps every route behind authentication metadata', () => {
     expect(authenticatedRoutes.every(({ authorization }) => Boolean(authorization))).toBe(true);
-    expect(authenticatedRoutes.find(({ path }) => path === '/grades')?.authorization).toBe('admin');
-    expect(authenticatedRoutes.find(({ path }) => path === '/enrollment')?.authorization).toBe('capability');
+    expect(authenticatedRoutes.find(({ path }) => path === '/grades')?.authorization).toEqual({ type: 'role', role: 'admin' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/enrollment')?.authorization).toEqual({ type: 'capability', capability: 'manage_enrollment' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/attendance-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
   });
 
   it('keeps the current not-found behavior', () => {

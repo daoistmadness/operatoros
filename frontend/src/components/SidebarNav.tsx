@@ -4,9 +4,9 @@ import type { AuthUser } from '../api/auth';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
-  Edit3, FileClock, FileText, GraduationCap, History, LayoutDashboard,
-  Layers3, LogOut, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
-  UploadCloud, UserCheck, Users as UsersIcon,
+  Database, Edit3, FileClock, FileText, GraduationCap, History, LayoutDashboard,
+  Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
+  UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
@@ -15,14 +15,14 @@ import { useAuth } from '../context/AuthContext';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { authenticatedRoutes, type RouteAuthorization } from '../routes/routeDefinitions';
 
 export type NavigationItem = {
   name: string;
   path: string;
   icon: LucideIcon;
   matches?: string[];
-  capability?: string;
-  role?: AuthUser['role'];
+  authorization: RouteAuthorization;
   nested?: boolean;
   exclude?: string[];
 };
@@ -33,54 +33,78 @@ export type NavigationGroup = {
   items: NavigationItem[];
 };
 
-export const NAV_GROUPS: NavigationGroup[] = [
+type NavigationItemInput = Omit<NavigationItem, 'authorization'>;
+type NavigationGroupInput = Omit<NavigationGroup, 'items'> & { items: NavigationItemInput[] };
+
+const RAW_NAV_GROUPS: NavigationGroupInput[] = [
   {
     id: 'overview', title: 'Overview',
     items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard, matches: ['/'] }],
   },
   {
-    id: 'workflows', title: 'Daily Workflows',
+    id: 'attendance', title: 'Attendance',
     items: [
-      { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck, capability: 'view_attendance_followups' },
-      { name: 'Input Absensi Kelas', path: '/attendance/class-entry', icon: CalendarDays, capability: 'enter_assigned_class_attendance' },
-      { name: 'Kepulangan Awal Kelas', path: '/attendance/class-departures', icon: Clock3, capability: 'view_early_departure' },
+      { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck },
+      { name: 'Class Attendance', path: '/attendance/class-entry', icon: CalendarDays },
+      { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
-      { name: 'Attendance Corrections', path: '/attendance-corrections', icon: ShieldCheck, capability: 'view_attendance_corrections' },
-      { name: 'Follow-Up Queue', path: '/attendance/followups', icon: ShieldCheck, capability: 'view_attendance_followups' },
-      { name: 'Students', path: '/students', icon: UsersIcon, capability: 'view_student', nested: true, exclude: ['/students/operations'] },
-      { name: 'Data Import Center', path: '/upload', icon: UploadCloud, role: 'admin' },
-      { name: 'Data Import & Export', path: '/data-portability', icon: UploadCloud, role: 'admin' },
-      { name: 'Import History', path: '/upload-history', icon: History, role: 'admin' },
-      { name: 'Academic Management', path: '/academic-management', icon: Layers3, role: 'admin' },
-      { name: 'Student Enrollment', path: '/enrollment', icon: UserCheck, capability: 'manage_enrollment' },
-      { name: 'Grade Ledger', path: '/grades', icon: GraduationCap, role: 'admin' },
+      { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },
+      { name: 'Follow-Up Queue', path: '/attendance/followups', icon: UserCheck },
+    ],
+  },
+  {
+    id: 'academic-students', title: 'Academic & Students',
+    items: [
+      { name: 'Student Directory', path: '/students', icon: UsersIcon, nested: true, exclude: ['/students/operations'] },
+      { name: 'Student Enrollment', path: '/enrollment', icon: UserRound },
+      { name: 'Academic Management', path: '/academic-management', icon: Layers3 },
+      { name: 'Teacher Assignments', path: '/teacher-class-assignments', icon: UserCheck },
+      { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
     ],
   },
   {
     id: 'insights', title: 'Analytics & Reports',
     items: [
-      { name: 'Management Analytics', path: '/analytics', icon: TrendingUp, capability: 'view_student' },
+      { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
       { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual'] },
-      { name: 'Monthly Management', path: '/reports/management/monthly', icon: BarChart3 },
+      { name: 'Monthly Management', path: '/reports/management/monthly', icon: PieChart },
       { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },
-      { name: 'Attendance Recap', path: '/reports/rekap-absensi', icon: BarChart3 },
+      { name: 'Attendance Recap', path: '/reports/rekap-absensi', icon: Database },
       { name: 'Tardiness Report', path: '/reports/tardiness', icon: FileClock },
+    ],
+  },
+  {
+    id: 'data-management', title: 'Data Management',
+    items: [
+      { name: 'Data Import Center', path: '/upload', icon: UploadCloud },
+      { name: 'Data Import & Export', path: '/data-portability', icon: Database },
+      { name: 'Import History', path: '/upload-history', icon: History },
     ],
   },
   {
     id: 'administration', title: 'Administration',
     items: [
-      { name: 'Penugasan Guru Kelas', path: '/teacher-class-assignments', icon: UserCheck, role: 'admin' },
-      { name: 'Kebijakan Jam Pulang', path: '/attendance/departure-policies', icon: Clock3, role: 'admin' },
-      { name: 'Cutoff Jenjang', path: '/config/jenjang', icon: Clock3 },
-      { name: 'HEB Overrides', path: '/config/heb', icon: Clock3, role: 'admin' },
-      { name: 'Absence Reasons', path: '/config/absence-reasons', icon: CalendarDays, role: 'admin' },
-      { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck, capability: 'view_student_audit' },
-      { name: 'Employee Directory', path: '/staff', icon: UsersIcon, capability: 'view_staff' },
+      { name: 'Departure Policies', path: '/attendance/departure-policies', icon: Clock3 },
+      { name: 'Grade Level Cutoff', path: '/config/jenjang', icon: GraduationCap },
+      { name: 'HEB Overrides', path: '/config/heb', icon: CalendarDays },
+      { name: 'Absence Reasons', path: '/config/absence-reasons', icon: FileText },
+      { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck },
+      { name: 'Employee Directory', path: '/staff', icon: UsersIcon },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
     ],
   },
 ];
+
+function navigationItem(input: NavigationItemInput): NavigationItem {
+  const route = authenticatedRoutes.find(({ path }) => path === input.path);
+  if (!route) throw new Error(`Navigation item has no authenticated route: ${input.path}`);
+  return { ...input, authorization: route.authorization };
+}
+
+export const NAV_GROUPS: NavigationGroup[] = RAW_NAV_GROUPS.map((group) => ({
+  ...group,
+  items: group.items.map(navigationItem),
+}));
 
 export function canAccessNavigationItem(
   item: NavigationItem,
@@ -88,8 +112,8 @@ export function canAccessNavigationItem(
   can: (capability: string) => boolean,
 ): boolean {
   if (!user) return false;
-  if (item.role && user.role !== item.role) return false;
-  if (item.capability && !can(item.capability)) return false;
+  if (item.authorization.type === 'role' && user.role !== item.authorization.role) return false;
+  if (item.authorization.type === 'capability' && !can(item.authorization.capability)) return false;
   return true;
 }
 
