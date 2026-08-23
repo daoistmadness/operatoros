@@ -1,0 +1,65 @@
+[
+  {
+    "name": "both-scans-zero-late",
+    "args": {
+      "check_in": "07:00",
+      "check_out": "16:00",
+      "late_duration": 0
+    },
+    "expected": "on-time"
+  },
+  {
+    "name": "both-scans-late-positive",
+    "args": {
+      "check_in": "07:00",
+      "check_out": "16:00",
+      "late_duration": 5
+    },
+    "expected": "late"
+  },
+  {
+    "name": "boundary-one-minute",
+    "args": {
+      "check_in": "07:00",
+      "check_out": "16:00",
+      "late_duration": 1
+    },
+    "expected": "late"
+  },
+  {
+    "name": "null-duration-treats-as-zero",
+    "args": {
+      "check_in": "07:30",
+      "check_out": "16:00",
+      "late_duration": null
+    },
+    "expected": "on-time"
+  },
+  {
+    "name": "check-in-only",
+    "args": {
+      "check_in": "07:40",
+      "check_out": null,
+      "late_duration": 20
+    },
+    "expected": "incomplete"
+  },
+  {
+    "name": "check-out-only",
+    "args": {
+      "check_in": null,
+      "check_out": "16:00",
+      "late_duration": 0
+    },
+    "expected": "incomplete"
+  },
+  {
+    "name": "no-scans",
+    "args": {
+      "check_in": null,
+      "check_out": null,
+      "late_duration": 0
+    },
+    "expected": "absent"
+  }
+]

@@ -1,0 +1,302 @@
+{
+  "counters": {
+    "total_rows": 15,
+    "logical_rows": 11,
+    "new_records": 6,
+    "update_records": 2,
+    "unchanged_records": 0,
+    "conflict_records": 3,
+    "invalid_records": 1,
+    "new_students": 0,
+    "status": "preview"
+  },
+  "preview": {
+    "batch_id": "a2d31787-fad4-4256-aa42-24a91f5c9c94",
+    "filename": "normal-preview.xlsx",
+    "checksum": "9788b1678c8fd94a1725811ae845c951ac4b8ef079212f26da745a6800ffc009",
+    "status": "preview",
+    "summary": {
+      "total_rows": 15,
+      "logical_rows": 11,
+      "new_rows": 6,
+      "update_rows": 2,
+      "unchanged_rows": 0,
+      "conflicts": 3,
+      "invalid_rows": 1,
+      "new_students": 0
+    },
+    "rows": [
+      {
+        "id": 7,
+        "source_row": 10,
+        "student_identifier": "9003",
+        "student": "Citra",
+        "date": "2026-06-21",
+        "existing_record": null,
+        "proposed_record": {
+          "_retry_source": {
+            "check_in": "07:20:00",
+            "check_out": "15:00:00",
+            "terlambat_seconds": null,
+            "overtime_seconds": null,
+            "exception": null,
+            "week": "25"
+          }
+        },
+        "classification": "CONFLICT",
+        "warning": null,
+        "validation_error": "Divergent duplicate rows share the same student/date key"
+      },
+      {
+        "id": 8,
+        "source_row": 12,
+        "student_identifier": "9999",
+        "student": "Ghost",
+        "date": "2026-06-22",
+        "existing_record": null,
+        "proposed_record": {
+          "_retry_source": {
+            "check_in": "07:30:00",
+            "check_out": "16:00:00",
+            "terlambat_seconds": null,
+            "overtime_seconds": null,
+            "exception": null,
+            "week": "25"
+          }
+        },
+        "classification": "CONFLICT",
+        "warning": null,
+        "validation_error": "DEVICE_IDENTITY_UNMATCHED: no active attendance device identity is linked to 9999"
+      },
+      {
+        "id": 9,
+        "source_row": 13,
+        "student_identifier": "9001",
+        "student": "Andi Tampered",
+        "date": "2026-06-23",
+        "existing_record": null,
+        "proposed_record": {
+          "_retry_source": {
+            "check_in": "07:00:00",
+            "check_out": "16:00:00",
+            "terlambat_seconds": null,
+            "overtime_seconds": null,
+            "exception": null,
+            "week": "25"
+          }
+        },
+        "classification": "CONFLICT",
+        "warning": null,
+        "validation_error": "Student identifier belongs to a different existing name"
+      },
+      {
+        "id": 1,
+        "source_row": 2,
+        "student_identifier": "9001",
+        "student": "Andi",
+        "date": "2026-06-15",
+        "existing_record": {
+          "check_in": "07:00:00",
+          "check_out": "16:00:00",
+          "late_duration": 0,
+          "late_source": "none",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "on-time"
+        },
+        "proposed_record": {
+          "check_in": "07:00:00",
+          "check_out": "16:00:00",
+          "late_duration": 0,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "on-time"
+        },
+        "classification": "DIFFERENCE",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 2,
+        "source_row": 3,
+        "student_identifier": "9002",
+        "student": "Beta",
+        "date": "2026-06-16",
+        "existing_record": {
+          "check_in": "08:00:00",
+          "check_out": "16:00:00",
+          "late_duration": 45,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "proposed_record": {
+          "check_in": "07:50:00",
+          "check_out": "16:00:00",
+          "late_duration": 35,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "classification": "DIFFERENCE",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 12,
+        "source_row": 7,
+        "student_identifier": "9003",
+        "student": "Citra",
+        "date": null,
+        "existing_record": null,
+        "proposed_record": null,
+        "classification": "INVALID",
+        "warning": null,
+        "validation_error": "Missing or invalid No. ID, Nama, or Tanggal"
+      },
+      {
+        "id": 3,
+        "source_row": 4,
+        "student_identifier": "9003",
+        "student": "Citra",
+        "date": "2026-06-17",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "07:40:00",
+          "check_out": "15:30:00",
+          "late_duration": 25,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "classification": "NEW",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 4,
+        "source_row": 5,
+        "student_identifier": "9002",
+        "student": "Beta",
+        "date": "2026-06-18",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "07:05:00",
+          "check_out": "16:10:00",
+          "late_duration": 25,
+          "late_source": "excel",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "classification": "NEW",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 5,
+        "source_row": 6,
+        "student_identifier": "9001",
+        "student": "Andi",
+        "date": "2026-06-19",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "07:00:00",
+          "check_out": null,
+          "late_duration": 0,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "incomplete"
+        },
+        "classification": "NEW",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 6,
+        "source_row": 8,
+        "student_identifier": "9002",
+        "student": "Beta",
+        "date": "2026-06-20",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "07:30:00",
+          "check_out": "16:00:00",
+          "late_duration": 15,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "classification": "NEW",
+        "warning": "Identical duplicate source key collapsed to one logical row",
+        "validation_error": null
+      },
+      {
+        "id": 10,
+        "source_row": 14,
+        "student_identifier": "9002",
+        "student": "Beta",
+        "date": "2026-06-24",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "00:00:00",
+          "check_out": "00:00:00",
+          "late_duration": 0,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "on-time"
+        },
+        "classification": "NEW",
+        "warning": null,
+        "validation_error": null
+      },
+      {
+        "id": 11,
+        "source_row": 16,
+        "student_identifier": "9101",
+        "student": "Diana",
+        "date": "2026-06-26",
+        "existing_record": null,
+        "proposed_record": {
+          "check_in": "07:20:00",
+          "check_out": "16:00:00",
+          "late_duration": 20,
+          "late_source": "calculated",
+          "is_absent": false,
+          "overtime_seconds": null,
+          "exception": null,
+          "week": "25",
+          "status": "late"
+        },
+        "classification": "NEW",
+        "warning": null,
+        "validation_error": null
+      }
+    ]
+  }
+}
