@@ -84,11 +84,38 @@ Recorded discoveries (behavior is authoritative):
    migration runtime contract says `.nvmrc` is authoritative. Needs an
    operator decision before Phase 12 launcher changes. Not fixed here.
 
-## Next steps (in order)
+## Completion audit (2026-08-23, second increment)
 
-1. Complete remaining corpus areas per `golden/docs/GOLDEN_PLAN.md`
-   taxonomy (auth, overrides/corrections, academics, grades/KKM, reports,
-   backups/restore, migrations).
-2. Implement the dual-backend replay harness per
-   `golden/docs/HARNESS_DESIGN.md` (Python driver first).
-3. Scaffold `backend-ts/` package (Phase 1 start) only after fixtures exist.
+| Requirement | Status |
+|---|---|
+| Replay harness implemented | DONE — `golden/tools/harness.py` (adapters, 5 layers, verdicts, normalization) |
+| FastAPI self-comparison | PASSED — 27/27 scenarios EXACT_MATCH |
+| Deliberate mismatch detection | PASSED — injected fault flagged MIGRATION_DEFECT on all 27 |
+| Deterministic generation | PASSED — both generators byte-identical on double runs |
+| Protected DB boundary | HELD — fail-closed guard exercised during development; no protected access |
+| Auth corpus | LANDED — 13 replay scenarios (login/logout/me/expiry/lockout/setup/role-metadata) |
+| Override corpus | LANDED — incl. append-only trigger UPDATE/DELETE abort evidence |
+| Corrections corpus | LANDED — submit/approve/reject/cancel/self-confirm/duplicate-terminal |
+| Migration corpus | LANDED — startup-validation cases vs disposable DBs |
+| Integrity corpus | LANDED — CHECK/unique/composite/FK-RESTRICT via replay SQL steps |
+| KKM/terms/grades/HEB-edge/backup checksums | LANDED — service-level goldens (`service-corpora/`) |
+| Coverage matrix | `golden/coverage-matrix.json` — 33 fixtures across categories |
+
+### Remaining gaps (gate withheld)
+
+1. Reports corpus: no dedicated report-aggregate fixtures yet.
+2. Academic placement/canonical-resolution cases: creation-chain evidence
+   only.
+3. Restore HTTP-gate scenarios and backup execution-history cases: preflight
+   rehearsal + checksum vectors cover the core, depth pending.
+
+Per gate rules these keep `TYPESCRIPT_BACKEND_PHASE_0_READY` withheld until
+closed.
+
+### Runtime authority resolution
+
+Current repository policy is Bun-authoritative for JavaScript tooling
+(`frontend/bun.lock` whitelist, bun engines/scripts/CI). No `.nvmrc`
+consumer exists in scripts, CI, or Makefile. The operator's uncommitted
+`.nvmrc` deletion was not touched. Phase 0 documentation no longer claims
+`.nvmrc` as authoritative.
