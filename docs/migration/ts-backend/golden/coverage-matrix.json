@@ -1,10 +1,12 @@
 {
   "generated_from": "golden/corpora_manifest.json",
-  "total_fixtures": 33,
+  "total_fixtures": 37,
+  "replay_scenarios": 31,
   "fixtures_by_protected_category": {
     "API contract": 1,
-    "authorization": 13,
+    "authorization": 15,
     "data integrity": 17,
+    "data preservation": 2,
     "import validation": 1,
     "report correctness": 1
   },
@@ -14,6 +16,9 @@
     },
     "auth": {
       "replay-scenario": 13
+    },
+    "backup-restore": {
+      "replay-scenario": 4
     },
     "corrections": {
       "replay-scenario": 5
@@ -25,10 +30,13 @@
       "service-golden": 6
     }
   },
+  "determinism": {
+    "normal-preview.json": "PYTHONHASHSEED=0 pinned; three-run identical (07cd270ef40c\u2026)",
+    "service-corpora": "byte-identical double-run",
+    "xlsx binaries": "regenerated artifacts; parsed content carries parity meaning"
+  },
   "gaps": {
-    "reports": "no dedicated report-aggregate fixtures yet",
-    "academic-placement-resolution": "only creation-chain evidence via grades seed; canonical relation cases pending",
-    "restore-api-gates": "preflight rehearsal covered; HTTP restore-gate scenarios pending",
-    "backup-execution-history": "checksum vectors only"
+    "reports": "dedicated report-aggregate fixtures still open",
+    "academic-placement-resolution": "creation-chain evidence only; canonical relation cases open"
   }
 }

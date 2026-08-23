@@ -221,6 +221,46 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "restore_anonymous_rejected",
+      "domain": "backup-restore",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_anonymous_rejected.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_disabled_gate_precedes_confirmation_checks",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_disabled_gate_precedes_confirmation_checks.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_preflight_status_and_empty_history_shapes",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_preflight_status_and_empty_history_shapes.json",
+      "setup": "seed_auth_users",
+      "steps": 4,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_staff_forbidden",
+      "domain": "backup-restore",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_staff_forbidden.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "review_history_is_append_only_update_delete_abort",
       "domain": "attendance-review",
       "protected_category": "data integrity",

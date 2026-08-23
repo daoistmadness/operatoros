@@ -57,6 +57,8 @@ def _is_volatile_column(col: str) -> bool:
 
 
 def normalize_value(value: Any, key_hint: str = "") -> Any:
+    if key_hint in {"free_disk_space_bytes", "free_space_bytes"}:
+        return "<env>"
     if isinstance(value, dict):
         return {k: normalize_value(v, str(k)) for k, v in sorted(value.items())}
     if isinstance(value, list):

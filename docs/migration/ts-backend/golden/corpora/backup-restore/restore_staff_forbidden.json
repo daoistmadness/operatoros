@@ -1,0 +1,28 @@
+{
+  "id": "restore_staff_forbidden",
+  "domain": "backup-restore",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/admin/backups/x.db/restore",
+      "jar": true,
+      "json": {
+        "current_password": "golden-staff-pass-1",
+        "confirmation_filename": "x.db",
+        "confirmation_phrase": "RESTORE_DATABASE"
+      }
+    }
+  ]
+}
