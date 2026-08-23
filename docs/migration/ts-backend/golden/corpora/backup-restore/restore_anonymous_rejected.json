@@ -1,0 +1,18 @@
+{
+  "id": "restore_anonymous_rejected",
+  "domain": "backup-restore",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/admin/backups/x.db/restore",
+      "json": {
+        "current_password": "golden-admin-pass-1",
+        "confirmation_filename": "x.db",
+        "confirmation_phrase": "RESTORE_DATABASE"
+      }
+    }
+  ]
+}

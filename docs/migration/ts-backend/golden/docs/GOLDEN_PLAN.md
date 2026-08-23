@@ -65,10 +65,10 @@ All landed fixtures regenerate from source of truth:
 
 ```
 cd backend
-.venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
+PYTHONHASHSEED=0 .venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
 ```
 
-The generator is deterministic for all JSON evidence. The `.xlsx` binaries
+The generator is deterministic for all JSON evidence when run with PYTHONHASHSEED=0 (parser set-ordering is hash-seed dependent). The `.xlsx` binaries
 embed build timestamps and are regenerated artifacts: their bytes may differ
 between runs; their PARSED content is what carries parity meaning. The
 preview checksum is frozen to a token for the same reason. Committed outputs
