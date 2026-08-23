@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-08-23T16:16:35.476760+00:00",
+  "baseline_schema": "20260724_s42",
+  "current_schema": "20260725_s43",
+  "manifest_top_level_keys": [
+    "baseline_schema",
+    "current_schema",
+    "manifest_version",
+    "migrations",
+    "startup_is_migration_runner",
+    "states"
+  ],
+  "registered_step_count": 7,
+  "sqlite_files": [
+    "20260713_identity_schema_rollback_sqlite.sql",
+    "20260713_identity_schema_sqlite.sql",
+    "20260714_backup_scheduler_sqlite.sql",
+    "20260714_first_admin_setup_sqlite.sql",
+    "20260716_student_master_foundation_sqlite.sql",
+    "20260717_s3_linking_enrollment_sqlite.sql",
+    "20260718_attendance_import_preview_sqlite.sql",
+    "20260719_s35_academic_mapping_sqlite.sql",
+    "20260720_s36_academic_roster_sqlite.sql",
+    "20260721_s37_academic_master_sqlite.sql",
+    "20260722_s38_final_academic_master_sqlite.sql",
+    "20260722_s39_student_import_provenance_sqlite.sql",
+    "20260722_student_enrollment_ledger_safety_sqlite.sql",
+    "20260722_student_progression_rollover_sqlite.sql",
+    "2026_04_01_upload_logs_and_student_id_updates_sqlite.sql",
+    "2026_04_02_attendance_late_minutes_and_jenjang_config_sqlite.sql",
+    "2026_04_02_attendance_override_review_sqlite.sql",
+    "2026_04_02_ensure_history_append_only_sqlite.sql",
+    "2026_04_06_absence_reasons_sqlite.sql",
+    "2026_04_06_heb_overrides_sqlite.sql"
+  ],
+  "postgresql_files": [
+    "20260713_identity_schema_postgresql.sql",
+    "20260713_identity_schema_rollback_postgresql.sql",
+    "20260714_backup_scheduler_postgresql.sql",
+    "20260714_first_admin_setup_postgresql.sql",
+    "20260716_student_master_foundation_postgresql.sql",
+    "20260717_s3_linking_enrollment_postgresql.sql",
+    "20260718_attendance_import_preview_postgresql.sql",
+    "20260719_s35_academic_mapping_postgresql.sql",
+    "20260720_s36_academic_roster_postgresql.sql",
+    "20260721_s37_academic_master_postgresql.sql",
+    "20260722_s38_final_academic_master_postgresql.sql",
+    "20260722_s39_student_import_provenance_postgresql.sql",
+    "20260722_student_enrollment_ledger_safety_postgresql.sql",
+    "20260722_student_progression_rollover_postgresql.sql"
+  ],
+  "other_sql_files": [
+    "2026_03_31_add_attendance_export_fields.sql",
+    "2026_04_01_add_attendance_analytics_indexes.sql",
+    "2026_04_02_dashboard_performance_indexes.sql"
+  ],
+  "counts": {
+    "sqlite": 20,
+    "postgresql": 14,
+    "other": 3
+  }
+}
