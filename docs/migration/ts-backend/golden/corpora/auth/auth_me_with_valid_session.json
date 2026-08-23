@@ -1,0 +1,23 @@
+{
+  "id": "auth_me_with_valid_session",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "jar": true
+    }
+  ]
+}

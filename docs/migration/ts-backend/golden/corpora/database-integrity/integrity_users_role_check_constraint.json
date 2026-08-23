@@ -1,0 +1,12 @@
+{
+  "id": "integrity_users_role_check_constraint",
+  "domain": "database-integrity",
+  "protected_category": "data integrity",
+  "seed": "seed_none",
+  "steps": [
+    {
+      "type": "sql",
+      "sql": "INSERT INTO users (username, password_hash, role, is_active) VALUES ('bogus', 'x', 'superadmin', 1)"
+    }
+  ]
+}

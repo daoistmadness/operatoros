@@ -1,0 +1,34 @@
+{
+  "id": "auth_lockout_expiry_recovers_counters_reset",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "sql",
+      "sql": "UPDATE users SET failed_login_attempts = 4 WHERE username = 'golden-staff'"
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-final"
+      }
+    },
+    {
+      "type": "sql",
+      "sql": "UPDATE users SET locked_until = datetime('now','-1 minute') WHERE username = 'golden-staff'"
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "id": "auth_lockout_after_five_failures",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-one"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-two"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-three"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-four"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "bad-five"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1"
+      }
+    }
+  ]
+}

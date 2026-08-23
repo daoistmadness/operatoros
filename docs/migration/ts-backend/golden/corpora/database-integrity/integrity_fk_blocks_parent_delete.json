@@ -1,0 +1,12 @@
+{
+  "id": "integrity_fk_blocks_parent_delete",
+  "domain": "database-integrity",
+  "protected_category": "data integrity",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "sql",
+      "sql": "DELETE FROM students WHERE id = 7001"
+    }
+  ]
+}
