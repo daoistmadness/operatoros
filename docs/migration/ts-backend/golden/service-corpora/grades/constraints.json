@@ -1,0 +1,18 @@
+[
+  {
+    "case": "grade_insert_ok",
+    "outcome": "OK"
+  },
+  {
+    "case": "duplicate_grade_unique",
+    "outcome": "IntegrityError"
+  },
+  {
+    "case": "component_type_check",
+    "outcome": "IntegrityError"
+  },
+  {
+    "case": "subject_delete_restrict",
+    "outcome": "IntegrityError"
+  }
+]

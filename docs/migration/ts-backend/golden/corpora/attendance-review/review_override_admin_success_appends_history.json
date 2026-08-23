@@ -1,0 +1,33 @@
+{
+  "id": "review_override_admin_success_appends_history",
+  "domain": "attendance-review",
+  "protected_category": "data integrity",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/review/attendance/1/override",
+      "jar": true,
+      "json": {
+        "override_status": "on-time",
+        "note": "Device missed the morning scan."
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/review/attendance/1/history",
+      "jar": true
+    }
+  ]
+}

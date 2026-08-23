@@ -1,0 +1,22 @@
+[
+  {
+    "case": "fresh_current_schema_validates",
+    "outcome": "OK"
+  },
+  {
+    "case": "empty_file_integrity_rejected",
+    "outcome": "OK"
+  },
+  {
+    "case": "in_memory_url_rejected",
+    "outcome": "OK"
+  },
+  {
+    "case": "missing_file_rejected",
+    "outcome": "OK"
+  },
+  {
+    "case": "missing_migration_ledger",
+    "outcome": "OK"
+  }
+]

@@ -1,0 +1,64 @@
+{
+  "configured_academic_year_overall": "EffectiveKkm(threshold=90.0, source='subject-specific', threshold_id=1)",
+  "default_term_rows": [
+    {
+      "academic_year_id": 1,
+      "end_date": "2025-09-30",
+      "id": null,
+      "label": "Term 1",
+      "source": "default",
+      "start_date": "2025-07-01",
+      "term_number": 1,
+      "value": "term_1"
+    },
+    {
+      "academic_year_id": 1,
+      "end_date": "2025-12-31",
+      "id": null,
+      "label": "Term 2",
+      "source": "default",
+      "start_date": "2025-10-01",
+      "term_number": 2,
+      "value": "term_2"
+    },
+    {
+      "academic_year_id": 1,
+      "end_date": "2026-03-31",
+      "id": null,
+      "label": "Term 3",
+      "source": "default",
+      "start_date": "2026-01-01",
+      "term_number": 3,
+      "value": "term_3"
+    },
+    {
+      "academic_year_id": 1,
+      "end_date": "2026-06-30",
+      "id": null,
+      "label": "Term 4",
+      "source": "default",
+      "start_date": "2026-04-01",
+      "term_number": 4,
+      "value": "term_4"
+    }
+  ],
+  "legacy_fallback_overall": "EffectiveKkm(threshold=85.0, source='legacy-fallback', threshold_id=None)",
+  "term_one_range": [
+    "2025-07-01",
+    "2025-09-30",
+    {
+      "academic_year_id": 1,
+      "end_date": "2025-09-30",
+      "id": null,
+      "label": "Term 1",
+      "source": "default",
+      "start_date": "2025-07-01",
+      "term_number": 1,
+      "value": "term_1"
+    },
+    [
+      "Default term date mapping is used because no custom term configuration exists."
+    ]
+  ],
+  "unconfigured_formatif_falls_back": "EffectiveKkm(threshold=90.0, source='subject-overall', threshold_id=1)"
+}
