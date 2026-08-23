@@ -1,0 +1,27 @@
+{
+  "id": "review_mass_override_incomplete_counts",
+  "domain": "attendance-review",
+  "protected_category": "report correctness",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/review/attendance/mass-override-incomplete",
+      "jar": true,
+      "json": {
+        "override_status": "on-time",
+        "note": "Mass override: bulk correction."
+      }
+    }
+  ]
+}

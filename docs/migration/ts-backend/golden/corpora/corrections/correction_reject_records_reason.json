@@ -1,0 +1,26 @@
+{
+  "id": "correction_reject_records_reason",
+  "domain": "corrections",
+  "protected_category": "data integrity",
+  "seed": "seed_corrections",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/attendance-corrections/2/reject",
+      "jar": true,
+      "json": {
+        "rejection_reason": "Insufficient evidence supplied."
+      }
+    }
+  ]
+}

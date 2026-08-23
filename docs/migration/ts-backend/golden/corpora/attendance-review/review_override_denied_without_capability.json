@@ -1,0 +1,27 @@
+{
+  "id": "review_override_denied_without_capability",
+  "domain": "attendance-review",
+  "protected_category": "authorization",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/review/attendance/1/override",
+      "jar": true,
+      "json": {
+        "override_status": "on-time",
+        "note": "Device missed the morning scan."
+      }
+    }
+  ]
+}

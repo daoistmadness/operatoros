@@ -1,0 +1,17 @@
+{
+  "id": "auth_login_inactive_account_rejected",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-inactive",
+        "password": "golden-inactive-pass"
+      }
+    }
+  ]
+}
