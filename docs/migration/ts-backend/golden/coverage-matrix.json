@@ -1,0 +1,34 @@
+{
+  "generated_from": "golden/corpora_manifest.json",
+  "total_fixtures": 33,
+  "fixtures_by_protected_category": {
+    "API contract": 1,
+    "authorization": 13,
+    "data integrity": 17,
+    "import validation": 1,
+    "report correctness": 1
+  },
+  "fixtures_by_domain": {
+    "attendance-review": {
+      "replay-scenario": 5
+    },
+    "auth": {
+      "replay-scenario": 13
+    },
+    "corrections": {
+      "replay-scenario": 5
+    },
+    "database-integrity": {
+      "replay-scenario": 4
+    },
+    "service-corpora": {
+      "service-golden": 6
+    }
+  },
+  "gaps": {
+    "reports": "no dedicated report-aggregate fixtures yet",
+    "academic-placement-resolution": "only creation-chain evidence via grades seed; canonical relation cases pending",
+    "restore-api-gates": "preflight rehearsal covered; HTTP restore-gate scenarios pending",
+    "backup-execution-history": "checksum vectors only"
+  }
+}
