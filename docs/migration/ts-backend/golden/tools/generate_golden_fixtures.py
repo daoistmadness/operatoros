@@ -248,14 +248,19 @@ def generate_import_goldens() -> list[str]:
     rows = db.query(AttendanceImportRow).filter_by(batch_id=batch.id).all()
     payload = serialize_preview(batch, rows)
 
-    def _scrub(node):
+    def _scrub(node, key=""):
         if isinstance(node, dict):
-            return {
-                k: ("<ts>" if k.endswith("_at") and v else _scrub(v))
-                for k, v in node.items()
-            }
+            out = {}
+            for k, v in node.items():
+                if k == "batch_id":
+                    out[k] = "<uuid>"
+                elif k.endswith("_at") and v:
+                    out[k] = "<ts>"
+                else:
+                    out[k] = _scrub(v, k)
+            return out
         if isinstance(node, list):
-            return [_scrub(v) for v in node]
+            return [_scrub(v, key) for v in node]
         return node
 
     payload = _scrub(payload)

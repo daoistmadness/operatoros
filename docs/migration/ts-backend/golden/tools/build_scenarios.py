@@ -174,6 +174,36 @@ scenarios.append(scenario(
 ))
 
 scenarios.append(scenario(
+    "restore_anonymous_rejected", "backup-restore", "authorization", "seed_auth_users",
+    [req("POST", "/api/admin/backups/x.db/restore",
+         payload={"current_password": "golden-admin-pass-1",
+                  "confirmation_filename": "x.db", "confirmation_phrase": "RESTORE_DATABASE"})],
+))
+scenarios.append(scenario(
+    "restore_staff_forbidden", "backup-restore", "authorization", "seed_auth_users",
+    [login("staff"), req("POST", "/api/admin/backups/x.db/restore", jar=True,
+                         payload={"current_password": "golden-staff-pass-1",
+                                  "confirmation_filename": "x.db",
+                                  "confirmation_phrase": "RESTORE_DATABASE"})],
+))
+scenarios.append(scenario(
+    "restore_disabled_gate_precedes_confirmation_checks", "backup-restore", "data preservation", "seed_auth_users",
+    [login("admin"), req("POST", "/api/admin/backups/x.db/restore", jar=True,
+                         payload={"current_password": "golden-admin-pass-1",
+                                  "confirmation_filename": "mismatched.db",
+                                  "confirmation_phrase": "WRONG_PHRASE"})],
+))
+scenarios.append(scenario(
+    "restore_preflight_status_and_empty_history_shapes", "backup-restore", "data preservation", "seed_auth_users",
+    [
+        login("admin"),
+        req("GET", "/api/admin/backups/status", jar=True),
+        req("GET", "/api/admin/backups/history", jar=True),
+        req("GET", "/api/admin/backups/recovery-history", jar=True),
+    ],
+))
+
+scenarios.append(scenario(
     "integrity_users_role_check_constraint", "database-integrity", "data integrity", "seed_none",
     [sql("INSERT INTO users (username, password_hash, role, is_active) VALUES ('bogus', 'x', 'superadmin', 1)")],
 ))
