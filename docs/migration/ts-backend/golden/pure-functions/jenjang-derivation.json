@@ -1,0 +1,62 @@
+[
+  {
+    "args": {
+      "class_name": "SMP7"
+    },
+    "expected": "SMP7"
+  },
+  {
+    "args": {
+      "class_name": "smp7a"
+    },
+    "expected": "SMP7"
+  },
+  {
+    "args": {
+      "class_name": "IPA1A"
+    },
+    "expected": "IPA1"
+  },
+  {
+    "args": {
+      "class_name": "Umum"
+    },
+    "expected": "Umum"
+  },
+  {
+    "args": {
+      "class_name": "7B"
+    },
+    "expected": "7"
+  },
+  {
+    "args": {
+      "class_name": "X-II-A"
+    },
+    "expected": "X"
+  },
+  {
+    "args": {
+      "class_name": "kelas-7"
+    },
+    "expected": "Kelas"
+  },
+  {
+    "args": {
+      "class_name": null
+    },
+    "expected": "Unassigned"
+  },
+  {
+    "args": {
+      "class_name": ""
+    },
+    "expected": "Unassigned"
+  },
+  {
+    "args": {
+      "class_name": "  "
+    },
+    "expected": "Unassigned"
+  }
+]

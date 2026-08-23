@@ -47,9 +47,33 @@ cd backend && .venv/bin/python ../docs/migration/ts-backend/tools/generate_inven
 | Database inventory exists | DONE (incl. triggers) |
 | Migration inventory exists | DONE |
 | OpenAPI contract frozen | DONE (`openapi-frozen.json`) |
-| Parity fixtures exist | **PENDING** — golden corpus scaffolding is the next work item |
+| Parity fixtures exist | **PARTIAL** — pure-function truth tables, import-preview goldens, HEB goldens landed (`golden/`); auth/override/corrections/reports/backup corpora still planned per `golden/docs/GOLDEN_PLAN.md` |
 | Protected categories have a TS migration plan | PARTIAL — plan exists in `.omo/plans/ts-backend-migration.md`; per-category fixture mapping pending |
 | Rollback strategy exists | DONE — full cutover with rehearsed rollback (master plan D7) |
+
+## Golden corpus progress
+
+Landed (regenerate via `golden/tools/generate_golden_fixtures.py`):
+
+- `pure-functions/` — 4 truth tables (~35 cases): status derivation,
+  late-minute precedence, cutoff/terlambat parsing, jenjang derivation.
+- `attendance-import/` — synthetic 15-row workbook + frozen preview
+  classification/counters, plus missing-header error case.
+  Classifications exercised: NEW(6), DIFFERENCE(2), CONFLICT(3),
+  INVALID(1). UNCHANGED not yet produced by the seed — revisit seed match.
+- `heb/auto-manual-empty.json` — auto median-top5 (20), manual override
+  wins (22), empty jenjang (0).
+
+Recorded discoveries (behavior is authoritative):
+
+1. Excel-source lateness fires ONLY for duration-parsable string values
+   (e.g. `"00:25"` → `(25, "excel")`). Raw integers and `"00:00"` fall
+   through to the calculated path. A TS port must reproduce this parser
+   distinction exactly.
+2. Malformed date `31/02/2026` coerces to null with a parse warning and the
+   row drops as invalid — warning text recorded in run output and counters.
+3. Exact-duplicate rows collapse before logical-row counting; divergent
+   duplicates become CONFLICT rows.
 
 ## Deviations
 
@@ -62,8 +86,9 @@ cd backend && .venv/bin/python ../docs/migration/ts-backend/tools/generate_inven
 
 ## Next steps (in order)
 
-1. Build golden fixture corpora (synthetic workbooks, request/response
-   snapshots) under `docs/migration/ts-backend/golden/`.
-2. Design the dual-backend replay harness (same requests → FastAPI vs Elysia,
-   normalized nondeterministic fields only).
+1. Complete remaining corpus areas per `golden/docs/GOLDEN_PLAN.md`
+   taxonomy (auth, overrides/corrections, academics, grades/KKM, reports,
+   backups/restore, migrations).
+2. Implement the dual-backend replay harness per
+   `golden/docs/HARNESS_DESIGN.md` (Python driver first).
 3. Scaffold `backend-ts/` package (Phase 1 start) only after fixtures exist.
