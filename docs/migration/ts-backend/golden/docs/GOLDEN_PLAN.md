@@ -68,4 +68,8 @@ cd backend
 .venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
 ```
 
-The generator is deterministic. Committed outputs must never be hand-edited.
+The generator is deterministic for all JSON evidence. The `.xlsx` binaries
+embed build timestamps and are regenerated artifacts: their bytes may differ
+between runs; their PARSED content is what carries parity meaning. The
+preview checksum is frozen to a token for the same reason. Committed outputs
+must never be hand-edited.
