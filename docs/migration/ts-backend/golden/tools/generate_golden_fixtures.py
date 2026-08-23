@@ -247,6 +247,22 @@ def generate_import_goldens() -> list[str]:
     batch = create_attendance_preview(db, workbook, "normal-preview.xlsx", "golden")
     rows = db.query(AttendanceImportRow).filter_by(batch_id=batch.id).all()
     payload = serialize_preview(batch, rows)
+
+    def _scrub(node):
+        if isinstance(node, dict):
+            return {
+                k: ("<ts>" if k.endswith("_at") and v else _scrub(v))
+                for k, v in node.items()
+            }
+        if isinstance(node, list):
+            return [_scrub(v) for v in node]
+        return node
+
+    payload = _scrub(payload)
+    # Workbook bytes embed build timestamps; the checksum value therefore
+    # varies per generation. Parity never depends on it — freeze a token.
+    if isinstance(payload, dict) and "checksum" in payload:
+        payload["checksum"] = "<sha256-of-source-workbook>"
     counters = {
         "total_rows": batch.total_rows,
         "logical_rows": batch.logical_rows,
