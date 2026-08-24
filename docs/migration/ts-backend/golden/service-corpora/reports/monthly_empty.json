@@ -1,0 +1,156 @@
+{
+  "label": "monthly_empty_2026-07_combined",
+  "result": {
+    "academic_summary": {
+      "availability": true,
+      "below_kkm_count": 1,
+      "by_subject": [
+        {
+          "below_kkm_count": 1,
+          "formatif_average": null,
+          "jenjang": "SMP",
+          "subject_id": 2,
+          "subject_name": "Matematika",
+          "sumatif_average": 80.0
+        }
+      ],
+      "formatif_average": null,
+      "reason": null,
+      "sumatif_average": 80.0
+    },
+    "attendance_by_level": [
+      {
+        "alfa": 0,
+        "attendance_rate": null,
+        "incomplete": 0,
+        "izin": 0,
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "level": "SD",
+        "present": 0,
+        "sakit": 0
+      },
+      {
+        "alfa": 0,
+        "attendance_rate": null,
+        "incomplete": 0,
+        "izin": 0,
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "level": "SMP",
+        "present": 0,
+        "sakit": 0
+      }
+    ],
+    "attendance_summary": {
+      "alfa": 0,
+      "attendance_rate": null,
+      "incomplete": 0,
+      "izin": 0,
+      "late_days": 0,
+      "late_minutes": 0,
+      "late_rate": null,
+      "present": 0,
+      "sakit": 0
+    },
+    "data_quality": {
+      "empty_grade_cells": 0,
+      "incomplete_attendance": 0,
+      "missing_domicile": 8,
+      "missing_gender": 8,
+      "missing_religion": 8,
+      "unmapped_levels": [],
+      "warnings": [
+        "Student gender, religion, and domicile fields are not available in the current Student master schema.",
+        "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available."
+      ]
+    },
+    "executive_summary": {
+      "attendance_rate": null,
+      "below_kkm_count": 1,
+      "data_completeness_rate": null,
+      "female_students": 0,
+      "late_minutes": 0,
+      "late_rate": null,
+      "male_students": 0,
+      "total_students": 8
+    },
+    "meta": {
+      "academic_year": {
+        "id": 2,
+        "name": "2026/2027-reports"
+      },
+      "generated_at": "<ts>",
+      "period": {
+        "end": "2026-07-31",
+        "start": "2026-07-01"
+      },
+      "report_type": "monthly",
+      "scope": "combined"
+    },
+    "report_period": {
+      "academic_year_id": 2,
+      "academic_year_label": "2026/2027-reports",
+      "sections": {
+        "academics": {
+          "basis": "available_academic_year_records",
+          "label": "Available Academic Records - AY 2026/2027-reports",
+          "month_bound": false
+        },
+        "attendance": {
+          "basis": "calendar_month",
+          "label": "July 2026",
+          "month_bound": true
+        },
+        "population": {
+          "basis": "academic_year_enrollment_snapshot",
+          "label": "Academic Year 2026/2027-reports",
+          "month_bound": false
+        }
+      },
+      "selected_month": "2026-07"
+    },
+    "student_distribution": {
+      "by_class": [
+        {
+          "count": 2,
+          "name": "1A",
+          "percentage": 25.0
+        },
+        {
+          "count": 3,
+          "name": "7A",
+          "percentage": 37.5
+        },
+        {
+          "count": 2,
+          "name": "7B",
+          "percentage": 25.0
+        },
+        {
+          "count": 1,
+          "name": "7C",
+          "percentage": 12.5
+        }
+      ],
+      "by_domicile": [],
+      "by_gender": [],
+      "by_level": [
+        {
+          "count": 2,
+          "name": "SD",
+          "percentage": 25.0
+        },
+        {
+          "count": 6,
+          "name": "SMP",
+          "percentage": 75.0
+        }
+      ],
+      "by_religion": []
+    },
+    "trends": []
+  }
+}

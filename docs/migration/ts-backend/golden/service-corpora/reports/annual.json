@@ -1,0 +1,384 @@
+{
+  "label": "annual_2026-2027",
+  "result": {
+    "academic_summary": {
+      "availability": true,
+      "below_kkm_count": 1,
+      "by_subject": [
+        {
+          "below_kkm_count": 1,
+          "formatif_average": null,
+          "jenjang": "SMP",
+          "subject_id": 2,
+          "subject_name": "Matematika",
+          "sumatif_average": 80.0
+        }
+      ],
+      "formatif_average": null,
+      "reason": null,
+      "sumatif_average": 80.0
+    },
+    "attendance_by_level": [
+      {
+        "alfa": 0,
+        "attendance_rate": 66.7,
+        "incomplete": 2,
+        "izin": 1,
+        "late_days": 2,
+        "late_minutes": 40,
+        "late_rate": 50.0,
+        "level": "SD",
+        "present": 4,
+        "sakit": 1
+      },
+      {
+        "alfa": 1,
+        "attendance_rate": 77.8,
+        "incomplete": 2,
+        "izin": 1,
+        "late_days": 3,
+        "late_minutes": 45,
+        "late_rate": 21.4,
+        "level": "SMP",
+        "present": 14,
+        "sakit": 2
+      }
+    ],
+    "attendance_summary": {
+      "alfa": 1,
+      "attendance_rate": 75.0,
+      "incomplete": 4,
+      "izin": 2,
+      "late_days": 5,
+      "late_minutes": 85,
+      "late_rate": 27.8,
+      "present": 18,
+      "sakit": 3
+    },
+    "comparisons": {
+      "highest_attendance_level": {
+        "attendance_denominator": 18,
+        "attendance_rate": 77.8,
+        "name": "SMP"
+      },
+      "highest_attendance_month": {
+        "attendance_denominator": 24,
+        "attendance_rate": 75.0,
+        "name": "2026-08"
+      },
+      "lowest_attendance_level": {
+        "attendance_denominator": 6,
+        "attendance_rate": 66.7,
+        "name": "SD"
+      },
+      "lowest_attendance_month": {
+        "attendance_denominator": 24,
+        "attendance_rate": 75.0,
+        "name": "2026-08"
+      }
+    },
+    "data_quality": {
+      "empty_grade_cells": 0,
+      "incomplete_attendance": 4,
+      "missing_domicile": 8,
+      "missing_gender": 8,
+      "missing_religion": 8,
+      "unmapped_levels": [],
+      "warnings": [
+        "Student gender, religion, and domicile fields are not available in the current Student master schema.",
+        "Historical enrollment snapshots are not available; student population represents the selected academic year's enrollment snapshot.",
+        "Monthly academic trends are unavailable because Grade Ledger scores do not have an assessment-month field."
+      ]
+    },
+    "executive_summary": {
+      "attendance_rate": 75.0,
+      "below_kkm_count": 1,
+      "data_completeness_rate": 85.7,
+      "female_students": 0,
+      "late_minutes": 85,
+      "late_rate": 27.8,
+      "male_students": 0,
+      "total_students": 8
+    },
+    "meta": {
+      "academic_year": {
+        "id": 2,
+        "name": "2026/2027-reports"
+      },
+      "generated_at": "<ts>",
+      "period": {
+        "end": "2027-06-30",
+        "start": "2026-07-01"
+      },
+      "report_type": "annual",
+      "scope": "combined"
+    },
+    "report_period": {
+      "academic_year_id": 2,
+      "academic_year_label": "2026/2027-reports",
+      "sections": {
+        "academics": {
+          "basis": "available_academic_year_records",
+          "label": "Available Academic Records - AY 2026/2027-reports",
+          "month_bound": false
+        },
+        "attendance": {
+          "basis": "academic_year",
+          "label": "Academic Year 2026/2027-reports",
+          "month_bound": false
+        },
+        "population": {
+          "basis": "academic_year_enrollment_snapshot",
+          "label": "Academic Year 2026/2027-reports",
+          "month_bound": false
+        }
+      },
+      "selected_month": ""
+    },
+    "student_distribution": {
+      "by_class": [
+        {
+          "count": 2,
+          "name": "1A",
+          "percentage": 25.0
+        },
+        {
+          "count": 3,
+          "name": "7A",
+          "percentage": 37.5
+        },
+        {
+          "count": 2,
+          "name": "7B",
+          "percentage": 25.0
+        },
+        {
+          "count": 1,
+          "name": "7C",
+          "percentage": 12.5
+        }
+      ],
+      "by_domicile": [],
+      "by_gender": [],
+      "by_level": [
+        {
+          "count": 2,
+          "name": "SD",
+          "percentage": 25.0
+        },
+        {
+          "count": 6,
+          "name": "SMP",
+          "percentage": 75.0
+        }
+      ],
+      "by_religion": []
+    },
+    "trends": [
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "July 2026",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2026-07",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 1,
+        "attendance_denominator": 24,
+        "attendance_rate": 75.0,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 4,
+        "izin": 2,
+        "label": "August 2026",
+        "late_days": 5,
+        "late_minutes": 85,
+        "late_rate": 27.8,
+        "month": "2026-08",
+        "present": 18,
+        "sakit": 3,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "September 2026",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2026-09",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "October 2026",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2026-10",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "November 2026",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2026-11",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "December 2026",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2026-12",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "January 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-01",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "February 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-02",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "March 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-03",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "April 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-04",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "May 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-05",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      },
+      {
+        "alfa": 0,
+        "attendance_denominator": 0,
+        "attendance_rate": null,
+        "below_kkm_count": 0,
+        "formatif_average": null,
+        "incomplete": 0,
+        "izin": 0,
+        "label": "June 2027",
+        "late_days": 0,
+        "late_minutes": 0,
+        "late_rate": null,
+        "month": "2027-06",
+        "present": 0,
+        "sakit": 0,
+        "sumatif_average": null
+      }
+    ]
+  }
+}

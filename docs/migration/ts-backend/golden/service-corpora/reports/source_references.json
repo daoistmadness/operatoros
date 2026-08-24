@@ -1,0 +1,8 @@
+{
+  "annual": "services/report_service.py:build_annual_report",
+  "management": "services/report_service.py:build_monthly_management_report",
+  "monthly": "services/report_service.py:build_monthly_report",
+  "rekap_v2": "api/analytics.py:_collect_v2_rekap_absensi_report_data",
+  "rounding": "api/analytics.py:_round_percentage_int (Decimal ROUND_HALF_UP) and services/report_service.py:_round_rate/_round_average",
+  "tardiness": "api/analytics.py:_collect_tardiness_report_data"
+}

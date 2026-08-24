@@ -1,0 +1,274 @@
+{
+  "label": "monthly_management_2026-08",
+  "result": {
+    "academic_summary": {
+      "availability": true,
+      "below_kkm_count": 1,
+      "by_subject": [
+        {
+          "below_kkm_count": 1,
+          "formatif_average": null,
+          "jenjang": "SMP",
+          "subject_id": 2,
+          "subject_name": "Matematika",
+          "sumatif_average": 80.0
+        }
+      ],
+      "formatif_average": null,
+      "reason": null,
+      "sumatif_average": 80.0
+    },
+    "attendance": {
+      "by_jenjang": [
+        {
+          "alfa": 0,
+          "attendance_rate": 66.7,
+          "incomplete": 2,
+          "izin": 1,
+          "late_days": 2,
+          "late_minutes": 40,
+          "late_rate": 50.0,
+          "level": "SD",
+          "present": 4,
+          "sakit": 1
+        },
+        {
+          "alfa": 1,
+          "attendance_rate": 77.8,
+          "incomplete": 2,
+          "izin": 1,
+          "late_days": 3,
+          "late_minutes": 45,
+          "late_rate": 21.4,
+          "level": "SMP",
+          "present": 14,
+          "sakit": 2
+        }
+      ],
+      "summary": {
+        "alfa": 1,
+        "attendance_rate": 75.0,
+        "incomplete": 4,
+        "izin": 2,
+        "late_days": 5,
+        "late_minutes": 85,
+        "late_rate": 27.8,
+        "present": 18,
+        "sakit": 3
+      }
+    },
+    "data_quality": {
+      "reconciliation": {
+        "gender_known": 0,
+        "gender_unknown": 8,
+        "location_known": 0,
+        "location_unknown": 8,
+        "population_total": 8,
+        "religion_known": 0,
+        "religion_unknown": 8,
+        "student_master_linked": 8,
+        "student_master_unlinked": 0
+      },
+      "sections": {
+        "academics": {
+          "denominator_used": "students represented by available academic-year records",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 2,
+          "percentage_basis": "students represented by available academic-year records",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 6
+        },
+        "attendance": {
+          "attendance_event_denominator": 24,
+          "denominator_used": "eligible students with selected-month attendance records",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 7,
+          "percentage_basis": "eligible students with selected-month attendance records",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 1
+        },
+        "gender": {
+          "denominator_used": "known gender values",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 0,
+          "percentage_basis": "known gender values",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 8
+        },
+        "population": {
+          "denominator_used": "selected academic-year enrollments",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 8,
+          "percentage_basis": "selected academic-year enrollments",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 0
+        },
+        "religion": {
+          "denominator_used": "known religion values",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 0,
+          "percentage_basis": "known religion values",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 8
+        },
+        "residential_area": {
+          "denominator_used": "known kelurahan values",
+          "eligible_count": 8,
+          "excluded_count": 0,
+          "exclusion_reasons": [],
+          "known_count": 0,
+          "percentage_basis": "known kelurahan values",
+          "reconciles": true,
+          "reconciliation_difference": 0,
+          "unknown_count": 8
+        }
+      },
+      "unmapped_levels": [],
+      "warnings": [
+        "Demographic percentages use their disclosed known-value denominator and are never forced to match another section total.",
+        "Academic figures use available academic-year records and are not restricted to the selected calendar month.",
+        "Student gender, religion, and domicile fields are not available in the current Student master schema.",
+        "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available."
+      ]
+    },
+    "demographics": {
+      "gender": {
+        "denominator_used": "known_values",
+        "eligible_count": 8,
+        "known_count": 0,
+        "percentage_basis": "known demographic values; eligible-population percentage is also provided",
+        "rows": [],
+        "unknown_count": 8
+      },
+      "religion": {
+        "denominator_used": "known_values",
+        "eligible_count": 8,
+        "known_count": 0,
+        "percentage_basis": "known demographic values; eligible-population percentage is also provided",
+        "rows": [],
+        "unknown_count": 8
+      },
+      "residential_area": {
+        "denominator_used": "known_values",
+        "eligible_count": 8,
+        "known_count": 0,
+        "percentage_basis": "known demographic values; eligible-population percentage is also provided",
+        "rows": [],
+        "unknown_count": 8
+      }
+    },
+    "executive_summary": {
+      "attendance_denominator": 24,
+      "attendance_rate": 75.0,
+      "data_completeness_rate": 85.7,
+      "excused_absence_count": 2,
+      "late_count": 5,
+      "present_count": 18,
+      "sick_count": 3,
+      "students_below_kkm": 1,
+      "total_classes": 4,
+      "total_students": 8,
+      "unexcused_absence_count": 1
+    },
+    "metadata": {
+      "academic_year": {
+        "id": 2,
+        "name": "2026/2027-reports"
+      },
+      "filters": {
+        "class_name": null,
+        "subject_id": null
+      },
+      "generated_at": "<ts>",
+      "report_type": "monthly_management",
+      "scope": "combined",
+      "title": "Monthly Management Report"
+    },
+    "report_period": {
+      "academic_year_id": 2,
+      "academic_year_label": "2026/2027-reports",
+      "sections": {
+        "academics": {
+          "basis": "available_academic_year_records",
+          "label": "Available Academic Records - AY 2026/2027-reports",
+          "month_bound": false
+        },
+        "attendance": {
+          "basis": "calendar_month",
+          "label": "August 2026",
+          "month_bound": true
+        },
+        "population": {
+          "basis": "academic_year_enrollment_snapshot",
+          "label": "Academic Year 2026/2027-reports",
+          "month_bound": false
+        }
+      },
+      "selected_month": "2026-08"
+    },
+    "student_population": {
+      "by_class": [
+        {
+          "class_name": "1A",
+          "jenjang": "SD",
+          "percentage_of_eligible": 25.0,
+          "percentage_within_jenjang": 100.0,
+          "student_count": 2
+        },
+        {
+          "class_name": "7A",
+          "jenjang": "SMP",
+          "percentage_of_eligible": 37.5,
+          "percentage_within_jenjang": 50.0,
+          "student_count": 3
+        },
+        {
+          "class_name": "7B",
+          "jenjang": "SMP",
+          "percentage_of_eligible": 25.0,
+          "percentage_within_jenjang": 33.3,
+          "student_count": 2
+        },
+        {
+          "class_name": "7C",
+          "jenjang": "SMP",
+          "percentage_of_eligible": 12.5,
+          "percentage_within_jenjang": 16.7,
+          "student_count": 1
+        }
+      ],
+      "by_jenjang": [
+        {
+          "class_count": 1,
+          "classification": "known",
+          "jenjang": "SD",
+          "percentage_of_eligible": 25.0,
+          "student_count": 2
+        },
+        {
+          "class_count": 3,
+          "classification": "known",
+          "jenjang": "SMP",
+          "percentage_of_eligible": 75.0,
+          "student_count": 6
+        }
+      ],
+      "eligible_count": 8
+    }
+  }
+}
