@@ -263,9 +263,9 @@ def generate_import_goldens() -> list[str]:
             return [_scrub(v, key) for v in node]
         return node
 
+    if isinstance(payload, dict) and "rows" in payload and isinstance(payload["rows"], list):
+        payload["rows"] = sorted(payload["rows"], key=lambda r: (r.get("id", 0), str(r.get("student_identifier", ""))))
     payload = _scrub(payload)
-    # Workbook bytes embed build timestamps; the checksum value therefore
-    # varies per generation. Parity never depends on it — freeze a token.
     if isinstance(payload, dict) and "checksum" in payload:
         payload["checksum"] = "<sha256-of-source-workbook>"
     counters = {
