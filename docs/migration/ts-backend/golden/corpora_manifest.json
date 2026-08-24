@@ -221,6 +221,56 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "reports_annual",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_annual.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_filters",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_filters.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_management_monthly",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_management_monthly.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_monthly_empty_month",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_monthly_empty_month.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_monthly_with_data",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_monthly_with_data.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "restore_anonymous_rejected",
       "domain": "backup-restore",
       "protected_category": "authorization",
@@ -311,6 +361,15 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "svc-service-corpora-annual",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/annual.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "svc-service-corpora-checksum-vectors",
       "domain": "service-corpora",
       "protected_category": "data integrity",
@@ -338,11 +397,65 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "svc-service-corpora-export_structure",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/export_structure.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-management",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/management.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-monthly_complete",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/monthly_complete.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-monthly_empty",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/monthly_empty.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "svc-service-corpora-preflight-gates",
       "domain": "service-corpora",
       "protected_category": "data integrity",
       "kind": "service-golden",
       "file": "service-corpora/restore/preflight-gates.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-rekap_v2",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/rekap_v2.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-rekap_v2_missing",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/rekap_v2_missing.json",
       "setup": "disposable-temp-db",
       "expected_verdict": "EXACT_MATCH"
     },
@@ -356,11 +469,29 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "svc-service-corpora-source_references",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/source_references.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "svc-service-corpora-startup-validation",
       "domain": "service-corpora",
       "protected_category": "data integrity",
       "kind": "service-golden",
       "file": "service-corpora/migrations/startup-validation.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-tardiness",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/tardiness.json",
       "setup": "disposable-temp-db",
       "expected_verdict": "EXACT_MATCH"
     }
