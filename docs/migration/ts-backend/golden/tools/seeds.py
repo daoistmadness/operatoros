@@ -176,3 +176,81 @@ def seed_corrections(db_path) -> None:
         db.commit()
     finally:
         db.close()
+
+
+def seed_reports(db_path) -> None:
+    from models.absence_reason import AbsenceReason
+    from models.absence_reason_class_entry import AbsenceReasonClassEntry
+    from models.academic_year import AcademicYear
+    from models.attendance import Attendance
+    from models.heb_override import HebOverride
+    from models.jenjang import Jenjang
+    from models.student import Student
+    from models.student_enrollment import StudentEnrollment
+    from models.student_master import StudentMaster
+
+    db = _session(db_path)
+    try:
+        _add_users(db)
+        year = AcademicYear(label="2026/2027-reports", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_default=False)
+        db.add(year)
+        db.flush()
+        j_smp = Jenjang(name="SMP", code="SMP", level="junior")
+        j_sd = Jenjang(name="SD", code="SD", level="primary")
+        db.add_all([j_smp, j_sd])
+        db.flush()
+
+        def _add_enrolled(name, mid, jenjang, cls):
+            master = StudentMaster(id=mid, full_name=name, normalized_name=name.lower(), student_status="active")
+            db.add(master)
+            db.flush()
+            student = Student(name=name, jenjang=jenjang.name, class_name=cls)
+            db.add(student)
+            db.flush()
+            enr = StudentEnrollment(student_id=student.id, student_master_id=master.id, academic_year_id=year.id, jenjang_id=jenjang.id, class_name=cls, lifecycle_state="ACTIVE")
+            db.add(enr)
+            db.flush()
+            return enr, student
+
+        _, s_a1 = _add_enrolled("Alice SMP7A", "00000000-0000-0000-0000-000000000101", j_smp, "7A")
+        _, s_a2 = _add_enrolled("Bob SMP7A", "00000000-0000-0000-0000-000000000102", j_smp, "7A")
+        _, s_a3 = _add_enrolled("Charlie SMP7A", "00000000-0000-0000-0000-000000000103", j_smp, "7A")
+        _, s_b1 = _add_enrolled("Dina SMP7B", "00000000-0000-0000-0000-000000000104", j_smp, "7B")
+        _, s_b2 = _add_enrolled("Eko SMP7B", "00000000-0000-0000-0000-000000000105", j_smp, "7B")
+        _, s_c1 = _add_enrolled("Fajar SD1A", "00000000-0000-0000-0000-000000000201", j_sd, "1A")
+        _, s_c2 = _add_enrolled("Gina SD1A", "00000000-0000-0000-0000-000000000202", j_sd, "1A")
+        db.commit()
+
+        def _att(student, d, status, late=0):
+            ci = time(7, 45) if status == "late" else (time(7, 30) if status in ("on-time", "incomplete") else None)
+            co = time(15, 0) if status in ("on-time", "late") else None
+            db.add(Attendance(student_id=student.id, date=d, check_in=ci, check_out=co, late_duration=late if status == "late" else 0, late_source="calculated" if status == "late" else "none", is_absent=False, status=status, week="31"))
+
+        for s in [s_a1, s_a2, s_a3]:
+            for i in range(3):
+                _att(s, date(2026, 8, 1+i), "on-time")
+            _att(s, date(2026, 8, 5), "late", late=15)
+        for s in [s_b1, s_b2]:
+            _att(s, date(2026, 8, 1), "on-time")
+            _att(s, date(2026, 8, 2), "incomplete")
+        for s in [s_c1, s_c2]:
+            _att(s, date(2026, 8, 1), "on-time")
+            _att(s, date(2026, 8, 3), "late", late=20)
+            _att(s, date(2026, 8, 5), "incomplete")
+
+        db.add_all([
+            AbsenceReasonClassEntry(class_name="7A", month=8, year=2026, sakit=2, izin=1, alfa=0, entered_by="golden-seed"),
+            AbsenceReasonClassEntry(class_name="7B", month=8, year=2026, sakit=0, izin=0, alfa=1, entered_by="golden-seed"),
+            AbsenceReasonClassEntry(class_name="1A", month=8, year=2026, sakit=1, izin=1, alfa=1, entered_by="golden-seed"),
+        ])
+        db.add_all([
+            AbsenceReason(student_id=s_a1.id, class_name="7A", month=8, year=2026, sakit=1, izin=0, alfa=0, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_a2.id, class_name="7A", month=8, year=2026, sakit=1, izin=1, alfa=0, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_b1.id, class_name="7B", month=8, year=2026, sakit=0, izin=0, alfa=1, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_c1.id, class_name="1A", month=8, year=2026, sakit=1, izin=1, alfa=0, entered_by="golden-seed"),
+        ])
+        db.add(HebOverride(jenjang="SMP", month=8, year=2026, heb_value=18, note="reports golden SMP", set_by="golden-seed"))
+        db.add(HebOverride(jenjang="SD", month=8, year=2026, heb_value=15, note="reports golden SD", set_by="golden-seed"))
+        db.commit()
+    finally:
+        db.close()

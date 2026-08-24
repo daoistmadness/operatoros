@@ -11,11 +11,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sqlite3
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 import sys
 import tempfile
-from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[5]
@@ -41,8 +41,10 @@ def dump(obj) -> str:
 
 
 def _sanitize(value, key: str = ""):
-    import re
-
+    if isinstance(value, datetime):
+        if key.endswith("_at") or key == "generated_at":
+            return "<ts>"
+        return value
     if isinstance(value, dict):
         return {k: _sanitize(v, str(k)) for k, v in value.items()}
     if isinstance(value, list):
@@ -53,6 +55,9 @@ def _sanitize(value, key: str = ""):
         keep_digest = any(t in key.lower() for t in ("digest", "checksum", "sha"))
         if not keep_digest:
             value = re.sub(r"\b[0-9a-f]{64}\b", "<sha256>", value)
+        if re.match(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}", value):
+            if key.endswith("_at") or key == "generated_at":
+                return "<ts>"
         return value
     return value
 
@@ -316,6 +321,181 @@ def heb_edge_corpus() -> None:
         db.close()
 
 
+def reports_corpus() -> None:
+    from models.absence_reason_class_entry import AbsenceReasonClassEntry
+    from models.academic_year import AcademicYear
+    from models.assessment_component import AssessmentComponent
+    from models.attendance import Attendance
+    from models.jenjang import Jenjang
+    from models.student import Student
+    from models.student_enrollment import StudentEnrollment
+    from models.student_master import StudentMaster
+    from models.subject import Subject
+    from models.student_subject_grade import StudentSubjectGrade
+    from services.report_service import (
+        build_annual_report,
+        build_monthly_management_report,
+        build_monthly_report,
+    )
+
+    tmp = Path(tempfile.mkdtemp(prefix="tsphase0-reports-"))
+    db_path = fresh_ledgered_db(tmp, "reports.db")
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+    from core import database as core_database
+
+    db = core_database.SessionLocal()
+    try:
+        year = AcademicYear(label="2026/2027-reports", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_default=False)
+        db.add(year)
+        db.flush()
+        jenjang_smp = Jenjang(name="SMP", code="SMP", level="junior")
+        jenjang_sd = Jenjang(name="SD", code="SD", level="primary")
+        db.add_all([jenjang_smp, jenjang_sd])
+        db.flush()
+        subject_smp = Subject(name="Matematika", jenjang_id=jenjang_smp.id)
+        subject_sd = Subject(name="Bahasa", jenjang_id=jenjang_sd.id)
+        db.add_all([subject_smp, subject_sd])
+        db.flush()
+        comp_smp = AssessmentComponent(name="UH1", assessment_type="sumatif", subject_id=subject_smp.id)
+        comp_smp2 = AssessmentComponent(name="UH2", assessment_type="sumatif", subject_id=subject_smp.id)
+        comp_sd = AssessmentComponent(name="UH1", assessment_type="sumatif", subject_id=subject_sd.id)
+        db.add_all([comp_smp, comp_smp2, comp_sd])
+        db.flush()
+
+        def add_enrolled(name, jenjang, class_name):
+            master = StudentMaster(full_name=name, normalized_name=name.lower(), student_status="active")
+            db.add(master)
+            db.flush()
+            student = Student(name=name, jenjang=jenjang.name, class_name=class_name)
+            db.add(student)
+            db.flush()
+            enr = StudentEnrollment(student_id=student.id, student_master_id=master.id, academic_year_id=year.id, jenjang_id=jenjang.id, class_name=class_name, lifecycle_state="ACTIVE")
+            db.add(enr)
+            db.flush()
+            return enr, student
+
+        enrollments = []
+        e_a1, s_a1 = add_enrolled("Alice SMP7A", jenjang_smp, "7A")
+        e_a2, s_a2 = add_enrolled("Bob SMP7A", jenjang_smp, "7A")
+        e_a3, s_a3 = add_enrolled("Charlie SMP7A", jenjang_smp, "7A")
+        e_b1, s_b1 = add_enrolled("Dina SMP7B", jenjang_smp, "7B")
+        e_b2, s_b2 = add_enrolled("Eko SMP7B", jenjang_smp, "7B")
+        e_c1, s_c1 = add_enrolled("Fajar SD1A", jenjang_sd, "1A")
+        e_c2, s_c2 = add_enrolled("Gina SD1A", jenjang_sd, "1A")
+        enrollments.extend([e_a1, e_a2, e_a3, e_b1, e_b2, e_c1, e_c2])
+        db.commit()
+
+        def add_attendance(student, d, status, late=0):
+            from datetime import time as _t
+            if status in ("on-time", "late"):
+                ci = _t(7, 45) if status == "late" else _t(7, 30)
+                co = _t(15, 0)
+            elif status == "incomplete":
+                ci = _t(7, 30)
+                co = None
+            else:
+                ci = None
+                co = None
+            db.add(Attendance(student_id=student.id, date=d, check_in=ci, check_out=co, late_duration=late if status=="late" else 0, late_source="none" if status!="late" else "calculated", is_absent=False, status=status, week="31"))
+
+        for s in [s_a1, s_a2, s_a3]:
+            for i in range(3):
+                add_attendance(s, date(2026, 8, 1+i), "on-time")
+            add_attendance(s, date(2026, 8, 5), "late", late=15)
+        for s in [s_b1, s_b2]:
+            add_attendance(s, date(2026, 8, 1), "on-time")
+            add_attendance(s, date(2026, 8, 2), "incomplete")
+        for s in [s_c1, s_c2]:
+            add_attendance(s, date(2026, 8, 1), "on-time")
+            add_attendance(s, date(2026, 8, 3), "late", late=20)
+            add_attendance(s, date(2026, 8, 5), "incomplete")
+        e_empty, s_empty = add_enrolled("Hana SMP7C", jenjang_smp, "7C")
+        db.flush()
+
+        db.add_all([
+            AbsenceReasonClassEntry(class_name="7A", month=8, year=2026, sakit=2, izin=1, alfa=0, entered_by="golden-seed"),
+            AbsenceReasonClassEntry(class_name="7B", month=8, year=2026, sakit=0, izin=0, alfa=1, entered_by="golden-seed"),
+            AbsenceReasonClassEntry(class_name="1A", month=8, year=2026, sakit=1, izin=1, alfa=1, entered_by="golden-seed"),
+            AbsenceReasonClassEntry(class_name="7C", month=8, year=2026, sakit=0, izin=0, alfa=0, entered_by="golden-seed"),
+        ])
+        from models.absence_reason import AbsenceReason
+        from models.heb_override import HebOverride
+        db.add_all([
+            AbsenceReason(student_id=s_a1.id, class_name="7A", month=8, year=2026, sakit=1, izin=0, alfa=0, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_a2.id, class_name="7A", month=8, year=2026, sakit=1, izin=1, alfa=0, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_a3.id, class_name="7A", month=8, year=2026, sakit=0, izin=0, alfa=0, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_b1.id, class_name="7B", month=8, year=2026, sakit=0, izin=0, alfa=1, entered_by="golden-seed"),
+            AbsenceReason(student_id=s_c1.id, class_name="1A", month=8, year=2026, sakit=1, izin=1, alfa=0, entered_by="golden-seed"),
+        ])
+        db.add(HebOverride(jenjang="SMP", month=8, year=2026, heb_value=18, note="reports golden SMP", set_by="golden-seed"))
+        db.add(HebOverride(jenjang="SD", month=8, year=2026, heb_value=15, note="reports golden SD", set_by="golden-seed"))
+        db.add_all([
+            StudentSubjectGrade(enrollment_id=e_a1.id, subject_id=subject_smp.id, component_id=comp_smp.id, score=80),
+            StudentSubjectGrade(enrollment_id=e_a1.id, subject_id=subject_smp.id, component_id=comp_smp2.id, score=90),
+        ])
+        db.flush()
+        db.add(StudentSubjectGrade(enrollment_id=e_a2.id, subject_id=subject_smp.id, component_id=comp_smp.id, score=70))
+        db.commit()
+
+        def safe_call(label, fn):
+            try:
+                res = fn()
+                return {"label": label, "result": res}
+            except Exception as exc:
+                return {"label": label, "error": f"{type(exc).__name__}: {exc}"}
+
+        monthly_complete = safe_call("monthly_complete_2026-08_combined", lambda: build_monthly_report(db, year.id, "2026-08", "combined"))
+        monthly_empty = safe_call("monthly_empty_2026-07_combined", lambda: build_monthly_report(db, year.id, "2026-07", "combined"))
+        monthly_mgmt = safe_call("monthly_management_2026-08", lambda: build_monthly_management_report(db, year.id, "2026-08", "combined"))
+        annual = safe_call("annual_2026-2027", lambda: build_annual_report(db, year.id, "combined"))
+        try:
+            from api.analytics import _collect_tardiness_report_data
+            tardiness = safe_call("tardiness_2026-08", lambda: _collect_tardiness_report_data(db, {"date_from": date(2026,8,1), "date_to": date(2026,8,31), "label": "August 2026"}))
+        except Exception as exc:
+            tardiness = {"label": "tardiness_2026-08", "error": f"{type(exc).__name__}: {exc}"}
+        try:
+            from api.analytics import _collect_v2_rekap_absensi_report_data
+            rekap = safe_call("rekap_v2_2026-08", lambda: _collect_v2_rekap_absensi_report_data(db, {"date_from": date(2026,8,1), "date_to": date(2026,8,31), "label": "August 2026", "year": 2026}))
+        except Exception as exc:
+            rekap = {"label": "rekap_v2_2026-08", "error": f"{type(exc).__name__}: {exc}"}
+        try:
+            rekap_missing = safe_call("rekap_v2_2026-07_missing", lambda: _collect_v2_rekap_absensi_report_data(db, {"date_from": date(2026,7,1), "date_to": date(2026,7,31), "label": "July 2026", "year": 2026}))
+        except Exception as exc:
+            rekap_missing = {"label": "rekap_v2_2026-07_missing", "error": f"{type(exc).__name__}: {exc}"}
+
+        export_struct = {}
+        try:
+            from services.report_export import build_report_xlsx, get_report_branding
+            branding = get_report_branding(db)
+            sample_report = monthly_complete.get("result")
+            if sample_report:
+                xlsx = build_report_xlsx(sample_report, branding)
+                import openpyxl
+                wb = openpyxl.load_workbook(filename=BytesIO(xlsx))
+                export_struct = {"sheets": wb.sheetnames, "headers": [cell.value for cell in wb.active[5]] if wb.active else []}
+        except Exception as exc:
+            export_struct = {"error": f"{type(exc).__name__}: {exc}"}
+
+        record("reports/monthly_complete.json", monthly_complete)
+        record("reports/monthly_empty.json", monthly_empty)
+        record("reports/management.json", monthly_mgmt)
+        record("reports/annual.json", annual)
+        record("reports/tardiness.json", tardiness)
+        record("reports/rekap_v2.json", rekap)
+        record("reports/rekap_v2_missing.json", rekap_missing)
+        record("reports/export_structure.json", export_struct)
+        record("reports/source_references.json", {
+            "monthly": "services/report_service.py:build_monthly_report",
+            "management": "services/report_service.py:build_monthly_management_report",
+            "annual": "services/report_service.py:build_annual_report",
+            "rekap_v2": "api/analytics.py:_collect_v2_rekap_absensi_report_data",
+            "tardiness": "api/analytics.py:_collect_tardiness_report_data",
+            "rounding": "api/analytics.py:_round_percentage_int (Decimal ROUND_HALF_UP) and services/report_service.py:_round_rate/_round_average",
+        })
+    finally:
+        db.close()
+
+
 def backup_corpus() -> None:
     from services.backup_service import calculate_sha256
 
@@ -344,6 +524,7 @@ def main() -> None:
     kkm_term_corpus()
     grades_corpus()
     heb_edge_corpus()
+    reports_corpus()
     backup_corpus()
     manifest_path = GOLDEN / "corpora_manifest.json"
     manifest = json.loads(manifest_path.read_text())

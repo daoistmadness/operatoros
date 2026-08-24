@@ -27,14 +27,14 @@ never silently accepted.
 | 9 | Academic masters + enrollments | API contract | creation-chain evidence only (grades seed); canonical-resolution cases pending | PARTIAL |
 | 10 | Grades grid save + uniqueness | data integrity | `service-corpora/grades/constraints.json` (unique/CHECK/RESTRICT) | LANDED |
 | 11 | KKM fallback + term mapping | report correctness | `service-corpora/kkm/resolution-and-term-defaults.json` (85.0 fallback verified at source) | LANDED |
-| 12 | Rekap/report aggregates | report correctness | no dedicated fixtures yet | MISSING |
+| 12 | Report aggregates (monthly/management/annual/rekap/tardiness) | report correctness | `service-corpora/reports/*` (8 files) + `corpora/reports/*` (5 scenarios) | LANDED |
 | 13 | Backup checksum + identity | data preservation | `service-corpora/backup/checksum-vectors.json`; execution-history cases pending | PARTIAL |
 | 14 | Restore gates fail-closed | migration/rollback | `service-corpora/restore/preflight-gates.json` (21-step rehearsal); HTTP gate scenarios pending | PARTIAL |
 | 15 | Migration ledger/fingerprint | migration/rollback | `service-corpora/migrations/startup-validation.json` (fresh/memory/missing-path/no-ledger/empty-file) | LANDED |
 | 16 | Browser critical workflows | critical browser workflows | e2e suite reuse (no new corpus) | EXISTING |
 
-Replay harness (`tools/harness.py`) evidence: self-comparison 27/27
-EXACT_MATCH; injected mismatch detected 27/27 MIGRATION_DEFECT.
+Replay harness (`tools/harness.py`) evidence: self-comparison 36/36
+EXACT_MATCH; injected mismatch detected 36/36 MIGRATION_DEFECT.
 Determinism: both generators byte-identical across double runs after
 path/free-space/digest sanitization.
 

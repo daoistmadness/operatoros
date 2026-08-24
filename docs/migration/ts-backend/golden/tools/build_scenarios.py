@@ -225,6 +225,26 @@ scenarios.append(scenario(
     "integrity_fk_blocks_parent_delete", "database-integrity", "data integrity", "seed_attendance_review",
     [sql("DELETE FROM students WHERE id = 7001")],
 ))
+scenarios.append(scenario(
+    "reports_monthly_with_data", "reports", "report correctness", "seed_reports",
+    [login("admin"), req("GET", "/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", jar=True)],
+))
+scenarios.append(scenario(
+    "reports_monthly_empty_month", "reports", "report correctness", "seed_reports",
+    [login("admin"), req("GET", "/api/reports/monthly?academic_year_id=2&month=2026-07&scope=combined", jar=True)],
+))
+scenarios.append(scenario(
+    "reports_management_monthly", "reports", "report correctness", "seed_reports",
+    [login("admin"), req("GET", "/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", jar=True)],
+))
+scenarios.append(scenario(
+    "reports_annual", "reports", "report correctness", "seed_reports",
+    [login("admin"), req("GET", "/api/reports/annual?academic_year_id=2&scope=combined", jar=True)],
+))
+scenarios.append(scenario(
+    "reports_filters", "reports", "report correctness", "seed_reports",
+    [login("admin"), req("GET", "/api/reports/filters?academic_year_id=2&scope=combined", jar=True)],
+))
 
 
 def main() -> None:
