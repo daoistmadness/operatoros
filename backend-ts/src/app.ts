@@ -8,6 +8,9 @@ import { coreRoutes } from "./domains/core";
 import { configRoutes, readinessRoutes, systemRoutes } from "./domains/config";
 import { attendanceRoutes } from "./domains/attendance";
 import { attendanceImportRoutes } from "./domains/attendance-import";
+import { gradeRoutes } from "./domains/grades";
+import { interventionRoutes } from "./domains/interventions";
+import { progressionRoutes } from "./domains/progression";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -42,6 +45,9 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     readinessRoutes(app, context);
     attendanceRoutes(app, context);
     attendanceImportRoutes(app, context);
+    gradeRoutes(app, context);
+    interventionRoutes(app, context);
+    progressionRoutes(app, context);
   }
   systemRoutes(app, { destructiveOperationsEnabled: false });
 
