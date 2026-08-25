@@ -1,0 +1,23 @@
+{
+  "id": "academic_history_current_and_ended",
+  "domain": "academic-placement",
+  "protected_category": "data integrity",
+  "seed": "seed_academic",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/student-enrollments/student/11111111-1111-1111-1111-111111111111",
+      "jar": true
+    }
+  ]
+}

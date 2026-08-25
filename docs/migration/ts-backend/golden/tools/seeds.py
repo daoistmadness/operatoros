@@ -178,6 +178,75 @@ def seed_corrections(db_path) -> None:
         db.close()
 
 
+def seed_academic(db_path) -> None:
+    from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram
+    from models.academic_year import AcademicYear
+    from models.jenjang import Jenjang
+    from models.student import Student
+    from models.student_enrollment import StudentEnrollment
+    from models.student_master import StudentDeviceIdentity, StudentMaster
+
+    db = _session(db_path)
+    try:
+        _add_users(db)
+        y1 = AcademicYear(label="2025/2026-academic", start_date=date(2025, 7, 1), end_date=date(2026, 6, 30), is_default=False)
+        y2 = AcademicYear(label="2026/2027-academic", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_default=False)
+        j_smp = Jenjang(name="SMP", code="SMP", level="junior")
+        db.add_all([y1, y2, j_smp])
+        db.flush()
+        program = AcademicProgram(jenjang_id=j_smp.id, name="SMP Program")
+        db.add(program)
+        db.flush()
+        grade = AcademicGrade(jenjang_id=j_smp.id, program_id=program.id, name="Grade 7", sequence_number=1)
+        db.add(grade)
+        db.flush()
+        aclass = AcademicClass(academic_year_id=y2.id, grade_id=grade.id, class_name="7A", active=True)
+        db.add(aclass)
+        db.flush()
+
+        m1 = "11111111-1111-1111-1111-111111111111"
+        m2 = "22222222-2222-2222-2222-222222222222"
+        masters = {}
+        for mid in (m1, m2):
+            row = StudentMaster(id=mid, full_name=f"Academic Master {mid[:4]}", normalized_name=f"academic master {mid[:4]}", student_status="active")
+            db.add(row)
+            masters[mid] = row
+        db.flush()
+
+        def _legacy(sid, name, master_id=None):
+            student = Student(id=sid, name=name, jenjang="SMP", class_name="7A")
+            db.add(student)
+            db.flush()
+            if master_id:
+                db.add(StudentDeviceIdentity(
+                    student_master_id=master_id, legacy_student_id=sid,
+                    device_identifier=str(sid), device_source="attendance_device",
+                    effective_from=date(2026, 1, 1), is_active=True,
+                ))
+            db.flush()
+            return student
+
+        s_link = _legacy(701, "Linked Student", m1)
+        _legacy(702, "Unlinked Student")
+        _legacy(703, "Ambiguous Student", m2)
+        _legacy(704, "Second Ambiguous Student")
+
+        ended = StudentEnrollment(
+            student_master_id=m1, academic_year_id=y1.id, jenjang_id=j_smp.id,
+            class_name="7A-old", lifecycle_state="ENDED",
+            effective_from=date(2025, 7, 1), effective_to=date(2026, 6, 30),
+        )
+        active = StudentEnrollment(
+            student_master_id=m1, academic_year_id=y2.id, jenjang_id=j_smp.id,
+            academic_class_id=aclass.id, class_name="7A", lifecycle_state="ACTIVE",
+            effective_from=date(2026, 7, 1),
+        )
+        db.add_all([ended, active])
+        db.commit()
+    finally:
+        db.close()
+
+
 def seed_reports(db_path) -> None:
     from models.absence_reason import AbsenceReason
     from models.absence_reason_class_entry import AbsenceReasonClassEntry

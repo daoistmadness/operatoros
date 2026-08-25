@@ -1,0 +1,23 @@
+{
+  "id": "academic_history_missing_master_404",
+  "domain": "academic-placement",
+  "protected_category": "report correctness",
+  "seed": "seed_academic",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/student-enrollments/student/99999999-9999-9999-9999-999999999999",
+      "jar": true
+    }
+  ]
+}

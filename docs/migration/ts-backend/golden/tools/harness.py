@@ -134,6 +134,9 @@ class FastAPIReferenceAdapter:
         os.environ["OPERATOROS_ISOLATED_TEST"] = "true"
         os.environ.setdefault("AUTH_COOKIE_SECRET", "astryx-test-only-cookie-secret-32-chars")
         os.environ.setdefault("ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION", "true")
+        # Academic seeds intentionally include unlinked legacy students;
+        # this env key exists precisely for explicit test harnesses.
+        os.environ.setdefault("BYPASS_STUDENT_LINKING_GATE", "true")
         self.tmpdir = Path(tempfile.mkdtemp(prefix=f"tsharness-{self.label}-"))
         db_path = self.tmpdir / "scenario.db"
         os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
