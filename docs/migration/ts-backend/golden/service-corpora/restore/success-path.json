@@ -15,40 +15,73 @@
     "trigger_type_present": true
   },
   "corrupt_backup_fail_closed": {
-    "error_code": null,
-    "preflight_not_ok": false,
+    "fail_closed": true,
     "preflight_status": 200,
-    "restore_status_fail_closed": false
+    "restore_status": 422
   },
-  "current_restore_session": "unknown",
+  "current_restore_session": "revoked-with-all-sessions",
   "post_restore_database": {
     "admin_user_survives": true,
-    "all_sessions_revoked_or_wiped": false,
-    "sessions_total": 2
+    "all_sessions_revoked_or_wiped": true,
+    "post_backup_marker_session_absent": true,
+    "sessions_total": 1,
+    "unrevoked_remaining": 0
   },
   "pre_restore_state": {
     "sessions": 2,
     "users": 3
   },
   "recovery_history": {
-    "entry_count": 0,
-    "operation_fields_sample": [],
-    "successful_entries": 0
+    "completed_entry_keys": [
+      "actor_display",
+      "event",
+      "filename",
+      "operation_reference_id",
+      "result",
+      "safe_reason_code",
+      "safety_backup_filename",
+      "timestamp"
+    ],
+    "entry_count": 3,
+    "event_result_sequence": [
+      [
+        "RESTORE_REQUESTED",
+        "REQUESTED"
+      ],
+      [
+        "RESTORE_STARTED",
+        "STARTED"
+      ],
+      [
+        "RESTORE_COMPLETED",
+        "COMPLETED"
+      ]
+    ],
+    "has_restore_completed": true,
+    "operation_reference_ids_match": true
   },
   "restore_preflight": {
     "has_active_sha256": true,
     "has_source_sha256": true,
-    "impact_classification": "SCHEMA_INCOMPATIBLE",
+    "impact_classification": "LOW_IMPACT",
     "status": 200
   },
   "restore_success": {
-    "body_keys": null,
-    "set_cookie_revoked": false,
-    "status": 409
+    "post_restore_foreign_key_violations": 0,
+    "post_restore_integrity": "ok",
+    "set_cookie_revoked": true,
+    "status": 200
+  },
+  "restored_database_history_note": {
+    "explanation": "restore replaces the DB file; the backup-era RUNNING row reappears and the post-backup SUCCESS update is intentionally discarded",
+    "history_statuses_after_restore": [
+      "RUNNING"
+    ]
   },
   "safety_snapshot": {
-    "backup_dir_file_count": 14,
-    "note": "snapshot existence inferred from dir growth; names normalized",
-    "snapshot_named_files": 0
+    "backup_dir_file_count": 19,
+    "note": "snapshot materializes as a pre_restore_auto backup file; restored DB history shows pre-restore state",
+    "pre_restore_auto_trigger_in_history": false,
+    "restore_completed_recovery_safety_backup_filename": "<backup-file>"
   }
 }

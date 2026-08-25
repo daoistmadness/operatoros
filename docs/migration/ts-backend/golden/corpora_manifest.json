@@ -341,6 +341,16 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "restore_status_admin_shape",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_status_admin_shape.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "review_history_is_append_only_update_delete_abort",
       "domain": "attendance-review",
       "protected_category": "data integrity",
