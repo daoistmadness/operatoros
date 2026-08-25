@@ -110,6 +110,42 @@ def seed_attendance_review(db_path) -> None:
         db.close()
 
 
+def seed_attendance_import(db_path) -> None:
+    from models.attendance import Attendance
+    from models.jenjang_config import JenjangConfig
+
+    db = _session(db_path)
+    try:
+        _add_users(db)
+        for sid, name, jenjang, class_name in (
+            (9001, "Andi", "SMP", "SMP7A"),
+            (9002, "Beta", "SMP", "SMP7A"),
+            (9003, "Citra", "SMP", "SMP7B"),
+            (9101, "Diana", "SMA", "SMA2C"),
+        ):
+            _seed_student_with_identity(db, sid, name, jenjang, class_name)
+        db.add_all([JenjangConfig(jenjang="SMP", cutoff_time="07:15"), JenjangConfig(jenjang="SMA", cutoff_time="07:00")])
+        db.add_all(
+            [
+                Attendance(
+                    student_id=9001, date=date(2026, 6, 15),
+                    check_in=time(7, 0), check_out=time(16, 0),
+                    late_duration=0, late_source="none", is_absent=False,
+                    week="25", status="on-time",
+                ),
+                Attendance(
+                    student_id=9002, date=date(2026, 6, 16),
+                    check_in=time(8, 0), check_out=time(16, 0),
+                    late_duration=45, late_source="calculated", is_absent=False,
+                    week="25", status="late",
+                ),
+            ]
+        )
+        db.commit()
+    finally:
+        db.close()
+
+
 def seed_corrections(db_path) -> None:
     from models.attendance import Attendance
     from models.attendance_review import AttendanceCorrectionRequest

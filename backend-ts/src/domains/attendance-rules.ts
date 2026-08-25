@@ -10,8 +10,20 @@ export function parseClockMinutes(value: unknown): number | null {
 
 export function parseExcelDurationMinutes(value: unknown): number {
   if (typeof value !== "string") return 0;
-  const match = value.trim().match(/^(\d+):([0-5]\d)$/);
+  const match = value.trim().match(/^(\d+):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?$/);
   return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+}
+
+export function deriveJenjangFromClassName(className: string | null): string {
+  const normalized = className?.trim() ?? "";
+  if (!normalized) return "Unassigned";
+  const alnum = normalized.match(/^([A-Za-z]+\d+)/);
+  if (alnum?.[1]) return alnum[1].toUpperCase();
+  const alpha = normalized.match(/^([A-Za-z]+)/);
+  if (alpha?.[1]) return alpha[1][0]!.toUpperCase() + alpha[1].slice(1).toLowerCase();
+  const digit = normalized.match(/^(\d+)/);
+  if (digit?.[1]) return digit[1];
+  return normalized.split("-")[0]?.trim().toUpperCase() ?? "";
 }
 
 export function deriveAttendanceStatus(checkIn: string | null, checkOut: string | null, lateMinutes: number | null): "on-time" | "late" | "incomplete" | "absent" {
