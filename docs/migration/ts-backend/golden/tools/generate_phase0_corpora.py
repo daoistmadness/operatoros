@@ -60,12 +60,13 @@ def _sanitize(value, key: str = ""):
     if isinstance(value, str):
         value = re.sub(r"/(?:tmp|home)/[A-Za-z0-9_./-]+", "<path>", value)
         value = re.sub(r"Free bytes: \d+", "Free bytes: <free>", value)
+        value = re.sub(r"backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(_\d+)?\.sqlite3", "<backup-file>", value)
         keep_digest = any(t in key.lower() for t in ("digest", "checksum", "sha"))
         if not keep_digest:
             value = re.sub(r"\b[0-9a-f]{64}\b", "<sha256>", value)
         if re.match(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}", value):
-            if key.endswith("_at") or key == "generated_at":
-                return "<ts>"
+            if key.endswith("_at") or key in ("generated_at", "timestamp") or key.endswith("_filename") and "backup" in key.lower():
+                return "<ts>" if key == "timestamp" else value
         return value
     return value
 
@@ -742,10 +743,15 @@ def restore_success_corpus() -> None:
 
     _rebind(core_database, f"sqlite:///{active_db}")
 
-    import main as app_main
+    # settings fields froze at first backend import; repoint them at the
+    # disposable active DB before the one-time `main` import.
     from core.config import settings
 
+    settings.DATABASE_URL = f"sqlite:///{active_db}"
+    settings.BACKUP_DIR = str(_RESTORE_BACKUP_DIR)
     settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+
+    import main as app_main
     client = TestClient(app_main.app)
     out: dict = {}
 
@@ -803,6 +809,51 @@ def restore_success_corpus() -> None:
     conn2.close()
     out["pre_restore_state"] = {"sessions": pre_restore_sessions, "users": pre_restore_users}
 
+    conn = _sq.connect(active_db)
+    conn.execute(
+        "INSERT INTO sessions (user_id, token_hash, created_at, last_used_at, expires_at, absolute_expires_at) "
+        "VALUES (1, ?, ?, ?, ?, ?)",
+        ("f" * 64, _dt.utcnow().isoformat(" "), _dt.utcnow().isoformat(" "), future, future),
+    )
+    conn.commit()
+    conn.close()
+
+    # Corrupt-backup case runs while still authenticated: create second
+    # backup, flip bytes inside its file, expect fail-closed validation.
+    second = client.post("/api/admin/backups", headers=auth)
+    fname2 = second.json().get("filename")
+    target = Path(os.environ["BACKUP_DIR"]) / fname2 if fname2 else None
+    corrupt_status = None
+    if target and target.exists():
+        data = bytearray(target.read_bytes())
+        data[len(data) // 2 : len(data) // 2 + 16] = b"CORRUPTED-CORRUPT"[:16]
+        target.write_bytes(bytes(data))
+        conn = _sq.connect(active_db)
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        conn.close()
+        corrupt_preflight = client.post(f"/api/admin/backups/{fname2}/restore-preflight", headers=auth)
+        corrupt_restore = client.post(
+            f"/api/admin/backups/{fname2}/restore",
+            headers=auth,
+            json={
+                "current_password": "golden-admin-pass-1",
+                "confirmation_filename": fname2,
+                "confirmation_phrase": "RESTORE_DATABASE",
+                "expected_source_sha256": "stale",
+                "expected_active_sha256": "stale",
+                "acknowledge_complete_replacement": True,
+                "acknowledge_session_revocation": True,
+                "acknowledge_restart_required": True,
+                "acknowledge_safety_backup": True,
+            },
+        )
+        corrupt_status = {
+            "preflight_status": corrupt_preflight.status_code,
+            "restore_status": corrupt_restore.status_code,
+            "fail_closed": corrupt_preflight.status_code >= 400 or corrupt_restore.status_code >= 400,
+        }
+    out["corrupt_backup_fail_closed"] = corrupt_status
+
     preflight = client.post(f"/api/admin/backups/{filename}/restore-preflight", headers=auth)
     pf = preflight.json() if preflight.status_code == 200 else {}
     out["restore_preflight"] = {
@@ -827,71 +878,64 @@ def restore_success_corpus() -> None:
             "acknowledge_safety_backup": True,
         },
     )
+    restore_body = restore.json() if restore.status_code == 200 else {}
     out["restore_success"] = {
         "status": restore.status_code,
-        "set_cookie_revoked": "astyx_session=" in restore.headers.get("set-cookie", "") and "Max-Age=0" in restore.headers.get("set-cookie", "").replace("max-age=0", "Max-Age=0"),
-        "body_keys": sorted(restore.json().keys())[:8] if restore.status_code == 200 else None,
+        "set_cookie_revoked": "astyx_session=" in restore.headers.get("set-cookie", "")
+        and "max-age=0" in restore.headers.get("set-cookie", "").lower(),
+        "post_restore_integrity": restore_body.get("post_restore_integrity"),
+        "post_restore_foreign_key_violations": restore_body.get("post_restore_foreign_key_violations"),
     }
 
     conn = _sq.connect(active_db)
     post_sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
-    revoked_or_gone = post_sessions == 0 or conn.execute(
-        "SELECT COUNT(*) FROM sessions WHERE revoked_at IS NULL"
-    ).fetchone()[0] == 0
+    unrevoked = conn.execute("SELECT COUNT(*) FROM sessions WHERE revoked_at IS NULL").fetchone()[0]
+    marker_sessions = conn.execute(
+        "SELECT COUNT(*) FROM sessions WHERE token_hash = ?", ("f" * 64,)
+    ).fetchone()[0]
     post_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     conn.close()
     out["post_restore_database"] = {
         "sessions_total": post_sessions,
-        "all_sessions_revoked_or_wiped": revoked_or_gone,
+        "unrevoked_remaining": unrevoked,
+        "all_sessions_revoked_or_wiped": post_sessions == 0 or unrevoked == 0,
+        "post_backup_marker_session_absent": marker_sessions == 0,
         "admin_user_survives": post_users >= 1,
     }
-    out["current_restore_session"] = "revoked-with-all-sessions" if revoked_or_gone else "unknown"
+    out["current_restore_session"] = (
+        "revoked-with-all-sessions" if out["post_restore_database"]["all_sessions_revoked_or_wiped"] else "unknown"
+    )
 
-    recovery = client.get("/api/admin/backups/recovery-history", headers=auth).json() if token else []
+    fresh_login = client.post("/api/auth/login", json={"username": "golden-admin", "password": "golden-admin-pass-1"})
+    fresh_auth = {"Cookie": f"astyx_session={fresh_login.cookies.get('astyx_session')}"}
+
+    backup_history = client.get("/api/admin/backups/history", headers=fresh_auth).json()
+    triggers = [entry.get("trigger") or entry.get("trigger_type") for entry in backup_history]
+    statuses = [entry.get("status") for entry in backup_history]
+
+    recovery = client.get("/api/admin/backups/recovery-history", headers=fresh_auth).json()
     recovery = recovery if isinstance(recovery, list) else recovery.get("items", [])
-    success_recovery = [r for r in recovery if str(r.get("status", "")).upper() in ("SUCCESS", "COMPLETED")]
+    events = [(r.get("event"), r.get("result")) for r in recovery]
+    completed_recovery = next(
+        (r for r in recovery if r.get("event") == "RESTORE_COMPLETED"), None
+    )
+
+    out["safety_snapshot"] = {
+        "backup_dir_file_count": len(list(Path(os.environ["BACKUP_DIR"]).iterdir())),
+        "pre_restore_auto_trigger_in_history": "pre_restore_auto" in [str(t).lower() for t in triggers if t],
+        "restore_completed_recovery_safety_backup_filename": (completed_recovery or {}).get("safety_backup_filename"),
+        "note": "snapshot materializes as a pre_restore_auto backup file; restored DB history shows pre-restore state",
+    }
     out["recovery_history"] = {
         "entry_count": len(recovery),
-        "successful_entries": len(success_recovery),
-        "operation_fields_sample": sorted(success_recovery[0].keys())[:10] if success_recovery else [],
+        "event_result_sequence": events,
+        "has_restore_completed": any(e == "RESTORE_COMPLETED" for e, _ in events),
+        "operation_reference_ids_match": len({r.get("operation_reference_id") for r in recovery}) <= 1,
+        "completed_entry_keys": sorted(completed_recovery.keys())[:12] if completed_recovery else [],
     }
-
-    second = client.post("/api/admin/backups", headers=auth)
-    fname2 = second.json().get("filename")
-    target = Path(os.environ["BACKUP_DIR"]) / fname2 if fname2 else None
-    if target and target.exists():
-        data = bytearray(target.read_bytes())
-        data[len(data) // 2 : len(data) // 2 + 16] = b"CORRUPTED-CORRUPT"[:16]
-        target.write_bytes(bytes(data))
-    corrupt_preflight = client.post(f"/api/admin/backups/{fname2}/restore-preflight", headers=auth)
-    corrupt_restore = client.post(
-        f"/api/admin/backups/{fname2}/restore",
-        headers=auth,
-        json={
-            "current_password": "golden-admin-pass-1",
-            "confirmation_filename": fname2,
-            "confirmation_phrase": "RESTORE_DATABASE",
-            "expected_source_sha256": "stale",
-            "expected_active_sha256": "stale",
-            "acknowledge_complete_replacement": True,
-            "acknowledge_session_revocation": True,
-            "acknowledge_restart_required": True,
-            "acknowledge_safety_backup": True,
-        },
-    )
-    out["corrupt_backup_fail_closed"] = {
-        "preflight_status": corrupt_preflight.status_code,
-        "preflight_not_ok": corrupt_preflight.status_code != 200,
-        "restore_status_fail_closed": corrupt_restore.status_code in (400, 409),
-        "error_code": (corrupt_restore.json().get("detail", {}) or {}).get("code") if isinstance(corrupt_restore.json().get("detail"), dict) else None,
-    }
-
-    backup_files = sorted(p.name for p in os.environ["BACKUP_DIR"] and Path(os.environ["BACKUP_DIR"]).iterdir())
-    snapshot_like = [n for n in backup_files if "snapshot" in n.lower() or "safety" in n.lower()]
-    out["safety_snapshot"] = {
-        "backup_dir_file_count": len(backup_files),
-        "snapshot_named_files": len(snapshot_like),
-        "note": "snapshot existence inferred from dir growth; names normalized",
+    out["restored_database_history_note"] = {
+        "history_statuses_after_restore": statuses,
+        "explanation": "restore replaces the DB file; the backup-era RUNNING row reappears and the post-backup SUCCESS update is intentionally discarded",
     }
 
     record("restore/success-path.json", out)

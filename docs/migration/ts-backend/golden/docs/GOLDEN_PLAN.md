@@ -28,13 +28,27 @@ never silently accepted.
 | 10 | Grades grid save + uniqueness | data integrity | `service-corpora/grades/constraints.json` (unique/CHECK/RESTRICT) | LANDED |
 | 11 | KKM fallback + term mapping | report correctness | `service-corpora/kkm/resolution-and-term-defaults.json` (85.0 fallback verified at source) | LANDED |
 | 12 | Report aggregates (monthly/management/annual/rekap/tardiness) | report correctness | `service-corpora/reports/*` (8 files) + `corpora/reports/*` (5 scenarios) | LANDED |
-| 13 | Backup checksum + identity | data preservation | `service-corpora/backup/checksum-vectors.json`; execution-history cases pending | PARTIAL |
-| 14 | Restore gates fail-closed | migration/rollback | `service-corpora/restore/preflight-gates.json` (21-step rehearsal); HTTP gate scenarios pending | PARTIAL |
+| 13 | Backup checksum + identity + execution history | data preservation | `service-corpora/backup/checksum-vectors.json` + `service-corpora/restore/success-path.json` (creation/history/checksum relation) | LANDED |
+| 14 | Restore gates fail-closed + success path | migration/rollback | preflight rehearsal + `corpora/backup-restore/*` (6 scenarios) + `service-corpora/restore/success-path.json` (200 restore, snapshot, revocation, recovery history, corrupt fail-closed) | LANDED |
 | 15 | Migration ledger/fingerprint | migration/rollback | `service-corpora/migrations/startup-validation.json` (fresh/memory/missing-path/no-ledger/empty-file) | LANDED |
 | 16 | Browser critical workflows | critical browser workflows | e2e suite reuse (no new corpus) | EXISTING |
 
-Replay harness (`tools/harness.py`) evidence: self-comparison 39/39
-EXACT_MATCH; injected mismatch detected 39/39 MIGRATION_DEFECT.
+Replay harness (`tools/harness.py`) evidence: self-comparison 40/40
+EXACT_MATCH; injected mismatch detected 40/40 MIGRATION_DEFECT.
+
+Restore success path (`service-corpora/restore/success-path.json`):
+HTTP backup 200 with checksum; two-phase contract (preflight SHA256s +
+four acknowledgements + RESTORE_DATABASE phrase); restore HTTP 200 with
+post_restore integrity ok / FK violations 0; cookie + database session
+revocation proven; post-backup marker session absent (restored state
+proven); safety snapshot via pre-restore auto backup; recovery history
+RESTORE_REQUESTED -> STARTED -> COMPLETED with matching
+operation_reference_id and safety_backup_filename; corrupt backup fails
+closed; restored DB history shows backup-era RUNNING row (source-
+accurate replacement semantics). Root cause of earlier empty-backup
+evidence: frozen pydantic settings fields — fixed by repointing
+settings.DATABASE_URL/BACKUP_DIR at the disposable active DB before the
+one-time main import.
 
 Academic placement evidence (`service-corpora/academic/`): full population
 action matrix (CREATE_ENROLLMENT / ALREADY_ENROLLED / CROSS_JENJANG_CONFLICT /

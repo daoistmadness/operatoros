@@ -202,6 +202,10 @@ scenarios.append(scenario(
         req("GET", "/api/admin/backups/recovery-history", jar=True),
     ],
 ))
+scenarios.append(scenario(
+    "restore_status_admin_shape", "backup-restore", "data preservation", "seed_auth_users",
+    [login("admin"), req("GET", "/api/admin/backups/status", jar=True)],
+))
 
 scenarios.append(scenario(
     "integrity_users_role_check_constraint", "database-integrity", "data integrity", "seed_none",
