@@ -532,6 +532,76 @@ function sendError(ctx: Context, error: any): { detail: string } { const status 
 
 function sendFile(bytes: Uint8Array, format: "pdf" | "xlsx", filename: string): Response { return new Response(bytes, { headers: { "content-type": format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeName(filename)}.${format}"`, "cache-control": "no-store, no-cache, must-revalidate, private", pragma: "no-cache" } }); }
 
+function safeRate(numerator: number, denominator: number): number | null {
+  return denominator === 0 ? null : roundHalfEven(numerator / denominator, 3);
+}
+
+function attendanceMonths(context: AuthContext): string[] {
+  return rows(context, "SELECT DISTINCT substr(date, 1, 7) AS month FROM attendance WHERE date IS NOT NULL ORDER BY month").map((value) => String(value.month));
+}
+
+function attendanceRateByStudent(context: AuthContext): Row[] {
+  const values = rows(context, "SELECT s.id, s.name, s.class_name, s.jenjang, substr(a.date, 1, 7) AS month, COUNT(a.id) AS present_days FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.check_in IS NOT NULL GROUP BY s.id, s.name, s.class_name, s.jenjang, month");
+  const months = attendanceMonths(context);
+  const hebCache = new Map<string, number>();
+  const students = new Map<number, Row>();
+  const hebFor = (jenjang: string, month: string): number => {
+    const key = `${jenjang}:${month}`;
+    if (!hebCache.has(key)) {
+      const [year, value] = month.split("-").map(Number);
+      hebCache.set(key, Number(calculateHeb(context, jenjang, value!, year!).heb));
+    }
+    return hebCache.get(key)!;
+  };
+  for (const value of values) {
+    const id = Number(value.id);
+    if (!students.has(id)) students.set(id, { no_id: String(id), nama: value.name, class_name: value.class_name, jenjang: value.jenjang, monthly_map: new Map<string, Row>() });
+    const student = students.get(id)!;
+    const month = String(value.month);
+    student.monthly_map.set(month, { month, present_days: Number(value.present_days), heb: hebFor(String(value.jenjang), month), rate: safeRate(Number(value.present_days), hebFor(String(value.jenjang), month)) });
+  }
+  return [...students.values()].map((student) => {
+    const monthly = [...student.monthly_map.values()].sort((a, b) => a.month.localeCompare(b.month));
+    const totalPresent = monthly.reduce((sum, value) => sum + value.present_days, 0);
+    const totalHeb = months.reduce((sum, month) => sum + hebFor(String(student.jenjang), month), 0);
+    return { no_id: student.no_id, nama: student.nama, class_name: student.class_name, jenjang: student.jenjang, monthly, total: { present_days: totalPresent, heb: totalHeb, rate: safeRate(totalPresent, totalHeb) } };
+  }).sort((a, b) => String(a.nama).localeCompare(String(b.nama)));
+}
+
+function attendanceRateByJenjang(context: AuthContext): Row[] {
+  const studentRows = rows(context, "SELECT id, jenjang FROM students WHERE jenjang IS NOT NULL");
+  const idsByJenjang = new Map<string, number[]>();
+  for (const value of studentRows) {
+    const jenjang = String(value.jenjang);
+    if (!idsByJenjang.has(jenjang)) idsByJenjang.set(jenjang, []);
+    idsByJenjang.get(jenjang)!.push(Number(value.id));
+  }
+  const presentRows = rows(context, "SELECT s.id, s.class_name, substr(a.date, 1, 7) AS month, COUNT(a.id) AS present_days FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.check_in IS NOT NULL GROUP BY s.id, s.class_name, month");
+  const presentByStudentMonth = new Map<string, number>();
+  for (const value of presentRows) presentByStudentMonth.set(`${Number(value.id)}:${value.month}`, Number(value.present_days));
+  const months = attendanceMonths(context);
+  const hebCache = new Map<string, number>();
+  const hebFor = (jenjang: string, month: string): number => {
+    const key = `${jenjang}:${month}`;
+    if (!hebCache.has(key)) {
+      const [year, value] = month.split("-").map(Number);
+      hebCache.set(key, Number(calculateHeb(context, jenjang, value!, year!).heb));
+    }
+    return hebCache.get(key)!;
+  };
+  return [...idsByJenjang.entries()].map(([jenjang, ids]) => {
+    const monthly = months.map((month) => {
+      const heb = hebFor(jenjang, month);
+      const totalPresent = ids.reduce((sum, id) => sum + (presentByStudentMonth.get(`${id}:${month}`) ?? 0), 0);
+      const averagePresent = roundHalfEven(totalPresent / ids.length, 3);
+      return { month, avg_present_days: averagePresent, heb, rate: safeRate(averagePresent, heb) };
+    });
+    const totalHeb = monthly.reduce((sum, value) => sum + value.heb, 0);
+    const totalAveragePresent = roundHalfEven(monthly.reduce((sum, value) => sum + value.avg_present_days * ids.length, 0) / ids.length, 3);
+    return { jenjang, monthly, total: { avg_present_days: totalAveragePresent, heb: totalHeb, rate: safeRate(totalAveragePresent, totalHeb) } };
+  }).sort((a, b) => String(a.jenjang).localeCompare(String(b.jenjang)));
+}
+
 function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
   const auth = (ctx: Context) => actor(context, ctx, {});
   app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
@@ -567,6 +637,8 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
     if (!auth(ctx)) return { detail: "Authentication required" };
     return rows(context, "SELECT s.id, s.name, s.class_name, s.jenjang, COUNT(a.id) AS late_count FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.status = 'late' GROUP BY s.id, s.name, s.class_name, s.jenjang ORDER BY late_count DESC").map((value) => ({ no_id: String(value.id), nama: value.name, class_name: value.class_name, jenjang: value.jenjang, late_count: Number(value.late_count) }));
   });
+  app.get(`${prefix}/attendance-rate/students`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return attendanceRateByStudent(context); });
+  app.get(`${prefix}/attendance-rate/jenjang`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return attendanceRateByJenjang(context); });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);
