@@ -215,7 +215,7 @@ export function findSession(context: AuthContext, token: string | null): Session
   ).get(digest(token, context.config)) ?? null;
 }
 
-export function validateSession(context: AuthContext, token: string | null): CurrentUser | null {
+export function validateSession(context: AuthContext, token: string | null, refreshActivity = true): CurrentUser | null {
   const session = findSession(context, token);
   if (!session || session.revoked_at) return null;
   const now = Date.now();
@@ -231,7 +231,7 @@ export function validateSession(context: AuthContext, token: string | null): Cur
   if (!user || !user.is_active) return null;
   const refreshed = futureSqlite(context.config.sessionIdleTimeoutHours * 3_600_000);
   const nextExpiry = refreshed < session.absolute_expires_at ? refreshed : session.absolute_expires_at;
-  inTransaction(context.database.client, () => {
+  if (refreshActivity) inTransaction(context.database.client, () => {
     context.database.client.run("UPDATE sessions SET last_used_at = ?, expires_at = ? WHERE id = ?", [nowSqlite(), nextExpiry, session.id]);
   });
   return { id: user.id, username: user.username, role: user.role };
@@ -240,10 +240,10 @@ export function validateSession(context: AuthContext, token: string | null): Cur
 export function authorize(
   context: AuthContext,
   token: string | null,
-  requirement: { role?: "admin" | "staff"; capability?: string },
+  requirement: { role?: "admin" | "staff"; capability?: string; refreshSession?: boolean },
   request: { path: string; userAgent: string | null; ipAddress: string | null },
 ): { user: CurrentUser } | { status: 401 | 403; message: string } {
-  const user = validateSession(context, token);
+  const user = validateSession(context, token, requirement.refreshSession !== false);
   if (!user) return { status: 401, message: "Authentication required" };
   const allowed = requirement.role ? user.role === requirement.role : requirement.capability ? capabilitiesForRole(user.role).includes(requirement.capability) : true;
   if (allowed) return { user };
