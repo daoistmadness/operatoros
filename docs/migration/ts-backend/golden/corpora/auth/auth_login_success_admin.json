@@ -1,0 +1,17 @@
+{
+  "id": "auth_login_success_admin",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    }
+  ]
+}

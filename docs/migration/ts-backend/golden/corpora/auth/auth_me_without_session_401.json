@@ -1,0 +1,13 @@
+{
+  "id": "auth_me_without_session_401",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/auth/me"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "review_override_note_minimum_enforced",
+  "domain": "attendance-review",
+  "protected_category": "import validation",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/review/attendance/1/override",
+      "jar": true,
+      "json": {
+        "override_status": "on-time",
+        "note": "abc"
+      }
+    }
+  ]
+}

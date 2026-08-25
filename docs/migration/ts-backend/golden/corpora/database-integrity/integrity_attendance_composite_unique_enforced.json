@@ -1,0 +1,20 @@
+{
+  "id": "integrity_attendance_composite_unique_enforced",
+  "domain": "database-integrity",
+  "protected_category": "data integrity",
+  "seed": "seed_none",
+  "steps": [
+    {
+      "type": "sql",
+      "sql": "INSERT INTO students (id, name) VALUES (9001, 'Dup Student')"
+    },
+    {
+      "type": "sql",
+      "sql": "INSERT INTO attendance (student_id, date, late_duration, late_source, is_absent, status) VALUES (9001, '2026-06-15', 0, 'none', 0, 'on-time')"
+    },
+    {
+      "type": "sql",
+      "sql": "INSERT INTO attendance (student_id, date, late_duration, late_source, is_absent, status) VALUES (9001, '2026-06-15', 0, 'none', 0, 'on-time')"
+    }
+  ]
+}

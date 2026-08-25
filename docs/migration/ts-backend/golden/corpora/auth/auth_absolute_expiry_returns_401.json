@@ -1,0 +1,27 @@
+{
+  "id": "auth_absolute_expiry_returns_401",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "sql",
+      "sql": "UPDATE sessions SET absolute_expires_at = datetime('now','-30 hours'), expires_at = datetime('now','-30 hours')"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "jar": true
+    }
+  ]
+}

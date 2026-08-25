@@ -1,0 +1,18 @@
+{
+  "id": "auth_untrusted_role_metadata_ignored",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-staff",
+        "password": "golden-staff-pass-1",
+        "role": "admin"
+      }
+    }
+  ]
+}

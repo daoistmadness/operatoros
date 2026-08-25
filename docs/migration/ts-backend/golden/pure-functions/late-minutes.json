@@ -1,0 +1,122 @@
+[
+  {
+    "name": "integer-terlambat-falls-to-calculated",
+    "args": {
+      "check_in": "08:00",
+      "terlambat": 30,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      45,
+      "calculated"
+    ]
+  },
+  {
+    "name": "string-hhmm-duration-terlambat",
+    "args": {
+      "check_in": "07:40",
+      "terlambat": "00:25",
+      "jenjang": "SMP"
+    },
+    "expected": [
+      25,
+      "excel"
+    ]
+  },
+  {
+    "name": "string-zero-duration-terlambat",
+    "args": {
+      "check_in": "07:40",
+      "terlambat": "00:00",
+      "jenjang": "SMP"
+    },
+    "expected": [
+      25,
+      "calculated"
+    ]
+  },
+  {
+    "name": "integer-zero-falls-to-calculated",
+    "args": {
+      "check_in": "07:40",
+      "terlambat": 0,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      25,
+      "calculated"
+    ]
+  },
+  {
+    "name": "exact-cutoff-boundary",
+    "args": {
+      "check_in": "07:15",
+      "terlambat": 0,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      0,
+      "calculated"
+    ]
+  },
+  {
+    "name": "before-cutoff-clamps-to-zero",
+    "args": {
+      "check_in": "07:10",
+      "terlambat": 0,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      0,
+      "calculated"
+    ]
+  },
+  {
+    "name": "unknown-jenjang-no-cutoff",
+    "args": {
+      "check_in": "07:40",
+      "terlambat": 0,
+      "jenjang": "XYZ"
+    },
+    "expected": [
+      0,
+      "none"
+    ]
+  },
+  {
+    "name": "no-check-in-none-source",
+    "args": {
+      "check_in": null,
+      "terlambat": 0,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      0,
+      "none"
+    ]
+  },
+  {
+    "name": "case-insensitive-jenjang-lookup",
+    "args": {
+      "check_in": "08:10",
+      "terlambat": 0,
+      "jenjang": "smk"
+    },
+    "expected": [
+      0,
+      "none"
+    ]
+  },
+  {
+    "name": "negative-integer-terlambat-calculated-path",
+    "args": {
+      "check_in": "07:40",
+      "terlambat": -5,
+      "jenjang": "SMP"
+    },
+    "expected": [
+      25,
+      "calculated"
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "id": "review_history_is_append_only_update_delete_abort",
+  "domain": "attendance-review",
+  "protected_category": "data integrity",
+  "seed": "seed_attendance_review",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/review/attendance/1/override",
+      "jar": true,
+      "json": {
+        "override_status": "on-time",
+        "note": "Device missed the morning scan."
+      }
+    },
+    {
+      "type": "sql",
+      "sql": "UPDATE attendance_override_history SET note = 'tampered'"
+    },
+    {
+      "type": "sql",
+      "sql": "DELETE FROM attendance_override_history"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/review/attendance/1/history",
+      "jar": true
+    }
+  ]
+}

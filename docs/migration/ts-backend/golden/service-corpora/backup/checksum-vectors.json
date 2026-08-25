@@ -1,0 +1,7 @@
+{
+  "algorithm": "sha256-hex-chunked-file-read",
+  "corrupt_differs": true,
+  "corrupt_matches_expected": false,
+  "expected_digest_of_vector": "3d14046d44b2d9d6b5cdbcbc5592855c070eef487d537d48a9f77971c1db63fa",
+  "good_matches": true
+}

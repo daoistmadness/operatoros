@@ -1,0 +1,80 @@
+[
+  {
+    "args": {
+      "cutoff_text": "07:15"
+    },
+    "expected": 435
+  },
+  {
+    "args": {
+      "cutoff_text": "7:05"
+    },
+    "expected": 425
+  },
+  {
+    "args": {
+      "cutoff_text": "24:00"
+    },
+    "expected": null
+  },
+  {
+    "args": {
+      "cutoff_text": "abc"
+    },
+    "expected": null
+  },
+  {
+    "args": {
+      "cutoff_text": ""
+    },
+    "expected": null
+  },
+  {
+    "args": {
+      "cutoff_text": null
+    },
+    "expected": null
+  },
+  {
+    "args": {
+      "cutoff_text": " 07:20 "
+    },
+    "expected": 440
+  },
+  {
+    "args": {
+      "terlambat": null
+    },
+    "expected": 0
+  },
+  {
+    "args": {
+      "terlambat": 12
+    },
+    "expected": 0
+  },
+  {
+    "args": {
+      "terlambat": "12"
+    },
+    "expected": 0
+  },
+  {
+    "args": {
+      "terlambat": "00:25"
+    },
+    "expected": 25
+  },
+  {
+    "args": {
+      "terlambat": "00:00"
+    },
+    "expected": 0
+  },
+  {
+    "args": {
+      "terlambat": -5
+    },
+    "expected": 0
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "auto_smp_june_2026": {
+    "heb": 20,
+    "source": "auto",
+    "note": null,
+    "derived_from": [
+      21,
+      21,
+      20,
+      19,
+      18
+    ],
+    "median": 20
+  },
+  "empty_sd": {
+    "heb": 0,
+    "source": "auto",
+    "note": null,
+    "derived_from": [],
+    "median": 0
+  },
+  "manual_with_override": {
+    "heb": 22,
+    "source": "manual",
+    "note": "manual override wins",
+    "derived_from": null,
+    "median": null
+  },
+  "fallback_without_data": {
+    "heb": 0,
+    "source": "auto",
+    "note": null,
+    "derived_from": [],
+    "median": 0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "auth_idle_expiry_returns_401",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "sql",
+      "sql": "UPDATE sessions SET expires_at = datetime('now','-8 hours'), last_used_at = datetime('now','-8 hours')"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "jar": true
+    }
+  ]
+}
