@@ -85,6 +85,8 @@ describe("core CRUD parity slices", () => {
       const secondClass = database.client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) SELECT academic_year_id, grade_id, '7B', 'B', 1 FROM academic_classes WHERE id = 1");
       const staffId = "staff-golden-1";
       database.client.run("INSERT INTO staff_members (id, full_name, normalized_name, employment_status, employment_start_date, dapodik_status_normalized) VALUES (?, ?, ?, 'ACTIVE', ?, 'ACTIVE')", [staffId, "Golden Staff", "golden staff", "2020-01-01"]);
+      database.client.run("INSERT INTO staff_import_batches (id, source_filename, source_sheet, file_sha256, actor, total_rows, active_count, former_count, review_count, issue_count, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ["staff-batch-golden", "staff.xlsx", "Staff", "a".repeat(64), "golden-admin", 2, 1, 1, 0, 1, "APPLIED"]);
+      database.client.run("INSERT INTO staff_import_issues (batch_id, issue_code, severity, message) VALUES (?, ?, ?, ?)", ["staff-batch-golden", "MISSING_NIP", "WARNING", "NIP is missing"]);
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}` };
       const yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as any).id);
@@ -111,6 +113,10 @@ describe("core CRUD parity slices", () => {
       const jenjangId = Number((database.client.query("SELECT id FROM jenjangs LIMIT 1").get() as any).id);
       expect((await app.handle(new Request(`http://local/api/staff/${staffId}/jenjangs`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang_ids: [jenjangId] }) }))).status).toBe(200);
       expect((await (await app.handle(new Request("http://local/api/staff?status=ALL", { headers: auth }))).json() as any).items[0]).toMatchObject({ highest_education_level: "S1", jenjangs: [{ id: jenjangId }] });
+      const staffImports = await app.handle(new Request("http://local/api/staff/imports/history", { headers: auth }));
+      expect(staffImports.status).toBe(200); expect(await staffImports.json()).toMatchObject({ items: [{ id: "staff-batch-golden", total_rows: 2, issue_count: 1 }] });
+      const staffImport = await app.handle(new Request("http://local/api/staff/imports/staff-batch-golden", { headers: auth }));
+      expect(staffImport.status).toBe(200); expect(await staffImport.json()).toMatchObject({ id: "staff-batch-golden", issue_counts: { MISSING_NIP: 1 } });
       const managed = await app.handle(new Request("http://local/api/student-masters/management/list?page=1&page_size=10", { headers: auth }));
       expect(managed.status).toBe(200); expect(await managed.json()).toMatchObject({ total: 2, status_counts: { all: 2 } });
       const managedCsv = await app.handle(new Request("http://local/api/student-masters/management/export.csv", { headers: auth }));
