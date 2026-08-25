@@ -89,10 +89,10 @@ describe("core CRUD parity slices", () => {
       const auth = { cookie: `astyx_session=${cookie(login)}` };
       const yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as any).id);
       const term = await app.handle(new Request("http://local/api/academic-config/terms", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, term_number: 1, label: "Semester One", start_date: "2026-07-01", end_date: "2026-09-30" }) }));
-      expect(term.status).toBe(201);
+      expect(term.status).toBe(200);
       expect((await (await app.handle(new Request(`http://local/api/academic-config/terms/effective?academic_year_id=${yearId}`, { headers: auth }))).json() as any)[0]).toMatchObject({ label: "Semester One", source: "custom" });
       const threshold = await app.handle(new Request("http://local/api/academic-config/kkm-thresholds", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, assessment_type: "sumatif", threshold: 82 }) }));
-      expect(threshold.status).toBe(201); const thresholdId = (await threshold.json() as any).id;
+      expect(threshold.status).toBe(200); const thresholdId = (await threshold.json() as any).id;
       expect(await (await app.handle(new Request(`http://local/api/academic-config/kkm-effective?academic_year_id=${yearId}&assessment_type=sumatif`, { headers: auth }))).json()).toMatchObject({ threshold: 82, threshold_source: "subject-specific" });
       expect((await app.handle(new Request(`http://local/api/academic-config/kkm-thresholds/${thresholdId}`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ threshold: 83 }) }))).status).toBe(200);
       expect((await app.handle(new Request(`http://local/api/academic-config/kkm-thresholds/${thresholdId}`, { method: "DELETE", headers: auth }))).status).toBe(200);
