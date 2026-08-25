@@ -555,6 +555,18 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
     const subjects = rows(context, `SELECT id, name, jenjang_id FROM subjects${subjectFilter} ORDER BY name`, subjectParams as any[]).map((value) => ({ id: Number(value.id), name: value.name, jenjang_id: Number(value.jenjang_id) }));
     return { academic_years: academicYears, jenjangs, class_names: classNames, subjects };
   }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()) }) });
+  app.get(`${prefix}/late-by-class`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    return rows(context, "SELECT s.class_name, COUNT(a.id) AS late_count FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.status = 'late' GROUP BY s.class_name ORDER BY late_count DESC").map((value) => ({ class_name: value.class_name, late_count: Number(value.late_count) }));
+  });
+  app.get(`${prefix}/late-by-jenjang`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    return rows(context, "SELECT s.jenjang, COUNT(a.id) AS late_count FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.status = 'late' GROUP BY s.jenjang ORDER BY late_count DESC").map((value) => ({ jenjang: value.jenjang, late_count: Number(value.late_count) }));
+  });
+  app.get(`${prefix}/late-by-student`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    return rows(context, "SELECT s.id, s.name, s.class_name, s.jenjang, COUNT(a.id) AS late_count FROM students s JOIN attendance a ON s.id = a.student_id WHERE a.status = 'late' GROUP BY s.id, s.name, s.class_name, s.jenjang ORDER BY late_count DESC").map((value) => ({ no_id: String(value.id), nama: value.name, class_name: value.class_name, jenjang: value.jenjang, late_count: Number(value.late_count) }));
+  });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);
