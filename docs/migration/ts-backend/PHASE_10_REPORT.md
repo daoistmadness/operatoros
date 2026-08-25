@@ -6,8 +6,9 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 85
-migration defects. The legacy `.xls` preview path also needs an approved
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 83
+missing operations and one deprecated operation. Candidate analytics routes
+still need full dual replay. The legacy `.xls` preview path also needs an approved
 disposition.
 
 ## Completed in this loop
@@ -23,14 +24,16 @@ disposition.
 - Added monthly late counts by class parity for both aliases.
 - Added attendance-report parity for both aliases.
 - Added intervention-impact parity for both aliases.
+- Added a management-summary candidate with disposable attendance, grade, term,
+  and intervention tests.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 241 matching operations and one Elysia-only `/ready` route.
-- Unresolved endpoint operations: 86.
+- Elysia: 243 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 84.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -69,5 +72,5 @@ the frontend still accept `.xls`. Elysia currently supports the Phase 0
 - Phase 11 started: no.
 - Phase 7, Phase 8, and Phase 9 merged-main prerequisites remain accepted.
 
-Next safe action: migrate the next smallest analytics dashboard route group and
-replay both its canonical and legacy aliases.
+Next safe action: complete management-summary dual replay, then add its export
+routes and historical-trends routes.
