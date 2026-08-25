@@ -11,9 +11,9 @@ document and a disposable SQLite database for the Elysia route list.
 
 | Measure | FastAPI | Elysia | Result |
 | --- | ---: | ---: | --- |
-| OpenAPI paths | 282 | 205 candidate routes | 84 FastAPI operations remain unresolved |
-| Operations | 327 | 243 candidate operations | 83 missing operations and one deprecated route remain |
-| Elysia runtime routes | — | 244 | `/ready` is an Elysia-only readiness route |
+| OpenAPI paths | 282 | 206 candidate routes | 83 FastAPI operations remain unresolved |
+| Operations | 327 | 244 candidate operations | 82 missing operations and one deprecated route remain |
+| Elysia runtime routes | — | 245 | `/ready` is an Elysia-only readiness route |
 | Unknown operations | — | — | 0 |
 
 The route comparison normalizes only FastAPI `{id:type}` and Elysia `:id`
@@ -32,7 +32,7 @@ headers, cookies, database state, or audit state.
 
 ## Green and non-applicable routes
 
-- 223 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
+- 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
 - Analytics candidate routes are tested on disposable SQLite, but new routes do
   not become `PARITY_GREEN` until FastAPI-versus-Elysia replay proves them.
   level.
@@ -56,14 +56,13 @@ unknown.
 | `api.student_exports` | 2 | `/api/student-exports/{preview,download}` | `MIGRATION_DEFECT` | Export authorization and preview checksum are not proven in Elysia. |
 | `api.student_import_sessions` | 2 | `/api/student-import-sessions/*` | `MIGRATION_DEFECT` | Rollback behavior is not proven in Elysia. |
 | `api.student_masters` | 6 | Student update preview, commit, history, template, and result workbook | `MIGRATION_DEFECT` | The frontend uses update preview and commit. Preserve checksum and provenance. |
-| `api.students` | 1 | `GET /students/operations` | `MIGRATION_DEFECT` | Canonical `/api` behavior exists. The legacy alias must remain or receive approved deprecation. |
 | `api.system` | 1 | `POST /api/system/clear-data` | `MIGRATION_DEFECT` | The frontend uses this destructive control. Preserve confirmation, locks, triggers, and audit state. |
 | `api.teacher_class_assignments` | 5 | `/api/teacher-class-assignments/*` | `MIGRATION_DEFECT` | The frontend uses this CRUD surface. Preserve capability checks and overlap rules. |
 | `api.upload_conflicts` | 8 | `/api/upload-conflicts/*` | `MIGRATION_DEFECT` | The frontend uses resolution and retry routes. Preserve conflict state and audit events. |
 | `api.uploads` | 8 | `/api/uploads/history*`, missing-records, and sample-template | `MIGRATION_DEFECT` | The frontend uses upload history. Preserve row, timeline, export, and missing-record contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **83** plus one deprecated operation. Candidate analytics routes remain parity-blocked until dual replay.
+Remaining missing operations: **82** plus one deprecated operation. Candidate analytics routes remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
