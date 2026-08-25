@@ -276,16 +276,27 @@ class FastAPIReferenceAdapter:
 
     def replay_step(self, step: dict) -> StepResult:
         kind = step.get("type")
-        if kind == "request":
+        if kind in {"request", "multipart"}:
             cookies = dict(self._jar) if step.get("jar") else (step.get("cookies") or {})
+            files = None
+            if kind == "multipart":
+                file = step["file"]
+                files = {
+                    "file": (
+                        file.get("filename", Path(file["path"]).name),
+                        (REPO / file["path"]).read_bytes(),
+                        file.get("content_type", "application/octet-stream"),
+                    )
+                }
             resp = self.client.request(
                 step["method"],
                 step["path"],
                 json=step.get("json"),
+                files=files,
                 cookies=cookies or None,
                 headers=step.get("headers"),
             )
-            result = StepResult(kind="request", status=resp.status_code)
+            result = StepResult(kind=kind, status=resp.status_code)
             try:
                 result.body = resp.json()
             except Exception:
@@ -415,7 +426,7 @@ class ElysiaCandidateAdapter:
             finally:
                 conn.close()
             return StepResult(kind="sql", status=0)
-        if kind != "request":
+        if kind not in {"request", "multipart"}:
             raise ValueError(f"unsupported step type: {kind}")
 
         headers = dict(step.get("headers") or {})
@@ -423,8 +434,21 @@ class ElysiaCandidateAdapter:
         if cookies:
             headers["Cookie"] = "; ".join(f"{key}={value}" for key, value in cookies.items())
         payload = step.get("json")
-        data = json.dumps(payload).encode() if payload is not None else None
-        if data is not None:
+        if kind == "multipart":
+            boundary = f"----operatoros-phase6-{uuid.uuid4().hex}"
+            file = step["file"]
+            filename = file.get("filename", Path(file["path"]).name)
+            content_type = file.get("content_type", "application/octet-stream")
+            content = (REPO / file["path"]).read_bytes()
+            data = (
+                f"--{boundary}\r\n"
+                f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+                f"Content-Type: {content_type}\r\n\r\n"
+            ).encode() + content + f"\r\n--{boundary}--\r\n".encode()
+            headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
+        else:
+            data = json.dumps(payload).encode() if payload is not None else None
+        if data is not None and kind == "request":
             headers.setdefault("Content-Type", "application/json")
         request = urllib.request.Request(
             f"{self._base}{step['path']}",
@@ -437,7 +461,7 @@ class ElysiaCandidateAdapter:
         except urllib.error.HTTPError as exc:
             response = exc
         raw_cookie = response.headers.get("set-cookie")
-        result = StepResult(kind="request", status=response.status)
+        result = StepResult(kind=kind, status=response.status)
         body = response.read()
         try:
             result.body = json.loads(body) if body else None
