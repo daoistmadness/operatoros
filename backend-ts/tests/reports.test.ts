@@ -93,6 +93,12 @@ describe("analytics and report parity", () => {
           expect.objectContaining({ jenjang: "SMP", total: { avg_present_days: 2.667, heb: 18, rate: 0.148 } }),
           expect.objectContaining({ jenjang: "SD", total: { avg_present_days: 3, heb: 15, rate: 0.2 } }),
         ]));
+        const byClassMonth = await app.handle(new Request(`http://local${alias}/monthly-by-class`, { headers: { cookie } }));
+        expect(byClassMonth.status).toBe(200);
+        expect(await byClassMonth.json()).toEqual(expect.arrayContaining([
+          { class_name: "7A", month: "2026-08", late_count: 3 },
+          { class_name: "1A", month: "2026-08", late_count: 2 },
+        ]));
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
