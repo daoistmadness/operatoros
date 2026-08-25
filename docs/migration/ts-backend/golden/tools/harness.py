@@ -20,9 +20,14 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import subprocess
+import time
 import sys
 import tempfile
 import uuid
+import urllib.error
+import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
@@ -45,6 +50,14 @@ UUID_RE = re.compile(
 COOKIE_VALUE_RE = re.compile(r"(astyx_session=[^;]+)")
 
 
+def copy_sqlite(source: Path, destination: Path) -> None:
+    """Copy a WAL-backed disposable database without losing committed rows."""
+    import sqlite3
+
+    with sqlite3.connect(source) as source_connection, sqlite3.connect(destination) as destination_connection:
+        source_connection.backup(destination_connection)
+
+
 def short_digest(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()[:8]
 
@@ -59,6 +72,8 @@ def _is_volatile_column(col: str) -> bool:
 def normalize_value(value: Any, key_hint: str = "") -> Any:
     if key_hint in {"free_disk_space_bytes", "free_space_bytes"}:
         return "<env>"
+    if key_hint in {"user_agent", "ip_address"}:
+        return "<env>" if value is not None else None
     if isinstance(value, dict):
         return {k: normalize_value(v, str(k)) for k, v in sorted(value.items())}
     if isinstance(value, list):
@@ -76,6 +91,97 @@ def normalize_value(value: Any, key_hint: str = "") -> Any:
             return NORMALIZED_TOKEN_SECRET
         return value
     return value
+
+
+def normalize_cookie_flag(value: str) -> str:
+    value = value.strip()
+    if value.lower().startswith("samesite="):
+        return "SameSite=" + value.split("=", 1)[1].lower()
+    return value
+
+
+def capture_sqlite_state(db_path: Path) -> tuple[dict, list]:
+    """Capture table and audit state from one disposable SQLite database."""
+    import importlib
+    import sqlite3
+
+    sys.path.insert(0, str(REPO / "backend" / "src"))
+    for model_file in sorted((REPO / "backend" / "src" / "models").glob("*.py")):
+        if model_file.stem != "__init__":
+            importlib.import_module(f"models.{model_file.stem}")
+    from core.database import Base
+
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    database: dict[str, list] = {}
+    for table in Base.metadata.sorted_tables:
+        cols = [c.name for c in table.columns]
+        order = ", ".join(f'"{c}"' for c in cols)
+        try:
+            cursor = conn.execute(f'SELECT * FROM "{table.name}" ORDER BY {order}')
+        except sqlite3.Error:
+            continue
+        values = []
+        for row in cursor.fetchall():
+            record = {}
+            for col, value in zip(cols, row):
+                if _is_volatile_column(col):
+                    record[col] = NORMALIZED_TOKEN_TS if value is not None else None
+                elif col in {"token_hash", "password_hash"} and value:
+                    record[col] = NORMALIZED_TOKEN_SECRET
+                else:
+                    record[col] = normalize_value(value, col)
+            values.append(record)
+        if values or table.name in {"users", "sessions", "operations_audit_events"}:
+            database[table.name] = values
+    conn.close()
+    audit = database.pop("operations_audit_events", [])
+    return database, audit
+
+
+def seed_disposable_database(db_path: Path, seed_fn_name: str) -> None:
+    """Create and seed an S4.3 database in a fresh Python process."""
+    python = os.environ.get(
+        "OPERATOROS_PYTHON",
+        "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python",
+    )
+    script = """
+import importlib.util, os, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / 'backend' / 'src'))
+from core.schema_migrations import bootstrap_fresh_sqlite_database
+db_path = Path(sys.argv[1])
+bootstrap_fresh_sqlite_database(db_path)
+spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+getattr(module, sys.argv[2])(db_path)
+from core import database as core_database
+core_database.run_grade_ledger_patches(core_database.engine)
+core_database._seed_grade_ledger_minimum(core_database.engine)
+from services.report_builder import seed_report_builder_defaults
+seed_report_builder_defaults()
+"""
+    env = os.environ.copy()
+    env.update(
+        {
+            "DATABASE_URL": f"sqlite:///{db_path}",
+            "AUTH_COOKIE_SECRET": "astryx-test-only-cookie-secret-32-chars",
+            "OPERATOROS_ISOLATED_TEST": "true",
+            "ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION": "false",
+            "BYPASS_STUDENT_LINKING_GATE": "true",
+        }
+    )
+    result = subprocess.run(
+        [python, "-c", script, str(db_path), seed_fn_name],
+        cwd=REPO,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        raise RuntimeError(f"Disposable seed failed: {result.stderr or result.stdout}")
 
 
 @dataclass
@@ -133,7 +239,7 @@ class FastAPIReferenceAdapter:
     def start(self, seed_fn_name: str) -> None:
         os.environ["OPERATOROS_ISOLATED_TEST"] = "true"
         os.environ.setdefault("AUTH_COOKIE_SECRET", "astryx-test-only-cookie-secret-32-chars")
-        os.environ.setdefault("ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION", "true")
+        os.environ["ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION"] = "true"
         # Academic seeds intentionally include unlinked legacy students;
         # this env key exists precisely for explicit test harnesses.
         os.environ.setdefault("BYPASS_STUDENT_LINKING_GATE", "true")
@@ -141,34 +247,24 @@ class FastAPIReferenceAdapter:
         db_path = self.tmpdir / "scenario.db"
         os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
 
-        import importlib
-
         from core import database as core_database
-        from core.database import init_db
+        from core.schema_migrations import bootstrap_fresh_sqlite_database
 
-        for model_file in sorted((REPO / "backend" / "src" / "models").glob("*.py")):
-            if model_file.stem != "__init__":
-                importlib.import_module(f"models.{model_file.stem}")
-
+        bootstrap_fresh_sqlite_database(db_path)
         _rebind_database(core_database, f"sqlite:///{db_path}")
-        init_db()
 
-        # Identity tables are migration-owned; apply the real migration DDL.
-        import sqlite3
-
-        identity_sql = (
-            REPO / "backend" / "migrations" / "20260713_identity_schema_sqlite.sql"
-        ).read_text()
-        conn = sqlite3.connect(db_path)
-        try:
-            conn.executescript(identity_sql)
-            conn.commit()
-        finally:
-            conn.close()
+        # The S4.3 bootstrap already owns users and sessions. Do not replay
+        # the historical identity migration on the disposable database.
 
         seeds_module = _load_seeds()
         seed_fn = getattr(seeds_module, seed_fn_name)
         seed_fn(db_path)
+        core_database.run_grade_ledger_patches(core_database.engine)
+        core_database._seed_grade_ledger_minimum(core_database.engine)
+        from services.report_builder import seed_report_builder_defaults
+        seed_report_builder_defaults()
+        self._candidate_seed_path = self.tmpdir / "candidate-seed.db"
+        copy_sqlite(db_path, self._candidate_seed_path)
 
         if self.client is None:
             from fastapi.testclient import TestClient
@@ -205,7 +301,7 @@ class FastAPIReferenceAdapter:
                 result.set_cookie_flags = sorted(
                     "expires=<ts>"
                     if part.strip().lower().startswith("expires=")
-                    else part.strip()
+                    else normalize_cookie_flag(part)
                     for part in raw_cookie_header.split(";")
                     if part.strip() and not part.strip().startswith("astyx_session=")
                 )
@@ -228,39 +324,7 @@ class FastAPIReferenceAdapter:
         raise ValueError(f"unsupported step type: {kind}")
 
     def capture_state(self) -> tuple[dict, list]:
-        import sqlite3
-
-        from core.database import Base
-
-        conn = sqlite3.connect(f"file:{self._db_path}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-        database: dict[str, list] = {}
-        for table in Base.metadata.sorted_tables:
-            cols = [c.name for c in table.columns]
-            order = ", ".join(f'"{c}"' for c in cols)
-            rows = []
-            try:
-                cursor = conn.execute(f'SELECT * FROM "{table.name}" ORDER BY {order}')
-            except sqlite3.Error:
-                continue
-            for row in cursor.fetchall():
-                record = {}
-                for col, value in zip(cols, row):
-                    if _is_volatile_column(col):
-                        record[col] = NORMALIZED_TOKEN_TS if value is not None else None
-                    elif col in {"token_hash", "password_hash"} and value:
-                        record[col] = NORMALIZED_TOKEN_SECRET
-                    else:
-                        record[col] = normalize_value(value, col)
-                rows.append(record)
-            if rows or table.name in {"users", "sessions", "operations_audit_events"}:
-                database[table.name] = rows
-        conn.close()
-
-        audit = []
-        if "operations_audit_events" in database:
-            audit = database.pop("operations_audit_events")
-        return database, audit
+        return capture_sqlite_state(self._db_path)
 
     def stop(self) -> None:
         if self.db_session is not None:
@@ -269,12 +333,151 @@ class FastAPIReferenceAdapter:
 
 
 class CandidateBackendAdapter(Protocol):
-    """Future Elysia adapter implements the same four methods."""
+    """Elysia adapter protocol used by the dual-backend replay driver."""
 
     def start(self, seed_fn_name: str) -> None: ...
     def replay_step(self, step: dict) -> StepResult: ...
     def capture_state(self) -> tuple[dict, list]: ...
     def stop(self) -> None: ...
+
+
+class ElysiaCandidateAdapter:
+    """Runs backend-ts in a disposable subprocess beside a FastAPI seed."""
+
+    def __init__(self, label: str = "candidate") -> None:
+        self.label = label
+        self.process: subprocess.Popen[str] | None = None
+        self.tmpdir: Path | None = None
+        self._jar: dict[str, str] = {}
+
+    def start(self, seed_fn_name: str) -> None:
+        self.tmpdir = Path(tempfile.mkdtemp(prefix=f"tsharness-{self.label}-"))
+        db_path = self.tmpdir / "scenario.db"
+        seed_disposable_database(db_path, seed_fn_name)
+        os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+
+        import socket
+
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        repo = REPO / "backend-ts"
+        bun = os.environ.get(
+            "OPERATOROS_BUN",
+            "/home/mikhailryu/.local/share/mise/installs/bun/1.4.0/bin/bun",
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "DATABASE_URL": str(db_path),
+                "AUTH_COOKIE_SECRET": "astryx-test-only-cookie-secret-32-chars",
+                "HOST": "127.0.0.1",
+                "PORT": str(port),
+                "NODE_ENV": "development",
+                "BACKUP_DIR": str(self.tmpdir / "backups"),
+            }
+        )
+        self.process = subprocess.Popen(
+            [bun, "run", "src/server.ts"],
+            cwd=repo,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        self._base = f"http://127.0.0.1:{port}"
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if self.process.poll() is not None:
+                output = self.process.stdout.read() if self.process.stdout else ""
+                raise RuntimeError(f"Elysia candidate exited during startup: {output}")
+            try:
+                with urllib.request.urlopen(f"{self._base}/health", timeout=0.2) as response:
+                    if response.status == 200:
+                        return
+            except (OSError, urllib.error.URLError):
+                time.sleep(0.05)
+        raise RuntimeError("Elysia candidate failed readiness check")
+
+    def replay_step(self, step: dict) -> StepResult:
+        if self.process is None:
+            raise RuntimeError("candidate adapter is not started")
+        kind = step.get("type")
+        if kind == "sql":
+            import sqlite3
+
+            conn = sqlite3.connect(self.tmpdir / "scenario.db")
+            try:
+                conn.execute(step["sql"], step.get("params", []))
+                conn.commit()
+            except sqlite3.Error as exc:
+                return StepResult(kind="sql", status=None, error=f"{type(exc).__name__}")
+            finally:
+                conn.close()
+            return StepResult(kind="sql", status=0)
+        if kind != "request":
+            raise ValueError(f"unsupported step type: {kind}")
+
+        headers = dict(step.get("headers") or {})
+        cookies = dict(self._jar) if step.get("jar") else dict(step.get("cookies") or {})
+        if cookies:
+            headers["Cookie"] = "; ".join(f"{key}={value}" for key, value in cookies.items())
+        payload = step.get("json")
+        data = json.dumps(payload).encode() if payload is not None else None
+        if data is not None:
+            headers.setdefault("Content-Type", "application/json")
+        request = urllib.request.Request(
+            f"{self._base}{step['path']}",
+            data=data,
+            headers=headers,
+            method=step["method"],
+        )
+        try:
+            response = urllib.request.urlopen(request, timeout=10)
+        except urllib.error.HTTPError as exc:
+            response = exc
+        raw_cookie = response.headers.get("set-cookie")
+        result = StepResult(kind="request", status=response.status)
+        body = response.read()
+        try:
+            result.body = json.loads(body) if body else None
+        except json.JSONDecodeError:
+            result.body = body.decode() if body else None
+        if raw_cookie:
+            match = re.search(r"astyx_session=([^;]+)", raw_cookie)
+            if match:
+                self._jar["astyx_session"] = match.group(1)
+            else:
+                self._jar.pop("astyx_session", None)
+            result.cookie_present = True
+            result.set_cookie_flags = sorted(
+                "expires=<ts>"
+                if part.strip().lower().startswith("expires=")
+                else normalize_cookie_flag(part)
+                for part in raw_cookie.split(";")
+                if part.strip() and not part.strip().startswith("astyx_session=")
+            )
+        else:
+            result.cookie_present = False
+            result.set_cookie_flags = []
+        return result
+
+    def capture_state(self) -> tuple[dict, list]:
+        return capture_sqlite_state(self.tmpdir / "scenario.db")
+
+    def stop(self) -> None:
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.terminate()
+                try:
+                    self.process.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    self.process.kill()
+                    self.process.wait(timeout=3)
+            self.process = None
+        if self.tmpdir is not None:
+            shutil.rmtree(self.tmpdir, ignore_errors=True)
+            self.tmpdir = None
 
 
 def _rebind_database(core_database, url: str) -> None:
@@ -465,12 +668,28 @@ def selfcheck(scenario_dir: Path, inject_mismatch: bool = False) -> dict:
     return {"mode": "mismatch-injection" if inject_mismatch else "selfcheck", "results": results}
 
 
+def dual_replay(scenario_dir: Path, only: set[str] | None = None) -> dict:
+    results = []
+    for scenario in load_scenarios(scenario_dir):
+        scenario_id = scenario.get("id", scenario.get("_source_file"))
+        if only and scenario_id not in only:
+            continue
+        reference = run_scenario(scenario, FastAPIReferenceAdapter(label="reference"))
+        candidate = run_scenario(scenario, ElysiaCandidateAdapter(label="candidate"))
+        verdict = compare_scenarios(reference, candidate)
+        results.append({"scenario": scenario_id, "verdict": verdict["verdict"], "layers": verdict["layers"]})
+    counts = {verdict: sum(item["verdict"] == verdict for item in results) for verdict in (VERDICT_EXACT, VERDICT_NONDET, VERDICT_INTENTIONAL, VERDICT_DEFECT)}
+    return {"mode": "dual-replay", "counts": counts, "results": results}
+
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument("scenario_dir")
     parser.add_argument("--inject-mismatch", action="store_true")
+    parser.add_argument("--candidate", action="store_true")
+    parser.add_argument("--only", action="append", default=[])
     args = parser.parse_args()
-    report = selfcheck(Path(args.scenario_dir), inject_mismatch=args.inject_mismatch)
+    report = dual_replay(Path(args.scenario_dir), set(args.only)) if args.candidate else selfcheck(Path(args.scenario_dir), inject_mismatch=args.inject_mismatch)
     print(json.dumps(report, indent=2, default=str))
