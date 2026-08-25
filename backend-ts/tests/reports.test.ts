@@ -116,6 +116,15 @@ describe("analytics and report parity", () => {
           impact_rows: [],
           executive_insights: [expect.objectContaining({ title: "No intervention impact records found" })],
         });
+        const managementSummary = await app.handle(new Request(`http://local${alias}/management-summary?academic_year_id=2`, { headers: { cookie } }));
+        expect(managementSummary.status).toBe(200);
+        const managementJson = await managementSummary.json() as any;
+        expect(managementJson).toMatchObject({
+          filters: { academic_year_id: 2, academic_year_label: "2026/2027-reports", jenjang_id: null, subject_id: null },
+          attendance_summary: { total_records: 24, status_counts: { hadir: 18, sakit: 3, izin: 2, alfa: 1 } },
+          thresholds: { kkm_edelweiss: 85, kkm_national: 75, legacy_fallback: 85 },
+        });
+        expect(managementJson.terms_breakdown).toEqual(expect.arrayContaining([expect.objectContaining({ term_number: 1, hadir: 18, sakit: 3, izin: 2, alfa: 1, total_records: 24, attendance_percentage: 75 })]));
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
