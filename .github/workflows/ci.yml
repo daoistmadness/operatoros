@@ -40,6 +40,32 @@ jobs:
       - run: .venv/bin/python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/api/system/clear-data' in routes; assert '/api/system/health' in routes"
       - run: .venv/bin/python -m pytest -q
 
+  backend-ts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: backend-ts
+    env:
+      OPERATOROS_PYTHON: ${{ github.workspace }}/backend/.venv/bin/python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Create reference backend virtualenv
+        run: python -m venv ../backend/.venv
+      - name: Install reference backend dependencies
+        run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
