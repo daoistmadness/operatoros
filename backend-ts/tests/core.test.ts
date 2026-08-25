@@ -87,6 +87,15 @@ describe("core CRUD parity slices", () => {
       database.client.run("INSERT INTO staff_members (id, full_name, normalized_name, employment_status, employment_start_date, dapodik_status_normalized) VALUES (?, ?, ?, 'ACTIVE', ?, 'ACTIVE')", [staffId, "Golden Staff", "golden staff", "2020-01-01"]);
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as any).id);
+      const term = await app.handle(new Request("http://local/api/academic-config/terms", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, term_number: 1, label: "Semester One", start_date: "2026-07-01", end_date: "2026-09-30" }) }));
+      expect(term.status).toBe(201);
+      expect((await (await app.handle(new Request(`http://local/api/academic-config/terms/effective?academic_year_id=${yearId}`, { headers: auth }))).json() as any)[0]).toMatchObject({ label: "Semester One", source: "custom" });
+      const threshold = await app.handle(new Request("http://local/api/academic-config/kkm-thresholds", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, assessment_type: "sumatif", threshold: 82 }) }));
+      expect(threshold.status).toBe(201); const thresholdId = (await threshold.json() as any).id;
+      expect(await (await app.handle(new Request(`http://local/api/academic-config/kkm-effective?academic_year_id=${yearId}&assessment_type=sumatif`, { headers: auth }))).json()).toMatchObject({ threshold: 82, threshold_source: "subject-specific" });
+      expect((await app.handle(new Request(`http://local/api/academic-config/kkm-thresholds/${thresholdId}`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ threshold: 83 }) }))).status).toBe(200);
+      expect((await app.handle(new Request(`http://local/api/academic-config/kkm-thresholds/${thresholdId}`, { method: "DELETE", headers: auth }))).status).toBe(200);
       const education = await app.handle(new Request(`http://local/api/staff/${staffId}/education`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ education_level: "S1", institution_name: "State University", graduation_year: 2015 }) }));
       expect(education.status).toBe(201);
       const educationList = await app.handle(new Request(`http://local/api/staff/${staffId}/education`, { headers: auth }));
