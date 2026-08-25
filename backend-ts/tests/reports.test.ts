@@ -108,6 +108,14 @@ describe("analytics and report parity", () => {
             expect.objectContaining({ name: "Dina SMP7B", present_count: 1, late_count: 0, absent_count: 0, incomplete_count: 1, total_days: 2, attendance_percentage: 100 }),
           ]),
         });
+        const interventionImpact = await app.handle(new Request(`http://local${alias}/intervention-impact?academic_year_id=2`, { headers: { cookie } }));
+        expect(interventionImpact.status).toBe(200);
+        expect(await interventionImpact.json()).toMatchObject({
+          filters: { academic_year_id: 2 },
+          summary: { total_interventions: 0, open_interventions: 0, resolved_interventions: 0, average_score_delta: null },
+          impact_rows: [],
+          executive_insights: [expect.objectContaining({ title: "No intervention impact records found" })],
+        });
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);

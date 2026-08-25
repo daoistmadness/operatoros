@@ -648,6 +648,92 @@ function attendanceReport(context: AuthContext, startDate: string, endDate: stri
   return { results, summary: { avg_late_time_str: pythonDuration(totalLateCount ? totalLateMinutes / totalLateCount : 0), heb_days: hebDays } };
 }
 
+const activeInterventionStatuses = ["open", "in_progress", "monitoring"];
+const resolvedInterventionStatuses = ["resolved", "closed"];
+
+function dateOnly(value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  return String(value).slice(0, 10);
+}
+
+function interventionRisk(value: Row): [string, string[]] {
+  let score = 0;
+  const reasons: string[] = [];
+  if (value.latest_average === null) { score += 2; reasons.push("Missing latest score"); }
+  else if (value.effective_threshold !== null && value.latest_average < value.effective_threshold) { score += 2; reasons.push("Still below effective KKM"); }
+  if (value.score_delta === null) { score += 1; reasons.push("Score delta cannot be calculated"); }
+  else if (value.score_delta <= 0) { score += 2; reasons.push("No score improvement after intervention"); }
+  if (value.is_overdue) { score += 2; reasons.push("Follow-up overdue"); }
+  if (value.priority === "urgent") { score += 2; reasons.push("Urgent priority"); }
+  else if (value.priority === "high") { score += 1; reasons.push("High priority"); }
+  if (value.repeated_below_kkm_alerts > 1) { score += 1; reasons.push("Repeated Below-KKM alert context"); }
+  if (activeInterventionStatuses.includes(value.status) && value.days_open > 30) { score += 1; reasons.push("Open longer than 30 days"); }
+  if (score >= 6) return ["critical", reasons];
+  if (score >= 4) return ["high", reasons];
+  if (score >= 2) return ["medium", reasons];
+  return ["low", reasons.length ? reasons : ["No immediate risk flags"]];
+}
+
+function averageNullable(values: (number | null)[]): number | null {
+  const valid = values.filter((value): value is number => value !== null);
+  return valid.length ? roundHalfEven(valid.reduce((sum, value) => sum + value, 0) / valid.length, 1) : null;
+}
+
+function percent(count: number, total: number): number { return total ? roundHalfEven(count / total * 100, 1) : 0; }
+
+function interventionBreakdown(values: Row[], key: string, outputKey: string): Row[] {
+  const groups = new Map<string, Row[]>();
+  for (const value of values) { const label = value[key] || "Unassigned"; if (!groups.has(label)) groups.set(label, []); groups.get(label)!.push(value); }
+  return [...groups.entries()].map(([label, items]) => ({ [outputKey]: label, total_interventions: items.length, open_interventions: items.filter((value) => activeInterventionStatuses.includes(value.status)).length, resolved_interventions: items.filter((value) => resolvedInterventionStatuses.includes(value.status)).length, overdue_interventions: items.filter((value) => value.is_overdue).length, average_score_delta: averageNullable(items.map((value) => value.score_delta)), moved_above_kkm_percent: percent(items.filter((value) => value.moved_above_kkm).length, items.length), high_risk_count: items.filter((value) => ["high", "critical"].includes(value.risk_level)).length })).sort((a, b) => Number(b.high_risk_count) - Number(a.high_risk_count) || String(a[outputKey]).localeCompare(String(b[outputKey])));
+}
+
+function interventionInsights(summary: Row, values: Row[], classes: Row[], subjects: Row[]): Row[] {
+  const insights: Row[] = [];
+  const stillBelow = values.filter((value) => value.latest_average !== null && value.latest_average < value.effective_threshold);
+  if (stillBelow.length) insights.push({ severity: stillBelow.length < 5 ? "warning" : "critical", category: "intervention_impact", title: "Students remain below KKM after intervention", message: `${stillBelow.length} students remain below KKM after intervention tracking.`, metric_value: stillBelow.length, recommended_action: "Review intervention plans and escalate students with high risk levels." });
+  const overdueHigh = values.filter((value) => value.is_overdue && ["high", "urgent"].includes(value.priority));
+  if (overdueHigh.length) insights.push({ severity: "critical", category: "intervention_impact", title: "High-priority interventions are overdue", message: `${overdueHigh.length} high or urgent priority interventions are overdue.`, metric_value: overdueHigh.length, recommended_action: "Assign immediate owner follow-up for overdue high-risk interventions." });
+  if (classes.length) { const top = classes.reduce((best, value) => Number(value.open_interventions) > Number(best.open_interventions) ? value : best, classes[0]!); if (Number(top.open_interventions) > 0) insights.push({ severity: "warning", category: "intervention_impact", title: `${top.class_name} has the highest unresolved intervention count`, message: `${top.class_name} has ${top.open_interventions} active interventions.`, metric_value: Number(top.open_interventions), recommended_action: "Coordinate class-level remediation with the wali kelas." }); }
+  const improved = subjects.filter((value) => value.average_score_delta !== null);
+  if (improved.length) { const best = improved.reduce((current, value) => Number(value.average_score_delta) > Number(current.average_score_delta) ? value : current, improved[0]!); if (Number(best.average_score_delta) > 0) insights.push({ severity: "info", category: "intervention_impact", title: `${best.subject_name} interventions show the highest average improvement`, message: `${best.subject_name} has an average score delta of ${best.average_score_delta} points.`, metric_value: Number(best.average_score_delta), recommended_action: "Review effective practices from this subject for reuse." }); }
+  if (summary.total_interventions === 0) insights.push({ severity: "info", category: "intervention_impact", title: "No intervention impact records found", message: "No academic interventions match the selected filters.", metric_value: 0, recommended_action: "Create interventions from Below-KKM alerts before measuring impact." });
+  const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+  return insights.sort((a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3));
+}
+
+function interventionImpact(context: AuthContext, query: Row): Row {
+  const ids = ["academic_year_id", "jenjang_id", "subject_id"].map((key) => queryNumber(query[key]));
+  const [academicYearId, jenjangId, subjectId] = ids;
+  if (academicYearId !== null && !row(context, "SELECT id FROM academic_years WHERE id = ?", [academicYearId])) throw Object.assign(new Error("Academic year not found"), { status: 404 });
+  if (jenjangId !== null && !row(context, "SELECT id FROM jenjangs WHERE id = ?", [jenjangId])) throw Object.assign(new Error("Jenjang not found"), { status: 404 });
+  if (subjectId !== null && !row(context, "SELECT id FROM subjects WHERE id = ?", [subjectId])) throw Object.assign(new Error("Subject not found"), { status: 404 });
+  const clauses: string[] = []; const params: any[] = [];
+  for (const key of ["academic_year_id", "jenjang_id", "student_id", "subject_id"]) { const value = queryNumber(query[key]); if (value !== null) { clauses.push(`${key} = ?`); params.push(value); } }
+  for (const key of ["class_name", "term", "status", "priority", "owner_name"]) if (query[key]) { clauses.push(`${key} = ?`); params.push(query[key]); }
+  const source = rows(context, `SELECT * FROM academic_interventions${clauses.length ? ` WHERE ${clauses.join(" AND ")}` : ""} ORDER BY updated_at DESC, id DESC`, params);
+  const contexts = new Map<string, number>();
+  for (const value of source) { const key = `${value.student_id}|${value.subject_id}|${value.assessment_type ?? ""}|${value.term ?? ""}`; contexts.set(key, (contexts.get(key) ?? 0) + 1); }
+  const today = new Date().toISOString().slice(0, 10);
+  const impact = source.map((value) => {
+    const baseline = value.current_average === null ? null : roundHalfEven(Number(value.current_average), 1);
+    const types = value.assessment_type === null || value.assessment_type === "overall" ? ["sumatif", "formatif"] : [value.assessment_type];
+    const latestValue = row(context, `SELECT AVG(g.score) AS average_score FROM student_subject_grades g JOIN student_enrollments e ON e.id = g.enrollment_id JOIN assessment_components ac ON ac.id = g.component_id WHERE e.student_id = ? AND e.academic_year_id = ? AND g.subject_id = ? AND g.score IS NOT NULL AND ac.assessment_type IN (${types.map(() => "?").join(",")})${value.enrollment_id === null ? "" : " AND g.enrollment_id = ?"}`, [value.student_id, value.academic_year_id, value.subject_id, ...types, ...(value.enrollment_id === null ? [] : [value.enrollment_id])]);
+    const latest = latestValue?.average_score === null || latestValue?.average_score === undefined ? null : roundHalfEven(Number(latestValue.average_score), 1);
+    const delta = latest !== null && baseline !== null ? roundHalfEven(latest - baseline, 1) : null;
+    const created = dateOnly(value.created_at); const resolved = dateOnly(value.resolved_at); const daysOpen = created ? Math.max(0, Math.floor((new Date(`${resolved ?? today}T00:00:00Z`).getTime() - new Date(`${created}T00:00:00Z`).getTime()) / 86400000)) : 0;
+    const overdue = activeInterventionStatuses.includes(value.status) && value.follow_up_date !== null && String(value.follow_up_date) < today;
+    const item: Row = { intervention_id: Number(value.id), student_id: Number(value.student_id), student_name: value.student_name, class_name: value.class_name || "Unassigned", subject_id: Number(value.subject_id), subject_name: value.subject_name, assessment_type: value.assessment_type, term: value.term, status: value.status, priority: value.priority, owner_name: value.owner_name || "Unassigned", created_at: value.created_at ?? null, updated_at: value.updated_at ?? null, resolved_at: value.resolved_at ?? null, follow_up_date: dateOnly(value.follow_up_date), baseline_average: baseline, latest_average: latest, score_delta: delta, effective_threshold: Number(value.effective_threshold), threshold_source: value.threshold_source, moved_above_kkm: latest !== null && latest >= Number(value.effective_threshold) && (baseline === null || baseline < Number(value.effective_threshold)), days_open: daysOpen, is_overdue: overdue, resolution_status: resolvedInterventionStatuses.includes(value.status) ? "resolved" : "active", follow_up_status: overdue ? "overdue" : value.follow_up_date && activeInterventionStatuses.includes(value.status) ? "scheduled" : "none", repeated_below_kkm_alerts: contexts.get(`${value.student_id}|${value.subject_id}|${value.assessment_type ?? ""}|${value.term ?? ""}`) ?? 0 };
+    [item.risk_level, item.risk_reasons] = interventionRisk(item);
+    return item;
+  });
+  const filtered = query.risk_level ? impact.filter((value) => value.risk_level === query.risk_level) : impact;
+  const resolved = filtered.filter((value) => resolvedInterventionStatuses.includes(value.status));
+  const summary: Row = { total_interventions: filtered.length, open_interventions: filtered.filter((value) => activeInterventionStatuses.includes(value.status)).length, resolved_interventions: resolved.length, overdue_interventions: filtered.filter((value) => value.is_overdue).length, high_urgent_priority_count: filtered.filter((value) => ["high", "urgent"].includes(value.priority)).length, average_score_delta: averageNullable(filtered.map((value) => value.score_delta)), percent_improved: percent(filtered.filter((value) => value.score_delta !== null && value.score_delta > 0).length, filtered.length), percent_moved_above_kkm: percent(filtered.filter((value) => value.moved_above_kkm).length, filtered.length), average_days_to_resolution: averageNullable(resolved.map((value) => value.days_open)), interventions_by_status: Object.fromEntries([...new Set(filtered.map((value) => value.status))].map((key) => [key, filtered.filter((value) => value.status === key).length])), interventions_by_priority: Object.fromEntries([...new Set(filtered.map((value) => value.priority))].map((key) => [key, filtered.filter((value) => value.priority === key).length])), risk_distribution: Object.fromEntries([...new Set(filtered.map((value) => value.risk_level))].map((key) => [key, filtered.filter((value) => value.risk_level === key).length])) };
+  const classes = interventionBreakdown(filtered, "class_name", "class_name"); const subjects = interventionBreakdown(filtered, "subject_name", "subject_name"); const owners = interventionBreakdown(filtered, "owner_name", "owner_name");
+  const riskOrder: Record<string, number> = { critical: 0, high: 1 }; const studentRisk = filtered.filter((value) => ["high", "critical"].includes(value.risk_level)).map((value) => ({ student_id: value.student_id, student_name: value.student_name, class_name: value.class_name, subject_name: value.subject_name, risk_level: value.risk_level, risk_reasons: value.risk_reasons, latest_average: value.latest_average, effective_threshold: value.effective_threshold, is_overdue: value.is_overdue })).sort((a, b) => (riskOrder[a.risk_level] ?? 2) - (riskOrder[b.risk_level] ?? 2) || String(a.student_name).localeCompare(String(b.student_name)));
+  return { filters: { academic_year_id: academicYearId, jenjang_id: jenjangId, class_name: query.class_name ?? null, student_id: queryNumber(query.student_id), subject_id: subjectId, term: query.term ?? null, status: query.status ?? null, priority: query.priority ?? null, owner_name: query.owner_name ?? null, risk_level: query.risk_level ?? null }, summary, impact_rows: filtered, class_breakdown: classes, subject_breakdown: subjects, student_risk_list: studentRisk, owner_workload_summary: owners, warnings: ["Baseline score uses the intervention's captured current_average snapshot; latest score uses the current grade ledger average."], executive_insights: interventionInsights(summary, filtered, classes, subjects) };
+}
+
 function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
   const auth = (ctx: Context) => actor(context, ctx, {});
   app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
@@ -698,6 +784,7 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
     if (!auth(ctx)) return { detail: "Authentication required" };
     try { return attendanceReport(context, ctx.query.start_date, ctx.query.end_date, ctx.query.jenjang, ctx.query.class_name); } catch (error) { return sendError(ctx, error); }
   }, { query: t.Object({ start_date: t.String(), end_date: t.String(), jenjang: t.Optional(t.String()), class_name: t.Optional(t.String()) }) });
+  app.get(`${prefix}/intervention-impact`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return interventionImpact(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), student_id: t.Optional(t.String()), subject_id: t.Optional(t.String()), term: t.Optional(t.String()), status: t.Optional(t.String()), priority: t.Optional(t.String()), owner_name: t.Optional(t.String()), risk_level: t.Optional(t.String()) }) });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);
