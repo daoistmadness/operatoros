@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 103
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 101
 migration defects. The legacy `.xls` preview path also needs an approved
 disposition.
 
@@ -17,14 +17,15 @@ disposition.
 - Added verified backup download parity at
   `GET /api/admin/backups/{filename}/download`.
 - Added focused disposable tests for backup download and deletion.
+- Added analytics filter parity for canonical and legacy aliases.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 223 matching operations and one Elysia-only `/ready` route.
-- Unresolved endpoint operations: 104.
+- Elysia: 225 matching operations and one Elysia-only `/ready` route.
+- Unresolved endpoint operations: 102.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -63,5 +64,5 @@ the frontend still accept `.xls`. Elysia currently supports the Phase 0
 - Phase 11 started: no.
 - Phase 7, Phase 8, and Phase 9 merged-main prerequisites remain accepted.
 
-Next safe action: migrate the next smallest active group, starting with the
-analytics dashboard routes and their legacy aliases, then replay the group.
+Next safe action: migrate the next smallest analytics dashboard route group and
+replay both its canonical and legacy aliases.
