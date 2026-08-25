@@ -11,9 +11,9 @@ document and a disposable SQLite database for the Elysia route list.
 
 | Measure | FastAPI | Elysia | Result |
 | --- | ---: | ---: | --- |
-| OpenAPI paths | 282 | 212 candidate routes | 77 FastAPI operations remain unresolved |
-| Operations | 327 | 250 candidate operations | 76 missing operations and one deprecated route remain |
-| Elysia runtime routes | — | 251 | `/ready` is an Elysia-only readiness route |
+| OpenAPI paths | 282 | 214 candidate routes | 75 FastAPI operations remain unresolved |
+| Operations | 327 | 252 candidate operations | 74 missing operations and one deprecated route remain |
+| Elysia runtime routes | — | 253 | `/ready` is an Elysia-only readiness route |
 | Unknown operations | — | — | 0 |
 
 The route comparison normalizes only FastAPI `{id:type}` and Elysia `:id`
@@ -33,9 +33,9 @@ headers, cookies, database state, or audit state.
 ## Green and non-applicable routes
 
 - 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
-- Analytics, operator-queue, and teacher-assignment candidate routes are tested
-  on disposable SQLite, but they do not become `PARITY_GREEN` until
-  FastAPI-versus-Elysia replay proves them.
+- Analytics, operator-queue, teacher-assignment, and student-export candidate
+  routes are tested on disposable SQLite, but they do not become
+  `PARITY_GREEN` until FastAPI-versus-Elysia replay proves them.
 - `GET /ready` is `NOT_APPLICABLE`. It is an Elysia foundation route.
 - The existing 40-scenario replay remains `40/40 EXACT_MATCH`.
 
@@ -52,7 +52,6 @@ unknown.
 | `api.report_builder` | 12 | `/api/report-builder/*` | `MIGRATION_DEFECT` | The frontend uses templates, preview, and exports. Port the service contract before cutover. |
 | `api.staff` | 2 | `/api/staff/imports/*` | `MIGRATION_DEFECT` | Import history is a production API surface. Preserve provenance and result files. |
 | `api.student_enrollments` | 4 | Roster preview, commit, template, and academic-master preview | `MIGRATION_DEFECT` | The frontend uses roster preview, commit, and template routes. |
-| `api.student_exports` | 2 | `/api/student-exports/{preview,download}` | `MIGRATION_DEFECT` | Export authorization and preview checksum are not proven in Elysia. |
 | `api.student_import_sessions` | 2 | `/api/student-import-sessions/*` | `MIGRATION_DEFECT` | Rollback behavior is not proven in Elysia. |
 | `api.student_masters` | 6 | Student update preview, commit, history, template, and result workbook | `MIGRATION_DEFECT` | The frontend uses update preview and commit. Preserve checksum and provenance. |
 | `api.system` | 1 | `POST /api/system/clear-data` | `MIGRATION_DEFECT` | The frontend uses this destructive control. Preserve confirmation, locks, triggers, and audit state. |
@@ -60,7 +59,7 @@ unknown.
 | `api.uploads` | 8 | `/api/uploads/history*`, missing-records, and sample-template | `MIGRATION_DEFECT` | The frontend uses upload history. Preserve row, timeline, export, and missing-record contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **76** plus one deprecated operation. Candidate analytics, operator-queue, and teacher-assignment routes remain parity-blocked until dual replay.
+Remaining missing operations: **74** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, and student-export routes remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
