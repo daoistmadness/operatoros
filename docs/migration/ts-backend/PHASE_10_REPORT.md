@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 81
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 76
 missing operations and one deprecated operation. Candidate analytics routes
 still need full dual replay. The legacy `.xls` preview path also needs an approved
 disposition.
@@ -28,14 +28,15 @@ disposition.
   and intervention tests.
 - Added the operator work-queue candidate with server-side capability checks.
 - Preserved the legacy `/students/operations` audit alias.
+- Added the teacher-class assignment candidate with overlap and lifecycle checks.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 245 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 82.
+- Elysia: 250 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 77.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -55,7 +56,7 @@ The unresolved families include active frontend consumers:
 - data portability;
 - report builder;
 - roster and student update workflows;
-- teacher assignments;
+- teacher assignments remain candidate-only until dual replay;
 - upload history and conflict resolution;
 - destructive clear-data control.
 
