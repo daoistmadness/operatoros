@@ -81,6 +81,18 @@ describe("analytics and report parity", () => {
           expect.objectContaining({ nama: "Alice SMP7A", class_name: "7A", jenjang: "SMP", late_count: 1 }),
           expect.objectContaining({ nama: "Fajar SD1A", class_name: "1A", jenjang: "SD", late_count: 1 }),
         ]));
+        const byStudentRate = await app.handle(new Request(`http://local${alias}/attendance-rate/students`, { headers: { cookie } }));
+        expect(byStudentRate.status).toBe(200);
+        expect(await byStudentRate.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ nama: "Alice SMP7A", jenjang: "SMP", total: { present_days: 4, heb: 18, rate: 0.222 } }),
+          expect.objectContaining({ nama: "Fajar SD1A", jenjang: "SD", total: { present_days: 3, heb: 15, rate: 0.2 } }),
+        ]));
+        const byJenjangRate = await app.handle(new Request(`http://local${alias}/attendance-rate/jenjang`, { headers: { cookie } }));
+        expect(byJenjangRate.status).toBe(200);
+        expect(await byJenjangRate.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ jenjang: "SMP", total: { avg_present_days: 2.667, heb: 18, rate: 0.148 } }),
+          expect.objectContaining({ jenjang: "SD", total: { avg_present_days: 3, heb: 15, rate: 0.2 } }),
+        ]));
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
