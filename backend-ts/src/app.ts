@@ -12,6 +12,7 @@ import { gradeRoutes } from "./domains/grades";
 import { interventionRoutes } from "./domains/interventions";
 import { progressionRoutes } from "./domains/progression";
 import { reportRoutes } from "./domains/reports";
+import { safetyRoutes } from "./domains/safety";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -50,8 +51,12 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     interventionRoutes(app, context);
     progressionRoutes(app, context);
     reportRoutes(app, context);
+    safetyRoutes(app, context, {
+      backupDir: _config.backupDir ?? context.config.auditDir,
+      destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
+    });
   }
-  systemRoutes(app, { destructiveOperationsEnabled: false });
+  systemRoutes(app, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
     app.use(openapi({ path: "/openapi" }));
