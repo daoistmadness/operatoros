@@ -117,6 +117,20 @@ function rowsFromFiles(root: string): Row[] {
   return result;
 }
 
+function verifiedBackup(root: string, filename: string): string {
+  if (!backupFile.test(filename)) throw Object.assign(new Error("Invalid backup filename."), { status: 404 });
+  const path = `${root}/${filename}`;
+  if (!statSafe(path) || !statSafe(`${path}.meta.json`)) throw Object.assign(new Error("Backup not found."), { status: 404 });
+  return path;
+}
+
+function deleteBackup(root: string, filename: string): void {
+  const path = verifiedBackup(root, filename);
+  rmSync(path);
+  rmSync(`${path}.meta.json`);
+  audit(root, "backup_deleted", { filename });
+}
+
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   const root = backupRoot(config); const active = dbPath(context); const entries = statSafe(root) ? metadata(root) : [];
   const minimumRequired = Math.max((statSafe(active) ? statSync(active).size : 0) * 2, 3_088_384);
@@ -185,6 +199,8 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } });
   app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; });
   app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.sqlite3", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
   app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return rows(context, "SELECT id, backup_filename, started_at, completed_at, duration_seconds, status, error_message, trigger_type, size_bytes, checksum, integrity_verified, removed_backups_json FROM backup_execution_history ORDER BY started_at DESC, id DESC LIMIT 200").map((value) => ({ ...value, integrity_verified: Boolean(value.integrity_verified), removed_backups: JSON.parse(String(value.removed_backups_json ?? "[]")) })); });
   app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); if (!statSafe(`${root}/backup_restore_audit.jsonl`)) return []; return readFileSync(`${root}/backup_restore_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((value) => { try { const item = JSON.parse(value); return { timestamp: item.timestamp ?? null, filename: item.target_filename ?? null, event: item.event ?? null, actor_display: item.authenticated_username ?? "unknown", result: item.outcome ?? null, safe_reason_code: item.reason ?? null, operation_reference_id: item.request_context?.operation_id ?? null, safety_backup_filename: item.pre_restore_snapshot_filename ?? null }; } catch { return null; } }).filter(Boolean); });
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });

@@ -36,6 +36,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       set.status = 500;
       return errorBody("INTERNAL_ERROR", "Internal server error.");
     })
+    .get("/", () => ({ status: "ok", message: "School Attendance Analytics API" }))
     .get("/health", () => ({ status: "ok" }))
     .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
 

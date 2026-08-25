@@ -101,7 +101,7 @@ describe("openapi", () => {
     const j1 = await r1.text(); const j2 = await r2.text();
     expect(j1).toBe(j2);
     const doc = JSON.parse(j1);
-    expect(Object.keys(doc.paths).sort()).toEqual(["/api/system/health", "/health", "/ready"]);
+    expect(Object.keys(doc.paths).sort()).toEqual(["/", "/api/system/health", "/health", "/ready"]);
   });
 
   it("test fixture app excludes diag routes from openapi", async () => {

@@ -42,6 +42,11 @@ describe("backup, restore, and scheduler safety", () => {
       expect(backup.filename).toMatch(/^backup_.*\.sqlite3$/);
       expect(backup.sha256).toHaveLength(64);
 
+      const download = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/download`, { headers: { cookie } }));
+      expect(download.status).toBe(200);
+      expect(download.headers.get("content-disposition")).toContain(backup.filename);
+      expect((await download.arrayBuffer()).byteLength).toBeGreaterThan(0);
+
       database.client.run("CREATE TABLE restore_marker (value TEXT NOT NULL)");
       database.client.run("INSERT INTO restore_marker VALUES ('after-backup')");
       const preflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie } }));
@@ -52,11 +57,16 @@ describe("backup, restore, and scheduler safety", () => {
       expect(restore.status).toBe(200);
       expect((await restore.json() as any).sessions_revoked).toBe(true);
       expect(database.client.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'restore_marker'").get()).toBeNull();
+      const postRestoreCookie = await login(app, "golden-admin", "golden-admin-pass-1");
 
       const corrupt = `${backupDir}/${backup.filename}`;
       const bytes = readFileSync(corrupt); bytes[bytes.length - 1] = (bytes[bytes.length - 1] ?? 0) ^ 1; writeFileSync(corrupt, bytes);
-      const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie } }));
-      expect(corruptPreflight.status).toBeGreaterThanOrEqual(400);
+      const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: postRestoreCookie } }));
+      expect(corruptPreflight.status).toBe(200);
+      expect((await corruptPreflight.json() as any).source.checksum_matches_manifest).toBe(false);
+      const deleted = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie } }));
+      expect(deleted.status).toBe(200);
+      expect(existsSync(corrupt)).toBe(false);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 
