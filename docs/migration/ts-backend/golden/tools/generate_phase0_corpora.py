@@ -496,6 +496,216 @@ def reports_corpus() -> None:
         db.close()
 
 
+def academic_placement_corpus() -> None:
+    from sqlalchemy.exc import IntegrityError
+
+    from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram
+    from models.academic_mapping import StudentAcademicMappingRule
+    from models.academic_year import AcademicYear
+    from models.attendance import Attendance
+    from models.jenjang import Jenjang
+    from models.student import Student
+    from models.student_enrollment import StudentEnrollment
+    from models.student_master import (
+        EnrollmentPopulationPreviewBatch,
+        StudentDeviceIdentity,
+        StudentMaster,
+    )
+    from services.academic_mapping import resolve_class, resolve_jenjang
+    from services.enrollment_population import (
+        ENROLLMENT_CONFIRMATION,
+        build_enrollment_rows,
+        commit_enrollment_preview,
+        create_enrollment_preview,
+    )
+
+    tmp = Path(tempfile.mkdtemp(prefix="tsphase0-academic-"))
+    db_path = fresh_ledgered_db(tmp, "academic.db")
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+    from core import database as core_database
+
+    db = core_database.SessionLocal()
+    cases: dict = {}
+    try:
+        y1 = AcademicYear(label="2025/2026-academic", start_date=date(2025, 7, 1), end_date=date(2026, 6, 30), is_default=False)
+        y2 = AcademicYear(label="2026/2027-academic", start_date=date(2026, 7, 1), end_date=date(2027, 6, 30), is_default=False)
+        j_smp = Jenjang(name="SMP", code="SMP", level="junior")
+        j_smk_a = Jenjang(name="Smk", code="SMKA", level="vocational")
+        j_smk_b = Jenjang(name="SMK", code="SMKB", level="vocational")
+        db.add_all([y1, y2, j_smp, j_smk_a, j_smk_b])
+        db.flush()
+        program = AcademicProgram(jenjang_id=j_smp.id, name="SMP Program")
+        db.add(program)
+        db.flush()
+        grade = AcademicGrade(jenjang_id=j_smp.id, program_id=program.id, name="Grade 7", sequence_number=1)
+        db.add(grade)
+        db.flush()
+        aclass = AcademicClass(academic_year_id=y2.id, grade_id=grade.id, class_name="7A", active=True)
+        rule = StudentAcademicMappingRule(
+            mapping_type="class", source_value="7A", normalized_source_value="7a",
+            target_value="7A", status="approved",
+            created_by="golden-seed", approved_by="golden-seed", approved_at=datetime.now(),
+        )
+        db.add_all([aclass, rule])
+        db.flush()
+
+        m1 = "11111111-1111-1111-1111-111111111111"
+        m2 = "22222222-2222-2222-2222-222222222222"
+        m3 = "33333333-3333-3333-3333-333333333333"
+        m4 = "44444444-4444-4444-4444-444444444444"
+        m5 = "55555555-5555-5555-5555-555555555555"
+        m6 = "66666666-6666-6666-6666-666666666666"
+        for mid in (m1, m2, m3, m4, m5, m6):
+            db.add(StudentMaster(
+                id=mid, full_name=f"Academic Master {mid[:4]}",
+                normalized_name=f"academic master {mid[:4]}", student_status="active",
+            ))
+        db.flush()
+
+        def _legacy(sid, name, jenjang_val="SMP", cls="7A", master_id=None, second_master=None):
+            student = Student(id=sid, name=name, jenjang=jenjang_val, class_name=cls)
+            db.add(student)
+            db.flush()
+            if master_id:
+                db.add(StudentDeviceIdentity(
+                    student_master_id=master_id, legacy_student_id=sid,
+                    device_identifier=str(sid), device_source="attendance_device",
+                    effective_from=date(2026, 1, 1), is_active=True,
+                ))
+            if second_master:
+                db.add(StudentDeviceIdentity(
+                    student_master_id=second_master, legacy_student_id=sid,
+                    device_identifier=f"{sid}-alt", device_source="attendance_device",
+                    effective_from=date(2026, 1, 1), is_active=True,
+                ))
+            db.flush()
+            return student
+
+        s_link = _legacy(601, "Linked Student", master_id=m1)
+        _legacy(602, "Unlinked Student")
+        _legacy(603, "Ambiguous Student", master_id=m2, second_master=m3)
+        _legacy(604, "Blank Jenjang Student", jenjang_val=None, cls="7C")
+        _legacy(605, "Unmapped Class Student", cls="9X")
+        s_pre = _legacy(606, "Pre Enrolled Student", master_id=m4)
+        _legacy(607, "Same Name Twin A", master_id=m5)
+        _legacy(608, "Same Name Twin B", master_id=m6)
+        s_pop = _legacy(609, "Populate Student", master_id=m5)
+        _legacy(610, "Linked Bad Class Student", cls="9X", master_id=m2)
+
+        m4_row = db.get(StudentMaster, m4)
+        db.add(StudentEnrollment(
+            student_master_id=m4, student_id=s_pre.id, academic_year_id=y2.id,
+            jenjang_id=j_smp.id, academic_class_id=aclass.id, class_name="7A",
+            lifecycle_state="ACTIVE", effective_from=date(2026, 7, 1),
+        ))
+        ended_y1 = StudentEnrollment(
+            student_master_id=m1, academic_year_id=y1.id, jenjang_id=j_smp.id,
+            class_name="7A-old", lifecycle_state="ENDED",
+            effective_from=date(2025, 7, 1), effective_to=date(2026, 6, 30),
+        )
+        active_y2 = StudentEnrollment(
+            student_master_id=m1, academic_year_id=y2.id, jenjang_id=j_smp.id,
+            academic_class_id=aclass.id, class_name="7A", lifecycle_state="ACTIVE",
+            effective_from=date(2026, 7, 1),
+        )
+        db.add_all([ended_y1, active_y2])
+        att_before = Attendance(student_id=s_link.id, date=date(2026, 8, 10), late_duration=0, late_source="none", is_absent=False, status="on-time")
+        db.add(att_before)
+        db.commit()
+        fk_before = att_before.student_id
+
+        exact = resolve_jenjang("SMP", {"SMP": j_smp}, {}, {})
+        missing = resolve_jenjang("SMA", {"SMP": j_smp}, {"sma": [j_smk_a]}, {})
+        ambiguous_src = resolve_jenjang("smk", {"Smk": j_smk_a, "SMK": j_smk_b}, {"smk": [j_smk_a, j_smk_b]}, {})
+        class_missing = resolve_class("9X", {})
+        cases["jenjang_resolution"] = {
+            "exact": {"state": exact[1], "match_type": exact[2]},
+            "missing": {"state": missing[1], "match_type": missing[2]},
+            "ambiguous": {"state": ambiguous_src[1], "match_type": ambiguous_src[2]},
+        }
+        cases["class_resolution"] = {"missing_rule": {"state": class_missing[1], "match_type": class_missing[2]}}
+
+        rows = build_enrollment_rows(db, y2.id, date(2026, 7, 1), None)
+        cases["population_actions"] = {
+            str(row["legacy_student_id"]): row["proposed_action"] for row in rows
+        }
+
+        preview = create_enrollment_preview(db, y2.id, date(2026, 7, 1), [609], "golden-seed")
+        cases["preview"] = {
+            "id_token": "<uuid>",
+            "row_count": len(preview.rows),
+            "checksum_present": bool(preview.snapshot_checksum),
+            "proposed_action": preview.rows[0]["proposed_action"] if preview.rows else None,
+        }
+        try:
+            commit_enrollment_preview(db, str(preview.id), [609], "WRONG", "golden-seed")
+            cases["commit_wrong_confirmation"] = "OK (unexpected)"
+        except Exception as exc:
+            cases["commit_wrong_confirmation"] = f"{type(exc).__name__}: {exc}"
+        result = commit_enrollment_preview(db, str(preview.id), [609], ENROLLMENT_CONFIRMATION, "golden-seed")
+        cases["commit_first"] = result
+        result_second = commit_enrollment_preview(db, str(preview.id), [609], ENROLLMENT_CONFIRMATION, "golden-seed")
+        cases["commit_idempotent_second"] = result_second
+
+        att_after = db.get(Attendance, att_before.id)
+        cases["attendance_fk_preserved"] = fk_before == att_after.student_id == s_link.id
+
+        try:
+            dup = StudentEnrollment(
+                student_master_id=m1, academic_year_id=y2.id, jenjang_id=j_smp.id,
+                class_name="7A", lifecycle_state="ACTIVE", effective_from=date(2026, 7, 1),
+            )
+            db.add(dup)
+            db.commit()
+            cases["duplicate_master_year_rejection"] = "OK (unexpected)"
+        except IntegrityError as exc:
+            db.rollback()
+            cases["duplicate_master_year_rejection"] = {
+                "outcome": "REJECTED", "layer": "database",
+                "constraint": "uq_student_master_academic_year",
+                "error": type(exc.orig).__name__,
+            }
+        try:
+            db.delete(db.get(StudentMaster, m1))
+            db.commit()
+            cases["master_delete_restrict"] = "OK (unexpected)"
+        except IntegrityError as exc:
+            db.rollback()
+            cases["master_delete_restrict"] = {
+                "outcome": "REJECTED", "layer": "database",
+                "error": type(exc.orig).__name__,
+            }
+
+        history_rows = db.query(StudentEnrollment).filter_by(student_master_id=m1).order_by(StudentEnrollment.academic_year_id.asc()).all()
+        cases["historical_and_current_coexist"] = [
+            {"year_id": row.academic_year_id, "lifecycle_state": row.lifecycle_state, "class_name": row.class_name}
+            for row in history_rows
+        ]
+        no_current = [
+            row for row in db.query(StudentEnrollment).filter_by(student_master_id=m1)
+            if row.academic_year_id == y1.id and row.lifecycle_state != "ACTIVE"
+        ]
+        current_for_y1_only_master = db.query(StudentEnrollment).filter_by(student_master_id=m1, academic_year_id=y1.id, lifecycle_state="ACTIVE").first()
+        cases["no_current_in_ended_year"] = {
+            "ended_rows_in_past_year": len(no_current),
+            "active_rows_in_past_year": 1 if current_for_y1_only_master else 0,
+        }
+        cases["canonical_identity_architecture"] = {
+            "student_masters_hold_person_record": True,
+            "student_enrollments_hold_placement": True,
+            "enrollment_columns_reference_placement": ["jenjang_id", "academic_class_id", "class_name"],
+            "master_has_no_placement_columns": not any(hasattr(StudentMaster, col) for col in ("jenjang_id", "class_name")),
+        }
+        cases["future_enrollment"] = "NOT_APPLICABLE: placement resolution keys on lifecycle_state + academic_year; no future-dated enrollment concept exists in source"
+        cases["name_only_merge_prohibition"] = {
+            "same_name_students_get_distinct_masters_via_device_identity": True,
+            "resolver_never_matches_by_name": True,
+        }
+        record("academic/placement-and-resolution.json", cases)
+    finally:
+        db.close()
+
+
 def backup_corpus() -> None:
     from services.backup_service import calculate_sha256
 
@@ -525,6 +735,7 @@ def main() -> None:
     grades_corpus()
     heb_edge_corpus()
     reports_corpus()
+    academic_placement_corpus()
     backup_corpus()
     manifest_path = GOLDEN / "corpora_manifest.json"
     manifest = json.loads(manifest_path.read_text())

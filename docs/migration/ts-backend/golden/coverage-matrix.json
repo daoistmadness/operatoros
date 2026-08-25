@@ -1,16 +1,19 @@
 {
   "generated_from": "golden/corpora_manifest.json",
-  "total_fixtures": 51,
-  "replay_scenarios": 36,
+  "total_fixtures": 55,
+  "replay_scenarios": 39,
   "fixtures_by_protected_category": {
     "API contract": 1,
     "authorization": 15,
-    "data integrity": 26,
+    "data integrity": 29,
     "data preservation": 2,
     "import validation": 1,
-    "report correctness": 6
+    "report correctness": 7
   },
   "fixtures_by_domain": {
+    "academic-placement": {
+      "replay-scenario": 3
+    },
     "attendance-review": {
       "replay-scenario": 5
     },
@@ -30,16 +33,15 @@
       "replay-scenario": 5
     },
     "service-corpora": {
-      "service-golden": 15
+      "service-golden": 16
     }
   },
   "determinism": {
     "normal-preview.json": "PYTHONHASHSEED=0 pinned; three-run identical (07cd270ef40c)",
-    "service-corpora": "byte-identical double-run with sanitized timestamps",
+    "service-corpora (incl. academic)": "byte-identical double-run with sanitized timestamps",
     "xlsx binaries": "regenerated artifacts; parsed content carries parity meaning"
   },
   "gaps": {
-    "academic-placement-resolution": "creation-chain evidence only; canonical relation cases open",
-    "restore-success-path": "preflight rehearsal + HTTP gates; success-path snapshot/revocation depth open"
+    "restore-success-path": "preflight rehearsal + HTTP gates + status/history shapes done; success-path snapshot/revocation/recovery-history depth open"
   }
 }

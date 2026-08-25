@@ -245,6 +245,19 @@ scenarios.append(scenario(
     "reports_filters", "reports", "report correctness", "seed_reports",
     [login("admin"), req("GET", "/api/reports/filters?academic_year_id=2&scope=combined", jar=True)],
 ))
+scenarios.append(scenario(
+    "academic_history_current_and_ended", "academic-placement", "data integrity", "seed_academic",
+    [login("admin"), req("GET", "/api/student-enrollments/student/11111111-1111-1111-1111-111111111111", jar=True)],
+))
+scenarios.append(scenario(
+    "academic_history_missing_master_404", "academic-placement", "report correctness", "seed_academic",
+    [login("admin"), req("GET", "/api/student-enrollments/student/99999999-9999-9999-9999-999999999999", jar=True)],
+))
+scenarios.append(scenario(
+    "academic_enrollment_duplicate_year_rejected", "academic-placement", "data integrity", "seed_academic",
+    [login("admin"), req("POST", "/api/student-enrollments/student/11111111-1111-1111-1111-111111111111", jar=True,
+                         payload={"academic_year_id": 3, "academic_class_id": 1, "effective_from": "2026-07-01"})],
+))
 
 
 def main() -> None:
