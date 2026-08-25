@@ -14,6 +14,8 @@ export type AppDatabase = BunSQLiteDatabase<typeof schema>;
 export interface DatabaseHandle {
   readonly client: Database;
   readonly db: AppDatabase;
+  readonly path: string;
+  reopen(): void;
   close(): void;
 }
 
@@ -65,19 +67,33 @@ function validateSchema(client: Database): void {
 
 export function openDatabase(path: string, options: { readonly?: boolean; validate?: boolean } = {}): DatabaseHandle {
   assertDatabasePath(path);
+  let client = openClient(path, options);
+  let closed = false;
+  const close = () => { if (!closed) { client.close(); closed = true; } };
+  const reopen = () => {
+    close();
+    client = openClient(path, options);
+    closed = false;
+  };
+  return {
+    get client() { return client; },
+    get db() { return drizzle({ client, schema }); },
+    path,
+    reopen,
+    close,
+  };
+}
+
+function openClient(path: string, options: { readonly?: boolean; validate?: boolean }): Database {
   const client = new Database(path, options.readonly ? { readonly: true } : { readwrite: true, create: false });
   try {
     client.run("PRAGMA foreign_keys = ON");
     if (options.validate !== false) validateSchema(client);
+    return client;
   } catch (error) {
     client.close();
     throw error;
   }
-  return {
-    client,
-    db: drizzle({ client, schema }),
-    close: () => client.close(),
-  };
 }
 
 export function validateDatabase(client: Database): void {

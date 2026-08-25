@@ -5,6 +5,8 @@ export interface BackendConfig {
   databasePath?: string;
   auth?: Partial<import("./auth/service").AuthConfig>;
   databaseHandle?: import("./db/connection").DatabaseHandle;
+  destructiveOperationsEnabled?: boolean;
+  backupDir?: string;
 }
 
 function sqlitePath(value: string | undefined): string | undefined {
@@ -19,6 +21,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     port: Number(env.PORT ?? 8090),
     environment: (env.NODE_ENV as BackendConfig["environment"]) ?? "development",
     databasePath: sqlitePath(env.DATABASE_URL ?? env.DATABASE_PATH),
+    destructiveOperationsEnabled: env.ENABLE_DESTRUCTIVE_OPERATIONS === "true",
+    backupDir: env.BACKUP_DIR,
     auth: {
       authCookieSecret: env.AUTH_COOKIE_SECRET,
       cookieSecure: env.COOKIE_SECURE === "true",
