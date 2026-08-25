@@ -602,6 +602,52 @@ function attendanceRateByJenjang(context: AuthContext): Row[] {
   }).sort((a, b) => String(a.jenjang).localeCompare(String(b.jenjang)));
 }
 
+function pythonDuration(minutes: number | null | undefined): string {
+  const total = Math.floor(Number(minutes ?? 0));
+  if (total <= 0) return "—";
+  const hours = Math.floor(total / 60);
+  const remainder = total % 60;
+  return hours > 0 ? `${hours}h${remainder ? ` ${remainder}m` : ""}` : `${remainder}m`;
+}
+
+function attendanceReport(context: AuthContext, startDate: string, endDate: string, jenjang?: string, className?: string): Row {
+  const academicYear = row(context, "SELECT id FROM academic_years WHERE start_date <= ? AND end_date >= ? LIMIT 1", [endDate, startDate]);
+  const params: any[] = [];
+  const enrollmentJoin = academicYear ? "LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ?" : "LEFT JOIN student_enrollments e ON e.student_id = s.id";
+  if (academicYear) params.push(academicYear.id);
+  const filters = ["a.date >= ?", "a.date <= ?"];
+  params.push(startDate, endDate);
+  const effectiveClass = "COALESCE(c.class_name, e.class_name, s.class_name)";
+  const effectiveJenjang = "COALESCE(j.name, s.jenjang)";
+  if (jenjang && normalizedLower(jenjang) !== "all") { filters.push(`${effectiveJenjang} = ?`); params.push(normalized(jenjang)); }
+  if (className && normalizedLower(className) !== "all") {
+    if (normalizedLower(className) === "unassigned") filters.push(`${effectiveClass} IS NULL`);
+    else { filters.push(`${effectiveClass} = ?`); params.push(normalized(className)); }
+  }
+  const values = rows(context, `SELECT s.id AS student_id, s.name, ${effectiveClass} AS class_name, ${effectiveJenjang} AS jenjang, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'on-time' THEN 1 ELSE 0 END) AS present_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN 1 ELSE 0 END) AS late_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'absent' THEN 1 ELSE 0 END) AS absent_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'incomplete' THEN 1 ELSE 0 END) AS incomplete_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN COALESCE(a.late_duration, 0) ELSE 0 END) AS total_late_duration, COUNT(a.id) AS total_days FROM students s JOIN attendance a ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id ${enrollmentJoin} LEFT JOIN academic_classes c ON c.id = e.academic_class_id LEFT JOIN jenjangs j ON j.id = e.jenjang_id WHERE ${filters.join(" AND ")} GROUP BY s.id, s.name, ${effectiveClass}, ${effectiveJenjang} ORDER BY s.name`, params);
+  const absences = absenceMap(context, startDate, endDate);
+  const results = values.map((value) => {
+    const total = Number(value.total_days);
+    const attended = Number(value.present_count) + Number(value.late_count) + Number(value.incomplete_count);
+    const absence = absences.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0 };
+    return { student_id: Number(value.student_id), name: value.name, class_name: value.class_name, jenjang: value.jenjang, present_count: Number(value.present_count), late_count: Number(value.late_count), absent_count: Number(value.absent_count), incomplete_count: Number(value.incomplete_count), sakit: Number(absence.sakit ?? 0), izin: Number(absence.izin ?? 0), alfa: Number(absence.alfa ?? 0), total_late_time_str: pythonDuration(value.total_late_duration), total_days: total, attendance_percentage: total > 0 ? roundHalfEven(attended / total * 100, 1) : 0 };
+  });
+  const totalLateMinutes = values.reduce((sum, value) => sum + Number(value.total_late_duration ?? 0), 0);
+  const totalLateCount = values.reduce((sum, value) => sum + Number(value.late_count ?? 0), 0);
+  const periods = monthPairs(startDate, endDate);
+  let hebDays = 0;
+  if (jenjang && normalizedLower(jenjang) !== "all") {
+    const original = row(context, "SELECT TRIM(jenjang) AS jenjang FROM students WHERE UPPER(TRIM(COALESCE(jenjang, 'Unassigned'))) = ? LIMIT 1", [normalized(jenjang).toUpperCase()]);
+    const target = original?.jenjang ?? normalized(jenjang);
+    hebDays = periods.reduce((sum, [year, month]) => sum + Number(calculateHeb(context, target, month, year).heb), 0);
+  } else {
+    const jenjangs = rows(context, "SELECT DISTINCT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => String(value.jenjang));
+    const total = jenjangs.reduce((sum, value) => sum + periods.reduce((periodSum, [year, month]) => periodSum + Number(calculateHeb(context, value, month, year).heb), 0), 0);
+    hebDays = jenjangs.length ? roundHalfEven(total / jenjangs.length, 0) : 0;
+  }
+  return { results, summary: { avg_late_time_str: pythonDuration(totalLateCount ? totalLateMinutes / totalLateCount : 0), heb_days: hebDays } };
+}
+
 function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
   const auth = (ctx: Context) => actor(context, ctx, {});
   app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
@@ -648,6 +694,10 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
     const params = defaultYear ? [defaultYear.id] : [];
     return rows(context, `SELECT COALESCE(c.class_name, e.class_name, s.class_name) AS class_name, strftime('%Y-%m', a.date) AS month, COUNT(*) AS late_count FROM attendance a JOIN students s ON s.id = a.student_id ${join} WHERE a.status = 'late' GROUP BY COALESCE(c.class_name, e.class_name, s.class_name), strftime('%Y-%m', a.date)`, params).map((value) => ({ class_name: value.class_name, month: value.month, late_count: Number(value.late_count) }));
   });
+  app.get(`${prefix}/attendance-report`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    try { return attendanceReport(context, ctx.query.start_date, ctx.query.end_date, ctx.query.jenjang, ctx.query.class_name); } catch (error) { return sendError(ctx, error); }
+  }, { query: t.Object({ start_date: t.String(), end_date: t.String(), jenjang: t.Optional(t.String()), class_name: t.Optional(t.String()) }) });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);

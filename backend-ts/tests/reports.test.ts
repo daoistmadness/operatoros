@@ -99,6 +99,15 @@ describe("analytics and report parity", () => {
           { class_name: "7A", month: "2026-08", late_count: 3 },
           { class_name: "1A", month: "2026-08", late_count: 2 },
         ]));
+        const attendanceReport = await app.handle(new Request(`http://local${alias}/attendance-report?start_date=2026-08-01&end_date=2026-08-05`, { headers: { cookie } }));
+        expect(attendanceReport.status).toBe(200);
+        expect(await attendanceReport.json()).toMatchObject({
+          summary: { avg_late_time_str: "17m", heb_days: 16 },
+          results: expect.arrayContaining([
+            expect.objectContaining({ name: "Alice SMP7A", present_count: 3, late_count: 1, absent_count: 0, incomplete_count: 0, sakit: 2, izin: 1, alfa: 0, total_late_time_str: "15m", total_days: 4, attendance_percentage: 100 }),
+            expect.objectContaining({ name: "Dina SMP7B", present_count: 1, late_count: 0, absent_count: 0, incomplete_count: 1, total_days: 2, attendance_percentage: 100 }),
+          ]),
+        });
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
