@@ -1,0 +1,581 @@
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import ExcelJS from "exceljs";
+import { t } from "elysia";
+import { actor } from "./core";
+import type { AuthContext } from "../auth/service";
+
+type Row = Record<string, any>;
+type Context = any;
+type Scope = "combined" | "early_year" | "primary" | "secondary";
+
+const scopes: Record<Scope, string> = {
+  combined: "Combined",
+  early_year: "Early Year Program",
+  primary: "Primary",
+  secondary: "Secondary",
+};
+const reportTitle = "Student Tardiness Report";
+const rekapTitle = "Rekap Absensi Siswa SD";
+const schoolName = "EDELWEISS SCHOOL";
+const indonesianMonths = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
+
+function rows(context: AuthContext, sql: string, params: any[] = []): Row[] {
+  return context.database.client.query(sql).all(...params) as Row[];
+}
+
+function row(context: AuthContext, sql: string, params: any[] = []): Row | null {
+  return (context.database.client.query(sql).get(...params) as Row | null) ?? null;
+}
+
+function fail(set: any, status: number, detail: string): { detail: string } {
+  set.status = status;
+  return { detail };
+}
+
+function normalized(value: string | null | undefined): string {
+  return (value ?? "").trim().replace(/\s+/g, " ");
+}
+
+function normalizedLower(value: string | null | undefined): string {
+  return normalized(value).toLowerCase();
+}
+
+function scopeForLevel(level: string | null | undefined): Scope | null {
+  const value = normalizedLower(level);
+  if (["early year program", "kb", "tk", "kiddy", "kindergarten"].includes(value)) return "early_year";
+  if (["primary", "sd"].includes(value)) return "primary";
+  if (["secondary", "smp"].includes(value)) return "secondary";
+  return null;
+}
+
+function matchesScope(level: string | null | undefined, scope: Scope): boolean {
+  const canonical = scopeForLevel(level);
+  return scope === "combined" ? canonical !== null : canonical === scope;
+}
+
+function parseDate(value: string): { year: number; month: number; day: number } {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) throw new Error("invalid date");
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function monthPeriod(value: string): [string, string] {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) throw Object.assign(new Error("month must use the YYYY-MM format"), { status: 422 });
+  const [year, month] = value.split("-").map(Number) as [number, number];
+  return [`${value}-01`, `${value}-${String(daysInMonth(year, month)).padStart(2, "0")}`];
+}
+
+function monthOptions(start: string, end: string): { value: string; label: string }[] {
+  const first = parseDate(start);
+  const last = parseDate(end);
+  const result: { value: string; label: string }[] = [];
+  let year = first.year;
+  let month = first.month;
+  while (year < last.year || year === last.year && month <= last.month) {
+    const value = `${year}-${String(month).padStart(2, "0")}`;
+    const label = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1)));
+    result.push({ value, label });
+    if (month === 12) { year++; month = 1; } else month++;
+  }
+  return result;
+}
+
+function monthPairs(start: string, end: string): [number, number][] {
+  const first = parseDate(start);
+  const last = parseDate(end);
+  const result: [number, number][] = [];
+  let year = first.year;
+  let month = first.month;
+  while (year < last.year || year === last.year && month <= last.month) {
+    result.push([year, month]);
+    if (month === 12) { year++; month = 1; } else month++;
+  }
+  return result;
+}
+
+function roundHalfEven(value: number, decimals = 1): number {
+  const factor = 10 ** decimals;
+  const scaled = Math.abs(value) * factor;
+  const lower = Math.floor(scaled);
+  const fraction = scaled - lower;
+  const epsilon = 1e-9;
+  let rounded = lower;
+  if (fraction > 0.5 + epsilon) rounded++;
+  else if (Math.abs(fraction - 0.5) <= epsilon && lower % 2 === 1) rounded++;
+  return (value < 0 ? -1 : 1) * rounded / factor;
+}
+
+function roundHalfUp(value: number, decimals = 2): number {
+  const factor = 10 ** decimals;
+  return Math.floor(value * factor + 0.5 + 1e-9) / factor;
+}
+
+function rate(numerator: number, denominator: number): number | null {
+  return denominator ? roundHalfEven((numerator / denominator) * 100, 1) : null;
+}
+
+function average(values: number[]): number | null {
+  return values.length ? roundHalfEven(values.reduce((sum, value) => sum + value, 0) / values.length, 1) : null;
+}
+
+function averageHalfUp(values: number[]): number | null {
+  return values.length ? Math.floor(values.reduce((sum, value) => sum + value, 0) / values.length + 0.5 + 1e-9) : null;
+}
+
+function emptyAttendance(): Row {
+  return { present: 0, sakit: 0, izin: 0, alfa: 0, incomplete: 0, late_days: 0, late_minutes: 0 };
+}
+
+function finalizeAttendance(value: Row): Row {
+  const denominator = value.present + value.sakit + value.izin + value.alfa;
+  return { ...value, attendance_rate: rate(value.present, denominator), late_rate: rate(value.late_days, value.present) };
+}
+
+function scopedEnrollments(context: AuthContext, academicYearId: number, scope: Scope, className?: string | null): { rows: Row[]; unmapped: string[] } {
+  const source = rows(context, `
+    SELECT e.*, s.id AS legacy_student_id, s.name AS student_name, s.jenjang AS student_jenjang,
+           s.class_name AS student_class_name, j.name AS jenjang_name, c.class_name AS academic_class_name
+    FROM student_enrollments e
+    JOIN students s ON s.id = e.student_id
+    JOIN jenjangs j ON j.id = e.jenjang_id
+    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
+    WHERE e.academic_year_id = ?`, [academicYearId]);
+  const wantedClass = className ? normalized(className) : null;
+  const selected: Row[] = [];
+  const unmapped = new Set<string>();
+  for (const value of source) {
+    if (!scopeForLevel(value.jenjang_name)) {
+      unmapped.add(normalized(value.jenjang_name) || "Unknown");
+      continue;
+    }
+    if (!matchesScope(value.jenjang_name, scope)) continue;
+    const resolvedClass = normalized(value.academic_class_name || value.class_name);
+    if (wantedClass !== null && resolvedClass !== wantedClass) continue;
+    selected.push({ ...value, report_class: resolvedClass || "Unknown / Not Provided" });
+  }
+  return { rows: selected, unmapped: [...unmapped].sort((a, b) => a.localeCompare(b)) };
+}
+
+function resolveKkm(context: AuthContext, academicYearId: number, jenjangId: number, subjectId: number, assessmentType: string): number {
+  const candidates: [number | null, number | null, string][] = [
+    [jenjangId, subjectId, assessmentType], [jenjangId, subjectId, "overall"],
+    [jenjangId, null, assessmentType], [jenjangId, null, "overall"],
+    [null, null, assessmentType], [null, null, "overall"],
+  ];
+  for (const [j, subject, kind] of candidates) {
+    const value = row(context, `SELECT threshold FROM kkm_thresholds WHERE academic_year_id = ? AND assessment_type = ? AND ${j === null ? "jenjang_id IS NULL" : "jenjang_id = ?"} AND ${subject === null ? "subject_id IS NULL" : "subject_id = ?"} LIMIT 1`, j === null && subject === null ? [academicYearId, kind] : j === null ? [academicYearId, kind, subject] : subject === null ? [academicYearId, kind, j] : [academicYearId, kind, j, subject]);
+    if (value) return Number(value.threshold);
+  }
+  return 85;
+}
+
+function qualitySection(eligible: number, known: number, denominator: string, excluded = 0): Row {
+  const unknown = Math.max(eligible - known, 0);
+  return { eligible_count: eligible, known_count: known, unknown_count: unknown, excluded_count: excluded, denominator_used: denominator, percentage_basis: denominator, exclusion_reasons: [], reconciliation_difference: eligible - known - unknown, reconciles: eligible === known + unknown };
+}
+
+function demographic(values: (string | null)[], eligible: number): Row {
+  const counts = new Map<string, number>();
+  for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+  const known = [...counts.values()].reduce((sum, value) => sum + value, 0);
+  return { eligible_count: eligible, known_count: known, unknown_count: eligible - known, denominator_used: "known_values", percentage_basis: "known demographic values; eligible-population percentage is also provided", rows: [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count, percentage_of_known: rate(count, known), percentage_of_eligible: rate(count, eligible) })) };
+}
+
+function calculateAutoHeb(context: AuthContext, jenjang: string, month: number, year: number): Row {
+  const start = `${year}-${String(month).padStart(2, "0")}-01`;
+  const end = `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth(year, month)).padStart(2, "0")}`;
+  const counts = rows(context, "SELECT s.id, COUNT(a.id) AS present_days FROM students s JOIN attendance a ON a.student_id = s.id WHERE s.jenjang = ? AND a.check_in IS NOT NULL AND a.date >= ? AND a.date <= ? GROUP BY s.id", [jenjang, start, end]).map((value) => Number(value.present_days)).sort((a, b) => b - a).slice(0, 5);
+  const median = counts.length ? roundHalfEven(counts.length % 2 ? counts[(counts.length - 1) / 2]! : (counts[counts.length / 2 - 1]! + counts[counts.length / 2]!) / 2, 0) : 0;
+  return { heb: median, source: "auto", note: null, derived_from: counts, median };
+}
+
+function calculateHeb(context: AuthContext, jenjang: string, month: number, year: number): Row {
+  const override = row(context, "SELECT heb_value, note FROM heb_overrides WHERE jenjang = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1", [jenjang, month, year]);
+  if (override) return { heb: Number(override.heb_value), source: "manual", note: override.note ?? null, derived_from: null, median: null };
+  return calculateAutoHeb(context, jenjang, month, year);
+}
+
+function reportFilters(context: AuthContext, academicYearId: number | null, scope: Scope): Row {
+  const years = rows(context, "SELECT id, label, start_date, end_date, is_default FROM academic_years ORDER BY start_date, id");
+  const selected = academicYearId === null ? years.find((value) => Number(value.is_default) === 1) ?? years.at(-1) : years.find((value) => Number(value.id) === academicYearId);
+  if (academicYearId !== null && !selected) throw Object.assign(new Error("Academic year not found"), { status: 404 });
+  const enrollment = selected ? scopedEnrollments(context, Number(selected.id), scope, null).rows : [];
+  const subjects = rows(context, "SELECT s.id, s.name, s.jenjang_id, j.name AS jenjang_name FROM subjects s JOIN jenjangs j ON j.id = s.jenjang_id ORDER BY s.name, j.name, s.id").filter((value) => matchesScope(value.jenjang_name, scope)).map((value) => ({ id: Number(value.id), name: value.name, jenjang_id: Number(value.jenjang_id), jenjang_name: value.jenjang_name }));
+  return {
+    academic_years: years.map((value) => ({ id: Number(value.id), name: value.label, start_date: value.start_date, end_date: value.end_date, is_default: Boolean(value.is_default) })),
+    default_academic_year_id: years.find((value) => Number(value.is_default) === 1)?.id ?? null,
+    months: selected ? monthOptions(selected.start_date, selected.end_date) : [],
+    scopes: Object.entries(scopes).map(([value, label]) => ({ value, label })),
+    classes: [...new Set(enrollment.map((value) => value.report_class))].sort((a, b) => a.localeCompare(b)),
+    subjects,
+  };
+}
+
+function buildMonthly(context: AuthContext, academicYearId: number, month: string, scope: Scope, className?: string | null, subjectId?: number | null): Row {
+  const year = row(context, "SELECT * FROM academic_years WHERE id = ?", [academicYearId]);
+  if (!year) throw Object.assign(new Error("Academic year not found"), { status: 404 });
+  const [startDate, endDate] = monthPeriod(month);
+  if (startDate < year.start_date || endDate > year.end_date) throw Object.assign(new Error("Selected month falls outside the academic year"), { status: 422 });
+  if (subjectId !== null && subjectId !== undefined && !row(context, "SELECT id FROM subjects WHERE id = ?", [subjectId])) throw Object.assign(new Error("Subject not found"), { status: 404 });
+  const scoped = scopedEnrollments(context, academicYearId, scope, className);
+  const enrollmentByStudent = new Map<number, Row>();
+  const levelCounts = new Map<string, number>();
+  const classCounts = new Map<string, number>();
+  for (const value of scoped.rows) {
+    enrollmentByStudent.set(Number(value.legacy_student_id), value);
+    levelCounts.set(normalized(value.jenjang_name), (levelCounts.get(normalized(value.jenjang_name)) ?? 0) + 1);
+    classCounts.set(value.report_class, (classCounts.get(value.report_class) ?? 0) + 1);
+  }
+  const studentIds = [...enrollmentByStudent.keys()];
+  const byLevel = new Map<string, Row>();
+  for (const level of levelCounts.keys()) byLevel.set(level, emptyAttendance());
+  let unmatchedAbsent = 0;
+  let malformedLateness = 0;
+  if (studentIds.length) {
+    const placeholders = studentIds.map(() => "?").join(",");
+    const attendances = rows(context, `SELECT a.*, COALESCE(o.override_status, a.status) AS effective_status FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE a.student_id IN (${placeholders}) AND a.date >= ? AND a.date <= ?`, [...studentIds, startDate, endDate]);
+    for (const value of attendances) {
+      const enrollment = enrollmentByStudent.get(Number(value.student_id));
+      if (!enrollment) continue;
+      const bucket = byLevel.get(normalized(enrollment.jenjang_name))!;
+      if (["on-time", "late"].includes(value.effective_status)) bucket.present++;
+      if (value.effective_status === "late") {
+        bucket.late_days++;
+        if (Number.isInteger(value.late_duration) && Number(value.late_duration) >= 0) bucket.late_minutes += Number(value.late_duration);
+        else malformedLateness++;
+      } else if (value.effective_status === "incomplete") bucket.incomplete++;
+      else if (value.effective_status === "absent") unmatchedAbsent++;
+    }
+    const [reportYear, reportMonth] = month.split("-").map(Number);
+    const absences = rows(context, `SELECT * FROM absence_reasons WHERE student_id IN (${placeholders}) AND year = ? AND month = ?`, [...studentIds, reportYear, reportMonth]);
+    for (const value of absences) {
+      const enrollment = enrollmentByStudent.get(Number(value.student_id));
+      if (!enrollment) continue;
+      const bucket = byLevel.get(normalized(enrollment.jenjang_name))!;
+      bucket.sakit += Number(value.sakit ?? 0); bucket.izin += Number(value.izin ?? 0); bucket.alfa += Number(value.alfa ?? 0);
+    }
+  }
+  const overall = emptyAttendance();
+  for (const value of byLevel.values()) for (const key of Object.keys(overall)) overall[key] += Number(value[key] ?? 0);
+  const attendanceByLevel = [...levelCounts.keys()].sort((a, b) => a.localeCompare(b)).map((level) => ({ level, ...finalizeAttendance(byLevel.get(level)!) }));
+  const enrollmentIds = scoped.rows.map((value) => Number(value.id));
+  const gradeValues: { sumatif: number[]; formatif: number[] } = { sumatif: [], formatif: [] };
+  const subjectValues = new Map<string, { id: number; name: string; jenjang: string; sumatif: number[]; formatif: number[] }>();
+  let emptyGradeCells = 0;
+  const belowRows: { studentId: number; subjectId: number; type: string }[] = [];
+  if (enrollmentIds.length) {
+    const placeholders = enrollmentIds.map(() => "?").join(",");
+    const params: any[] = [...enrollmentIds];
+    const subjectClause = subjectId !== null && subjectId !== undefined ? " AND g.subject_id = ?" : "";
+    if (subjectId !== null && subjectId !== undefined) params.push(subjectId);
+    const grades = rows(context, `SELECT g.*, ac.assessment_type, s.name AS subject_name, s.jenjang_id, j.name AS jenjang_name, e.student_id FROM student_subject_grades g JOIN assessment_components ac ON ac.id = g.component_id JOIN subjects s ON s.id = g.subject_id JOIN jenjangs j ON j.id = s.jenjang_id JOIN student_enrollments e ON e.id = g.enrollment_id WHERE g.enrollment_id IN (${placeholders})${subjectClause}`, params);
+    const grouped = new Map<string, { values: number[]; studentId: number; subjectId: number; type: string; subjectName: string; jenjang: string }>();
+    for (const value of grades) {
+      const type = String(value.assessment_type);
+      const key = `${value.student_id}:${value.enrollment_id}:${value.subject_id}:${type}`;
+      if (!grouped.has(key)) grouped.set(key, { values: [], studentId: Number(value.student_id), subjectId: Number(value.subject_id), type, subjectName: value.subject_name, jenjang: value.jenjang_name });
+      const group = grouped.get(key)!;
+      if (value.score === null || value.score === undefined) { emptyGradeCells++; continue; }
+      const score = Number(value.score); group.values.push(score);
+      if (type === "sumatif" || type === "formatif") gradeValues[type].push(score);
+      const subjectKey = `${value.subject_id}:${value.subject_name}:${value.jenjang_name}`;
+      if (!subjectValues.has(subjectKey)) subjectValues.set(subjectKey, { id: Number(value.subject_id), name: value.subject_name, jenjang: value.jenjang_name, sumatif: [], formatif: [] });
+      if (type === "sumatif" || type === "formatif") subjectValues.get(subjectKey)![type].push(score);
+    }
+    for (const group of grouped.values()) {
+      if (!group.values.length) continue;
+      if (average(group.values)! < resolveKkm(context, academicYearId, Number(scoped.rows.find((value) => Number(value.legacy_student_id) === group.studentId)?.jenjang_id ?? 0), group.subjectId, group.type)) belowRows.push({ studentId: group.studentId, subjectId: group.subjectId, type: group.type });
+    }
+  }
+  const academicAvailable = gradeValues.sumatif.length > 0 || gradeValues.formatif.length > 0;
+  const subjectSummaries = [...subjectValues.values()].sort((a, b) => a.name.localeCompare(b.name) || a.jenjang.localeCompare(b.jenjang)).map((value) => ({ subject_id: value.id, subject_name: value.name, jenjang: value.jenjang, sumatif_average: average(value.sumatif), formatif_average: average(value.formatif), below_kkm_count: belowRows.filter((below) => below.subjectId === value.id).length }));
+  const warnings = [
+    "Student gender, religion, and domicile fields are not available in the current Student master schema.",
+    "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available.",
+  ];
+  if (!academicAvailable) warnings.push("Academic data is not available for the selected report context.");
+  if (scoped.unmapped.length) warnings.push(`Unmapped Jenjang values were excluded from report scope calculations: ${scoped.unmapped.join(", ")}.`);
+  if (unmatchedAbsent) warnings.push(`${unmatchedAbsent} effective absent attendance record(s) were not reinterpreted as Sakit, Izin, or Alfa; absence totals use AbsenceReason data.`);
+  if (malformedLateness) warnings.push(`${malformedLateness} malformed lateness duration value(s) were ignored.`);
+  const denominator = overall.present + overall.sakit + overall.izin + overall.alfa;
+  const completeness = rate(denominator, denominator + overall.incomplete);
+  const named = (values: Map<string, number>) => [...values.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count, percentage: rate(count, studentIds.length) }));
+  const label = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${startDate}T00:00:00Z`));
+  return {
+    meta: { report_type: "monthly", scope, academic_year: { id: Number(year.id), name: year.label }, period: { start: startDate, end: endDate }, generated_at: new Date().toISOString() },
+    report_period: { selected_month: month, academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "calendar_month", month_bound: true, label }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "available_academic_year_records", month_bound: false, label: `Available Academic Records - AY ${year.label}` } } },
+    executive_summary: { total_students: studentIds.length, male_students: 0, female_students: 0, attendance_rate: finalizeAttendance(overall).attendance_rate, late_rate: finalizeAttendance(overall).late_rate, late_minutes: overall.late_minutes, below_kkm_count: belowRows.length, data_completeness_rate: completeness },
+    student_distribution: { by_level: named(levelCounts), by_class: named(classCounts), by_gender: [], by_religion: [], by_domicile: [] },
+    attendance_summary: finalizeAttendance(overall), attendance_by_level: attendanceByLevel,
+    academic_summary: { availability: academicAvailable, reason: academicAvailable ? null : "Academic data is not available for the selected report context.", sumatif_average: average(gradeValues.sumatif), formatif_average: average(gradeValues.formatif), below_kkm_count: belowRows.length, by_subject: subjectSummaries },
+    trends: [], data_quality: { missing_gender: studentIds.length, missing_religion: studentIds.length, missing_domicile: studentIds.length, incomplete_attendance: overall.incomplete, empty_grade_cells: emptyGradeCells, unmapped_levels: scoped.unmapped, warnings },
+  };
+}
+
+function buildManagement(context: AuthContext, academicYearId: number, month: string, scope: Scope, className?: string | null, subjectId?: number | null): Row {
+  const executive = buildMonthly(context, academicYearId, month, scope, className, subjectId);
+  const enrollments = scopedEnrollments(context, academicYearId, scope, className).rows;
+  const eligible = enrollments.length;
+  const masterIds = enrollments.map((value) => value.student_master_id).filter(Boolean);
+  const masterMap = new Map(rows(context, masterIds.length ? `SELECT * FROM student_masters WHERE id IN (${masterIds.map(() => "?").join(",")})` : "SELECT * FROM student_masters WHERE 0", masterIds).map((value) => [value.id, value]));
+  const addressMap = new Map(rows(context, masterIds.length ? `SELECT * FROM student_addresses WHERE student_master_id IN (${masterIds.map(() => "?").join(",")})` : "SELECT * FROM student_addresses WHERE 0", masterIds).map((value) => [value.student_master_id, value]));
+  const genders: (string | null)[] = []; const religions: (string | null)[] = []; const locations: (string | null)[] = [];
+  const levelCounts = new Map<string, number>(); const levelClasses = new Map<string, Set<string>>(); const classCounts = new Map<string, number>();
+  for (const value of enrollments) {
+    const level = normalized(value.jenjang_name); levelCounts.set(level, (levelCounts.get(level) ?? 0) + 1); if (!levelClasses.has(level)) levelClasses.set(level, new Set()); levelClasses.get(level)!.add(value.report_class); classCounts.set(`${level}|${value.report_class}`, (classCounts.get(`${level}|${value.report_class}`) ?? 0) + 1);
+    const master = masterMap.get(value.student_master_id); genders.push(master?.gender ? String(master.gender).replace(/^./, (v: string) => v.toUpperCase()) : null); religions.push(master?.religion ?? null); const address = addressMap.get(value.student_master_id); locations.push(address?.kelurahan ? normalized(address.kelurahan).replace(/^./, (v: string) => v.toUpperCase()) : null);
+  }
+  const attendance = executive.attendance_summary;
+  const attendanceDenominator = attendance.present + attendance.sakit + attendance.izin + attendance.alfa;
+  const attendanceStudentIds = new Set(rows(context, enrollments.length ? `SELECT DISTINCT a.student_id FROM attendance a WHERE a.student_id IN (${enrollments.map(() => "?").join(",")}) AND a.date >= ? AND a.date <= ?` : "SELECT student_id FROM attendance WHERE 0", [...enrollments.map((value) => value.legacy_student_id), executive.meta.period.start, executive.meta.period.end]).map((value) => Number(value.student_id)));
+  const academicStudentIds = new Set(rows(context, enrollments.length ? `SELECT DISTINCT enrollment_id FROM student_subject_grades WHERE enrollment_id IN (${enrollments.map(() => "?").join(",")}) AND score IS NOT NULL${subjectId ? " AND subject_id = ?" : ""}` : "SELECT enrollment_id FROM student_subject_grades WHERE 0", [...enrollments.map((value) => value.id), ...(subjectId ? [subjectId] : [])]).map((value) => value.enrollment_id));
+  const populationByLevel = [...levelCounts.entries()].sort().map(([jenjang, count]) => ({ jenjang, student_count: count, percentage_of_eligible: rate(count, eligible), class_count: levelClasses.get(jenjang)?.size ?? 0, classification: "known" }));
+  const populationByClass = [...classCounts.entries()].sort().map(([key, count]) => { const [jenjang = "", name = ""] = key.split("|"); return { jenjang, class_name: name, student_count: count, percentage_within_jenjang: rate(count, levelCounts.get(jenjang) ?? 0), percentage_of_eligible: rate(count, eligible) }; });
+  const gender = demographic(genders, eligible); const religion = demographic(religions, eligible); const location = demographic(locations, eligible);
+  const quality = { reconciliation: { population_total: eligible, student_master_linked: masterMap.size, student_master_unlinked: eligible - masterMap.size, religion_known: religion.known_count, religion_unknown: religion.unknown_count, gender_known: gender.known_count, gender_unknown: gender.unknown_count, location_known: location.known_count, location_unknown: location.unknown_count }, sections: { population: qualitySection(eligible, eligible, "selected academic-year enrollments"), religion: qualitySection(eligible, religion.known_count, "known religion values"), gender: qualitySection(eligible, gender.known_count, "known gender values"), residential_area: qualitySection(eligible, location.known_count, "known kelurahan values"), attendance: { ...qualitySection(eligible, attendanceStudentIds.size, "eligible students with selected-month attendance records"), attendance_event_denominator: attendanceDenominator }, academics: qualitySection(eligible, Math.min(eligible, academicStudentIds.size), "students represented by available academic-year records") }, unmapped_levels: scopedEnrollments(context, academicYearId, scope, className).unmapped, warnings: ["Demographic percentages use their disclosed known-value denominator and are never forced to match another section total.", "Academic figures use available academic-year records and are not restricted to the selected calendar month.", ...executive.data_quality.warnings.map((value: string) => value.replace("Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available.", "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available."))] };
+  return { metadata: { report_type: "monthly_management", title: "Monthly Management Report", scope, academic_year: executive.meta.academic_year, generated_at: executive.meta.generated_at, filters: { class_name: className ?? null, subject_id: subjectId ?? null } }, report_period: executive.report_period, executive_summary: { total_students: eligible, total_classes: classCounts.size, attendance_rate: attendance.attendance_rate, present_count: attendance.present, excused_absence_count: attendance.izin, sick_count: attendance.sakit, unexcused_absence_count: attendance.alfa, late_count: attendance.late_days, students_below_kkm: executive.academic_summary.below_kkm_count, data_completeness_rate: executive.executive_summary.data_completeness_rate, attendance_denominator: attendanceDenominator }, student_population: { eligible_count: eligible, by_jenjang: populationByLevel, by_class: populationByClass }, attendance: { summary: attendance, by_jenjang: executive.attendance_by_level }, academic_summary: executive.academic_summary, demographics: { religion, gender, residential_area: location }, data_quality: quality };
+}
+
+function comparison(values: Row[], highest: boolean): Row | null {
+  const valid = values.filter((value) => value.attendance_denominator > 0 && value.attendance_rate !== null);
+  if (!valid.length) return null;
+  const best = (highest ? Math.max : Math.min)(...valid.map((value) => value.attendance_rate));
+  const selected = valid.find((value) => value.attendance_rate === best)!;
+  return { name: selected.name, attendance_rate: selected.attendance_rate, attendance_denominator: selected.attendance_denominator };
+}
+
+function buildAnnual(context: AuthContext, academicYearId: number, scope: Scope, className?: string | null, subjectId?: number | null): Row {
+  const year = row(context, "SELECT * FROM academic_years WHERE id = ?", [academicYearId]);
+  if (!year) throw Object.assign(new Error("Academic year not found"), { status: 404 });
+  const options = monthOptions(year.start_date, year.end_date);
+  const reports = options.map((value) => buildMonthly(context, academicYearId, value.value, scope, className, subjectId));
+  const total = emptyAttendance(); const levelTotals = new Map<string, Row>(); const trends: Row[] = [];
+  for (let index = 0; index < reports.length; index++) {
+    const report = reports[index]!; const value = report.attendance_summary;
+    for (const key of Object.keys(total)) total[key] += Number(value[key] ?? 0);
+    const denominator = value.present + value.sakit + value.izin + value.alfa;
+    trends.push({ month: options[index]!.value, label: options[index]!.label, present: value.present, sakit: value.sakit, izin: value.izin, alfa: value.alfa, incomplete: value.incomplete, attendance_denominator: denominator, attendance_rate: rate(value.present, denominator), late_days: value.late_days, late_minutes: value.late_minutes, late_rate: rate(value.late_days, value.present), sumatif_average: null, formatif_average: null, below_kkm_count: 0 });
+    for (const level of report.attendance_by_level) { if (!levelTotals.has(level.level)) levelTotals.set(level.level, emptyAttendance()); const bucket = levelTotals.get(level.level)!; for (const key of Object.keys(bucket)) bucket[key] += Number(level[key] ?? 0); }
+  }
+  const finalized = finalizeAttendance(total); const annualLevels: Row[] = [...levelTotals.keys()].sort().map((level) => ({ level, ...finalizeAttendance(levelTotals.get(level)!) }));
+  const base = reports[0] ?? buildMonthly(context, academicYearId, `${String(year.start_date).slice(0, 7)}`, scope, className, subjectId);
+  const academicUnavailable = base.data_quality.warnings.find((value: string) => value === "Academic data is not available for the selected report context.");
+  const warnings = [...base.data_quality.warnings.filter((value: string) => !value.includes("Student population") && !value.includes("Academic data is not available") && !value.includes("Monthly academic trends")), "Historical enrollment snapshots are not available; student population represents the selected academic year's enrollment snapshot.", ...(academicUnavailable ? [academicUnavailable] : []), "Monthly academic trends are unavailable because Grade Ledger scores do not have an assessment-month field."];
+  for (const report of reports) for (const warning of report.data_quality.warnings) if (!warnings.includes(warning) && !warning.includes("Student population")) warnings.push(warning);
+  const denominator = total.present + total.sakit + total.izin + total.alfa;
+  const monthRows = trends.map((value) => ({ name: value.month, attendance_rate: value.attendance_rate, attendance_denominator: value.attendance_denominator }));
+  const levelRows = annualLevels.map((value) => ({ name: value.level, attendance_rate: value.attendance_rate, attendance_denominator: value.present + value.sakit + value.izin + value.alfa }));
+  return { meta: { report_type: "annual", scope, academic_year: { id: Number(year.id), name: year.label }, period: { start: year.start_date, end: year.end_date }, generated_at: new Date().toISOString() }, report_period: { selected_month: "", academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "academic_year", month_bound: false, label: `Academic Year ${year.label}` }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "available_academic_year_records", month_bound: false, label: `Available Academic Records - AY ${year.label}` } } }, executive_summary: { total_students: base.executive_summary.total_students, male_students: 0, female_students: 0, attendance_rate: finalized.attendance_rate, late_rate: finalized.late_rate, late_minutes: total.late_minutes, below_kkm_count: base.academic_summary.below_kkm_count, data_completeness_rate: rate(denominator, denominator + total.incomplete) }, student_distribution: base.student_distribution, attendance_summary: finalized, attendance_by_level: annualLevels, academic_summary: base.academic_summary, trends, comparisons: { highest_attendance_month: comparison(monthRows, true), lowest_attendance_month: comparison(monthRows, false), highest_attendance_level: comparison(levelRows, true), lowest_attendance_level: comparison(levelRows, false) }, data_quality: { missing_gender: base.executive_summary.total_students, missing_religion: base.executive_summary.total_students, missing_domicile: base.executive_summary.total_students, incomplete_attendance: total.incomplete, empty_grade_cells: base.data_quality.empty_grade_cells, unmapped_levels: base.data_quality.unmapped_levels, warnings } };
+}
+
+function reportPeriod(month?: number, year?: number, dateFrom?: string, dateTo?: string, term?: number): Row {
+  if ((dateFrom === undefined) !== (dateTo === undefined)) throw Object.assign(new Error("date_from and date_to must be provided together"), { status: 400 });
+  if (dateFrom && dateTo) { if (dateFrom > dateTo) throw Object.assign(new Error("date_from must be before or equal to date_to"), { status: 400 }); return { date_from: dateFrom, date_to: dateTo, label: `${dateFrom.split("-").reverse().join("/")} - ${dateTo.split("-").reverse().join("/")}`, mode: "date_range" }; }
+  if (term !== undefined && year === undefined) throw Object.assign(new Error("year is required when term is provided"), { status: 400 });
+  if (month !== undefined && year === undefined) throw Object.assign(new Error("year is required when month is provided"), { status: 400 });
+  if (term !== undefined && year !== undefined) { const ranges: Record<number, [number, number, string]> = { 1: [7, 9, "July–September"], 2: [10, 12, "October–December"], 3: [1, 3, "January–March"], 4: [4, 6, "April–June"] }; const value = ranges[term]; if (!value) throw Object.assign(new Error("invalid term"), { status: 400 }); const start = `${year}-${String(value[0]).padStart(2, "0")}-01`; const end = `${year}-${String(value[1]).padStart(2, "0")}-${String(daysInMonth(year, value[1])).padStart(2, "0")}`; return { date_from: start, date_to: end, label: `Term ${term} (${value[2]}) - TA ${year}/${year + 1}`, mode: "term" }; }
+  if (month !== undefined && year !== undefined) { const start = `${year}-${String(month).padStart(2, "0")}-01`; const end = `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth(year, month)).padStart(2, "0")}`; return { date_from: start, date_to: end, label: `${indonesianMonths[month - 1]} ${year}`, mode: "month" }; }
+  const now = new Date(); const currentYear = now.getUTCFullYear(); const currentMonth = now.getUTCMonth() + 1; return { date_from: `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`, date_to: `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(daysInMonth(currentYear, currentMonth)).padStart(2, "0")}`, label: `${indonesianMonths[currentMonth - 1]} ${currentYear}`, mode: "current_month" };
+}
+
+function timeLabel(minutes: number): string { return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`; }
+
+function absenceMap(context: AuthContext, start: string, end: string): Map<string, Row> {
+  const pairs = monthPairs(start, end); const values = new Map<string, Row>();
+  for (const [year, month] of pairs) {
+    const classRows = rows(context, "SELECT class_name, sakit, izin, alfa FROM absence_reason_class_entries WHERE year = ? AND month = ?", [year, month]);
+    const classKeys = new Set(classRows.map((value) => value.class_name));
+    for (const value of classRows) { const current = values.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; current.sakit += Number(value.sakit ?? 0); current.izin += Number(value.izin ?? 0); current.alfa += Number(value.alfa ?? 0); current.total_absence_reasons = current.sakit + current.izin + current.alfa; values.set(value.class_name, current); }
+    const studentRows = rows(context, "SELECT class_name, sakit, izin, alfa FROM absence_reasons WHERE year = ? AND month = ?", [year, month]);
+    for (const value of studentRows) { if (classKeys.has(value.class_name)) continue; const current = values.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; current.sakit += Number(value.sakit ?? 0); current.izin += Number(value.izin ?? 0); current.alfa += Number(value.alfa ?? 0); current.total_absence_reasons = current.sakit + current.izin + current.alfa; values.set(value.class_name, current); }
+  }
+  return values;
+}
+
+function buildTardiness(context: AuthContext, period: Row, jenjang?: string | null, includeDetail = false): Row {
+  const params: any[] = [period.date_from, period.date_to]; const filter = jenjang && normalizedLower(jenjang) !== "all" ? " AND UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) = ?" : ""; if (filter) params.push(normalized(jenjang).toUpperCase());
+  const lateRows = rows(context, `SELECT a.student_id, a.date AS attendance_date, s.name, COALESCE(NULLIF(TRIM(s.class_name), ''), 'Belum Diatur') AS class_name, UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, COALESCE(a.late_duration, 0) AS late_duration FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' AND a.date >= ? AND a.date <= ?${filter}`, params);
+  const absences = absenceMap(context, period.date_from, period.date_to);
+  const tracked = Number((row(context, "SELECT COUNT(DISTINCT date) AS count FROM attendance WHERE date >= ? AND date <= ? AND status <> 'skipped'", [period.date_from, period.date_to]) as Row)?.count ?? 0);
+  const totalMinutes = lateRows.reduce((sum, value) => sum + Number(value.late_duration ?? 0), 0); const uniqueDays = new Set(lateRows.map((value) => value.attendance_date)).size; const incidents = lateRows.length; const students = new Set(lateRows.map((value) => value.student_id)).size;
+  const byJenjang = new Map<string, Row>(); const byClass = new Map<string, Row>();
+  for (const value of lateRows) {
+    const j = byJenjang.get(value.jenjang) ?? { jenjang: value.jenjang, total_late_duration_minutes: 0, total_days_late: 0, late_student_count: new Set<number>() }; j.total_late_duration_minutes += Number(value.late_duration); j.total_days_late++; j.late_student_count.add(Number(value.student_id)); byJenjang.set(value.jenjang, j);
+    const key = `${value.jenjang}|${value.class_name}`; const c = byClass.get(key) ?? { class_name: value.class_name, jenjang: value.jenjang, total_late_duration_minutes: 0, total_days_late: new Set<string>(), late_student_count: new Set<number>() }; c.total_late_duration_minutes += Number(value.late_duration); c.total_days_late.add(value.attendance_date); c.late_student_count.add(Number(value.student_id)); byClass.set(key, c);
+  }
+  const grandJenjangMinutes = [...byJenjang.values()].reduce((sum, value) => sum + value.total_late_duration_minutes, 0); const grandJenjangDays = [...byJenjang.values()].reduce((sum, value) => sum + value.total_days_late, 0); const grandClassMinutes = [...byClass.values()].reduce((sum, value) => sum + value.total_late_duration_minutes, 0); const grandClassDays = [...byClass.values()].reduce((sum, value) => sum + value.total_days_late.size, 0);
+  const summaryByJenjang = [...byJenjang.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang)).map((value) => ({ jenjang: value.jenjang, total_late_duration_minutes: value.total_late_duration_minutes, total_late_duration_str: timeLabel(value.total_late_duration_minutes), late_duration_pct: grandJenjangMinutes ? roundHalfEven(value.total_late_duration_minutes / grandJenjangMinutes * 100, 1) : 0, total_days_late: value.total_days_late, days_late_pct: grandJenjangDays ? roundHalfEven(value.total_days_late / grandJenjangDays * 100, 1) : 0, late_student_count: value.late_student_count.size }));
+  const breakdown = [...byClass.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.class_name.localeCompare(b.class_name)).map((value) => { const absence = absences.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; return { class_name: value.class_name, jenjang: value.jenjang, total_late_duration_minutes: value.total_late_duration_minutes, total_late_duration_str: timeLabel(value.total_late_duration_minutes), late_duration_pct: grandClassMinutes ? roundHalfEven(value.total_late_duration_minutes / grandClassMinutes * 100, 1) : 0, total_days_late: value.total_days_late.size, days_late_pct: grandClassDays ? roundHalfEven(value.total_days_late.size / grandClassDays * 100, 1) : 0, late_student_count: value.late_student_count.size, ...absence }; });
+  const hebByJenjang: Row = {}; for (const value of new Set(lateRows.map((item) => item.jenjang))) { const raw = rows(context, "SELECT jenjang FROM students WHERE UPPER(TRIM(COALESCE(jenjang, 'Unassigned'))) = ? LIMIT 1", [value])[0]?.jenjang ?? value; hebByJenjang[value] = monthPairs(period.date_from, period.date_to).reduce((sum, [py, pm]) => sum + Number(calculateHeb(context, raw, pm, py).heb), 0); }
+  const result: Row = { report_title: reportTitle, school_name: schoolName, period: { label: period.label, date_from: period.date_from, date_to: period.date_to }, heb_by_jenjang: hebByJenjang, summary_by_jenjang: summaryByJenjang, breakdown_by_class: breakdown, totals: { total_late_duration_minutes: totalMinutes, total_late_duration_str: timeLabel(totalMinutes), total_days_late: incidents, total_late_incidents: incidents, unique_late_days: uniqueDays, tracked_school_days: tracked, school_impact_rate_pct: tracked ? roundHalfEven(uniqueDays / tracked * 100, 1) : 0, average_lateness_density: uniqueDays ? roundHalfEven(incidents / uniqueDays, 2) : 0, total_students_ever_late: students }, management_summary: { total_late_incidents: incidents, unique_late_days: uniqueDays, tracked_school_days: tracked, school_impact_rate_pct: tracked ? roundHalfEven(uniqueDays / tracked * 100, 1) : 0, average_lateness_density: uniqueDays ? roundHalfEven(incidents / uniqueDays, 2) : 0 } };
+  if (includeDetail) {
+    const details = new Map<number, Row>(); for (const value of lateRows) { const current = details.get(Number(value.student_id)) ?? { no_id: Number(value.student_id), nama: value.name, kelas: value.class_name, jenjang: value.jenjang, total_days_late: 0, total_late_duration_minutes: 0 }; current.total_days_late++; current.total_late_duration_minutes += Number(value.late_duration); details.set(Number(value.student_id), current); }
+    result.student_details = [...details.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama)).map((value) => ({ ...value, total_durasi: timeLabel(value.total_late_duration_minutes), rata_rata_durasi: timeLabel(Math.round(value.total_late_duration_minutes / value.total_days_late)), ...(() => { const absence = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id = ? AND date(year || '-' || printf('%02d', month) || '-01') <= date(?) AND date(year || '-' || printf('%02d', month) || '-01') <= date(?)", [value.no_id, period.date_to, period.date_to])[0] ?? {}; return { sakit: Number(absence.sakit ?? 0), izin: Number(absence.izin ?? 0), alfa: Number(absence.alfa ?? 0) }; })() })); result.detail_summary = { average_late_duration_str: incidents ? timeLabel(Math.round(totalMinutes / incidents)) : "00:00" };
+  }
+  return result;
+}
+
+function buildTardinessSummary(context: AuthContext, period: Row, jenjang?: string | null): Row[] {
+  const params: any[] = [period.date_from, period.date_to];
+  const filter = jenjang && normalizedLower(jenjang) !== "all" ? " AND UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) = ?" : "";
+  if (filter) params.push(normalized(jenjang).toUpperCase());
+  const grouped = rows(context, `SELECT UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, COUNT(*) AS total_kejadian, COUNT(DISTINCT a.date) AS hari_efektif_terlambat FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' AND a.date >= ? AND a.date <= ?${filter} GROUP BY UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) ORDER BY jenjang`, params).map((value) => ({ jenjang: value.jenjang, total_kejadian: Number(value.total_kejadian), hari_efektif_terlambat: Number(value.hari_efektif_terlambat) }));
+  const total = grouped.reduce((sum, value) => sum + value.total_kejadian, 0);
+  return grouped.map((value) => ({ ...value, rata_rata_siswa_terlambat_per_hari: value.hari_efektif_terlambat ? roundHalfEven(value.total_kejadian / value.hari_efektif_terlambat, 1) : 0, percentage_of_total: total ? roundHalfEven(value.total_kejadian / total * 100, 1) : 0 }));
+}
+
+function normalizeV2Percentages(values: { hadir_pct: number | null; sakit_pct: number | null; izin_pct: number | null; alfa_pct: number | null }): Row {
+  if (Object.values(values).some((value) => value === null)) return { ...values, total_pct: null };
+  const numeric = values as { hadir_pct: number; sakit_pct: number; izin_pct: number; alfa_pct: number };
+  const total = Object.values(numeric).reduce((sum, value) => sum + value, 0);
+  return { ...numeric, hadir_pct: Math.abs(total - 100) > 0.001 ? Math.max(0, numeric.hadir_pct + 100 - total) : numeric.hadir_pct, total_pct: 100 };
+}
+
+function buildRekap(context: AuthContext, period: Row): Row {
+  const students = rows(context, "SELECT UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, TRIM(s.jenjang) AS raw_jenjang, TRIM(s.class_name) AS class_name, COUNT(*) AS student_count FROM students s WHERE TRIM(COALESCE(s.jenjang, '')) <> '' AND TRIM(COALESCE(s.class_name, '')) <> '' GROUP BY UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))), TRIM(s.jenjang), TRIM(s.class_name)");
+  const classes = new Map<string, Map<string, Row>>(); const rawLevels = new Map<string, string>();
+  for (const value of students) { if (!classes.has(value.jenjang)) classes.set(value.jenjang, new Map()); classes.get(value.jenjang)!.set(value.class_name, { student_count: Number(value.student_count), hadir_days: 0 }); rawLevels.set(value.jenjang, value.raw_jenjang); }
+  const attendance = rows(context, "SELECT UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, TRIM(s.class_name) AS class_name, COUNT(a.id) AS hadir_days FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE a.date >= ? AND a.date <= ? AND TRIM(COALESCE(s.jenjang, '')) <> '' AND TRIM(COALESCE(s.class_name, '')) <> '' AND COALESCE(o.override_status, a.status) IN ('on-time', 'late') GROUP BY UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))), TRIM(s.class_name)", [period.date_from, period.date_to]);
+  for (const value of attendance) classes.get(value.jenjang)?.get(value.class_name) && (classes.get(value.jenjang)!.get(value.class_name)!.hadir_days = Number(value.hadir_days));
+  const absence = new Map<string, Row>();
+  for (const [year, month] of monthPairs(period.date_from, period.date_to)) for (const value of rows(context, "SELECT TRIM(class_name) AS class_name, COALESCE(SUM(sakit), 0) AS sakit, COALESCE(SUM(izin), 0) AS izin, COALESCE(SUM(alfa), 0) AS alfa FROM absence_reason_class_entries WHERE year = ? AND month = ? GROUP BY TRIM(class_name)", [year, month])) absence.set(value.class_name, { sakit: Number(value.sakit), izin: Number(value.izin), alfa: Number(value.alfa) });
+  const missingLevels: string[] = []; const jenjang: Row[] = []; let hasIssue = false; let affectedClasses = 0;
+  for (const level of [...classes.keys()].sort()) {
+    const heb = monthPairs(period.date_from, period.date_to).reduce((sum, [py, pm]) => sum + Number(calculateHeb(context, rawLevels.get(level)!, pm, py).heb), 0);
+    if (!heb) missingLevels.push(level);
+    const classRows: Row[] = []; let sumH = 0; let sumS = 0; let sumI = 0; let sumA = 0; let sumL = 0; let sumTotal = 0;
+    for (const className of [...classes.get(level)!.keys()].sort()) {
+      const base = classes.get(level)!.get(className)!; const sia = absence.get(className) ?? { sakit: 0, izin: 0, alfa: 0 }; const studentCount = base.student_count; let hadir = base.hadir_days; const sakit = sia.sakit; const izin = sia.izin; const alfa = sia.alfa; const expected = studentCount * heb; let total = hadir + sakit + izin + alfa; let lain2 = 0; const flags: Row = {};
+      if (heb > 0) { lain2 = Math.max(0, expected - total); hadir += lain2; total += lain2; lain2 = 0; } else flags.expected_total_missing = true;
+      if (total === 0) { flags.no_valid_data = true; flags.data_quality_issue = true; hasIssue = true; affectedClasses++; }
+      const percentages = total ? normalizeV2Percentages({ hadir_pct: roundHalfUp(hadir / total * 100), sakit_pct: roundHalfUp(sakit / total * 100), izin_pct: roundHalfUp(izin / total * 100), alfa_pct: roundHalfUp(alfa / total * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, total_pct: null };
+      sumH += hadir; sumS += sakit; sumI += izin; sumA += alfa; sumL += lain2; sumTotal += total;
+      classRows.push({ class_name: className, student_count: studentCount, hadir, sakit, izin, alfa, lain2, total, percentages, warning_flags: flags });
+    }
+    const percentages = sumTotal ? normalizeV2Percentages({ hadir_pct: roundHalfUp(sumH / sumTotal * 100), sakit_pct: roundHalfUp(sumS / sumTotal * 100), izin_pct: roundHalfUp(sumI / sumTotal * 100), alfa_pct: roundHalfUp(sumA / sumTotal * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, total_pct: null };
+    jenjang.push({ name: level, classes: classRows, summary: { hadir: sumH, sakit: sumS, izin: sumI, alfa: sumA, lain2: sumL, total: sumTotal, heb, percentages } });
+  }
+  const global = { hadir: jenjang.reduce((sum, value) => sum + value.summary.hadir, 0), sakit: jenjang.reduce((sum, value) => sum + value.summary.sakit, 0), izin: jenjang.reduce((sum, value) => sum + value.summary.izin, 0), alfa: jenjang.reduce((sum, value) => sum + value.summary.alfa, 0), lain2: jenjang.reduce((sum, value) => sum + value.summary.lain2, 0), total: jenjang.reduce((sum, value) => sum + value.summary.total, 0) };
+  const percentages = global.total ? normalizeV2Percentages({ hadir_pct: roundHalfUp(global.hadir / global.total * 100), sakit_pct: roundHalfUp(global.sakit / global.total * 100), izin_pct: roundHalfUp(global.izin / global.total * 100), alfa_pct: roundHalfUp(global.alfa / global.total * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, total_pct: null };
+  const warnings: string[] = []; if (missingLevels.length) warnings.push(`HEB belum tersedia untuk beberapa jenjang: ${[...missingLevels].sort((a, b) => b.localeCompare(a)).join(", ")}.`); const periodSia = rows(context, "SELECT id FROM absence_reason_class_entries WHERE year = ? AND month >= ? AND month <= ? LIMIT 1", [parseDate(period.date_from).year, parseDate(period.date_from).month, parseDate(period.date_to).month]).length; if (!periodSia) warnings.push("Data Sakit/Izin/Alfa belum diisi untuk periode ini.");
+  return { report_title: rekapTitle, school_name: schoolName, period: { date_from: period.date_from, date_to: period.date_to, label: period.label, term: period.term ?? null, year: period.year ?? parseDate(period.date_to).year }, jenjang, heb_by_jenjang: Object.fromEntries(jenjang.map((value) => [value.name, value.summary.heb])), global_summary: { ...global, percentages }, chart_data: [{ label: "Hadir", value: percentages.hadir_pct ?? 0 }, { label: "Sakit", value: percentages.sakit_pct ?? 0 }, { label: "Izin", value: percentages.izin_pct ?? 0 }, { label: "Alfa", value: percentages.alfa_pct ?? 0 }], warnings, global_flags: { has_data_quality_issue: hasIssue, affected_classes: affectedClasses, heb_missing: missingLevels.length > 0, sia_missing: !periodSia } };
+}
+
+async function reportPdf(title: string, report: Row): Promise<Uint8Array> {
+  const document = await PDFDocument.create(); const page = document.addPage([842, 595]); const font = await document.embedFont(StandardFonts.Helvetica); const bold = await document.embedFont(StandardFonts.HelveticaBold); let y = 550;
+  page.drawText(schoolName, { x: 32, y, size: 14, font: bold, color: rgb(0.12, 0.23, 0.54) }); y -= 28; page.drawText(title, { x: 32, y, size: 18, font: bold }); y -= 28;
+  const summary = report.executive_summary ?? report.totals ?? report.management_summary ?? {};
+  for (const [key, value] of Object.entries(summary)) { if (y < 40) break; page.drawText(`${key}: ${value == null ? "-" : String(value)}`, { x: 32, y, size: 10, font }); y -= 16; }
+  return document.save();
+}
+
+function safeName(value: string): string { return normalized(value).replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "report"; }
+
+async function reportWorkbook(report: Row): Promise<Uint8Array> {
+  const workbook = new ExcelJS.Workbook(); const executive = report.executive_summary; const add = (name: string, headers: string[], values: any[][]) => { const sheet = workbook.addWorksheet(name); sheet.addRow(headers); for (const value of values) sheet.addRow(value); sheet.getRow(1).font = { bold: true }; sheet.views = [{ state: "frozen", ySplit: 1 }]; for (const column of sheet.columns) column.width = Math.min(36, Math.max(12, ...(column.values ?? []).map((value) => String(value ?? "").length + 2))); };
+  add("Executive Summary", ["Metric", "Value"], Object.entries(executive ?? {}).map(([key, value]) => [key, value]));
+  add("Attendance", ["Level", "Present", "Sakit", "Izin", "Alfa", "Incomplete", "Late Days", "Late Minutes", "Attendance Rate", "Late Rate"], [report.attendance_summary, ...(report.attendance_by_level ?? [])].map((value: Row, index: number) => [index ? value.level : "Overall", value.present, value.sakit, value.izin, value.alfa, value.incomplete, value.late_days, value.late_minutes, value.attendance_rate, value.late_rate]));
+  add("Student Distribution", ["Dimension", "Name", "Count", "Percentage"], Object.entries(report.student_distribution ?? {}).flatMap(([dimension, values]) => (values as Row[]).map((value) => [dimension, value.name, value.count, value.percentage])));
+  const academic = report.academic_summary ?? {}; add("Academic Summary", ["Subject", "Level", "Sumatif Average", "Formatif Average", "Below KKM Count", "Available", "Reason"], [["Overall", null, academic.sumatif_average, academic.formatif_average, academic.below_kkm_count, academic.availability, academic.reason], ...(academic.by_subject ?? []).map((value: Row) => [value.subject_name, value.jenjang, value.sumatif_average, value.formatif_average, value.below_kkm_count, true, null])]);
+  if (report.meta?.report_type === "annual") add("Annual Trends", ["Month", "Label", "Present", "Sakit", "Izin", "Alfa", "Incomplete", "Attendance Denominator", "Attendance Rate", "Late Days", "Late Minutes", "Late Rate", "Sumatif Average", "Formatif Average", "Below KKM Count"], (report.trends ?? []).map((value: Row) => Object.values(value)));
+  const quality = report.data_quality ?? {}; add("Data Quality", ["Metric", "Value"], [["Missing Gender", quality.missing_gender], ["Missing Religion", quality.missing_religion], ["Missing Domicile", quality.missing_domicile], ["Incomplete Attendance", quality.incomplete_attendance], ["Empty Grade Cells", quality.empty_grade_cells], ["Unmapped Levels", (quality.unmapped_levels ?? []).join(", ")], ...(quality.warnings ?? []).map((value: string) => ["Warning", value])]);
+  return new Uint8Array(await workbook.xlsx.writeBuffer());
+}
+
+async function rekapWorkbook(report: Row): Promise<Uint8Array> {
+  const workbook = new ExcelJS.Workbook();
+  const summary = workbook.addWorksheet("Rekap Absensi");
+  summary.addRow([report.report_title]);
+  summary.addRow([report.period.label]);
+  summary.addRow(["JENJANG", "KELAS", "HEB", "HADIR", "SAKIT", "IZIN", "ALFA", "TOTAL"]);
+  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) summary.addRow([level.name, value.class_name, level.summary?.heb ?? level.classes?.[0]?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.total]);
+  summary.getRow(3).font = { bold: true };
+  summary.views = [{ state: "frozen", ySplit: 3 }];
+  const detail = workbook.addWorksheet("Detail");
+  detail.addRow(["JENJANG", "SISWA", "HEB", "HADIR (hari)", "SAKIT", "IZIN", "ALFA", "LAIN2"]);
+  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) detail.addRow([level.name, value.student_count, level.summary.heb, value.hadir, value.sakit, value.izin, value.alfa, value.lain2]);
+  detail.getRow(1).font = { bold: true };
+  return new Uint8Array(await workbook.xlsx.writeBuffer());
+}
+
+async function tardinessWorkbook(report: Row, managementOnly: boolean): Promise<Uint8Array> {
+  const workbook = new ExcelJS.Workbook();
+  const summary = workbook.addWorksheet(managementOnly ? "Executive Summary" : "Management Summary");
+  summary.addRow(["Metric", "Value"]);
+  for (const [key, value] of Object.entries(report.management_summary ?? {})) summary.addRow([key, value]);
+  const levels = workbook.addWorksheet(managementOnly ? "Jenjang Late Summary" : "Summary by Jenjang");
+  levels.addRow(["Level", "HEB", "Total Late Incidents", "Percentage of Total", "Effective Late Days", "Late Students"]);
+  for (const value of report.summary_by_jenjang as Row[]) levels.addRow([value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_days_late, value.days_late_pct, value.total_days_late, value.late_student_count]);
+  if (!managementOnly) {
+    const classes = workbook.addWorksheet("Class Breakdown");
+    classes.addRow(["Class", "Level", "HEB", "Total Late Duration", "% Duration", "Unique Late Days", "% Late Days", "Late Students"]);
+    for (const value of report.breakdown_by_class as Row[]) classes.addRow([value.class_name, value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_late_duration_str, value.late_duration_pct, value.total_days_late, value.days_late_pct, value.late_student_count]);
+    const students = workbook.addWorksheet("Student Details");
+    students.addRow(["ID", "Name", "Class", "Level", "Late Days", "Total Duration", "Average Duration"]);
+    for (const value of report.student_details ?? []) students.addRow([value.no_id, value.nama, value.kelas, value.jenjang, value.total_days_late, value.total_durasi, value.rata_rata_durasi]);
+  }
+  return new Uint8Array(await workbook.xlsx.writeBuffer());
+}
+
+function bodyQuery(): any { return { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(t.Union([t.Literal("combined"), t.Literal("early_year"), t.Literal("primary"), t.Literal("secondary")])), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) }; }
+
+function queryNumber(value: unknown): number | null { if (value === undefined || value === null || value === "") return null; const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; }
+
+function sendError(ctx: Context, error: any): { detail: string } { const status = Number(error?.status ?? 500); ctx.set.status = status; return { detail: status >= 500 ? "The report could not be generated. Please review the selected parameters." : String(error?.message ?? error) }; }
+
+function sendFile(bytes: Uint8Array, format: "pdf" | "xlsx", filename: string): Response { return new Response(bytes, { headers: { "content-type": format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeName(filename)}.${format}"`, "cache-control": "no-store, no-cache, must-revalidate, private", pragma: "no-cache" } }); }
+
+function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
+  const auth = (ctx: Context) => actor(context, ctx, {});
+  app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
+  app.get(`${prefix}/heb`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    const month = queryNumber(ctx.query.month);
+    const year = queryNumber(ctx.query.year);
+    if (!month || month < 1 || month > 12 || !year || year < 1900) return fail(ctx.set, 422, "month and year are required");
+    const values = rows(context, "SELECT DISTINCT jenjang FROM students WHERE jenjang IS NOT NULL ORDER BY jenjang").map((value) => normalized(value.jenjang)).filter(Boolean).map((jenjang) => {
+      const auto = calculateAutoHeb(context, jenjang, month, year);
+      const effective = calculateHeb(context, jenjang, month, year);
+      const override = row(context, "SELECT heb_value, note, set_by, set_at FROM heb_overrides WHERE jenjang = ? AND month = ? AND year = ? ORDER BY id DESC LIMIT 1", [jenjang, month, year]);
+      const count = row(context, "SELECT COUNT(*) AS count FROM students WHERE jenjang = ?", [jenjang]);
+      return { jenjang, heb: effective.heb, source: effective.source, note: effective.note, derived_from: effective.derived_from, median: effective.median, student_count: Number(count?.count ?? 0), auto_heb: auto.heb, auto_derived_from: auto.derived_from, auto_median: auto.median, override_heb: override ? Number(override.heb_value) : null, override_note: override?.note ?? null, override_set_by: override?.set_by ?? null, override_set_at: override?.set_at ?? null };
+    });
+    return { month: `${year}-${String(month).padStart(2, "0")}`, heb_by_jenjang: values };
+  }, { query: t.Object({ month: t.String(), year: t.String() }) });
+  app.get(`${prefix}/tardiness-report`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildTardiness(context, period, ctx.query.jenjang, true); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()), jenjang: t.Optional(t.String()) }) });
+  for (const path of [`${prefix}/tardiness/summary-by-jenjang`, `${prefix}/tardiness-report/summary-by-jenjang`]) app.get(path, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return { period: period, rows: buildTardinessSummary(context, period, ctx.query.jenjang) }; } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()), jenjang: t.Optional(t.String()) }) });
+  app.get(`${prefix}/v2/rekap-absensi`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const month = queryNumber(ctx.query.month); const year = queryNumber(ctx.query.year); const period = reportPeriod(month ?? undefined, year ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildRekap(context, period); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()) }) });
+  app.get(`${prefix}/rekap-absensi`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildRekap(context, period); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()) }) });
+  app.get(`${prefix}/summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return { total_late: Number(row(context, "SELECT COUNT(*) AS count FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late'")?.count ?? 0), total_incomplete: Number(row(context, "SELECT COUNT(*) AS count FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'incomplete' AND a.check_in IS NOT NULL")?.count ?? 0), total_offenders: Number(row(context, "SELECT COUNT(*) AS count FROM (SELECT student_id FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' GROUP BY student_id HAVING COUNT(*) >= 3)")?.count ?? 0) }; });
+  app.get(`${prefix}/attendance-date-range`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const value = row(context, "SELECT MIN(date) AS earliest_date, MAX(date) AS latest_date FROM attendance"); return { earliest_date: value?.earliest_date ?? null, latest_date: value?.latest_date ?? null }; });
+  app.get(`${prefix}/incomplete-summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const value = rows(context, "SELECT student_id, date FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'incomplete' AND a.check_in IS NOT NULL"); const dates = value.map((item) => item.date).sort(); return { total_incomplete: value.length, affected_students: new Set(value.map((item) => item.student_id)).size, earliest_date: dates[0] ?? null, latest_date: dates.at(-1) ?? null }; });
+  app.get(`${prefix}/monthly`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return rows(context, "SELECT substr(a.date, 1, 7) AS month, COUNT(*) AS late_count FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' GROUP BY substr(a.date, 1, 7) ORDER BY month").map((value) => ({ month: value.month, late_count: Number(value.late_count) })); });
+  app.get(`${prefix}/class-leaderboard`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return rows(context, "SELECT COALESCE(NULLIF(TRIM(s.class_name), ''), 'Belum Diatur') AS class_name, COUNT(a.id) AS total_records, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN 1 ELSE 0 END) AS late_count, (100.0 * SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'on-time' THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0)) AS punctuality_score FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id GROUP BY class_name ORDER BY punctuality_score DESC").map((value) => ({ ...value, total_records: Number(value.total_records), late_count: Number(value.late_count), punctuality_score: value.punctuality_score === null ? null : Number(value.punctuality_score) })); });
+  app.get(`${prefix}/frequent-offenders`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return rows(context, "SELECT s.name, COALESCE(NULLIF(TRIM(s.class_name), ''), 'Belum Diatur') AS class_name, substr(a.date, 1, 7) AS month, COUNT(*) AS late_count FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' GROUP BY s.id, s.name, class_name, month HAVING COUNT(*) >= 3 ORDER BY late_count DESC LIMIT 20").map((value) => ({ ...value, late_count: Number(value.late_count) })); });
+  app.get(`${prefix}/pending-categorization`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const year = row(context, "SELECT id FROM academic_years WHERE is_default = 1 LIMIT 1"); return year ? rows(context, "SELECT s.* FROM students s WHERE NOT EXISTS (SELECT 1 FROM student_enrollments e WHERE e.student_id = s.id AND e.academic_year_id = ?)", [year.id]) : rows(context, "SELECT * FROM students WHERE class_name IS NULL OR class_name = 'Unknown Class'"); });
+  app.get(`${prefix}/tardiness-report/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); const report = buildTardiness(context, period, ctx.query.jenjang, true); return sendFile(await tardinessWorkbook(report, false), "xlsx", `tardiness-report-${period.label}`); } catch (error) { return sendError(ctx, error); } });
+  app.get(`${prefix}/tardiness-report/export-management-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); const report = buildTardiness(context, period, ctx.query.jenjang, false); return sendFile(await tardinessWorkbook(report, true), "xlsx", `executive-tardiness-summary-${period.label}`); } catch (error) { return sendError(ctx, error); } });
+  app.get(`${prefix}/v2/rekap-absensi/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return sendFile(await rekapWorkbook(buildRekap(context, period)), "xlsx", `rekap-absensi-v2-${period.label}`); } catch (error) { return sendError(ctx, error); } });
+  app.get(`${prefix}/rekap-absensi/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return sendFile(await rekapWorkbook(buildRekap(context, period)), "xlsx", `rekap-absensi-${period.label}`); } catch (error) { return sendError(ctx, error); } });
+}
+
+export function reportRoutes(app: any, context: AuthContext): any {
+  const reportQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(t.Union([t.Literal("combined"), t.Literal("early_year"), t.Literal("primary"), t.Literal("secondary")])), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) };
+  app.get("/api/reports/filters", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return reportFilters(context, queryNumber(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  app.get("/api/reports/monthly", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildMonthly(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  app.get("/api/reports/management/monthly", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; try { return buildManagement(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  app.get("/api/reports/annual", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildAnnual(context, Number(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  const exportRoute = (path: string, kind: "monthly" | "annual" | "management") => app.get(path, async (ctx: Context) => { const requirement = kind === "management" ? { role: "admin" as const } : {}; if (!actor(context, ctx, requirement)) return { detail: kind === "management" ? "Insufficient permissions" : "Authentication required" }; try { const format = ctx.query.format; if (format !== "pdf" && format !== "xlsx") return fail(ctx.set, 422, "format must be pdf or xlsx"); const report = kind === "monthly" ? buildMonthly(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)) : kind === "annual" ? buildAnnual(context, Number(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)) : buildManagement(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); const bytes = format === "pdf" ? await reportPdf(kind === "management" ? "Monthly Management Report" : `${kind.charAt(0).toUpperCase()}${kind.slice(1)} Executive Report`, report) : await reportWorkbook(kind === "management" ? { ...report, meta: { report_type: "monthly" }, executive_summary: report.executive_summary, student_distribution: { by_level: [], by_class: [], by_gender: [], by_religion: [], by_domicile: [] }, attendance_summary: report.attendance.summary, attendance_by_level: report.attendance.by_jenjang, academic_summary: report.academic_summary, report_period: report.report_period, data_quality: report.data_quality } : report); return sendFile(bytes, format, `${kind}-report-${ctx.query.scope ?? "combined"}-${ctx.query.month ?? "annual"}`); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  exportRoute("/api/reports/monthly/export", "monthly"); exportRoute("/api/reports/annual/export", "annual"); exportRoute("/api/reports/management/monthly/export", "management");
+  for (const prefix of ["/api/analytics", "/analytics"]) analyticsBasicRoutes(app, context, prefix);
+  return app;
+}
+
+export { buildAnnual, buildManagement, buildMonthly, buildRekap, buildTardiness, calculateHeb, reportFilters, roundHalfEven, roundHalfUp };
