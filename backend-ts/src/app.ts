@@ -14,6 +14,7 @@ import { progressionRoutes } from "./domains/progression";
 import { reportRoutes } from "./domains/reports";
 import { safetyRoutes } from "./domains/safety";
 import { operatorRoutes } from "./domains/operator";
+import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -54,6 +55,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     progressionRoutes(app, context);
     reportRoutes(app, context);
     operatorRoutes(app, context);
+    teacherAssignmentRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
