@@ -1,0 +1,35 @@
+{
+  "id": "restore_preflight_status_and_empty_history_shapes",
+  "domain": "backup-restore",
+  "protected_category": "data preservation",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/admin/backups/status",
+      "jar": true
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/admin/backups/history",
+      "jar": true
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/admin/backups/recovery-history",
+      "jar": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "regenerate_command": "backend/.venv/bin/python docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py",
+  "note": "outputs are recorded behavior of the FastAPI reference; never hand-edit",
+  "files": [
+    "attendance-import/missing-header.json",
+    "attendance-import/normal-preview.json",
+    "heb/auto-manual-empty.json",
+    "pure-functions/cutoff-parsing.json",
+    "pure-functions/derive-status.json",
+    "pure-functions/jenjang-derivation.json",
+    "pure-functions/late-minutes.json"
+  ]
+}

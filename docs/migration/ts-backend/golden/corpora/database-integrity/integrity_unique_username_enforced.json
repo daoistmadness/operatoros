@@ -1,0 +1,12 @@
+{
+  "id": "integrity_unique_username_enforced",
+  "domain": "database-integrity",
+  "protected_category": "data integrity",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "sql",
+      "sql": "INSERT INTO users (username, password_hash, role) SELECT username, password_hash, role FROM users LIMIT 1"
+    }
+  ]
+}
