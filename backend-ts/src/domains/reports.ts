@@ -639,6 +639,15 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
   });
   app.get(`${prefix}/attendance-rate/students`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return attendanceRateByStudent(context); });
   app.get(`${prefix}/attendance-rate/jenjang`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return attendanceRateByJenjang(context); });
+  app.get(`${prefix}/monthly-by-class`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    const defaultYear = row(context, "SELECT id FROM academic_years WHERE is_default = 1 LIMIT 1");
+    const join = defaultYear
+      ? "LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ? LEFT JOIN academic_classes c ON c.id = e.academic_class_id"
+      : "LEFT JOIN student_enrollments e ON e.student_id = s.id LEFT JOIN academic_classes c ON c.id = e.academic_class_id";
+    const params = defaultYear ? [defaultYear.id] : [];
+    return rows(context, `SELECT COALESCE(c.class_name, e.class_name, s.class_name) AS class_name, strftime('%Y-%m', a.date) AS month, COUNT(*) AS late_count FROM attendance a JOIN students s ON s.id = a.student_id ${join} WHERE a.status = 'late' GROUP BY COALESCE(c.class_name, e.class_name, s.class_name), strftime('%Y-%m', a.date)`, params).map((value) => ({ class_name: value.class_name, month: value.month, late_count: Number(value.late_count) }));
+  });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);

@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 91
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 89
 migration defects. The legacy `.xls` preview path also needs an approved
 disposition.
 
@@ -20,14 +20,15 @@ disposition.
 - Added analytics filter parity for canonical and legacy aliases.
 - Added late-by-class, late-by-jenjang, and late-by-student parity for both aliases.
 - Added attendance-rate by student and by jenjang parity for both aliases.
+- Added monthly late counts by class parity for both aliases.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 235 matching operations and one Elysia-only `/ready` route.
-- Unresolved endpoint operations: 92.
+- Elysia: 237 matching operations and one Elysia-only `/ready` route.
+- Unresolved endpoint operations: 90.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
