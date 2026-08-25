@@ -127,6 +127,10 @@ describe("core CRUD parity slices", () => {
       expect(workQueue.status).toBe(200); expect(await workQueue.json()).toEqual([]);
       const assignments = await app.handle(new Request("http://local/api/teacher-class-assignments", { headers: auth }));
       expect(assignments.status).toBe(200); expect(await assignments.json()).toEqual([]);
+      const exportPreview = await app.handle(new Request("http://local/api/student-exports/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ scope: "ALL_PERMITTED_STUDENTS", field_profile: "STANDARD_OPERATIONAL" }) }));
+      expect(exportPreview.status).toBe(200); expect(await exportPreview.json()).toMatchObject({ normalized_scope: "ALL_PERMITTED_STUDENTS", estimated_row_count: 2, allowed: true });
+      const exportDownload = await app.handle(new Request("http://local/api/student-exports/download", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ scope: "ALL_PERMITTED_STUDENTS", field_profile: "STANDARD_OPERATIONAL" }) }));
+      expect(exportDownload.status).toBe(200); expect(new TextDecoder().decode(new Uint8Array(await exportDownload.arrayBuffer()).slice(0, 2))).toBe("PK");
       const mappings = await app.handle(new Request("http://local/api/student-enrollments/mapping-preview", { method: "POST", headers: auth }));
       expect(mappings.status).toBe(200); expect(await mappings.json()).toMatchObject({ summary: { total: 5 } });
       const legacyPreview = await app.handle(new Request("http://local/api/student-masters/legacy-link/preview", { method: "POST", headers: auth }));
