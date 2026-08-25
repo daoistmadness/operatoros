@@ -11,6 +11,7 @@ import { attendanceImportRoutes } from "./domains/attendance-import";
 import { gradeRoutes } from "./domains/grades";
 import { interventionRoutes } from "./domains/interventions";
 import { progressionRoutes } from "./domains/progression";
+import { reportRoutes } from "./domains/reports";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -48,6 +49,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     gradeRoutes(app, context);
     interventionRoutes(app, context);
     progressionRoutes(app, context);
+    reportRoutes(app, context);
   }
   systemRoutes(app, { destructiveOperationsEnabled: false });
 
