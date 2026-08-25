@@ -1,0 +1,28 @@
+{
+  "id": "academic_enrollment_duplicate_year_rejected",
+  "domain": "academic-placement",
+  "protected_category": "data integrity",
+  "seed": "seed_academic",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/student-enrollments/student/11111111-1111-1111-1111-111111111111",
+      "jar": true,
+      "json": {
+        "academic_year_id": 3,
+        "academic_class_id": 1,
+        "effective_from": "2026-07-01"
+      }
+    }
+  ]
+}

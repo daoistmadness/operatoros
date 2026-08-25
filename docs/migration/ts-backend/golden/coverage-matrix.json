@@ -1,0 +1,46 @@
+{
+  "generated_from": "golden/corpora_manifest.json",
+  "total_fixtures": 57,
+  "replay_scenarios": 40,
+  "fixtures_by_protected_category": {
+    "API contract": 1,
+    "authorization": 15,
+    "data integrity": 30,
+    "data preservation": 3,
+    "import validation": 1,
+    "report correctness": 7
+  },
+  "fixtures_by_domain": {
+    "academic-placement": {
+      "replay-scenario": 3
+    },
+    "attendance-review": {
+      "replay-scenario": 5
+    },
+    "auth": {
+      "replay-scenario": 13
+    },
+    "backup-restore": {
+      "replay-scenario": 5
+    },
+    "corrections": {
+      "replay-scenario": 5
+    },
+    "database-integrity": {
+      "replay-scenario": 4
+    },
+    "reports": {
+      "replay-scenario": 5
+    },
+    "service-corpora": {
+      "service-golden": 17
+    }
+  },
+  "determinism": {
+    "normal-preview.json": "PYTHONHASHSEED=0 pinned; three-run identical (07cd270ef40c)",
+    "all service-corpora": "byte-identical double-run with sanitized timestamps/paths/digests",
+    "xlsx binaries": "regenerated artifacts; parsed content carries parity meaning"
+  },
+  "gaps": {},
+  "open_phase0_evidence_areas": 0
+}

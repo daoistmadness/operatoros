@@ -1,0 +1,23 @@
+{
+  "id": "reports_filters",
+  "domain": "reports",
+  "protected_category": "report correctness",
+  "seed": "seed_reports",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/reports/filters?academic_year_id=2&scope=combined",
+      "jar": true
+    }
+  ]
+}

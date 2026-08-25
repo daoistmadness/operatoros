@@ -1,0 +1,17 @@
+{
+  "id": "auth_login_unknown_user_same_generic_error",
+  "domain": "auth",
+  "protected_category": "authorization",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "ghost-user",
+        "password": "whatever"
+      }
+    }
+  ]
+}

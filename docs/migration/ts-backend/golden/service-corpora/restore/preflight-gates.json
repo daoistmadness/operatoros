@@ -1,0 +1,270 @@
+{
+  "empty_rejected": {
+    "failed_steps": 1,
+    "passed_steps": 20,
+    "status": "FAILED",
+    "steps": [
+      {
+        "detail": "<path>",
+        "name": "Canonical database path",
+        "passed": true,
+        "step": 1
+      },
+      {
+        "detail": "Path is inside project workspace",
+        "name": "Approved-path policy",
+        "passed": true,
+        "step": 2
+      },
+      {
+        "detail": "Path verified not to be a symlink escape",
+        "name": "No symlink escape",
+        "passed": true,
+        "step": 3
+      },
+      {
+        "detail": "<sha256>",
+        "name": "Source checksum",
+        "passed": true,
+        "step": 4
+      },
+      {
+        "detail": "ok",
+        "name": "SQLite integrity",
+        "passed": true,
+        "step": 5
+      },
+      {
+        "detail": "20260722_s39",
+        "name": "Schema revision S3.9",
+        "passed": true,
+        "step": 6
+      },
+      {
+        "detail": "Tables present",
+        "name": "Required session and ledger objects",
+        "passed": false,
+        "step": 7
+      },
+      {
+        "detail": "Count: 0",
+        "name": "No committed session with incomplete provenance",
+        "passed": true,
+        "step": 8
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Historical non-rollbackable session count",
+        "passed": true,
+        "step": 9
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Orphan batch count",
+        "passed": true,
+        "step": 10
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Orphan action count",
+        "passed": true,
+        "step": 11
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Duplicate operation-ID count",
+        "passed": true,
+        "step": 12
+      },
+      {
+        "detail": "Free bytes: <free>",
+        "name": "Available disk space",
+        "passed": true,
+        "step": 13
+      },
+      {
+        "detail": "Verified",
+        "name": "Operation-plan checksum",
+        "passed": true,
+        "step": 14
+      },
+      {
+        "detail": "Disposable temp directory",
+        "name": "Backup destination policy",
+        "passed": true,
+        "step": 15
+      },
+      {
+        "detail": "<sha256>",
+        "name": "Backup checksum",
+        "passed": true,
+        "step": 16
+      },
+      {
+        "detail": "ok",
+        "name": "Backup integrity",
+        "passed": true,
+        "step": 17
+      },
+      {
+        "detail": "<path>",
+        "name": "Restore into separate disposable path",
+        "passed": true,
+        "step": 18
+      },
+      {
+        "detail": "Tables match (0)",
+        "name": "Schema parity",
+        "passed": true,
+        "step": 19
+      },
+      {
+        "detail": "Parity verified across all tables",
+        "name": "Critical row-count parity",
+        "passed": true,
+        "step": 20
+      },
+      {
+        "detail": "Enforced",
+        "name": "Explicit approval requirement before mutation",
+        "passed": true,
+        "step": 21
+      }
+    ],
+    "total_steps": 21
+  },
+  "fresh_ok": {
+    "failed_steps": 0,
+    "passed_steps": 21,
+    "status": "PASSED",
+    "steps": [
+      {
+        "detail": "<path>",
+        "name": "Canonical database path",
+        "passed": true,
+        "step": 1
+      },
+      {
+        "detail": "Path is inside project workspace",
+        "name": "Approved-path policy",
+        "passed": true,
+        "step": 2
+      },
+      {
+        "detail": "Path verified not to be a symlink escape",
+        "name": "No symlink escape",
+        "passed": true,
+        "step": 3
+      },
+      {
+        "detail": "<sha256>",
+        "name": "Source checksum",
+        "passed": true,
+        "step": 4
+      },
+      {
+        "detail": "ok",
+        "name": "SQLite integrity",
+        "passed": true,
+        "step": 5
+      },
+      {
+        "detail": "20260722_s39",
+        "name": "Schema revision S3.9",
+        "passed": true,
+        "step": 6
+      },
+      {
+        "detail": "Tables present",
+        "name": "Required session and ledger objects",
+        "passed": true,
+        "step": 7
+      },
+      {
+        "detail": "Count: 0",
+        "name": "No committed session with incomplete provenance",
+        "passed": true,
+        "step": 8
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Historical non-rollbackable session count",
+        "passed": true,
+        "step": 9
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Orphan batch count",
+        "passed": true,
+        "step": 10
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Orphan action count",
+        "passed": true,
+        "step": 11
+      },
+      {
+        "detail": "Count: 0",
+        "name": "Duplicate operation-ID count",
+        "passed": true,
+        "step": 12
+      },
+      {
+        "detail": "Free bytes: <free>",
+        "name": "Available disk space",
+        "passed": true,
+        "step": 13
+      },
+      {
+        "detail": "Verified",
+        "name": "Operation-plan checksum",
+        "passed": true,
+        "step": 14
+      },
+      {
+        "detail": "Disposable temp directory",
+        "name": "Backup destination policy",
+        "passed": true,
+        "step": 15
+      },
+      {
+        "detail": "<sha256>",
+        "name": "Backup checksum",
+        "passed": true,
+        "step": 16
+      },
+      {
+        "detail": "ok",
+        "name": "Backup integrity",
+        "passed": true,
+        "step": 17
+      },
+      {
+        "detail": "<path>",
+        "name": "Restore into separate disposable path",
+        "passed": true,
+        "step": 18
+      },
+      {
+        "detail": "Tables match (69)",
+        "name": "Schema parity",
+        "passed": true,
+        "step": 19
+      },
+      {
+        "detail": "Parity verified across all tables",
+        "name": "Critical row-count parity",
+        "passed": true,
+        "step": 20
+      },
+      {
+        "detail": "Enforced",
+        "name": "Explicit approval requirement before mutation",
+        "passed": true,
+        "step": 21
+      }
+    ],
+    "total_steps": 21
+  }
+}

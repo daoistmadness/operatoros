@@ -1,0 +1,193 @@
+{
+  "label": "rekap_v2_2026-07_missing",
+  "result": {
+    "chart_data": [
+      {
+        "label": "Hadir",
+        "value": 0
+      },
+      {
+        "label": "Sakit",
+        "value": 0
+      },
+      {
+        "label": "Izin",
+        "value": 0
+      },
+      {
+        "label": "Alfa",
+        "value": 0
+      }
+    ],
+    "global_flags": {
+      "affected_classes": 4,
+      "has_data_quality_issue": true,
+      "heb_missing": true,
+      "sia_missing": true
+    },
+    "global_summary": {
+      "alfa": 0,
+      "hadir": 0,
+      "izin": 0,
+      "lain2": 0,
+      "percentages": {
+        "alfa_pct": null,
+        "hadir_pct": null,
+        "izin_pct": null,
+        "sakit_pct": null,
+        "total_pct": null
+      },
+      "sakit": 0,
+      "total": 0
+    },
+    "heb_by_jenjang": {
+      "SD": 0,
+      "SMP": 0
+    },
+    "jenjang": [
+      {
+        "classes": [
+          {
+            "alfa": 0,
+            "class_name": "1A",
+            "hadir": 0,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": null,
+              "hadir_pct": null,
+              "izin_pct": null,
+              "sakit_pct": null,
+              "total_pct": null
+            },
+            "sakit": 0,
+            "student_count": 2,
+            "total": 0,
+            "warning_flags": {
+              "data_quality_issue": true,
+              "expected_total_missing": true,
+              "no_valid_data": true
+            }
+          }
+        ],
+        "name": "SD",
+        "summary": {
+          "alfa": 0,
+          "hadir": 0,
+          "heb": 0,
+          "izin": 0,
+          "lain2": 0,
+          "percentages": {
+            "alfa_pct": null,
+            "hadir_pct": null,
+            "izin_pct": null,
+            "sakit_pct": null,
+            "total_pct": null
+          },
+          "sakit": 0,
+          "total": 0
+        }
+      },
+      {
+        "classes": [
+          {
+            "alfa": 0,
+            "class_name": "7A",
+            "hadir": 0,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": null,
+              "hadir_pct": null,
+              "izin_pct": null,
+              "sakit_pct": null,
+              "total_pct": null
+            },
+            "sakit": 0,
+            "student_count": 3,
+            "total": 0,
+            "warning_flags": {
+              "data_quality_issue": true,
+              "expected_total_missing": true,
+              "no_valid_data": true
+            }
+          },
+          {
+            "alfa": 0,
+            "class_name": "7B",
+            "hadir": 0,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": null,
+              "hadir_pct": null,
+              "izin_pct": null,
+              "sakit_pct": null,
+              "total_pct": null
+            },
+            "sakit": 0,
+            "student_count": 2,
+            "total": 0,
+            "warning_flags": {
+              "data_quality_issue": true,
+              "expected_total_missing": true,
+              "no_valid_data": true
+            }
+          },
+          {
+            "alfa": 0,
+            "class_name": "7C",
+            "hadir": 0,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": null,
+              "hadir_pct": null,
+              "izin_pct": null,
+              "sakit_pct": null,
+              "total_pct": null
+            },
+            "sakit": 0,
+            "student_count": 1,
+            "total": 0,
+            "warning_flags": {
+              "data_quality_issue": true,
+              "expected_total_missing": true,
+              "no_valid_data": true
+            }
+          }
+        ],
+        "name": "SMP",
+        "summary": {
+          "alfa": 0,
+          "hadir": 0,
+          "heb": 0,
+          "izin": 0,
+          "lain2": 0,
+          "percentages": {
+            "alfa_pct": null,
+            "hadir_pct": null,
+            "izin_pct": null,
+            "sakit_pct": null,
+            "total_pct": null
+          },
+          "sakit": 0,
+          "total": 0
+        }
+      }
+    ],
+    "period": {
+      "date_from": "2026-07-01",
+      "date_to": "2026-07-31",
+      "label": "July 2026",
+      "term": null,
+      "year": 2026
+    },
+    "report_title": "Rekap Absensi Siswa SD",
+    "school_name": "EDELWEISS SCHOOL",
+    "warnings": [
+      "HEB belum tersedia untuk beberapa jenjang: SMP, SD.",
+      "Data Sakit/Izin/Alfa belum diisi untuk periode ini."
+    ]
+  }
+}

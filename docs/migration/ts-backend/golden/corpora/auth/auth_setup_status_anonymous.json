@@ -1,0 +1,13 @@
+{
+  "id": "auth_setup_status_anonymous",
+  "domain": "auth",
+  "protected_category": "API contract",
+  "seed": "seed_auth_users",
+  "steps": [
+    {
+      "type": "request",
+      "method": "GET",
+      "path": "/api/setup/status"
+    }
+  ]
+}

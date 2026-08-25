@@ -1,0 +1,4635 @@
+{
+  "generated_at": "2026-08-23T16:16:35.455725+00:00",
+  "total_endpoints": 327,
+  "endpoints_by_router_module": {
+    "api.academic_config": 10,
+    "api.academic_interventions": 6,
+    "api.academic_masters": 20,
+    "api.analytics": 62,
+    "api.attendance_corrections": 11,
+    "api.attendance_followups": 17,
+    "api.auth": 3,
+    "api.backups": 11,
+    "api.config": 11,
+    "api.data_portability": 8,
+    "api.early_departure": 7,
+    "api.grades": 14,
+    "api.operator_work_queue": 1,
+    "api.readiness": 1,
+    "api.report_builder": 12,
+    "api.reports": 7,
+    "api.review": 5,
+    "api.scoped_attendance": 3,
+    "api.setup": 3,
+    "api.staff": 12,
+    "api.student_enrollments": 14,
+    "api.student_exports": 2,
+    "api.student_import_sessions": 2,
+    "api.student_masters": 30,
+    "api.student_progression": 9,
+    "api.students": 18,
+    "api.system": 2,
+    "api.teacher_class_assignments": 5,
+    "api.upload_conflicts": 8,
+    "api.uploads": 11,
+    "main": 2
+  },
+  "routes": [
+    {
+      "path": "/api/academic-config/kkm-effective",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_effective_kkm",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/kkm-thresholds",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_kkm_thresholds",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/kkm-thresholds",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_kkm_threshold",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/kkm-thresholds/{threshold_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_kkm_threshold",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/kkm-thresholds/{threshold_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_kkm_threshold",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/terms",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_term_configs",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/terms",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_term_config",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/terms/effective",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_effective_terms",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/terms/{term_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_term_config",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-config/terms/{term_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_term_config",
+      "router_module": "api.academic_config",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_interventions",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_intervention",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions/from-alert",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_intervention_from_alert",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions/{intervention_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "close_intervention",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions/{intervention_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_intervention",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-interventions/{intervention_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_intervention",
+      "router_module": "api.academic_interventions",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/academic-years",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_years",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/academic-years",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_year",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/academic-years/{row_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_year",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/academic-years/{row_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_year",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/classes",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_classes",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/classes",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_class",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/classes/{row_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_class",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/classes/{row_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_class",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/grades",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_grades",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/grades",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_grade",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/grades/{row_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_grade",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/grades/{row_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_grade",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/jenjangs",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_jenjangs",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/jenjangs",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_jenjang",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/jenjangs/{row_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_jenjang",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/jenjangs/{row_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_jenjang",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/programs",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_programs",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/programs",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_program",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/programs/{row_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_program",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/academic-masters/programs/{row_id}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_program",
+      "router_module": "api.academic_masters",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/attendance-date-range",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_date_range",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/attendance-rate/jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_rate_per_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/attendance-rate/students",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_rate_per_student",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/attendance-report",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_report",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/class-leaderboard",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_class_leaderboard",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/filters",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_analytics_filters",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/frequent-offenders",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_frequent_offenders",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/heb",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_heb_visibility",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/historical-trends",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_historical_trends",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/incomplete-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_incomplete_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/intervention-impact",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_intervention_impact",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/jenjangs",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_all_jenjangs",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/late-by-class",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_class",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/late-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/late-by-student",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_student",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/management-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_management_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/management-summary/export/excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_management_summary_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/management-summary/export/pdf",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_management_summary_pdf",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/monthly",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_late_trends",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/monthly-by-class",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_late_by_class",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/pending-categorization",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_pending_categorization",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/rekap-absensi",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_rekap_absensi",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/rekap-absensi/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_rekap_absensi_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_analytics_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/tardiness-report",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_report",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/tardiness-report/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_tardiness_report_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/tardiness-report/export-management-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_tardiness_management_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/tardiness-report/summary-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_summary_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/tardiness/summary-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_summary_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/v2/rekap-absensi",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_v2_rekap_absensi",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/analytics/v2/rekap-absensi/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_v2_rekap_absensi_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/attendance-date-range",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_date_range",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/attendance-rate/jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_rate_per_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/attendance-rate/students",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_rate_per_student",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/attendance-report",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_attendance_report",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/class-leaderboard",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_class_leaderboard",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/filters",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_analytics_filters",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/frequent-offenders",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_frequent_offenders",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/heb",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_heb_visibility",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/historical-trends",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_historical_trends",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/incomplete-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_incomplete_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/intervention-impact",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_intervention_impact",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/jenjangs",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_all_jenjangs",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/late-by-class",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_class",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/late-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/late-by-student",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_late_by_student",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/management-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_management_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/management-summary/export/excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_management_summary_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/management-summary/export/pdf",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_management_summary_pdf",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/monthly",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_late_trends",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/monthly-by-class",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_late_by_class",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/pending-categorization",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_pending_categorization",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/rekap-absensi",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_rekap_absensi",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/rekap-absensi/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_rekap_absensi_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_analytics_summary",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/tardiness-report",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_report",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/tardiness-report/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_tardiness_report_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/tardiness-report/export-management-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_tardiness_management_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/tardiness-report/summary-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_summary_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/tardiness/summary-by-jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_tardiness_summary_by_jenjang",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/v2/rekap-absensi",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_v2_rekap_absensi",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/analytics/v2/rekap-absensi/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_v2_rekap_absensi_excel",
+      "router_module": "api.analytics",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_requests",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/periods/finalize",
+      "methods": [
+        "POST"
+      ],
+      "name": "finalize",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/periods/reopen",
+      "methods": [
+        "POST"
+      ],
+      "name": "reopen",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/periods/status",
+      "methods": [
+        "GET"
+      ],
+      "name": "period_status",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}/approve",
+      "methods": [
+        "POST"
+      ],
+      "name": "approve_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}/cancel",
+      "methods": [
+        "POST"
+      ],
+      "name": "cancel_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}/reject",
+      "methods": [
+        "POST"
+      ],
+      "name": "reject_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}/self-confirm",
+      "methods": [
+        "POST"
+      ],
+      "name": "self_confirm_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance-corrections/{request_id:int}/submit",
+      "methods": [
+        "POST"
+      ],
+      "name": "submit_request",
+      "router_module": "api.attendance_corrections",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_cases",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/bulk-assign",
+      "methods": [
+        "POST"
+      ],
+      "name": "bulk_assign",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/bulk-resolve",
+      "methods": [
+        "POST"
+      ],
+      "name": "bulk_resolve",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/candidates",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_candidates",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/metrics/summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_metrics_summary",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_case_detail",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/acknowledge",
+      "methods": [
+        "POST"
+      ],
+      "name": "acknowledge_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/assign",
+      "methods": [
+        "POST"
+      ],
+      "name": "assign_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/dismiss",
+      "methods": [
+        "POST"
+      ],
+      "name": "dismiss_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_case_history",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/monitor",
+      "methods": [
+        "POST"
+      ],
+      "name": "monitor_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/notes",
+      "methods": [
+        "POST"
+      ],
+      "name": "add_note",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/reopen",
+      "methods": [
+        "POST"
+      ],
+      "name": "reopen_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/resolve",
+      "methods": [
+        "POST"
+      ],
+      "name": "resolve_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/followups/{id}/start",
+      "methods": [
+        "POST"
+      ],
+      "name": "start_case",
+      "router_module": "api.attendance_followups",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/auth/login",
+      "methods": [
+        "POST"
+      ],
+      "name": "login",
+      "router_module": "api.auth",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/auth/logout",
+      "methods": [
+        "POST"
+      ],
+      "name": "logout",
+      "router_module": "api.auth",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/auth/me",
+      "methods": [
+        "GET"
+      ],
+      "name": "current_user",
+      "router_module": "api.auth",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_backups",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_backup",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "backup_history",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/recovery-history",
+      "methods": [
+        "GET"
+      ],
+      "name": "recovery_history",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/scheduler",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_scheduler_config",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/scheduler",
+      "methods": [
+        "PUT"
+      ],
+      "name": "update_scheduler_config",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/status",
+      "methods": [
+        "GET"
+      ],
+      "name": "backup_status",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/{filename}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_backup_endpoint",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/{filename}/download",
+      "methods": [
+        "GET"
+      ],
+      "name": "download_backup",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/{filename}/restore",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_restore",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "require_restore_admin"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/admin/backups/{filename}/restore-preflight",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_restore_preflight",
+      "router_module": "api.backups",
+      "auth_dependencies": [
+        "require_restore_admin"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/absence-reasons",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_absence_reasons",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/absence-reasons/bulk",
+      "methods": [
+        "POST"
+      ],
+      "name": "bulk_upsert_absence_reasons",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/absence-reasons/summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_absence_reasons_summary",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/deployment-mode",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_deployment_mode",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/heb",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_heb_overrides",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/heb/{jenjang}/{year}/{month}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_heb_override",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/heb/{jenjang}/{year}/{month}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "upsert_heb_override",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/jenjang",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_jenjang_configs",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/jenjang/available",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_available_jenjangs",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/jenjang/{jenjang}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_jenjang_config",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/config/jenjang/{jenjang}",
+      "methods": [
+        "PUT"
+      ],
+      "name": "upsert_jenjang_config",
+      "router_module": "api.config",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/datasets",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_datasets",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/exports",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_export",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/exports/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_export_preview",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_history",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/imports/commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_import_commit",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/imports/error-file",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_error_file",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/imports/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_import_preview",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/data-portability/templates/{dataset}",
+      "methods": [
+        "GET"
+      ],
+      "name": "download_template",
+      "router_module": "api.data_portability",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/classes/{class_id}/dates/{date_val}/departures",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_class_date_departures",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/departure-policies",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_departure_policies",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/departure-policies",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_policy_endpoint",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/departure-policies/{policy_id}/deactivate",
+      "methods": [
+        "POST"
+      ],
+      "name": "deactivate_policy_endpoint",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/{attendance_id}/departure-excuses",
+      "methods": [
+        "POST"
+      ],
+      "name": "record_excuse_endpoint",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/{attendance_id}/departure-excuses/{excuse_id}/revoke",
+      "methods": [
+        "POST"
+      ],
+      "name": "revoke_excuse_endpoint",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/{attendance_id}/departure-history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_departure_history",
+      "router_module": "api.early_departure",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/academic-years",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_academic_years",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/academic-years",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_academic_year",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/analytics",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_grade_analytics",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/components",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_components",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/enrollment",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_enrollments",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/enrollment/bulk",
+      "methods": [
+        "POST"
+      ],
+      "name": "bulk_enroll_students",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/enrollment/candidates",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_enrollment_candidates",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/enrollment/source-classes",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_enrollment_source_classes",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/enrollment/{enrollment_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_enrollment",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/jenjangs",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_jenjangs",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/ledger",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_grade_ledger",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/save",
+      "methods": [
+        "POST"
+      ],
+      "name": "save_grade_ledger",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/subjects",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_subjects",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/grades/subjects",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_subject",
+      "router_module": "api.grades",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/operator/work-queue",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_operator_work_queue",
+      "router_module": "api.operator_work_queue",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/readiness",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_readiness",
+      "router_module": "api.readiness",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/branding",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_branding",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/branding",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_branding",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/branding/{branding_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_branding",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/export/excel",
+      "methods": [
+        "POST"
+      ],
+      "name": "export_report_excel",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/export/pdf",
+      "methods": [
+        "POST"
+      ],
+      "name": "export_report_pdf",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_report",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/sections",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_sections",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/templates",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_templates",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/templates",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_template",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/templates/{template_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "remove_template",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/templates/{template_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_template",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/report-builder/templates/{template_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_template",
+      "router_module": "api.report_builder",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/annual",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_annual_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/annual/export",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_annual_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/filters",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_report_filters",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/management/monthly",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_management_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/management/monthly/export",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_monthly_management_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/monthly",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_monthly_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/reports/monthly/export",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_monthly_report",
+      "router_module": "api.reports",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/review/attendance",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_review_attendance",
+      "router_module": "api.review",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/review/attendance/mass-override-incomplete",
+      "methods": [
+        "POST"
+      ],
+      "name": "mass_override_incomplete",
+      "router_module": "api.review",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/review/attendance/{attendance_id}/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_override_history",
+      "router_module": "api.review",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/review/attendance/{attendance_id}/override",
+      "methods": [
+        "POST"
+      ],
+      "name": "upsert_attendance_override",
+      "router_module": "api.review",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/review/classes",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_review_classes",
+      "router_module": "api.review",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/classes/assigned",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_assigned_classes",
+      "router_module": "api.scoped_attendance",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/classes/{class_id}/dates/{date_val}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_class_date_attendance",
+      "router_module": "api.scoped_attendance",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/attendance/classes/{class_id}/dates/{date_val}/entries",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_class_date_attendance_entries",
+      "router_module": "api.scoped_attendance",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/setup/admin",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_first_admin",
+      "router_module": "api.setup",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/setup/bootstrap",
+      "methods": [
+        "POST"
+      ],
+      "name": "bootstrap_setup",
+      "router_module": "api.setup",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/setup/status",
+      "methods": [
+        "GET"
+      ],
+      "name": "setup_status",
+      "router_module": "api.setup",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_staff",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/export",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_staff",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/imports/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "staff_import_history",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/imports/{batch_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "staff_import_detail",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "staff_detail",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_staff_employment",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/education",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_staff_education",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/education",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_staff_education",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/education/{education_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_staff_education",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/education/{education_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_staff_education",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/jenjangs",
+      "methods": [
+        "PUT"
+      ],
+      "name": "replace_staff_jenjangs",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/staff/{staff_id}/sensitive",
+      "methods": [
+        "GET"
+      ],
+      "name": "staff_sensitive_detail",
+      "router_module": "api.staff",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/academic-master-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_academic_masters",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/mapping-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_academic_mappings",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/populate/commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_enrollment_population",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/populate/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_enrollment_population",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/roster-commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_academic_roster",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/roster-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_academic_roster",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/roster-template",
+      "methods": [
+        "GET"
+      ],
+      "name": "download_academic_roster_template",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/student/{student_master_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_student_enrollment_history",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/student/{student_master_id}",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_student_enrollment",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/{enrollment_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_unused_draft_enrollment",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/{enrollment_id}/deletion-status",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_enrollment_deletion_status",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/{enrollment_id}/end",
+      "methods": [
+        "POST"
+      ],
+      "name": "end_student_enrollment",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/{enrollment_id}/transfer",
+      "methods": [
+        "POST"
+      ],
+      "name": "transfer_student_enrollment",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-enrollments/{enrollment_id}/{action}",
+      "methods": [
+        "POST"
+      ],
+      "name": "change_student_enrollment_lifecycle",
+      "router_module": "api.student_enrollments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-exports/download",
+      "methods": [
+        "POST"
+      ],
+      "name": "download_export",
+      "router_module": "api.student_exports",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-exports/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_export",
+      "router_module": "api.student_exports",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-import-sessions/{session_id}/rollback",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_rollback",
+      "router_module": "api.student_import_sessions",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-import-sessions/{session_id}/rollback-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_rollback",
+      "router_module": "api.student_import_sessions",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_student_masters",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_canonical_student",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/data-quality-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "student_master_data_quality_summary",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/legacy-link/commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_legacy_student_links",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/legacy-link/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_legacy_student_links",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/legacy-link/{legacy_student_id}/resolve",
+      "methods": [
+        "POST"
+      ],
+      "name": "resolve_legacy_student_link",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/export-template",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_managed_students",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/export.csv",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_managed_students_csv",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/import-history",
+      "methods": [
+        "GET"
+      ],
+      "name": "student_update_import_history",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/imports/{batch_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "student_update_import_detail",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/imports/{batch_id}/result.xlsx",
+      "methods": [
+        "GET"
+      ],
+      "name": "student_update_result_workbook",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/list",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_managed_students",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/quality",
+      "methods": [
+        "GET"
+      ],
+      "name": "managed_student_quality",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/update-commit/{batch_id}",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_student_update_workbook",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/management/update-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_student_update_workbook",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_master",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/device-identities",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_student_device_identities",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/device-identities",
+      "methods": [
+        "POST"
+      ],
+      "name": "replace_student_device_identity",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/device-identities/reassign",
+      "methods": [
+        "POST"
+      ],
+      "name": "guarded_reassign_student_device_identity",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/device-identities/{identity_id}/retire",
+      "methods": [
+        "POST"
+      ],
+      "name": "retire_student_device_identity",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/documents",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_student_documents",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/guardians",
+      "methods": [
+        "POST"
+      ],
+      "name": "add_student_guardian",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/guardians/{guardian_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "name": "delete_student_guardian",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/guardians/{guardian_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_student_guardian",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/health",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_student_health",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_change_history",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/legacy-link",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_canonical_legacy_link",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/legacy-link",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_canonical_legacy_link",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/profile",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_profile",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-masters/{student_master_id}/profile",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_student_profile",
+      "router_module": "api.student_masters",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/batches/{batch_id}/result",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_result",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/mapping-rules",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_mapping_rules",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/mapping-rules",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_mapping_rule",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_previews",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_preview",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews/{batch_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_preview",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews/{batch_id}/commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_preview",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews/{batch_id}/revalidate",
+      "methods": [
+        "POST"
+      ],
+      "name": "revalidate_preview",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/student-progression/previews/{batch_id}/rows/{row_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "patch_row",
+      "router_module": "api.student_progression",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_students",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_student",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/all",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_all_students",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/assign-class",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "assign_class_bulk",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/classes",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_existing_classes",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/operations",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_operations_audit_logs",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/set-class",
+      "methods": [
+        "POST"
+      ],
+      "name": "set_class",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/{no_id}/attendance-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_attendance_summary",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/students/{no_id}/monthly-history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_monthly_history",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_students",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_student",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/all",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_all_students",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/assign-class",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "assign_class_bulk",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/classes",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_existing_classes",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/operations",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_operations_audit_logs",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/set-class",
+      "methods": [
+        "POST"
+      ],
+      "name": "set_class",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/{no_id}/attendance-summary",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_attendance_summary",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/students/{no_id}/monthly-history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_student_monthly_history",
+      "router_module": "api.students",
+      "auth_dependencies": [
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/system/clear-data",
+      "methods": [
+        "POST"
+      ],
+      "name": "clear_all_data",
+      "router_module": "api.system",
+      "auth_dependencies": [
+        "get_db",
+        "role_dependency"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/system/health",
+      "methods": [
+        "GET"
+      ],
+      "name": "system_health",
+      "router_module": "api.system",
+      "auth_dependencies": [],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/teacher-class-assignments",
+      "methods": [
+        "GET"
+      ],
+      "name": "list_assignments",
+      "router_module": "api.teacher_class_assignments",
+      "auth_dependencies": [
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/teacher-class-assignments",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_create_assignment",
+      "router_module": "api.teacher_class_assignments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/teacher-class-assignments/{assignment_id}",
+      "methods": [
+        "PATCH"
+      ],
+      "name": "update_assignment_endpoint",
+      "router_module": "api.teacher_class_assignments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/teacher-class-assignments/{assignment_id}/deactivate",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_deactivate_assignment",
+      "router_module": "api.teacher_class_assignments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/teacher-class-assignments/{assignment_id}/reactivate",
+      "methods": [
+        "POST"
+      ],
+      "name": "post_reactivate_assignment",
+      "router_module": "api.teacher_class_assignments",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts",
+      "methods": [
+        "GET"
+      ],
+      "name": "unresolved_queue",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/retry-commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "retry_commit",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/retry-preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "retry_preview",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/{resolution_item_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "conflict_detail",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/{resolution_item_id}/link-device",
+      "methods": [
+        "POST"
+      ],
+      "name": "link_device",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/{resolution_item_id}/resolve-roster",
+      "methods": [
+        "POST"
+      ],
+      "name": "resolve_roster",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/{resolution_item_id}/roster-comparison",
+      "methods": [
+        "GET"
+      ],
+      "name": "compare_roster_conflict",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/upload-conflicts/{resolution_item_id}/student-candidates",
+      "methods": [
+        "GET"
+      ],
+      "name": "conflict_student_candidates",
+      "router_module": "api.upload_conflicts",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_upload_history",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history/{upload_id}",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_upload_history_detail",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history/{upload_id}/export.csv",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_upload_history_csv",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history/{upload_id}/export.json",
+      "methods": [
+        "GET"
+      ],
+      "name": "export_upload_history_json",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history/{upload_id}/rows",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_upload_history_rows",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/history/{upload_id}/timeline",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_upload_history_timeline",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/missing-records",
+      "methods": [
+        "GET"
+      ],
+      "name": "get_missing_records",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/preview",
+      "methods": [
+        "POST"
+      ],
+      "name": "preview_attendance_import",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/preview/{batch_id}/commit",
+      "methods": [
+        "POST"
+      ],
+      "name": "commit_previewed_attendance_import",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user",
+        "get_db"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/sample-template",
+      "methods": [
+        "GET"
+      ],
+      "name": "download_sample_template",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/api/uploads/upload",
+      "methods": [
+        "POST"
+      ],
+      "name": "upload_file",
+      "router_module": "api.uploads",
+      "auth_dependencies": [
+        "capability_dependency",
+        "get_current_user"
+      ],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/",
+      "methods": [
+        "GET"
+      ],
+      "name": "read_root",
+      "router_module": "main",
+      "auth_dependencies": [],
+      "response_class": null,
+      "in_schema": true
+    },
+    {
+      "path": "/health",
+      "methods": [
+        "GET"
+      ],
+      "name": "health_check",
+      "router_module": "main",
+      "auth_dependencies": [],
+      "response_class": null,
+      "in_schema": true
+    }
+  ]
+}

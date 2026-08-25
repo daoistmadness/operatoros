@@ -1,0 +1,174 @@
+{
+  "label": "rekap_v2_2026-08",
+  "result": {
+    "chart_data": [
+      {
+        "label": "Hadir",
+        "value": 94.93
+      },
+      {
+        "label": "Sakit",
+        "value": 2.17
+      },
+      {
+        "label": "Izin",
+        "value": 1.45
+      },
+      {
+        "label": "Alfa",
+        "value": 1.45
+      }
+    ],
+    "global_flags": {
+      "affected_classes": 0,
+      "has_data_quality_issue": false,
+      "heb_missing": false,
+      "sia_missing": false
+    },
+    "global_summary": {
+      "alfa": 2,
+      "hadir": 131,
+      "izin": 2,
+      "lain2": 0,
+      "percentages": {
+        "alfa_pct": 1.45,
+        "hadir_pct": 94.93,
+        "izin_pct": 1.45,
+        "sakit_pct": 2.17,
+        "total_pct": 100.0
+      },
+      "sakit": 3,
+      "total": 138
+    },
+    "heb_by_jenjang": {
+      "SD": 15,
+      "SMP": 18
+    },
+    "jenjang": [
+      {
+        "classes": [
+          {
+            "alfa": 1,
+            "class_name": "1A",
+            "hadir": 27,
+            "izin": 1,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": 3.33,
+              "hadir_pct": 90.01,
+              "izin_pct": 3.33,
+              "sakit_pct": 3.33,
+              "total_pct": 100.0
+            },
+            "sakit": 1,
+            "student_count": 2,
+            "total": 30,
+            "warning_flags": {}
+          }
+        ],
+        "name": "SD",
+        "summary": {
+          "alfa": 1,
+          "hadir": 27,
+          "heb": 15,
+          "izin": 1,
+          "lain2": 0,
+          "percentages": {
+            "alfa_pct": 3.33,
+            "hadir_pct": 90.01,
+            "izin_pct": 3.33,
+            "sakit_pct": 3.33,
+            "total_pct": 100.0
+          },
+          "sakit": 1,
+          "total": 30
+        }
+      },
+      {
+        "classes": [
+          {
+            "alfa": 0,
+            "class_name": "7A",
+            "hadir": 51,
+            "izin": 1,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": 0.0,
+              "hadir_pct": 94.45,
+              "izin_pct": 1.85,
+              "sakit_pct": 3.7,
+              "total_pct": 100.0
+            },
+            "sakit": 2,
+            "student_count": 3,
+            "total": 54,
+            "warning_flags": {}
+          },
+          {
+            "alfa": 1,
+            "class_name": "7B",
+            "hadir": 35,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": 2.78,
+              "hadir_pct": 97.22,
+              "izin_pct": 0.0,
+              "sakit_pct": 0.0,
+              "total_pct": 100.0
+            },
+            "sakit": 0,
+            "student_count": 2,
+            "total": 36,
+            "warning_flags": {}
+          },
+          {
+            "alfa": 0,
+            "class_name": "7C",
+            "hadir": 18,
+            "izin": 0,
+            "lain2": 0,
+            "percentages": {
+              "alfa_pct": 0.0,
+              "hadir_pct": 100.0,
+              "izin_pct": 0.0,
+              "sakit_pct": 0.0,
+              "total_pct": 100.0
+            },
+            "sakit": 0,
+            "student_count": 1,
+            "total": 18,
+            "warning_flags": {}
+          }
+        ],
+        "name": "SMP",
+        "summary": {
+          "alfa": 1,
+          "hadir": 104,
+          "heb": 18,
+          "izin": 1,
+          "lain2": 0,
+          "percentages": {
+            "alfa_pct": 0.93,
+            "hadir_pct": 96.29,
+            "izin_pct": 0.93,
+            "sakit_pct": 1.85,
+            "total_pct": 100.0
+          },
+          "sakit": 2,
+          "total": 108
+        }
+      }
+    ],
+    "period": {
+      "date_from": "2026-08-01",
+      "date_to": "2026-08-31",
+      "label": "August 2026",
+      "term": null,
+      "year": 2026
+    },
+    "report_title": "Rekap Absensi Siswa SD",
+    "school_name": "EDELWEISS SCHOOL",
+    "warnings": []
+  }
+}

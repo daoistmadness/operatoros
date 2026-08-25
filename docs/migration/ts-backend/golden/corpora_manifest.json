@@ -1,0 +1,557 @@
+{
+  "fixtures": [
+    {
+      "fixture_id": "academic_enrollment_duplicate_year_rejected",
+      "domain": "academic-placement",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_enrollment_duplicate_year_rejected.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "academic_history_current_and_ended",
+      "domain": "academic-placement",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_history_current_and_ended.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "academic_history_missing_master_404",
+      "domain": "academic-placement",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_history_missing_master_404.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_absolute_expiry_returns_401",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_absolute_expiry_returns_401.json",
+      "setup": "seed_auth_users",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_idle_expiry_returns_401",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_idle_expiry_returns_401.json",
+      "setup": "seed_auth_users",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_lockout_after_five_failures",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_lockout_after_five_failures.json",
+      "setup": "seed_auth_users",
+      "steps": 6,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_lockout_expiry_recovers_counters_reset",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_lockout_expiry_recovers_counters_reset.json",
+      "setup": "seed_auth_users",
+      "steps": 4,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_login_inactive_account_rejected",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_login_inactive_account_rejected.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_login_success_admin",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_login_success_admin.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_login_unknown_user_same_generic_error",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_login_unknown_user_same_generic_error.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_login_wrong_password_generic_error",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_login_wrong_password_generic_error.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_logout_revokes_session_token",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_logout_revokes_session_token.json",
+      "setup": "seed_auth_users",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_me_with_valid_session",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_me_with_valid_session.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_me_without_session_401",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_me_without_session_401.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_setup_status_anonymous",
+      "domain": "auth",
+      "protected_category": "API contract",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_setup_status_anonymous.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "auth_untrusted_role_metadata_ignored",
+      "domain": "auth",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/auth/auth_untrusted_role_metadata_ignored.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "correction_approve_terminal_state_and_audit",
+      "domain": "corrections",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/corrections/correction_approve_terminal_state_and_audit.json",
+      "setup": "seed_corrections",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "correction_reject_records_reason",
+      "domain": "corrections",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/corrections/correction_reject_records_reason.json",
+      "setup": "seed_corrections",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "correction_requester_may_cancel_own",
+      "domain": "corrections",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/corrections/correction_requester_may_cancel_own.json",
+      "setup": "seed_corrections",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "correction_self_confirm_behavior_frozen",
+      "domain": "corrections",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/corrections/correction_self_confirm_behavior_frozen.json",
+      "setup": "seed_corrections",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "correction_submit_moves_draft_to_submitted",
+      "domain": "corrections",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/corrections/correction_submit_moves_draft_to_submitted.json",
+      "setup": "seed_corrections",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "integrity_attendance_composite_unique_enforced",
+      "domain": "database-integrity",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/database-integrity/integrity_attendance_composite_unique_enforced.json",
+      "setup": "seed_none",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "integrity_fk_blocks_parent_delete",
+      "domain": "database-integrity",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/database-integrity/integrity_fk_blocks_parent_delete.json",
+      "setup": "seed_attendance_review",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "integrity_unique_username_enforced",
+      "domain": "database-integrity",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/database-integrity/integrity_unique_username_enforced.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "integrity_users_role_check_constraint",
+      "domain": "database-integrity",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/database-integrity/integrity_users_role_check_constraint.json",
+      "setup": "seed_none",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_annual",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_annual.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_filters",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_filters.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_management_monthly",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_management_monthly.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_monthly_empty_month",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_monthly_empty_month.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "reports_monthly_with_data",
+      "domain": "reports",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/reports/reports_monthly_with_data.json",
+      "setup": "seed_reports",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_anonymous_rejected",
+      "domain": "backup-restore",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_anonymous_rejected.json",
+      "setup": "seed_auth_users",
+      "steps": 1,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_disabled_gate_precedes_confirmation_checks",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_disabled_gate_precedes_confirmation_checks.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_preflight_status_and_empty_history_shapes",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_preflight_status_and_empty_history_shapes.json",
+      "setup": "seed_auth_users",
+      "steps": 4,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_staff_forbidden",
+      "domain": "backup-restore",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_staff_forbidden.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "restore_status_admin_shape",
+      "domain": "backup-restore",
+      "protected_category": "data preservation",
+      "kind": "replay-scenario",
+      "file": "corpora/backup-restore/restore_status_admin_shape.json",
+      "setup": "seed_auth_users",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "review_history_is_append_only_update_delete_abort",
+      "domain": "attendance-review",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/attendance-review/review_history_is_append_only_update_delete_abort.json",
+      "setup": "seed_attendance_review",
+      "steps": 5,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "review_mass_override_incomplete_counts",
+      "domain": "attendance-review",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/attendance-review/review_mass_override_incomplete_counts.json",
+      "setup": "seed_attendance_review",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "review_override_admin_success_appends_history",
+      "domain": "attendance-review",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/attendance-review/review_override_admin_success_appends_history.json",
+      "setup": "seed_attendance_review",
+      "steps": 3,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "review_override_denied_without_capability",
+      "domain": "attendance-review",
+      "protected_category": "authorization",
+      "kind": "replay-scenario",
+      "file": "corpora/attendance-review/review_override_denied_without_capability.json",
+      "setup": "seed_attendance_review",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "review_override_note_minimum_enforced",
+      "domain": "attendance-review",
+      "protected_category": "import validation",
+      "kind": "replay-scenario",
+      "file": "corpora/attendance-review/review_override_note_minimum_enforced.json",
+      "setup": "seed_attendance_review",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-annual",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/annual.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-checksum-vectors",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/backup/checksum-vectors.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-constraints",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/grades/constraints.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-even-median-rounding",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/heb/even-median-rounding.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-export_structure",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/export_structure.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-management",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/management.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-monthly_complete",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/monthly_complete.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-monthly_empty",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/monthly_empty.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-placement-and-resolution",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/academic/placement-and-resolution.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-preflight-gates",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/restore/preflight-gates.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-rekap_v2",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/rekap_v2.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-rekap_v2_missing",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/rekap_v2_missing.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-resolution-and-term-defaults",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/kkm/resolution-and-term-defaults.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-source_references",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/source_references.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-startup-validation",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/migrations/startup-validation.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-success-path",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/restore/success-path.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-tardiness",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/reports/tardiness.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    }
+  ]
+}

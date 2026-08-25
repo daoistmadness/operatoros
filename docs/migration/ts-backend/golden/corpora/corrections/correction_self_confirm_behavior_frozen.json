@@ -1,0 +1,26 @@
+{
+  "id": "correction_self_confirm_behavior_frozen",
+  "domain": "corrections",
+  "protected_category": "data integrity",
+  "seed": "seed_corrections",
+  "steps": [
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "json": {
+        "username": "golden-admin",
+        "password": "golden-admin-pass-1"
+      }
+    },
+    {
+      "type": "request",
+      "method": "POST",
+      "path": "/api/attendance-corrections/2/self-confirm",
+      "jar": true,
+      "json": {
+        "note": "Single operator confirmation note."
+      }
+    }
+  ]
+}
