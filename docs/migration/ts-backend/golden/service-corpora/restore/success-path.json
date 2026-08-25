@@ -1,0 +1,54 @@
+{
+  "backup_creation": {
+    "checksum_present": true,
+    "created_at_present": true,
+    "filename_class": "<backup-file>",
+    "size_bytes_present": false,
+    "status": 200
+  },
+  "backup_execution_history": {
+    "checksum_matches": true,
+    "entry_count": 1,
+    "history_is_list_ordered_newest_first": true,
+    "matched_created_backup": true,
+    "status_success": true,
+    "trigger_type_present": true
+  },
+  "corrupt_backup_fail_closed": {
+    "error_code": null,
+    "preflight_not_ok": false,
+    "preflight_status": 200,
+    "restore_status_fail_closed": false
+  },
+  "current_restore_session": "unknown",
+  "post_restore_database": {
+    "admin_user_survives": true,
+    "all_sessions_revoked_or_wiped": false,
+    "sessions_total": 2
+  },
+  "pre_restore_state": {
+    "sessions": 2,
+    "users": 3
+  },
+  "recovery_history": {
+    "entry_count": 0,
+    "operation_fields_sample": [],
+    "successful_entries": 0
+  },
+  "restore_preflight": {
+    "has_active_sha256": true,
+    "has_source_sha256": true,
+    "impact_classification": "SCHEMA_INCOMPATIBLE",
+    "status": 200
+  },
+  "restore_success": {
+    "body_keys": null,
+    "set_cookie_revoked": false,
+    "status": 409
+  },
+  "safety_snapshot": {
+    "backup_dir_file_count": 14,
+    "note": "snapshot existence inferred from dir growth; names normalized",
+    "snapshot_named_files": 0
+  }
+}
