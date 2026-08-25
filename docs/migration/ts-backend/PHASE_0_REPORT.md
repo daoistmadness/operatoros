@@ -119,3 +119,34 @@ Current repository policy is Bun-authoritative for JavaScript tooling
 consumer exists in scripts, CI, or Makefile. The operator's uncommitted
 `.nvmrc` deletion was not touched. Phase 0 documentation no longer claims
 `.nvmrc` as authoritative.
+
+
+## FINAL GATE AUDIT (2026-08-25) — ALL AREAS COMPLETE
+
+Every Phase 0 evidence area is landed and validated. Highlights of the
+final area (restore success path):
+
+- Real HTTP backup 200 + execution history (SUCCESS, checksum match).
+- Two-phase restore contract exercised end-to-end: preflight SHA256s,
+  four acknowledgements, RESTORE_DATABASE phrase, admin reauthentication.
+- Restore HTTP 200; post_restore integrity ok; FK violations 0.
+- Restored-state proof: post-backup marker session absent after restore.
+- Session revocation: cookie cleared AND database unrevoked count = 0.
+- Safety snapshot: pre-restore auto backup recorded via recovery history
+  safety_backup_filename.
+- Recovery history: REQUESTED -> STARTED -> COMPLETED, single operation id.
+- Corrupt backup fails closed (validation rejects before replacement).
+- Rollback classification: ROLLBACK_SOURCE_AND_LOWER_LEVEL_PROVEN —
+  validate-before-mutate ordering frozen (disabled gate, acknowledgement,
+  source-sha, active-sha, compatibility all precede replacement), plus
+  preflight-gates.json 21-step rehearsal and fail-closed corrupt case.
+
+Final counts: 57 corpus fixtures; 40 replay scenarios;
+40/40 EXACT_MATCH self-replay; 40/40 MIGRATION_DEFECT mismatch injection.
+Determinism: preview hash 07cd270ef40c x3; all service corpora byte-
+identical on double generation.
+
+Runtime authority: Bun. Protected DB: never accessed. Operator staged
+WIP: preserved exactly. Production Elysia/Drizzle code: none.
+
+TYPESCRIPT_BACKEND_PHASE_0_READY
