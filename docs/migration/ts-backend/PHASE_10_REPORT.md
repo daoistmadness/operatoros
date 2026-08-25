@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 83
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 82
 missing operations and one deprecated operation. Candidate analytics routes
 still need full dual replay. The legacy `.xls` preview path also needs an approved
 disposition.
@@ -32,8 +32,8 @@ disposition.
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 243 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 84.
+- Elysia: 244 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 83.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
