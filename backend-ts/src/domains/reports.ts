@@ -535,6 +535,26 @@ function sendFile(bytes: Uint8Array, format: "pdf" | "xlsx", filename: string): 
 function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
   const auth = (ctx: Context) => actor(context, ctx, {});
   app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
+  app.get(`${prefix}/filters`, (ctx: Context) => {
+    if (!auth(ctx)) return { detail: "Authentication required" };
+    for (const [name, value] of [["academic_year_id", ctx.query.academic_year_id], ["jenjang_id", ctx.query.jenjang_id]] as const) {
+      if (value !== undefined && value !== "" && (typeof value !== "string" || !/^-?\d+$/.test(value))) return fail(ctx.set, 422, `${name} must be a valid integer`);
+    }
+    const academicYearId = queryNumber(ctx.query.academic_year_id);
+    const jenjangId = queryNumber(ctx.query.jenjang_id);
+    const academicYears = rows(context, "SELECT id, label, is_default FROM academic_years ORDER BY start_date").map((value) => ({ id: Number(value.id), label: value.label, is_default: Boolean(value.is_default) }));
+    const jenjangs = rows(context, "SELECT id, name FROM jenjangs ORDER BY name").map((value) => ({ id: Number(value.id), name: value.name }));
+    const classParams: unknown[] = [];
+    const classFilters: string[] = ["class_name IS NOT NULL"];
+    if (academicYearId) { classFilters.push("academic_year_id = ?"); classParams.push(academicYearId); }
+    if (jenjangId) { classFilters.push("jenjang_id = ?"); classParams.push(jenjangId); }
+    const classNames = rows(context, `SELECT DISTINCT class_name FROM student_enrollments WHERE ${classFilters.join(" AND ")} ORDER BY class_name`, classParams as any[]).map((value) => value.class_name).filter((value) => typeof value === "string" && value.trim());
+    const subjectParams: unknown[] = [];
+    const subjectFilter = jenjangId ? " WHERE jenjang_id = ?" : "";
+    if (jenjangId) subjectParams.push(jenjangId);
+    const subjects = rows(context, `SELECT id, name, jenjang_id FROM subjects${subjectFilter} ORDER BY name`, subjectParams as any[]).map((value) => ({ id: Number(value.id), name: value.name, jenjang_id: Number(value.jenjang_id) }));
+    return { academic_years: academicYears, jenjangs, class_names: classNames, subjects };
+  }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()) }) });
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);

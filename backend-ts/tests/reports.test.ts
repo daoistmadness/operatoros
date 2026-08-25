@@ -50,6 +50,18 @@ describe("analytics and report parity", () => {
     try {
       const cookie = await adminCookie(app);
       const staff = await staffCookie(app);
+      for (const path of ["/api/analytics/filters?academic_year_id=2&jenjang_id=2", "/analytics/filters?academic_year_id=2&jenjang_id=2"]) {
+        const filters = await app.handle(new Request(`http://local${path}`, { headers: { cookie } }));
+        expect(filters.status).toBe(200);
+        expect(await filters.json()).toEqual({
+          academic_years: expect.arrayContaining([expect.objectContaining({ id: 2, label: "2026/2027-reports" })]),
+          jenjangs: expect.arrayContaining([expect.objectContaining({ id: 2, name: "SMP" })]),
+          class_names: ["7A", "7B", "7C"],
+          subjects: expect.arrayContaining([expect.objectContaining({ name: "Matematika", jenjang_id: 2 })]),
+        });
+      }
+      const invalidFilters = await app.handle(new Request("http://local/api/analytics/filters?academic_year_id=2.5", { headers: { cookie } }));
+      expect(invalidFilters.status).toBe(422);
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
       const monthlyJson = await monthly.json() as any;
