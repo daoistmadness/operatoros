@@ -131,6 +131,10 @@ describe("core CRUD parity slices", () => {
       expect(exportPreview.status).toBe(200); expect(await exportPreview.json()).toMatchObject({ normalized_scope: "ALL_PERMITTED_STUDENTS", estimated_row_count: 2, allowed: true });
       const exportDownload = await app.handle(new Request("http://local/api/student-exports/download", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ scope: "ALL_PERMITTED_STUDENTS", field_profile: "STANDARD_OPERATIONAL" }) }));
       expect(exportDownload.status).toBe(200); expect(new TextDecoder().decode(new Uint8Array(await exportDownload.arrayBuffer()).slice(0, 2))).toBe("PK");
+      const masterPreview = await app.handle(new Request("http://local/api/student-enrollments/academic-master-preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ source_owner: "golden", academic_years: [], jenjangs: [], programs: [], grades: [], classes: [] }) }));
+      expect(masterPreview.status).toBe(200); expect(await masterPreview.json()).toMatchObject({ status: "review_required", summary: { total: 0 } });
+      const rosterTemplate = await app.handle(new Request("http://local/api/student-enrollments/roster-template", { headers: auth }));
+      expect(rosterTemplate.status).toBe(200); expect(new TextDecoder().decode(new Uint8Array(await rosterTemplate.arrayBuffer()).slice(0, 2))).toBe("PK");
       const mappings = await app.handle(new Request("http://local/api/student-enrollments/mapping-preview", { method: "POST", headers: auth }));
       expect(mappings.status).toBe(200); expect(await mappings.json()).toMatchObject({ summary: { total: 5 } });
       const legacyPreview = await app.handle(new Request("http://local/api/student-masters/legacy-link/preview", { method: "POST", headers: auth }));
