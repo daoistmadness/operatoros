@@ -24,7 +24,7 @@ never silently accepted.
 | 6 | Early departure grace | report correctness | pending | PLANNED Phase 5 |
 | 7 | Overrides + append-only history | data integrity | `corpora/attendance-review/*.json` incl. trigger-abort cases | LANDED |
 | 8 | Corrections state machine | data integrity | `corpora/corrections/*.json` (submit/approve/reject/cancel/self-confirm/duplicate) | LANDED |
-| 9 | Academic masters + enrollments | API contract | creation-chain evidence only (grades seed); canonical-resolution cases pending | PARTIAL |
+| 9 | Academic placement + canonical resolution | data integrity, API contract | `service-corpora/academic/placement-and-resolution.json` + `corpora/academic-placement/*` (3 scenarios: history listing, missing-master 404, duplicate-year 409) | LANDED |
 | 10 | Grades grid save + uniqueness | data integrity | `service-corpora/grades/constraints.json` (unique/CHECK/RESTRICT) | LANDED |
 | 11 | KKM fallback + term mapping | report correctness | `service-corpora/kkm/resolution-and-term-defaults.json` (85.0 fallback verified at source) | LANDED |
 | 12 | Report aggregates (monthly/management/annual/rekap/tardiness) | report correctness | `service-corpora/reports/*` (8 files) + `corpora/reports/*` (5 scenarios) | LANDED |
@@ -33,8 +33,21 @@ never silently accepted.
 | 15 | Migration ledger/fingerprint | migration/rollback | `service-corpora/migrations/startup-validation.json` (fresh/memory/missing-path/no-ledger/empty-file) | LANDED |
 | 16 | Browser critical workflows | critical browser workflows | e2e suite reuse (no new corpus) | EXISTING |
 
-Replay harness (`tools/harness.py`) evidence: self-comparison 36/36
-EXACT_MATCH; injected mismatch detected 36/36 MIGRATION_DEFECT.
+Replay harness (`tools/harness.py`) evidence: self-comparison 39/39
+EXACT_MATCH; injected mismatch detected 39/39 MIGRATION_DEFECT.
+
+Academic placement evidence (`service-corpora/academic/`): full population
+action matrix (CREATE_ENROLLMENT / ALREADY_ENROLLED / CROSS_JENJANG_CONFLICT /
+MISSING_MASTER_LINK / MISSING_CLASS), jenjang resolution EXACT / MISSING /
+AMBIGUOUS (genuine two-candidate ambiguity via normalized name collision),
+class APPROVAL_REQUIRED, populate preview→commit→idempotent re-commit,
+wrong-confirmation rejection, attendance FK preservation across enrollment
+population, duplicate master+year rejected at database layer
+(`uq_student_master_academic_year` — schema-prevented ambiguity), master
+delete RESTRICT, historical ENDED + current ACTIVE coexistence with no
+flattening onto student_masters, canonical person identity architecture,
+name-only merge prohibition. Future-dated enrollment: NOT_APPLICABLE
+(source keys placement on lifecycle_state + academic_year only).
 Determinism: both generators byte-identical across double runs after
 path/free-space/digest sanitization.
 

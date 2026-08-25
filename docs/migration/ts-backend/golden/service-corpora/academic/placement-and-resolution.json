@@ -1,0 +1,92 @@
+{
+  "attendance_fk_preserved": true,
+  "canonical_identity_architecture": {
+    "enrollment_columns_reference_placement": [
+      "jenjang_id",
+      "academic_class_id",
+      "class_name"
+    ],
+    "master_has_no_placement_columns": true,
+    "student_enrollments_hold_placement": true,
+    "student_masters_hold_person_record": true
+  },
+  "class_resolution": {
+    "missing_rule": {
+      "match_type": "APPROVAL_REQUIRED",
+      "state": "UNMATCHED_CLASS"
+    }
+  },
+  "commit_first": {
+    "created": 1,
+    "skipped_existing": 0
+  },
+  "commit_idempotent_second": {
+    "created": 0,
+    "skipped_existing": 1
+  },
+  "commit_wrong_confirmation": "HTTPException: 400: Invalid confirmation token",
+  "duplicate_master_year_rejection": {
+    "constraint": "uq_student_master_academic_year",
+    "error": "IntegrityError",
+    "layer": "database",
+    "outcome": "REJECTED"
+  },
+  "future_enrollment": "NOT_APPLICABLE: placement resolution keys on lifecycle_state + academic_year; no future-dated enrollment concept exists in source",
+  "historical_and_current_coexist": [
+    {
+      "class_name": "7A-old",
+      "lifecycle_state": "ENDED",
+      "year_id": 2
+    },
+    {
+      "class_name": "7A",
+      "lifecycle_state": "ACTIVE",
+      "year_id": 3
+    }
+  ],
+  "jenjang_resolution": {
+    "ambiguous": {
+      "match_type": "AMBIGUOUS",
+      "state": "UNMATCHED_JENJANG"
+    },
+    "exact": {
+      "match_type": "EXACT",
+      "state": "MATCHED_JENJANG"
+    },
+    "missing": {
+      "match_type": "NORMALIZED_REVIEW_REQUIRED",
+      "state": "UNMATCHED_JENJANG"
+    }
+  },
+  "master_delete_restrict": {
+    "error": "IntegrityError",
+    "layer": "database",
+    "outcome": "REJECTED"
+  },
+  "name_only_merge_prohibition": {
+    "resolver_never_matches_by_name": true,
+    "same_name_students_get_distinct_masters_via_device_identity": true
+  },
+  "no_current_in_ended_year": {
+    "active_rows_in_past_year": 0,
+    "ended_rows_in_past_year": 1
+  },
+  "population_actions": {
+    "601": "CROSS_JENJANG_CONFLICT",
+    "602": "MISSING_MASTER_LINK",
+    "603": "CROSS_JENJANG_CONFLICT",
+    "604": "MISSING_MASTER_LINK",
+    "605": "MISSING_MASTER_LINK",
+    "606": "ALREADY_ENROLLED",
+    "607": "CREATE_ENROLLMENT",
+    "608": "CREATE_ENROLLMENT",
+    "609": "CREATE_ENROLLMENT",
+    "610": "MISSING_CLASS"
+  },
+  "preview": {
+    "checksum_present": true,
+    "id_token": "<uuid>",
+    "proposed_action": "CREATE_ENROLLMENT",
+    "row_count": 1
+  }
+}

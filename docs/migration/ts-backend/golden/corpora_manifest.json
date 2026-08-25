@@ -1,6 +1,36 @@
 {
   "fixtures": [
     {
+      "fixture_id": "academic_enrollment_duplicate_year_rejected",
+      "domain": "academic-placement",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_enrollment_duplicate_year_rejected.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "academic_history_current_and_ended",
+      "domain": "academic-placement",
+      "protected_category": "data integrity",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_history_current_and_ended.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "academic_history_missing_master_404",
+      "domain": "academic-placement",
+      "protected_category": "report correctness",
+      "kind": "replay-scenario",
+      "file": "corpora/academic-placement/academic_history_missing_master_404.json",
+      "setup": "seed_academic",
+      "steps": 2,
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "auth_absolute_expiry_returns_401",
       "domain": "auth",
       "protected_category": "authorization",
@@ -429,6 +459,15 @@
       "protected_category": "data integrity",
       "kind": "service-golden",
       "file": "service-corpora/reports/monthly_empty.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
+      "fixture_id": "svc-service-corpora-placement-and-resolution",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/academic/placement-and-resolution.json",
       "setup": "disposable-temp-db",
       "expected_verdict": "EXACT_MATCH"
     },
