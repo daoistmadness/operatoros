@@ -7,6 +7,7 @@ import { defaultAuthConfig } from "./auth/service";
 import { coreRoutes } from "./domains/core";
 import { configRoutes, readinessRoutes, systemRoutes } from "./domains/config";
 import { attendanceRoutes } from "./domains/attendance";
+import { attendanceImportRoutes } from "./domains/attendance-import";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -40,6 +41,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     configRoutes(app, context);
     readinessRoutes(app, context);
     attendanceRoutes(app, context);
+    attendanceImportRoutes(app, context);
   }
   systemRoutes(app, { destructiveOperationsEnabled: false });
 
