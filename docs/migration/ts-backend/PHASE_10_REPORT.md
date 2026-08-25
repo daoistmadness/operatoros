@@ -6,10 +6,10 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 74
-missing operations and one deprecated operation. Candidate analytics routes
-still need full dual replay. The legacy `.xls` preview path also needs an approved
-disposition.
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 72
+missing operations and one deprecated operation. Candidate analytics and
+roster routes still need full dual replay. The legacy `.xls` preview path also
+needs an approved disposition.
 
 ## Completed in this loop
 
@@ -31,14 +31,16 @@ disposition.
 - Added the teacher-class assignment candidate with overlap and lifecycle checks.
 - Added student export preview and download candidates with sensitive-field
   capability checks, row limits, and audit records.
+- Added academic-master preview and roster-template candidates with non-mutating
+  preview behavior and ExcelJS workbook output.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 252 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 75.
+- Elysia: 254 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 73.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -58,7 +60,7 @@ The unresolved families include active frontend consumers:
 - data portability;
 - report builder;
 - roster and student update workflows;
-- teacher assignments and student exports remain candidate-only until dual replay;
+- teacher assignments, student exports, and roster candidates remain candidate-only until dual replay;
 - upload history and conflict resolution;
 - destructive clear-data control.
 
@@ -77,5 +79,5 @@ the frontend still accept `.xls`. Elysia currently supports the Phase 0
 - Phase 11 started: no.
 - Phase 7, Phase 8, and Phase 9 merged-main prerequisites remain accepted.
 
-Next safe action: complete management-summary and operator-queue dual replay, then add its export
-routes and historical-trends routes.
+Next safe action: complete dual replay for the existing candidate routes, then
+close the smallest remaining FastAPI family.
