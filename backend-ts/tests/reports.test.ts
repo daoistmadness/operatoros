@@ -62,6 +62,26 @@ describe("analytics and report parity", () => {
       }
       const invalidFilters = await app.handle(new Request("http://local/api/analytics/filters?academic_year_id=2.5", { headers: { cookie } }));
       expect(invalidFilters.status).toBe(422);
+      for (const alias of ["/api/analytics", "/analytics"]) {
+        const byClass = await app.handle(new Request(`http://local${alias}/late-by-class`, { headers: { cookie } }));
+        expect(byClass.status).toBe(200);
+        expect(await byClass.json()).toEqual(expect.arrayContaining([
+          { class_name: "7A", late_count: 3 },
+          { class_name: "1A", late_count: 2 },
+        ]));
+        const byJenjang = await app.handle(new Request(`http://local${alias}/late-by-jenjang`, { headers: { cookie } }));
+        expect(byJenjang.status).toBe(200);
+        expect(await byJenjang.json()).toEqual(expect.arrayContaining([
+          { jenjang: "SMP", late_count: 3 },
+          { jenjang: "SD", late_count: 2 },
+        ]));
+        const byStudent = await app.handle(new Request(`http://local${alias}/late-by-student`, { headers: { cookie } }));
+        expect(byStudent.status).toBe(200);
+        expect(await byStudent.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ nama: "Alice SMP7A", class_name: "7A", jenjang: "SMP", late_count: 1 }),
+          expect.objectContaining({ nama: "Fajar SD1A", class_name: "1A", jenjang: "SD", late_count: 1 }),
+        ]));
+      }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
       const monthlyJson = await monthly.json() as any;
