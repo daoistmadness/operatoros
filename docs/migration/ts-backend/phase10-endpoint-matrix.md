@@ -11,9 +11,9 @@ document and a disposable SQLite database for the Elysia route list.
 
 | Measure | FastAPI | Elysia | Result |
 | --- | ---: | ---: | --- |
-| OpenAPI paths | 282 | 206 candidate routes | 83 FastAPI operations remain unresolved |
-| Operations | 327 | 244 candidate operations | 82 missing operations and one deprecated route remain |
-| Elysia runtime routes | — | 245 | `/ready` is an Elysia-only readiness route |
+| OpenAPI paths | 282 | 207 candidate routes | 82 FastAPI operations remain unresolved |
+| Operations | 327 | 245 candidate operations | 81 missing operations and one deprecated route remain |
+| Elysia runtime routes | — | 246 | `/ready` is an Elysia-only readiness route |
 | Unknown operations | — | — | 0 |
 
 The route comparison normalizes only FastAPI `{id:type}` and Elysia `:id`
@@ -33,9 +33,9 @@ headers, cookies, database state, or audit state.
 ## Green and non-applicable routes
 
 - 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
-- Analytics candidate routes are tested on disposable SQLite, but new routes do
-  not become `PARITY_GREEN` until FastAPI-versus-Elysia replay proves them.
-  level.
+- Analytics and operator-queue candidate routes are tested on disposable
+  SQLite, but they do not become `PARITY_GREEN` until FastAPI-versus-Elysia
+  replay proves them.
 - `GET /ready` is `NOT_APPLICABLE`. It is an Elysia foundation route.
 - The existing 40-scenario replay remains `40/40 EXACT_MATCH`.
 
@@ -49,7 +49,6 @@ unknown.
 | `api.analytics` | 6 | Management-summary exports, historical-trends, and both legacy aliases | `MIGRATION_DEFECT` | The management-summary candidate exists. Complete dual replay, export parity, and the remaining historical-trends routes. |
 | `api.attendance_followups` | 17 | `/api/attendance/followups*` | `MIGRATION_DEFECT` | Frontend consumers exist. Preserve the follow-up state machine and history. |
 | `api.data_portability` | 8 | `/api/data-portability/*` | `MIGRATION_DEFECT` | The frontend uses this surface. Preserve preview, commit, error-file, and history behavior. |
-| `api.operator_work_queue` | 1 | `GET /api/operator/work-queue` | `MIGRATION_DEFECT` | The frontend exposes the work queue. Reuse follow-up authorization. |
 | `api.report_builder` | 12 | `/api/report-builder/*` | `MIGRATION_DEFECT` | The frontend uses templates, preview, and exports. Port the service contract before cutover. |
 | `api.staff` | 2 | `/api/staff/imports/*` | `MIGRATION_DEFECT` | Import history is a production API surface. Preserve provenance and result files. |
 | `api.student_enrollments` | 4 | Roster preview, commit, template, and academic-master preview | `MIGRATION_DEFECT` | The frontend uses roster preview, commit, and template routes. |
@@ -62,7 +61,7 @@ unknown.
 | `api.uploads` | 8 | `/api/uploads/history*`, missing-records, and sample-template | `MIGRATION_DEFECT` | The frontend uses upload history. Preserve row, timeline, export, and missing-record contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **82** plus one deprecated operation. Candidate analytics routes remain parity-blocked until dual replay.
+Remaining missing operations: **81** plus one deprecated operation. Candidate analytics and operator-queue routes remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
