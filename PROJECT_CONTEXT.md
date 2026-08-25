@@ -2,7 +2,7 @@
 
 This document serves as the single source of truth for the **OperatorOS** project structure, architecture, data flow, and development guidelines.
 
-Current completed milestone: **Phase 10 — Incremental Design-System Modernization** (with Phase 18 Trends, Phase 19 Impact, and Phase 20 Report Builder fully implemented). Phase 9 platform work remains the historical foundation baseline, with the Phase 9.6 clean-Windows external acceptance gate still open. Phase 11 desktop production work remains gated by that acceptance result. See [current roadmap](docs/project-status/current-roadmap.md) and [Phase 10 release notes](docs/releases/phase-10-design-system-modernization.md). The application is verified by a baseline of 296 backend tests (pytest) and 110 frontend tests (Vitest).
+Current completed milestone: **Phase 11.1 — Desktop Runtime Reliability & Sidecar Supervisor** (with Phase 11.1A–11.1D implemented on dev host; clean-machine acceptance pending external execution). Prior milestones include Phase 10 Design System Modernization, Phase 18 Trends, Phase 19 Impact, and Phase 20 Report Builder. See [current roadmap](docs/project-status/current-roadmap.md), [Phase 10 release notes](docs/releases/phase-10-design-system-modernization.md), and [Phase 11.1D Closure Report](PHASE_11_1D_CLOSURE_REPORT.md). The application is verified by a baseline of 296 backend tests (pytest) and 110 frontend tests (Vitest).
 
 ---
 
@@ -19,11 +19,11 @@ Key functionalities:
 
 ## 2. Architectural Blueprint
 
-The application employs a decoupled client-server architecture connected via a REST API:
+The application employs a decoupled client-server architecture connected via a REST API, supporting both web/dev server execution and standalone desktop supervisor modes:
 
 ```mermaid
 graph TD
-    Client[React 19 Frontend] <-->|REST API / HTTP| API[FastAPI Backend]
+    Client[React 19 Frontend / Tauri v2 WebView2] <-->|REST API / HTTP| API[FastAPI Backend / PyInstaller Sidecar]
     API <-->|SQLAlchemy ORM| DB[(Database: SQLite / PostgreSQL)]
     Import[Excel Uploads] -->|pandas / openpyxl| API
 ```
@@ -31,16 +31,20 @@ graph TD
 ### Components
 1. **Backend (FastAPI & Python 3.12):**
    * Located in [backend/](backend).
-   * Exposes JSON endpoints using FastAPI routers. Run with Uvicorn.
+   * Exposes JSON endpoints using FastAPI routers (`/api/<domain>/...`). Run with Uvicorn in web mode or as `sidecar_main.py` when packaged.
    * Manages data access through SQLAlchemy ORM.
-2. **Frontend (React 19 & JavaScript):**
+2. **Frontend (React 19 & JavaScript / TypeScript):**
    * Located in [frontend/](frontend).
-   * Built with Vite configuration. Uses React Router v6.
+   * Built with Vite configuration. Uses React Router v7.
    * Utilizes Chart.js for data-dense dashboards, Framer Motion for transitions, and Tailwind CSS 4 for styling.
-3. **Database Environments:**
-   * **Local Development:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
+3. **Desktop Supervisor (Tauri v2 & PyInstaller Sidecar - Phase 11.1):**
+   * Located in [frontend/src-tauri/](frontend/src-tauri).
+   * Wraps the web frontend inside a native WebView2 window on Windows.
+   * Manages the PyInstaller backend process (`dist/operatoros-sidecar.exe`) as a child sidecar process with health checks, crash recovery, graceful teardown, and log collection (`Logs/desktop-runtime.log`).
+4. **Database Environments:**
+   * **Local Development & Desktop App:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
    * **Docker / Production:** PostgreSQL 16 database.
-4. **DevOps & Orchestration:**
+5. **DevOps & Orchestration:**
    * **Docker Compose:** A supported secondary workflow defined in [docker-compose.yml](docker-compose.yml). It orchestrates the DB (`attendance_db` container), Backend, Frontend, and Nginx reverse proxy; direct Vite/FastAPI processes remain the primary local workflow.
    * **Dev Launcher:** Configured inside [start-dev.sh](start-dev.sh), starting Vite dev server (port 5173) and FastAPI (port 8000). Runs a proxy forwarding `/api/*` to the backend.
 

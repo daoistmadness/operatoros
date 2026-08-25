@@ -40,7 +40,7 @@ This hybrid model is intentional, not an i18n gap. Mixing languages within a str
 
 ### Frontend
 
-#### [`frontend/src/lib/api/errors.js`](../../frontend/src/lib/api/errors.js)
+#### [`frontend/src/lib/api/errors.js`](../../frontend/src/lib/api/errors.ts)
 
 | Before | After | Reason |
 |--------|-------|--------|
@@ -55,19 +55,19 @@ This hybrid model is intentional, not an i18n gap. Mixing languages within a str
 | `"Grade Ledger failed to render"` (error boundary title) | `"Grade Ledger could not be displayed"` | More actionable; avoids technical "render" language |
 | Page description mentioned "Grade Ledger API" | Removed "API" from description | Exposes implementation detail unnecessarily |
 
-#### [`frontend/src/pages/Settings.js`](../../frontend/src/pages/Settings.js)
+#### [`frontend/src/pages/Settings.js`](../../frontend/src/pages/Settings.tsx)
 
 | Before | After | Reason |
 |--------|-------|--------|
 | `"Failed to reset database. Check console for details."` | `"Data reset could not be completed. Retry or contact the system administrator."` | "Check console" is meaningless to end users and exposes the debugging workflow |
 
-#### [`frontend/src/pages/JenjangConfig.jsx`](../../frontend/src/pages/JenjangConfig.jsx)
+#### [`frontend/src/pages/JenjangConfig.jsx`](../../frontend/src/features/jenjang-config/pages/JenjangConfig.tsx)
 
 | Before | After | Reason |
 |--------|-------|--------|
 | Column header: `"Jenjang siswa"` | `"Jenjang"` | "Jenjang siswa" was lowercase and redundant — the page context establishes this is student data; "Jenjang" is the canonical domain term |
 
-#### [`frontend/src/pages/Upload.js`](../../frontend/src/pages/Upload.js) — closeout correction
+#### [`frontend/src/pages/Upload.js`](../../frontend/src/pages/Upload.tsx) — closeout correction
 
 The closeout inventory found three attendance-import error fallbacks that still exposed "endpoint", "upload method", "routing configuration", or "backend logs". They now use user-directed service and retry language. The initial inventory was therefore incomplete: four frontend files changed in the accepted terminology commit, and one additional frontend file was corrected during closeout.
 
@@ -107,7 +107,7 @@ A 13-section canonical glossary covering:
 
 ### Tests
 
-#### [`frontend/src/lib/api/errors.test.js`](../../frontend/src/lib/api/errors.test.js)
+#### [`frontend/src/lib/api/errors.test.js`](../../frontend/src/lib/api/errors.test.ts)
 
 - Updated existing assertions for 404/405 and 500 to match new safe message content
 - Added 2 guard tests: one for 404/405 implementation terms and one for 500 implementation terms, with two negative assertions in each test
