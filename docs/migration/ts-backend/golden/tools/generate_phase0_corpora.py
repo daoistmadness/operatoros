@@ -30,6 +30,14 @@ _BOOTSTRAP_DB.parent.mkdir(parents=True, exist_ok=True)
 if _BOOTSTRAP_DB.exists():
     _BOOTSTRAP_DB.unlink()
 os.environ["DATABASE_URL"] = f"sqlite:///{_BOOTSTRAP_DB}"
+_RESTORE_BACKUP_DIR = Path(tempfile.gettempdir()) / "opencode" / "tsphase0" / "restore-backups"
+if _RESTORE_BACKUP_DIR.exists():
+    import shutil as _shutil
+
+    _shutil.rmtree(_RESTORE_BACKUP_DIR, ignore_errors=True)
+_RESTORE_BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+os.environ["BACKUP_DIR"] = str(_RESTORE_BACKUP_DIR)
+os.environ["ENABLE_DESTRUCTIVE_OPERATIONS"] = "true"
 os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
 os.environ.setdefault("ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION", "true")
 
@@ -706,6 +714,189 @@ def academic_placement_corpus() -> None:
         db.close()
 
 
+def restore_success_corpus() -> None:
+    import sqlite3 as _sq
+
+    sys.path.insert(0, str(GOLDEN / "tools"))
+    from seeds import seed_auth_users
+
+    # Rebind FIRST so the one-time `main` import initializes against the
+    # disposable active database, not the previous corpus's database.
+    from fastapi.testclient import TestClient
+
+    stale = _RESTORE_BACKUP_DIR.parent / "restore-active.db"
+    if stale.exists():
+        stale.unlink()
+    for suffix in ("-wal", "-shm"):
+        sidecar = Path(str(stale) + suffix)
+        if sidecar.exists():
+            sidecar.unlink()
+    from core.schema_migrations import bootstrap_fresh_sqlite_database
+
+    active_db = _RESTORE_BACKUP_DIR.parent / "restore-active.db"
+    bootstrap_fresh_sqlite_database(active_db)
+    os.environ["DATABASE_URL"] = f"sqlite:///{active_db}"
+    seed_auth_users(active_db)
+
+    from core import database as core_database
+
+    _rebind(core_database, f"sqlite:///{active_db}")
+
+    import main as app_main
+    from core.config import settings
+
+    settings.ENABLE_DESTRUCTIVE_OPERATIONS = True
+    client = TestClient(app_main.app)
+    out: dict = {}
+
+    login = client.post("/api/auth/login", json={"username": "golden-admin", "password": "golden-admin-pass-1"})
+    token = login.cookies.get("astyx_session")
+    auth = {"Cookie": f"astyx_session={token}"}
+
+    # File-based backups read only the main DB file; flush WAL first so
+    # seeded users/sessions are visible to the backup.
+    conn = _sq.connect(active_db)
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    conn.close()
+
+    backup_resp = client.post("/api/admin/backups", headers=auth)
+    backup_body = backup_resp.json()
+    filename = backup_body.get("filename")
+    out["backup_creation"] = {
+        "status": backup_resp.status_code,
+        "filename_class": "<backup-file>" if filename else None,
+        "checksum_present": bool(backup_body.get("sha256")),
+        "size_bytes_present": backup_body.get("size_bytes") is not None,
+        "created_at_present": backup_body.get("created_at") is not None,
+    }
+
+    history = client.get("/api/admin/backups/history", headers=auth).json()
+    entry = next((e for e in history if e.get("backup_filename") == filename or e.get("filename") == filename), None)
+    out["backup_execution_history"] = {
+        "entry_count": len(history),
+        "matched_created_backup": entry is not None,
+        "status_success": (entry or {}).get("status") in ("SUCCESS", "success") if entry else None,
+        "trigger_type_present": bool((entry or {}).get("trigger_type") or (entry or {}).get("trigger")),
+        "checksum_matches": bool(entry) and (
+            (entry or {}).get("sha256") == backup_body.get("sha256")
+            or (entry or {}).get("checksum") == backup_body.get("sha256")
+        ),
+        "history_is_list_ordered_newest_first": bool(history) and history[0].get("id", 0) >= max(e.get("id", 0) for e in history),
+    }
+
+    import sqlite3 as _sq
+
+    from datetime import datetime as _dt
+
+    future = "2030-01-01 00:00:00"
+    conn = _sq.connect(active_db)
+    conn.execute(
+        "INSERT INTO sessions (user_id, token_hash, created_at, last_used_at, expires_at, absolute_expires_at) "
+        "VALUES (1, ?, ?, ?, ?, ?)",
+        ("f" * 64, _dt.utcnow().isoformat(" "), _dt.utcnow().isoformat(" "), future, future),
+    )
+    conn.commit()
+    conn2 = _sq.connect(active_db)
+    conn2.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    pre_restore_sessions = conn2.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
+    pre_restore_users = conn2.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    conn2.close()
+    out["pre_restore_state"] = {"sessions": pre_restore_sessions, "users": pre_restore_users}
+
+    preflight = client.post(f"/api/admin/backups/{filename}/restore-preflight", headers=auth)
+    pf = preflight.json() if preflight.status_code == 200 else {}
+    out["restore_preflight"] = {
+        "status": preflight.status_code,
+        "has_source_sha256": bool(pf.get("source", {}).get("sha256")),
+        "has_active_sha256": bool(pf.get("active", {}).get("active_sha256")),
+        "impact_classification": pf.get("impact_classification"),
+    }
+
+    restore = client.post(
+        f"/api/admin/backups/{filename}/restore",
+        headers=auth,
+        json={
+            "current_password": "golden-admin-pass-1",
+            "confirmation_filename": filename,
+            "confirmation_phrase": "RESTORE_DATABASE",
+            "expected_source_sha256": pf.get("source", {}).get("sha256"),
+            "expected_active_sha256": pf.get("active", {}).get("active_sha256"),
+            "acknowledge_complete_replacement": True,
+            "acknowledge_session_revocation": True,
+            "acknowledge_restart_required": True,
+            "acknowledge_safety_backup": True,
+        },
+    )
+    out["restore_success"] = {
+        "status": restore.status_code,
+        "set_cookie_revoked": "astyx_session=" in restore.headers.get("set-cookie", "") and "Max-Age=0" in restore.headers.get("set-cookie", "").replace("max-age=0", "Max-Age=0"),
+        "body_keys": sorted(restore.json().keys())[:8] if restore.status_code == 200 else None,
+    }
+
+    conn = _sq.connect(active_db)
+    post_sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
+    revoked_or_gone = post_sessions == 0 or conn.execute(
+        "SELECT COUNT(*) FROM sessions WHERE revoked_at IS NULL"
+    ).fetchone()[0] == 0
+    post_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    conn.close()
+    out["post_restore_database"] = {
+        "sessions_total": post_sessions,
+        "all_sessions_revoked_or_wiped": revoked_or_gone,
+        "admin_user_survives": post_users >= 1,
+    }
+    out["current_restore_session"] = "revoked-with-all-sessions" if revoked_or_gone else "unknown"
+
+    recovery = client.get("/api/admin/backups/recovery-history", headers=auth).json() if token else []
+    recovery = recovery if isinstance(recovery, list) else recovery.get("items", [])
+    success_recovery = [r for r in recovery if str(r.get("status", "")).upper() in ("SUCCESS", "COMPLETED")]
+    out["recovery_history"] = {
+        "entry_count": len(recovery),
+        "successful_entries": len(success_recovery),
+        "operation_fields_sample": sorted(success_recovery[0].keys())[:10] if success_recovery else [],
+    }
+
+    second = client.post("/api/admin/backups", headers=auth)
+    fname2 = second.json().get("filename")
+    target = Path(os.environ["BACKUP_DIR"]) / fname2 if fname2 else None
+    if target and target.exists():
+        data = bytearray(target.read_bytes())
+        data[len(data) // 2 : len(data) // 2 + 16] = b"CORRUPTED-CORRUPT"[:16]
+        target.write_bytes(bytes(data))
+    corrupt_preflight = client.post(f"/api/admin/backups/{fname2}/restore-preflight", headers=auth)
+    corrupt_restore = client.post(
+        f"/api/admin/backups/{fname2}/restore",
+        headers=auth,
+        json={
+            "current_password": "golden-admin-pass-1",
+            "confirmation_filename": fname2,
+            "confirmation_phrase": "RESTORE_DATABASE",
+            "expected_source_sha256": "stale",
+            "expected_active_sha256": "stale",
+            "acknowledge_complete_replacement": True,
+            "acknowledge_session_revocation": True,
+            "acknowledge_restart_required": True,
+            "acknowledge_safety_backup": True,
+        },
+    )
+    out["corrupt_backup_fail_closed"] = {
+        "preflight_status": corrupt_preflight.status_code,
+        "preflight_not_ok": corrupt_preflight.status_code != 200,
+        "restore_status_fail_closed": corrupt_restore.status_code in (400, 409),
+        "error_code": (corrupt_restore.json().get("detail", {}) or {}).get("code") if isinstance(corrupt_restore.json().get("detail"), dict) else None,
+    }
+
+    backup_files = sorted(p.name for p in os.environ["BACKUP_DIR"] and Path(os.environ["BACKUP_DIR"]).iterdir())
+    snapshot_like = [n for n in backup_files if "snapshot" in n.lower() or "safety" in n.lower()]
+    out["safety_snapshot"] = {
+        "backup_dir_file_count": len(backup_files),
+        "snapshot_named_files": len(snapshot_like),
+        "note": "snapshot existence inferred from dir growth; names normalized",
+    }
+
+    record("restore/success-path.json", out)
+
+
 def backup_corpus() -> None:
     from services.backup_service import calculate_sha256
 
@@ -737,6 +928,7 @@ def main() -> None:
     reports_corpus()
     academic_placement_corpus()
     backup_corpus()
+    restore_success_corpus()
     manifest_path = GOLDEN / "corpora_manifest.json"
     manifest = json.loads(manifest_path.read_text())
     by_id = {e["fixture_id"]: e for e in manifest.get("fixtures", [])}
@@ -750,6 +942,7 @@ def main() -> None:
             "grades": "data integrity",
             "heb": "report correctness",
             "backup": "data preservation",
+            "restore": "data preservation",
         }.get(domain, "data integrity")
         by_id[f"svc-{domain}-{fixture_id}"] = {
             "fixture_id": f"svc-{domain}-{fixture_id}",

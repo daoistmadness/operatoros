@@ -526,6 +526,15 @@
       "expected_verdict": "EXACT_MATCH"
     },
     {
+      "fixture_id": "svc-service-corpora-success-path",
+      "domain": "service-corpora",
+      "protected_category": "data integrity",
+      "kind": "service-golden",
+      "file": "service-corpora/restore/success-path.json",
+      "setup": "disposable-temp-db",
+      "expected_verdict": "EXACT_MATCH"
+    },
+    {
       "fixture_id": "svc-service-corpora-tardiness",
       "domain": "service-corpora",
       "protected_category": "data integrity",
