@@ -75,4 +75,34 @@ describe("core CRUD parity slices", () => {
       rmSync(path, { force: true });
     }
   }, 30000);
+
+  it("preserves staff education and enrollment lifecycle history", async () => {
+    const path = `/tmp/operatoros-core-lifecycle-${process.pid}-${Date.now()}.db`;
+    seedAcademic(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-lifecycle-audit-${process.pid}` } });
+    try {
+      const secondClass = database.client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) SELECT academic_year_id, grade_id, '7B', 'B', 1 FROM academic_classes WHERE id = 1");
+      const staffId = "staff-golden-1";
+      database.client.run("INSERT INTO staff_members (id, full_name, normalized_name, employment_status, employment_start_date, dapodik_status_normalized) VALUES (?, ?, ?, 'ACTIVE', ?, 'ACTIVE')", [staffId, "Golden Staff", "golden staff", "2020-01-01"]);
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const education = await app.handle(new Request(`http://local/api/staff/${staffId}/education`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ education_level: "S1", institution_name: "State University", graduation_year: 2015 }) }));
+      expect(education.status).toBe(201);
+      const educationList = await app.handle(new Request(`http://local/api/staff/${staffId}/education`, { headers: auth }));
+      expect(await educationList.json()).toMatchObject({ highest_education_level: "S1", highest_education_institution: "State University" });
+      expect((await (await app.handle(new Request(`http://local/api/staff/${staffId}`, { headers: auth }))).json()) as any).toMatchObject({ employment_status: "ACTIVE", full_name: "Golden Staff" });
+      const jenjangId = Number((database.client.query("SELECT id FROM jenjangs LIMIT 1").get() as any).id);
+      expect((await app.handle(new Request(`http://local/api/staff/${staffId}/jenjangs`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang_ids: [jenjangId] }) }))).status).toBe(200);
+      const enrollmentId = Number((database.client.query("SELECT id FROM student_enrollments WHERE student_master_id = ? AND lifecycle_state = 'ACTIVE'").get("11111111-1111-1111-1111-111111111111") as any).id);
+      expect((await app.handle(new Request(`http://local/api/student-enrollments/${enrollmentId}/transfer`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ target_class_id: Number(secondClass.lastInsertRowid), effective_date: "2026-08-01", reason: "Class placement changed", confirmation: "TRANSFER_STUDENT_ENROLLMENT" }) }))).status).toBe(200);
+      const withdrawn = await app.handle(new Request(`http://local/api/student-enrollments/${enrollmentId}/withdraw`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ effective_date: "2026-08-15", reason: "Student withdrew", reason_code: "WITHDRAWAL", confirmation: "WITHDRAW_STUDENT_ENROLLMENT" }) }));
+      expect(withdrawn.status).toBe(200); expect((await withdrawn.json() as any).lifecycle_state).toBe("WITHDRAWN");
+      const status = await app.handle(new Request(`http://local/api/student-enrollments/${enrollmentId}/deletion-status`, { headers: auth }));
+      expect(await status.json()).toMatchObject({ can_hard_delete: false, dependencies: ["CLASS_HISTORY", "LIFECYCLE_AUDIT"] });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
 });

@@ -4,6 +4,7 @@ import { inTransaction } from "../db/connection";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext, CurrentUser } from "../auth/service";
+import { earlyDepartureRoutes } from "./early-departure";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -128,4 +129,4 @@ function selfConfirmRoute(app: any, context: AuthContext): void {
   }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }), body: t.Object({ expected_version: t.Number({ minimum: 1 }), confirmation: t.String(), confirmation_note: t.String({ minLength: 3, maxLength: 1000 }) }) });
 }
 
-export function attendanceRoutes(app: any, context: AuthContext): any { reviewRoutes(app, context); scopedRoutes(app, context); correctionRoutes(app, context); selfConfirmRoute(app, context); return app; }
+export function attendanceRoutes(app: any, context: AuthContext): any { reviewRoutes(app, context); scopedRoutes(app, context); correctionRoutes(app, context); selfConfirmRoute(app, context); earlyDepartureRoutes(app, context); return app; }

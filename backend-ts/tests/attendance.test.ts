@@ -70,4 +70,22 @@ describe("attendance parity slices", () => {
       expect(duplicate.status).toBe(409);
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
+
+  it("keeps early-departure policy, excuse, and history behavior", async () => {
+    const path = `/tmp/operatoros-departure-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-departure-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const created = await app.handle(new Request("http://local/api/attendance/departure-policies", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang: "SMP", weekday: 5, dismissal_time: "16:30", grace_period_minutes: 15, effective_from: "2026-07-01", change_reason: "Attendance policy test" }) }));
+      expect(created.status).toBe(201); expect((await created.json() as any).dismissal_time).toBe("16:30");
+      const departures = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-01/departures", { headers: auth }));
+      expect(departures.status).toBe(200); expect((await departures.json() as any).departures[0]).toMatchObject({ classification: "EARLY_DEPARTURE", minutes_early: 30 });
+      const recorded = await app.handle(new Request("http://local/api/attendance/1/departure-excuses", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ reason_code: "SCHOOL_EVENT", explanation: "Approved school event" }) }));
+      expect(recorded.status).toBe(201); const excuseId = (await recorded.json() as any).id;
+      const history = await app.handle(new Request("http://local/api/attendance/1/departure-history", { headers: auth }));
+      expect((await history.json() as any).audit_trail[0]).toMatchObject({ action: "RECORDED", reason_code: "SCHOOL_EVENT" });
+      expect((await (await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-01/departures", { headers: auth }))).json() as any).departures[0].classification).toBe("EXCUSED_EARLY_DEPARTURE");
+      const revoked = await app.handle(new Request(`http://local/api/attendance/1/departure-excuses/${excuseId}/revoke`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ revocation_reason: "Event ended" }) }));
+      expect(revoked.status).toBe(200); expect((await revoked.json() as any).state).toBe("REVOKED");
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
 });
