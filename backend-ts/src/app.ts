@@ -1,6 +1,12 @@
 import { Elysia, t } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import type { BackendConfig } from "./config";
+import { openDatabase } from "./db/connection";
+import { authRoutes } from "./auth/routes";
+import { defaultAuthConfig } from "./auth/service";
+import { coreRoutes } from "./domains/core";
+import { configRoutes, readinessRoutes, systemRoutes } from "./domains/config";
+import { attendanceRoutes } from "./domains/attendance";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -9,6 +15,7 @@ function errorBody(code: string, message: string) {
 }
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
+  const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const app = new Elysia({ name: "backend-ts" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -24,7 +31,17 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       return errorBody("INTERNAL_ERROR", "Internal server error.");
     })
     .get("/health", () => ({ status: "ok" }))
-    .get("/ready", () => ({ ready: true, persistence: "not-configured" }));
+    .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
+
+  if (database && _config.auth?.authCookieSecret) {
+    const context = { database, config: defaultAuthConfig(_config.auth) };
+    authRoutes(app, context);
+    coreRoutes(app, context);
+    configRoutes(app, context);
+    readinessRoutes(app, context);
+    attendanceRoutes(app, context);
+  }
+  systemRoutes(app, { destructiveOperationsEnabled: false });
 
   if (_config.environment !== "test") {
     app.use(openapi({ path: "/openapi" }));

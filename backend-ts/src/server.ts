@@ -1,6 +1,7 @@
 import type { Subprocess } from "bun";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
+import { openDatabase } from "./db/connection";
 
 export interface RunningServer {
   port: number;
@@ -10,7 +11,8 @@ export interface RunningServer {
 
 export function startServer(overrides: Partial<{ hostname: string; port: number }> = {}): RunningServer {
   const config = { ...loadConfig(), ...overrides };
-  const app = createApp(config);
+  const databaseHandle = config.databaseHandle ?? (config.databasePath ? openDatabase(config.databasePath) : undefined);
+  const app = createApp({ ...config, databaseHandle });
   app.listen({ hostname: config.hostname, port: config.port === 0 ? 0 : config.port });
   const bunServer = app.server as unknown as {
     port: number;
@@ -20,7 +22,10 @@ export function startServer(overrides: Partial<{ hostname: string; port: number 
   return {
     port: bunServer.port,
     hostname: config.hostname,
-    stop: () => bunServer.stop(true),
+    stop: () => {
+      bunServer.stop(true);
+      databaseHandle?.close();
+    },
   };
 }
 
