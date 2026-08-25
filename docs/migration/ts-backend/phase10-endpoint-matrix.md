@@ -11,9 +11,9 @@ document and a disposable SQLite database for the Elysia route list.
 
 | Measure | FastAPI | Elysia | Result |
 | --- | ---: | ---: | --- |
-| OpenAPI paths | 282 | 216 candidate routes | 73 FastAPI operations remain unresolved |
-| Operations | 327 | 254 candidate operations | 72 missing operations and one deprecated route remain |
-| Elysia runtime routes | — | 255 | `/ready` is an Elysia-only readiness route |
+| OpenAPI paths | 282 | 218 candidate routes | 71 FastAPI operations remain unresolved |
+| Operations | 327 | 256 candidate operations | 70 missing operations and one deprecated route remain |
+| Elysia runtime routes | — | 257 | `/ready` is an Elysia-only readiness route |
 | Unknown operations | — | — | 0 |
 
 The route comparison normalizes only FastAPI `{id:type}` and Elysia `:id`
@@ -33,7 +33,7 @@ headers, cookies, database state, or audit state.
 ## Green and non-applicable routes
 
 - 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
-- Analytics, operator-queue, teacher-assignment, student-export, and roster candidate
+- Analytics, operator-queue, teacher-assignment, student-export, roster, and staff-import candidate
   routes are tested on disposable SQLite, but they do not become
   `PARITY_GREEN` until FastAPI-versus-Elysia replay proves them.
 - `GET /ready` is `NOT_APPLICABLE`. It is an Elysia foundation route.
@@ -50,7 +50,7 @@ unknown.
 | `api.attendance_followups` | 17 | `/api/attendance/followups*` | `MIGRATION_DEFECT` | Frontend consumers exist. Preserve the follow-up state machine and history. |
 | `api.data_portability` | 8 | `/api/data-portability/*` | `MIGRATION_DEFECT` | The frontend uses this surface. Preserve preview, commit, error-file, and history behavior. |
 | `api.report_builder` | 12 | `/api/report-builder/*` | `MIGRATION_DEFECT` | The frontend uses templates, preview, and exports. Port the service contract before cutover. |
-| `api.staff` | 2 | `/api/staff/imports/*` | `MIGRATION_DEFECT` | Import history is a production API surface. Preserve provenance and result files. |
+| `api.staff` | 2 | `/api/staff/imports/*` | `MIGRATION_DEFECT` | History and detail candidates exist. Complete dual replay and preserve provenance fields. |
 | `api.student_enrollments` | 2 | Roster preview and commit | `MIGRATION_DEFECT` | Academic-master preview and roster-template candidates exist. Complete roster preview, commit, and dual replay. |
 | `api.student_import_sessions` | 2 | `/api/student-import-sessions/*` | `MIGRATION_DEFECT` | Rollback behavior is not proven in Elysia. |
 | `api.student_masters` | 6 | Student update preview, commit, history, template, and result workbook | `MIGRATION_DEFECT` | The frontend uses update preview and commit. Preserve checksum and provenance. |
@@ -59,7 +59,7 @@ unknown.
 | `api.uploads` | 8 | `/api/uploads/history*`, missing-records, and sample-template | `MIGRATION_DEFECT` | The frontend uses upload history. Preserve row, timeline, export, and missing-record contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **72** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, student-export, and roster routes remain parity-blocked until dual replay.
+Remaining missing operations: **70** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, student-export, roster, and staff-import routes remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
@@ -79,7 +79,7 @@ approved deprecation decision records the replacement and consumer impact.
 
 ## OpenAPI disposition
 
-The FastAPI and Elysia OpenAPI documents differ because the 102 unresolved
+The FastAPI and Elysia OpenAPI documents differ because the 100 unresolved
 operations are not registered in Elysia. The matrix explains every difference.
 There is no hidden or unknown drift. The OpenAPI gate remains withheld until
 the migration-defect rows close and the `.xls` disposition is approved.
