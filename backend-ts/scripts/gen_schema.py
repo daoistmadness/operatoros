@@ -1,4 +1,5 @@
 """Generate Drizzle schema.ts from the authoritative bootstrapped SQLite DB."""
+import ast
 import os, sqlite3, sys, tempfile
 from pathlib import Path
 
@@ -72,10 +73,22 @@ for tname in tables:
                 mods += f".default(sql`{dv}`)"
             else:
                 try:
-                    float(dv)
-                    mods += f".default({dv})"
-                except ValueError:
-                    mods += f".default({json_dumps(dflt)})"
+                    value = ast.literal_eval(dv)
+                except (SyntaxError, ValueError):
+                    value = dflt
+                if isinstance(value, (int, float)):
+                    mods += f".default({value})"
+                elif isinstance(value, str):
+                    if ts_type in {"integer", "real"}:
+                        try:
+                            numeric = float(value)
+                            mods += f".default({int(numeric) if numeric.is_integer() else numeric})"
+                        except ValueError:
+                            mods += f".default({json_dumps(value)})"
+                    else:
+                        mods += f".default({json_dumps(value)})"
+                else:
+                    mods += f".default(sql`{dv}`)"
         col_defs.append(f'    "{name}": {ts_type}(){mods},')
         if pk: pk_cols.append(name)
     for fk in fks:
