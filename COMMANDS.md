@@ -1,6 +1,6 @@
 # Commands
 
-Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
+Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
 
 ## Install
 - `mise install`  # install Bun 1.4.0 and Python 3.12.3 from mise.lock
@@ -11,11 +11,13 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `agent-browser install --with-deps`  # Linux / WSL2 browser dependencies
 
 ## Development
-- `./start-dev.sh`  # direct FastAPI + Vite launcher
+- `./start-dev.sh`  # default Elysia + Vite launcher
+- `OPERATOROS_BACKEND=fastapi ./start-dev.sh`  # FastAPI fallback launcher
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
-- `cd backend && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000`
+- `cd backend-ts && bun run src/server.ts`  # standalone Elysia backend
+- `OPERATOROS_BACKEND=fastapi ./scripts/start-backend.sh`  # standalone FastAPI fallback
 - `cd frontend && bun run dev`
-- `cd frontend && VITE_API_BASE_URL=http://localhost:8000 bun run dev`
+- `cd frontend && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
 
 ## Build
 - `cd frontend && bun run build`
@@ -26,7 +28,7 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `cd frontend && bun test`  # frontend unit tests
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
-- `curl http://localhost:8000/docs`
+- `curl http://localhost:8000/openapi`
 - `PYTHONPATH=backend:backend/src python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # deterministic optional-engine pilot; never point output at a database
 
 ## Formatting / Lint / Typecheck

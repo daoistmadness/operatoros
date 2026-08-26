@@ -4,8 +4,8 @@ This file records durable project decisions and stable context for future agent 
 
 ## Stable Decisions
 - The repository is a full-stack OperatorOS school attendance and grade analytics platform, not a generic dashboard starter.
-- The backend is FastAPI + SQLAlchemy, and the frontend is React 19 with Vite.
-- `backend/src/main.py` is the authoritative router registration point.
+- The primary backend is Elysia + TypeScript + Drizzle, and the frontend is React 19 with Vite. FastAPI + SQLAlchemy remains the rollback and reference backend.
+- `backend-ts/src/app.ts` is the authoritative normal router registration point; `backend/src/main.py` remains the FastAPI reference router.
 - `backend/src/core/database.py` creates tables on startup and applies compatibility fixes for older local databases.
 - Raw SQL files in `backend/migrations/` are the repo's visible migration history.
 - The frontend uses Vite for development. In dev mode, `VITE_API_BASE_URL` is empty and the Vite dev proxy forwards `/api/*` from `http://127.0.0.1:5173` to `http://127.0.0.1:8000`.
@@ -31,7 +31,7 @@ This file records durable project decisions and stable context for future agent 
 - Phase 10 incremental design-system modernization is complete. Login, navigation, Settings, Backup Management, restore dialog, Executive Reports, Dashboard/Attendance Summary, and target semantic tables use the owned primitive/shared-pattern system; 200%-equivalent reflow, rendered contrast, and disposable monthly/annual PDF/XLSX acceptance passed.
 - The backend can construct a PostgreSQL SQLAlchemy URL from `POSTGRES_*` fields; Compose supplies `db` as the service host.
 - Backend behavioral tests now live under `backend/tests/` and are run with `pytest`.
-- The experimental Tauri desktop shell (`frontend/src-tauri/`), `desktop-spike/` packaging, Windows launcher scripts, and desktop sidecar contract tests were removed on 2026-08-20. The supported runtime is `LOCAL_BROWSER_RUNTIME`: local FastAPI backend, React frontend in a browser, SQLite database.
+- The experimental Tauri desktop shell (`frontend/src-tauri/`), `desktop-spike/` packaging, Windows launcher scripts, and desktop sidecar contract tests were removed on 2026-08-20. The supported runtime is `LOCAL_BROWSER_RUNTIME`: local Elysia backend, React frontend in a browser, SQLite database. FastAPI remains the documented rollback and reference backend.
 - **Verified Test Suites (July 2026)**: The backend test suite contains 296 tests verified using `pytest`. The frontend test suite contains 110 tests verified using `Vitest`. Both suites pass cleanly on the standard development stack.
 - E2E conventions are durable: `make e2e-validate` validates infrastructure, `timeout 300 make e2e-smoke` is the local blocking gate, and `make e2e-full` is GitHub Actions-only unless explicitly owner-approved. The application stack and Playwright 1.55.1 collection use the repository-pinned genuine Linux Node.js 24/npm 11 runtime.
 - E2E runs use dynamic launcher state and a fresh synthetic SQLite database under `.runtime/operatoros-e2e/`; they never use `backend/attendance.db` or `backend/.local-dev/`, never kill unknown port owners, and must preserve production checksum and the seeded enrollment fingerprint.

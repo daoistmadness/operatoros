@@ -24,7 +24,7 @@ baseline. Local development uses a disposable configured database—never
 flowchart LR
   Browser[Browser / staff user]
   FE[React frontend]
-  API[FastAPI backend]
+  API[Elysia backend]
   DB[(SQLite)]
   SVC[Excel import and reporting services]
 
@@ -46,7 +46,7 @@ OperatorOS uses a layered local security model:
 
 ```mermaid
 flowchart TD
-  Browser["Browser"] -->|"HttpOnly astyx_session cookie"| API["FastAPI backend"]
+  Browser["Browser"] -->|"HttpOnly astyx_session cookie"| API["Elysia backend"]
   API --> Session["Validated database session"]
   Session --> User["Active database user"]
   User --> Role["Database role"]
@@ -56,10 +56,11 @@ flowchart TD
 Only the backend grants access. Frontend identity and role state are navigation conveniences. Client fields such as `request.role`, `reviewed_by`, `entered_by`, and `uploaded_by` are untrusted metadata, not authorization evidence. See [Identity and Authentication](docs/security/identity-authentication.md) and [Backup and Restore Security](docs/security/backup-restore.md).
 
 ## Stack
-- Backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
+- Primary backend: Bun, TypeScript, Elysia, Drizzle, SQLite, ExcelJS
+- Rollback/reference backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
 - Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Database: SQLite
-- Runtime: local FastAPI backend and React browser UI
+- Runtime: local Elysia backend and React browser UI
 
 ## Repository Layout
 - [`backend/`](backend/): API routers, settings, ORM models, services, and raw SQL migrations
@@ -67,7 +68,8 @@ Only the backend grants access. Frontend identity and role state are navigation 
 - [`docs/`](docs/): WSL2 guidance, utility script notes, and operational references
 - [`scratch/`](scratch/): one-off diagnostics and experiments
 - Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
-- [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and FastAPI backend
+- [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and Elysia backend
+- [`scripts/start-backend.sh`](scripts/start-backend.sh): standalone Elysia launcher with FastAPI fallback
 - [`scripts/verify-browser.sh`](scripts/verify-browser.sh): Agent Browser smoke test
 
 ## Core validation
@@ -93,16 +95,22 @@ are generated and drift-checked through the frontend package scripts. See
 - Agent Browser on the PATH if you want browser verification
 
 ## Quick Start
-Direct Bun/Vite and Python/FastAPI processes are the local-development
-workflow. The supported runtime is a local FastAPI backend with the React
-frontend in a browser and a SQLite database. Containers are not required.
+Direct Bun/Vite and Bun/Elysia processes are the local-development workflow.
+The supported runtime is a local Elysia backend with the React frontend in a
+browser and a SQLite database. FastAPI remains available as a rollback and
+reference backend. Containers are not required.
 
 ### Local Development Launcher
 ```bash
 ./start-dev.sh
 ```
 
-The launcher validates Bun, locked frontend dependencies (`bun.lock`), the Python environment, backend imports, and ports before starting anything. It displays the ready banner only after both health checks pass and stores service logs under `.runtime/operatoros-dev/`. Press `Ctrl+C` to stop both process groups cleanly.
+The launcher defaults to Elysia. It validates Bun, locked dependencies, the
+Python environment used for managed database and session state, and ports
+before starting anything. Set `OPERATOROS_BACKEND=fastapi` for the fallback.
+The launcher displays the ready banner only after both health checks pass and
+stores service logs under `.runtime/operatoros-dev/`. Press `Ctrl+C` to stop
+both process groups cleanly.
 
 On a fresh database, open the frontend and create the first administrator on the setup screen. OperatorOS then closes setup permanently and redirects to normal login. There are no default credentials.
 
@@ -144,12 +152,12 @@ This launches the app and then runs [`scripts/verify-browser.sh`](scripts/verify
 
 ## Local Development Without start-dev.sh
 ```bash
-cd backend
-python3.12 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
+cd backend-ts
+bun install --frozen-lockfile
+DATABASE_URL=sqlite:///./operatoros.db AUTH_COOKIE_SECRET='use-a-local-secret-with-at-least-32-characters' bun run src/server.ts
 ```
+
+Use `OPERATOROS_BACKEND=fastapi ./start-dev.sh` for the FastAPI fallback.
 
 ```bash
 cd frontend
@@ -160,8 +168,8 @@ bun run dev
 Open:
 - Frontend: `http://127.0.0.1:5173`
 - Backend API: `http://127.0.0.1:8000`
-- OpenAPI docs: `http://127.0.0.1:8000/docs`
-- Redoc: `http://127.0.0.1:8000/redoc`
+- OpenAPI docs: `http://127.0.0.1:8000/openapi`
+- FastAPI fallback docs: `http://127.0.0.1:8000/docs`
 
 ## Environment Variables
 
@@ -183,7 +191,8 @@ For `./start-dev.sh`, the persistent database path is resolved from the reposito
 | `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS origins for development. | `http://localhost:5173,http://127.0.0.1:5173` |
 | `HOST` | Backend | No | `0.0.0.0` | Bind host used by the backend runtime. | `0.0.0.0` |
 | `PORT` | Backend | No | `8000` | Bind port used by the backend runtime. | `8000` |
-| `VITE_API_BASE_URL` | Frontend | No | unset | Build-time API base URL used by the Vite client. If empty, uses same-origin with Vite proxy. | `http://localhost:8000` |
+| `OPERATOROS_BACKEND` | Launcher/E2E | No | `elysia` | Selects the normal Elysia backend or the documented `fastapi` fallback. | `fastapi` |
+| `VITE_API_BASE_URL` | Frontend | No | unset | Build-time API base URL used by the Vite client. If empty, uses same-origin with the proxy for the selected backend. | `http://localhost:8000` |
 
 ## Database and Migrations
 - Database restore requires an authenticated administrator, an identity-compatible backup with an active administrator, exact confirmation, and single-worker runtime. Successful restore revokes every restored session and requires all operators to sign in again. Multi-worker deployments fail closed because the repository has no approved cross-process restore lock.

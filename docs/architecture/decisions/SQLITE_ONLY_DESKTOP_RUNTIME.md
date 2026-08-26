@@ -4,8 +4,9 @@
 - Decision date: 2026-07-29
 - Accepted baseline: `03df8317c94431420692c75efd15b585c6b29d7d`
 - Update 2026-08-20: the experimental Tauri desktop shell was removed. The
-  supported runtime is `LOCAL_BROWSER_RUNTIME`: a local FastAPI backend with
-  the React frontend in a browser and a SQLite database. The SQLite-only
+  supported runtime is `LOCAL_BROWSER_RUNTIME`: a local Elysia backend with
+  the React frontend in a browser and a SQLite database. FastAPI remains
+  available as the documented rollback and reference backend. The SQLite-only
   decision is unchanged.
 
 ## Context
@@ -23,8 +24,9 @@ deployment. SQLAlchemy remains the persistence abstraction.
 PostgreSQL and containerized hosted-server deployment are removed from active
 support. PostgreSQL URLs fail explicitly with a sanitized SQLite-only error.
 
-Supported deployment is `LOCAL_BROWSER_RUNTIME` with a local FastAPI backend,
-the React frontend in a browser, and a SQLite database. PostgreSQL, Docker
+Supported deployment is `LOCAL_BROWSER_RUNTIME` with a local Elysia backend,
+the React frontend in a browser, and a SQLite database. FastAPI remains the
+documented rollback backend. PostgreSQL, Docker
 Compose, and hosted multi-service runtime topologies are unsupported.
 
 ## Reasons and consequences
