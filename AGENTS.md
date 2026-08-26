@@ -37,8 +37,8 @@ historical evidence unless they explicitly identify a current procedure.
 - Use focused `codex/` branches unless the task specifies another name. Do not
   amend, rebase, squash, force-push, or push directly to `main`.
 - Verified primary baseline: `main` at
-  `1e891674d133f29a7c6b027fb42fce0dfd96dc50`, matching `origin/main`. PR #48
-  runtime hardening is merged.
+  `f87b58997f474fa6bc489d158efe97096bff6e28`, matching `origin/main`. Phase 11
+  frontend verification is merged.
 - Stage explicit paths only; never use `git add .` or `git add -A`.
 - Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, and, when present,
   `docs/student-data/dapodik-roster-import-design.md`.
