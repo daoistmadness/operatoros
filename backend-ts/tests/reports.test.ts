@@ -175,6 +175,33 @@ describe("analytics and report parity", () => {
     expect(roundHalfUp(2.5, 0)).toBe(3);
   });
 
+  it("serves historical trends and management export aliases", async () => {
+    const path = `/tmp/operatoros-phase10-analytics-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase10-analytics-audit-${process.pid}` } });
+    try {
+      const cookie = await adminCookie(app);
+      const trends = await app.handle(new Request("http://local/api/analytics/historical-trends?academic_year_id=2&include_forecast=true", { headers: { cookie } }));
+      expect(trends.status).toBe(200);
+      expect(await trends.json()).toMatchObject({ filters: { academic_year_id: 2, granularity: "term" }, trend_series: { attendance: { by_month: expect.any(Array), by_term: expect.any(Array) }, grades: { by_term: expect.any(Array) } }, forecast_series: expect.any(Array) });
+      const invalid = await app.handle(new Request("http://local/analytics/historical-trends?academic_year_id=2&granularity=bad", { headers: { cookie } }));
+      expect(invalid.status).toBe(400);
+      for (const path of ["/api/analytics", "/analytics"]) {
+        const excel = await app.handle(new Request(`http://local${path}/management-summary/export/excel?academic_year_id=2&mode=editable`, { headers: { cookie } }));
+        expect(excel.status).toBe(200);
+        expect(excel.headers.get("content-type")).toContain("spreadsheetml");
+        expect(new TextDecoder().decode((await excel.arrayBuffer()).slice(0, 2))).toBe("PK");
+        const pdf = await app.handle(new Request(`http://local${path}/management-summary/export/pdf?academic_year_id=2`, { headers: { cookie } }));
+        expect(pdf.status).toBe(200);
+        expect(new TextDecoder().decode((await pdf.arrayBuffer()).slice(0, 4))).toBe("%PDF");
+      }
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
   it("exports report, tardiness, and rekap workbooks without mutation", async () => {
     const path = `/tmp/operatoros-phase8-exports-${process.pid}-${Date.now()}.db`;
     seed(path);

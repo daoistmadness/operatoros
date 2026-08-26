@@ -33,6 +33,7 @@ function errorBody(code: string, message: string) {
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
+  const context = database && _config.auth?.authCookieSecret ? { database, config: defaultAuthConfig(_config.auth) } : null;
   const app = new Elysia({ name: "backend-ts" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -51,8 +52,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     .get("/health", () => ({ status: "ok" }))
     .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
 
-  if (database && _config.auth?.authCookieSecret) {
-    const context = { database, config: defaultAuthConfig(_config.auth) };
+  if (context) {
     authRoutes(app, context);
     coreRoutes(app, context);
     configRoutes(app, context);
@@ -79,7 +79,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
     });
   }
-  systemRoutes(app, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
+  systemRoutes(app, context, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
     app.use(openapi({ path: "/openapi", exclude: { staticFile: false } }));

@@ -1,6 +1,7 @@
 import { t } from "elysia";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
+import { inTransaction } from "../db/connection";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -17,6 +18,8 @@ function fail(set: any, status: number, detail: string): { detail: string } {
   set.status = status;
   return { detail };
 }
+
+let clearDataBusy = false;
 
 function currentUser(context: AuthContext, ctx: Context): CurrentUser | null {
   const requestInfo = requestContext(ctx.request, ctx.server);
@@ -187,7 +190,40 @@ export function readinessRoutes(app: any, context: AuthContext): any {
   return app;
 }
 
-export function systemRoutes(app: any, config: { destructiveOperationsEnabled?: boolean } = {}): any {
+export function systemRoutes(app: any, context: AuthContext | null = null, config: { destructiveOperationsEnabled?: boolean } = {}): any {
   app.get("/api/system/health", () => ({ status: "ok", service: "System API", destructive_operations_enabled: config.destructiveOperationsEnabled ?? false }));
+  if (context) app.post("/api/system/clear-data", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" };
+    if (!config.destructiveOperationsEnabled) return fail(ctx.set, 403, "Destructive operations are disabled.");
+    const mode = ctx.body?.mode ?? "attendance"; const confirmation = String(ctx.body?.confirmation ?? "").trim();
+    if (!["attendance", "attendance_keep_exceptions", "full"].includes(mode)) return fail(ctx.set, 422, "Invalid clear-data mode");
+    if (confirmation !== "CLEAR_ALL_ATTENDANCE_DATA") return fail(ctx.set, 400, "Invalid confirmation token. Use CLEAR_ALL_ATTENDANCE_DATA.");
+    if (clearDataBusy) return fail(ctx.set, 409, "Another destructive operation is already active.");
+    clearDataBusy = true;
+    const client = context.database.client; let triggersDropped = false;
+    try {
+      const deleted: Row = {};
+      inTransaction(client, () => {
+        for (const name of ["trg_attendance_override_history_no_delete", "trg_attendance_override_history_no_update", "trg_history_no_delete", "trg_history_no_update"]) client.run(`DROP TRIGGER IF EXISTS ${name}`);
+        triggersDropped = true;
+        if (mode === "attendance_keep_exceptions") {
+          deleted.attendance_override_history = Number(client.run("DELETE FROM attendance_override_history WHERE override_id NOT IN (SELECT id FROM attendance_overrides WHERE override_status IN ('sakit','izin','alfa'))").changes);
+          deleted.attendance_overrides = Number(client.run("DELETE FROM attendance_overrides WHERE override_status NOT IN ('sakit','izin','alfa')").changes);
+          deleted.attendance = Number(client.run("DELETE FROM attendance WHERE id NOT IN (SELECT id FROM attendance WHERE status IN ('sakit','izin','alfa') UNION SELECT attendance_id FROM attendance_overrides WHERE override_status IN ('sakit','izin','alfa'))").changes);
+          deleted.upload_logs = Number(client.run("DELETE FROM upload_logs").changes); deleted.absence_reasons = 0; deleted.absence_reason_class_entries = 0;
+        } else {
+          for (const [key, table] of [["attendance_override_history", "attendance_override_history"], ["attendance_overrides", "attendance_overrides"], ["attendance", "attendance"], ["upload_logs", "upload_logs"], ["absence_reasons", "absence_reasons"], ["absence_reason_class_entries", "absence_reason_class_entries"]] as const) deleted[key] = Number(client.run(`DELETE FROM ${table}`).changes);
+        }
+        if (mode === "full") deleted.students = Number(client.run("DELETE FROM students").changes);
+        client.run("CREATE TRIGGER trg_attendance_override_history_no_update BEFORE UPDATE ON attendance_override_history BEGIN SELECT RAISE(FAIL, 'attendance_override_history is append-only'); END");
+        client.run("CREATE TRIGGER trg_attendance_override_history_no_delete BEFORE DELETE ON attendance_override_history BEGIN SELECT RAISE(FAIL, 'attendance_override_history is append-only'); END");
+        triggersDropped = false;
+      });
+      return { status: "success", message: `Data cleared successfully (${mode} mode).`, deleted_counts: deleted };
+    } catch {
+      if (triggersDropped) { try { client.run("CREATE TRIGGER IF NOT EXISTS trg_attendance_override_history_no_update BEFORE UPDATE ON attendance_override_history BEGIN SELECT RAISE(FAIL, 'attendance_override_history is append-only'); END"); client.run("CREATE TRIGGER IF NOT EXISTS trg_attendance_override_history_no_delete BEFORE DELETE ON attendance_override_history BEGIN SELECT RAISE(FAIL, 'attendance_override_history is append-only'); END"); } catch { /* preserve the original failure */ } }
+      return fail(ctx.set, 500, "Failed to reset database.");
+    } finally { clearDataBusy = false; }
+  }, { body: t.Object({ mode: t.Optional(t.Union([t.Literal("attendance"), t.Literal("attendance_keep_exceptions"), t.Literal("full")])), confirmation: t.Optional(t.String()) }) });
   return app;
 }

@@ -814,6 +814,118 @@ export function managementSummary(context: AuthContext, query: Row): Row {
   return { filters: { academic_year_id: academicYearId, academic_year_label: year.label, jenjang_id: jenjangId, jenjang_name: jenjang?.name ?? null, class_name: query.class_name ?? null, term: query.term ?? null, subject_id: subjectId, subject_name: subject?.name ?? null, date_start: range.start, date_end: range.end, term_label: range.context?.label ?? "All", term_source: range.context?.source ?? "full-year" }, term_context: range.context, attendance_summary: attendanceSummary, lateness_by_class: latenessByClass, grade_by_class: gradeByClass, grade_by_subject: gradeBySubject, grade_by_student: gradeByStudent, below_kkm_alerts: belowAlerts, terms_breakdown: termsBreakdown, interventions_summary: interventionsSummary, thresholds: { kkm_edelweiss: 85, kkm_national: 75, legacy_fallback: 85 }, warnings, executive_insights: insights.sort((a, b) => (a.severity === "critical" ? 0 : a.severity === "warning" ? 1 : 2) - (b.severity === "critical" ? 0 : b.severity === "warning" ? 1 : 2)) };
 }
 
+function nextMonthStart(year: number, month: number): string {
+  return month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+}
+
+function percentage(value: number, total: number): number {
+  return total ? roundHalfEven(value / total * 100, 1) : 0;
+}
+
+function historicalYears(context: AuthContext, selected: Row, fromId: number | null, toId: number | null): Row[] {
+  const all = rows(context, "SELECT * FROM academic_years ORDER BY start_date, id");
+  const from = fromId === null ? null : row(context, "SELECT start_date FROM academic_years WHERE id = ?", [fromId]);
+  const to = toId === null ? null : row(context, "SELECT start_date FROM academic_years WHERE id = ?", [toId]);
+  if (fromId !== null && !from) throw Object.assign(new Error("from_academic_year_id not found"), { status: 404 });
+  if (toId !== null && !to) throw Object.assign(new Error("to_academic_year_id not found"), { status: 404 });
+  const values = all.filter((value) => {
+    if (from && String(value.start_date) < String(from.start_date)) return false;
+    if (to && String(value.start_date) > String(to.start_date)) return false;
+    if (!from && !to && String(value.start_date) > String(selected.start_date)) return false;
+    return true;
+  });
+  return values.length ? values : [selected];
+}
+
+function forecast(metric: string, values: (number | null)[], method: string): Row {
+  const clean = values.filter((value): value is number => value !== null).map(Number);
+  if (clean.length < 2) return { metric, period: "next_term", forecast_value: null, method: "none", history_points: clean.length, confidence: "none", data_sufficiency: "insufficient", warning: "Fewer than 2 historical periods available." };
+  const selected = ["moving_average", "weighted_moving_average", "linear_trend"].includes(method) ? method : "linear_trend";
+  let value: number;
+  if (selected === "moving_average") {
+    const window = clean.slice(-Math.min(3, clean.length)); value = window.reduce((sum, item) => sum + item, 0) / window.length;
+  } else if (selected === "weighted_moving_average") {
+    const window = clean.slice(-Math.min(3, clean.length)); const weight = window.reduce((sum, _, index) => sum + index + 1, 0); value = window.reduce((sum, item, index) => sum + item * (index + 1), 0) / weight;
+  } else {
+    const xMean = (clean.length - 1) / 2; const yMean = clean.reduce((sum, item) => sum + item, 0) / clean.length; const denominator = clean.reduce((sum, _, index) => sum + (index - xMean) ** 2, 0); const slope = denominator ? clean.reduce((sum, item, index) => sum + (index - xMean) * (item - yMean), 0) / denominator : 0; value = yMean + slope * clean.length;
+  }
+  const bounded = ["attendance_percentage", "sumatif_average", "formatif_average"].includes(metric) ? Math.min(100, Math.max(0, value)) : Math.max(0, value);
+  const confidence = clean.length === 2 ? "low" : clean.length <= 5 ? "medium" : "higher";
+  const sufficiency = clean.length === 2 ? "limited" : "adequate";
+  return { metric, period: "next_term", forecast_value: roundHalfEven(bounded, 1), method: selected, history_points: clean.length, confidence, data_sufficiency: sufficiency, warning: clean.length === 2 ? "Only 2 historical periods available." : `${clean.length} historical periods available.` };
+}
+
+function historicalTrends(context: AuthContext, query: Row): Row {
+  const granularity = String(query.granularity ?? "term");
+  if (!["month", "term", "academic_year"].includes(granularity)) throw Object.assign(new Error("granularity must be month, term, or academic_year"), { status: 400 });
+  const requestedYear = queryNumber(query.academic_year_id);
+  const selected = requestedYear === null ? row(context, "SELECT * FROM academic_years WHERE is_default = 1 LIMIT 1") ?? row(context, "SELECT * FROM academic_years ORDER BY start_date DESC LIMIT 1") : row(context, "SELECT * FROM academic_years WHERE id = ?", [requestedYear]);
+  if (!selected) throw Object.assign(new Error("Academic year not found"), { status: 404 });
+  const jenjangId = queryNumber(query.jenjang_id); const subjectId = queryNumber(query.subject_id);
+  const jenjang = jenjangId === null ? null : row(context, "SELECT name FROM jenjangs WHERE id = ?", [jenjangId]);
+  const subject = subjectId === null ? null : row(context, "SELECT name FROM subjects WHERE id = ?", [subjectId]);
+  if (jenjangId !== null && !jenjang) throw Object.assign(new Error("Jenjang not found"), { status: 404 });
+  if (subjectId !== null && !subject) throw Object.assign(new Error("Subject not found"), { status: 404 });
+  const years = historicalYears(context, selected, queryNumber(query.from_academic_year_id), queryNumber(query.to_academic_year_id));
+  const attendanceMonths: Row[] = []; const latenessMonths: Row[] = []; const warnings: string[] = [];
+  for (const year of years) {
+    for (const [periodYear, periodMonth] of monthPairs(String(year.start_date), String(year.end_date))) {
+      const start = `${periodYear}-${String(periodMonth).padStart(2, "0")}-01`; const end = nextMonthStart(periodYear, periodMonth);
+      const effectiveClass = "COALESCE(c.class_name, e.class_name, s.class_name)"; const effectiveJenjang = "COALESCE(j.name, s.jenjang)";
+      const filters = ["a.date >= ?", "a.date < ?"]; const params: any[] = [year.id, start, end]; if (jenjang) { filters.push(`${effectiveJenjang} = ?`); params.push(jenjang.name); } if (query.class_name) { filters.push(`${effectiveClass} = ?`); params.push(query.class_name); }
+      const attendance = rows(context, `SELECT COALESCE(o.override_status, a.status) AS status, COUNT(a.id) AS count FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ? LEFT JOIN academic_classes c ON c.id = e.academic_class_id LEFT JOIN jenjangs j ON j.id = e.jenjang_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE ${filters.join(" AND ")} GROUP BY COALESCE(o.override_status, a.status)`, params);
+      const hadir = attendance.filter((value) => ["on-time", "late"].includes(String(value.status))).reduce((sum, value) => sum + Number(value.count), 0);
+      const absenceParams: any[] = [year.id, periodYear, periodMonth]; const absenceFilters = ["ar.year = ?", "ar.month = ?"]; if (jenjang) { absenceFilters.push(`${effectiveJenjang} = ?`); absenceParams.push(jenjang.name); } if (query.class_name) { absenceFilters.push(`${effectiveClass} = ?`); absenceParams.push(query.class_name); }
+      const absence = row(context, `SELECT COALESCE(SUM(ar.sakit), 0) AS sakit, COALESCE(SUM(ar.izin), 0) AS izin, COALESCE(SUM(ar.alfa), 0) AS alfa FROM absence_reasons ar JOIN students s ON s.id = ar.student_id LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ? LEFT JOIN academic_classes c ON c.id = e.academic_class_id LEFT JOIN jenjangs j ON j.id = e.jenjang_id WHERE ${absenceFilters.join(" AND ")}`, absenceParams) ?? {};
+      const sakit = Number(absence.sakit ?? 0); const izin = Number(absence.izin ?? 0); const alfa = Number(absence.alfa ?? 0); const total = hadir + sakit + izin + alfa;
+      if (!total) warnings.push(`No historical records for ${String(start).slice(0, 7)}.`);
+      attendanceMonths.push({ period: String(start).slice(0, 7), academic_year_id: Number(year.id), academic_year_label: year.label, hadir, sakit, izin, alfa, total_records: total, attendance_percentage: percentage(hadir, total), absence_reason_shares: { sakit: percentage(sakit, total), izin: percentage(izin, total), alfa: percentage(alfa, total) } });
+      const late = row(context, `SELECT COUNT(a.id) AS late_days, COALESCE(SUM(a.late_duration), 0) AS late_minutes FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ? LEFT JOIN academic_classes c ON c.id = e.academic_class_id LEFT JOIN jenjangs j ON j.id = e.jenjang_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE ${filters.concat("COALESCE(o.override_status, a.status) = 'late'").join(" AND ")}`, params) ?? {};
+      latenessMonths.push({ period: String(start).slice(0, 7), academic_year_id: Number(year.id), academic_year_label: year.label, late_days: Number(late.late_days ?? 0), late_minutes: Number(late.late_minutes ?? 0) });
+    }
+  }
+  const attendanceTerms: Row[] = []; const latenessTerms: Row[] = []; const latenessByClassTerms: Row[] = []; const gradeTerms: Row[] = []; const interventionTerms: Row[] = []; const kkmTerms: Row[] = []; const yearComparisons: Row[] = [];
+  for (const year of years) {
+    const yearly = managementSummary(context, { academic_year_id: String(year.id), jenjang_id: jenjangId === null ? undefined : String(jenjangId), class_name: query.class_name, subject_id: subjectId === null ? undefined : String(subjectId) });
+    yearComparisons.push({ period: year.label, academic_year_id: Number(year.id), attendance_percentage: yearly.attendance_summary.status_percentages.hadir, late_days: yearly.lateness_by_class.reduce((sum: number, value: Row) => sum + Number(value.late_days), 0), late_minutes: yearly.lateness_by_class.reduce((sum: number, value: Row) => sum + Number(value.late_minutes), 0), sumatif_average: averageHalfUp(yearly.grade_by_class.map((value: Row) => value.sumatif_average)), formatif_average: averageHalfUp(yearly.grade_by_class.map((value: Row) => value.formatif_average)), below_kkm_alert_count: yearly.below_kkm_alerts.length, open_intervention_count: yearly.interventions_summary.status_counts.open ?? 0 });
+    for (const termRow of managementTerms(context, year)) {
+      const summary = managementSummary(context, { academic_year_id: String(year.id), jenjang_id: jenjangId === null ? undefined : String(jenjangId), class_name: query.class_name, subject_id: subjectId === null ? undefined : String(subjectId), term: termRow.value });
+      const termLabel = `${year.label} ${termRow.label}`; const att = summary.attendance_summary; const lates = summary.lateness_by_class;
+      attendanceTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, term_label: termRow.label, start_date: termRow.start_date, end_date: termRow.end_date, term_source: termRow.source, attendance_percentage: att.status_percentages.hadir, hadir: att.status_counts.hadir, sakit: att.status_counts.sakit, izin: att.status_counts.izin, alfa: att.status_counts.alfa, total_records: att.total_records, absence_reason_shares: { sakit: att.status_percentages.sakit, izin: att.status_percentages.izin, alfa: att.status_percentages.alfa } });
+      latenessTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, late_days: lates.reduce((sum: number, value: Row) => sum + Number(value.late_days), 0), late_minutes: lates.reduce((sum: number, value: Row) => sum + Number(value.late_minutes), 0) });
+      for (const value of lates) latenessByClassTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, class_name: value.class_name, late_days: value.late_days, late_minutes: value.late_minutes });
+      const sumatif = averageHalfUp(summary.grade_by_class.map((value: Row) => value.sumatif_average)); const formatif = averageHalfUp(summary.grade_by_class.map((value: Row) => value.formatif_average));
+      gradeTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, sumatif_average: sumatif, formatif_average: formatif, sumatif_formatif_gap: sumatif !== null && formatif !== null ? roundHalfEven(sumatif - formatif, 1) : null, below_kkm_alert_count: summary.below_kkm_alerts.length, grade_average_by_class: summary.grade_by_class.map((value: Row) => ({ class_name: value.class_name, sumatif_average: value.sumatif_average, formatif_average: value.formatif_average })), grade_average_by_subject: summary.grade_by_subject.map((value: Row) => ({ subject_id: value.subject_id, subject_name: value.subject_name, sumatif_average: value.sumatif_average, formatif_average: value.formatif_average })) });
+      const sources = [...new Set(summary.below_kkm_alerts.map((value: Row) => value.threshold_source).filter(Boolean))].sort(); kkmTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, threshold_source: sources.join(", ") || null, below_kkm_alert_count: summary.below_kkm_alerts.length });
+      const active = ["open", "in_progress", "monitoring"].reduce((sum, status) => sum + Number(summary.interventions_summary.status_counts[status] ?? 0), 0); const resolved = Number(summary.interventions_summary.status_counts.resolved ?? 0) + Number(summary.interventions_summary.status_counts.closed ?? 0);
+      interventionTerms.push({ period: termLabel, academic_year_id: Number(year.id), term: termRow.value, open_interventions: active, resolved_interventions: resolved, overdue_followups: summary.interventions_summary.due_soon.length, high_priority: Number(summary.interventions_summary.priority_counts.high ?? 0), urgent_priority: Number(summary.interventions_summary.priority_counts.urgent ?? 0), resolution_rate: percentage(resolved, summary.interventions_summary.total), average_days_to_resolution: null });
+    }
+  }
+  const recurring = new Map<string, number>(); for (const period of [...new Set(latenessByClassTerms.map((value) => value.period))]) { const values = latenessByClassTerms.filter((value) => value.period === period && Number(value.late_days) > 0).sort((a, b) => Number(b.late_days) - Number(a.late_days) || Number(b.late_minutes) - Number(a.late_minutes)); if (values[0]) recurring.set(values[0].class_name, (recurring.get(values[0].class_name) ?? 0) + 1); }
+  const recurringTopClasses = [...recurring.entries()].filter(([, count]) => count >= 2).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([class_name, top_lateness_terms]) => ({ class_name, top_lateness_terms }));
+  const history: Record<string, (number | null)[]> = { attendance_percentage: attendanceTerms.filter((value) => value.total_records > 0).map((value) => value.attendance_percentage), late_days: latenessTerms.map((value) => value.late_days), late_minutes: latenessTerms.map((value) => value.late_minutes), sumatif_average: gradeTerms.map((value) => value.sumatif_average), formatif_average: gradeTerms.map((value) => value.formatif_average), below_kkm_alert_count: gradeTerms.map((value) => value.below_kkm_alert_count), open_intervention_count: interventionTerms.map((value) => value.open_interventions) };
+  const forecasts = query.include_forecast === false || String(query.include_forecast).toLowerCase() === "false" ? [] : Object.entries(history).map(([metric, values]) => forecast(metric, values, String(query.forecast_method ?? "linear_trend")));
+  const diagnostics: Row[] = []; if (!attendanceMonths.some((value) => value.total_records > 0)) diagnostics.push({ code: "no_historical_records", severity: "warning", message: "No historical attendance records found for the selected filters." }); if (attendanceTerms.filter((value) => value.total_records > 0).length <= 1) diagnostics.push({ code: "only_one_period_available", severity: "warning", message: "Only one populated attendance period is available." }); if (attendanceTerms.some((value) => value.term_source === "default")) diagnostics.push({ code: "term_fallback_used", severity: "info", message: "At least one historical term uses default term mapping." }); if (kkmTerms.some((value) => value.threshold_source === "legacy-fallback")) diagnostics.push({ code: "kkm_fallback_used", severity: "info", message: "Legacy KKM fallback was used in at least one historical period." });
+  const trends = { attendance: { by_month: attendanceMonths, by_term: attendanceTerms, by_academic_year: yearComparisons }, lateness: { by_month: latenessMonths, by_term: latenessTerms, by_class_terms: latenessByClassTerms, recurring_top_classes: recurringTopClasses }, grades: { by_term: gradeTerms, effective_kkm_by_term: kkmTerms }, interventions: { by_term: interventionTerms } };
+  return { filters: { academic_year_id: Number(selected.id), academic_year_label: selected.label, jenjang_id: jenjangId, jenjang_name: jenjang?.name ?? null, class_name: query.class_name ?? null, subject_id: subjectId, subject_name: subject?.name ?? null, term: query.term ?? null, from_academic_year_id: queryNumber(query.from_academic_year_id), to_academic_year_id: queryNumber(query.to_academic_year_id), granularity, include_forecast: forecasts.length > 0, forecast_method: String(query.forecast_method ?? "linear_trend") }, period_definitions: years.map((year) => ({ academic_year_id: Number(year.id), academic_year_label: year.label, start_date: year.start_date, end_date: year.end_date, terms: managementTerms(context, year) })), trend_series: trends, forecast_series: forecasts, warnings: ["Forecasts are deterministic estimates based on historical trend data and do not imply certainty.", ...warnings.slice(0, 6)], data_quality_diagnostics: diagnostics, effective_kkm_metadata: kkmTerms, effective_term_metadata: years.flatMap((year) => managementTerms(context, year)), executive_insights: forecasts.filter((value) => ["insufficient", "limited"].includes(value.data_sufficiency)).slice(0, 1).map((value) => ({ severity: "info", category: "forecast", title: "Forecast confidence is limited", message: value.warning, metric_value: value.forecast_value, recommended_action: "Use the forecast as an estimate and collect more period history." })) };
+}
+
+async function managementAnalyticsWorkbook(summary: Row): Promise<Uint8Array> {
+  const workbook = new ExcelJS.Workbook(); const add = (name: string, headers: string[], values: any[][]) => { const sheet = workbook.addWorksheet(name); sheet.addRow(headers); for (const value of values) sheet.addRow(value); sheet.getRow(1).font = { bold: true }; };
+  const filters = summary.filters; add("Summary", ["Metric", "Value"], [["Academic Year", filters.academic_year_label], ["Jenjang", filters.jenjang_name ?? "All"], ["Class", filters.class_name ?? "All"], ["Term", filters.term_label ?? "All"], ["Attendance Rate", summary.attendance_summary.status_percentages.hadir], ["Total Records", summary.attendance_summary.total_records]]);
+  add("Attendance", ["Status", "Count", "Percentage"], Object.entries(summary.attendance_summary.status_counts).map(([key, value]) => [key, value, summary.attendance_summary.status_percentages[key]]));
+  add("Lateness", ["Class", "Late Days", "Late Minutes"], summary.lateness_by_class.map((value: Row) => [value.class_name, value.late_days, value.late_minutes]));
+  const trends = summary.historical_trends?.trend_series?.attendance?.by_term ?? []; add("Trend_Attendance_Data", ["Period", "Hadir", "Sakit", "Izin", "Alfa", "Total"], trends.map((value: Row) => [value.period, value.hadir, value.sakit, value.izin, value.alfa, value.total_records]));
+  return new Uint8Array(await workbook.xlsx.writeBuffer());
+}
+
+async function managementAnalyticsExport(context: AuthContext, query: Row, format: "pdf" | "xlsx"): Promise<Response> {
+  const summary = managementSummary(context, query); summary.historical_trends = historicalTrends(context, { ...query, include_forecast: true }); summary.intervention_impact = interventionImpact(context, query);
+  const year = String(summary.filters.academic_year_label ?? "all-years").replace(/\//g, "-"); const term = String(summary.filters.term ?? "all-terms").replace(/_/g, "-"); const filename = `management-analytics-report-${year}-${term}-${new Date().toISOString().slice(0, 10)}`;
+  if (format === "xlsx") return sendFile(await managementAnalyticsWorkbook(summary), "xlsx", filename);
+  return sendFile(await reportPdf("Management Analytics Report", { executive_summary: { attendance_rate: summary.attendance_summary.status_percentages.hadir, late_days: summary.lateness_by_class.reduce((sum: number, value: Row) => sum + Number(value.late_days), 0), below_kkm: summary.below_kkm_alerts.length, interventions: summary.interventions_summary.total } }), "pdf", filename);
+}
+
 function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): void {
   const auth = (ctx: Context) => actor(context, ctx, {});
   app.get(`${prefix}/jenjangs`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return [...new Set(rows(context, "SELECT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => normalized(value.jenjang)).filter(Boolean))].sort(); });
@@ -866,6 +978,10 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
   }, { query: t.Object({ start_date: t.String(), end_date: t.String(), jenjang: t.Optional(t.String()), class_name: t.Optional(t.String()) }) });
   app.get(`${prefix}/intervention-impact`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return interventionImpact(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), student_id: t.Optional(t.String()), subject_id: t.Optional(t.String()), term: t.Optional(t.String()), status: t.Optional(t.String()), priority: t.Optional(t.String()), owner_name: t.Optional(t.String()), risk_level: t.Optional(t.String()) }) });
   app.get(`${prefix}/management-summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return managementSummary(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), term: t.Optional(t.String()), subject_id: t.Optional(t.String()) }) });
+  const historicalQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), term: t.Optional(t.String()), from_academic_year_id: t.Optional(t.String()), to_academic_year_id: t.Optional(t.String()), granularity: t.Optional(t.String()), include_forecast: t.Optional(t.Boolean()), forecast_method: t.Optional(t.String()), mode: t.Optional(t.String()) }) };
+  app.get(`${prefix}/historical-trends`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return historicalTrends(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, historicalQuery);
+  app.get(`${prefix}/management-summary/export/excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return await managementAnalyticsExport(context, ctx.query, "xlsx"); } catch (error) { return sendError(ctx, error); } }, historicalQuery);
+  app.get(`${prefix}/management-summary/export/pdf`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return await managementAnalyticsExport(context, ctx.query, "pdf"); } catch (error) { return sendError(ctx, error); } }, historicalQuery);
   app.get(`${prefix}/heb`, (ctx: Context) => {
     if (!auth(ctx)) return { detail: "Authentication required" };
     const month = queryNumber(ctx.query.month);

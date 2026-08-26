@@ -6,10 +6,10 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 23
-missing operations and one deprecated operation. Candidate analytics, roster,
-staff-import, attendance-followup, and report-builder routes still need full dual replay. The legacy `.xls` preview
-path also needs an approved disposition.
+The audit does not issue the Phase 10 gate. The endpoint matrix contains zero
+missing route registrations and one intentionally deprecated operation. Candidate
+route families still need full FastAPI-versus-Elysia replay. The legacy `.xls`
+preview path also needs an approved disposition.
 
 ## Completed in this loop
 
@@ -41,14 +41,17 @@ path also needs an approved disposition.
   and sample-template candidates.
 - Added attendance follow-up candidate discovery, workflow, metrics, notes, and history routes.
 - Added report-builder template, branding, preview, and export candidates.
+- Added historical-trends and management-summary export candidates.
+- Added academic roster preview and commit candidates.
+- Added the destructive system clear-data candidate.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 304 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 24.
+- Elysia: 327 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route registrations: 0.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -56,12 +59,12 @@ path also needs an approved disposition.
 
 - Existing full Phase 0 replay: 40/40 `EXACT_MATCH`.
 - Existing deliberate mismatch replay: 40/40 `MIGRATION_DEFECT`.
-- Phase 10-specific replay for unresolved families: not run because those
-  Elysia routes do not exist yet.
+- Phase 10-specific replay for candidate families: not complete. Route
+  registration and disposable candidate tests do not prove parity.
 
 ## Blocking defects
 
-The unresolved families include active frontend consumers:
+The parity-blocked candidate families include active frontend consumers:
 
 - analytics dashboard detail and management routes;
 - attendance follow-ups;
@@ -72,8 +75,8 @@ The unresolved families include active frontend consumers:
 - upload conflict resolution;
 - destructive clear-data control.
 
-These routes need implementation and FastAPI-versus-Elysia replay. The full
-matrix lists each family, route count, classification, and next action.
+These routes need FastAPI-versus-Elysia replay. The full matrix lists each
+family, route count, classification, and next action.
 
 Legacy `.xls` remains an explicit FastAPI compatibility blocker. FastAPI and
 the frontend still accept `.xls`. Elysia currently supports the Phase 0
