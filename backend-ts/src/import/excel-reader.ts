@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import * as XLSX from "@e965/xlsx";
 import {
   isAbsentFlagTrue,
   isBlank,
@@ -99,22 +100,47 @@ function readRawRows(sheet: ExcelJS.Worksheet, headers: string[]): RawRow[] {
   return rows;
 }
 
+function readLegacyRawRows(buffer: ArrayBuffer): { rows: RawRow[]; headers: string[]; date1904: boolean } {
+  const workbook = XLSX.read(Buffer.from(buffer), { type: "buffer", cellDates: true, cellFormula: true });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new Error("Attendance workbook has no worksheet");
+  const sheet = workbook.Sheets[sheetName]!;
+  const grid = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null, blankrows: true }) as CellValue[][];
+  const headers = (grid[0] ?? []).map(normalizeHeader);
+  const rows = grid.slice(1).map((values, index) => ({
+    excelRow: index + 2,
+    values: new Map(headers.map((header, column) => [header, values[column] ?? null])),
+  })).filter((row) => [...row.values.values()].some((value) => !isBlank(value)));
+  return { rows, headers, date1904: Boolean(workbook.Workbook?.WBProps?.date1904) };
+}
+
 export async function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
-  if (!filename.toLowerCase().endsWith(".xlsx")) throw new Error("ATTENDANCE_SOURCE_MUST_BE_XLSX");
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer);
-  const sheet = workbook.worksheets[0];
-  if (!sheet) throw new Error("Attendance workbook has no worksheet");
-  const headerValues = sheet.getRow(1).values as CellValue[];
-  const headers = headerValues.slice(1).map(normalizeHeader);
+  const isLegacyXls = filename.toLowerCase().endsWith(".xls");
+  if (!isLegacyXls && !filename.toLowerCase().endsWith(".xlsx")) throw new Error("ATTENDANCE_SOURCE_MUST_BE_EXCEL");
+  let rawRows: RawRow[];
+  let headers: string[];
+  let date1904 = false;
+  if (isLegacyXls) {
+    const legacy = readLegacyRawRows(buffer);
+    rawRows = legacy.rows;
+    headers = legacy.headers;
+    date1904 = legacy.date1904;
+  } else {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    const sheet = workbook.worksheets[0];
+    if (!sheet) throw new Error("Attendance workbook has no worksheet");
+    const headerValues = sheet.getRow(1).values as CellValue[];
+    headers = headerValues.slice(1).map(normalizeHeader);
+    rawRows = readRawRows(sheet, headers);
+    date1904 = Boolean(workbook.properties.date1904);
+  }
   const missing = REQUIRED_COLUMNS.find((column) => !headers.includes(column));
   if (missing) throw new Error(`Missing required column: ${missing}`);
-  const rawRows = readRawRows(sheet, headers);
   const duplicates = buildDuplicateSets(rawRows);
   const rows: AttendanceSourceRow[] = [];
   const invalidRows: InvalidSourceRow[] = [];
   const seen = new Map<string, AttendanceSourceRow>();
-  const date1904 = Boolean(workbook.properties.date1904);
 
   for (const raw of rawRows) {
     const idValue = raw.values.get("No. ID");
