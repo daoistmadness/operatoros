@@ -766,7 +766,7 @@ function kkmDetail(context: AuthContext, academicYearId: number, jenjangId: numb
   return { threshold: 85, source: "legacy-fallback" };
 }
 
-function managementSummary(context: AuthContext, query: Row): Row {
+export function managementSummary(context: AuthContext, query: Row): Row {
   const academicYearId = queryNumber(query.academic_year_id);
   if (academicYearId === null) throw Object.assign(new Error("academic_year_id is required"), { status: 422 });
   const year = row(context, "SELECT * FROM academic_years WHERE id = ?", [academicYearId]);
