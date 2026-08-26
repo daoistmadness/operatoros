@@ -75,7 +75,6 @@ export function studentExportRoutes(app: any, context: AuthContext): any {
     const count = selectedRows.length; const sensitive = profile !== "STANDARD_OPERATIONAL"; const required = sensitive ? "export_sensitive_student_fields" : "export_student_data"; const allowed = capabilitiesForRole(user.role).includes(required as never) && count <= maxRows;
     const warnings: string[] = []; if (!count) warnings.push("No student records match the export criteria."); if (count > maxRows) warnings.push(`Export size (${count} rows) exceeds maximum allowed threshold of ${maxRows} rows.`); if (!allowed && sensitive && !capabilitiesForRole(user.role).includes("export_sensitive_student_fields")) warnings.push("Elevated capability export_sensitive_student_fields is required for sensitive fields.");
     const previewChecksum = checksum(scope, profile, count, filters);
-    audit(context, user, required, "EXPORT_PREVIEW", scope, allowed, { estimated_count: count, sensitive, field_profile: profile, preview_checksum: previewChecksum }, allowed ? null : "EXPORT_PREVIEW_DENIED");
     return { normalized_scope: scope, field_profile: profile, estimated_row_count: count, sensitive_field_indicator: sensitive, required_capability: required, allowed, warnings, maximum_permitted_row_count: maxRows, filter_summary: filters, preview_checksum: previewChecksum, expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString() };
   }, { body: previewBody });
   app.post("/api/student-exports/download", async (ctx: Context) => {

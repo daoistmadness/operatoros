@@ -64,6 +64,25 @@ function candidate(
   };
 }
 
+function queueCandidate(value: Row): Row {
+  const kind = String(value.metadata?.exception_kind ?? "");
+  const title = kind.toLowerCase().replaceAll("_", " ").replace(/(^|\s)[a-z]/g, (letter) => letter.toUpperCase());
+  const metadata = { ...value.metadata };
+  delete metadata.jenjang;
+  return {
+    ...value,
+    title: `Kandidat: ${title}`,
+    evidence_summary: "Eksplorasi kandidat pengecualian kehadiran.",
+    metadata: {
+      ...metadata,
+      academic_class_id: metadata.academic_class_id ?? null,
+      severity: value.priority,
+      evidence_summary: value.evidence_summary,
+      materialized_case: metadata.materialized_case ?? null,
+    },
+  };
+}
+
 function workQueue(context: AuthContext, user: Row): Row[] {
   const singleUser = process.env.OPERATOROS_DEPLOYMENT_MODE === "single_user_offline";
   const items: Row[] = [];
@@ -114,18 +133,18 @@ function workQueue(context: AuthContext, user: Row): Row[] {
     ORDER BY a.date DESC, a.id DESC`);
   for (const value of attendance) {
     const studentReference = value.student_master_id ?? String(value.legacy_student_id);
-    const className = value.academic_class_name ?? value.enrollment_class_name ?? value.legacy_class_name ?? null;
+    const className = value.academic_class_name ?? null;
     const status = String(value.override_status ?? value.status ?? "").toLowerCase();
     const date = value.date ?? null;
     const id = Number(value.id);
     const add = (item: Row) => { if (!existingKeys.has(item.deduplication_key)) items.push(item); };
     if (status === "alfa" || status === "absent" || Number(value.is_absent) === 1 && !["sakit", "izin"].includes(status)) {
-      add(candidate("UNEXPLAINED_ABSENCE", studentReference, value.student_name, className, value.jenjang_name ?? null, date, id, `Unexplained absence recorded on ${date}`, "HIGH", { source_entity: "attendance", source_id: id }));
+      add(queueCandidate(candidate("UNEXPLAINED_ABSENCE", studentReference, value.student_name, className, null, date, id, `Unexplained absence recorded on ${date}`, "HIGH", { academic_class_id: value.academic_class_id ?? null, source_entity: "attendance", source_id: id })));
     } else if (status === "late" || value.late_source && value.late_source !== "none") {
-      add(candidate("LATE_ARRIVAL", studentReference, value.student_name, className, value.jenjang_name ?? null, date, id, `Late arrival recorded at ${value.check_in ? String(value.check_in).slice(0, 5) : "N/A"} on ${date}`, "MEDIUM", { source_entity: "attendance", source_id: id }));
+      add(queueCandidate(candidate("LATE_ARRIVAL", studentReference, value.student_name, className, null, date, id, `Late arrival recorded at ${value.check_in ? String(value.check_in).slice(0, 5) : "N/A"} on ${date}`, "MEDIUM", { academic_class_id: value.academic_class_id ?? null, source_entity: "attendance", source_id: id })));
     }
-    if (value.check_in && !value.check_out) add(candidate("MISSING_CHECKOUT", studentReference, value.student_name, className, value.jenjang_name ?? null, date, id, `Check-in present but missing checkout on ${date}`, "MEDIUM", { source_entity: "attendance", source_id: id }));
-    if (value.pending_correction_id) add(candidate("PENDING_CORRECTION", studentReference, value.student_name, className, value.jenjang_name ?? null, date, Number(value.pending_correction_id), `Pending attendance correction request #${value.pending_correction_id} submitted on ${date}`, "MEDIUM", { source_entity: "attendance_correction_requests", source_id: Number(value.pending_correction_id) }));
+    if (value.check_in && !value.check_out) add(queueCandidate(candidate("MISSING_CHECKOUT", studentReference, value.student_name, className, null, date, id, `Check-in present but missing checkout on ${date}`, "MEDIUM", { academic_class_id: value.academic_class_id ?? null, source_entity: "attendance", source_id: id })));
+    if (value.pending_correction_id) add(queueCandidate(candidate("PENDING_CORRECTION", studentReference, value.student_name, className, null, date, Number(value.pending_correction_id), `Pending attendance correction request #${value.pending_correction_id} submitted on ${date}`, "MEDIUM", { academic_class_id: value.academic_class_id ?? null, source_entity: "attendance_correction_requests", source_id: Number(value.pending_correction_id) })));
   }
 
   for (const value of rows(context, `
