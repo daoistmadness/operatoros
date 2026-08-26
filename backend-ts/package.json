@@ -13,6 +13,7 @@
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.1.0",
     "exceljs": "^4.4.0",
+    "jszip": "3.10.1",
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
