@@ -12,7 +12,7 @@ SQLite schema. No production database is used by cutover checks.
 | Standalone backend launcher | FastAPI | Elysia | `OPERATOROS_BACKEND=fastapi ./scripts/start-backend.sh` | Script validation and health check | `LOCAL_GREEN` |
 | Frontend development proxy | Selected backend | Elysia | Set `OPERATOROS_BACKEND=fastapi` | Browser smoke with both runtimes | `LOCAL_GREEN` |
 | E2E primary backend | FastAPI-compatible stack | Elysia | `OPERATOROS_E2E_BACKEND=fastapi` | E2E smoke with disposable SQLite | `LOCAL_GREEN` |
-| CI primary runtime smoke | FastAPI reference | Elysia | Python backend regression job | CI workflow | `REQUIRED_PR_CI_PENDING` |
+| CI primary runtime smoke | FastAPI reference | Elysia | Python backend regression job | CI workflow | `GREEN` |
 | Health and readiness | FastAPI | Elysia `/health`, `/ready` | FastAPI health endpoints | Curl and startup checks | `LOCAL_GREEN` |
 | Scheduler owner | FastAPI runtime | Elysia runtime | FastAPI fallback process | Process and lifecycle checks | `LOCAL_GREEN` |
 | Operator documentation | FastAPI | Elysia | Rollback runbook | Documentation audit | `LOCAL_GREEN` |
@@ -25,7 +25,6 @@ Required final state:
 - The final runtime uses one scheduler owner.
 - Protected database access remains zero.
 
-Local acceptance is green. Required pull request CI remains pending until the
-cutover commits are pushed. The local evidence includes the default Elysia
+Local acceptance and pull request CI are green. The local evidence includes the default Elysia
 launcher, the FastAPI fallback, both browser stacks, frontend and backend
 tests, the production build, and the full Python backend suite.
