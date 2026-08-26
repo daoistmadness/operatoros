@@ -24,6 +24,7 @@ import { attendanceFollowupRoutes } from "./domains/attendance-followups";
 import { reportBuilderRoutes } from "./domains/report-builder";
 import { uploadConflictRoutes } from "./domains/upload-conflicts";
 import { studentUpdateRoutes } from "./domains/student-update";
+import { phase10OpenApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -82,7 +83,11 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
   systemRoutes(app, context, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
-    app.use(openapi({ path: "/openapi", exclude: { staticFile: false } }));
+    app.use(openapi({
+      path: "/openapi",
+      exclude: { staticFile: false },
+      documentation: context ? phase10OpenApiDocumentation() : undefined,
+    }));
   }
   return app;
 }
