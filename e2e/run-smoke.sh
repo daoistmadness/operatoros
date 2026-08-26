@@ -56,8 +56,16 @@ operatoros_wsl_prepare_bun "$repo_root" || {
   exit 2
 }
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
+playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
+[[ -n "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
+playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
+[[ -x "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
 export PATH="$bun_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
+fixture_dir="$workspace/state/frontend-fixtures"
+"$bun_bin/bun" "$repo_root/e2e/helpers/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
+export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
+export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
 import hashlib, json, sqlite3, sys
@@ -92,11 +100,11 @@ with sqlite3.connect(sys.argv[1]) as connection:
 PY
 
 web_status=0
-playwright_args=(run test:e2e --config playwright.config.ts)
+playwright_args=(--config "$repo_root/frontend/playwright.config.ts")
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$bun_bin:/usr/bin:/bin" bun "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/frontend" && PATH="$bun_bin:/usr/bin:/bin" "$playwright_node" "$repo_root/frontend/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT
