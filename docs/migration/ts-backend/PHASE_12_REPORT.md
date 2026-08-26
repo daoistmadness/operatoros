@@ -63,5 +63,19 @@ Local acceptance and the first pull request validation are green.
   zero.
 - FastAPI source, dependencies, routes, and fallback startup remain present.
 
-The required pull request checks passed. The Phase 12 gate remains withheld
-until the merge and post-merge cutover and rollback drills pass.
+The required pull request checks passed. PR #61 merged as
+`a8a0911592e6a9261124d9e75044c633939b8e0a`. Merged-main CI and merged-main E2E
+also passed on that commit. The disposable rollback drill passed in both
+directions: Elysia to FastAPI and FastAPI to Elysia.
+
+## Final gate
+
+`TYPESCRIPT_BACKEND_PHASE_12_FINAL_CUTOVER_READY`
+
+- Authoritative normal backend: Elysia.
+- FastAPI fallback: available and verified.
+- Default frontend target: Elysia.
+- Scheduler owner: one Elysia runtime.
+- Protected database access: zero.
+- FastAPI source and Python dependencies: retained.
+- Phase 13: not started.
