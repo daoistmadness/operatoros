@@ -126,7 +126,7 @@ function previewPayload(batch: Row, importRows: Row[]): Row {
   };
 }
 
-function createPreview(context: AuthContext, workbook: WorkbookRows, filename: string, checksum: string, username: string): Row {
+export function createPreview(context: AuthContext, workbook: WorkbookRows, filename: string, checksum: string, username: string): Row {
   const client = context.database.client;
   const cutoffMap = cutoffs(context);
   const batchId = randomUUID();
@@ -171,7 +171,7 @@ function createPreview(context: AuthContext, workbook: WorkbookRows, filename: s
   return previewPayload(batch, importRows);
 }
 
-function commitPreview(context: AuthContext, batchId: string, selectedIds: number[], confirmation: string, checksum: string, username: string): Row {
+export function commitPreview(context: AuthContext, batchId: string, selectedIds: number[], confirmation: string, checksum: string, username: string): Row {
   if (confirmation !== ATTENDANCE_IMPORT_CONFIRMATION) throw new ImportError(400, "Invalid confirmation token");
   const client = context.database.client;
   const batch = row(client, "SELECT * FROM attendance_import_batches WHERE id = ?", [batchId]);
