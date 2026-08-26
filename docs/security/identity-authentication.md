@@ -6,14 +6,17 @@ OperatorOS is an offline-first local application with a **Minimal Identity Bound
 
 ```mermaid
 flowchart TD
-  Browser["Browser"] -->|"HttpOnly astyx_session cookie"| API["FastAPI backend"]
+  Browser["Browser"] -->|"HttpOnly astyx_session cookie"| API["Elysia backend"]
   API --> Session["Validated database session"]
   Session --> User["Active database user"]
   User --> Role["Database role: admin or staff"]
   Role --> Protected["Protected operation"]
 ```
 
-The backend is the authorization authority. Frontend state is used only to display identity, redirect anonymous users, and hide unavailable controls. It cannot grant access.
+The active Elysia backend is the authorization authority. FastAPI keeps the
+same contract for rollback and reference checks. Frontend state is used only
+to display identity, redirect anonymous users, and hide unavailable controls.
+It cannot grant access.
 
 Trusted authorization input is the validated session and its database user role. Request fields such as `request.role`, `reviewed_by`, `entered_by`, `uploaded_by`, and similar legacy attribution strings are untrusted metadata and are never authorization inputs.
 
