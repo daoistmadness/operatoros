@@ -51,7 +51,6 @@ def main() -> int:
         f"Backend regression: {backend_passed} passed, {backend_failed} failed, {backend_skipped} skipped",
         f"Frontend regression: {frontend_passed} passed, {frontend_failed} failed, {frontend_skipped} skipped",
         f"Frontend build: {args.build_status}",
-        "Desktop: BLOCKED_BY_EXISTING_INFRASTRUCTURE",
         f"Duration: {args.duration}",
         "Failed tests:",
         *[f"- {name}" for name in (failed_names or ["None"])],

@@ -11,7 +11,7 @@
     "error-recovery",
     "fresh-install"
   ],
-  "command": "npm run e2e:release -- --grep @<group>",
+  "command": "bun run e2e:release -- --grep @<group>",
   "isolation": {
     "workers": 1,
     "database": "fresh disposable database per invocation",

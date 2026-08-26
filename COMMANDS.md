@@ -3,8 +3,10 @@
 Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
 
 ## Install
-- `cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
-- `cd frontend && npm ci`
+- `mise install`  # install Bun 1.4.0 and Python 3.12.3 from mise.lock
+- `mise run doctor`  # verify toolchain
+- `cd backend && python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt`
+- `cd frontend && bun install`
 - `npm install -g agent-browser && agent-browser install`  # browser tooling
 - `agent-browser install --with-deps`  # Linux / WSL2 browser dependencies
 
@@ -12,19 +14,16 @@ Verified from `README.md`, `backend/requirements.txt`, `frontend/package.json`, 
 - `./start-dev.sh`  # direct FastAPI + Vite launcher
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
 - `cd backend && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000`
-- `cd frontend && npm run dev`
-- `cd frontend && npm run tauri:dev`  # Windows Tauri shell + Vite; backend remains a separate process
-- `cd frontend && VITE_API_BASE_URL=http://localhost:8000 npm run dev`
+- `cd frontend && bun run dev`
+- `cd frontend && VITE_API_BASE_URL=http://localhost:8000 bun run dev`
 
 ## Build
-- `cd frontend && npm run build`
-- `cd frontend && npm run tauri -- build --no-bundle`  # Windows desktop executable, without an installer
+- `cd frontend && bun run build`
 
 ## Test / Validation
 - `cd backend && python3 -m pytest -q` (or with venv-backed execution: `DATABASE_URL=sqlite:///./attendance.db PYTHONPATH=backend backend/.venv/bin/pytest backend/tests/ -q`)
 - `cd backend && python3 -c "from src.main import app; assert app is not None"`
-- `cd frontend && npm test`  # Vitest frontend unit tests
-- `cd frontend/src-tauri && cargo check`  # run from a Windows Rust toolchain for the Windows shell
+- `cd frontend && bun test`  # frontend unit tests
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
 - `curl http://localhost:8000/docs`

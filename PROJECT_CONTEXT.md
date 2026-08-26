@@ -38,14 +38,13 @@ graph TD
    * Built with Vite configuration. Uses React Router v7.
    * Utilizes Chart.js for data-dense dashboards, Framer Motion for transitions, and Tailwind CSS 4 for styling.
 3. **Desktop Supervisor (Tauri v2 & PyInstaller Sidecar - Phase 11.1):**
-   * Located in [frontend/src-tauri/](frontend/src-tauri).
-   * Wraps the web frontend inside a native WebView2 window on Windows.
-   * Manages the PyInstaller backend process (`dist/operatoros-sidecar.exe`) as a child sidecar process with health checks, crash recovery, graceful teardown, and log collection (`Logs/desktop-runtime.log`).
+   * Previously located in `frontend/src-tauri` (experimental Tauri shell removed on 2026-08-20).
+   * The supported runtime is a local FastAPI backend with the React frontend in a browser.
 4. **Database Environments:**
    * **Local Development & Desktop App:** SQLite database (`attendance.db`) running in WAL (Write-Ahead Logging) mode to prevent query concurrency locks.
    * **Docker / Production:** PostgreSQL 16 database.
 5. **DevOps & Orchestration:**
-   * **Docker Compose:** A supported secondary workflow defined in Docker Compose (retired secondary workflow; removed from the repository). It orchestrates the DB (`attendance_db` container), Backend, Frontend, and Nginx reverse proxy; direct Vite/FastAPI processes remain the primary local workflow.
+   * **Docker Compose:** Previously a supported secondary workflow (removed from repository). Direct Vite/FastAPI processes remain the primary local workflow.
    * **Dev Launcher:** Configured inside [start-dev.sh](start-dev.sh), starting Vite dev server (port 5173) and FastAPI (port 8000). Runs a proxy forwarding `/api/*` to the backend.
 
 ### Frontend Infrastructure & API Integration

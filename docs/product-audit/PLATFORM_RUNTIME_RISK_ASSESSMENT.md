@@ -2,8 +2,7 @@
 
 > **Historical PR #35 audit record.** Its PostgreSQL evaluation classification
 > is superseded by the SQLite-only decision. Current contracts are
-> [platform portability](../architecture/PLATFORM_PORTABILITY.md), [desktop
-> sidecar runtime](../architecture/DESKTOP_SIDECAR_RUNTIME.md), and [ingestion
+> [platform portability](../architecture/PLATFORM_PORTABILITY.md) and [ingestion
 > strategy](../architecture/INGESTION_DEPENDENCY_STRATEGY.md).
 
 ## Executive summary

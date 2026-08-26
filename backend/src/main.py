@@ -63,7 +63,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — configured for the local Vite/Tauri UI and custom origins via ALLOWED_ORIGINS
+# CORS — configured for the local Vite UI and custom origins via ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

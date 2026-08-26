@@ -32,7 +32,6 @@ def main() -> int:
     parser.add_argument("--status", choices=("PASS", "FAIL", "BLOCKED"), required=True)
     parser.add_argument("--backend", default="0 passed, 0 failed")
     parser.add_argument("--web", default="0 passed, 0 failed")
-    parser.add_argument("--desktop", default="0 passed, 0 failed, 1 skipped")
     parser.add_argument("--duration", default="0m 0s")
     parser.add_argument("--failed-test", action="append", default=[])
     parser.add_argument("--evidence", action="append", default=[])
@@ -56,7 +55,6 @@ def main() -> int:
         f"Status: {args.status}",
         f"Backend: {args.backend}",
         f"Web: {args.web}",
-        f"Desktop: {args.desktop}",
         f"Duration: {args.duration}",
         "Failed tests:",
         *[f"- {item}" for item in failed],

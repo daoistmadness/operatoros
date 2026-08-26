@@ -4,14 +4,14 @@ set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tier="${1:?tier required}"
 python="$repo/backend/.venv/bin/python"
-source "$repo/scripts/validate-wsl-node-npm.sh"
-if ! operatoros_wsl_prepare_node_npm "$repo" "$repo/.nvmrc"; then
-  printf '%s\n' "Node/npm toolchain validation failed" >&2
+source "$repo/scripts/validate-wsl-bun.sh"
+if ! operatoros_wsl_prepare_bun "$repo"; then
+  printf '%s\n' "Bun toolchain validation failed" >&2
   printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
   exit 1
 fi
-node_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
-export PATH="$node_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
+export PATH="$bun_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
 export SHELL=/bin/bash
 hash -r
@@ -93,7 +93,7 @@ api_drift_required="$(json_value api_drift_required)"
 frontend_build_required="$(json_value frontend_build_required)"
 
 frontend_static() {
-  (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run boundaries:check && npm run api:check && npm run typecheck)
+  (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
   (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests -q)
@@ -118,10 +118,10 @@ for path in json.load(open(sys.argv[1]))["focused_tests"]:
 PY
 )
         if ((${#frontend_tests[@]})); then
-          (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run "${frontend_tests[@]}")
+          (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test "${frontend_tests[@]}")
         fi
         if [[ "$frontend_build_required" == yes ]]; then
-          (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run build)
+          (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run build)
         fi
       fi
       if [[ "$backend_changed" == yes ]]; then
@@ -138,9 +138,9 @@ PY
     fi
     ;;
   pr)
-    echo "selected_suites=classifier,boundaries,api-drift,typecheck,node-tests,node-build,backend,focused-browser"
+    echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,backend,focused-browser"
     frontend_static
-    (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run && npm run build)
+    (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
     if [[ "$backend_changed" == yes || "$schema_sensitive" == yes ]]; then
       backend_full
@@ -156,7 +156,7 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,backend-full,node-tests,node-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,backend-full,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
     passes=1
     reliable_change_context=no
@@ -174,7 +174,7 @@ PY
     fi
     for ((pass=1; pass<=passes; pass++)); do echo "backend_full_pass=$pass"; backend_full; done
     frontend_static
-    (cd "$repo/frontend" && PATH="$node_bin:$PATH" npm run test -- --run && npm run build)
+    (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     make -C "$repo" e2e-validate
     make -C "$repo" e2e-smoke
     make -C "$repo" e2e-clean

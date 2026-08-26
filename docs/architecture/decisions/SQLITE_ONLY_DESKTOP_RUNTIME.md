@@ -3,27 +3,29 @@
 - Status: Accepted
 - Decision date: 2026-07-29
 - Accepted baseline: `03df8317c94431420692c75efd15b585c6b29d7d`
+- Update 2026-08-20: the experimental Tauri desktop shell was removed. The
+  supported runtime is `LOCAL_BROWSER_RUNTIME`: a local FastAPI backend with
+  the React frontend in a browser and a SQLite database. The SQLite-only
+  decision is unchanged.
 
 ## Context
 
-OperatorOS is an offline-first school application targeting a local Tauri
-desktop deployment. The prior PostgreSQL-aware Compose stack represented a
+OperatorOS is an offline-first school application targeting a local
+deployment. The prior PostgreSQL-aware Compose stack represented a
 hosted-server deployment that the product does not require. Its driver,
 configuration, branches, tests, and container topology increased maintenance
 and safety scope without an active deployment owner.
 
 ## Decision
 
-OperatorOS is standardized on SQLite as its sole supported database for a local
-Tauri desktop deployment. SQLAlchemy remains the persistence abstraction.
+OperatorOS is standardized on SQLite as its sole supported database for local
+deployment. SQLAlchemy remains the persistence abstraction.
 PostgreSQL and containerized hosted-server deployment are removed from active
 support. PostgreSQL URLs fail explicitly with a sanitized SQLite-only error.
 
-Supported deployment is `TAURI_DESKTOP_LOCAL` with a local FastAPI sidecar and
-SQLite database. PostgreSQL, Docker Compose, and hosted multi-service runtime
-topologies are unsupported. Desktop readiness remains
-`DESKTOP_RUNTIME_EXPERIMENTAL` until the separate packaged-sidecar release
-milestone succeeds.
+Supported deployment is `LOCAL_BROWSER_RUNTIME` with a local FastAPI backend,
+the React frontend in a browser, and a SQLite database. PostgreSQL, Docker
+Compose, and hosted multi-service runtime topologies are unsupported.
 
 ## Reasons and consequences
 
@@ -49,14 +51,13 @@ Rollback backups are restore inputs and cannot become writable runtime data.
 The repository operational database is excluded from development, tests, and
 packaging.
 
-## Desktop path contract
+## Local data path contract
 
-The packaged database must be an absolute path supplied from the operating
-system/Tauri application-data directory: Tauri application data on Windows,
+Any packaged or long-lived local runtime must use an absolute database path in
+the operating-system application-data directory: Application Data on Windows,
 XDG application data on Linux, and Application Support on macOS. It must not
 depend on the working directory or resolve to `backend/attendance.db`.
-Development and tests use explicit disposable paths. Final cross-platform path
-bridging belongs to the packaged-sidecar milestone.
+Development and tests use explicit disposable paths.
 
 ## PostgreSQL reconsideration
 

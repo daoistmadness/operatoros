@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-OperatorOS has one local blocking smoke suite and one guarded full suite. The smoke suite verifies critical backend and browser workflows against a fresh synthetic database. The full suite is reserved for GitHub Actions or an explicit owner-approved local override. Native Windows/Tauri acceptance is a separate manual workflow and is not part of either automated result.
+OperatorOS has one local blocking smoke suite and one guarded full suite. The smoke suite verifies critical backend and browser workflows against a fresh synthetic database. The full suite is reserved for GitHub Actions or an explicit owner-approved local override.
 
 ## 2. Components
 
@@ -20,7 +20,6 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `e2e/full/` is the expansion point for CI-only coverage.
 - `frontend/playwright.config.ts` reads the selected frontend URL from runtime state and stores failure evidence.
 - `start-dev.sh` and `stop-dev.sh` provide session-aware process ownership and dynamic ports.
-- `scripts/start-tauri-dev.ps1` provides the separate Windows/Tauri development acceptance path.
 
 ## 3. Smoke execution flow
 
@@ -85,26 +84,10 @@ The full suite is for GitHub Actions. Local execution is rejected unless an owne
 
 The backend smoke suite covers health/authentication and the approved critical API scenarios. The web smoke suite covers login-state detection, attendance navigation, synthetic upload behavior, and preview-only Class Allocation without creating a new enrollment. The full suite adds existing backend and frontend regressions plus a frontend production build.
 
-Desktop is reported as skipped with `BLOCKED_BY_EXISTING_INFRASTRUCTURE`. No automated run claims native Tauri, WebView2, installer, sidecar, restart, or Windows lifecycle coverage.
-
-### Windows/Tauri manual development acceptance
-
-Run native Tauri tooling from an NTFS Windows worktree, not a WSL UNC path. The Windows and WSL worktrees must both be clean and at the same commit. From PowerShell, use:
-
-```powershell
-.\scripts\start-tauri-dev.ps1 `
-  -WslRepositoryPath /home/<user>/projects/absensi/school-attendance-analytics `
-  -WindowsSourcePath C:\path\to\school-attendance-analytics `
-  -PortStrategy fixed
-```
-
-The launcher verifies Node 24 and npm, starts the WSL application stack, waits for synchronized runtime state, verifies Windows-to-WSL reachability, generates a temporary Tauri override under `%LOCALAPPDATA%\OperatorOS\dev\<session-id>`, and runs Tauri from the Windows worktree. Its `finally` block stops only the session it started. This is a manual development workflow and does not change the automated desktop status.
-
 ## 9. Generated directories
 
 - `.runtime/operatoros-e2e/` contains per-invocation database, runtime state, backups, session identity, and selected ports.
 - `e2e-results/` contains summaries, logs, JUnit XML, Playwright screenshots, and traces.
-- `%LOCALAPPDATA%\OperatorOS\dev\<session-id>` contains temporary Windows/Tauri override state and is preserved when a failed run needs diagnosis.
 
 These paths are generated evidence and must not be committed.
 
@@ -112,8 +95,8 @@ These paths are generated evidence and must not be committed.
 
 The smoke command fails on backend or web test failure, startup failure, an unavailable genuine Node 24 runtime, a production checksum change, or a changed disposable enrollment fingerprint. Expected unauthenticated `/api/auth/me` detection may return 401; unexpected 401/403 and other unexpected 4xx/5xx responses remain failures.
 
-Normal output is the terse summary. Diagnose failures using `e2e-results/summary.txt`, `e2e-results/logs/`, `e2e-results/junit/`, `e2e-results/playwright/`, and the before/after database metadata. Do not reinterpret a missing desktop prerequisite as a desktop pass.
+Normal output is the terse summary. Diagnose failures using `e2e-results/summary.txt`, `e2e-results/logs/`, `e2e-results/junit/`, `e2e-results/playwright/`, and the before/after database metadata.
 
 ## 11. Extending coverage
 
-Add only deterministic tests that use runtime-provided URLs and synthetic fixture data. Put blocking critical paths under `e2e/smoke/`; put broader CI-only browser coverage under `e2e/full/web/`. Update the fixture contract when deterministic seed data changes, preserve the production checksum and enrollment fingerprint gates, and keep tests independent of ordering. Native desktop automation requires a separately approved Windows automation interface before it can enter either suite.
+Add only deterministic tests that use runtime-provided URLs and synthetic fixture data. Put blocking critical paths under `e2e/smoke/`; put broader CI-only browser coverage under `e2e/full/web/`. Update the fixture contract when deterministic seed data changes, preserve the production checksum and enrollment fingerprint gates, and keep tests independent of ordering.

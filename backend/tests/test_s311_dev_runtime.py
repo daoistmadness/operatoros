@@ -171,16 +171,3 @@ def test_vite_configuration_is_strict_and_port_synchronized():
     assert "strictPort: true" in config
     assert "clearScreen: false" in config
     assert "port: frontendPort" in config
-
-
-def test_windows_launcher_generates_untracked_matching_dev_url():
-    launcher = (ROOT / "scripts" / "start-tauri-dev.ps1").read_text(encoding="utf-8")
-    assert "ports.frontend_url" in launcher
-    assert "tauri.dev.override.json" in launcher
-    assert "beforeDevCommand = $null" in launcher
-    assert "bundle = @{ resources = @() }" in launcher
-    assert "$env:OPERATOROS_TAURI_DEV_URL = $ports.frontend_url" in launcher
-    assert "candidate.session_id -ne $previousSessionId" in launcher
-    assert "./stop-dev.sh --session" in launcher
-    assert "& npm run tauri -- dev --config $overridePath" in launcher
-    assert ".runtime/operatoros-dev/" in (ROOT / ".gitignore").read_text(encoding="utf-8")

@@ -1,8 +1,17 @@
 # ADR: Tauri v2 Desktop Architecture
 
-- Status: Proposed; approval gate for Phase 11
+- Status: Retired 2026-08-20; superseded by `LOCAL_BROWSER_RUNTIME` in
+  [Platform portability](../architecture/PLATFORM_PORTABILITY.md)
 - Date: 2026-07-14
 - Initial target: Windows x86_64
+
+## Retirement note
+
+The Tauri v2 shell (`frontend/src-tauri/`), the packaged sidecar experiments
+(`desktop-spike/`), the Windows launcher helpers, and the desktop sidecar
+contract tests were removed from the repository. This ADR is retained as
+historical design evidence only. None of the contracts below apply to the
+current runtime; do not implement against them without a new accepted ADR.
 
 ## Context
 

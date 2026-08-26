@@ -4,8 +4,10 @@
 
 OperatorOS is an offline-first school attendance and academic analytics system.
 Its active runtime contract is `SQLITE_ONLY_SUPPORTED`,
-`TAURI_DESKTOP_LOCAL`, `POSTGRESQL_NOT_SUPPORTED`, and
-`CONTAINER_RUNTIME_NOT_REQUIRED`; desktop packaging remains experimental.
+`LOCAL_BROWSER_RUNTIME`, `POSTGRESQL_NOT_SUPPORTED`, and
+`CONTAINER_RUNTIME_NOT_REQUIRED`. The experimental Tauri desktop shell was
+removed; the supported runtime is a local FastAPI backend with the React
+frontend in a browser.
 This file is the authoritative execution contract for coding agents. A nested
 `AGENTS.md` may add local refinements but cannot weaken this contract. Current
 detail lives in [docs/README.md](docs/README.md); product-audit documents are
@@ -14,42 +16,20 @@ historical evidence unless they explicitly identify a current procedure.
 ## Environment and dependencies
 
 - Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
-- Use Linux Node.js 24.x and npm 11.x in WSL. The repository-pinned runtime is
-  defined by `.nvmrc`; read it before making Node-version assumptions. The
-  `frontend/package-lock.json` file is the package-manager lockfile authority.
-  Bun is not a project dependency or validation gate.
+- Use `mise` as runtime-version authority. `mise.toml` pins Bun 1.4.0 and Python 3.12.3. `frontend/bun.lock` remains the package-manager lockfile authority. Bun remains the package manager; mise only installs the runtime.
+- Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
 
-### WSL Node.js and npm runtime
+### WSL Bun runtime
 
-- Use only the Linux Node.js and npm installation provided by existing NVM.
-  Do not install Node or NVM automatically. Do not modify shell profile files
-  or the global NVM default.
-- Before executing Node or npm version commands, inspect `command -v`,
-  `type -P`, and `readlink -f` for both commands. Reject candidates that
+- Use only the native Linux Bun installation via mise.
+- Before executing Bun commands, inspect `command -v`, `type -P`, and `readlink -f`. Reject candidates that
   resolve to `/mnt/c`, another `/mnt/<drive>`, `WindowsApps`, `Program Files`,
-  `nvm4w`, `.exe`, `.cmd`, `.bat`, or UNC-like Windows paths. Never execute a
+  `.exe`, `.cmd`, `.bat`, or UNC-like Windows paths. Never execute a
   rejected Windows binary.
-- A contaminated shell can contain `/home/mikhailryu/.local/bin/node`, which
-  resolves to `/mnt/c/Users/OPREDEL/AppData/Local/nvm/v22.23.1/node.exe`, and
-  an older Linux npm at
-  `/home/mikhailryu/.nvm/versions/node/v22.23.1/bin/npm`. This is an invalid
-  mixed Node/npm runtime.
-- `./scripts/validate-wsl-node-npm.sh --probe .` is validation-only. It can
-  report `UNSAFE_PATH` in a contaminated shell and must not execute the
-  rejected Windows Node binary.
-- Normal launchers use `operatoros_wsl_prepare_node_npm` to recover through
-  existing Linux NVM. Recovery reads `.nvmrc`, sources `~/.nvm/nvm.sh`, selects
-  the pinned version, prepends its `bin` directory to `PATH`, runs `hash -r`,
-  resolves Node and npm again, validates both paths, and validates both
-  versions before continuing.
-- The verified runtime is Node `v24.13.0` with npm `11.6.2`. The selected
-  NVM paths are `/home/mikhailryu/.nvm/versions/node/v24.13.0/bin/node` and
-  `/home/mikhailryu/.nvm/versions/node/v24.13.0/bin/npm`. Manual `nvm use` is
-  not required by the normal launcher.
-- Node 20 and Node 22 are not accepted final runtimes. They may appear only in
-  wrong-version tests or historical references.
+- `./scripts/validate-wsl-bun.sh --probe .` is validation-only.
+- Normal launchers use `operatoros_wsl_prepare_bun` to validate the environment and prepend the Bun bin directory to `PATH`.
 
 ## Git and worktree safety
 
@@ -84,7 +64,7 @@ historical evidence unless they explicitly identify a current procedure.
 ## Development startup and database
 
 - `./start-dev.sh` is the canonical normal development entrypoint. It reports
-  `DATABASE_URL` configuration drift, validates and recovers the WSL Node/npm
+  `DATABASE_URL` configuration drift, validates and recovers the WSL Bun
   runtime, uses the canonical persistent development database, enforces one
   managed session, starts the backend first, waits for backend and frontend
   readiness, and performs managed shutdown.
@@ -169,6 +149,6 @@ database, authorization, audit, or Git safeguards. See
   Required Changes, Safety Rules, Validation, Git Rules, Acceptance Criteria,
   and Final Report. Use only the sections that the task needs. Do not repeat
   the same rule in multiple sections.
-- Keep technical identifiers exact, including `.nvmrc`, `backend/.venv`,
+- Keep technical identifiers exact, including `mise.toml`, `mise.lock`, `backend/.venv`,
   `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`,
-  `operatoros_wsl_prepare_node_npm`, and `./start-dev.sh`.
+  `operatoros_wsl_prepare_bun`, and `./start-dev.sh`.
