@@ -20,6 +20,7 @@ import { rosterRoutes } from "./domains/roster";
 import { studentImportSessionRoutes } from "./domains/student-import-sessions";
 import { dataPortabilityRoutes } from "./domains/data-portability";
 import { uploadHistoryRoutes } from "./domains/upload-history";
+import { attendanceFollowupRoutes } from "./domains/attendance-followups";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -66,6 +67,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     studentImportSessionRoutes(app, context);
     dataPortabilityRoutes(app, context);
     uploadHistoryRoutes(app, context);
+    attendanceFollowupRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,

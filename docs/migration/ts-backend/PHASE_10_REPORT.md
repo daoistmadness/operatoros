@@ -6,9 +6,9 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 52
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 35
 missing operations and one deprecated operation. Candidate analytics, roster,
-and staff-import routes still need full dual replay. The legacy `.xls` preview
+staff-import, and attendance-followup routes still need full dual replay. The legacy `.xls` preview
 path also needs an approved disposition.
 
 ## Completed in this loop
@@ -39,14 +39,15 @@ path also needs an approved disposition.
 - Added data portability dataset, CSV export, template, import, and history candidates.
 - Added upload history, timeline, row outcome, sanitized evidence, missing-record,
   and sample-template candidates.
+- Added attendance follow-up candidate discovery, workflow, metrics, notes, and history routes.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 275 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 53.
+- Elysia: 292 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 36.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
