@@ -8,7 +8,7 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="${1:?workspace required}"
-if [[ "${OPERATOROS_E2E_BACKEND:-fastapi}" == "elysia" ]]; then
+if [[ "${OPERATOROS_E2E_BACKEND:-elysia}" == "elysia" ]]; then
   exec bash "$repo_root/e2e/start-elysia-test-stack.sh" "$workspace" "${2:?log directory required}"
 fi
 runtime="$workspace/runtime"
@@ -20,6 +20,7 @@ export ASTRYX_DEV_STATE_DIR="$state"
 export OPERATOROS_DEV_DATA_DIR="$state"
 export OPERATOROS_RUNTIME_DIR="$runtime"
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
+export OPERATOROS_BACKEND=fastapi
 
 "$repo_root/start-dev.sh" --auto-port --no-clean-stale >"$logs/stack-launcher.log" 2>&1 &
 launcher_pid=$!

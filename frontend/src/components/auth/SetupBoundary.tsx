@@ -13,7 +13,7 @@ export function SetupBoundary({ children }: { children: ReactNode }) {
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
         <section role="alert" className="max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
           <h1 className="text-xl font-black text-slate-900">Setup status unavailable</h1>
-          <p className="mt-3 text-sm text-slate-600">Confirm the FastAPI backend is running, then retry.</p>
+          <p className="mt-3 text-sm text-slate-600">Confirm the backend is running, then retry.</p>
           <Button onClick={() => status.refetch()} className="mt-6">Retry</Button>
         </section>
       </main>
