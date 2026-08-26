@@ -68,6 +68,9 @@ The required pull request checks passed. PR #61 merged as
 also passed on that commit. The disposable rollback drill passed in both
 directions: Elysia to FastAPI and FastAPI to Elysia.
 
+- Merged-main CI run: `33019678095`.
+- Merged-main E2E run: `33019678082`.
+
 ## Final gate
 
 `TYPESCRIPT_BACKEND_PHASE_12_FINAL_CUTOVER_READY`
