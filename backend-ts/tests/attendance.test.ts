@@ -88,4 +88,27 @@ describe("attendance parity slices", () => {
       expect(revoked.status).toBe(200); expect((await revoked.json() as any).state).toBe("REVOKED");
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
+
+  it("supports follow-up candidate discovery and case workflow", async () => {
+    const path = `/tmp/operatoros-followups-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-followups-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const candidates = await app.handle(new Request("http://local/api/attendance/followups/candidates?date_from=2026-08-01&date_to=2026-08-02", { headers: auth }));
+      expect(candidates.status).toBe(200); expect((await candidates.json() as any).items.map((item: any) => item.exception_kind)).toEqual(expect.arrayContaining(["LATE_ARRIVAL", "MISSING_CHECKOUT"]));
+      const created = await app.handle(new Request("http://local/api/attendance/followups", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ exception_key: "LATE_ARRIVAL:student:2026-08-01:1", exception_kind: "LATE_ARRIVAL", attendance_id: 1, exception_date: "2026-08-01", source_snapshot: { summary: "Late arrival" } }) }));
+      const createdResponseBody = await created.json() as any; expect(created.status, JSON.stringify(createdResponseBody)).toBe(200); const caseBody = createdResponseBody; expect(caseBody).toMatchObject({ status: "OPEN", version: 1, exception_kind: "LATE_ARRIVAL" });
+      const acknowledged = await app.handle(new Request(`http://local/api/attendance/followups/${caseBody.id}/acknowledge`, { method: "POST", headers: auth }));
+      expect(acknowledged.status).toBe(200); expect((await acknowledged.json() as any)).toMatchObject({ status: "ACKNOWLEDGED", version: 2 });
+      const note = await app.handle(new Request(`http://local/api/attendance/followups/${caseBody.id}/notes`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ body: "Contacted the class teacher" }) }));
+      expect(note.status).toBe(200); expect((await note.json() as any).body).toBe("Contacted the class teacher");
+      const started = await app.handle(new Request(`http://local/api/attendance/followups/${caseBody.id}/start`, { method: "POST", headers: auth }));
+      expect(started.status).toBe(200);
+      const resolved = await app.handle(new Request(`http://local/api/attendance/followups/${caseBody.id}/resolve`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ resolution_code: "EXPLAINED", resolution_note: "Teacher confirmed the event", version: 3 }) }));
+      const resolvedBody = await resolved.json() as any; expect(resolved.status, JSON.stringify(resolvedBody)).toBe(200); expect(resolvedBody.status).toBe("RESOLVED");
+      const history = await app.handle(new Request(`http://local/api/attendance/followups/${caseBody.id}/history`, { headers: auth }));
+      expect((await history.json() as any).history.length).toBeGreaterThanOrEqual(3);
+      const metrics = await app.handle(new Request("http://local/api/attendance/followups/metrics/summary", { headers: auth }));
+      const metricsBody = await metrics.json() as any; expect(metrics.status).toBe(200); expect(metricsBody.by_class).toBeInstanceOf(Object); expect(metricsBody.by_class).not.toBeInstanceOf(Array);
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
 });
