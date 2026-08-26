@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
+import * as XLSX from "@e965/xlsx";
 import ExcelJS from "exceljs";
 import { createApp } from "../src/app";
 import { openDatabase } from "../src/db/connection";
@@ -43,6 +44,13 @@ async function workbook(rows: unknown[][], customHeaders = headers): Promise<Uin
   return new Uint8Array(await book.xlsx.writeBuffer());
 }
 
+function legacyWorkbook(rows: unknown[][], customHeaders = headers): Uint8Array {
+  const sheet = XLSX.utils.aoa_to_sheet([customHeaders, ...rows]);
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheet, "Attendance Export");
+  return new Uint8Array(XLSX.write(book, { bookType: "biff8", type: "buffer" }) as Uint8Array);
+}
+
 function authCookie(response: Response): string {
   const value = response.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!value) throw new Error("session cookie missing");
@@ -63,9 +71,9 @@ function cleanup(value: Awaited<ReturnType<typeof setup>>): void {
   rmSync(value.path, { force: true });
 }
 
-async function preview(app: ReturnType<typeof createApp>, cookie: string, bytes: Uint8Array, filename = "test.xlsx") {
+async function preview(app: ReturnType<typeof createApp>, cookie: string, bytes: Uint8Array, filename = "test.xlsx", type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
   const form = new FormData();
-  form.append("file", new File([bytes], filename, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  form.append("file", new File([bytes], filename, { type }));
   return app.handle(new Request("http://local/api/uploads/preview", { method: "POST", headers: { cookie }, body: form }));
 }
 
@@ -193,5 +201,21 @@ describe("Excel attendance import", () => {
     const bytes = await workbook([[9001, "Andi", new Date(Date.UTC(2026, 5, 15)), 0.3125, new Date(Date.UTC(1899, 11, 30, 16)), "00:25", 0.0208333333, "", "25"]]);
     const result = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "typed.xlsx");
     expect(result.rows[0]).toMatchObject({ date: "2026-06-15", checkIn: "07:30", checkOut: "16:00", overtimeSeconds: null });
+  });
+
+  it("reads legacy BIFF .xls through the same preview and commit pipeline", async () => {
+    const value = await setup("xls");
+    try {
+      const bytes = legacyWorkbook([[9001, "Andi", "17/06/2026", "07:30", "16:00", "00:25", "", "", "25"]]);
+      const parsed = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "legacy.xls");
+      expect(parsed.rows[0]).toMatchObject({ date: "2026-06-17", checkIn: "07:30", checkOut: "16:00", lateRaw: "00:25" });
+      const response = await preview(value.app, value.cookie, bytes, "legacy.xls", "application/vnd.ms-excel");
+      expect(response.status).toBe(200);
+      const body = await response.json() as any;
+      expect(body.summary).toMatchObject({ total_rows: 1, new_rows: 1, conflicts: 0, invalid_rows: 0 });
+      const commit = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      expect(commit.status).toBe(200);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9001 AND date = '2026-06-17'").get() as any).count).toBe(1);
+    } finally { cleanup(value); }
   });
 });
