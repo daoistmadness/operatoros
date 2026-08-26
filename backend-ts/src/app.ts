@@ -18,6 +18,7 @@ import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
 import { studentExportRoutes } from "./domains/student-exports";
 import { rosterRoutes } from "./domains/roster";
 import { studentImportSessionRoutes } from "./domains/student-import-sessions";
+import { dataPortabilityRoutes } from "./domains/data-portability";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -62,6 +63,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     studentExportRoutes(app, context);
     rosterRoutes(app, context);
     studentImportSessionRoutes(app, context);
+    dataPortabilityRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
