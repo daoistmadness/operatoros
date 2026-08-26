@@ -13,6 +13,18 @@ import { interventionRoutes } from "./domains/interventions";
 import { progressionRoutes } from "./domains/progression";
 import { reportRoutes } from "./domains/reports";
 import { safetyRoutes } from "./domains/safety";
+import { operatorRoutes } from "./domains/operator";
+import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
+import { studentExportRoutes } from "./domains/student-exports";
+import { rosterRoutes } from "./domains/roster";
+import { studentImportSessionRoutes } from "./domains/student-import-sessions";
+import { dataPortabilityRoutes } from "./domains/data-portability";
+import { uploadHistoryRoutes } from "./domains/upload-history";
+import { attendanceFollowupRoutes } from "./domains/attendance-followups";
+import { reportBuilderRoutes } from "./domains/report-builder";
+import { uploadConflictRoutes } from "./domains/upload-conflicts";
+import { studentUpdateRoutes } from "./domains/student-update";
+import { phase10OpenApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -22,6 +34,7 @@ function errorBody(code: string, message: string) {
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
+  const context = database && _config.auth?.authCookieSecret ? { database, config: defaultAuthConfig(_config.auth) } : null;
   const app = new Elysia({ name: "backend-ts" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -36,11 +49,11 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       set.status = 500;
       return errorBody("INTERNAL_ERROR", "Internal server error.");
     })
+    .get("/", () => ({ status: "ok", message: "School Attendance Analytics API" }))
     .get("/health", () => ({ status: "ok" }))
     .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
 
-  if (database && _config.auth?.authCookieSecret) {
-    const context = { database, config: defaultAuthConfig(_config.auth) };
+  if (context) {
     authRoutes(app, context);
     coreRoutes(app, context);
     configRoutes(app, context);
@@ -51,15 +64,30 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     interventionRoutes(app, context);
     progressionRoutes(app, context);
     reportRoutes(app, context);
+    operatorRoutes(app, context);
+    teacherAssignmentRoutes(app, context);
+    studentExportRoutes(app, context);
+    rosterRoutes(app, context);
+    studentImportSessionRoutes(app, context);
+    dataPortabilityRoutes(app, context);
+    uploadHistoryRoutes(app, context);
+    attendanceFollowupRoutes(app, context);
+    reportBuilderRoutes(app, context);
+    uploadConflictRoutes(app, context);
+    studentUpdateRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
     });
   }
-  systemRoutes(app, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
+  systemRoutes(app, context, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
-    app.use(openapi({ path: "/openapi" }));
+    app.use(openapi({
+      path: "/openapi",
+      exclude: { staticFile: false },
+      documentation: context ? phase10OpenApiDocumentation() : undefined,
+    }));
   }
   return app;
 }

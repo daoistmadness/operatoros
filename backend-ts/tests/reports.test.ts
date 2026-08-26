@@ -50,6 +50,82 @@ describe("analytics and report parity", () => {
     try {
       const cookie = await adminCookie(app);
       const staff = await staffCookie(app);
+      for (const path of ["/api/analytics/filters?academic_year_id=2&jenjang_id=2", "/analytics/filters?academic_year_id=2&jenjang_id=2"]) {
+        const filters = await app.handle(new Request(`http://local${path}`, { headers: { cookie } }));
+        expect(filters.status).toBe(200);
+        expect(await filters.json()).toEqual({
+          academic_years: expect.arrayContaining([expect.objectContaining({ id: 2, label: "2026/2027-reports" })]),
+          jenjangs: expect.arrayContaining([expect.objectContaining({ id: 2, name: "SMP" })]),
+          class_names: ["7A", "7B", "7C"],
+          subjects: expect.arrayContaining([expect.objectContaining({ name: "Matematika", jenjang_id: 2 })]),
+        });
+      }
+      const invalidFilters = await app.handle(new Request("http://local/api/analytics/filters?academic_year_id=2.5", { headers: { cookie } }));
+      expect(invalidFilters.status).toBe(422);
+      for (const alias of ["/api/analytics", "/analytics"]) {
+        const byClass = await app.handle(new Request(`http://local${alias}/late-by-class`, { headers: { cookie } }));
+        expect(byClass.status).toBe(200);
+        expect(await byClass.json()).toEqual(expect.arrayContaining([
+          { class_name: "7A", late_count: 3 },
+          { class_name: "1A", late_count: 2 },
+        ]));
+        const byJenjang = await app.handle(new Request(`http://local${alias}/late-by-jenjang`, { headers: { cookie } }));
+        expect(byJenjang.status).toBe(200);
+        expect(await byJenjang.json()).toEqual(expect.arrayContaining([
+          { jenjang: "SMP", late_count: 3 },
+          { jenjang: "SD", late_count: 2 },
+        ]));
+        const byStudent = await app.handle(new Request(`http://local${alias}/late-by-student`, { headers: { cookie } }));
+        expect(byStudent.status).toBe(200);
+        expect(await byStudent.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ nama: "Alice SMP7A", class_name: "7A", jenjang: "SMP", late_count: 1 }),
+          expect.objectContaining({ nama: "Fajar SD1A", class_name: "1A", jenjang: "SD", late_count: 1 }),
+        ]));
+        const byStudentRate = await app.handle(new Request(`http://local${alias}/attendance-rate/students`, { headers: { cookie } }));
+        expect(byStudentRate.status).toBe(200);
+        expect(await byStudentRate.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ nama: "Alice SMP7A", jenjang: "SMP", total: { present_days: 4, heb: 18, rate: 0.222 } }),
+          expect.objectContaining({ nama: "Fajar SD1A", jenjang: "SD", total: { present_days: 3, heb: 15, rate: 0.2 } }),
+        ]));
+        const byJenjangRate = await app.handle(new Request(`http://local${alias}/attendance-rate/jenjang`, { headers: { cookie } }));
+        expect(byJenjangRate.status).toBe(200);
+        expect(await byJenjangRate.json()).toEqual(expect.arrayContaining([
+          expect.objectContaining({ jenjang: "SMP", total: { avg_present_days: 2.667, heb: 18, rate: 0.148 } }),
+          expect.objectContaining({ jenjang: "SD", total: { avg_present_days: 3, heb: 15, rate: 0.2 } }),
+        ]));
+        const byClassMonth = await app.handle(new Request(`http://local${alias}/monthly-by-class`, { headers: { cookie } }));
+        expect(byClassMonth.status).toBe(200);
+        expect(await byClassMonth.json()).toEqual(expect.arrayContaining([
+          { class_name: "7A", month: "2026-08", late_count: 3 },
+          { class_name: "1A", month: "2026-08", late_count: 2 },
+        ]));
+        const attendanceReport = await app.handle(new Request(`http://local${alias}/attendance-report?start_date=2026-08-01&end_date=2026-08-05`, { headers: { cookie } }));
+        expect(attendanceReport.status).toBe(200);
+        expect(await attendanceReport.json()).toMatchObject({
+          summary: { avg_late_time_str: "17m", heb_days: 16 },
+          results: expect.arrayContaining([
+            expect.objectContaining({ name: "Alice SMP7A", present_count: 3, late_count: 1, absent_count: 0, incomplete_count: 0, sakit: 2, izin: 1, alfa: 0, total_late_time_str: "15m", total_days: 4, attendance_percentage: 100 }),
+            expect.objectContaining({ name: "Dina SMP7B", present_count: 1, late_count: 0, absent_count: 0, incomplete_count: 1, total_days: 2, attendance_percentage: 100 }),
+          ]),
+        });
+        const interventionImpact = await app.handle(new Request(`http://local${alias}/intervention-impact?academic_year_id=2`, { headers: { cookie } }));
+        expect(interventionImpact.status).toBe(200);
+        expect(await interventionImpact.json()).toMatchObject({
+          filters: { academic_year_id: 2 },
+          summary: { total_interventions: 0, open_interventions: 0, resolved_interventions: 0, average_score_delta: null },
+          impact_rows: [],
+          executive_insights: [expect.objectContaining({ title: "No intervention impact records found" })],
+        });
+        const managementSummary = await app.handle(new Request(`http://local${alias}/management-summary?academic_year_id=2`, { headers: { cookie } }));
+        expect(managementSummary.status).toBe(200);
+        const managementJson = await managementSummary.json() as any;
+        expect(managementJson).toMatchObject({
+          filters: { academic_year_id: 2, academic_year_label: "2026/2027-reports", jenjang_id: null, subject_id: null },
+          attendance_summary: { total_records: 24, status_counts: { hadir: 18, sakit: 3, izin: 2, alfa: 1 } },
+          thresholds: { kkm_edelweiss: 85, kkm_national: 75, legacy_fallback: 85 },
+        });
+        expect(managementJson.terms_breakdown).toEqual(expect.arrayContaining([expect.objectContaining({ term_number: 1, hadir: 18, sakit: 3, izin: 2, alfa: 1, total_records: 24, attendance_percentage: 75 })]));
+      }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
       const monthlyJson = await monthly.json() as any;
@@ -98,6 +174,33 @@ describe("analytics and report parity", () => {
     expect(roundHalfEven(3.5, 0)).toBe(4);
     expect(roundHalfUp(2.5, 0)).toBe(3);
   });
+
+  it("serves historical trends and management export aliases", async () => {
+    const path = `/tmp/operatoros-phase10-analytics-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase10-analytics-audit-${process.pid}` } });
+    try {
+      const cookie = await adminCookie(app);
+      const trends = await app.handle(new Request("http://local/api/analytics/historical-trends?academic_year_id=2&include_forecast=true", { headers: { cookie } }));
+      expect(trends.status).toBe(200);
+      expect(await trends.json()).toMatchObject({ filters: { academic_year_id: 2, granularity: "term" }, trend_series: { attendance: { by_month: expect.any(Array), by_term: expect.any(Array) }, grades: { by_term: expect.any(Array) } }, forecast_series: expect.any(Array) });
+      const invalid = await app.handle(new Request("http://local/analytics/historical-trends?academic_year_id=2&granularity=bad", { headers: { cookie } }));
+      expect(invalid.status).toBe(400);
+      for (const path of ["/api/analytics", "/analytics"]) {
+        const excel = await app.handle(new Request(`http://local${path}/management-summary/export/excel?academic_year_id=2&mode=editable`, { headers: { cookie } }));
+        expect(excel.status).toBe(200);
+        expect(excel.headers.get("content-type")).toContain("spreadsheetml");
+        expect(new TextDecoder().decode((await excel.arrayBuffer()).slice(0, 2))).toBe("PK");
+        const pdf = await app.handle(new Request(`http://local${path}/management-summary/export/pdf?academic_year_id=2`, { headers: { cookie } }));
+        expect(pdf.status).toBe(200);
+        expect(new TextDecoder().decode((await pdf.arrayBuffer()).slice(0, 4))).toBe("%PDF");
+      }
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
 
   it("exports report, tardiness, and rekap workbooks without mutation", async () => {
     const path = `/tmp/operatoros-phase8-exports-${process.pid}-${Date.now()}.db`;

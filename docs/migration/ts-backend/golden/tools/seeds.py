@@ -55,11 +55,11 @@ def seed_auth_users(db_path) -> None:
         db.close()
 
 
-def _seed_student_with_identity(db, sid: int, name: str, jenjang: str, class_name: str) -> None:
+def _seed_student_with_identity(db, sid: int, name: str, jenjang: str, class_name: str, master_id: str | None = None) -> None:
     from models.student import Student
     from models.student_master import StudentDeviceIdentity, StudentMaster
 
-    master = StudentMaster(full_name=name, normalized_name=name.lower(), student_status="active")
+    master = StudentMaster(id=master_id, full_name=name, normalized_name=name.lower(), student_status="active")
     db.add(master)
     db.flush()
     db.add(
@@ -123,7 +123,7 @@ def seed_attendance_import(db_path) -> None:
             (9003, "Citra", "SMP", "SMP7B"),
             (9101, "Diana", "SMA", "SMA2C"),
         ):
-            _seed_student_with_identity(db, sid, name, jenjang, class_name)
+            _seed_student_with_identity(db, sid, name, jenjang, class_name, f"00000000-0000-0000-0000-{sid:012d}")
         db.add_all([JenjangConfig(jenjang="SMP", cutoff_time="07:15"), JenjangConfig(jenjang="SMA", cutoff_time="07:00")])
         db.add_all(
             [

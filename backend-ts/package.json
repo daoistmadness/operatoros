@@ -9,10 +9,12 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@e965/xlsx": "0.20.3",
     "@elysiajs/openapi": "^1.1.0",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.1.0",
     "exceljs": "^4.4.0",
+    "jszip": "3.10.1",
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
