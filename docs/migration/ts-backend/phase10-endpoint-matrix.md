@@ -32,7 +32,8 @@ headers, cookies, database state, or audit state.
 
 ## Green and non-applicable routes
 
-- 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
+- The accepted Phase 3 through Phase 9 gates cover the previously migrated
+  route groups.
 - Analytics, operator-queue, teacher-assignment, student-export, roster, staff-import,
   student-import-session, data-portability, upload-history, attendance-followup, and
   report-builder candidate
@@ -50,14 +51,22 @@ unknown.
 | --- | ---: | --- | --- | --- |
 | `api.analytics` | 6 | Management-summary exports, historical-trends, and both legacy aliases | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay and export parity. |
 | `api.attendance_followups` | 17 | `/api/attendance/followups*` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay and preserve the follow-up state machine and history. |
+| `api.data_portability` | 8 | `/api/data-portability/*` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay for CSV export, import, templates, and history. |
+| `api.operator_work_queue` | 1 | `/api/operator/work-queue` | `MIGRATION_DEFECT` | Candidate route exists. Complete dual replay and capability checks. |
 | `api.report_builder` | 12 | `/api/report-builder/*` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay for templates, preview, branding, and exports. |
+| `api.staff` | 2 | `/api/staff/imports/history`, `/api/staff/imports/{batch_id}` | `MIGRATION_DEFECT` | Candidate import-history routes exist. Complete dual replay and issue-count parity. |
 | `api.student_enrollments` | 2 | Roster preview and commit | `MIGRATION_DEFECT` | Candidate routes exist. Complete roster preview, commit, and dual replay. |
+| `api.student_exports` | 2 | `/api/student-exports/preview`, `/api/student-exports/download` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay and sensitive-field authorization checks. |
+| `api.student_import_sessions` | 2 | `/api/student-import-sessions/{session_id}/rollback*` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay and rollback safety checks. |
 | `api.student_masters` | 6 | Student update preview, commit, history, template, and result workbook | `MIGRATION_DEFECT` | The frontend uses update preview and commit. Preserve checksum and provenance. |
 | `api.system` | 1 | `POST /api/system/clear-data` | `MIGRATION_DEFECT` | Candidate route exists. Complete destructive-operation dual replay and audit comparison. |
+| `api.teacher_class_assignments` | 5 | `/api/teacher-class-assignments*` | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay for overlap and lifecycle behavior. |
 | `api.upload_conflicts` | 8 | `/api/upload-conflicts/*` | `MIGRATION_DEFECT` | The frontend uses resolution and retry routes. Preserve conflict state and audit events. |
+| `api.uploads` | 10 | Attendance import, upload history, evidence, missing records, and sample template | `MIGRATION_DEFECT` | Candidate routes exist. Complete dual replay for history and evidence contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **0** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, student-export, roster, staff-import, student-import-session, data-portability, upload-history, attendance-followup, report-builder, system, student-update, and upload-conflict routes remain parity-blocked until dual replay.
+Remaining missing operations: **0** plus one deprecated operation. The
+candidate families listed above remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
