@@ -5,8 +5,9 @@
 `SQLITE_ONLY_SUPPORTED`. OperatorOS is a local/desktop SQLite application.
 PostgreSQL is not a supported runtime, and the application explicitly rejects
 PostgreSQL URLs and legacy PostgreSQL configuration without echoing credentials.
-The supported runtime is a local FastAPI backend with the React frontend in a
-browser; a container runtime is not required.
+The supported runtime is a local Elysia backend with the React frontend in a
+browser. FastAPI remains available as the documented rollback and reference
+backend. A container runtime is not required.
 
 The current deployment labels are:
 
