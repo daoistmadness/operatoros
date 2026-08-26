@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { inTransaction } from "../db/connection";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -13,8 +14,8 @@ function parse(value: unknown): Row | null { if (value == null || value === "") 
 function canonical(value: unknown): string { if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`; if (value && typeof value === "object") return `{${Object.entries(value as Row).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`; return JSON.stringify(value); }
 function digest(value: unknown): string { return createHash("sha256").update(canonical(value)).digest("hex"); }
 function stateChecksum(value: unknown): string { return digest(value); }
-function audit(context: AuthContext, user: Row, session: Row, operation: string, metadata: Row): void {
-  context.database.client.run("INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, import_session_id, success, metadata, schema_version) VALUES (?, ?, ?, ?, 'IMPORT_SESSION', ?, ?, ?, 'API', ?, 1, ?, '1')", [randomUUID(), user.username, user.role, "rollback_import_session", session.session_uuid, operation, operation === "ROLLBACK_COMMIT" ? "CRITICAL" : "MEDIUM", session.id, JSON.stringify(metadata)]);
+function audit(context: AuthContext, user: Row, session: Row, operation: string, metadata: Row, reason: string | null = null): void {
+  context.database.client.run("INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, reason, import_session_id, success, metadata, schema_version) VALUES (?, ?, ?, ?, 'IMPORT_SESSION', ?, ?, ?, 'API', ?, ?, 1, ?, '1')", [randomUUID(), user.username, user.role, "rollback_import_session", session.session_uuid, operation, operation === "ROLLBACK_COMMIT" ? "CRITICAL" : "MEDIUM", reason, session.id, JSON.stringify(metadata)]);
 }
 
 function preview(context: AuthContext, session: Row, user: Row): Row {
@@ -91,6 +92,52 @@ function preview(context: AuthContext, session: Row, user: Row): Row {
   return { session_reference: session.session_uuid, session_id: session.id, provenance_status: session.provenance_status, rollback_state: "PREVIEWED", is_rollbackable: eligible > 0, total_applied_actions: actions.length, eligible_actions: eligible, blocked_actions: blocked, manual_review_actions: manual, already_compensated_actions: compensated, affected_entity_counts: { students: students.size, enrollments: enrollments.size, devices: devices.size }, proposed_reverse_action_order: reverse, dependency_conflicts: conflicts, preview_checksum: previewChecksum, expiration: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), required_capability: "rollback_import_session", required_confirmation: `ROLLBACK_SESSION_${String(session.session_uuid).slice(0, 8)}`, history_preservation_disclosure: "Compensating rollback appends new historical actions and preserves all original provenance and audit records." };
 }
 
+function appendCompensation(context: AuthContext, session: Row, user: Row, action: Row, actionType: string, entityType: string, entityId: string, beforeState: Row, afterState: Row, compensationType: string): number {
+  const checksumBefore = stateChecksum(beforeState); const checksumAfter = stateChecksum(afterState); const operationId = digest(`${session.session_uuid}:COMP:${action.id}`);
+  const result = context.database.client.run("INSERT INTO student_import_applied_actions (session_id, source_row_number, action_sequence, action_type, entity_type, entity_id, entity_reference, operation_id, parent_action_id, applied_by, before_state, after_state, before_state_checksum, after_state_checksum, dependency_checkpoint, compensation_type, rollback_eligibility, rollback_state, metadata, schema_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'APPLIED', 'APPLIED', '{}', '1')", [session.id, action.source_row_number, Number(action.action_sequence) + 1000, actionType, entityType, entityId, action.entity_reference, operationId, action.id, user.username, JSON.stringify(beforeState), JSON.stringify(afterState), checksumBefore, checksumAfter, JSON.stringify(afterState), compensationType]);
+  const id = Number(result.lastInsertRowid); context.database.client.run("UPDATE student_import_applied_actions SET rollback_state = 'APPLIED', rollback_action_id = ? WHERE id = ?", [id, action.id]); return id;
+}
+
+function commitRollback(context: AuthContext, session: Row, user: Row, body: Row, set: any): Row {
+  const token = String(body.idempotency_token);
+  if (session.idempotency_key === `ROLLBACK:${token}`) return { session_id: session.id, session_reference: session.session_uuid, rollback_state: session.rollback_state, status: "COMPLETED", idempotent_replay: true, message: "Rollback request was previously processed idempotently." };
+  if (session.provenance_status === "LEGACY_PROVENANCE_UNAVAILABLE") return fail(set, 409, "Historical import session marked LEGACY_PROVENANCE_UNAVAILABLE cannot be rolled back.");
+  const expectedConfirmation = `ROLLBACK_SESSION_${String(session.session_uuid).slice(0, 8)}`;
+  if (body.confirmation_value !== expectedConfirmation) return fail(set, 400, `Confirmation value '${body.confirmation_value}' does not match expected '${expectedConfirmation}'`);
+  let compensated = 0; let blocked = 0; const compensationActions: number[] = [];
+  try {
+    inTransaction(context.database.client, () => {
+      const currentPreview = preview(context, session, user);
+      if (currentPreview.preview_checksum !== body.preview_checksum) throw new Error("PREVIEW_CHECKSUM");
+      const actions = rows(context, "SELECT * FROM student_import_applied_actions WHERE session_id = ? ORDER BY action_sequence DESC", [session.id]);
+      for (const action of actions) {
+        if (body.mode === "SELECTED_ACTIONS" && Array.isArray(body.selected_action_ids) && body.selected_action_ids.length && !body.selected_action_ids.map(Number).includes(Number(action.id))) continue;
+        if (action.rollback_state === "APPLIED") continue;
+        if (action.action_type === "CREATE_STUDENT_MASTER") {
+          const student = row(context, "SELECT * FROM student_masters WHERE id = ?", [action.entity_id]);
+          const device = student ? row(context, "SELECT legacy_student_id FROM student_device_identities WHERE student_master_id = ? LIMIT 1", [student.id]) : null;
+          const attendanceCount = device?.legacy_student_id == null ? 0 : Number((row(context, "SELECT COUNT(*) AS count FROM attendance WHERE student_id = ?", [device.legacy_student_id]) as Row).count);
+          if (student && attendanceCount === 0) { const id = appendCompensation(context, session, user, action, "COMPENSATE_CREATE_STUDENT_MASTER", "STUDENT_MASTER", String(student.id), { student_status: student.student_status }, { student_status: "inactive" }, "STATUS_INACTIVE"); context.database.client.run("UPDATE student_masters SET student_status = 'inactive', updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [user.username, student.id]); compensated++; compensationActions.push(id); }
+        } else if (action.action_type === "UPDATE_STUDENT_PROFILE") {
+          const student = row(context, "SELECT * FROM student_masters WHERE id = ?", [action.entity_id]); const before = parse(action.before_state);
+          if (student && before) { const after = parse(action.after_state) ?? {}; const id = appendCompensation(context, session, user, action, "COMPENSATE_UPDATE_STUDENT_PROFILE", "STUDENT_MASTER", String(student.id), after, before, "RESTORE_PROFILE"); const updates = ["full_name", "gender", "birth_place", "birth_date"].filter((field) => before[field] !== undefined); if (updates.length) context.database.client.run(`UPDATE student_masters SET ${updates.map((field) => `${field} = ?`).join(", ")}, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...updates.map((field) => before[field]), user.username, student.id]); compensated++; compensationActions.push(id); }
+        } else if (["ADD_DEVICE_IDENTITY", "REPLACE_DEVICE_IDENTITY"].includes(action.action_type)) {
+          const device = row(context, "SELECT * FROM student_device_identities WHERE id = ?", [action.entity_id]);
+          if (device && Number(device.is_active) === 1) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "DEVICE_IDENTITY", String(device.id), { is_active: true }, { is_active: false }, "RETIRE_DEVICE"); context.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = CURRENT_DATE WHERE id = ?", [device.id]); compensated++; compensationActions.push(id); }
+        } else if (["CREATE_ENROLLMENT", "TRANSFER_ENROLLMENT"].includes(action.action_type)) {
+          const enrollment = row(context, "SELECT * FROM student_enrollments WHERE id = ?", [action.entity_id]);
+          if (enrollment && enrollment.lifecycle_state === "ACTIVE" && enrollment.effective_to == null) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "STUDENT_ENROLLMENT", String(enrollment.id), { lifecycle_state: enrollment.lifecycle_state, effective_to: enrollment.effective_to }, { lifecycle_state: "ENDED", effective_to: new Date().toISOString().slice(0, 10) }, "DEACTIVATE_ENROLLMENT"); context.database.client.run("UPDATE student_enrollments SET effective_to = CURRENT_DATE, lifecycle_state = 'ENDED', lifecycle_effective_date = CURRENT_DATE, lifecycle_reason_code = 'ROLLBACK', lifecycle_reason = ?, class_assigned = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [body.reason, enrollment.id]); compensated++; compensationActions.push(id); }
+        }
+      }
+      const rollbackState = blocked === 0 ? "APPLIED" : "PARTIALLY_BLOCKED"; context.database.client.run("UPDATE student_import_sessions SET rollback_state = ?, rollback_requested_at = CURRENT_TIMESTAMP, rollback_completed_at = CURRENT_TIMESTAMP, idempotency_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [rollbackState, `ROLLBACK:${token}`, session.id]); audit(context, user, session, "ROLLBACK_COMMIT", { compensated_actions: compensated, blocked_actions: blocked, rollback_state: rollbackState, idempotency_token: token }, String(body.reason));
+      session.rollback_state = rollbackState; session.idempotency_key = `ROLLBACK:${token}`;
+    });
+  } catch (cause) {
+    return fail(set, cause instanceof Error && cause.message === "PREVIEW_CHECKSUM" ? 409 : 409, cause instanceof Error && cause.message === "PREVIEW_CHECKSUM" ? "Rollback preview checksum mismatch or stale preview. Please generate a new preview." : "Rollback could not be completed safely.");
+  }
+  return { session_id: session.id, session_reference: session.session_uuid, rollback_state: session.rollback_state, status: "COMPLETED", compensated_action_count: compensated, blocked_action_count: blocked, compensation_actions: compensationActions, idempotent_replay: false, history_preserved: true, message: `Successfully performed compensating rollback for ${compensated} action(s).` };
+}
+
 export function studentImportSessionRoutes(app: any, context: AuthContext): any {
   app.post("/api/student-import-sessions/:session_id/rollback-preview", ({ params, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "rollback_import_session" }); if (!user) return { detail: "Insufficient permissions" };
@@ -99,5 +146,12 @@ export function studentImportSessionRoutes(app: any, context: AuthContext): any 
     if (session.status !== "COMMITTED" && session.provenance_status !== "LEGACY_PROVENANCE_UNAVAILABLE") return fail(set, 409, `Import session status is '${session.status}', only COMMITTED sessions can be rolled back`);
     return preview(context, session, user);
   }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }) });
+  app.post("/api/student-import-sessions/:session_id/rollback", ({ params, body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "rollback_import_session" }); if (!user) return { detail: "Insufficient permissions" };
+    const session = row(context, "SELECT * FROM student_import_sessions WHERE id = ? OR session_uuid = ? LIMIT 1", [params.session_id, params.session_id]);
+    if (!session) return fail(set, 404, "Import session not found");
+    if (session.status !== "COMMITTED") return fail(set, 409, `Import session status is '${session.status}', only COMMITTED sessions can be rolled back`);
+    return commitRollback(context, session, user, body, set);
+  }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }), body: t.Object({ preview_checksum: t.String({ minLength: 1 }), mode: t.Optional(t.String()), selected_action_ids: t.Optional(t.Array(t.Number({ minimum: 1 }))), reason: t.String({ minLength: 5 }), confirmation_value: t.String({ minLength: 1 }), idempotency_token: t.String({ minLength: 8 }) }) });
   return app;
 }
