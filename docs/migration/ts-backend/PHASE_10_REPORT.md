@@ -6,6 +6,8 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
+Current closure commit: `a1c9ffa`.
+
 The audit does not issue the Phase 10 gate. The endpoint matrix contains zero
 missing route registrations and one intentionally deprecated operation. Candidate
 route families still need full FastAPI-versus-Elysia replay. The legacy `.xls`
@@ -46,6 +48,19 @@ preview path also needs an approved disposition.
 - Added the destructive system clear-data candidate.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
+
+## Current evidence
+
+- FastAPI self-replay: 40/40 `EXACT_MATCH`.
+- FastAPI-versus-Elysia replay: 40/40 `EXACT_MATCH`.
+- Deliberate mismatch replay: 40/40 `MIGRATION_DEFECT`.
+- TypeScript regression: 59/59 tests passed, 442 expectations.
+- Typecheck: passed.
+- Frozen Bun install: passed.
+- PR #58 CI: backend, backend-ts, frontend, and docs passed.
+- OpenAPI route pairs: 327/327 match after parameter syntax normalization.
+- The deprecated FastAPI `POST /api/uploads/upload` remains intentionally
+  absent. Elysia-only `GET /ready` remains outside the FastAPI contract.
 
 ## Inventory
 
