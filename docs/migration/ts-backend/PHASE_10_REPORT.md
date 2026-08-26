@@ -35,6 +35,7 @@ path also needs an approved disposition.
   preview behavior and ExcelJS workbook output.
 - Added staff import history and detail candidates with issue-count aggregation.
 - Added student import rollback-preview candidate behavior with legacy fail-closed handling.
+- Added transactional student import rollback commit candidate behavior with idempotency.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
@@ -42,7 +43,7 @@ path also needs an approved disposition.
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
 - Elysia: 257 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 70.
+- Unresolved route operations: 69.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -62,7 +63,7 @@ The unresolved families include active frontend consumers:
 - data portability;
 - report builder;
 - roster and student update workflows;
-- teacher assignments, student exports, roster, staff-import, and student rollback-preview candidates remain candidate-only until dual replay;
+- teacher assignments, student exports, roster, staff-import, and student rollback candidates remain candidate-only until dual replay;
 - upload history and conflict resolution;
 - destructive clear-data control.
 
