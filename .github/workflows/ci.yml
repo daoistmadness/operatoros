@@ -86,6 +86,12 @@ jobs:
           mise --version
           bun --version | grep -Eq "^1\.4\."
           mise ls --current
+      - name: Install backend dependencies for OpenAPI generation
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m venv backend/.venv
+          backend/.venv/bin/python -m pip install --upgrade pip
+          backend/.venv/bin/python -m pip install -r backend/requirements.txt
       - name: Install dependencies (frozen lockfile)
         run: bun ci
       - name: Dependency deduplication check
