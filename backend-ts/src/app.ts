@@ -19,6 +19,7 @@ import { studentExportRoutes } from "./domains/student-exports";
 import { rosterRoutes } from "./domains/roster";
 import { studentImportSessionRoutes } from "./domains/student-import-sessions";
 import { dataPortabilityRoutes } from "./domains/data-portability";
+import { uploadHistoryRoutes } from "./domains/upload-history";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -64,6 +65,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     rosterRoutes(app, context);
     studentImportSessionRoutes(app, context);
     dataPortabilityRoutes(app, context);
+    uploadHistoryRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
@@ -72,7 +74,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
   systemRoutes(app, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
-    app.use(openapi({ path: "/openapi" }));
+    app.use(openapi({ path: "/openapi", exclude: { staticFile: false } }));
   }
   return app;
 }

@@ -2,7 +2,7 @@
 
 Audit base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
-Audit commit: Phase 10 student rollback candidate slice.
+Audit commit: Phase 10 upload-history candidate slice.
 
 FastAPI remains the reference. The audit used the current application OpenAPI
 document and a disposable SQLite database for the Elysia route list.
@@ -11,9 +11,9 @@ document and a disposable SQLite database for the Elysia route list.
 
 | Measure | FastAPI | Elysia | Result |
 | --- | ---: | ---: | --- |
-| OpenAPI paths | 282 | 228 candidate routes | 61 FastAPI operations remain unresolved |
-| Operations | 327 | 266 candidate operations | 60 missing operations and one deprecated route remain |
-| Elysia runtime routes | — | 267 | `/ready` is an Elysia-only readiness route |
+| OpenAPI paths | 282 | 236 candidate routes | 53 FastAPI operations remain unresolved |
+| Operations | 327 | 275 candidate operations | 52 missing operations and one deprecated route remain |
+| Elysia runtime routes | — | 276 | `/ready` is an Elysia-only readiness route |
 | Unknown operations | — | — | 0 |
 
 The route comparison normalizes only FastAPI `{id:type}` and Elysia `:id`
@@ -34,7 +34,7 @@ headers, cookies, database state, or audit state.
 
 - 224 FastAPI operations are `PARITY_GREEN` at route and prior-phase evidence.
 - Analytics, operator-queue, teacher-assignment, student-export, roster, staff-import,
-  student-import-session, and data-portability candidate
+  student-import-session, data-portability, and upload-history candidate
   routes are tested on disposable SQLite, but they do not become
   `PARITY_GREEN` until FastAPI-versus-Elysia replay proves them.
 - `GET /ready` is `NOT_APPLICABLE`. It is an Elysia foundation route.
@@ -50,15 +50,13 @@ unknown.
 | `api.analytics` | 6 | Management-summary exports, historical-trends, and both legacy aliases | `MIGRATION_DEFECT` | The management-summary candidate exists. Complete dual replay, export parity, and the remaining historical-trends routes. |
 | `api.attendance_followups` | 17 | `/api/attendance/followups*` | `MIGRATION_DEFECT` | Frontend consumers exist. Preserve the follow-up state machine and history. |
 | `api.report_builder` | 12 | `/api/report-builder/*` | `MIGRATION_DEFECT` | The frontend uses templates, preview, and exports. Port the service contract before cutover. |
-| `api.staff` | 2 | `/api/staff/imports/*` | `MIGRATION_DEFECT` | History and detail candidates exist. Complete dual replay and preserve provenance fields. |
 | `api.student_enrollments` | 2 | Roster preview and commit | `MIGRATION_DEFECT` | Academic-master preview and roster-template candidates exist. Complete roster preview, commit, and dual replay. |
 | `api.student_masters` | 6 | Student update preview, commit, history, template, and result workbook | `MIGRATION_DEFECT` | The frontend uses update preview and commit. Preserve checksum and provenance. |
 | `api.system` | 1 | `POST /api/system/clear-data` | `MIGRATION_DEFECT` | The frontend uses this destructive control. Preserve confirmation, locks, triggers, and audit state. |
 | `api.upload_conflicts` | 8 | `/api/upload-conflicts/*` | `MIGRATION_DEFECT` | The frontend uses resolution and retry routes. Preserve conflict state and audit events. |
-| `api.uploads` | 8 | `/api/uploads/history*`, missing-records, and sample-template | `MIGRATION_DEFECT` | The frontend uses upload history. Preserve row, timeline, export, and missing-record contracts. |
 | `api.uploads` | 1 | `POST /api/uploads/upload` | `INTENTIONALLY_DEPRECATED` | FastAPI marks this route deprecated and returns `410 LEGACY_ATTENDANCE_IMPORT_DISABLED`. |
 
-Remaining missing operations: **60** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, student-export, roster, staff-import, student-import-session, and data-portability routes remain parity-blocked until dual replay.
+Remaining missing operations: **52** plus one deprecated operation. Candidate analytics, operator-queue, teacher-assignment, student-export, roster, staff-import, student-import-session, data-portability, and upload-history routes remain parity-blocked until dual replay.
 
 ## Legacy `.xls`
 
@@ -78,7 +76,7 @@ approved deprecation decision records the replacement and consumer impact.
 
 ## OpenAPI disposition
 
-The FastAPI and Elysia OpenAPI documents differ because the 90 unresolved
+The FastAPI and Elysia OpenAPI documents differ because the 53 unresolved
 operations are not registered in Elysia. The matrix explains every difference.
 There is no hidden or unknown drift. The OpenAPI gate remains withheld until
 the migration-defect rows close and the `.xls` disposition is approved.

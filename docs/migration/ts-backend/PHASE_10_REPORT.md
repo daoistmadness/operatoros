@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains 70
+The audit does not issue the Phase 10 gate. The endpoint matrix contains 52
 missing operations and one deprecated operation. Candidate analytics, roster,
 and staff-import routes still need full dual replay. The legacy `.xls` preview
 path also needs an approved disposition.
@@ -37,14 +37,16 @@ path also needs an approved disposition.
 - Added student import rollback-preview candidate behavior with legacy fail-closed handling.
 - Added transactional student import rollback commit candidate behavior with idempotency.
 - Added data portability dataset, CSV export, template, import, and history candidates.
+- Added upload history, timeline, row outcome, sanitized evidence, missing-record,
+  and sample-template candidates.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
 
 ## Inventory
 
 - FastAPI: 327 operations across 282 OpenAPI paths.
-- Elysia: 257 candidate operations and one Elysia-only `/ready` route.
-- Unresolved route operations: 61.
+- Elysia: 275 candidate operations and one Elysia-only `/ready` route.
+- Unresolved route operations: 53.
 - Unknown operations: 0.
 - FastAPI aliases are included in the comparison.
 
@@ -63,8 +65,9 @@ The unresolved families include active frontend consumers:
 - attendance follow-ups;
 - report builder;
 - roster and student update workflows;
-- teacher assignments, student exports, roster, staff-import, student rollback, and data portability candidates remain candidate-only until dual replay;
-- upload history and conflict resolution;
+- teacher assignments, student exports, roster, staff-import, student rollback,
+  data portability, and upload-history candidates remain candidate-only until dual replay;
+- upload conflict resolution;
 - destructive clear-data control.
 
 These routes need implementation and FastAPI-versus-Elysia replay. The full
