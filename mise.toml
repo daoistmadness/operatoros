@@ -1,0 +1,35 @@
+min_version = "2024.1.0"
+
+[settings]
+lockfile = true
+
+[settings.python]
+github_attestations = false
+
+[tools]
+bun = "1.4.0"
+python = "3.12.3"
+
+[tasks.doctor]
+description = "Report toolchain versions and verify lockfile contracts"
+run = """
+mise --version
+bun --version
+python --version
+echo "--- mise current ---"
+mise ls --current
+echo "--- lockfiles ---"
+ls -lh frontend/bun.lock
+if [ -f frontend/package-lock.json ]; then echo "ERROR: frontend/package-lock.json exists"; exit 1; fi
+if [ -f package-lock.json ]; then echo "ERROR: package-lock.json exists"; exit 1; fi
+if [ -f yarn.lock ]; then echo "ERROR: yarn.lock exists"; exit 1; fi
+if [ -f pnpm-lock.yaml ]; then echo "ERROR: pnpm-lock.yaml exists"; exit 1; fi
+echo "doctor: ok"
+"""
+
+[tasks.test]
+description = "Run core verification gates"
+run = """
+bun --version
+python --version
+"""

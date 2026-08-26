@@ -50,13 +50,13 @@ export DATABASE_URL="sqlite:///$database"
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
-source "$repo_root/scripts/validate-wsl-node-npm.sh"
-operatoros_wsl_prepare_node_npm "$repo_root" "$repo_root/.nvmrc" || {
+source "$repo_root/scripts/validate-wsl-bun.sh"
+operatoros_wsl_prepare_bun "$repo_root" || {
   printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
   exit 2
 }
-node_bin="$(dirname -- "$OPERATOROS_NODE_REALPATH")"
-export PATH="$node_bin:/usr/bin:/bin"
+bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
+export PATH="$bun_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
@@ -92,11 +92,11 @@ with sqlite3.connect(sys.argv[1]) as connection:
 PY
 
 web_status=0
-playwright_args=(run test:e2e -- --config playwright.config.ts)
+playwright_args=(run test:e2e --config playwright.config.ts)
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$node_bin:/usr/bin:/bin" npm "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/frontend" && PATH="$bun_bin:/usr/bin:/bin" bun "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT
@@ -131,7 +131,6 @@ duration=$((SECONDS - started_at))
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/write-summary.py" \
   --output "$results/summary.txt" --status "$status" \
   --backend-junit "$junit/backend.xml" --web-junit "$junit/web.xml" \
-  --desktop "0 passed, 0 failed, 1 skipped (BLOCKED_BY_EXISTING_INFRASTRUCTURE)" \
   --duration "$((duration / 60))m $((duration % 60))s" \
   "${failed_args[@]}" "${evidence_args[@]}"
 cat "$results/summary.txt"

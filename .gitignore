@@ -28,6 +28,9 @@ coverage/
 *.log
 *.pid
 *.lock
+!frontend/bun.lock
+!backend-ts/bun.lock
+!mise.lock
 *.har
 *.trace
 
@@ -52,17 +55,8 @@ backend/test_reset.py
 *.db
 *.db-shm
 *.db-wal
-# Desktop feasibility-spike build products
-desktop-spike/build/
-desktop-spike/output/
-frontend/src-tauri/target/
-frontend/src-tauri/output/
-frontend/src-tauri/gen/schemas/
-.build-sidecar/
+# Build products
 dist/
-frontend/src-tauri/resources/operatoros-sidecar.exe
-frontend/src-tauri/tauri.*.override.json
-frontend/src-tauri/tauri.*.generated.json
 
 # Release artifacts
 release/**/*.exe

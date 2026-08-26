@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24 <25",
-    "npm": ">=11 <12"
+    "bun": ">=1.4.0 <2"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.7",
@@ -31,7 +30,6 @@
     "@playwright/test": "1.55.1",
     "@tailwindcss/cli": "^4.2.2",
     "@tailwindcss/postcss": "^4.0.0",
-    "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.7.0",
@@ -45,19 +43,20 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "api:check": "node ../scripts/openapi-contracts.mjs check",
-    "api:generate": "node ../scripts/openapi-contracts.mjs generate",
-    "boundaries:check": "node ../scripts/frontend-boundaries.mjs",
-    "boundaries:test": "node --test ../scripts/frontend-boundaries.test.mjs",
-    "dev": "vite",
-    "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test",
-    "e2e:release": "playwright test --config playwright.config.ts --grep @release",
-    "preview": "vite preview",
-    "test": "vitest run"
+    "api:check": "bun ../scripts/openapi-contracts.mjs check",
+    "api:generate": "bun ../scripts/openapi-contracts.mjs generate",
+    "boundaries:check": "bun ../scripts/frontend-boundaries.mjs",
+    "boundaries:test": "bun test ../scripts/frontend-boundaries.test.mjs",
+    "dev": "bun run --bun vite",
+    "build": "bun run --bun vite build",
+    "typecheck": "bun run --bun tsc --noEmit",
+    "test:e2e": "bun run --bun playwright test",
+    "e2e:release": "bun run --bun playwright test --config playwright.config.ts --grep @release",
+    "preview": "bun run --bun vite preview",
+    "test": "bun run --bun vitest run",
+    "check:dependencies": "bun dedupe --check",
+    "check:node-regressions": "bun ../scripts/check-node-regressions.mjs",
+    "check:audit": "bun audit"
   },
   "trustedDependencies": [
     "@parcel/watcher",
