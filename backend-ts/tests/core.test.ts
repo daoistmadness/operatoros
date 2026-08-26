@@ -37,6 +37,15 @@ describe("core CRUD parity slices", () => {
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}` };
+      database.client.run("INSERT INTO student_import_sessions (id, session_uuid, import_type, status, provenance_status, created_by, expires_at, source_filename, source_file_checksum, row_count, selected_row_count, applied_action_count, rollback_state, metadata, schema_version) VALUES (?, ?, 'STUDENT_DATA_UPDATE', 'COMMITTED', 'LEGACY_PROVENANCE_UNAVAILABLE', ?, ?, ?, ?, 0, 0, 0, 'NOT_AVAILABLE', '{}', '1')", ["legacy-import-session", "legacy-import-uuid", "golden-admin", "2026-08-27T00:00:00", "legacy.xlsx", "a".repeat(64)]);
+      const legacyRollbackPreview = await app.handle(new Request("http://local/api/student-import-sessions/legacy-import-session/rollback-preview", { method: "POST", headers: auth }));
+      expect(legacyRollbackPreview.status).toBe(200);
+      expect(await legacyRollbackPreview.json()).toMatchObject({ rollback_state: "NOT_AVAILABLE", is_rollbackable: false, required_capability: "rollback_import_session" });
+      database.client.run("INSERT INTO student_import_sessions (id, session_uuid, import_type, status, provenance_status, created_by, expires_at, source_filename, source_file_checksum, row_count, selected_row_count, applied_action_count, rollback_state, metadata, schema_version) VALUES (?, ?, 'STUDENT_DATA_UPDATE', 'COMMITTED', 'COMPLETE_ACTION_PROVENANCE', ?, ?, ?, ?, 0, 0, 0, 'AVAILABLE', '{}', '1')", ["committed-import-session", "committed-import-uuid", "golden-admin", "2026-08-27T00:00:00", "current.xlsx", "b".repeat(64)]);
+      const rollbackPreview = await app.handle(new Request("http://local/api/student-import-sessions/committed-import-session/rollback-preview", { method: "POST", headers: auth }));
+      expect(rollbackPreview.status).toBe(200);
+      expect(await rollbackPreview.json()).toMatchObject({ rollback_state: "PREVIEWED", total_applied_actions: 0, eligible_actions: 0 });
+      expect((database.client.query("SELECT rollback_state FROM student_import_sessions WHERE id = ?").get("committed-import-session") as any).rollback_state).toBe("PREVIEWED");
       const years = await app.handle(new Request("http://local/api/academic-masters/academic-years", { headers: auth }));
       expect(years.status).toBe(200);
       expect((await years.json()) as unknown[]).toHaveLength(3);
