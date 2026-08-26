@@ -2,11 +2,15 @@
 set -euo pipefail
 
 if [[ "${1:-}" == "--validate" ]]; then
+  bash -n "$(dirname "${BASH_SOURCE[0]}")/start-elysia-test-stack.sh"
   exit 0
 fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="${1:?workspace required}"
+if [[ "${OPERATOROS_E2E_BACKEND:-fastapi}" == "elysia" ]]; then
+  exec bash "$repo_root/e2e/start-elysia-test-stack.sh" "$workspace" "${2:?log directory required}"
+fi
 runtime="$workspace/runtime"
 state="$workspace/state"
 logs="${2:?log directory required}"

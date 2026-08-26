@@ -11,6 +11,10 @@ if ! operatoros_wsl_prepare_bun "$repo"; then
   exit 1
 fi
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
+native_node="$(command -v node || true)"
+if [[ -n "$native_node" ]]; then
+  export OPERATOROS_PLAYWRIGHT_NODE="$native_node"
+fi
 export PATH="$bun_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
 export SHELL=/bin/bash
