@@ -69,7 +69,7 @@ Run the repo launcher from the root:
 ./start-dev.sh
 ```
 
-The launcher starts Vite and FastAPI directly. Vite proxies canonical `/api/*` browser requests to the backend.
+The launcher starts Vite and Elysia by default. Vite proxies canonical `/api/*` browser requests to the selected backend. Set `OPERATOROS_BACKEND=fastapi` to use the FastAPI fallback.
 
 ## Production Build
 ```bash
@@ -106,7 +106,7 @@ The `Settings` page hides destructive reset controls unless the backend explicit
 
 ## Runtime
 
-OperatorOS runs with a local FastAPI backend and browser-based React UI backed by SQLite. Docker, Nginx, Compose, and PostgreSQL are not runtime dependencies.
+OperatorOS runs with a local Elysia backend and browser-based React UI backed by SQLite. FastAPI remains available as a rollback backend. Docker, Nginx, Compose, and PostgreSQL are not runtime dependencies.
 
 ## Verification
 ```bash

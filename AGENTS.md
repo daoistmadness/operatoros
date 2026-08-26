@@ -6,8 +6,9 @@ OperatorOS is an offline-first school attendance and academic analytics system.
 Its active runtime contract is `SQLITE_ONLY_SUPPORTED`,
 `LOCAL_BROWSER_RUNTIME`, `POSTGRESQL_NOT_SUPPORTED`, and
 `CONTAINER_RUNTIME_NOT_REQUIRED`. The experimental Tauri desktop shell was
-removed; the supported runtime is a local FastAPI backend with the React
-frontend in a browser.
+removed; the supported normal runtime is a local Elysia backend with the React
+frontend in a browser. FastAPI remains available as the documented rollback
+and reference backend.
 This file is the authoritative execution contract for coding agents. A nested
 `AGENTS.md` may add local refinements but cannot weaken this contract. Current
 detail lives in [docs/README.md](docs/README.md); product-audit documents are
@@ -36,8 +37,8 @@ historical evidence unless they explicitly identify a current procedure.
 - Use focused `codex/` branches unless the task specifies another name. Do not
   amend, rebase, squash, force-push, or push directly to `main`.
 - Verified primary baseline: `main` at
-  `1e891674d133f29a7c6b027fb42fce0dfd96dc50`, matching `origin/main`. PR #48
-  runtime hardening is merged.
+  `f87b58997f474fa6bc489d158efe97096bff6e28`, matching `origin/main`. Phase 11
+  frontend verification is merged.
 - Stage explicit paths only; never use `git add .` or `git add -A`.
 - Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, and, when present,
   `docs/student-data/dapodik-roster-import-design.md`.
@@ -63,11 +64,13 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Development startup and database
 
-- `./start-dev.sh` is the canonical normal development entrypoint. It reports
+- `./start-dev.sh` is the canonical normal development entrypoint. It defaults
+  to Elysia and reports
   `DATABASE_URL` configuration drift, validates and recovers the WSL Bun
   runtime, uses the canonical persistent development database, enforces one
   managed session, starts the backend first, waits for backend and frontend
   readiness, and performs managed shutdown.
+- Set `OPERATOROS_BACKEND=fastapi` for the documented FastAPI fallback.
 - The launcher expects `backend/.venv` to exist. Ordinary startup does not
   create the virtual environment or install dependencies. GitHub CI may create
   its own virtual environment as defined by CI.
