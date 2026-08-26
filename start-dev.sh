@@ -11,7 +11,7 @@ VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
-WSL_NODE_NPM_HELPER="$PROJECT_ROOT/scripts/validate-wsl-node-npm.sh"
+WSL_BUN_HELPER="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
@@ -31,7 +31,7 @@ CHECK_ONLY=0
 CLEAN_STALE=1
 AUTO_PORT=0
 MODE=browser
-JS_RUNTIME="node"
+JS_RUNTIME="bun"
 JS_RUNTIME_VERSION=""
 BACKEND_PID=""
 FRONTEND_PID=""
@@ -54,8 +54,6 @@ Usage: ./start-dev.sh [options]
   --no-clean-stale    Never clean; fail if a selected port is occupied
   --auto-port         Select frontend 5173-5199 and backend 8000-8099
   --mode browser      Fixed-port browser mode (default)
-  --mode tauri        Automatic-port mode for Windows Tauri coordination
-  --tauri-fixed       Dedicated Tauri ports 5174/8002
   --help              Show this help
 EOF
 }
@@ -142,16 +140,16 @@ run_preflight() {
   require_command ps "Process management" "Install procps."
   [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
   "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
-  [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/package-lock.json" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and package-lock.json."
-  [[ -s "$WSL_NODE_NPM_HELPER" ]] || fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_NODE_NPM_HELPER"
+  [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/bun.lock" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and bun.lock."
+  [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
   # shellcheck disable=SC1090
-  source "$WSL_NODE_NPM_HELPER"
-  if ! operatoros_wsl_prepare_node_npm "$PROJECT_ROOT" "$PROJECT_ROOT/.nvmrc"; then
-    fail_preflight "NODE_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
+  source "$WSL_BUN_HELPER"
+  if ! operatoros_wsl_prepare_bun "$PROJECT_ROOT"; then
+    fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
   fi
-  JS_RUNTIME_VERSION="${OPERATOROS_NODE_VERSION#v}"
-  printf '  [ok] Linux Node.js %s with paired npm %s\n' "$OPERATOROS_NODE_VERSION" "$OPERATOROS_NPM_VERSION"
-  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && npm ci"
+  JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
+  printf '  [ok] Linux Bun %s\n' "$OPERATOROS_BUN_VERSION"
+  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && bun install"
   printf '  [ok] Backend and frontend dependencies\n'
 }
 
@@ -191,9 +189,8 @@ allocate_ports() {
   export FRONTEND_PORT BACKEND_PORT
   export OPERATOROS_FRONTEND_URL="http://$FRONTEND_HOST:$FRONTEND_PORT"
   export OPERATOROS_BACKEND_URL="http://$BACKEND_HOST:$BACKEND_PORT"
-  # Browser and Tauri development both load Vite, so API traffic stays
-  # same-origin and uses the synchronized proxy target below. A caller may
-  # still explicitly provide a desktop API base when testing that mode.
+  # Browser development loads Vite, so API traffic stays same-origin and uses
+  # the synchronized proxy target below.
   export VITE_API_BASE_URL="${VITE_API_BASE_URL:-}"
   export DEV_API_PROXY_TARGET="$OPERATOROS_BACKEND_URL"
 }
@@ -313,8 +310,7 @@ while (( $# )); do
     --clean-stale) CLEAN_STALE=1; shift ;;
     --no-clean-stale) CLEAN_STALE=0; shift ;;
     --auto-port) AUTO_PORT=1; shift ;;
-    --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser || "$MODE" == tauri ]] || { usage >&2; exit 2; }; if [[ "$MODE" == tauri ]]; then AUTO_PORT=1; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8001; fi ;;
-    --tauri-fixed) MODE=tauri; AUTO_PORT=0; (( FRONTEND_PORT_CONFIGURED == 0 )) && FRONTEND_PORT=5174; (( BACKEND_PORT_CONFIGURED == 0 )) && BACKEND_PORT=8002; shift ;;
+    --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser ]] || { usage >&2; exit 2; };;
     --help|-h) usage; exit 0 ;;
     *) usage >&2; printf '\nUnknown option: %s\n' "$1" >&2; exit 2 ;;
   esac
@@ -375,12 +371,17 @@ else
   exit "$readiness_rc"
 fi
 
-VITE_EXECUTABLE="$(realpath -e "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}")"
+VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
+[[ -x "$VITE_EXECUTABLE" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && bun install"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 LAUNCHER_STATE=STARTING_FRONTEND
 (
   cd "$FRONTEND_DIR"
-  exec setsid "$VITE_EXECUTABLE" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
+  if [[ -n "${ASTRYX_VITE_EXECUTABLE:-}" ]]; then
+    exec setsid "$VITE_EXECUTABLE" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
+  else
+    exec setsid bun run --bun vite --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
+  fi
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"

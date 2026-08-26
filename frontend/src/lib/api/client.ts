@@ -32,7 +32,7 @@ export type ApiRequestOptions = {
 
 /**
  * Resolve the API base URL using the following priority order:
- * 1. window.__APP_CONFIG__.apiBaseUrl  — injected at runtime by the desktop launcher (Tauri)
+ * 1. window.__APP_CONFIG__.apiBaseUrl  — injected at runtime by the environment/launcher if present
  * 2. import.meta.env.VITE_API_BASE_URL — build-time environment variable
  * 3. Empty string                      — same-origin; Vite dev proxy forwards /api/* to FastAPI
  */

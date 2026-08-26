@@ -12,7 +12,6 @@
 - Backend processing logic/analytics live in `backend/src/services/`.
 - Frontend route screens/pages live in `frontend/src/pages/`.
 - Shared UI and API helpers live in `frontend/src/components/` and `frontend/src/lib/`.
-- Desktop Rust code lives in `frontend/src-tauri/src/`.
 
 ## Formatting
 - **Python**: Follow PEP8 standards. Indentation uses 4 spaces.

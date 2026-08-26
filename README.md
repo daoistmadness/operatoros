@@ -4,7 +4,7 @@ OperatorOS is an offline-first school attendance and academic analytics system.
 Current developer and operational guidance is indexed in [docs/README.md](docs/README.md);
 [AGENTS.md](AGENTS.md) is the authoritative execution contract.
 
-The prior **`v0.9.0-platform-foundation`** inventory, security review, and release notes remain the historical Phase 9 baseline. Phase 9.6 still requires the documented clean-Windows external acceptance run before the platform foundation is fully closed.
+The prior **`v0.9.0-platform-foundation`** inventory, security review, and release notes remain the historical Phase 9 baseline. The experimental Tauri desktop shell and its Phase 9.6/11 acceptance gates were removed on 2026-08-20.
 
 The current runtime schema is S4.3 (`20260725_s43`); S4.2 is the fresh-bootstrap
 baseline. Local development uses a disposable configured database—never
@@ -59,7 +59,7 @@ Only the backend grants access. Frontend identity and role state are navigation 
 - Backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn, pandas, openpyxl
 - Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Database: SQLite
-- Runtime: local FastAPI sidecar and React/Tauri desktop UI
+- Runtime: local FastAPI backend and React browser UI
 
 ## Repository Layout
 - [`backend/`](backend/): API routers, settings, ORM models, services, and raw SQL migrations
@@ -87,22 +87,22 @@ are generated and drift-checked through the frontend package scripts. See
 [database operations](docs/operations/DATABASE_OPERATIONS.md).
 
 ## Prerequisites
-- Python 3.12
-- Node.js 20+
-- npm
+- mise-en-place (mise) >= 2024.1.0 — controls runtime versions (Bun, Python)
+- Bun 1.4.0 (installed via `mise install`; `frontend/bun.lock` remains package lockfile)
+- Python 3.12.3 (installed via `mise install`)
 - Agent Browser on the PATH if you want browser verification
 
 ## Quick Start
-Direct Node.js/Vite and Python/FastAPI processes are the local-development
-workflow. The packaged target is a Tauri desktop application with a local
-FastAPI sidecar and SQLite database. Containers are not required.
+Direct Bun/Vite and Python/FastAPI processes are the local-development
+workflow. The supported runtime is a local FastAPI backend with the React
+frontend in a browser and a SQLite database. Containers are not required.
 
 ### Local Development Launcher
 ```bash
 ./start-dev.sh
 ```
 
-The launcher validates Node.js, npm, locked frontend dependencies, the Python environment, backend imports, and ports before starting anything. It displays the ready banner only after both health checks pass and stores service logs under `.dev-logs/`. Press `Ctrl+C` to stop both process groups cleanly.
+The launcher validates Bun, locked frontend dependencies (`bun.lock`), the Python environment, backend imports, and ports before starting anything. It displays the ready banner only after both health checks pass and stores service logs under `.runtime/operatoros-dev/`. Press `Ctrl+C` to stop both process groups cleanly.
 
 On a fresh database, open the frontend and create the first administrator on the setup screen. OperatorOS then closes setup permanently and redirects to normal login. There are no default credentials.
 
@@ -121,16 +121,19 @@ Run diagnostics without starting services:
 ./start-dev.sh --check
 ```
 
-Initial dependency setup remains explicit:
+Initial runtime and dependency setup:
 
 ```bash
+mise install
+mise run doctor
 cd backend
-python3.12 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 cd ../frontend
-npm ci
+bun ci
 ```
+
+`mise install` uses `mise.lock` for exact versions. `mise run doctor` verifies Bun, Python, and lockfile contracts. Bun remains the package manager authority; mise only installs the Bun runtime.
 
 ### Browser smoke test
 ```bash
@@ -150,8 +153,8 @@ uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
 
 ```bash
 cd frontend
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open:
@@ -237,12 +240,12 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 - Do not run `make e2e-full` locally without explicit owner approval; it is guarded for GitHub Actions.
 - Backend smoke check: `cd backend && python3 -c "from src.main import app; assert app is not None"`
 - Backend tests: `cd backend && pytest`
-- Frontend build: `cd frontend && npm run build`
+- Frontend build: `cd frontend && bun run build`
 - Browser smoke: `./scripts/verify-browser.sh`
 - SQLite-only runtime contract: `backend/.venv/bin/python -m pytest -q backend/tests/test_sqlite_only_runtime.py`
 
 ## Troubleshooting
-- If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && npm install` if needed.
+- If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && bun install` if needed.
 - If uploads fail, confirm the workbook is `.xlsx` and that the required columns exist on the first sheet.
 - If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
 

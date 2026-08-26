@@ -151,8 +151,8 @@ def test_release_runner_retains_required_gates_and_double_run_policy():
     for required in (
         "fresh-db-parity",
         "backend_full",
-        "npm run test",
-        "npm run build",
+        "bun run test",
+        "bun run build",
         "e2e-validate",
         "e2e-smoke",
         "e2e-clean",
