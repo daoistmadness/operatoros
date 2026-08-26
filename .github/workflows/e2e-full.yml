@@ -54,6 +54,10 @@ jobs:
           backend/.venv/bin/python -m pip install --upgrade pip
           backend/.venv/bin/python -m pip install -r backend/requirements.txt
 
+      - name: Install backend TypeScript dependencies
+        working-directory: backend-ts
+        run: bun install --frozen-lockfile
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: bun ci
