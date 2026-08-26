@@ -44,7 +44,7 @@ OPERATOROS_BACKEND=fastapi ./scripts/start-backend.sh
 
 ## Acceptance evidence
 
-Local acceptance is ready for pull request validation.
+Local acceptance and the first pull request validation are green.
 
 - Frontend tests: 301/301 passed across 57 files.
 - TypeScript backend tests: 61/61 passed with 455 expectations.
@@ -63,6 +63,5 @@ Local acceptance is ready for pull request validation.
   zero.
 - FastAPI source, dependencies, routes, and fallback startup remain present.
 
-The required pull request and merged-main checks remain pending until the
-cutover changes are committed and pushed. The Phase 12 gate remains withheld
-until those checks and the post-merge drill pass.
+The required pull request checks passed. The Phase 12 gate remains withheld
+until the merge and post-merge cutover and rollback drills pass.
