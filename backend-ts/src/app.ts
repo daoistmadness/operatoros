@@ -23,6 +23,7 @@ import { uploadHistoryRoutes } from "./domains/upload-history";
 import { attendanceFollowupRoutes } from "./domains/attendance-followups";
 import { reportBuilderRoutes } from "./domains/report-builder";
 import { uploadConflictRoutes } from "./domains/upload-conflicts";
+import { studentUpdateRoutes } from "./domains/student-update";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -72,6 +73,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     attendanceFollowupRoutes(app, context);
     reportBuilderRoutes(app, context);
     uploadConflictRoutes(app, context);
+    studentUpdateRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
