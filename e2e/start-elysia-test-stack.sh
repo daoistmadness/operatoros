@@ -85,7 +85,9 @@ wait_until_ready "http://127.0.0.1:$backend_port/health" "$backend_pid" "$backen
 
 (
   cd "$repo_root/frontend"
-  exec setsid env PATH="$bun_bin:/usr/bin:/bin" DEV_API_PROXY_TARGET="http://127.0.0.1:$backend_port" BACKEND_PORT="$backend_port" FRONTEND_PORT="$frontend_port" bun run --bun vite --host 127.0.0.1 --port "$frontend_port" --strictPort
+  export PATH="$bun_bin:/usr/bin:/bin" DEV_API_PROXY_TARGET="http://127.0.0.1:$backend_port" BACKEND_PORT="$backend_port" FRONTEND_PORT="$frontend_port"
+  bun run --bun vite build
+  exec setsid bun run --bun vite preview --host 127.0.0.1 --port "$frontend_port" --strictPort
 ) >"$frontend_log" 2>&1 &
 frontend_pid=$!
 wait_until_ready "http://127.0.0.1:$frontend_port" "$frontend_pid" "$frontend_log"

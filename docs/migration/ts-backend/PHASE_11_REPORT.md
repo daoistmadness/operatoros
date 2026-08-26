@@ -18,6 +18,7 @@ Branch: `codex/ts-backend-phase11-frontend-verification`.
   `OPERATOROS_E2E_BACKEND=elysia`.
 - Kept FastAPI as the default E2E and rollback backend.
 - Added synthetic `.xlsx` and `.xls` browser fixtures.
+- Verified the Elysia candidate with a built frontend served by `vite preview`.
 - Added browser verification for logout, session refresh, grades, both Excel
   formats, report download, backup download, and restore preflight.
 - Repaired the `e2e-full` YAML scalar that prevented jobs from being created.
