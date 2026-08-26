@@ -21,6 +21,7 @@ Branch: `codex/ts-backend-phase11-frontend-verification`.
 - Added browser verification for logout, session refresh, grades, both Excel
   formats, report download, backup download, and restore preflight.
 - Repaired the `e2e-full` YAML scalar that prevented jobs from being created.
+- Added the frozen backend-TS install required by the synthetic Excel fixtures.
 - Repaired the PR test-tier handoff for the native Playwright Node path.
 - Closed Elysia browser compatibility defects in correction IDs, student
   profiles, student exports, grade candidates, and progression errors.
@@ -68,7 +69,10 @@ verification run.
 
 The `e2e-full` workflow previously failed before job creation because the YAML
 parser rejected the unquoted value `sqlite:///:memory:`. The value is now
-quoted. This is a CI workflow repair, not an application behavior change.
+quoted. Its first executable run then lacked the backend-TS packages required
+by the synthetic Excel fixtures. The workflow now installs those packages with
+the frozen Bun lockfile. These are CI workflow repairs, not application
+behavior changes.
 
 The local `make test-pr` run completed its static, frontend, and first Python
 backend stages. Its second Python pass also passed. It then exposed a runner
