@@ -124,6 +124,27 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("exposes unresolved attendance conflicts with retry-safe provenance", async () => {
+    const value = await setup("conflicts");
+    try {
+      const bytes = await workbook([[9999, "Andi", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]);
+      const previewResponse = await preview(value.app, value.cookie, bytes, "conflict.xlsx");
+      const previewBody = await previewResponse.json() as any;
+      const reference = `attendance:${previewBody.rows[0].id}`;
+      const queue = await value.app.handle(new Request("http://local/api/upload-conflicts?workflow_type=ATTENDANCE", { headers: { cookie: value.cookie } }));
+      expect(queue.status).toBe(200);
+      expect((await queue.json() as any).items[0]).toMatchObject({ resolution_item_id: reference, technical_code: "DEVICE_IDENTITY_UNMATCHED", retry_eligible: false });
+      const detail = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}`, { headers: { cookie: value.cookie } }));
+      expect(detail.status).toBe(200);
+      const candidates = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/student-candidates?query=Andi`, { headers: { cookie: value.cookie } }));
+      expect(candidates.status).toBe(200);
+      expect((await candidates.json() as any).items[0]).toMatchObject({ full_name: "Andi", student_status: "active" });
+      const retry = await value.app.handle(new Request("http://local/api/upload-conflicts/retry-preview", { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ source_session_id: previewBody.batch_id, source_checksum: previewBody.checksum, resolution_item_ids: [reference], expected_classification: "CONFLICT", retry_mode: "PREVIEW_ONLY" }) }));
+      expect(retry.status).toBe(200);
+      expect((await retry.json() as any).outcomes[0]).toMatchObject({ resolution_item_id: reference, outcome: "STILL_UNMATCHED", classification: "CONFLICT" });
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("rolls back earlier writes when a later selected row is stale", async () => {
     const value = await setup("rollback");
     try {
