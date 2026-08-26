@@ -141,6 +141,33 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("exposes upload history and sanitized evidence for an attendance preview", async () => {
+    const value = await setup("history");
+    try {
+      const bytes = await workbook([[9003, "Citra", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]);
+      const previewResponse = await preview(value.app, value.cookie, bytes, "history.xlsx");
+      const previewBody = await previewResponse.json() as any;
+      const commitResponse = await value.app.handle(new Request(`http://local/api/uploads/preview/${previewBody.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [previewBody.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: previewBody.checksum }) }));
+      expect(commitResponse.status).toBe(200);
+
+      const uploadId = `attendance:${previewBody.batch_id}`;
+      const history = await value.app.handle(new Request("http://local/api/uploads/history?page=1&page_size=20", { headers: { cookie: value.cookie } }));
+      expect(history.status).toBe(200);
+      expect((await history.json() as any).items).toHaveLength(1);
+      const detail = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}`, { headers: { cookie: value.cookie } }));
+      expect(await detail.json()).toMatchObject({ upload_id: uploadId, status: "COMMITTED", committed_total: 1, unresolved_total: 0 });
+      const timeline = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/timeline`, { headers: { cookie: value.cookie } }));
+      expect((await timeline.json() as any).items.map((item: any) => item.event)).toContain("COMMIT_COMPLETED");
+      const rowsResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/rows?page=1&page_size=25`, { headers: { cookie: value.cookie } }));
+      expect((await rowsResponse.json() as any).items[0]).toMatchObject({ stable_row_reference: expect.stringContaining("attendance:"), commit_outcome: "COMMITTED" });
+      const csvResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.csv`, { headers: { cookie: value.cookie } }));
+      expect(csvResponse.status).toBe(200);
+      expect(await csvResponse.text()).toContain("reconciliation");
+      const jsonResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.json`, { headers: { cookie: value.cookie } }));
+      expect((await jsonResponse.json() as any).manifest.included_sections).toEqual(["reconciliation", "timeline", "row_outcomes"]);
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("reads date and time cells from ExcelJS without leaking workbook types", async () => {
     const bytes = await workbook([[9001, "Andi", new Date(Date.UTC(2026, 5, 15)), 0.3125, new Date(Date.UTC(1899, 11, 30, 16)), "00:25", 0.0208333333, "", "25"]]);
     const result = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "typed.xlsx");
