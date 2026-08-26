@@ -16,6 +16,13 @@ if (!Number.isInteger(backendPort) || backendPort < 1 || backendPort > 65535) {
 }
 
 const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
+const apiProxy = {
+  '/api': {
+    target: devApiProxyTarget,
+    changeOrigin: true,
+    secure: false,
+  },
+};
 
 // vite.config.js
 // Vite development server with API proxy, Vitest configuration, and JSX-in-JS transform support.
@@ -46,13 +53,13 @@ export default defineConfig({
       host: '127.0.0.1',
       port: frontendPort,
     },
-    proxy: {
-      '/api': {
-        target: devApiProxyTarget,
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    proxy: apiProxy,
+  },
+  preview: {
+    host: '127.0.0.1',
+    port: frontendPort,
+    strictPort: true,
+    proxy: apiProxy,
   },
   optimizeDeps: {
     esbuildOptions: {
