@@ -26,8 +26,8 @@
   approved feature API adapter may import them.
 - Keep route page exports lazy-safe. Do not create a root feature barrel or
   eagerly import every feature page.
-- Run `npm run boundaries:check` after changing imports, and
-  `npm run boundaries:test` after changing the enforcement rules.
+- Run `bun run boundaries:check` after changing imports, and
+  `bun run boundaries:test` after changing the enforcement rules.
 
 ## Responsibilities
 This React app provides the staff-facing UI for uploading attendance files, mapping students to classes, configuring HEB and jenjang rules, reviewing attendance overrides, and viewing reports and charts.
@@ -48,19 +48,19 @@ frontend/
 ```
 
 ## Requirements
-- Node.js 24.13.0
-- npm 11.x
+- mise-en-place controls runtime versions (see root `mise.toml`)
+- Bun 1.4.0 (installed via `mise install` at repo root)
 
 ## Setup
 ```bash
 cd frontend
-npm ci
+bun install
 ```
 
 ## Run
 ### Direct local development
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### Repository launcher
@@ -73,7 +73,7 @@ The launcher starts Vite and FastAPI directly. Vite proxies canonical `/api/*` b
 
 ## Production Build
 ```bash
-npm run build
+bun run build
 ```
 
 The production bundle is served from `frontend/build/`.
@@ -82,7 +82,7 @@ The production bundle is served from `frontend/build/`.
 - [`src/lib/api/client.ts`](src/lib/api/client.ts) centralizes URL building.
 - `VITE_API_BASE_URL` is the only build-time browser API base variable.
 - The default empty value keeps requests same-origin; Vite proxies them during
-  development and the local Tauri sidecar owns the packaged API lifecycle.
+  development.
 - The client sends JSON requests, multipart uploads, and file downloads through the shared request helper in `frontend/src/lib/api/`.
 - Authentication uses the backend's HttpOnly session cookie rather than browser-stored bearer tokens.
 
@@ -104,15 +104,13 @@ Routes are defined in [`src/App.tsx`](src/App.tsx):
 
 The `Settings` page hides destructive reset controls unless the backend explicitly reports that destructive operations are enabled.
 
-## Desktop packaging
+## Runtime
 
-Tauri is the supported packaged target. It launches a local FastAPI sidecar and
-uses SQLite; Docker, Nginx, Compose, and PostgreSQL are not runtime
-dependencies.
+OperatorOS runs with a local FastAPI backend and browser-based React UI backed by SQLite. Docker, Nginx, Compose, and PostgreSQL are not runtime dependencies.
 
 ## Verification
 ```bash
-npm run build
+bun run build
 ```
 
 If the build fails, check:
@@ -126,7 +124,7 @@ If the build fails, check:
 - If the frontend cannot reach the API, confirm the Vite development proxy target and backend port.
 - If the browser shows React HTML instead of JSON, confirm that the request path starts with `/api` exactly once.
 - If uploads fail, verify that the workbook is `.xlsx` and that the backend sample template matches the source file.
-- If browser verification fails, install Agent Browser with `npm install -g agent-browser` and `agent-browser install` (or `agent-browser install --with-deps` on Linux/WSL2).
+- If browser verification fails, install Agent Browser with `bun add -g agent-browser` and `agent-browser install` (or `agent-browser install --with-deps` on Linux/WSL2).
 
 ## Known Limitations
 - Frontend tests run with Vitest.

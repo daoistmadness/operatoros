@@ -18,7 +18,7 @@ backend/
 ```
 
 ## Runtime and Configuration
-- Python 3.12 is the current runtime used by the Docker image and dev script.
+- Python 3.12.3 via mise (`mise.toml` at repo root) is the current runtime; `mise install` provides it.
 - `backend/src/core/config.py` loads environment variables from `backend/.env` when present.
 - `DATABASE_URL` is optional when the `POSTGRES_*` fields are provided.
 - `ENABLE_DESTRUCTIVE_OPERATIONS` defaults to `false` and keeps guarded reset routes disabled.
@@ -34,10 +34,10 @@ backend/
 
 ## Setup
 ```bash
+mise install
 cd backend
-python3.12 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 ## Run
@@ -113,7 +113,7 @@ curl -F "file=@sample_attendance.xlsx" http://localhost:8000/uploads/upload
 
 - The supported database is SQLite.
 - PostgreSQL URLs and legacy PostgreSQL environment variables are rejected.
-- The packaged target is the local Tauri sidecar; containers are not required.
+- OperatorOS runs as a local backend with a browser frontend; containers are not required.
 - Keep the backend at one worker so the in-process scheduler and guarded restore
   policy remain valid.
 

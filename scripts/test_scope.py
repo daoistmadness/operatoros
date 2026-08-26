@@ -85,7 +85,7 @@ def classify_path(path: str) -> set[str]:
     if value.startswith(("frontend/src/lib/api/", "frontend/src/api/")):
         return {"FRONTEND_API_CLIENT"}
     if value.startswith("frontend/") and Path(value).name in {
-        "package.json", "package-lock.json", "vite.config.ts", "vitest.config.ts", "tsconfig.json"
+        "package.json", "package-lock.json", "bun.lock", "vite.config.ts", "vitest.config.ts", "tsconfig.json"
     }:
         return {"FRONTEND_BUILD_CONFIG", "FRONTEND_TEST_INFRASTRUCTURE"}
     if value.startswith("backend/src/models/"):
