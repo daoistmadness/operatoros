@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
+import * as XLSX from "@e965/xlsx";
 import ExcelJS from "exceljs";
 import { createApp } from "../src/app";
 import { openDatabase } from "../src/db/connection";
@@ -43,6 +44,13 @@ async function workbook(rows: unknown[][], customHeaders = headers): Promise<Uin
   return new Uint8Array(await book.xlsx.writeBuffer());
 }
 
+function legacyWorkbook(rows: unknown[][], customHeaders = headers): Uint8Array {
+  const sheet = XLSX.utils.aoa_to_sheet([customHeaders, ...rows]);
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheet, "Attendance Export");
+  return new Uint8Array(XLSX.write(book, { bookType: "biff8", type: "buffer" }) as Uint8Array);
+}
+
 function authCookie(response: Response): string {
   const value = response.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!value) throw new Error("session cookie missing");
@@ -63,9 +71,9 @@ function cleanup(value: Awaited<ReturnType<typeof setup>>): void {
   rmSync(value.path, { force: true });
 }
 
-async function preview(app: ReturnType<typeof createApp>, cookie: string, bytes: Uint8Array, filename = "test.xlsx") {
+async function preview(app: ReturnType<typeof createApp>, cookie: string, bytes: Uint8Array, filename = "test.xlsx", type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
   const form = new FormData();
-  form.append("file", new File([bytes], filename, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  form.append("file", new File([bytes], filename, { type }));
   return app.handle(new Request("http://local/api/uploads/preview", { method: "POST", headers: { cookie }, body: form }));
 }
 
@@ -124,6 +132,27 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("exposes unresolved attendance conflicts with retry-safe provenance", async () => {
+    const value = await setup("conflicts");
+    try {
+      const bytes = await workbook([[9999, "Andi", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]);
+      const previewResponse = await preview(value.app, value.cookie, bytes, "conflict.xlsx");
+      const previewBody = await previewResponse.json() as any;
+      const reference = `attendance:${previewBody.rows[0].id}`;
+      const queue = await value.app.handle(new Request("http://local/api/upload-conflicts?workflow_type=ATTENDANCE", { headers: { cookie: value.cookie } }));
+      expect(queue.status).toBe(200);
+      expect((await queue.json() as any).items[0]).toMatchObject({ resolution_item_id: reference, technical_code: "DEVICE_IDENTITY_UNMATCHED", retry_eligible: false });
+      const detail = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}`, { headers: { cookie: value.cookie } }));
+      expect(detail.status).toBe(200);
+      const candidates = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/student-candidates?query=Andi`, { headers: { cookie: value.cookie } }));
+      expect(candidates.status).toBe(200);
+      expect((await candidates.json() as any).items[0]).toMatchObject({ full_name: "Andi", student_status: "active" });
+      const retry = await value.app.handle(new Request("http://local/api/upload-conflicts/retry-preview", { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ source_session_id: previewBody.batch_id, source_checksum: previewBody.checksum, resolution_item_ids: [reference], expected_classification: "CONFLICT", retry_mode: "PREVIEW_ONLY" }) }));
+      expect(retry.status).toBe(200);
+      expect((await retry.json() as any).outcomes[0]).toMatchObject({ resolution_item_id: reference, outcome: "STILL_UNMATCHED", classification: "CONFLICT" });
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("rolls back earlier writes when a later selected row is stale", async () => {
     const value = await setup("rollback");
     try {
@@ -141,9 +170,52 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("exposes upload history and sanitized evidence for an attendance preview", async () => {
+    const value = await setup("history");
+    try {
+      const bytes = await workbook([[9003, "Citra", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]);
+      const previewResponse = await preview(value.app, value.cookie, bytes, "history.xlsx");
+      const previewBody = await previewResponse.json() as any;
+      const commitResponse = await value.app.handle(new Request(`http://local/api/uploads/preview/${previewBody.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [previewBody.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: previewBody.checksum }) }));
+      expect(commitResponse.status).toBe(200);
+
+      const uploadId = `attendance:${previewBody.batch_id}`;
+      const history = await value.app.handle(new Request("http://local/api/uploads/history?page=1&page_size=20", { headers: { cookie: value.cookie } }));
+      expect(history.status).toBe(200);
+      expect((await history.json() as any).items).toHaveLength(1);
+      const detail = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}`, { headers: { cookie: value.cookie } }));
+      expect(await detail.json()).toMatchObject({ upload_id: uploadId, status: "COMMITTED", committed_total: 1, unresolved_total: 0 });
+      const timeline = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/timeline`, { headers: { cookie: value.cookie } }));
+      expect((await timeline.json() as any).items.map((item: any) => item.event)).toContain("COMMIT_COMPLETED");
+      const rowsResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/rows?page=1&page_size=25`, { headers: { cookie: value.cookie } }));
+      expect((await rowsResponse.json() as any).items[0]).toMatchObject({ stable_row_reference: expect.stringContaining("attendance:"), commit_outcome: "COMMITTED" });
+      const csvResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.csv`, { headers: { cookie: value.cookie } }));
+      expect(csvResponse.status).toBe(200);
+      expect(await csvResponse.text()).toContain("reconciliation");
+      const jsonResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.json`, { headers: { cookie: value.cookie } }));
+      expect((await jsonResponse.json() as any).manifest.included_sections).toEqual(["reconciliation", "timeline", "row_outcomes"]);
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("reads date and time cells from ExcelJS without leaking workbook types", async () => {
     const bytes = await workbook([[9001, "Andi", new Date(Date.UTC(2026, 5, 15)), 0.3125, new Date(Date.UTC(1899, 11, 30, 16)), "00:25", 0.0208333333, "", "25"]]);
     const result = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "typed.xlsx");
     expect(result.rows[0]).toMatchObject({ date: "2026-06-15", checkIn: "07:30", checkOut: "16:00", overtimeSeconds: null });
+  });
+
+  it("reads legacy BIFF .xls through the same preview and commit pipeline", async () => {
+    const value = await setup("xls");
+    try {
+      const bytes = legacyWorkbook([[9001, "Andi", "17/06/2026", "07:30", "16:00", "00:25", "", "", "25"]]);
+      const parsed = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "legacy.xls");
+      expect(parsed.rows[0]).toMatchObject({ date: "2026-06-17", checkIn: "07:30", checkOut: "16:00", lateRaw: "00:25" });
+      const response = await preview(value.app, value.cookie, bytes, "legacy.xls", "application/vnd.ms-excel");
+      expect(response.status).toBe(200);
+      const body = await response.json() as any;
+      expect(body.summary).toMatchObject({ total_rows: 1, new_rows: 1, conflicts: 0, invalid_rows: 0 });
+      const commit = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      expect(commit.status).toBe(200);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9001 AND date = '2026-06-17'").get() as any).count).toBe(1);
+    } finally { cleanup(value); }
   });
 });

@@ -5,10 +5,12 @@
     "": {
       "name": "@operatoros/backend-ts",
       "dependencies": {
+        "@e965/xlsx": "0.20.3",
         "@elysiajs/openapi": "^1.1.0",
         "drizzle-orm": "^0.45.2",
         "elysia": "^1.1.0",
         "exceljs": "^4.4.0",
+        "jszip": "3.10.1",
         "pdf-lib": "^1.17.1",
       },
       "devDependencies": {
@@ -22,6 +24,8 @@
     "@borewit/text-codec": ["@borewit/text-codec@0.2.2", "", {}, "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.10.2", "", {}, "sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w=="],
+
+    "@e965/xlsx": ["@e965/xlsx@0.20.3", "", { "bin": { "xlsx": "bin/xlsx.njs" } }, "sha512-703RN/3OdsRD5mtse2HBX7Um7xwaP9tlswEG6svOtjqokXoX7rJdQj7DyabD2I+xk22RgaIIU+R6BHgkpZGB/w=="],
 
     "@elysiajs/openapi": ["@elysiajs/openapi@1.4.15", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-HDtGIrWfFJk6UJS7qbgRmjifbSqnnRGDM3CsU/GVJkxLbEVEkNuQDf+Quh9fGbytSrJ8g4+tX9eVjshYhCH29w=="],
 

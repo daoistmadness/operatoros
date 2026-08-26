@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from harness import (
@@ -18,6 +21,7 @@ from harness import (
 REPO = Path(__file__).resolve().parents[5]
 NORMAL = "docs/migration/ts-backend/golden/attendance-import/normal-preview.xlsx"
 MISSING = "docs/migration/ts-backend/golden/attendance-import/missing-header.xlsx"
+XLS_GENERATOR = REPO / "docs/migration/ts-backend/golden/tools/generate_xls_fixture.ts"
 
 
 def replay(adapter, fixture: str, apply: bool = False) -> ScenarioCapture:
@@ -109,26 +113,39 @@ def preview_matches_golden(body: dict) -> bool:
 
 
 def main() -> int:
-    cases = [
-        ("normal-preview", NORMAL, False),
-        ("missing-header", MISSING, False),
-        ("normal-apply", NORMAL, True),
-    ]
-    results = []
-    golden_ok = True
-    mismatch_ok = True
-    for name, fixture, apply in cases:
-        reference = replay(FastAPIReferenceAdapter(label=f"phase6-ref-{name}"), fixture, apply)
-        candidate = replay(ElysiaCandidateAdapter(label=f"phase6-candidate-{name}"), fixture, apply)
-        semantic_database(reference)
-        semantic_database(candidate)
-        verdict = compare_scenarios(reference, candidate)
-        if name == "normal-preview":
-            golden_ok = preview_matches_golden(reference.steps[0].body)
-        if name == "normal-apply":
-            candidate.steps[0].body["summary"]["new_rows"] += 1
-            mismatch_ok = compare_scenarios(reference, candidate)["verdict"] == VERDICT_DEFECT
-        results.append({"scenario": name, "verdict": verdict["verdict"], "layers": verdict["layers"]})
+    bun = os.environ.get("OPERATOROS_BUN", "/home/mikhailryu/.local/share/mise/installs/bun/1.4.0/bin/bun")
+    with tempfile.TemporaryDirectory(prefix="operatoros-phase6-") as directory:
+        legacy = Path(directory) / "legacy-preview.xls"
+        generated = subprocess.run([bun, "run", str(XLS_GENERATOR)], capture_output=True, check=True)
+        legacy.write_bytes(generated.stdout)
+        cases = [
+            ("normal-preview", NORMAL, False),
+            ("missing-header", MISSING, False),
+            ("normal-apply", NORMAL, True),
+            ("legacy-xls-preview", str(legacy), False),
+            ("legacy-xls-apply", str(legacy), True),
+        ]
+        results = []
+        golden_ok = True
+        mismatch_ok = True
+        for name, fixture, apply in cases:
+            reference = replay(FastAPIReferenceAdapter(label=f"phase6-ref-{name}"), fixture, apply)
+            candidate = replay(ElysiaCandidateAdapter(label=f"phase6-candidate-{name}"), fixture, apply)
+            semantic_database(reference)
+            semantic_database(candidate)
+            verdict = compare_scenarios(reference, candidate)
+            if name == "normal-preview":
+                golden_ok = preview_matches_golden(reference.steps[0].body)
+            if name == "normal-apply":
+                candidate.steps[0].body["summary"]["new_rows"] += 1
+                mismatch_ok = compare_scenarios(reference, candidate)["verdict"] == VERDICT_DEFECT
+            if name == "legacy-xls-preview":
+                mismatch = json.loads(json.dumps(candidate.steps[0].body))
+                mismatch["summary"]["new_rows"] += 1
+                mismatch_capture = ScenarioCapture(steps=[candidate.steps[0]])
+                mismatch_capture.steps[0].body = mismatch
+                mismatch_ok = mismatch_ok and compare_scenarios(reference, mismatch_capture)["verdict"] == VERDICT_DEFECT
+            results.append({"scenario": name, "verdict": verdict["verdict"], "layers": verdict["layers"]})
 
     digest = hashlib.sha256((REPO / "docs/migration/ts-backend/golden/attendance-import/normal-preview.json").read_bytes()).hexdigest()[:12]
     counts = {"EXACT_MATCH": sum(item["verdict"] == "EXACT_MATCH" for item in results)}
@@ -138,7 +155,7 @@ def main() -> int:
         "results": results,
         "golden_projection": "passed" if golden_ok else "failed",
         "existing_preview_hash": digest,
-        "deliberate_mismatch": {"MIGRATION_DEFECT": 1 if mismatch_ok else 0},
+        "deliberate_mismatch": {"MIGRATION_DEFECT": 2 if mismatch_ok else 0},
     }
     print(json.dumps(report, indent=2, default=str))
     return 0 if golden_ok and mismatch_ok and counts["EXACT_MATCH"] == len(cases) else 1

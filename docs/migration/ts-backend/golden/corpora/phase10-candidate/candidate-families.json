@@ -1,0 +1,138 @@
+[
+  {
+    "id": "phase10_candidate_attendance_followups",
+    "domain": "phase10-candidate",
+    "protected_category": "workflow parity",
+    "seed": "seed_attendance_review",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/attendance/followups/candidates", "jar": true },
+      { "type": "request", "method": "GET", "path": "/api/attendance/followups", "jar": true },
+      { "type": "request", "method": "GET", "path": "/api/attendance/followups/metrics/summary", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_data_portability",
+    "domain": "phase10-candidate",
+    "protected_category": "data portability",
+    "seed": "seed_academic",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/data-portability/datasets", "jar": true },
+      { "type": "request", "method": "POST", "path": "/api/data-portability/exports/preview", "jar": true, "json": { "dataset": "student_roster", "filters": {} } },
+      { "type": "request", "method": "GET", "path": "/api/data-portability/history?limit=50", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_operator_queue",
+    "domain": "phase10-candidate",
+    "protected_category": "authorization",
+    "seed": "seed_attendance_review",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/operator/work-queue", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_report_builder",
+    "domain": "phase10-candidate",
+    "protected_category": "report correctness",
+    "seed": "seed_reports",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/report-builder/sections", "jar": true },
+      { "type": "request", "method": "GET", "path": "/api/report-builder/templates", "jar": true },
+      { "type": "request", "method": "GET", "path": "/api/report-builder/branding", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_staff_import_history",
+    "protected_category": "audit parity",
+    "seed": "seed_auth_users",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/staff/imports/history?page=1&page_size=25", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_student_exports",
+    "domain": "phase10-candidate",
+    "protected_category": "authorization",
+    "seed": "seed_academic",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "POST", "path": "/api/student-exports/preview", "jar": true, "json": { "scope": "FILTERED_RESULTS", "field_profile": "STANDARD_OPERATIONAL", "filters": {} } }
+    ]
+  },
+  {
+    "id": "phase10_candidate_student_import_rollback",
+    "domain": "phase10-candidate",
+    "protected_category": "safety",
+    "seed": "seed_auth_users",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "POST", "path": "/api/student-import-sessions/not-a-session/rollback-preview", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_student_update_history",
+    "domain": "phase10-candidate",
+    "protected_category": "audit parity",
+    "seed": "seed_auth_users",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/student-masters/management/import-history?page=1&page_size=25", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_teacher_assignments",
+    "domain": "phase10-candidate",
+    "protected_category": "authorization",
+    "seed": "seed_academic",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/teacher-class-assignments?active_only=true", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_roster",
+    "domain": "phase10-candidate",
+    "protected_category": "data integrity",
+    "seed": "seed_academic",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "POST", "path": "/api/student-enrollments/academic-master-preview", "jar": true, "json": { "source_owner": "golden", "academic_years": [], "jenjangs": [], "programs": [], "grades": [], "classes": [] } }
+    ]
+  },
+  {
+    "id": "phase10_candidate_upload_conflicts",
+    "domain": "phase10-candidate",
+    "protected_category": "workflow parity",
+    "seed": "seed_attendance_import",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/upload-conflicts?workflow_type=ATTENDANCE&page=1&page_size=25", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_upload_history",
+    "domain": "phase10-candidate",
+    "protected_category": "audit parity",
+    "seed": "seed_attendance_import",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "GET", "path": "/api/uploads/history?workflow_type=ATTENDANCE&page=1&page_size=20", "jar": true },
+      { "type": "request", "method": "GET", "path": "/api/uploads/missing-records?month=6&year=2026", "jar": true }
+    ]
+  },
+  {
+    "id": "phase10_candidate_system_clear_data",
+    "domain": "phase10-candidate",
+    "protected_category": "safety",
+    "seed": "seed_auth_users",
+    "steps": [
+      { "type": "request", "method": "POST", "path": "/api/auth/login", "json": { "username": "golden-admin", "password": "golden-admin-pass-1" } },
+      { "type": "request", "method": "POST", "path": "/api/system/clear-data", "jar": true, "json": { "mode": "attendance", "confirmation": "" } }
+    ]
+  }
+]
