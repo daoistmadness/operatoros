@@ -62,7 +62,8 @@ Full smoke result for each backend:
 ## Runtime and safety disposition
 
 - FastAPI fallback remains available and passes the same 19 browser workflows.
-- Elysia production-like test startup uses Bun and a disposable SQLite database.
+- Elysia production-like test startup uses Bun, a built frontend served by
+  `vite preview`, and a disposable SQLite database.
 - Playwright uses the installed native Linux Node CLI because the Bun launcher
   does not collect this repository's Playwright tests reliably.
 - The E2E runner records the native Node path before its controlled PATH setup.
