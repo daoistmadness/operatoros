@@ -22,11 +22,14 @@ jobs:
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: jdx/mise-action@v4
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache: true
+      - name: Verify mise toolchain
+        run: |
+          mise --version
+          python --version
+          mise ls --current
       - name: Create canonical backend virtualenv
         run: python -m venv .venv
       - name: Install backend dependencies
@@ -50,18 +53,19 @@ jobs:
       OPERATOROS_PYTHON: ${{ github.workspace }}/backend/.venv/bin/python
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: jdx/mise-action@v4
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache: true
+      - name: Verify mise toolchain
+        run: |
+          mise --version
+          bun --version | grep -Eq "^1\.4\."
+          python --version
+          mise ls --current
       - name: Create reference backend virtualenv
         run: python -m venv ../backend/.venv
       - name: Install reference backend dependencies
         run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.4.0"
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun test
@@ -74,23 +78,45 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: jdx/mise-action@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Verify repository Node and npm contract
+          cache: true
+      - name: Verify Bun runtime and contract
         run: |
-          expected_node_major="$(sed -nE 's/^v?([0-9]+)\..*/\1/p' ../.nvmrc)"
-          expected_npm_major="$(sed -nE 's/^[[:space:]]*\"npm\"[[:space:]]*:[[:space:]]*\">=([0-9]+).*/\1/p' package.json | head -n1)"
-          node --version | grep -Eq "^v${expected_node_major}\."
-          npm --version | grep -Eq "^${expected_npm_major}\."
-      - run: npm ci
-      - run: npm run build
+          mise --version
+          bun --version | grep -Eq "^1\.4\."
+          mise ls --current
+      - name: Install backend dependencies for OpenAPI generation
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m venv backend/.venv
+          backend/.venv/bin/python -m pip install --upgrade pip
+          backend/.venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Install dependencies (frozen lockfile)
+        run: bun ci
+      - name: Dependency deduplication check
+        run: bun run check:dependencies
+      - name: Architecture boundaries test
+        run: bun run boundaries:test
+      - name: OpenAPI contract drift check
+        run: bun run api:check
+      - name: TypeScript validation
+        run: bun run typecheck
+      - name: Frontend unit tests
+        run: bun run test
+      - name: Build frontend bundle
+        run: bun run build
 
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v4
+        with:
+          cache: true
+      - name: Verify docs toolchain
+        run: |
+          mise --version
+          python --version
       - name: Validate relative Markdown links
         run: python .github/scripts/check_markdown_links.py
