@@ -28,7 +28,7 @@ jobs:
     env:
       CI: "true"
       PYTHONPATH: backend/src
-      DATABASE_URL: sqlite:///:memory:
+      DATABASE_URL: "sqlite:///:memory:"
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
       OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
       OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
@@ -53,6 +53,10 @@ jobs:
           python -m venv backend/.venv
           backend/.venv/bin/python -m pip install --upgrade pip
           backend/.venv/bin/python -m pip install -r backend/requirements.txt
+
+      - name: Install backend TypeScript dependencies
+        working-directory: backend-ts
+        run: bun install --frozen-lockfile
 
       - name: Install frontend dependencies
         working-directory: frontend

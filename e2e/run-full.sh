@@ -24,6 +24,9 @@ bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
 
 smoke_status=0
 bash "$repo_root/e2e/run-smoke.sh" >"$logs/full-smoke.log" 2>&1 || smoke_status=$?
+# A successful smoke run removes its own generated evidence. Recreate the
+# full-suite-owned directories before writing the remaining regression logs.
+mkdir -p "$logs" "$junit"
 
 backend_status=0
 (
