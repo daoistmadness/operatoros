@@ -16,24 +16,15 @@ TanStack Query provider/client policy, query-key factories, retry/cache behavior
 
 ## Phase 9 — Platform Stabilization
 
-Status: **CORE PLATFORM COMPLETE; PHASE 9.6 EXTERNAL ACCEPTANCE PENDING**.
+Status: **CORE PLATFORM COMPLETE**.
 
-Configuration, development launcher, identity/setup, executive reporting, backup/restore/scheduling, security review, and local packaged-desktop feasibility are implemented. The only remaining Phase 9 acceptance gate is the qualifying clean-Windows Phase 9.6 run below.
+Configuration, development launcher, identity/setup, executive reporting, backup/restore/scheduling, and security review are implemented.
 
 ## Phase 9.6 — Desktop Sidecar Feasibility
 
-Status: **IMPLEMENTED BUT NOT CLOSED**.
+Status: **RETIRED 2026-08-20**.
 
-Completed locally:
-
-- PyInstaller packaged backend, loopback startup, SQLite bootstrap/migrations, authentication, backup/restore, graceful shutdown, integrity and restart contracts.
-- Minimal Tauri v2 trusted supervisor with explicit `STOPPED`, `STARTING`, `READY`, `FAILED`, `STOPPING`, and `CRASHED` states.
-- Windows Job Object ownership with kill-on-job-close for the sidecar process tree.
-- Parent-only force termination releases the port, preserves SQLite integrity, and permits restart.
-- Canonical data-root byte-range lock rejects a simultaneous sidecar; the former strict xfail is now passing.
-- Windows desktop contract result: **9 passed in 300.52 seconds**, no xfail.
-
-External gate still open: no clean Windows 10/11 environment without Python, Rust, compiler tools, repository checkout, or developer virtual environments was available. The exact acceptance procedure is retained in `docs/desktop/clean-windows-validation-runbook.md`. Phase 9.6 cannot be closed until that run passes.
+The experimental Tauri v2 supervisor, PyInstaller sidecar packaging, and their Windows lifecycle contracts were removed from the repository. The clean-Windows external acceptance gate is retired with them. Historical evidence remains in Git history and the historical phase records under `docs/project-status/` and `docs/releases/`.
 
 ## Phase 10 — Incremental Design-System Modernization
 
@@ -59,10 +50,8 @@ Release acceptance completed on 2026-07-14:
 
 ## Phase 10.6 — Tauri Readiness Audit
 
-Status: **COMPLETE**. Runtime, communication, authentication, data, backup, security, dependency, and architecture findings remain under `docs/tauri/` and `docs/tauri-readiness-report.md`.
+Status: **RETIRED WITH THE TAURI SHELL (2026-08-20)**. The readiness findings and the `docs/tauri/` material they covered were removed with the desktop shell. Git history retains the evidence.
 
 ## Phase 11
 
-- Phase 11.0 minimal Tauri shell: **FOUNDATION CREATED** for process-ownership validation only.
-- Phase 11.1 sidecar ownership: **PROTOTYPE VALIDATED**, but production continuation remains gated by clean-machine Phase 9.6 acceptance.
-- Installer, signing, updater, native dialogs, and full desktop UX remain out of scope.
+Status: **RETIRED 2026-08-20**. The minimal Tauri shell, sidecar-ownership prototype, and related Windows scripts and contract tests were removed. The supported runtime is `LOCAL_BROWSER_RUNTIME` — a local FastAPI backend with the React frontend in a browser and a SQLite database. Any future desktop packaging requires a new accepted ADR and separate authorization.

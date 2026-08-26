@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   e2e-full:
-    name: Ubuntu / Node 24.13.0 / Python 3.12
+    name: Ubuntu / Bun 1.4.0 / Python 3.12
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -36,25 +36,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Set up mise toolchain
+        uses: jdx/mise-action@v4
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
+          cache: true
 
-      - name: Set up repository Node.js version
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Verify repository Node and npm contract
+      - name: Verify mise toolchain
         run: |
-          expected_node_major="$(sed -nE 's/^v?([0-9]+)\..*/\1/p' "$GITHUB_WORKSPACE/.nvmrc")"
-          expected_npm_major="$(sed -nE 's/^[[:space:]]*\"npm\"[[:space:]]*:[[:space:]]*\">=([0-9]+).*/\1/p' "$GITHUB_WORKSPACE/frontend/package.json" | head -n1)"
-          node --version | grep -Eq "^v${expected_node_major}\."
-          npm --version | grep -Eq "^${expected_npm_major}\."
+          mise --version
+          bun --version | grep -Eq "^1\.4\."
+          python --version
+          mise ls --current
 
       - name: Install backend dependencies
         run: |
@@ -64,11 +56,11 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: bun ci
 
       - name: Install Playwright Chromium
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: bun run --bun playwright install --with-deps chromium
 
       - name: Run CI-only full regression
         run: timeout 900 make e2e-full

@@ -35,11 +35,9 @@ def test_postgresql_database_urls_are_rejected_safely(
 
 def test_runtime_has_no_postgresql_driver_or_container_contract() -> None:
     requirements = (ROOT / "backend" / "requirements.txt").read_text(encoding="utf-8")
-    sidecar = (ROOT / "scripts" / "build-sidecar.ps1").read_text(encoding="utf-8")
     workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
 
     assert "asyncpg" not in requirements
-    assert "asyncpg" not in sidecar
     assert "docker compose" not in workflow.lower()
     assert not (ROOT / "docker-compose.yml").exists()
     assert not (ROOT / "backend" / "Dockerfile").exists()

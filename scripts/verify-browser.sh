@@ -37,7 +37,7 @@ ab() {
 
 check_agent_browser() {
   if ! command_exists agent-browser; then
-    die "agent-browser is not installed. Install it with 'npm install -g agent-browser' and then run 'agent-browser install' (or 'agent-browser install --with-deps' on Linux/WSL2)."
+    die "agent-browser is not installed. Install it with 'bun add -g agent-browser' and then run 'agent-browser install' (or 'agent-browser install --with-deps' on Linux/WSL2)."
   fi
 
   local version

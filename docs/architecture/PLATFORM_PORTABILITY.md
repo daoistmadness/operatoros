@@ -5,13 +5,13 @@
 `SQLITE_ONLY_SUPPORTED`. OperatorOS is a local/desktop SQLite application.
 PostgreSQL is not a supported runtime, and the application explicitly rejects
 PostgreSQL URLs and legacy PostgreSQL configuration without echoing credentials.
-The Tauri desktop target runs a local FastAPI sidecar; a container runtime is
-not required.
+The supported runtime is a local FastAPI backend with the React frontend in a
+browser; a container runtime is not required.
 
 The current deployment labels are:
 
 - `SQLITE_ONLY_SUPPORTED`
-- `TAURI_DESKTOP_LOCAL`
+- `LOCAL_BROWSER_RUNTIME`
 - `POSTGRESQL_NOT_SUPPORTED`
 - `CONTAINER_RUNTIME_NOT_REQUIRED`
 
