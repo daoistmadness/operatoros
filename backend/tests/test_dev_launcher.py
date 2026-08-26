@@ -32,6 +32,7 @@ def _launcher_environment(tmp_path: Path, vite_body: str) -> tuple[dict[str, str
     environment.update(
         PATH=f"{tools}:{environment['PATH']}",
         OPERATOROS_JS_RUNTIME="bun",
+        OPERATOROS_BACKEND="fastapi",
         OPERATOROS_RUNTIME_DIR=str(tmp_path / "runtime"),
         OPERATOROS_DEV_DATA_DIR=str(tmp_path / "persistent-data"),
         ASTRYX_VITE_EXECUTABLE=str(vite),
@@ -247,6 +248,17 @@ def test_dev_launcher_exposes_backend_src_import_root():
     assert 'export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"' in contents
     assert '"$VENV/bin/uvicorn" src.main:app' in contents
     assert '--reload-dir "$BACKEND_DIR/src"' in contents
+
+
+def test_dev_launcher_defaults_to_elysia_with_fastapi_fallback():
+    launcher = Path(__file__).resolve().parents[2] / "start-dev.sh"
+    contents = launcher.read_text(encoding="utf-8")
+
+    assert 'BACKEND_RUNTIME="${OPERATOROS_BACKEND:-elysia}"' in contents
+    assert 'export HOST="$BACKEND_HOST"' in contents
+    assert 'export PORT="$BACKEND_PORT"' in contents
+    assert 'exec setsid bun run "$BACKEND_TS_DIR/src/server.ts"' in contents
+    assert 'Use OPERATOROS_BACKEND=elysia or OPERATOROS_BACKEND=fastapi.' in contents
 
 
 def test_dev_launcher_scopes_secure_setup_token_to_backend_process():
