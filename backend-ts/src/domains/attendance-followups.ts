@@ -116,7 +116,7 @@ function discoverCandidates(context: AuthContext, user: CurrentUser, query: Row)
   if (query.date_to) { where.push("a.date <= ?"); params.push(query.date_to); }
   const assigned = assignedClassIds(context, user);
   if (assigned !== null) { if (!assigned.length && !query.class_id) return []; if (assigned.length && !query.class_id) { where.push(`e.academic_class_id IN (${assigned.map(() => "?").join(",")})`); params.push(...assigned); } }
-  const values = rows(context, `SELECT a.id, a.date, a.status, a.check_in, a.check_out, a.is_absent, a.late_source, s.name AS student_name, COALESCE(e.student_master_id, CAST(s.id AS TEXT)) AS student_master_id, e.academic_class_id, COALESCE(c.class_name, s.class_name) AS class_name FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.lifecycle_state = 'ACTIVE' LEFT JOIN academic_classes c ON c.id = e.academic_class_id WHERE ${where.join(" AND ")} ORDER BY a.date DESC, a.id DESC`, params);
+  const values = rows(context, `SELECT a.id, a.date, a.status, a.check_in, a.check_out, a.is_absent, a.late_source, s.name AS student_name, COALESCE(e.student_master_id, CAST(s.id AS TEXT)) AS student_master_id, e.academic_class_id, c.class_name AS class_name FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.lifecycle_state = 'ACTIVE' LEFT JOIN academic_classes c ON c.id = e.academic_class_id WHERE ${where.join(" AND ")} ORDER BY a.date DESC, a.id DESC`, params);
   const result: Row[] = [];
   for (const value of values) {
     const status = String(value.status ?? "").toLowerCase();

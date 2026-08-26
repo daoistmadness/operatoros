@@ -157,6 +157,10 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 getattr(module, sys.argv[2])(db_path)
 from core import database as core_database
+import models.staff
+# FastAPI creates additive model tables during its disposable startup. Mirror
+# that startup on the candidate fixture without changing production databases.
+core_database.init_db()
 core_database.run_grade_ledger_patches(core_database.engine)
 core_database._seed_grade_ledger_minimum(core_database.engine)
 from services.report_builder import seed_report_builder_defaults
