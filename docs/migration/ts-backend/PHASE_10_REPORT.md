@@ -6,7 +6,7 @@ Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-Current closure commit: `a1c9ffa`.
+Current closure commits: `a1c9ffa`, `5a9c4d7`, `7950b49`, `ace913e`, `a29acca`.
 
 The audit does not issue the Phase 10 gate. The endpoint matrix contains zero
 missing route registrations and one intentionally deprecated operation. Candidate
