@@ -6,6 +6,7 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 BACKEND_DIR="$PROJECT_ROOT/backend"
+BACKEND_TS_DIR="$PROJECT_ROOT/backend-ts"
 FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
 VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
@@ -24,6 +25,7 @@ BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+BACKEND_RUNTIME="${OPERATOROS_BACKEND:-elysia}"
 READINESS_TIMEOUT_SECONDS="${ASTRYX_READINESS_TIMEOUT_SECONDS:-30}"
 SHUTDOWN_TIMEOUT_SECONDS="${ASTRYX_SHUTDOWN_TIMEOUT_SECONDS:-5}"
 
@@ -133,13 +135,23 @@ prepare_local_environment() {
 
 run_preflight() {
   printf 'OperatorOS Development Stack\n\nChecking environment...\n'
+  case "$BACKEND_RUNTIME" in
+    elysia|fastapi) ;;
+    *) fail_preflight "Unsupported backend runtime: $BACKEND_RUNTIME" "Use OPERATOROS_BACKEND=elysia or OPERATOROS_BACKEND=fastapi." ;;
+  esac
   require_command bash Launcher "Install Bash using the Linux/WSL distribution."
   require_command flock Launcher "Install util-linux for collision-safe allocation."
   require_command curl "Readiness check" "Install curl."
   require_command setsid "Process management" "Install util-linux."
   require_command ps "Process management" "Install procps."
-  [[ -x "$VENV/bin/python" && -x "$VENV/bin/uvicorn" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python and uvicorn"
-  "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "Backend dependencies are incomplete" "Install backend requirements."
+  [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python for database and session management."
+  if [[ "$BACKEND_RUNTIME" == fastapi ]]; then
+    [[ -x "$VENV/bin/uvicorn" ]] || fail_preflight "FastAPI fallback environment is incomplete" "Expected $VENV/bin/uvicorn."
+    "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "FastAPI fallback dependencies are incomplete" "Install backend requirements."
+  else
+    [[ -f "$BACKEND_TS_DIR/package.json" && -f "$BACKEND_TS_DIR/bun.lock" ]] || fail_preflight "Elysia backend manifest is incomplete" "Expected backend-ts/package.json and backend-ts/bun.lock."
+    [[ -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: cd backend-ts && bun install"
+  fi
   [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/bun.lock" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and bun.lock."
   [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
   # shellcheck disable=SC1090
@@ -337,7 +349,7 @@ DEV_DATABASE="$EXPECTED_PERSISTENT_DB"
 prepare_local_environment
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
+"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --backend-runtime "$BACKEND_RUNTIME" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
 
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
   printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
@@ -349,12 +361,18 @@ FRONTEND_LOG="$RUNTIME_DIR/frontend.log"
 printf '\nStarting services (session %s)...\n' "$SESSION_ID"
 LAUNCHER_STATE=STARTING_BACKEND
 (
-  cd "$BACKEND_DIR"
-  export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
   export ASTRYX_SETUP_TOKEN="$SETUP_TOKEN"
   export OPERATOROS_MANAGED_DEV_SETUP=true
-  # Canonical command remains: "$VENV/bin/uvicorn" src.main:app
-  exec setsid "$VENV/bin/uvicorn" src.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" --reload --reload-dir "$BACKEND_DIR/src"
+  if [[ "$BACKEND_RUNTIME" == elysia ]]; then
+    export HOST="$BACKEND_HOST"
+    export PORT="$BACKEND_PORT"
+    cd "$BACKEND_TS_DIR"
+    exec setsid bun run "$BACKEND_TS_DIR/src/server.ts"
+  else
+    cd "$BACKEND_DIR"
+    export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+    exec setsid "$VENV/bin/uvicorn" src.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" --reload --reload-dir "$BACKEND_DIR/src"
+  fi
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
@@ -397,7 +415,7 @@ fi
 "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
-printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s\nSession   %s\nDatabase  %s\nSchema    20260725_s43\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$SESSION_ID" "$DEV_DATABASE"
+printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    20260725_s43\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE"
 LAUNCHER_STATE=RUNNING
 while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
