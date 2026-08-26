@@ -2,7 +2,7 @@
 
 This guide covers the WSL2 development workflow for this repository.
 
-Direct Node.js/Vite and Python/FastAPI processes are the primary local-development workflow. Docker Compose is a supported secondary workflow for containerized deployment, PostgreSQL provisioning, Nginx routing, and operational verification.
+Direct Bun/Elysia and Bun/Vite processes are the primary local-development workflow. FastAPI remains the documented rollback and reference backend. Docker Compose is a supported secondary workflow for historical operational verification only.
 
 ## Prerequisites
 - WSL2 with a Linux distribution installed
@@ -24,7 +24,7 @@ cd ~/projects/absensi/school-attendance-analytics
 ./start-dev.sh
 ```
 
-`--check` validates commands, the Python environment, local Vite installation, and both ports without starting services. Normal startup checks the same prerequisites, starts FastAPI and Vite in separate process groups, waits for both URLs, and only then displays the ready banner. Full service logs are stored in `.dev-logs/`.
+`--check` validates commands, the managed database/session environment, local Vite installation, and both ports without starting services. Normal startup defaults to Elysia and starts it with Vite in separate process groups. Set `OPERATOROS_BACKEND=fastapi` for rollback. The launcher waits for both URLs before displaying the ready banner. Full service logs are stored in `.runtime/operatoros-dev/`.
 
 With a fresh local database, the frontend displays the one-time administrator setup before it mounts normal authentication. Create the account, then sign in normally. Headless local operators can instead run `cd backend && PYTHONPATH=src .venv/bin/python -m cli create-admin`; the CLI requires a terminal and hidden password confirmation.
 
@@ -72,17 +72,17 @@ All backend canonical routes begin with `/api/<domain>/...`. Do not use bare pat
 
 ## Runtime model
 
-OperatorOS uses direct FastAPI/Vite processes during WSL2 development and a
-local FastAPI sidecar in the Tauri desktop target. SQLite is the only supported
-database. Docker, Compose, Nginx, and PostgreSQL are not required or supported
-runtime dependencies.
+OperatorOS uses direct Elysia/Vite processes during WSL2 development. FastAPI
+remains available as a local rollback backend. SQLite is the only supported
+database. Docker, Compose, Nginx, and PostgreSQL are not required runtime
+dependencies.
 
 Backend health is available at `GET /health` and `GET /api/system/health`.
 The destructive reset action remains disabled unless
 `ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
 
 ## Networking Notes
-- In direct local development, the Vite proxy forwards `/api/*` to `http://127.0.0.1:8000`. No separate CORS configuration is needed.
+- In direct local development, the Vite proxy forwards `/api/*` to the selected backend at `http://127.0.0.1:8000`. No separate CORS configuration is needed.
 
 ## File Permission and Line Ending Issues
 - Use LF line endings for shell scripts and config files.
@@ -125,12 +125,12 @@ hash -r
 
 Do not use `node.exe` or `npm.cmd` from `/mnt/c` for OperatorOS development.
 
-- If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `cd frontend && rm -rf node_modules && npm ci`.
-- If `npm ci` reports a registry/network failure, restore connectivity and rerun the same npm command. The launcher intentionally does not install dependencies automatically.
+- If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `cd frontend && bun install --frozen-lockfile`.
+- If Bun reports a registry/network failure, restore connectivity and rerun the same Bun command. The launcher intentionally does not install dependencies automatically.
 - If a port is occupied, `./start-dev.sh --check` reports the affected service and process information when `lsof` or `ss` can provide it. Stop that process or select a different `BACKEND_PORT`/`FRONTEND_PORT`.
 - If the Python environment is missing, create `backend/.venv` with Python 3.12 and install `backend/requirements.txt` as shown in the README.
 - If backend or frontend readiness times out, inspect `.dev-logs/backend.log` or `.dev-logs/frontend.log`; the launcher also prints the latest lines before shutting down both services.
 - If file watching is unreliable, confirm the repo is not mounted from the Windows filesystem.
 - If Docker port bindings conflict, stop the offending process before relaunching the stack.
-- If a frontend request returns a 404, verify the backend route is registered under `/api/<domain>/...` in `backend/src/main.py`.
+- If a frontend request returns a 404, verify the backend route is registered under `/api/<domain>/...` in the active backend source.
 - If `VITE_API_BASE_URL` is set, confirm it points to the running backend and does not end with a trailing slash.
