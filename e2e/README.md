@@ -9,7 +9,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `Makefile` exposes the supported entry points.
 - `e2e/run-smoke.sh` orchestrates the blocking smoke run and its safety checks.
 - `e2e/run-full.sh` guards and orchestrates the full regression run.
-- `e2e/start-test-stack.sh` starts an E2E-owned Node.js/npm application stack.
+- `e2e/start-test-stack.sh` starts an E2E-owned FastAPI or Elysia application stack.
 - `e2e/stop-test-stack.sh` stops only the session recorded for that invocation.
 - `e2e/clean.sh` removes only `.runtime/operatoros-e2e/` and `e2e-results/`.
 - `e2e/helpers/create-test-workspace.py` defines the isolated database-path contract.
@@ -32,19 +32,19 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 5. Initializes a fresh database with the current schema and approved baseline ledger.
 6. Seeds deterministic synthetic users, students, attendance, academic metadata, and one intentional enrollment.
 7. Records disposable database counts, checksum, and a deterministic enrollment fingerprint.
-8. Starts the backend and frontend through `start-dev.sh` using Node.js 24.13.0 and runtime-selected ports.
+8. Starts the default FastAPI backend and frontend through `start-dev.sh`, or starts the Elysia candidate stack when `OPERATOROS_E2E_BACKEND=elysia`.
 9. Copies the ready launcher state into the invocation workspace and exports its backend and frontend URLs.
 10. Runs the backend smoke tests with the backend virtual environment.
-11. Runs Playwright browser tests with genuine Node.js 24.13.0.
+11. Runs Playwright browser tests with the selected native Linux Node runtime.
 12. Stops only the recorded OperatorOS session and waits for its launcher.
 13. Recomputes production checksum and disposable enrollment fingerprint, failing if either protected value changed.
 14. Writes `e2e-results/summary.txt`; detailed logs, JUnit XML, screenshots, and traces are retained only where configured or needed for diagnosis.
 
 ## 4. Runtime responsibilities
 
-The OperatorOS application stack uses the `.nvmrc`-pinned genuine Linux Node.js 24.13.0 with npm 11.x and the authoritative frontend package lock. Playwright 1.55.1 collection uses that same Node runtime after the repository WSL runtime preparation step.
+The default FastAPI application stack uses the repository's managed runtime. The isolated Elysia candidate stack uses native Linux Bun. Playwright 1.55.1 collection uses the installed native Linux Node runtime after WSL runtime preparation.
 
-The smoke runner narrows `PATH` for Playwright so the selected Node 24 binary owns `node`, npm, and the local Playwright CLI. Node/npm also own the application frontend launched by `start-dev.sh`.
+The smoke runner records the native Node path before narrowing `PATH`. It then invokes the installed Playwright CLI directly. Bun remains the package manager and Elysia runtime for the candidate stack.
 
 ## 5. Ports and process ownership
 
@@ -69,6 +69,7 @@ Never kill an unknown process merely because it owns a preferred port. Cleanup a
 ```bash
 make e2e-validate
 timeout 300 make e2e-smoke
+OPERATOROS_E2E_BACKEND=elysia timeout 420 make e2e-smoke
 make e2e-clean
 ```
 
@@ -82,7 +83,7 @@ The full suite is for GitHub Actions. Local execution is rejected unless an owne
 
 ## 8. Coverage boundaries
 
-The backend smoke suite covers health/authentication and the approved critical API scenarios. The web smoke suite covers login-state detection, attendance navigation, synthetic upload behavior, and preview-only Class Allocation without creating a new enrollment. The full suite adds existing backend and frontend regressions plus a frontend production build.
+The backend smoke suite covers health/authentication and the approved critical API scenarios. The web smoke suite covers login-state detection, attendance navigation, synthetic upload behavior, preview-only Class Allocation, grades, both Excel formats, report downloads, backup download, and read-only restore preflight. The same suite runs against FastAPI by default and against Elysia with `OPERATOROS_E2E_BACKEND=elysia`.
 
 ## 9. Generated directories
 
