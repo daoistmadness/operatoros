@@ -1,17 +1,17 @@
 # Phase 10 full API parity audit
 
-Status: `BLOCKED_TYPESCRIPT_BACKEND_PHASE_10_FULL_API_PARITY`.
+Status: `LOCAL_ACCEPTANCE_READY_PENDING_PR_MERGE`.
 
 Base: `daaa1a8ff052b958be573c15a390e42c6d035d2c`.
 
 Branch: `codex/ts-backend-phase10-full-api-parity`.
 
-Current closure commits: `a1c9ffa`, `5a9c4d7`, `7950b49`, `ace913e`, `a29acca`.
+Starting continuation HEAD: `7dc34f4`.
 
-The audit does not issue the Phase 10 gate. The endpoint matrix contains zero
-missing route registrations and one intentionally deprecated operation. Candidate
-route families still need full FastAPI-versus-Elysia replay. The legacy `.xls`
-preview path also needs an approved disposition.
+Current closure commits: `44ff2df`, `683d8dd`, `8cfa015`, `bb3ede8`.
+
+Local acceptance is complete. The Phase 10 gate remains withheld until PR #58
+is promoted, merged, and verified on `origin/main`.
 
 ## Completed in this loop
 
@@ -48,17 +48,20 @@ preview path also needs an approved disposition.
 - Added the destructive system clear-data candidate.
 - Added the complete route matrix in
   `phase10-endpoint-matrix.md`.
+- Added legacy BIFF8 `.xls` replay through `@e965/xlsx` `0.20.3`.
+- Added dual replay evidence for all 14 candidate route families.
+- Added executable full-app OpenAPI contract parity for 326 intended operations.
 
 ## Current evidence
 
-- FastAPI self-replay: 40/40 `EXACT_MATCH`.
-- FastAPI-versus-Elysia replay: 40/40 `EXACT_MATCH`.
-- Deliberate mismatch replay: 40/40 `MIGRATION_DEFECT`.
-- TypeScript regression: 59/59 tests passed, 442 expectations.
+- FastAPI-versus-Elysia replay: 54/54 `EXACT_MATCH`.
+- Phase 6 workbook replay: 5/5 `EXACT_MATCH`.
+- Deliberate mismatch replay: 54/54 `MIGRATION_DEFECT`.
+- TypeScript regression: 61/61 tests passed, 454 expectations.
 - Typecheck: passed.
 - Frozen Bun install: passed.
-- PR #58 CI: backend, backend-ts, frontend, and docs passed.
-- OpenAPI route pairs: 327/327 match after parameter syntax normalization.
+- PR #58 CI before continuation: backend, backend-ts, frontend, and docs passed.
+- OpenAPI contract: 326/326 intended operations, 159/159 schemas, exact.
 - The deprecated FastAPI `POST /api/uploads/upload` remains intentionally
   absent. Elysia-only `GET /ready` remains outside the FastAPI contract.
 
@@ -74,28 +77,19 @@ preview path also needs an approved disposition.
 
 - Existing full Phase 0 replay: 40/40 `EXACT_MATCH`.
 - Existing deliberate mismatch replay: 40/40 `MIGRATION_DEFECT`.
-- Phase 10-specific replay for candidate families: not complete. Route
-  registration and disposable candidate tests do not prove parity.
+- Phase 10-specific candidate-family replay: 14/14 `EXACT_MATCH`.
+- `.xlsx` replay: 3/3 `EXACT_MATCH`.
+- `.xls` replay: 2/2 `EXACT_MATCH`.
+- FastAPI self-replay: 54/54 `EXACT_MATCH` after adding the Phase 10 corpus.
 
-## Blocking defects
+## Closure evidence
 
-The parity-blocked candidate families include active frontend consumers:
-
-- analytics dashboard detail and management routes;
-- attendance follow-ups;
-- report builder;
-- roster and student update workflows;
-- teacher assignments, student exports, roster, staff-import, student rollback,
-  data portability, and upload-history candidates remain candidate-only until dual replay;
-- upload conflict resolution;
-- destructive clear-data control.
-
-These routes need FastAPI-versus-Elysia replay. The full matrix lists each
-family, route count, classification, and next action.
-
-Legacy `.xls` remains an explicit FastAPI compatibility blocker. FastAPI and
-the frontend still accept `.xls`. Elysia currently supports the Phase 0
-`.xlsx` corpus only. The repository contains no approved deprecation record.
+- All 14 candidate families have representative FastAPI-versus-Elysia replay.
+- Legacy `.xls` is `MIGRATED_TO_ELYSIA` with `@e965/xlsx` `0.20.3`.
+- Request, response, status, cookie, security, and schema parity pass for the
+  intended OpenAPI operations.
+- The deprecated upload operation and Elysia readiness route have explicit
+  dispositions.
 
 ## Safety and scope
 
@@ -105,5 +99,5 @@ the frontend still accept `.xls`. Elysia currently supports the Phase 0
 - Phase 11 started: no.
 - Phase 7, Phase 8, and Phase 9 merged-main prerequisites remain accepted.
 
-Next safe action: complete dual replay for the existing candidate routes, then
-close the smallest remaining FastAPI family.
+Next safe action: push the local acceptance commits to PR #58, observe required
+CI, merge normally, and verify `origin/main`.
