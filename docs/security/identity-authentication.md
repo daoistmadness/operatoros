@@ -13,8 +13,7 @@ flowchart TD
   Role --> Protected["Protected operation"]
 ```
 
-The active Elysia backend is the authorization authority. FastAPI keeps the
-same contract for rollback and reference checks. Frontend state is used only
+The active Elysia backend is the authorization authority. Frontend state is used only
 to display identity, redirect anonymous users, and hide unavailable controls.
 It cannot grant access.
 

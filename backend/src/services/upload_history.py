@@ -9,7 +9,7 @@ from datetime import date, datetime, timezone
 from pathlib import PurePath
 from typing import Any
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.academic_roster import AcademicRosterImportBatch

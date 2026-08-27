@@ -7,8 +7,8 @@ Its active runtime contract is `SQLITE_ONLY_SUPPORTED`,
 `LOCAL_BROWSER_RUNTIME`, `POSTGRESQL_NOT_SUPPORTED`, and
 `CONTAINER_RUNTIME_NOT_REQUIRED`. The experimental Tauri desktop shell was
 removed; the supported normal runtime is a local Elysia backend with the React
-frontend in a browser. FastAPI remains available as the documented rollback
-and reference backend.
+frontend in a browser. The former FastAPI backend is retained only in
+historical migration evidence.
 This file is the authoritative execution contract for coding agents. A nested
 `AGENTS.md` may add local refinements but cannot weaken this contract. Current
 detail lives in [docs/README.md](docs/README.md); product-audit documents are
@@ -70,7 +70,7 @@ historical evidence unless they explicitly identify a current procedure.
   runtime, uses the canonical persistent development database, enforces one
   managed session, starts the backend first, waits for backend and frontend
   readiness, and performs managed shutdown.
-- Set `OPERATOROS_BACKEND=fastapi` for the documented FastAPI fallback.
+- Python remains available for disposable schema, fixture, and operations tools.
 - The launcher expects `backend/.venv` to exist. Ordinary startup does not
   create the virtual environment or install dependencies. GitHub CI may create
   its own virtual environment as defined by CI.

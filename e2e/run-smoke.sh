@@ -84,7 +84,7 @@ export OPERATOROS_E2E_BACKEND_URL="$($repo_root/backend/.venv/bin/python -c 'imp
 export OPERATOROS_E2E_FRONTEND_URL="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
 
 backend_status=0
-(cd "$repo_root/backend" && "$repo_root/backend/.venv/bin/python" -m pytest -q -c "$repo_root/backend/pytest.ini" "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
+(cd "$repo_root/backend" && "$repo_root/backend/.venv/bin/python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
 
 # These two identities exist solely to make the synthetic fixture valid at
 # process startup. Remove them after readiness so the conflict UI can exercise

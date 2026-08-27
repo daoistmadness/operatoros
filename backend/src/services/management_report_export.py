@@ -1,6 +1,6 @@
 # management_report_export.py
 # Management report export handler (PDF and Excel formats).
-# Tech Stack: FastAPI / Pandas / XlsxWriter / ReportLab
+# Retained report fixture tooling: Pandas / XlsxWriter / ReportLab
 
 from __future__ import annotations
 

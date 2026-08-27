@@ -10,9 +10,9 @@ Date: 2026-07-14
 
 ## 1. Executive Conclusion
 
-**Status: ACTIVE**
+**Status: SUPERSEDED**
 
-Docker is an actively supported secondary runtime for OperatorOS, alongside the primary direct-process local development workflow. It is not merely a historical documentation reference:
+This document is retained as historical evidence. It no longer describes a supported runtime:
 
 - `.github/workflows/ci.yml` contains a dedicated `compose` job that runs `docker compose config` on every supported push and pull request.
 - `docker-compose.yml` defines a coherent backend, frontend/Nginx, and PostgreSQL 16 topology with a persistent database volume and health-gated backend startup.
@@ -20,16 +20,16 @@ Docker is an actively supported secondary runtime for OperatorOS, alongside the 
 - `README.md`, `docs/WSL2_DEVOPS.md`, `COMMANDS.md`, and the component READMEs document and cross-reference the same container workflow.
 - `frontend/nginx.conf` depends on the Compose service name `backend`, while Compose passes the database service name `db` to the backend.
 
-Direct local development does not require Docker: `start-dev.sh` runs FastAPI and Vite directly and defaults to SQLite. This does not make the independently automated Compose workflow obsolete.
+This audit predates the TypeScript backend migration. Direct local development now runs Elysia and Vite with SQLite. The former Compose and FastAPI findings remain historical evidence, not supported runtime instructions.
 
-No Docker resources were removed because the conditional cleanup gate permits removal only for `LEGACY` or `NOT USED`.
+The current runtime contract is local Elysia plus React and SQLite. Container cleanup requires a separate scoped decision.
 
 ## 2. File Inventory
 
 | File or reference | Current purpose | Referenced by | Classification | Recommended action |
 | --- | --- | --- | --- | --- |
-| `docker-compose.yml` | Orchestrates FastAPI, Nginx-hosted frontend, and PostgreSQL 16 with persistent storage | CI, README, WSL2 guide, commands guide, component READMEs | Active | Keep |
-| `backend/Dockerfile` | Builds the Python 3.12/Uvicorn backend image with two workers | Compose, backend README | Active | Keep; separately verify authenticated container startup |
+| `docker-compose.yml` | Historical Compose topology for the former FastAPI/PostgreSQL runtime | This audit | Historical | Do not use for current runtime |
+| `backend/Dockerfile` | Historical Python/Uvicorn backend image definition | This audit | Historical | The file is retired |
 | `frontend/Dockerfile` | Builds the Vite frontend with Node.js 22 and serves the output through Nginx | Compose, frontend README | Active | Keep; align its build argument with Vite |
 | `frontend/nginx.conf` | Serves the SPA and forwards `/api/` to the Compose `backend` service | Frontend image, README, WSL2 guide | Active | Keep |
 | `.github/workflows/ci.yml` `compose` job | Validates the Compose model on pushes and pull requests | GitHub Actions | Active automation | Keep; consider adding image-build validation |
@@ -69,10 +69,11 @@ cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn src.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The repository also supports `./start-dev.sh`, which starts the FastAPI backend and Vite frontend directly. The launcher supplies a persistent local authentication secret and an absolute SQLite URL when explicit database/authentication settings are absent.
+This command is historical. Use `./start-dev.sh` for the supported Elysia runtime.
+
+The repository supports `./start-dev.sh`, which starts the Elysia backend and Vite frontend directly.
 
 ### Container workflow
 
@@ -83,7 +84,7 @@ docker compose config
 docker compose up --build
 ```
 
-Compose provides PostgreSQL at the internal hostname `db`, exposes FastAPI on port 8000, and serves the frontend through Nginx on port 80. This path is validated structurally in CI but CI does not build or launch the images.
+Compose provided PostgreSQL at the internal hostname `db` and exposed the former FastAPI service. This historical path is not part of the supported runtime.
 
 ### Production and packaging evidence
 
@@ -91,7 +92,7 @@ The repository contains no image publication, container registry, Kubernetes, cl
 
 ## 4. Risk Assessment
 
-Removing Docker would not prevent direct Vite/FastAPI/SQLite development or the normal npm and pytest suites. It would, however:
+Removing the historical Docker path does not prevent the supported Elysia/SQLite development flow or current Bun and retained-tooling checks. It would, however:
 
 - break the CI `compose` job;
 - remove the only repository-defined full-stack PostgreSQL 16 provisioning workflow;

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from datetime import date, datetime
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 

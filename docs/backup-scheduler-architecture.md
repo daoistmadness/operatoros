@@ -10,7 +10,7 @@ Backups are currently discovered from `backup_*.sqlite3.meta.json`; there is no 
 
 `BackupSchedulerConfig` is a singleton persistent row containing enabled state, schedule type (`daily`, `weekly`, or `interval`), interval value, UTC execution time/day, and daily/weekly/monthly retention counts. `BackupExecutionHistory` is append-only operational history with trigger, lifecycle status, timestamps, duration, filename, size, verification state, removed filenames, and a bounded error message.
 
-The FastAPI startup hook loads the row and starts one in-process scheduler loop only when the configured backend worker count is one. Shutdown signals the loop, waits for an active execution, and releases its task. The persisted `next_run_at` survives application restart. This is intentionally an offline, single-process scheduler; it is not a distributed lock or queue.
+The Elysia startup lifecycle loads the row and starts one in-process scheduler loop only when the configured backend worker count is one. Shutdown signals the loop, waits for an active execution, and releases its task. The persisted `next_run_at` survives application restart. This is intentionally an offline, single-process scheduler; it is not a distributed lock or queue.
 
 The supported Compose backend intentionally runs one worker and stores scheduler configuration/history in the persistent PostgreSQL volume. Application-created backup and audit artifacts use the separate persistent `backend_data` volume. Scheduled snapshot creation remains restricted to file-backed SQLite, so a PostgreSQL Compose deployment records scheduler state but does not claim PostgreSQL scheduled snapshots; `scripts/backup.sh` and `scripts/restore.sh` remain the separate PostgreSQL operational path.
 

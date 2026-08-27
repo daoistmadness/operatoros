@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import date, datetime, timedelta
 from io import BytesIO
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
