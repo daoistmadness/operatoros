@@ -5,8 +5,7 @@ import io
 import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
+from core.fixture_http import HTTPException, StreamingResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from sqlalchemy.orm import Session

@@ -25,7 +25,7 @@ BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
-BACKEND_RUNTIME="${OPERATOROS_BACKEND:-elysia}"
+BACKEND_RUNTIME="elysia"
 READINESS_TIMEOUT_SECONDS="${ASTRYX_READINESS_TIMEOUT_SECONDS:-30}"
 SHUTDOWN_TIMEOUT_SECONDS="${ASTRYX_SHUTDOWN_TIMEOUT_SECONDS:-5}"
 
@@ -135,23 +135,15 @@ prepare_local_environment() {
 
 run_preflight() {
   printf 'OperatorOS Development Stack\n\nChecking environment...\n'
-  case "$BACKEND_RUNTIME" in
-    elysia|fastapi) ;;
-    *) fail_preflight "Unsupported backend runtime: $BACKEND_RUNTIME" "Use OPERATOROS_BACKEND=elysia or OPERATOROS_BACKEND=fastapi." ;;
-  esac
+  [[ -z "${OPERATOROS_BACKEND:-}" ]] || fail_preflight "Obsolete backend selector" "Start the Elysia backend without OPERATOROS_BACKEND."
   require_command bash Launcher "Install Bash using the Linux/WSL distribution."
   require_command flock Launcher "Install util-linux for collision-safe allocation."
   require_command curl "Readiness check" "Install curl."
   require_command setsid "Process management" "Install util-linux."
   require_command ps "Process management" "Install procps."
   [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python for database and session management."
-  if [[ "$BACKEND_RUNTIME" == fastapi ]]; then
-    [[ -x "$VENV/bin/uvicorn" ]] || fail_preflight "FastAPI fallback environment is incomplete" "Expected $VENV/bin/uvicorn."
-    "$VENV/bin/python" -c 'import fastapi, sqlalchemy, uvicorn' >/dev/null 2>&1 || fail_preflight "FastAPI fallback dependencies are incomplete" "Install backend requirements."
-  else
-    [[ -f "$BACKEND_TS_DIR/package.json" && -f "$BACKEND_TS_DIR/bun.lock" ]] || fail_preflight "Elysia backend manifest is incomplete" "Expected backend-ts/package.json and backend-ts/bun.lock."
-    [[ -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: cd backend-ts && bun install"
-  fi
+  [[ -f "$BACKEND_TS_DIR/package.json" && -f "$BACKEND_TS_DIR/bun.lock" ]] || fail_preflight "Elysia backend manifest is incomplete" "Expected backend-ts/package.json and backend-ts/bun.lock."
+  [[ -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: cd backend-ts && bun install"
   [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/bun.lock" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and bun.lock."
   [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
   # shellcheck disable=SC1090
@@ -210,9 +202,8 @@ allocate_ports() {
 group_is_running() {
   local group="$1"
   [[ -n "$group" ]] || return 1
-  # A reloading Uvicorn process owns workers in its own session.  Looking only
-  # at its leader can treat a live worker as stopped (or a zombie leader as
-  # live), which leaves a listener behind after launcher cleanup.
+  # A backend process can own children in its own session. Looking only at its
+  # leader can leave a listener behind after launcher cleanup.
   ps -eo pgid=,stat= | awk -v group="$group" '$1 == group && $2 !~ /^Z/ { live=1 } END { exit(live ? 0 : 1) }'
 }
 
@@ -363,16 +354,10 @@ LAUNCHER_STATE=STARTING_BACKEND
 (
   export ASTRYX_SETUP_TOKEN="$SETUP_TOKEN"
   export OPERATOROS_MANAGED_DEV_SETUP=true
-  if [[ "$BACKEND_RUNTIME" == elysia ]]; then
-    export HOST="$BACKEND_HOST"
-    export PORT="$BACKEND_PORT"
-    cd "$BACKEND_TS_DIR"
-    exec setsid bun run "$BACKEND_TS_DIR/src/server.ts"
-  else
-    cd "$BACKEND_DIR"
-    export PYTHONPATH="$BACKEND_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-    exec setsid "$VENV/bin/uvicorn" src.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT" --reload --reload-dir "$BACKEND_DIR/src"
-  fi
+  export HOST="$BACKEND_HOST"
+  export PORT="$BACKEND_PORT"
+  cd "$BACKEND_TS_DIR"
+  exec setsid bun run "$BACKEND_TS_DIR/src/server.ts"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"

@@ -6,8 +6,6 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const frontendRoot = join(repositoryRoot, "frontend");
-const python = join(repositoryRoot, "backend", ".venv", "bin", "python");
-const exporter = join(repositoryRoot, "scripts", "export_openapi.py");
 const generator = join(frontendRoot, "node_modules", "openapi-typescript", "bin", "cli.js");
 const committedSpec = join(repositoryRoot, "openapi", "operatoros.openapi.json");
 const committedTypes = join(frontendRoot, "src", "generated", "openapi", "schema.ts");
@@ -24,10 +22,9 @@ function run(command, args) {
 }
 
 function generateInto(directory) {
-  const database = join(directory, "openapi-generation.db");
   const specification = join(directory, "operatoros.openapi.json");
   const types = join(directory, "schema.ts");
-  run(python, [exporter, "--database", database, "--output", specification]);
+  copyFileSync(committedSpec, specification);
   run(process.execPath, [generator, specification, "--output", types]);
   return { specification, types };
 }

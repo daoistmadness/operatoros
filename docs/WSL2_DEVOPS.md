@@ -2,7 +2,7 @@
 
 This guide covers the WSL2 development workflow for this repository.
 
-Direct Bun/Elysia and Bun/Vite processes are the primary local-development workflow. FastAPI remains the documented rollback and reference backend. Docker Compose is a supported secondary workflow for historical operational verification only.
+Direct Bun/Elysia and Bun/Vite processes are the supported local-development workflow. Docker Compose is a supported secondary workflow for historical operational verification only.
 
 ## Prerequisites
 - WSL2 with a Linux distribution installed
@@ -24,15 +24,15 @@ cd ~/projects/absensi/school-attendance-analytics
 ./start-dev.sh
 ```
 
-`--check` validates commands, the managed database/session environment, local Vite installation, and both ports without starting services. Normal startup defaults to Elysia and starts it with Vite in separate process groups. Set `OPERATOROS_BACKEND=fastapi` for rollback. The launcher waits for both URLs before displaying the ready banner. Full service logs are stored in `.runtime/operatoros-dev/`.
+`--check` validates commands, the managed database/session environment, local Vite installation, and both ports without starting services. Normal startup starts Elysia with Vite in separate process groups. The launcher waits for both URLs before displaying the ready banner. Full service logs are stored in `.runtime/operatoros-dev/`.
 
-With a fresh local database, the frontend displays the one-time administrator setup before it mounts normal authentication. Create the account, then sign in normally. Headless local operators can instead run `cd backend && PYTHONPATH=src .venv/bin/python -m cli create-admin`; the CLI requires a terminal and hidden password confirmation.
+With a fresh local database, the frontend displays the one-time administrator setup before it mounts normal authentication. Create the account, then sign in normally.
 
 | Service | URL |
 | :--- | :--- |
 | Frontend | `http://127.0.0.1:5173` |
 | Backend | `http://127.0.0.1:8000` |
-| API docs | `http://127.0.0.1:8000/docs` |
+| API docs | `http://127.0.0.1:8000/openapi` |
 | Health | `http://127.0.0.1:8000/health` |
 
 Press `Ctrl+C` to stop both processes.
@@ -72,8 +72,7 @@ All backend canonical routes begin with `/api/<domain>/...`. Do not use bare pat
 
 ## Runtime model
 
-OperatorOS uses direct Elysia/Vite processes during WSL2 development. FastAPI
-remains available as a local rollback backend. SQLite is the only supported
+OperatorOS uses direct Elysia/Vite processes during WSL2 development. SQLite is the only supported
 database. Docker, Compose, Nginx, and PostgreSQL are not required runtime
 dependencies.
 
@@ -82,7 +81,7 @@ The destructive reset action remains disabled unless
 `ENABLE_DESTRUCTIVE_OPERATIONS=true` and the confirmation token is supplied.
 
 ## Networking Notes
-- In direct local development, the Vite proxy forwards `/api/*` to the selected backend at `http://127.0.0.1:8000`. No separate CORS configuration is needed.
+- In direct local development, the Vite proxy forwards `/api/*` to Elysia at `http://127.0.0.1:8000`. No separate CORS configuration is needed.
 
 ## File Permission and Line Ending Issues
 - Use LF line endings for shell scripts and config files.

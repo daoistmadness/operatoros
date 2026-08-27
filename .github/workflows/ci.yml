@@ -9,40 +9,6 @@ on:
       - develop
 
 jobs:
-  backend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: backend
-    env:
-      PYTHONPATH: src
-      DATABASE_URL: sqlite:///${{ github.workspace }}/.runtime/operatoros-ci/ci-test.db
-      AUTH_COOKIE_SECRET: ci-backend-test-secret-at-least-32-characters
-      ENABLE_DESTRUCTIVE_OPERATIONS: "false"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v4
-        with:
-          cache: true
-      - name: Verify mise toolchain
-        run: |
-          mise --version
-          python --version
-          mise ls --current
-      - name: Create canonical backend virtualenv
-        run: python -m venv .venv
-      - name: Install backend dependencies
-        run: |
-          .venv/bin/python -m pip install --upgrade pip
-          .venv/bin/python -m pip install -r requirements.txt
-      - name: Prepare isolated CI database
-        run: |
-          mkdir -p "${{ github.workspace }}/.runtime/operatoros-ci"
-          .venv/bin/python -m core.schema_migrations initialize-fresh --database "${{ github.workspace }}/.runtime/operatoros-ci/ci-test.db"
-      - run: .venv/bin/python -c "from src.main import app; assert app is not None; routes = {route.path for route in app.routes}; assert '/api/system/clear-data' in routes; assert '/api/system/health' in routes"
-      - run: .venv/bin/python -m pytest -q
-
   backend-ts:
     runs-on: ubuntu-latest
     defaults:
@@ -62,9 +28,9 @@ jobs:
           bun --version | grep -Eq "^1\.4\."
           python --version
           mise ls --current
-      - name: Create reference backend virtualenv
+      - name: Create disposable fixture-tool virtualenv
         run: python -m venv ../backend/.venv
-      - name: Install reference backend dependencies
+      - name: Install schema and fixture tooling
         run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
       - run: bun install --frozen-lockfile
       - name: Prepare Elysia runtime database
@@ -114,12 +80,6 @@ jobs:
           mise --version
           bun --version | grep -Eq "^1\.4\."
           mise ls --current
-      - name: Install backend dependencies for OpenAPI generation
-        working-directory: ${{ github.workspace }}
-        run: |
-          python -m venv backend/.venv
-          backend/.venv/bin/python -m pip install --upgrade pip
-          backend/.venv/bin/python -m pip install -r backend/requirements.txt
       - name: Install dependencies (frozen lockfile)
         run: bun ci
       - name: Dependency deduplication check

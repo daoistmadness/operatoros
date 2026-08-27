@@ -54,4 +54,4 @@ Status: **RETIRED WITH THE TAURI SHELL (2026-08-20)**. The readiness findings an
 
 ## Phase 11
 
-Status: **RETIRED 2026-08-20**. The minimal Tauri shell, sidecar-ownership prototype, and related Windows scripts and contract tests were removed. The supported runtime is `LOCAL_BROWSER_RUNTIME` — a local Elysia backend with the React frontend in a browser and a SQLite database. FastAPI remains the documented rollback and reference backend. Any future desktop packaging requires a new accepted ADR and separate authorization.
+Status: **RETIRED 2026-08-20**. The minimal Tauri shell, sidecar-ownership prototype, and related Windows scripts and contract tests were removed. The supported runtime is `LOCAL_BROWSER_RUNTIME` — a local Elysia backend with the React frontend in a browser and a SQLite database. The former Python backend is retired. Any future desktop packaging requires a new accepted ADR and separate authorization.

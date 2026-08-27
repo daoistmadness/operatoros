@@ -6,7 +6,7 @@ import json
 from collections import Counter
 from datetime import date, datetime
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.academic_master import AcademicClass, AcademicGrade, AcademicProgram

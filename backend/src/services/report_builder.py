@@ -6,7 +6,7 @@ from datetime import date, datetime
 import copy
 import re
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, sessionmaker
 

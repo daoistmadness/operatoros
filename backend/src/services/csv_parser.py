@@ -11,7 +11,7 @@ from pathlib import PurePosixPath
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile, ZipInfo
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 
 from services.csv_contract import FORMAT_VERSION, DATASET_CONTRACTS
 from services.csv_serializer import decode_sanitized_cell_value

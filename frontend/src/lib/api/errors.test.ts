@@ -26,7 +26,7 @@ describe("typed API error normalization", () => {
     expect(isApiError(error)).toBe(true);
   });
 
-  it("normalizes FastAPI validation details into immutable field errors", () => {
+  it("normalizes validation details into immutable field errors", () => {
     const error = normalizeApiError({
       status: 422,
       data: {

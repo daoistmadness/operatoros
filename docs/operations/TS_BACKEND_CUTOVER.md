@@ -1,7 +1,7 @@
-# TypeScript Backend Cutover and Rollback
+# Elysia Runtime Operations
 
-Phase 12 makes Elysia the default backend. FastAPI remains available for
-rollback and parity checks.
+Elysia is the authoritative OperatorOS backend. React uses the same-origin
+proxy to reach it. FastAPI is no longer a runtime fallback.
 
 ## Normal start
 
@@ -12,19 +12,17 @@ Use the managed launcher:
 ```
 
 It starts Elysia, then Vite. It uses the launcher-owned SQLite development
-database. The frontend calls the backend through the same-origin Vite proxy.
-
-Check health and readiness:
+database. Check health and readiness:
 
 ```bash
 curl --fail http://127.0.0.1:8000/health
 curl --fail http://127.0.0.1:8000/ready
 ```
 
-The port can change when `--auto-port` is used. Use the URLs in the launcher
-runtime state in that case.
+The port can change with `--auto-port`. Read the selected URLs from launcher
+state when that option is used.
 
-## Forward cutover
+## Startup checks
 
 1. Verify the accepted `origin/main` commit.
 2. Verify the SQLite schema and migration fingerprint.
@@ -35,29 +33,17 @@ runtime state in that case.
 7. Verify critical CRUD, attendance, import, grades, reports, and safety flows.
 8. Verify one scheduler owner.
 9. Monitor application errors.
-10. Keep the FastAPI fallback available.
 
-## Rollback
+## Python history
 
-Use a disposable or approved rollback environment. Do not use
-`backend/attendance.db` for a test.
-
-1. Stop Elysia with `./stop-dev.sh`.
-2. Start FastAPI with `OPERATOROS_BACKEND=fastapi ./start-dev.sh`.
-3. Check FastAPI health.
-4. Verify login and critical workflows.
-5. Investigate the Elysia failure.
-6. Stop FastAPI.
-7. Start Elysia with `./start-dev.sh`.
-8. Verify health and the critical smoke again.
-
-Rollback uses the same accepted SQLite schema. It does not require reverse data
-conversion or source-code edits.
+The former FastAPI application is retired. Phase 13 retains migration reports,
+golden fixtures, and disposable schema tooling where they still support audit
+or regression work. These tools do not start a backend or serve requests.
 
 ## Safety rules
 
-- Never test cutover with the protected operational database.
-- Never start FastAPI and Elysia as normal backend owners at the same time.
-- Never introduce JWT or localStorage authentication.
+- Never use `backend/attendance.db` for tests or startup validation.
+- Use explicit disposable SQLite databases.
 - Never disable authorization, audit, or SQLite safety checks.
-- Keep Python source, dependencies, tests, and FastAPI routes during Phase 12.
+- Keep the Elysia scheduler single-owner.
+- Keep generated evidence outside commits unless the repository tracks it.

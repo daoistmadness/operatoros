@@ -12,10 +12,8 @@ Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`
 
 ## Development
 - `./start-dev.sh`  # default Elysia + Vite launcher
-- `OPERATOROS_BACKEND=fastapi ./start-dev.sh`  # FastAPI fallback launcher
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
 - `cd backend-ts && bun run src/server.ts`  # standalone Elysia backend
-- `OPERATOROS_BACKEND=fastapi ./scripts/start-backend.sh`  # standalone FastAPI fallback
 - `cd frontend && bun run dev`
 - `cd frontend && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
 
@@ -23,13 +21,12 @@ Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`
 - `cd frontend && bun run build`
 
 ## Test / Validation
-- `cd backend && python3 -m pytest -q` (or with venv-backed execution: `DATABASE_URL=sqlite:///./attendance.db PYTHONPATH=backend backend/.venv/bin/pytest backend/tests/ -q`)
-- `cd backend && python3 -c "from src.main import app; assert app is not None"`
+- `cd backend-ts && bun test`
 - `cd frontend && bun test`  # frontend unit tests
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
 - `curl http://localhost:8000/openapi`
-- `PYTHONPATH=backend:backend/src python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # deterministic optional-engine pilot; never point output at a database
+- `PYTHONPATH=backend:backend/src backend/.venv/bin/python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # retained tooling; never point output at a database
 
 ## Formatting / Lint / Typecheck
 - Not declared in the repository root, backend, or frontend scripts.
@@ -37,7 +34,7 @@ Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`
 
 ## Database Migration / Generation
 - No manual migration tool (like Alembic) is configured.
-- Database tables are automatically generated on startup via SQLAlchemy (`Base.metadata.create_all` in `backend/src/core/database.py`).
+- The Elysia runtime validates the accepted Drizzle schema and migration manifest at startup.
 - Schema updates/patches are programmatically run on startup via database patches (e.g. `run_grade_ledger_patches` in `backend/src/core/database.py`).
 - Raw SQL files in `backend/migrations/` represent the repository's migration history.
 

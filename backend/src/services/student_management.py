@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 import csv
 import io
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy import func, inspect, or_, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session

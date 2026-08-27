@@ -5,7 +5,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.student_import_session import StudentImportAppliedAction, StudentImportSession

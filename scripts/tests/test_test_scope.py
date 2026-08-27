@@ -119,7 +119,7 @@ def test_untracked_source_is_included(tmp_path):
 def test_every_mapped_test_exists():
     for tests in FOCUSED_TESTS.values():
         for test in tests:
-            candidate = ROOT / test if test.startswith("backend/") else ROOT / "frontend" / test
+            candidate = ROOT / test if test.startswith(("backend/", "backend-ts/")) else ROOT / "frontend" / test
             assert candidate.exists()
 
 

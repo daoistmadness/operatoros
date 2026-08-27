@@ -100,7 +100,7 @@ frontend_static() {
   (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
-  (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests -q)
+  (cd "$repo/backend-ts" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
 
 case "$tier" in
@@ -129,28 +129,24 @@ PY
         fi
       fi
       if [[ "$backend_changed" == yes ]]; then
-        mapfile -t backend_tests < <("$python" - "$scope_file" <<'PY'
+mapfile -t backend_tests < <("$python" - "$scope_file" <<'PY'
 import json, sys
 for path in json.load(open(sys.argv[1]))["focused_tests"]:
-    if path.startswith("backend/"):
+    if path.startswith(("backend/", "backend-ts/")):
         print(path)
 PY
 )
-        ((${#backend_tests[@]})) || backend_tests=("$repo/backend/tests/test_readiness_api.py")
-        (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest -q "${backend_tests[@]}")
+        ((${#backend_tests[@]})) || backend_tests=("backend-ts/tests/app.test.ts")
+        (cd "$repo/backend-ts" && PATH="$bun_bin:$PATH" bun test "${backend_tests[@]#backend-ts/}")
       fi
     fi
     ;;
   pr)
-    echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,backend,focused-browser"
+    echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,backend-ts,focused-browser"
     frontend_static
     (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
-    if [[ "$backend_changed" == yes || "$schema_sensitive" == yes ]]; then
-      backend_full
-    else
-      (cd "$repo" && PYTHONPATH=backend:backend/src "$python" -m pytest backend/tests/test_readiness_api.py -q)
-    fi
+    backend_full
     scenario_grep="$("$python" - "$scope_file" <<'PY'
 import json,sys
 items=json.load(open(sys.argv[1]))["browser_scenarios"]
@@ -160,7 +156,7 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,backend-full,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,backend-ts,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
     passes=1
     reliable_change_context=no

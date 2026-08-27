@@ -223,7 +223,6 @@ def stop_owned_session(args: argparse.Namespace) -> int:
     # record is written. Accept only launcher-supplied fallback PIDs whose live
     # identity independently proves ownership, using this same shared deadline.
     session = json.loads((directory / "session.json").read_text(encoding="utf-8"))
-    backend_runtime = session.get("backend_runtime", "fastapi")
     fallback = (("frontend", args.frontend_pid), ("backend", args.backend_pid))
     for role, raw_pid in fallback:
         if raw_pid is None:
@@ -233,8 +232,8 @@ def stop_owned_session(args: argparse.Namespace) -> int:
             continue
         info = process_info(pid)
         role_root = repo / role
-        role_command = "vite" if role == "frontend" else "uvicorn"
-        if role == "backend" and backend_runtime == "elysia":
+        role_command = "vite"
+        if role == "backend":
             role_root = repo / "backend-ts"
             role_command = "server.ts"
         if (
@@ -527,7 +526,7 @@ def parser() -> argparse.ArgumentParser:
     init = sub.add_parser("init-session")
     for name in ("runtime", "repo", "session", "mode", "token", "javascript-runtime", "javascript-runtime-version"):
         init.add_argument(f"--{name}", required=True)
-    init.add_argument("--launcher-pid", type=int, required=True); init.add_argument("--frontend-host", required=True); init.add_argument("--backend-host", required=True); init.add_argument("--frontend-port", type=int, required=True); init.add_argument("--backend-port", type=int, required=True); init.add_argument("--backend-runtime", choices=("elysia", "fastapi"), default="fastapi")
+    init.add_argument("--launcher-pid", type=int, required=True); init.add_argument("--frontend-host", required=True); init.add_argument("--backend-host", required=True); init.add_argument("--frontend-port", type=int, required=True); init.add_argument("--backend-port", type=int, required=True); init.add_argument("--backend-runtime", choices=("elysia",), default="elysia")
     init.add_argument("--database-path", required=True)
     init.set_defaults(func=init_session)
     registration = sub.add_parser("register")
