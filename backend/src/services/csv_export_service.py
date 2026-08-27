@@ -9,8 +9,7 @@ from datetime import UTC, datetime
 from zipfile import ZipFile
 from typing import Any, Dict, List, Optional
 
-from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
+from core.fixture_http import HTTPException, StreamingResponse
 from sqlalchemy.orm import Session
 
 from models.attendance import Attendance

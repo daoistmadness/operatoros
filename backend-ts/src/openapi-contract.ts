@@ -1,4 +1,4 @@
-import fastApiOpenApi from "../../docs/migration/ts-backend/openapi-frozen.json";
+import openApi from "../../openapi/operatoros.openapi.json";
 import type { OpenAPIV3 } from "openapi-types";
 
 const deprecatedOperations = new Set(["POST /api/uploads/upload"]);
@@ -13,7 +13,7 @@ function currentContract(): {
   paths: OpenAPIV3.PathsObject;
   components?: OpenAPIV3.ComponentsObject;
 } {
-  const source = fastApiOpenApi as unknown as {
+  const source = openApi as unknown as {
     info: OpenAPIV3.InfoObject;
     paths: Record<string, Record<string, unknown>>;
     components?: OpenAPIV3.ComponentsObject;
@@ -33,11 +33,11 @@ function currentContract(): {
 }
 
 /**
- * The FastAPI document is the accepted public contract for the full app.
- * Elysia still owns route execution and runtime validation.
- * The deprecated FastAPI upload operation stays out of the candidate document.
+ * This committed document is the accepted public contract for the full app.
+ * Elysia owns route execution and runtime validation.
+ * The deprecated upload operation stays out of the public document.
  */
-export function phase10OpenApiDocumentation(): {
+export function openApiDocumentation(): {
   info: OpenAPIV3.InfoObject;
   paths: OpenAPIV3.PathsObject;
   components?: OpenAPIV3.ComponentsObject;

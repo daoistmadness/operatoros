@@ -192,7 +192,7 @@ Phase 12 added database-backed academic configuration:
 - `kkm_thresholds`
 - `academic_term_configs`
 
-These tables are created through SQLAlchemy metadata during startup. They do not rewrite historical grade, attendance, upload, student, or enrollment data.
+These tables are created by the accepted SQLite schema and Drizzle migration contract. They do not rewrite historical grade, attendance, upload, student, or enrollment data.
 
 ### KKM Resolution Priority
 
@@ -264,7 +264,7 @@ These legacy routes are not the preferred contract for new code.
 
 ## Phase 17: Parity QA Framework & Numerical Accuracy Safeguards
 
-To guarantee report accuracy, consistency, and parity across all exported formats, Phase 17 introduced a formal **Parity QA Framework** backed by automated regression tests in [test_report_parity.py](../backend/tests/test_report_parity.py).
+To guarantee report accuracy, consistency, and parity across all exported formats, the **Parity QA Framework** uses automated TypeScript regression tests in [reports.test.ts](../backend-ts/tests/reports.test.ts).
 
 ### 1. Golden Fixture Test Suite
 The QA framework establishes a deterministic database state (`golden_db` fixture) containing:

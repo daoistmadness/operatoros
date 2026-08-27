@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from io import BytesIO
 
 import pandas as pd
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from sqlalchemy.orm import Session
