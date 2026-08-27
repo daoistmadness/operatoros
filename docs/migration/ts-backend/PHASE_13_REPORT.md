@@ -1,6 +1,6 @@
 # Phase 13 — Python Backend Retirement
 
-Status: local retirement gate passed; delivery gates pending.
+Status: Phase 13 complete on accepted `origin/main`.
 
 ## Accepted base
 
@@ -132,5 +132,18 @@ Python replay tools are not daily runtime or CI dependencies.
 - Backup and restore safety: `passed`.
 - Protected database access: `0`.
 
-The final gate remains pending PR CI, merge, and accepted-main post-merge
+The final gate passed after PR CI, merge, and accepted-main post-merge
 verification.
+
+## Accepted-main evidence
+
+- Retirement PR: `#63`.
+- Merge commit: `ee61d66fa3ec656e1757032bfce744bad8138bc9`.
+- PR CI: passed.
+- Merged-main CI: passed.
+- Merged-main E2E: passed.
+- Post-merge Elysia-only smoke: `7` backend checks and `19` browser workflows
+  passed.
+- Post-merge active FastAPI route definitions: `0`.
+- Post-merge protected database access: `0`.
+- Phase 13 gate: `TYPESCRIPT_BACKEND_PHASE_13_PYTHON_RETIREMENT_COMPLETE`.
