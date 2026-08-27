@@ -15,14 +15,14 @@ async function waitForReady(url: string, timeoutMs = 3000) {
 
 describe("server lifecycle", () => {
   it("start -> health -> stop -> restart on same port, no leaks", async () => {
-    const s1 = startServer({ port: 0 });
+    const s1 = startServer({ port: 0, databasePath: undefined });
     const url1 = `http://${s1.hostname}:${s1.port}/health`;
     const res = await waitForReady(url1);
     expect(((await res.json()) as { status: string }).status).toBe("ok");
     s1.stop();
     await Bun.sleep(50);
 
-    const s2 = startServer({ port: s1.port });
+    const s2 = startServer({ port: s1.port, databasePath: undefined });
     const res2 = await waitForReady(`http://${s2.hostname}:${s2.port}/health`);
     expect(res2.status).toBe(200);
     s2.stop();

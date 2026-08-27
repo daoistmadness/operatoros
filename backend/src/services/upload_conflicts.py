@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import date, datetime, time, timedelta
 from typing import Any
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy import case, desc, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session

@@ -4,7 +4,7 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.attendance import Attendance

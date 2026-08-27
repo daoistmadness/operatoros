@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "../src/db/connection";
-import fastApiOpenApi from "../../docs/migration/ts-backend/openapi-frozen.json";
+import openApi from "../../openapi/operatoros.openapi.json";
 
 type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -34,7 +34,7 @@ function withoutSpecialRoutes(values: Record<string, unknown>, excluded: string)
 }
 
 describe("full OpenAPI contract", () => {
-  it("matches the FastAPI operation, schema, status, cookie, and security contract", async () => {
+  it("matches the accepted operation, schema, status, cookie, and security contract", async () => {
     const directory = await mkdtemp(join(tmpdir(), "operatoros-p10-openapi-"));
     const databasePath = join(directory, "candidate.db");
     await writeFile(databasePath, "");
@@ -50,7 +50,7 @@ describe("full OpenAPI contract", () => {
       const response = await app.handle(new Request("http://local/openapi/json"));
       expect(response.status).toBe(200);
       const candidate = await response.json() as OpenApiDocument;
-      const reference = fastApiOpenApi as unknown as OpenApiDocument;
+      const reference = openApi as unknown as OpenApiDocument;
       const referenceOperations = withoutSpecialRoutes(operations(reference), deprecated);
       const candidateOperations = withoutSpecialRoutes(operations(candidate), candidateOnly);
 

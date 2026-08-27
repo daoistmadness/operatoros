@@ -4,12 +4,12 @@
 - Python modules, variables, and functions use `snake_case`.
 - React components, context providers, hook modules, and page files use `PascalCase` when they represent components or pages.
 - SQL migration files are date-stamped and descriptive, for example `2026_04_02_dashboard_performance_indexes.sql`.
-- Utility scripts use descriptive imperative names, for example `fix_parser.py` and `generate_primary_lateness_dashboard.py`.
+- Utility scripts use descriptive imperative names, for example `generate_primary_lateness_dashboard.py`.
 
 ## Organization
-- Backend routers live in `backend/src/api/`.
-- Backend models live in `backend/src/models/`.
-- Backend processing logic/analytics live in `backend/src/services/`.
+- Backend routes live in `backend-ts/src/domains/` and `backend-ts/src/auth/`.
+- Backend database schema lives in `backend-ts/src/db/`.
+- Backend processing logic and analytics live in the TypeScript domain modules.
 - Frontend route screens/pages live in `frontend/src/pages/`.
 - Shared UI and API helpers live in `frontend/src/components/` and `frontend/src/lib/`.
 
@@ -21,14 +21,14 @@
 ## Imports and Structure
 - Keep imports grouped by standard library, third-party, then local modules.
 - Prefer small helper functions over deeply nested logic.
-- Keep route registration explicit in `backend/src/main.py`.
+- Keep route registration explicit in `backend-ts/src/app.ts`.
 - Keep frontend route definitions explicit in `frontend/src/App.js`.
 - Keep API URL construction centralized in `frontend/src/lib/api/client.js` rather than scattering backend URLs across pages.
 - Keep development routing centralized in `frontend/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
-- Keep destructive request payloads typed with Pydantic models rather than accepting unstructured JSON.
+- Keep destructive request payloads typed with Elysia schemas rather than accepting unstructured JSON.
 
 ## Error Handling
-- Backend routes raise `HTTPException` for client-facing validation errors.
+- Backend routes return sanitized Elysia error envelopes for client-facing validation errors.
 - Upload and report endpoints return structured payloads rather than plain strings where practical.
 - Frontend API calls surface backend `detail` messages when available.
 - Destructive or privileged actions should log requests, rejections, and completion without logging sensitive payload values.
@@ -38,7 +38,7 @@
 - Avoid introducing noisy logging unless it helps diagnose a known issue.
 
 ## Testing Style
-- Backend behavioral tests live under `backend/tests/` and use `pytest`.
+- Backend behavioral tests live under `backend-ts/tests/` and use Bun.
 - Frontend tests live under `frontend/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
 - Validate behavior with startup checks, smoke requests, backend tests, and frontend build checks.
 - For user-visible frontend changes, run the Agent Browser smoke test when the tool is available.

@@ -46,14 +46,14 @@ FOCUSED_TESTS = {
     "FRONTEND_ROUTE": ["src/routes/routeDefinitions.test.tsx", "src/routes/RouteErrorBoundary.test.tsx"],
     "FRONTEND_API_CLIENT": ["src/lib/api", "src/lib/query"],
     "FRONTEND_GENERATED_CONTRACT": ["src/generated/openapi/openapiFoundation.test.ts"],
-    "BACKEND_UNIT": ["backend/tests/test_readiness_api.py"],
-    "BACKEND_API": ["backend/tests/test_frontend_route_contract.py"],
-    "BACKEND_AUTH": ["backend/tests/test_authentication_backend.py", "backend/tests/test_authorization_protection.py"],
-    "BACKEND_UPLOAD": ["backend/tests/test_upload_conflicts.py", "backend/tests/test_upload_history.py"],
-    "BACKEND_ATTENDANCE": ["backend/tests/test_attendance_authorization.py", "backend/tests/test_attendance_correction_workflow.py"],
-    "BACKEND_MODEL": ["backend/tests/test_fresh_database_parity.py"],
-    "BACKEND_MIGRATION": ["backend/tests/test_fresh_database_parity.py"],
-    "BACKEND_BOOTSTRAP": ["backend/tests/test_fresh_database_parity.py"],
+    "BACKEND_UNIT": ["backend-ts/tests/core.test.ts"],
+    "BACKEND_API": ["backend-ts/tests/app.test.ts"],
+    "BACKEND_AUTH": ["backend-ts/tests/auth.test.ts"],
+    "BACKEND_UPLOAD": ["backend-ts/tests/attendance-import.test.ts"],
+    "BACKEND_ATTENDANCE": ["backend-ts/tests/attendance.test.ts"],
+    "BACKEND_MODEL": ["backend-ts/tests/data-layer.test.ts"],
+    "BACKEND_MIGRATION": ["backend-ts/tests/data-layer.test.ts"],
+    "BACKEND_BOOTSTRAP": ["backend-ts/tests/data-layer.test.ts"],
 }
 
 BROWSER_SCENARIOS = {
@@ -76,6 +76,18 @@ def classify_path(path: str) -> set[str]:
         return {"DOCUMENTATION_ONLY"}
     if value.startswith("frontend/src/generated/"):
         return {"FRONTEND_GENERATED_CONTRACT"}
+    if value.startswith("backend-ts/src/"):
+        if "attendance-import" in value:
+            return {"BACKEND_UPLOAD"}
+        if "attendance" in value:
+            return {"BACKEND_ATTENDANCE"}
+        if "/auth/" in value:
+            return {"BACKEND_AUTH"}
+        if value.endswith("openapi-contract.ts"):
+            return {"BACKEND_API"}
+        return {"BACKEND_UNIT"}
+    if value.startswith("backend-ts/tests/"):
+        return {"BACKEND_UNIT"}
     if value.startswith("frontend/src/routes/"):
         return {"FRONTEND_ROUTE"}
     if value.startswith("frontend/src/features/"):

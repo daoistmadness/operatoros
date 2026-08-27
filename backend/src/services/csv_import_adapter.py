@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.student_master import StudentDeviceIdentity, StudentMaster

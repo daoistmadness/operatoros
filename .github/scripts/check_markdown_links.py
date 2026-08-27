@@ -19,6 +19,12 @@ TARGET_PATHS = [
     ROOT / "backend" / "README.md",
     ROOT / "frontend" / "README.md",
 ]
+HISTORICAL_LINK_FILES = {
+    ROOT / "PROJECT_CONTEXT.md",
+}
+HISTORICAL_LINK_PREFIXES = (
+    ROOT / "docs" / "product-audit",
+)
 
 
 def iter_markdown_files() -> list[Path]:
@@ -33,6 +39,8 @@ def main() -> int:
     problems: list[str] = []
 
     for file_path in iter_markdown_files():
+        if file_path in HISTORICAL_LINK_FILES or any(file_path.is_relative_to(prefix) for prefix in HISTORICAL_LINK_PREFIXES):
+            continue
         text = file_path.read_text(encoding="utf-8")
         for match in MARKDOWN_LINK_RE.finditer(text):
             target = match.group(1).strip()

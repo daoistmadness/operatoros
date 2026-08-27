@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from openpyxl import Workbook
+from argon2 import PasswordHasher
 
 BASELINE_ID = "20260722_s38"
 
@@ -155,10 +156,9 @@ def main() -> int:
     database = args.database.resolve()
     backend_src = Path(__file__).resolve().parents[2] / "backend" / "src"
     sys.path.insert(0, str(backend_src))
-    from security.password import hash_password
-
     username = os.environ["OPERATOROS_E2E_ADMIN_USERNAME"]
     password = os.environ["OPERATOROS_E2E_ADMIN_PASSWORD"]
+    hash_password = PasswordHasher().hash
     today = date.today()
     master_ids = [f"00000000-0000-4000-8000-00000000000{number}" for number in range(1, 4)]
 
