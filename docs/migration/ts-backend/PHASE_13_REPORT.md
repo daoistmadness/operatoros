@@ -87,6 +87,7 @@ tooling and historical fixture code.
 ## Regression evidence
 
 - TypeScript backend: `61/61`, `455` expectations.
+- CI-shaped backend environment: `61/61`, `455` expectations.
 - Frontend: `301/301`.
 - OpenAPI drift check: passed from the committed contract.
 - TypeScript typecheck: passed.
