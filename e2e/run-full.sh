@@ -30,8 +30,8 @@ mkdir -p "$logs" "$junit"
 
 backend_status=0
 (
-  cd "$repo_root/backend"
-  "$repo_root/backend/.venv/bin/python" -m pytest -q -c "$repo_root/backend/pytest.ini" --junitxml="$junit/backend-full.xml"
+  cd "$repo_root/backend-ts"
+  PATH="$bun_bin:$PATH" bun test --reporter=junit --reporter-outfile="$junit/backend-full.xml"
 ) >"$logs/backend-full.log" 2>&1 || backend_status=$?
 
 frontend_status=0

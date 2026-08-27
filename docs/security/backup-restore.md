@@ -33,7 +33,7 @@ Restore requires all of the following:
 9. at least one active administrator in the backup;
 10. a pre-restore safety snapshot;
 11. isolated replacement with rollback copy; and
-12. post-replacement database and SQLAlchemy smoke validation.
+12. post-replacement database and Elysia/Drizzle smoke validation.
 
 Backups created before Phase 7.1 are rejected by the authenticated runtime. Legacy recovery requires a separately reviewed offline procedure; it is not silently performed by the API.
 

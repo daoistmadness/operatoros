@@ -1,5 +1,4 @@
-// AUTO-GENERATED from the S4.3 production schema. Do not hand-edit.
-// Regenerate: cd backend && .venv/bin/python ../backend-ts/scripts/gen_schema.py
+// Accepted S4.3 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 

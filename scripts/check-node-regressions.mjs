@@ -37,8 +37,6 @@ const IGNORED_FILE_PATHS = new Set([
   "scripts/check-node-regressions.mjs",
   "scripts/validate-wsl-bun.sh",
   "scripts/test_scope.py",
-  "backend/tests/test_wsl_bun_toolchain.py",
-  "backend/tests/test_dev_launcher.py",
   "frontend/bun.lock",
 ]);
 

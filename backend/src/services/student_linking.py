@@ -2,7 +2,7 @@ import hashlib
 import json
 from datetime import date, datetime
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 

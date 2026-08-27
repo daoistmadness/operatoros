@@ -6,14 +6,8 @@ This repository includes several one-off scripts for reporting, dashboard genera
 | Script | Purpose | Inputs | Outputs | Data Changes | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `generate_primary_lateness_dashboard.py` | Builds an Excel lateness dashboard from a CSV or workbook. | Source file path, optional sheet name, `--output`, `--term-days`, `--level-value`, `--default-level` | New `.xlsx` workbook with summary, charts, and detail sheets | No database writes | Safe when writing to a new output file. |
-| `build_dashboard.py` | Regenerates `frontend/src/pages/Dashboard.js` from embedded React source. | None at runtime; script contains the target code | Overwrites the dashboard page file | Yes, it rewrites frontend code | Treat as a migration artifact, not a routine tool. |
 
-## Repair Scripts
-| Script | Purpose | Inputs | Outputs | Data Changes | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `fix_analytics.py` | Applies targeted text replacements to `backend/src/api/analytics.py`. | Local backend source tree | Rewritten analytics module | Yes, rewrites code | Keep a backup before running. |
-| `fix_parser.py` | Applies targeted text replacements to `backend/src/services/excel_parser.py`. | Local backend source tree | Rewritten parser module | Yes, rewrites code | One-off repair only. |
-| `patch_analytics.py` | Rewrites `backend/src/api/analytics.py` with a larger analytics patch. | Local backend source tree | Rewritten analytics module | Yes, rewrites code | Higher risk than `fix_analytics.py`. |
+The former FastAPI repair scripts were retired with the Python application.
 
 ## Diagnostics
 | Script | Purpose | Inputs | Outputs | Data Changes | Notes |

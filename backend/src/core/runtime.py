@@ -1,7 +1,7 @@
 """OperatorOS desktop runtime path resolution.
 
-This module has no dependency on application settings or SQLAlchemy so the
-sidecar can establish absolute writable paths before importing the FastAPI app.
+This module has no dependency on application settings or SQLAlchemy. Retained
+runtime-path tooling can establish absolute writable paths before boot.
 """
 
 from __future__ import annotations
