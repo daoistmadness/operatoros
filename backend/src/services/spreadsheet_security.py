@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import PurePosixPath
 from zipfile import BadZipFile, ZipFile
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 
 
 MAX_WORKBOOK_BYTES = 25 * 1024 * 1024

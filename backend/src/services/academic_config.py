@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from fastapi import HTTPException
+from core.fixture_http import HTTPException
 from sqlalchemy.orm import Session
 
 from models.academic_config import AcademicTermConfig, KkmThreshold

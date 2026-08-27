@@ -6,8 +6,8 @@
 PostgreSQL is not a supported runtime, and the application explicitly rejects
 PostgreSQL URLs and legacy PostgreSQL configuration without echoing credentials.
 The supported runtime is a local Elysia backend with the React frontend in a
-browser. FastAPI remains available as the documented rollback and reference
-backend. A container runtime is not required.
+browser. The former Python backend is not a runtime dependency. A container
+runtime is not required.
 
 The current deployment labels are:
 
@@ -24,9 +24,8 @@ append-only audit behavior hold; duplicate attendance/upload handling rolls
 back atomically; and analytics remain deterministic.
 
 SQLite-specific WAL/PRAGMA configuration and `BEGIN IMMEDIATE` serialization
-are intentional. SQLAlchemy and dialect-neutral repository logic remain because
-they provide useful transaction and query abstractions, not because a second
-dialect is promised.
+are intentional. Drizzle is the application data layer. Python SQLAlchemy
+modules remain only for disposable schema and migration tooling.
 
 Existing databases are never migrated by ordinary startup. Current applications
 pair with S4.3; the protected operational database is never a test target.

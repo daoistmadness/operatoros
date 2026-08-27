@@ -1,6 +1,6 @@
 # Database schema architecture
 
-OperatorOS supports SQLite only. SQLAlchemy remains the persistence abstraction;
+OperatorOS supports SQLite only. Drizzle is the application persistence layer;
 PostgreSQL contracts are not maintained. S4.2 is the fresh-bootstrap baseline
 and S4.3 is the current runtime/operational head. Existing outdated databases
 are rejected rather than silently migrated.
