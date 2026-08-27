@@ -9,7 +9,7 @@ export interface RunningServer {
   stop(): void;
 }
 
-export function startServer(overrides: Partial<{ hostname: string; port: number }> = {}): RunningServer {
+export function startServer(overrides: Partial<{ hostname: string; port: number; databasePath?: string }> = {}): RunningServer {
   const config = { ...loadConfig(), ...overrides };
   const databaseHandle = config.databaseHandle ?? (config.databasePath ? openDatabase(config.databasePath) : undefined);
   const app = createApp({ ...config, databaseHandle });

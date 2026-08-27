@@ -5,7 +5,7 @@ export class ElysiaCandidateAdapter {
   private instance: ReturnType<typeof startServer> | null = null;
 
   async start(_seedFnName: string) {
-    this.instance = startServer({ port: 0 });
+    this.instance = startServer({ port: 0, databasePath: undefined });
     const base = `http://${this.instance.hostname}:${this.instance.port}`;
     const deadline = Date.now() + 3000;
     while (Date.now() < deadline) {
