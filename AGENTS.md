@@ -132,8 +132,8 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Phase 14 monorepo modernization
 
-Phase 14.1 establishes workspace and tooling structure only. Application source
-remains in `backend-ts/` and `frontend/` until its own subphases.
+Phase 14.2 moved the authoritative API to `apps/api/`. The web application
+remains in `frontend/`. Phase 14.3 has not started.
 
 Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
 package ownership and dependency directions.

@@ -264,7 +264,7 @@ These legacy routes are not the preferred contract for new code.
 
 ## Phase 17: Parity QA Framework & Numerical Accuracy Safeguards
 
-To guarantee report accuracy, consistency, and parity across all exported formats, the **Parity QA Framework** uses automated TypeScript regression tests in [reports.test.ts](../backend-ts/tests/reports.test.ts).
+To guarantee report accuracy, consistency, and parity across all exported formats, the **Parity QA Framework** uses automated TypeScript regression tests in [reports.test.ts](../apps/api/tests/reports.test.ts).
 
 ### 1. Golden Fixture Test Suite
 The QA framework establishes a deterministic database state (`golden_db` fixture) containing:
