@@ -4,6 +4,8 @@ import type { BackendConfig } from "./config";
 import { openDatabase } from "@operatoros/db";
 import { authRoutes } from "./auth/routes";
 import { defaultAuthConfig } from "./auth/service";
+import { LoginRateLimiter } from "./auth/rate-limit";
+import { installHttpSecurity } from "./security/http";
 import { coreRoutes } from "./domains/core";
 import { configRoutes, readinessRoutes, systemRoutes } from "./domains/config";
 import { attendanceRoutes } from "./domains/attendance";
@@ -34,7 +36,8 @@ function errorBody(code: string, message: string) {
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
-  const context = database && _config.auth?.authCookieSecret ? { database, config: defaultAuthConfig(_config.auth) } : null;
+  const securityConfig = defaultAuthConfig(_config.auth);
+  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit) } : null;
   const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -52,6 +55,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     .get("/", () => ({ status: "ok", message: "School Attendance Analytics API" }))
     .get("/health", () => ({ status: "ok" }))
     .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
+  installHttpSecurity(app, { allowedOrigins: securityConfig.allowedOrigins });
 
   if (context) {
     authRoutes(app, context);
@@ -78,6 +82,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
+      backupEncryption: _config.backupEncryption ?? null,
     });
   }
   systemRoutes(app, context, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });

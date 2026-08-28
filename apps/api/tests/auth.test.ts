@@ -101,6 +101,23 @@ describe("authentication parity", () => {
     }
   }, 30000);
 
+  it("applies a second layered login limiter without changing generic failures", async () => {
+    const value = setup("rate-limit", true, { rateLimit: { windowMs: 60_000, perIp: 20, perAccount: 2, global: 20, maxEntries: 20 } });
+    try {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await value.app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: `wrong-${attempt}` }) }));
+        expect(response.status).toBe(401);
+        expect(await response.json()).toEqual({ detail: "Invalid username or password" });
+      }
+      const limited = await value.app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "wrong-3" }) }));
+      expect(limited.status).toBe(429);
+      expect(limited.headers.get("retry-after")).toBe("60");
+      expect(await limited.json()).toEqual({ detail: "Too many login attempts. Try again later." });
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
   it("refreshes valid sessions and revokes them on logout or expiry", async () => {
     const value = setup("sessions");
     try {
