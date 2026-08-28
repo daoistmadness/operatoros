@@ -9,6 +9,7 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@operatoros/contracts": "workspace:*",
     "@operatoros/db": "workspace:*",
     "@e965/xlsx": "0.20.3",
     "@elysiajs/openapi": "1.4.15",

@@ -1,4 +1,5 @@
 import { t } from "elysia";
+import { GradeGridSaveRequestSchema } from "@operatoros/contracts/grades";
 import { inTransaction } from "@operatoros/db";
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
@@ -22,17 +23,6 @@ function fail(set: any, status: number, detail: string | Record<string, unknown>
 function bool(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
 }
-
-const lineItem = t.Object({
-  subject_id: t.Number({ minimum: 1 }),
-  component_id: t.Number({ minimum: 1 }),
-  score: t.Optional(t.Union([t.Number({ minimum: 0, maximum: 100 }), t.Null()])),
-});
-
-const gradeBody = t.Object({
-  enrollment_id: t.Number({ minimum: 1 }),
-  grades: t.Array(lineItem, { minItems: 1 }),
-});
 
 const enrollmentBody = t.Object({
   academic_year_id: t.Number({ minimum: 1 }),
@@ -215,7 +205,7 @@ export function gradeRoutes(app: any, context: AuthContext): any {
       });
       return { status: "success", inserted, updated, saved: inserted + updated, grades: saved };
     } catch { return fail(ctx.set, 409, "The grade record could not be saved. Retry or contact the system administrator."); }
-  }, { body: gradeBody });
+  }, { body: GradeGridSaveRequestSchema });
 
   app.get("/api/grades/analytics", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };

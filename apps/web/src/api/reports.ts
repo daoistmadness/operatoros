@@ -4,17 +4,10 @@ import {
   createDownloadUrl,
   revokeDownloadUrl,
 } from "../lib/api/client";
+import type { ReportQuery, ReportScope } from "@operatoros/contracts/reports";
 
-export type ReportScope = "combined" | "early_year" | "primary" | "secondary";
 export type ReportType = "monthly" | "annual";
-
-export interface ReportQuery {
-  academic_year_id: number;
-  scope: ReportScope;
-  month?: string;
-  class_name?: string | null;
-  subject_id?: number | null;
-}
+export type { ReportQuery, ReportScope } from "@operatoros/contracts/reports";
 
 export interface ReportFiltersResponse {
   academic_years: Array<{ id: number; name: string; start_date: string; end_date: string; is_default: boolean }>;
