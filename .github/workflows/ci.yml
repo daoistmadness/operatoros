@@ -35,6 +35,12 @@ jobs:
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile
+      - name: Dependency security audit
+        working-directory: ${{ github.workspace }}
+        run: bun run security:audit
+      - name: Security behavior tests
+        working-directory: ${{ github.workspace }}
+        run: bun run test:security
       - name: Verify hk and Turbo toolchain
         working-directory: ${{ github.workspace }}
         env:
