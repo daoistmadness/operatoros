@@ -8,7 +8,7 @@
 
 ## Organization
 - Backend routes live in `apps/api/src/domains/` and `apps/api/src/auth/`.
-- Backend database schema lives in `apps/api/src/db/`.
+- Backend database schema and low-level persistence live in `packages/db/`.
 - Backend processing logic and analytics live in the TypeScript domain modules.
 - Frontend route screens/pages live in `apps/web/src/pages/`.
 - Shared UI and API helpers live in `apps/web/src/components/` and `apps/web/src/lib/`.

@@ -100,6 +100,7 @@ frontend_static() {
   (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
+  (cd "$repo" && PATH="$bun_bin:$PATH" bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
 
@@ -108,8 +109,9 @@ case "$tier" in
     if [[ "$documentation_only" == yes ]]; then
       echo "selected_suites=documentation-static-only"
     elif [[ "$schema_sensitive" == yes ]]; then
-      echo "selected_suites=classifier-tests,fresh-db-parity"
+      echo "selected_suites=classifier-tests,db-package,fresh-db-parity"
       "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
+      (cd "$repo" && PATH="$bun_bin:$PATH" bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
       make -C "$repo" fresh-db-parity
     else
       if [[ "$frontend_changed" == yes ]]; then
