@@ -73,7 +73,7 @@ print("changed_paths=" + ",".join(s["changed_paths"]))
 print("risk_categories=" + ",".join(s["risk_categories"]))
 print("focused_tests=" + ",".join(s["focused_tests"]))
 print("browser_scenarios=" + ",".join(s["browser_scenarios"]))
-for key in ("frontend_changed","backend_changed","schema_sensitive","full_backend_required","api_drift_required","frontend_build_required","documentation_only"):
+for key in ("frontend_changed","ui_changed","backend_changed","schema_sensitive","full_backend_required","api_drift_required","frontend_build_required","documentation_only"):
     print(f"{key}={'yes' if s[key] else 'no'}")
 print(f"backend_full_passes_required={s['backend_full_passes_required']}")
 for item in s["selection_reasons"]:
@@ -95,6 +95,7 @@ schema_sensitive="$(json_value schema_sensitive)"
 documentation_only="$(json_value documentation_only)"
 api_drift_required="$(json_value api_drift_required)"
 frontend_build_required="$(json_value frontend_build_required)"
+ui_changed="$(json_value ui_changed)"
 
 frontend_static() {
   (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
@@ -109,9 +110,9 @@ case "$tier" in
     if [[ "$documentation_only" == yes ]]; then
       echo "selected_suites=documentation-static-only"
     elif [[ "$schema_sensitive" == yes ]]; then
-      echo "selected_suites=classifier-tests,db-package,fresh-db-parity"
+      echo "selected_suites=classifier-tests,db-package,ui-package,fresh-db-parity"
       "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
-      (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
+      (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun run check:ui && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
       make -C "$repo" fresh-db-parity
     else
       if [[ "$frontend_changed" == yes ]]; then
@@ -128,6 +129,9 @@ PY
         fi
         if [[ "$frontend_build_required" == yes ]]; then
           (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run build)
+        fi
+        if [[ "$ui_changed" == yes ]]; then
+          (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:ui && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
         fi
       fi
       if [[ "$backend_changed" == yes ]]; then
@@ -146,6 +150,7 @@ PY
   pr)
     echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,api,focused-browser"
     frontend_static
+    (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:ui && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
     (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
     backend_full
@@ -158,7 +163,7 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,api,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,api,bun-tests,bun-build,boundaries,api-drift,typecheck,ui-package,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
     passes=1
     reliable_change_context=no
@@ -176,6 +181,7 @@ PY
     fi
     for ((pass=1; pass<=passes; pass++)); do echo "backend_full_pass=$pass"; backend_full; done
     frontend_static
+    (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:ui && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
     (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     make -C "$repo" e2e-validate
     make -C "$repo" e2e-smoke

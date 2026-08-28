@@ -69,6 +69,9 @@ jobs:
       - name: Contract boundary check
         working-directory: ${{ github.workspace }}
         run: bun run check:contracts
+      - name: UI boundary check
+        working-directory: ${{ github.workspace }}
+        run: bun run check:ui
       - name: Contracts package typecheck
         working-directory: ${{ github.workspace }}
         run: bun --filter @operatoros/contracts typecheck
@@ -81,6 +84,12 @@ jobs:
       - name: Database package tests
         working-directory: ${{ github.workspace }}
         run: bun --filter @operatoros/db test
+      - name: UI package typecheck
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/ui typecheck
+      - name: UI package tests
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/ui test
       - name: Backend TypeScript typecheck
         working-directory: ${{ github.workspace }}
         run: bun --filter @operatoros/api typecheck
@@ -109,6 +118,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Dependency deduplication check
         run: bun --filter @operatoros/web check:dependencies
+      - name: UI boundary check
+        working-directory: ${{ github.workspace }}
+        run: bun run check:ui
       - name: Architecture boundaries test
         run: bun --filter @operatoros/web boundaries:test
       - name: OpenAPI contract drift check

@@ -1,0 +1,9 @@
+{
+  "extends": "../config/typescript/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["bun-types"]
+  },
+  "include": ["src", "tests"]
+}
