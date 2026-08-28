@@ -99,14 +99,14 @@ operatoros_wsl_validate_bun() {
     return 1
   fi
 
-  if [[ ! -f "$project_root/frontend/bun.lock" ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="frontend/bun.lock is missing; bun.lock is the sole authority"
+  if [[ ! -f "$project_root/bun.lock" ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="root bun.lock is missing; it is the sole authority"
     OPERATOROS_WSL_TOOLCHAIN_STATE="MISSING_LOCKFILE"
     return 1
   fi
 
-  if [[ -f "$project_root/frontend/package-lock.json" ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="frontend/package-lock.json must not exist; bun.lock is the sole authority"
+  if [[ -f "$project_root/package-lock.json" || -f "$project_root/backend-ts/package-lock.json" || -f "$project_root/frontend/package-lock.json" ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="package-lock.json must not exist; root bun.lock is the sole authority"
     OPERATOROS_WSL_TOOLCHAIN_STATE="OBSOLETE_LOCKFILE"
     return 1
   fi
@@ -124,7 +124,7 @@ operatoros_wsl_toolchain_failure() {
   bun: $bun_display
     resolved: $bun_resolved
 
-OperatorOS requires the Linux Bun contract declared by frontend/package.json inside WSL.
+OperatorOS requires the Linux Bun contract declared by the root package.json inside WSL.
 State: ${OPERATOROS_WSL_TOOLCHAIN_STATE}
 Reason: ${OPERATOROS_WSL_TOOLCHAIN_REASON:-toolchain validation failed}
 
