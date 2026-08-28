@@ -1,11 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
-import * as XLSX from "@e965/xlsx";
-import ExcelJS from "exceljs";
+import { appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateLateMinutes } from "../src/domains/attendance-rules";
-import { parseDuration, parseExcelDate, parseExcelTime } from "../src/import/normalization";
+import { parseDuration, parseExcelDate, parseExcelTime } from "@operatoros/excel";
 import { readAttendanceWorkbook } from "../src/import/excel-reader";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
@@ -37,18 +36,15 @@ function seed(path: string): void {
 }
 
 async function workbook(rows: unknown[][], customHeaders = headers): Promise<Uint8Array> {
-  const book = new ExcelJS.Workbook();
+  const book = createWorkbook({ exportType: "attendance-test" });
   const sheet = book.addWorksheet("Attendance Export");
-  sheet.addRow(customHeaders);
-  for (const values of rows) sheet.addRow(values);
-  return new Uint8Array(await book.xlsx.writeBuffer());
+  appendRow(sheet, customHeaders);
+  for (const values of rows) appendRow(sheet, values);
+  return writeXlsxWorkbook(book);
 }
 
 function legacyWorkbook(rows: unknown[][], customHeaders = headers): Uint8Array {
-  const sheet = XLSX.utils.aoa_to_sheet([customHeaders, ...rows]);
-  const book = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(book, sheet, "Attendance Export");
-  return new Uint8Array(XLSX.write(book, { bookType: "biff8", type: "buffer" }) as Uint8Array);
+  return writeLegacyXlsRows(rows, customHeaders, "Attendance Export");
 }
 
 function authCookie(response: Response): string {

@@ -14,6 +14,7 @@ import {
 } from "@operatoros/contracts/grades";
 import { ReportQuerySchema } from "@operatoros/contracts/reports";
 import { AnalyticsOverviewResponseSchema } from "@operatoros/contracts/analytics";
+import { ExcelWorksheetDtoSchema } from "@operatoros/contracts/excel";
 import {
   CreateEnrollmentRequestSchema,
   ManagedStudentSchema,
@@ -79,6 +80,7 @@ describe("@operatoros/contracts", () => {
       },
       cohorts: [],
     })).toBe(true);
+    expect(Value.Check(ExcelWorksheetDtoSchema, { name: "Attendance", headers: ["ID"], rows: [[1]] })).toBe(true);
   });
 
   it("rejects invalid values without changing optional and null semantics", () => {
@@ -104,5 +106,6 @@ describe("@operatoros/contracts", () => {
       filters: { academic_year_id: 1, academic_year_label: "2026/2027", start_date: "2026-01-01", end_date: "2026-01-31", jenjang_id: null, class_name: null, subject_id: null },
       metric_definitions: [], cohorts: [],
     })).toBe(false);
+    expect(Value.Check(ExcelWorksheetDtoSchema, { name: "A".repeat(32), headers: ["ID"], rows: [] })).toBe(false);
   });
 });

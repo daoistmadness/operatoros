@@ -42,10 +42,11 @@ export type ArchitectureReport = {
 };
 
 const allowedInternal: Record<string, Set<string>> = {
-  "@operatoros/api": new Set(["@operatoros/config", "@operatoros/contracts", "@operatoros/db"]),
+  "@operatoros/api": new Set(["@operatoros/config", "@operatoros/contracts", "@operatoros/db", "@operatoros/excel"]),
   "@operatoros/web": new Set(["@operatoros/config", "@operatoros/contracts", "@operatoros/ui"]),
   "@operatoros/contracts": new Set(["@operatoros/config"]),
   "@operatoros/db": new Set(["@operatoros/config"]),
+  "@operatoros/excel": new Set(["@operatoros/contracts"]),
   "@operatoros/ui": new Set(["@operatoros/config"]),
   "@operatoros/config": new Set(),
 };
@@ -55,6 +56,7 @@ const forbiddenExternal: Record<string, Set<string>> = {
   "@operatoros/web": new Set(["drizzle-orm", ...SQLITE_DRIVERS]),
   "@operatoros/contracts": new Set(["elysia", "drizzle-orm", "react"]),
   "@operatoros/db": new Set(["elysia", "react"]),
+  "@operatoros/excel": new Set(["elysia", "drizzle-orm", "react"]),
   "@operatoros/ui": new Set(["elysia", "drizzle-orm"]),
   "@operatoros/config": new Set(),
 };
