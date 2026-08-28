@@ -14,6 +14,7 @@ import { gradeRoutes } from "./domains/grades";
 import { interventionRoutes } from "./domains/interventions";
 import { progressionRoutes } from "./domains/progression";
 import { reportRoutes } from "./domains/reports";
+import { analyticsRoutes } from "./domains/analytics";
 import { safetyRoutes } from "./domains/safety";
 import { operatorRoutes } from "./domains/operator";
 import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
@@ -68,6 +69,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     interventionRoutes(app, context);
     progressionRoutes(app, context);
     reportRoutes(app, context);
+    analyticsRoutes(app, context);
     operatorRoutes(app, context);
     teacherAssignmentRoutes(app, context);
     studentExportRoutes(app, context);

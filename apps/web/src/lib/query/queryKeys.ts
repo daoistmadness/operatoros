@@ -39,6 +39,16 @@ export const queryKeys = {
     metadata: (academicYearId?: number | null, scope?: ReportScope) => ["management-reports", "metadata", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
     monthly: (query: ReportQuery) => ["management-reports", "monthly", query] as const,
   },
+  analytics: {
+    all: ["analytics"] as const,
+    filters: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["analytics", "filters", canonicalizeQueryFilters(filters)] as const,
+    managementSummary: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-summary", canonicalizeQueryFilters(filters)] as const,
+    historicalTrends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "historical-trends", canonicalizeQueryFilters(filters)] as const,
+    interventionImpact: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "intervention-impact", canonicalizeQueryFilters(filters)] as const,
+    overview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "overview", canonicalizeQueryFilters(filters)] as const,
+    trends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "trends", canonicalizeQueryFilters(filters)] as const,
+    cohorts: (dimension: "class" | "jenjang", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "cohorts", dimension, canonicalizeQueryFilters(filters)] as const,
+  },
   students: {
     all: ["students"] as const,
     lists: ["students", "list"] as const,

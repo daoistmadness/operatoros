@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -41,15 +41,19 @@ import {
   SetupRequiredState,
 } from "../components/common/state-message";
 import {
-  fetchAnalyticsFilters,
-  fetchHistoricalTrends,
-  fetchInterventionImpact,
-  fetchManagementSummary,
   downloadManagementSummaryExcel,
   downloadManagementSummaryPdf,
+  type CanonicalAnalyticsParams,
   type FetchSummaryParams,
   type FetchHistoricalTrendsParams,
 } from "../api/analytics";
+import {
+  useAnalyticsFiltersQuery,
+  useAnalyticsCohortsQuery,
+  useHistoricalTrendsQuery,
+  useInterventionImpactQuery,
+  useManagementSummaryQuery,
+} from "../hooks/useAnalyticsQueries";
 import {
   downloadReportBuilderExcel,
   downloadReportBuilderPdf,
@@ -67,11 +71,7 @@ import {
 } from "../api/academicInterventions";
 import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import type {
-  AnalyticsFiltersResponse,
   BelowKkmAlert,
-  HistoricalTrendsResponse,
-  InterventionImpactResponse,
-  ManagementSummaryResponse,
   ExecutiveInsight,
 } from "../types/analytics";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
@@ -134,7 +134,6 @@ export default function ManagementAnalytics() {
   const navigate = useNavigate();
   const { user, can } = useAuth();
 
-  const [filterOptions, setFilterOptions] = useState<AnalyticsFiltersResponse | null>(null);
   const [termOptions, setTermOptions] = useState<AcademicTermConfig[]>([]);
   const [academicYearId, setAcademicYearId] = useState<number | null>(null);
   const [jenjangId, setJenjangId] = useState<number | null>(null);
@@ -142,13 +141,6 @@ export default function ManagementAnalytics() {
   const [subjectId, setSubjectId] = useState<number | null>(null);
   const [term, setTerm] = useState<string | null>(null);
 
-  const [summaryData, setSummaryData] = useState<ManagementSummaryResponse | null>(null);
-  const [trendData, setTrendData] = useState<HistoricalTrendsResponse | null>(null);
-  const [impactData, setImpactData] = useState<InterventionImpactResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isTrendLoading, setIsTrendLoading] = useState(false);
-  const [isImpactLoading, setIsImpactLoading] = useState(false);
-  const [isUpdatingFilters, setIsUpdatingFilters] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<"pdf" | "excel" | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [reportTemplates, setReportTemplates] = useState<ReportTemplate[]>([]);
@@ -172,9 +164,7 @@ export default function ManagementAnalytics() {
     includeInterventionData: true,
     groupBy: "term" as "term" | "class" | "subject" | "student",
   });
-  const [error, setError] = useState<string>("");
-  const [trendError, setTrendError] = useState<string>("");
-  const [impactError, setImpactError] = useState<string>("");
+  const [pageError, setPageError] = useState<string>("");
   const [impactRiskFilter, setImpactRiskFilter] = useState<string>("");
   const [impactStatusFilter, setImpactStatusFilter] = useState<string>("");
   const [trendGranularity, setTrendGranularity] = useState<"month" | "term" | "academic_year">("term");
@@ -196,11 +186,6 @@ export default function ManagementAnalytics() {
   const [isSavingIntervention, setIsSavingIntervention] = useState(false);
   const hasAnalyticsPermission = can("view_student");
 
-  // Stale request tracking refs
-  const summaryRequestIdRef = useRef(0);
-  const trendRequestIdRef = useRef(0);
-  const impactRequestIdRef = useRef(0);
-
   const currentParams = useMemo<FetchSummaryParams | null>(() => {
     if (academicYearId === null) {
       return null;
@@ -213,6 +198,55 @@ export default function ManagementAnalytics() {
       subject_id: subjectId,
     };
   }, [academicYearId, jenjangId, className, term, subjectId]);
+
+  const filterQuery = useAnalyticsFiltersQuery({ academic_year_id: academicYearId, jenjang_id: jenjangId }, hasAnalyticsPermission);
+  const summaryQuery = useManagementSummaryQuery(currentParams, hasAnalyticsPermission);
+  const trendParams = useMemo<FetchHistoricalTrendsParams | null>(() => currentParams ? {
+    ...currentParams,
+    granularity: trendGranularity,
+    include_forecast: includeForecast,
+    forecast_method: forecastMethod,
+  } : null, [currentParams, trendGranularity, includeForecast, forecastMethod]);
+  const trendQuery = useHistoricalTrendsQuery(trendParams, hasAnalyticsPermission);
+  const impactParams = useMemo(() => currentParams ? {
+    ...currentParams,
+    status: impactStatusFilter || null,
+    risk_level: impactRiskFilter || null,
+  } : null, [currentParams, impactStatusFilter, impactRiskFilter]);
+  const canonicalCohortParams = useMemo<CanonicalAnalyticsParams | null>(() => {
+    if (!currentParams) return null;
+    const selectedTerm = term ? termOptions.find((option) => option.value === term) : null;
+    if (term && (!selectedTerm?.start_date || !selectedTerm.end_date)) return null;
+    return {
+      academic_year_id: currentParams.academic_year_id,
+      start_date: selectedTerm?.start_date || null,
+      end_date: selectedTerm?.end_date || null,
+      jenjang_id: currentParams.jenjang_id,
+      class_name: currentParams.class_name,
+      subject_id: currentParams.subject_id,
+    };
+  }, [currentParams, term, termOptions]);
+  const canonicalCohortQuery = useAnalyticsCohortsQuery("class", canonicalCohortParams, hasAnalyticsPermission);
+  const impactQuery = useInterventionImpactQuery(impactParams, hasAnalyticsPermission);
+  const filterOptions = filterQuery.data;
+  const summaryData = summaryQuery.data;
+  const trendData = trendQuery.data;
+  const impactData = impactQuery.data;
+  const canonicalCohorts = canonicalCohortQuery.data?.cohorts ?? [];
+  const isLoading = filterQuery.isPending || summaryQuery.isPending;
+  const isTrendLoading = trendQuery.isFetching;
+  const isImpactLoading = impactQuery.isFetching;
+  const isCanonicalCohortLoading = canonicalCohortQuery.isFetching;
+  const isUpdatingFilters = filterQuery.isFetching;
+  const dataError = filterQuery.error ? getErrorMessage(filterQuery.error) : summaryQuery.error ? getErrorMessage(summaryQuery.error) : "";
+  const error = dataError || pageError;
+  const trendError = trendQuery.error ? getErrorMessage(trendQuery.error, "Data tren belum dapat dimuat.") : "";
+  const impactError = impactQuery.error ? getErrorMessage(impactQuery.error, "Data dampak intervensi belum dapat dimuat.") : "";
+  const canonicalCohortError = canonicalCohortQuery.error ? getErrorMessage(canonicalCohortQuery.error, "Perbandingan kohort belum dapat dimuat.") : "";
+  const loadSummaryData = () => { void summaryQuery.refetch(); };
+  const loadTrendData = () => { void trendQuery.refetch(); };
+  const loadImpactData = () => { void impactQuery.refetch(); };
+  const loadCanonicalCohorts = () => { void canonicalCohortQuery.refetch(); };
 
   const hasActiveFilters = useMemo(() => {
     return Boolean(
@@ -238,112 +272,27 @@ export default function ManagementAnalytics() {
     }
   };
 
-  // Load initial filter parameters
   useEffect(() => {
-    if (!hasAnalyticsPermission) return;
-    async function loadInitialFilters() {
-      try {
-        const filters = await fetchAnalyticsFilters();
-        setFilterOptions(filters);
-
-        // Auto-select default academic year
-        const defaultYear = filters.academic_years.find((y) => y.is_default);
-        if (defaultYear) {
-          setAcademicYearId(defaultYear.id);
-        } else if (filters.academic_years.length > 0) {
-          setAcademicYearId(filters.academic_years[0].id);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (err) {
-        setError(getErrorMessage(err));
-        setIsLoading(false);
-      }
-    }
-    loadInitialFilters();
-  }, [hasAnalyticsPermission]);
-
-  // Update classes and subjects reactively when academic year or jenjang changes
-  useEffect(() => {
-    if (academicYearId === null) return;
-    const activeAcademicYearId = academicYearId;
-
-    async function updateDependentOptions() {
-      setIsUpdatingFilters(true);
-      try {
-        const updated = await fetchAnalyticsFilters({
-          academic_year_id: activeAcademicYearId,
-          jenjang_id: jenjangId || undefined,
-        });
-        setFilterOptions((prev) => {
-          if (!prev) return updated;
-          return {
-            ...prev,
-            class_names: updated.class_names,
-            subjects: updated.subjects,
-          };
-        });
-        const terms = await fetchEffectiveTerms(activeAcademicYearId);
-        setTermOptions(terms);
-
-        // Safe cleanup: reset selected class/subject/term if no longer valid
-        if (className && !updated.class_names.includes(className)) {
-          setClassName(null);
-        }
-        if (subjectId && !updated.subjects.some((s) => s.id === subjectId)) {
-          setSubjectId(null);
-        }
-        if (term && !terms.some((t) => t.value === term)) {
-          setTerm(null);
-        }
-      } catch (err) {
-        console.error("Failed to update dependent filters", err);
-        setTermOptions(
-          TERM_OPTIONS.map((option, index) => ({
-            id: null,
-            academic_year_id: activeAcademicYearId,
-            term_number: index + 1,
-            value: option.value,
-            label: option.label,
-            start_date: "",
-            end_date: "",
-            source: "default",
-          }))
-        );
-      } finally {
-        setIsUpdatingFilters(false);
-      }
-    }
-
-    updateDependentOptions();
-  }, [academicYearId, jenjangId]);
-
-  // Load summary data with stale request protection
-  const loadSummaryData = async () => {
-    if (!hasAnalyticsPermission || currentParams === null) return;
-    const reqId = ++summaryRequestIdRef.current;
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const summary = await fetchManagementSummary(currentParams);
-      if (reqId === summaryRequestIdRef.current) {
-        setSummaryData(summary);
-      }
-    } catch (err) {
-      if (reqId === summaryRequestIdRef.current) {
-        setError(getErrorMessage(err));
-      }
-    } finally {
-      if (reqId === summaryRequestIdRef.current) {
-        setIsLoading(false);
-      }
-    }
-  };
+    if (!hasAnalyticsPermission || academicYearId !== null || !filterOptions?.academic_years.length) return;
+    const defaultYear = filterOptions.academic_years.find((year) => year.is_default) ?? filterOptions.academic_years[0];
+    if (defaultYear) setAcademicYearId(defaultYear.id);
+  }, [hasAnalyticsPermission, academicYearId, filterOptions]);
 
   useEffect(() => {
-    loadSummaryData();
-  }, [currentParams]);
+    if (!hasAnalyticsPermission || academicYearId === null) return;
+    let active = true;
+    fetchEffectiveTerms(academicYearId).then(setTermOptions).catch(() => {
+      if (!active) return;
+      setTermOptions(TERM_OPTIONS.map((option, index) => ({ id: null, academic_year_id: academicYearId, term_number: index + 1, value: option.value, label: option.label, start_date: "", end_date: "", source: "default" })));
+    });
+    return () => { active = false; };
+  }, [hasAnalyticsPermission, academicYearId]);
+
+  useEffect(() => {
+    if (!filterOptions) return;
+    if (className && !filterOptions.class_names.includes(className)) setClassName(null);
+    if (subjectId && !filterOptions.subjects.some((subject) => subject.id === subjectId)) setSubjectId(null);
+  }, [filterOptions, className, subjectId]);
 
   useEffect(() => {
     if (!hasAnalyticsPermission) return;
@@ -359,66 +308,6 @@ export default function ManagementAnalytics() {
     loadReportTemplatesList();
   }, [hasAnalyticsPermission]);
 
-  const loadTrendData = async () => {
-    if (!hasAnalyticsPermission || currentParams === null) return;
-    const reqId = ++trendRequestIdRef.current;
-    setIsTrendLoading(true);
-    setTrendError("");
-    try {
-      const params: FetchHistoricalTrendsParams = {
-        ...currentParams,
-        granularity: trendGranularity,
-        include_forecast: includeForecast,
-        forecast_method: forecastMethod,
-      };
-      const trends = await fetchHistoricalTrends(params);
-      if (reqId === trendRequestIdRef.current) {
-        setTrendData(trends);
-      }
-    } catch (err) {
-      if (reqId === trendRequestIdRef.current) {
-        setTrendError(getErrorMessage(err, "Data tren belum dapat dimuat."));
-      }
-    } finally {
-      if (reqId === trendRequestIdRef.current) {
-        setIsTrendLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadTrendData();
-  }, [currentParams, trendGranularity, forecastMethod, includeForecast]);
-
-  const loadImpactData = async () => {
-    if (!hasAnalyticsPermission || currentParams === null) return;
-    const reqId = ++impactRequestIdRef.current;
-    setIsImpactLoading(true);
-    setImpactError("");
-    try {
-      const impact = await fetchInterventionImpact({
-        ...currentParams,
-        status: impactStatusFilter || null,
-        risk_level: impactRiskFilter || null,
-      });
-      if (reqId === impactRequestIdRef.current) {
-        setImpactData(impact);
-      }
-    } catch (err) {
-      if (reqId === impactRequestIdRef.current) {
-        setImpactError(getErrorMessage(err, "Data dampak intervensi belum dapat dimuat."));
-      }
-    } finally {
-      if (reqId === impactRequestIdRef.current) {
-        setIsImpactLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadImpactData();
-  }, [currentParams, impactStatusFilter, impactRiskFilter]);
-
   const buildDownloadFilename = (format: "pdf" | "excel") => {
     const yearLabel =
       filterOptions?.academic_years.find((year) => year.id === academicYearId)?.label.replace("/", "-") ||
@@ -433,7 +322,7 @@ export default function ManagementAnalytics() {
     if (currentParams === null) return;
 
     setExportingFormat(format);
-    setError("");
+      setPageError("");
     try {
       const mode = modeOverride || (format === "excel" ? "summary" : undefined);
       const reportBuilderPayload = {
@@ -460,7 +349,7 @@ export default function ManagementAnalytics() {
       link.click();
       revokeDownloadUrl(url);
     } catch (err) {
-      setError(getErrorMessage(err, "Gagal mengunduh laporan analisis manajemen."));
+      setPageError(getErrorMessage(err, "Gagal mengunduh laporan analisis manajemen."));
     } finally {
       setExportingFormat(null);
     }
@@ -554,7 +443,7 @@ export default function ManagementAnalytics() {
         });
         setInterventionMessage("Intervention created.");
       }
-      await loadSummaryData();
+      await Promise.all([summaryQuery.refetch(), trendQuery.refetch(), impactQuery.refetch()]);
       setSelectedAlert(null);
     } catch (err) {
       setInterventionError(getErrorMessage(err, "Gagal menyimpan intervensi akademik."));
@@ -763,28 +652,7 @@ export default function ManagementAnalytics() {
     return "bg-emerald-50 text-emerald-800 border-emerald-200";
   };
 
-  const belowKKMCount = useMemo(() => {
-    if (!summaryData) return 0;
-    return summaryData.below_kkm_alerts?.length ?? summaryData.grade_by_student.filter((s) => s.below_threshold).length;
-  }, [summaryData]);
-
-  const overallGradeAverage = useMemo(() => {
-    if (!summaryData || summaryData.grade_by_class.length === 0) return null;
-    const classes = summaryData.grade_by_class;
-    let sum = 0;
-    let count = 0;
-    classes.forEach((c) => {
-      if (c.sumatif_average !== null) {
-        sum += c.sumatif_average;
-        count++;
-      }
-      if (c.formatif_average !== null) {
-        sum += c.formatif_average;
-        count++;
-      }
-    });
-    return count > 0 ? (sum / count).toFixed(1) : "—";
-  }, [summaryData]);
+  const belowKKMCount = summaryData?.grade_summary?.below_kkm_count ?? 0;
 
   const renderedTermOptions = useMemo(() => {
     if (termOptions.length > 0) {
@@ -988,19 +856,6 @@ export default function ManagementAnalytics() {
             )
           }
         />
-      ) : isLoading && !summaryData ? (
-        <div className="space-y-6" role="status" aria-live="polite">
-          <span className="sr-only">Memuat data analisis...</span>
-          <div className="grid gap-4 md:grid-cols-4">
-            {[0, 1, 2, 3].map((val) => (
-              <div key={val} className="h-28 animate-pulse rounded-3xl bg-slate-200/50" />
-            ))}
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="h-96 animate-pulse rounded-3xl bg-slate-200/50" />
-            <div className="h-96 animate-pulse rounded-3xl bg-slate-200/50" />
-          </div>
-        </div>
       ) : error ? (
         <ErrorState
           title="Gagal Memuat Analisis Manajemen"
@@ -1015,6 +870,19 @@ export default function ManagementAnalytics() {
             </button>
           }
         />
+      ) : isLoading && !summaryData ? (
+        <div className="space-y-6" role="status" aria-live="polite">
+          <span className="sr-only">Memuat data analisis...</span>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[0, 1, 2, 3].map((val) => (
+              <div key={val} className="h-28 animate-pulse rounded-3xl bg-slate-200/50" />
+            ))}
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="h-96 animate-pulse rounded-3xl bg-slate-200/50" />
+            <div className="h-96 animate-pulse rounded-3xl bg-slate-200/50" />
+          </div>
+        </div>
       ) : summaryData && summaryData.total_students === 0 ? (
         <EmptyState
           title="Analisis Belum Tersedia"
@@ -1133,7 +1001,7 @@ export default function ManagementAnalytics() {
               <div>
                 <span className="text-xs font-bold text-slate-400">Kasus Terlambat</span>
                 <h3 className="text-2xl font-black text-slate-800 mt-0.5">
-                  {summaryData.lateness_by_class.reduce((acc, c) => acc + c.late_days, 0)} Hari
+                  {summaryData.lateness_summary?.total_late_days ?? 0} Hari
                 </h3>
               </div>
             </div>
@@ -1145,7 +1013,7 @@ export default function ManagementAnalytics() {
               <div>
                 <span className="text-xs font-bold text-slate-400">Rata-rata Nilai</span>
                 <h3 className="text-2xl font-black text-slate-800 mt-0.5">
-                  {overallGradeAverage}
+                  {summaryData.grade_summary?.average ?? "—"}
                 </h3>
               </div>
             </div>
@@ -1161,6 +1029,41 @@ export default function ManagementAnalytics() {
                 </h3>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-3xl shadow-sm p-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-black text-slate-800">Perbandingan Kohort</h3>
+              <p className="text-xs font-semibold text-slate-500 mt-1">
+                Nilai agregat kelas dari pipeline analitik kanonik.
+              </p>
+            </div>
+            {isCanonicalCohortLoading ? (
+              <div className="h-24 animate-pulse rounded-2xl bg-slate-100" />
+            ) : canonicalCohortError ? (
+              <div role="alert" className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-800">
+                <p>{canonicalCohortError}</p>
+                <button type="button" onClick={loadCanonicalCohorts} className="mt-3 rounded-xl bg-rose-600 px-3 py-2 text-xs font-black text-white hover:bg-rose-700">
+                  Coba Lagi
+                </button>
+              </div>
+            ) : canonicalCohorts.length ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {canonicalCohorts.slice(0, 8).map((cohort) => (
+                  <div key={`${cohort.dimension}-${cohort.id ?? cohort.label}`} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-xs font-black text-slate-700">{cohort.label}</p>
+                    <p className="mt-1 text-xl font-black text-slate-800">
+                      {cohort.attendance_rate.value === null ? "—" : `${cohort.attendance_rate.value}%`}
+                    </p>
+                    <p className="text-[11px] font-semibold text-slate-500">{cohort.student_count} siswa · kehadiran</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+                Belum ada data kohort untuk filter ini.
+              </div>
+            )}
           </div>
 
           {/* Historical Trends */}

@@ -109,6 +109,8 @@ export interface ManagementSummaryResponse {
   };
   term_context?: TermContext | null;
   attendance_summary: AttendanceSummary;
+  lateness_summary?: { total_late_days: number; total_late_minutes: number };
+  grade_summary?: { average: number | null; below_kkm_count?: number };
   lateness_by_class: LatenessByClass[];
   grade_by_class: GradeByClass[];
   grade_by_subject: GradeBySubject[];

@@ -25,6 +25,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
 import { FieldLabel } from "../components/ui/field";
+import { queryKeys } from "../lib/query/queryKeys";
 
 type AttendanceStatus = "on-time" | "late" | "sick" | "leave" | "absent";
 
@@ -137,11 +138,12 @@ export default function ClassAttendanceEntry() {
   const submitMutation = useMutation({
     mutationFn: (entries: AttendanceEntryPayload[]) =>
       submitClassAttendanceEntries(classIdNum!, selectedDate, entries),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       setSaveSuccess(`Berhasil menyimpan ${res.total_submitted} data absensi.`);
       setSaveError(null);
       setIsDirty(false);
       refetchRoster();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       setTimeout(() => setSaveSuccess(null), 4000);
     },
     onError: (err: any) => {
