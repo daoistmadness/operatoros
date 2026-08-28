@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source not "./tailwind.css";
+@source "../../../packages/ui/src";
 
 @theme {
   --color-brand: #4f46e5;

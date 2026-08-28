@@ -134,9 +134,10 @@ historical evidence unless they explicitly identify a current procedure.
 
 Phase 14.1 established workspace tooling. Phase 14.2 moved the authoritative
 API to `apps/api/`. Phase 14.3 moved the authoritative web application to
-`apps/web/`. Phase 14.4 extracts persistence to `packages/db/`. Phase 14.5
-extracts shared TypeBox contracts to `packages/contracts/`. Phase 14.6 has
-not started.
+`apps/web/`. Phase 14.4 extracted persistence to `packages/db/`. Phase 14.5
+extracted shared TypeBox contracts to `packages/contracts/`. Phase 14.6
+establishes the reusable Base UI foundation in `packages/ui/`. It is complete
+after merge. Phase 14.7 has not started.
 
 Current physical structure:
 
@@ -144,6 +145,7 @@ Current physical structure:
 - `apps/web/`
 - `packages/db/`
 - `packages/contracts/`
+- `packages/ui/`
 - `packages/config/`
 
 Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
@@ -159,6 +161,9 @@ Phase 14.7:
 - `packages/contracts` must not import `elysia`, `drizzle-orm`, `react`, or `apps/*`.
 - `packages/db` must not import `apps/*`.
 - `packages/ui` must not import `apps/*` or `packages/db`.
+- `packages/ui` must not import `@operatoros/contracts`, `@operatoros/api`, `elysia`, or `drizzle-orm`.
+- `apps/api` must not import `@operatoros/ui`.
+- `packages/db` and `packages/contracts` must not import `@operatoros/ui`.
 - `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
 - `packages/*` must not import `apps/*`.
 
@@ -173,6 +178,12 @@ SQLite client lifecycle, and persistence representation. Business services,
 HTTP behavior, and backup or scheduler policy remain in `apps/api/`.
 `apps/web/` must not import `@operatoros/db` or persistence dependencies.
 
+`@operatoros/ui` owns reusable presentation primitives and source-owned shadcn
+components. New shadcn components use Base UI. The package uses package
+exports. It does not own routes, data fetching, business forms, or domain
+components. Existing Radix components may remain in `apps/web/`. Broad UI
+modernization is deferred to Phase 18.
+
 Phase 14.1 through 14.5 validation commands remain available. Use these
 workspace commands for current application checks:
 
@@ -180,10 +191,13 @@ workspace commands for current application checks:
 - `bun --filter @operatoros/contracts typecheck`
 - `bun --filter @operatoros/db test`
 - `bun --filter @operatoros/db typecheck`
+- `bun --filter @operatoros/ui test`
+- `bun --filter @operatoros/ui typecheck`
 - `bun --filter @operatoros/api test`
 - `bun --filter @operatoros/web test`
 - `bun run check:typebox`
 - `bun run check:contracts`
+- `bun run check:ui`
 - `bun run check`
 
 ## Stop and escalate

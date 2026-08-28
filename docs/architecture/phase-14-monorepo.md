@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.5` complete after merge. Phase 14.6 has not started.
+Status: `Phase 14.6` complete after merge. Phase 14.7 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -26,8 +26,8 @@ The API application lives in `apps/api/`. The web application lives in
 
 Phase 14.1 creates no active future application package. `packages/config`
 contains configuration skeletons. Phase 14.4 makes `packages/db` active.
-Phase 14.5 makes `packages/contracts` active. `packages/ui` and
-`packages/excel` remain deferred.
+Phase 14.5 makes `packages/contracts` active. Phase 14.6 makes `packages/ui`
+active. `packages/excel` remains deferred.
 
 ## Workspace ownership
 
@@ -36,6 +36,7 @@ Phase 14.5 makes `packages/contracts` active. `packages/ui` and
 - `apps/web/` is the `@operatoros/web` workspace.
 - `packages/db/` is the `@operatoros/db` workspace.
 - `packages/contracts/` is the `@operatoros/contracts` workspace.
+- `packages/ui/` is the `@operatoros/ui` workspace.
 - The application packages remain private and keep their existing `0.1.0`
   metadata. The database package is private and versionless.
 - The repository has no single release-version authority.
@@ -71,6 +72,10 @@ The binding rules are:
 - `packages/contracts` must not import Elysia, Drizzle, React, or `apps/*`.
 - `packages/db` must not import `apps/*`.
 - `packages/ui` must not import `apps/*` or `packages/db`.
+- `packages/ui` must not import `@operatoros/contracts`, `@operatoros/api`,
+  Elysia, or Drizzle.
+- `apps/api`, `packages/db`, and `packages/contracts` must not import
+  `@operatoros/ui`.
 - `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
 - `packages/*` must not import `apps/*`.
 
@@ -94,8 +99,8 @@ focused PR.
 4. 14.4: `packages/db` extraction. The package owns the Drizzle schema, the
 SQLite client lifecycle, the schema manifest, and transaction primitives.
 5. 14.5: `packages/contracts` extraction.
-6. 14.6: `packages/ui` and shadcn/Base UI foundation.
-7. 14.7: Architecture boundary enforcement.
+6. 14.6: `packages/ui` and shadcn/Base UI foundation. Complete after merge.
+7. 14.7: Architecture boundary enforcement. Pending.
 8. 14.8: Turborepo.
 
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
@@ -149,12 +154,33 @@ multipart parsing, file handling, headers, and other Elysia transport details.
 
 Database rows and persistence types remain in `packages/db`. Business mapping,
 calculations, authorization, backup policy, scheduler policy, and file parsing
-remain in `apps/api`. UI state remains in `apps/web`. The UI package, Excel
-implementation package, and full architecture enforcement remain pending.
+remain in `apps/api`. UI state remains in `apps/web`. The Excel implementation
+package and full architecture enforcement remain pending.
 
 Database row types stay in `@operatoros/db`. API business logic and mapping stay
 in `apps/api/`. Other report, attendance, import, and safety types remain in
 their current owners until an exact cross-boundary shape needs extraction.
 
-Phase 14.6 has not started. No UI components moved. No shadcn or Base UI work
-started. Excel implementation remains in `apps/api/`. Turbo remains deferred.
+## Phase 14.6 UI foundation
+
+`packages/ui/` is the `@operatoros/ui` workspace. It owns source-controlled
+shadcn primitives and UI-only utilities. New shadcn primitives use Base UI.
+The initial foundation contains `Button`, `Dialog`, and `Input`.
+
+The existing web application keeps its global CSS tokens and existing Radix
+components. The web package consumes the new package through workspace exports.
+The UI package does not import application code, contracts, database code, or
+API code. Domain components and page composition remain in `apps/web/`.
+
+The package uses `base-nova` shadcn configuration with the existing `slate`
+base color and `lucide` icon setting. This records Base UI through the
+style-specific configuration without replacing the current application theme.
+Tailwind v4 scans the UI package source from the web stylesheet. The package
+does not introduce a second global stylesheet or a shadcn runtime dependency.
+React remains owned by `apps/web/` at runtime. The UI package declares React
+compatibility as peer dependencies and uses the accepted React version for
+tests.
+
+Phase 14.7 will add repository-wide mechanical architecture enforcement.
+Turbo remains deferred to Phase 14.8. Broad UI modernization remains deferred
+to Phase 18.
