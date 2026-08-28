@@ -2,7 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { appendFileSync, chmodSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Database } from "bun:sqlite";
-import { inTransaction, type DatabaseHandle } from "../db/connection";
+import { inTransaction, type DatabaseHandle } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
 
 export const SESSION_COOKIE_NAME = "astyx_session";

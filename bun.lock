@@ -11,7 +11,7 @@
       "dependencies": {
         "@e965/xlsx": "0.20.3",
         "@elysiajs/openapi": "1.4.15",
-        "drizzle-orm": "0.45.2",
+        "@operatoros/db": "workspace:*",
         "elysia": "1.4.29",
         "exceljs": "4.4.0",
         "jszip": "3.10.1",
@@ -22,7 +22,6 @@
         "@sinclair/typebox": "catalog:",
         "@types/bun": "1.4.0",
         "bun-types": "1.4.0",
-        "drizzle-kit": "0.31.10",
         "typescript": "5.9.3",
       },
     },
@@ -66,6 +65,18 @@
         "typescript": "5.9.3",
         "vite": "6.4.3",
         "vitest": "4.1.10",
+      },
+    },
+    "packages/db": {
+      "name": "@operatoros/db",
+      "dependencies": {
+        "drizzle-orm": "0.45.2",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.0",
+        "bun-types": "1.4.0",
+        "drizzle-kit": "0.31.10",
+        "typescript": "5.9.3",
       },
     },
   },
@@ -208,6 +219,8 @@
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
 
     "@operatoros/api": ["@operatoros/api@workspace:apps/api"],
+
+    "@operatoros/db": ["@operatoros/db@workspace:packages/db"],
 
     "@operatoros/web": ["@operatoros/web@workspace:apps/web"],
 

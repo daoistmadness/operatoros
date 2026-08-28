@@ -1,7 +1,7 @@
 import type { Subprocess } from "bun";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
-import { openDatabase } from "./db/connection";
+import { openDatabase } from "@operatoros/db";
 
 export interface RunningServer {
   port: number;

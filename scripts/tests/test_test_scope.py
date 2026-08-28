@@ -28,6 +28,7 @@ from test_scope import FOCUSED_TESTS, build_scope, classify_path, paths_from_nam
         ("backend/src/security/dependencies.py", "BACKEND_AUTH"),
         ("backend/src/services/upload_preview.py", "BACKEND_UPLOAD"),
         ("backend/src/services/attendance_review.py", "BACKEND_ATTENDANCE"),
+        ("packages/db/src/schema.ts", "DATABASE_PACKAGE"),
         ("e2e/run-smoke.sh", "E2E_INFRASTRUCTURE"),
         ("Makefile", "E2E_INFRASTRUCTURE"),
         ("unknown/source.xyz", "UNKNOWN_HIGH_RISK"),

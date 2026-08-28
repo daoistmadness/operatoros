@@ -1,7 +1,7 @@
 import { t } from "elysia";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 
 type Row = Record<string, any>;
 type Context = any;

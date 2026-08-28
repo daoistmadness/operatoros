@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "../domains/core";
 import { calculateLateMinutes, deriveAttendanceStatus, deriveJenjangFromClassName } from "./attendance-rules";
 import type { AuthContext } from "../auth/service";
