@@ -21,6 +21,7 @@
     "./grades": "./src/grades/index.ts",
     "./reports": "./src/reports/index.ts",
     "./students": "./src/students/index.ts",
-    "./analytics": "./src/analytics/index.ts"
+    "./analytics": "./src/analytics/index.ts",
+    "./excel": "./src/excel.ts"
   }
 }

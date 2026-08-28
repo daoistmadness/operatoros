@@ -1,6 +1,7 @@
-import ExcelJS from "exceljs";
-import * as XLSX from "@e965/xlsx";
 import {
+  getCellValue,
+  loadXlsxWorkbook,
+  readLegacyXlsRows,
   isAbsentFlagTrue,
   isBlank,
   normalizeHeader,
@@ -11,7 +12,8 @@ import {
   parseInteger,
   parseOptionalString,
   type CellValue,
-} from "./normalization";
+  type ExcelWorksheet,
+} from "@operatoros/excel";
 
 export const REQUIRED_COLUMNS = [
   "No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang",
@@ -51,12 +53,6 @@ export type WorkbookRows = {
 
 type RawRow = { excelRow: number; values: Map<string, CellValue> };
 
-function cellValue(cell: ExcelJS.Cell): CellValue {
-  const value = cell.value;
-  if (value && typeof value === "object" && "result" in value) return value.result;
-  return value;
-}
-
 function key(studentId: number, date: string): string {
   return `${studentId}\u0000${date}`;
 }
@@ -89,11 +85,11 @@ function buildDuplicateSets(rawRows: RawRow[]): { exact: Set<string>; divergent:
   return { exact, divergent };
 }
 
-function readRawRows(sheet: ExcelJS.Worksheet, headers: string[]): RawRow[] {
+function readRawRows(sheet: ExcelWorksheet, headers: string[]): RawRow[] {
   const rows: RawRow[] = [];
   for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber++) {
     const row = sheet.getRow(rowNumber);
-    const values = new Map(headers.map((header, index) => [header, cellValue(row.getCell(index + 1))]));
+    const values = new Map(headers.map((header, index) => [header, getCellValue(row.getCell(index + 1))]));
     if ([...values.values()].every(isBlank)) continue;
     rows.push({ excelRow: rowNumber, values });
   }
@@ -101,17 +97,12 @@ function readRawRows(sheet: ExcelJS.Worksheet, headers: string[]): RawRow[] {
 }
 
 function readLegacyRawRows(buffer: ArrayBuffer): { rows: RawRow[]; headers: string[]; date1904: boolean } {
-  const workbook = XLSX.read(Buffer.from(buffer), { type: "buffer", cellDates: true, cellFormula: true });
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) throw new Error("Attendance workbook has no worksheet");
-  const sheet = workbook.Sheets[sheetName]!;
-  const grid = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null, blankrows: true }) as CellValue[][];
-  const headers = (grid[0] ?? []).map(normalizeHeader);
-  const rows = grid.slice(1).map((values, index) => ({
+  const legacy = readLegacyXlsRows(buffer);
+  const rows = legacy.rows.map((values, index) => ({
     excelRow: index + 2,
-    values: new Map(headers.map((header, column) => [header, values[column] ?? null])),
+    values: new Map(legacy.headers.map((header, column) => [header, values[column] ?? null])),
   })).filter((row) => [...row.values.values()].some((value) => !isBlank(value)));
-  return { rows, headers, date1904: Boolean(workbook.Workbook?.WBProps?.date1904) };
+  return { rows, headers: legacy.headers, date1904: legacy.date1904 };
 }
 
 export async function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
@@ -126,8 +117,7 @@ export async function readAttendanceWorkbook(buffer: ArrayBuffer, filename: stri
     headers = legacy.headers;
     date1904 = legacy.date1904;
   } else {
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
+    const workbook = await loadXlsxWorkbook(buffer);
     const sheet = workbook.worksheets[0];
     if (!sheet) throw new Error("Attendance workbook has no worksheet");
     const headerValues = sheet.getRow(1).values as CellValue[];

@@ -33,4 +33,9 @@ export const architectureFixtures: ArchitectureFixture[] = [
   { name: "UI may consume React", sourcePackage: "@operatoros/ui", source: 'import "react";', expected: "pass" },
   { name: "contracts may consume TypeBox", sourcePackage: "@operatoros/contracts", source: 'import { Type } from "@sinclair/typebox";', expected: "pass" },
   { name: "DB may consume Drizzle", sourcePackage: "@operatoros/db", source: 'import { sql } from "drizzle-orm";', expected: "pass" },
+  { name: "Excel may consume contracts", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/contracts";', expected: "pass" },
+  { name: "Excel rejects DB", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/db";', expected: "fail" },
+  { name: "Excel rejects UI", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/ui";', expected: "fail" },
+  { name: "Excel rejects API", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/api";', expected: "fail" },
+  { name: "Excel rejects Elysia", sourcePackage: "@operatoros/excel", source: 'import "elysia";', expected: "fail" },
 ];

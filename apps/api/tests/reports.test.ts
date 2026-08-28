@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
-import ExcelJS from "exceljs";
+import { loadXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateHeb, roundHalfEven, roundHalfUp } from "../src/domains/reports";
@@ -236,8 +236,7 @@ describe("analytics and report parity", () => {
         if (path.endsWith("format=pdf")) expect(new TextDecoder().decode(bytes.slice(0, 4))).toBe("%PDF");
         else {
           expect(new TextDecoder().decode(bytes.slice(0, 2))).toBe("PK");
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(bytes.buffer as ArrayBuffer);
+          const workbook = await loadXlsxWorkbook(bytes);
           expect(workbook.worksheets.length).toBeGreaterThan(0);
         }
       }

@@ -257,6 +257,21 @@ identity. Startup forwards this root and does not migrate an existing database
 automatically. Tests use disposable roots. Provider-managed history cleanup
 remains separately documented as pending.
 
+## Phase 17 Excel rules
+
+- `@operatoros/excel` owns Excel infrastructure only. It lives at
+  `packages/excel/` and may depend on `@operatoros/contracts`.
+- The Excel package must not depend on DB, apps, UI, React, Elysia, or Drizzle.
+  HTTP transport and database access remain outside the package.
+- ExcelJS `4.4.0` remains the `.xlsx` authority. The existing `@e965/xlsx`
+  adapter remains responsible for legacy `.xls` input.
+- Business metrics and formulas come from server DTOs. Excel must not compute
+  attendance, grades, KKM, rankings, or analytics.
+- `.xlsx` and `.xls` import parity must remain tested. Streaming requires
+  benchmark evidence and is not a global default.
+- The browser must not generate authoritative reports. Use the API export
+  flow. Run `bun --filter @operatoros/excel test` for focused package checks.
+
 ## Phase 16 analytics rules
 
 - Important business metrics are computed by the API with canonical SQL

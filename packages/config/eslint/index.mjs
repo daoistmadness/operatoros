@@ -3,6 +3,7 @@ const internalPackages = [
   "@operatoros/config",
   "@operatoros/contracts",
   "@operatoros/db",
+  "@operatoros/excel",
   "@operatoros/ui",
   "@operatoros/web",
 ];
@@ -45,6 +46,15 @@ const forbiddenByWorkspace = {
     "elysia",
     "react",
   ],
+  "@operatoros/excel": [
+    "@operatoros/api",
+    "@operatoros/web",
+    "@operatoros/db",
+    "@operatoros/ui",
+    "elysia",
+    "drizzle-orm",
+    "react",
+  ],
   "@operatoros/ui": [
     "@operatoros/api",
     "@operatoros/contracts",
@@ -76,6 +86,7 @@ const workspacePaths = {
   "@operatoros/web": "apps/web",
   "@operatoros/contracts": "packages/contracts",
   "@operatoros/db": "packages/db",
+  "@operatoros/excel": "packages/excel",
   "@operatoros/ui": "packages/ui",
   "@operatoros/config": "packages/config",
 };

@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import { addWorksheet, appendRow, createWorkbook, safeExportFilename, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
@@ -87,15 +87,15 @@ export function studentExportRoutes(app: any, context: AuthContext): any {
     try { values = exportRows(context, scope, filters, ctx.body.selected_student_ids ?? null); } catch (error) { return fail(ctx.set, (error as any).status ?? 400, (error as Error).message); }
     if (!values.length) { audit(context, user, required, "EXPORT_DOWNLOAD", scope, false, { reason: "No matching records found" }, "EMPTY_EXPORT"); return fail(ctx.set, 400, "Cannot generate empty export. No matching records found."); }
     if (values.length > maxRows) return fail(ctx.set, 400, `Export row count exceeds maximum limit of ${maxRows} rows.`);
-    const workbook = new ExcelJS.Workbook(); const sheet = workbook.addWorksheet("Student Records");
+    const workbook = createWorkbook({ exportType: "student-export" }); const sheet = addWorksheet(workbook, "Student Records");
     const headers = profile === "STANDARD_OPERATIONAL" ? ["ID", "Nama Lengkap", "Status", "Jenis Kelamin", "Tempat Lahir", "Tanggal Lahir", "Agama"] : profile === "SENSITIVE_IDENTIFIERS" ? ["ID", "Nama Lengkap", "Status", "NIK", "NISN", "NIPD", "Jenis Kelamin", "Device ID Active"] : ["ID", "Nama Lengkap", "Status", "Alamat", "No Telp / HP", "Nama Wali", "No HP Wali"];
-    sheet.addRow(headers); sheet.getRow(1).font = { color: { argb: "FFFFFFFF" }, bold: true }; sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+    appendRow(sheet, headers); styleHeader(sheet); sheet.getRow(1).font = { color: { argb: "FFFFFFFF" }, bold: true }; sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
     for (const value of values) {
-      if (profile === "STANDARD_OPERATIONAL") sheet.addRow([value.id, value.full_name, value.student_status, value.gender ?? "-", value.birth_place ?? "-", value.birth_date ?? "-", value.religion ?? "-"]);
-      else if (profile === "SENSITIVE_IDENTIFIERS") { const device = rows(context, "SELECT device_identifier FROM student_device_identities WHERE student_master_id = ? AND is_active = 1 ORDER BY id LIMIT 1", [value.id])[0]; sheet.addRow([value.id, value.full_name, value.student_status, String(value.nik ?? "-"), String(value.nisn ?? "-"), String(value.nipd ?? "-"), value.gender ?? "-", String(device?.device_identifier ?? "-")]); }
-      else { const address = rows(context, "SELECT address FROM student_addresses WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const contact = rows(context, "SELECT student_phone FROM student_contacts WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const guardian = rows(context, "SELECT name, phone FROM student_parent_guardians WHERE student_master_id = ? ORDER BY id LIMIT 1", [value.id])[0]; sheet.addRow([value.id, value.full_name, value.student_status, address?.address ?? "-", String(contact?.student_phone ?? "-"), guardian?.name ?? "-", String(guardian?.phone ?? "-")]); }
+      if (profile === "STANDARD_OPERATIONAL") appendRow(sheet, [value.id, value.full_name, value.student_status, value.gender ?? "-", value.birth_place ?? "-", value.birth_date ?? "-", value.religion ?? "-"]);
+      else if (profile === "SENSITIVE_IDENTIFIERS") { const device = rows(context, "SELECT device_identifier FROM student_device_identities WHERE student_master_id = ? AND is_active = 1 ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, String(value.nik ?? "-"), String(value.nisn ?? "-"), String(value.nipd ?? "-"), value.gender ?? "-", String(device?.device_identifier ?? "-")]); }
+      else { const address = rows(context, "SELECT address FROM student_addresses WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const contact = rows(context, "SELECT student_phone FROM student_contacts WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const guardian = rows(context, "SELECT name, phone FROM student_parent_guardians WHERE student_master_id = ? ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, address?.address ?? "-", String(contact?.student_phone ?? "-"), guardian?.name ?? "-", String(guardian?.phone ?? "-")]); }
     }
-    const bytes = new Uint8Array(await workbook.xlsx.writeBuffer()); const filename = `student_export_${scope.toLowerCase()}_${new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14)}.xlsx`;
+    const bytes = await writeXlsxWorkbook(workbook); const filename = safeExportFilename(`student_export_${scope.toLowerCase()}_${new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14)}`);
     audit(context, user, required, "EXPORT_DOWNLOAD", scope, true, { actual_row_count: values.length, sensitive, field_profile: profile, filename });
     return sendXlsx(bytes, filename);
   }, { body: downloadBody });
