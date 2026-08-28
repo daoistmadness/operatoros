@@ -32,7 +32,9 @@ jobs:
         run: python -m venv ../backend/.venv
       - name: Install schema and fixture tooling
         run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
-      - run: bun install --frozen-lockfile
+      - name: Install workspace dependencies (frozen lockfile)
+        working-directory: ${{ github.workspace }}
+        run: bun install --frozen-lockfile
       - name: Prepare Elysia runtime database
         working-directory: ${{ github.workspace }}
         run: |
@@ -61,8 +63,15 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:8090/health >/dev/null
           curl --fail --silent http://127.0.0.1:8090/ready >/dev/null
-      - run: bun run typecheck
-      - run: bun test
+      - name: TypeBox resolution check
+        working-directory: ${{ github.workspace }}
+        run: bun run check:typebox
+      - name: Backend TypeScript typecheck
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/api typecheck
+      - name: Backend TypeScript tests
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/api test
 
   frontend:
     runs-on: ubuntu-latest
@@ -81,19 +90,20 @@ jobs:
           bun --version | grep -Eq "^1\.4\."
           mise ls --current
       - name: Install dependencies (frozen lockfile)
-        run: bun ci
+        working-directory: ${{ github.workspace }}
+        run: bun install --frozen-lockfile
       - name: Dependency deduplication check
-        run: bun run check:dependencies
+        run: bun --filter @operatoros/web check:dependencies
       - name: Architecture boundaries test
-        run: bun run boundaries:test
+        run: bun --filter @operatoros/web boundaries:test
       - name: OpenAPI contract drift check
-        run: bun run api:check
+        run: bun --filter @operatoros/web api:check
       - name: TypeScript validation
-        run: bun run typecheck
+        run: bun --filter @operatoros/web typecheck
       - name: Frontend unit tests
-        run: bun run test
+        run: bun --filter @operatoros/web test
       - name: Build frontend bundle
-        run: bun run build
+        run: bun --filter @operatoros/web build
 
   docs:
     runs-on: ubuntu-latest
