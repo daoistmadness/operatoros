@@ -36,13 +36,13 @@ backend_status=0
 
 frontend_status=0
 (
-  cd "$repo_root/frontend"
+  cd "$repo_root/apps/web"
   PATH="$bun_bin:$PATH" bun run test --reporter=junit --outputFile="$junit/frontend-full.xml"
 ) >"$logs/frontend-full.log" 2>&1 || frontend_status=$?
 
 build_status=0
 (
-  cd "$repo_root/frontend"
+  cd "$repo_root/apps/web"
   PATH="$bun_bin:$PATH" bun run build
 ) >"$logs/frontend-build.log" 2>&1 || build_status=$?
 

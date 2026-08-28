@@ -100,11 +100,11 @@ with sqlite3.connect(sys.argv[1]) as connection:
 PY
 
 web_status=0
-playwright_args=(--config "$repo_root/frontend/playwright.config.ts")
+playwright_args=(--config "$repo_root/apps/web/playwright.config.ts")
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/frontend" && PATH="$bun_bin:/usr/bin:/bin" "$playwright_node" "$repo_root/frontend/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/apps/web" && PATH="$bun_bin:/usr/bin:/bin" "$playwright_node" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 trap - EXIT

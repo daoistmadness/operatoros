@@ -8,7 +8,7 @@ const repositoryRoot = resolve(scriptDirectory, "..");
 const SCAN_DIRECTORIES = [
   ".github",
   "scripts",
-  "frontend",
+  "apps/web",
   "backend",
   "e2e",
 ];

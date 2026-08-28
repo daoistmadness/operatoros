@@ -1,15 +1,15 @@
 .env
 backend/.env
 backend/.local-dev/
-frontend/.env
+apps/web/.env
 
 backend/attendance.db
 backend/attendance.db-*
 backend/*.db
 backend/*.sqlite3
 
-frontend/node_modules/
-frontend/build/
+apps/web/node_modules/
+apps/web/build/
 .artifacts/
 artifacts/
 .playwright-mcp/
@@ -29,7 +29,6 @@ coverage/
 *.pid
 *.lock
 !bun.lock
-!frontend/bun.lock
 !mise.lock
 *.har
 *.trace
