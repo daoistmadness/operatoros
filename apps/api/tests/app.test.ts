@@ -2,6 +2,8 @@ import { describe, it, expect } from "bun:test";
 import { createApp, createTestApp } from "../src/app";
 import { startServer } from "../src/server";
 import { loadConfig } from "../src/config";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
 
 const jsonHeaders = { "content-type": "application/json" };
 
@@ -119,5 +121,32 @@ describe("configuration isolation", () => {
     expect(c1).not.toEqual(c2);
     expect(c1.hostname).toBe("127.0.0.1");
     expect(c2.hostname).toBe("127.0.0.2");
+  });
+
+  it("derives the database, backup, and log paths from the canonical root", () => {
+    const root = mkdtempSync("/tmp/operatoros-config-");
+    try {
+      const config = loadConfig({
+        NODE_ENV: "test",
+        OPERATOROS_DATA_DIR: `${root}/nested/..`,
+        DATABASE_URL: `sqlite:///${root}/operatoros.sqlite`,
+      });
+      expect(config.dataPaths?.dataDir).toBe(root);
+      expect(config.databasePath).toBe(join(root, "operatoros.sqlite"));
+      expect(config.backupDir).toBe(join(root, "backups"));
+      expect(config.auth?.auditDir).toBe(join(root, "logs"));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails fast when DATABASE_URL disagrees with the canonical root", () => {
+    const root = mkdtempSync("/tmp/operatoros-config-conflict-");
+    try {
+      expect(() => loadConfig({ NODE_ENV: "test", OPERATOROS_DATA_DIR: root, DATABASE_URL: "sqlite:////tmp/other.sqlite" })).toThrow("DATABASE_URL conflicts");
+      expect(() => loadConfig({ NODE_ENV: "test", OPERATOROS_DATA_DIR: root, DATABASE_URL: "sqlite:///relative.sqlite" })).toThrow("DATABASE_URL conflicts");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

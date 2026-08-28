@@ -3,6 +3,7 @@ import { appendFileSync, chmodSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Database } from "bun:sqlite";
 import { inTransaction, type DatabaseHandle } from "@operatoros/db";
+import { resolveOperatorOSPaths } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
@@ -72,7 +73,7 @@ export function defaultAuthConfig(overrides: Partial<AuthConfig> = {}): AuthConf
     allowedOrigins: overrides.allowedOrigins ?? [
       "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173",
     ],
-    auditDir: overrides.auditDir ?? "./backups",
+    auditDir: overrides.auditDir ?? resolveOperatorOSPaths().logDir,
     setupToken: overrides.setupToken,
   };
 }

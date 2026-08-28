@@ -78,6 +78,13 @@ historical evidence unless they explicitly identify a current procedure.
   development warns about that value and uses the canonical persistent
   development database instead. Do not select a development database from
   ambient `DATABASE_URL` or automatically adopt an old database.
+- `OPERATOROS_DATA_DIR` is the canonical local data-root override. It derives
+  `operatoros.sqlite`, `backups/`, and `logs/`. Normal operator data stays
+  outside Git.
+- `OPERATOROS_DEV_DATA_DIR` is a deprecated compatibility alias. The canonical
+  variable takes precedence. Existing legacy data is never moved automatically.
+- An existing legacy development database without the new database fails safe
+  and requires manual operator migration.
 - Use `make dev-db-status`, `make dev-db-reset`, and
   `make dev-sessions-status` for the existing managed workflows. Use the
   repository-defined confirmation token for reset operations.
@@ -137,7 +144,8 @@ API to `apps/api/`. Phase 14.3 moved the authoritative web application to
 `apps/web/`. Phase 14.4 extracted persistence to `packages/db/`. Phase 14.5
 extracted shared TypeBox contracts to `packages/contracts/`. Phase 14.6
 established the reusable Base UI foundation in `packages/ui/`. Phase 14.7
-mechanically enforces the package boundaries. It is complete after merge.
+mechanically enforces the package boundaries. The post-14.7 data-directory
+insertion keeps that gate valid.
 
 Current physical structure:
 
@@ -177,7 +185,8 @@ HTTP transport details remain in `apps/api/`. Database rows remain in
 `@operatoros/db`.
 
 `@operatoros/db` owns the Drizzle schema, migrations when present, low-level
-SQLite client lifecycle, and persistence representation. Business services,
+SQLite client lifecycle, persistence representation, and canonical local data
+path resolution. Business services,
 HTTP behavior, and backup or scheduler policy remain in `apps/api/`.
 `apps/web/` must not import `@operatoros/db` or persistence dependencies.
 
@@ -211,6 +220,14 @@ source imports, type-only imports, re-exports, static dynamic imports, literal
 `require()` calls, package manifests, package exports, cross-workspace relative
 imports, and deep source imports. It reports zero real-tree exceptions. Phase
 14.8 Turbo has not started.
+
+The canonical local data resolver is `packages/db/src/data-dir.ts`. It returns
+absolute normalized paths for the data root, database, backups, and logs.
+`OPERATOROS_DATA_DIR` takes precedence over deprecated
+`OPERATOROS_DEV_DATA_DIR`, then the platform/XDG default with repository
+identity. Startup forwards this root and does not migrate an existing database
+automatically. Tests use disposable roots. Provider-managed history cleanup
+remains separately documented as pending.
 
 ## Stop and escalate
 

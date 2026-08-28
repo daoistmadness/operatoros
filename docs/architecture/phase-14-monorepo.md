@@ -1,6 +1,7 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.7` complete after merge. Phase 14.8 has not started.
+Status: `Phase 14.7` complete after history remediation. The post-14.7 data
+directory insertion is complete. Phase 14.8 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -102,11 +103,12 @@ focused PR.
 2. 14.2: API move.
 3. 14.3: Web move.
 4. 14.4: `packages/db` extraction. The package owns the Drizzle schema, the
-SQLite client lifecycle, the schema manifest, and transaction primitives.
+   SQLite client lifecycle, the schema manifest, and transaction primitives.
 5. 14.5: `packages/contracts` extraction.
 6. 14.6: `packages/ui` and shadcn/Base UI foundation. Complete after merge.
 7. 14.7: Architecture boundary enforcement. Complete after merge.
-8. 14.8: Turborepo.
+8. Post-14.7 insertion: canonical local data directory. Complete after merge.
+9. 14.8: Turborepo.
 
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
 Zod is not part of this architecture.
@@ -136,8 +138,8 @@ documentation paths. It did not restructure the API or extract a package.
 ## Phase 14.4 database boundary
 
 The persistence source now lives in `packages/db/src/`. Its public exports
-provide the database handle, transaction primitive, schema manifest, and
-Drizzle schema. `apps/api` supplies the path and uses these exports. It keeps
+provide the database handle, transaction primitive, schema manifest, Drizzle
+schema, and canonical local data paths. `apps/api` consumes these exports. It keeps
 business services, route handlers, auth transport, report calculations,
 attendance rules, import orchestration, backup and restore policy, and
 scheduler orchestration.
@@ -191,6 +193,42 @@ and `bun run test:architecture`. Shared ESLint restrictions live in
 `packages/config/eslint/`. The root `check` command and required CI run the
 architecture checks and fixture tests. The repository has no architecture
 exceptions.
+
+## Canonical local data directory
+
+The post-14.7 data-directory insertion keeps Phase 14.7 boundaries unchanged.
+`packages/db/src/data-dir.ts` is the single TypeScript resolver. It returns
+absolute normalized paths for:
+
+```text
+OPERATOROS_DATA_DIR/
+  operatoros.sqlite
+  backups/
+  logs/
+```
+
+The precedence is `OPERATOROS_DATA_DIR`, then deprecated
+`OPERATOROS_DEV_DATA_DIR`, then the platform/XDG data directory. The default
+keeps repository identity so separate checkouts do not share one development
+database. Normal data stays outside Git.
+
+`start-dev.sh` resolves and exports `OPERATOROS_DATA_DIR`. `apps/api` consumes
+the exported paths. It uses `DATABASE_URL` only for disposable or externally
+managed runs when no explicit data root is selected. An explicit data root and
+a conflicting database URL fail fast. An existing
+`operatoros-development.db` without `operatoros.sqlite` fails safe and needs
+manual migration. No operator data moves automatically.
+
+The API backup and restore services consume the canonical backup directory.
+The API logger consumes the canonical log directory. Python lifecycle tooling
+accepts the resolved root for compatibility. Tests create disposable roots and
+never use the protected operational database. Startup diagnostics report paths
+only and do not report secrets.
+
+History remediation removed confirmed runtime database artifacts before this
+insertion. Normal retained refs are clean. GitHub-managed pull refs remain a
+separate `PROVIDER_HISTORY_CLEANUP_PENDING` risk. Provider-side garbage
+collection is unverified.
 
 Turbo remains deferred to Phase 14.8. Broad UI modernization remains deferred
 to Phase 18.

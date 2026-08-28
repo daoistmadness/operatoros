@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / "backend" / "src"))
 
 from core.development_database import (  # noqa: E402
     DATABASE_NAME,
+    LEGACY_DATABASE_NAME,
     DevelopmentDatabaseResolutionError,
     common_directory as _common_directory,
     resolve_data_directory,
@@ -78,6 +79,12 @@ def dotenv_defines_database_url(path: Path) -> bool:
 
 def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
     directory, identifier, common = data_directory(repo, override)
+    legacy = directory / LEGACY_DATABASE_NAME
+    database = directory / DATABASE_NAME
+    if legacy.exists() and not database.exists():
+        fail(f"PERSISTENT_DEVELOPMENT_DATABASE_REQUIRES_MANUAL_MIGRATION: {legacy} -> {database}")
+    if legacy.exists() and database.exists():
+        fail("PERSISTENT_DEVELOPMENT_DATABASE_MULTIPLE_LOCATIONS")
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(directory, 0o700)
     metadata_path = directory / "database.json"
@@ -88,7 +95,7 @@ def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
             handle.write("\n")
         os.chmod(temporary, 0o600)
         os.replace(temporary, metadata_path)
-    return directory, directory / DATABASE_NAME
+    return directory, database
 
 
 def inspect(database: Path) -> dict:

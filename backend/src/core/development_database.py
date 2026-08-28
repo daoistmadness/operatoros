@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Callable
 
 
-DATABASE_NAME = "operatoros-development.db"
+DATABASE_NAME = "operatoros.sqlite"
+LEGACY_DATABASE_NAME = "operatoros-development.db"
 
 
 class DevelopmentDatabaseResolutionError(ValueError):
@@ -68,7 +69,7 @@ def resolve_data_directory(
     common = common_directory_resolver(repo)
     repository_id = hashlib.sha256(str(common).encode("utf-8")).hexdigest()[:16]
 
-    source = override if override is not None else os.environ.get("OPERATOROS_DEV_DATA_DIR")
+    source = override if override is not None else (os.environ.get("OPERATOROS_DATA_DIR") or os.environ.get("OPERATOROS_DEV_DATA_DIR"))
     if source:
         supplied = Path(source)
         if not supplied.is_absolute():

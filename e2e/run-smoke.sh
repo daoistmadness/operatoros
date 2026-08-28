@@ -11,20 +11,24 @@ fi
 
 started_at=$SECONDS
 results="$repo_root/e2e-results"
-runtime_root="$repo_root/.runtime/operatoros-e2e"
+runtime_root="$(mktemp -d /tmp/operatoros-e2e.XXXXXX)"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 workspace="$runtime_root/$run_id"
-database="$workspace/state/operatoros-development.db"
+database="$workspace/state/operatoros.sqlite"
 production_database="$repo_root/backend/attendance.db"
 logs="$results/logs"
 junit="$results/junit"
 mkdir -p "$workspace/state" "$logs" "$junit"
 
+cleanup_runtime_root() {
+  find "$runtime_root" -depth -delete
+}
+
 export OPERATOROS_E2E_ADMIN_USERNAME="${OPERATOROS_E2E_ADMIN_USERNAME:-operatoros_e2e_admin}"
 export OPERATOROS_E2E_ADMIN_PASSWORD="${OPERATOROS_E2E_ADMIN_PASSWORD:-E2E-Admin-2026-Secure!}"
 export OPERATOROS_E2E_DATABASE="$database"
-export OPERATOROS_DEV_DATA_DIR="$workspace/state"
-export BACKUP_DIR="$workspace/backups"
+export OPERATOROS_DATA_DIR="$workspace/state"
+export BACKUP_DIR="$workspace/state/backups"
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
 
 resolved_database="$(realpath -m "$database")"
@@ -38,7 +42,11 @@ production_before="MISSING"
 cleanup_stack() {
   bash "$repo_root/e2e/stop-test-stack.sh" "$workspace"
 }
-trap cleanup_stack EXIT
+cleanup() {
+  cleanup_stack
+  cleanup_runtime_root
+}
+trap cleanup EXIT
 
 export DATABASE_URL="sqlite:///$database"
 (
