@@ -30,7 +30,7 @@ export function assertDatabasePath(path: string): void {
   if (path === ":memory:") return;
   if (!path.startsWith("/")) fail("DATABASE_PATH_INVALID", "an absolute SQLite path is required");
   if (path.split("/").at(-1) === PROTECTED_DATABASE_BASENAME) {
-    fail("PROTECTED_DATABASE_FORBIDDEN", "the operational database is never opened by backend-ts");
+    fail("PROTECTED_DATABASE_FORBIDDEN", "the operational database is never opened by the Elysia API");
   }
 }
 

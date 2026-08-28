@@ -35,7 +35,7 @@ function errorBody(code: string, message: string) {
 export function createApp(_config: Partial<BackendConfig> = {}) {
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const context = database && _config.auth?.authCookieSecret ? { database, config: defaultAuthConfig(_config.auth) } : null;
-  const app = new Elysia({ name: "backend-ts" })
+  const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
       if (code === "VALIDATION") {
