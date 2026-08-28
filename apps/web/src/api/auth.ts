@@ -1,13 +1,7 @@
 import { apiRequest } from "../lib/api/client";
+import type { AuthUser } from "@operatoros/contracts/auth";
 
-export type UserRole = "admin" | "staff";
-
-export interface AuthUser {
-  id: number;
-  username: string;
-  role: UserRole;
-  capabilities: string[];
-}
+export type { AuthUser, UserRole } from "@operatoros/contracts/auth";
 
 export async function login(username: string, password: string): Promise<AuthUser> {
   const response = await apiRequest<AuthUser>({

@@ -66,6 +66,15 @@ jobs:
       - name: TypeBox resolution check
         working-directory: ${{ github.workspace }}
         run: bun run check:typebox
+      - name: Contract boundary check
+        working-directory: ${{ github.workspace }}
+        run: bun run check:contracts
+      - name: Contracts package typecheck
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/contracts typecheck
+      - name: Contracts package tests
+        working-directory: ${{ github.workspace }}
+        run: bun --filter @operatoros/contracts test
       - name: Database package typecheck
         working-directory: ${{ github.workspace }}
         run: bun --filter @operatoros/db typecheck
