@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
-import ExcelJS from "exceljs";
+import { appendRow, loadXlsxWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 
@@ -27,7 +27,7 @@ describe("student update workbook candidates", () => {
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: cookie(login) };
       const template = await app.handle(new Request("http://local/api/student-masters/management/export-template", { headers: auth })); expect(template.status).toBe(200);
-      const workbook = new ExcelJS.Workbook(); await workbook.xlsx.load(await template.arrayBuffer() as any); const sheet = workbook.getWorksheet("Student Data")!; expect(sheet.rowCount).toBeGreaterThan(1); sheet.spliceRows(2, sheet.rowCount - 1); sheet.addRow(["missing-student", ...Array(headers.length - 1).fill("")]); const bytes = new Uint8Array(await workbook.xlsx.writeBuffer()); const form = new FormData(); form.append("file", new File([bytes], "student-update.xlsx"));
+      const workbook = await loadXlsxWorkbook(await template.arrayBuffer()); const sheet = workbook.getWorksheet("Student Data")!; expect(sheet.rowCount).toBeGreaterThan(1); sheet.spliceRows(2, sheet.rowCount - 1); appendRow(sheet, ["missing-student", ...Array(headers.length - 1).fill("")]); const bytes = await writeXlsxWorkbook(workbook); const form = new FormData(); form.append("file", new File([bytes], "student-update.xlsx"));
       const preview = await app.handle(new Request("http://local/api/student-masters/management/update-preview", { method: "POST", headers: auth, body: form })); const body = await preview.json() as any; expect(preview.status, JSON.stringify(body)).toBe(200); expect(body.summary).toMatchObject({ total: 1, invalid: 1 }); expect(body.rows[0]).toMatchObject({ classification: "INVALID", errors: [{ code: "UNKNOWN_UUID" }] });
       const history = await app.handle(new Request("http://local/api/student-masters/management/import-history", { headers: auth })); expect(history.status).toBe(200); expect((await history.json() as any).total).toBe(1);
       const commit = await app.handle(new Request(`http://local/api/student-masters/management/update-commit/${body.id}`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_STUDENT_DATA_UPDATE", preview_checksum: body.preview_checksum }) })); expect(commit.status).toBe(409);

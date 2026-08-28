@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
-import ExcelJS from "exceljs";
+import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 
@@ -29,8 +29,8 @@ describe("academic roster candidates", () => {
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login) };
-      const workbook = new ExcelJS.Workbook(); const sheet = workbook.addWorksheet("Roster"); sheet.addRow(["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"]); sheet.addRow(["123", "Andi", "2026/2027-roster", "SMP", "7A", "Science", "active"]);
-      const bytes = new Uint8Array(await workbook.xlsx.writeBuffer());
+      const workbook = createWorkbook({ exportType: "roster-test" }); const sheet = workbook.addWorksheet("Roster"); appendRow(sheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"]); appendRow(sheet, ["123", "Andi", "2026/2027-roster", "SMP", "7A", "Science", "active"]);
+      const bytes = await writeXlsxWorkbook(workbook);
       const invalidForm = new FormData(); invalidForm.append("file", new File([bytes], "roster.xlsx")); invalidForm.append("source_owner", "School Office"); invalidForm.append("date_received", "2026-02-30");
       const invalid = await app.handle(new Request("http://local/api/student-enrollments/roster-preview", { method: "POST", headers: auth, body: invalidForm })); expect(invalid.status).toBe(422);
       const form = new FormData(); form.append("file", new File([bytes], "roster.xlsx")); form.append("source_owner", "School Office"); form.append("date_received", "2026-08-26");

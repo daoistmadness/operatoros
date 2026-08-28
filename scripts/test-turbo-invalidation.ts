@@ -70,6 +70,8 @@ const baseline = taskMap(dryRun());
 const contractDependents = [
   "@operatoros/contracts#typecheck",
   "@operatoros/contracts#test",
+  "@operatoros/excel#typecheck",
+  "@operatoros/excel#test",
   "@operatoros/api#typecheck",
   "@operatoros/api#test",
   "@operatoros/web#typecheck",
@@ -88,6 +90,12 @@ const uiDependents = [
   "@operatoros/web#typecheck",
   "@operatoros/web#test",
   "@operatoros/web#build",
+];
+const excelDependents = [
+  "@operatoros/excel#typecheck",
+  "@operatoros/excel#test",
+  "@operatoros/api#typecheck",
+  "@operatoros/api#test",
 ];
 
 withTemporaryChange("packages/contracts/src/index.ts", "\n// turbo invalidation proof\n", () => {
@@ -108,6 +116,15 @@ withTemporaryChange("packages/ui/src/index.ts", "\n// turbo invalidation proof\n
   for (const taskId of ["@operatoros/api#typecheck", "@operatoros/api#test", "@operatoros/api#build"]) {
     if (baseline.get(taskId)?.hash !== changed.get(taskId)?.hash) {
       throw new Error(`Turbo invalidation incorrectly reached API from UI: ${taskId}`);
+    }
+  }
+});
+withTemporaryChange("packages/excel/src/index.ts", "\n// turbo invalidation proof\n", () => {
+  const changed = taskMap(dryRun());
+  assertChanged(baseline, changed, excelDependents, "Excel -> API");
+  for (const taskId of ["@operatoros/web#typecheck", "@operatoros/web#test", "@operatoros/web#build"]) {
+    if (baseline.get(taskId)?.hash !== changed.get(taskId)?.hash) {
+      throw new Error(`Turbo invalidation incorrectly reached web from Excel: ${taskId}`);
     }
   }
 });

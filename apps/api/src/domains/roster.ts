@@ -1,10 +1,18 @@
-import ExcelJS from "exceljs";
+import {
+  addWorksheet,
+  appendRow,
+  createWorkbook,
+  loadXlsxWorkbook,
+  styleHeader,
+  writeXlsxWorkbook,
+  type ExcelWorkbook,
+} from "@operatoros/excel";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
-import { normalizeHeader, parseExcelDate, parseOptionalString } from "../import/normalization";
+import { normalizeHeader, parseExcelDate, parseOptionalString } from "@operatoros/excel";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -40,7 +48,7 @@ function rosterCell(value: unknown): unknown {
 
 function rosterName(value: unknown): string { return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase(); }
 
-function rosterRows(workbook: ExcelJS.Workbook): Row[] {
+function rosterRows(workbook: ExcelWorkbook): Row[] {
   const result: Row[] = [];
   for (const sheet of workbook.worksheets) {
     const headerValues = (sheet.getRow(1).values as unknown[]).slice(1).map((value) => normalizeHeader(value).toLowerCase().replace(/ /g, "_"));
@@ -87,7 +95,7 @@ function rosterMaster(context: AuthContext, payload: Row): { master: Row | null;
 
 function rosterPreview(context: AuthContext, file: File, owner: string, dateReceived: string, username: string): Promise<Row> {
   return file.arrayBuffer().then(async (buffer) => {
-    const workbook = new ExcelJS.Workbook(); await workbook.xlsx.load(buffer);
+    const workbook = await loadXlsxWorkbook(buffer);
     const source = rosterRows(workbook); const result: Row[] = []; const seen = new Set<string>();
     const activeJenjangs = new Map(rows(context, "SELECT * FROM jenjangs WHERE active = 1").map((value) => [value.name, value]));
     for (const sourceRow of source) {
@@ -187,6 +195,6 @@ export function rosterRoutes(app: any, context: AuthContext): any {
   app.post("/api/student-enrollments/academic-master-preview", (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; return academicMasterPreview(context, ctx.body, user.username); }, { body: t.Object({ source_owner: t.String({ minLength: 2, maxLength: 255 }), academic_years: t.Optional(t.Array(year)), jenjangs: t.Optional(t.Array(jenjang)), programs: t.Optional(t.Array(program)), grades: t.Optional(t.Array(grade)), classes: t.Optional(t.Array(academicClass)) }) });
   app.post("/api/student-enrollments/roster-preview", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const file = ctx.body?.file as File | undefined; const dateReceived = String(ctx.body?.date_received ?? ""); if (!file || !file.name.toLowerCase().endsWith(".xlsx")) return error(ctx.set, 400, "Academic roster must be an .xlsx workbook"); if (!rosterDate(dateReceived)) return error(ctx.set, 422, "Input should be a valid date"); try { return await rosterPreview(context, file, String(ctx.body.source_owner).trim(), dateReceived, user.username); } catch (cause) { ctx.set.status = 400; return { detail: cause instanceof Error ? cause.message : "The roster workbook could not be previewed." }; } }, { body: t.Object({ file: t.File(), source_owner: t.String({ minLength: 2, maxLength: 255 }), date_received: t.String() }) });
   app.post("/api/student-enrollments/roster-commit", (ctx: Context) => { const user = actor(context, ctx, { capability: "commit_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; try { return rosterCommit(context, ctx.body, user.username); } catch (cause) { ctx.set.status = Number((cause as any)?.status ?? 409); return { detail: cause instanceof Error ? cause.message : "The roster could not be committed." }; } }, { body: t.Object({ preview_id: t.String({ minLength: 1 }), selected_row_ids: t.Array(t.Number({ minimum: 1 }), { minItems: 1 }), confirmation: t.String(), preview_checksum: t.Optional(t.String()) }) });
-  app.get("/api/student-enrollments/roster-template", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const workbook = new ExcelJS.Workbook(); const sheet = workbook.addWorksheet("Roster"); const headers = [...required, ...optional].sort((a, b) => (a === "student_identifier" ? -1 : b === "student_identifier" ? 1 : a === "student_name" ? -1 : b === "student_name" ? 1 : a.localeCompare(b))); sheet.addRow(headers); sheet.views = [{ state: "frozen", ySplit: 1 }]; sheet.autoFilter = { from: "A1", to: `${String.fromCharCode(64 + headers.length)}1` }; sheet.getRow(1).font = { bold: true }; const instructions = workbook.addWorksheet("Instructions"); instructions.addRow(["OperatorOS Student Roster"]); instructions.addRow(["Required columns", [...required].sort().join(", ")]); instructions.addRow(["Workflow", "Upload creates a non-mutating preview. Select valid rows and confirm before commit."]); const bytes = new Uint8Array(await workbook.xlsx.writeBuffer()); return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": 'attachment; filename="operatoros-student-roster.xlsx"' } }); });
+  app.get("/api/student-enrollments/roster-template", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const workbook = createWorkbook({ exportType: "student-roster-template" }); const sheet = addWorksheet(workbook, "Roster"); const headers = [...required, ...optional].sort((a, b) => (a === "student_identifier" ? -1 : b === "student_identifier" ? 1 : a === "student_name" ? -1 : b === "student_name" ? 1 : a.localeCompare(b))); appendRow(sheet, headers); styleHeader(sheet); sheet.autoFilter = { from: "A1", to: `${String.fromCharCode(64 + headers.length)}1` }; const instructions = addWorksheet(workbook, "Instructions"); appendRow(instructions, ["OperatorOS Student Roster"]); appendRow(instructions, ["Required columns", [...required].sort().join(", ")]); appendRow(instructions, ["Workflow", "Upload creates a non-mutating preview. Select valid rows and confirm before commit."]); const bytes = await writeXlsxWorkbook(workbook); return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": 'attachment; filename="operatoros-student-roster.xlsx"' } }); });
   return app;
 }
