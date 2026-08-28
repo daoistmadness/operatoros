@@ -30,7 +30,6 @@ coverage/
 *.lock
 !bun.lock
 !frontend/bun.lock
-!backend-ts/bun.lock
 !mise.lock
 *.har
 *.trace
