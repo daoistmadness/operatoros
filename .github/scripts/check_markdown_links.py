@@ -17,7 +17,7 @@ TARGET_PATHS = [
     ROOT / "MEMORY.md",
     ROOT / "ERRORS.md",
     ROOT / "backend" / "README.md",
-    ROOT / "frontend" / "README.md",
+    ROOT / "apps" / "web" / "README.md",
 ]
 HISTORICAL_LINK_FILES = {
     ROOT / "PROJECT_CONTEXT.md",

@@ -16,10 +16,10 @@ from test_scope import FOCUSED_TESTS, build_scope, classify_path, paths_from_nam
     ("path", "category"),
     [
         ("docs/guide.md", "DOCUMENTATION_ONLY"),
-        ("frontend/src/components/Card.tsx", "FRONTEND_COMPONENT"),
-        ("frontend/src/features/readiness/index.ts", "FRONTEND_FEATURE"),
-        ("frontend/src/routes/routeDefinitions.tsx", "FRONTEND_ROUTE"),
-        ("frontend/src/generated/openapi/schema.ts", "FRONTEND_GENERATED_CONTRACT"),
+        ("apps/web/src/components/Card.tsx", "FRONTEND_COMPONENT"),
+        ("apps/web/src/features/readiness/index.ts", "FRONTEND_FEATURE"),
+        ("apps/web/src/routes/routeDefinitions.tsx", "FRONTEND_ROUTE"),
+        ("apps/web/src/generated/openapi/schema.ts", "FRONTEND_GENERATED_CONTRACT"),
         ("backend/src/services/foo.py", "BACKEND_UNIT"),
         ("backend/src/api/students.py", "BACKEND_API"),
         ("backend/src/models/student.py", "BACKEND_MODEL"),
@@ -51,12 +51,12 @@ def test_schema_and_unknown_changes_require_duplicate_backend():
 
 
 def test_route_requires_build_and_api_requires_drift():
-    assert build_scope(["frontend/src/routes/x.tsx"])["frontend_build_required"] is True
+    assert build_scope(["apps/web/src/routes/x.tsx"])["frontend_build_required"] is True
     assert build_scope(["backend/src/api/x.py"])["api_drift_required"] is True
 
 
 def test_generated_contract_requires_api_drift():
-    assert build_scope(["frontend/src/generated/openapi/schema.ts"])["api_drift_required"] is True
+    assert build_scope(["apps/web/src/generated/openapi/schema.ts"])["api_drift_required"] is True
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ def test_generated_contract_requires_api_drift():
         ("backend/src/api/auth.py", "auth"),
         ("backend/src/services/upload_preview.py", "uploads"),
         ("backend/src/services/attendance_review.py", "attendance"),
-        ("frontend/src/features/readiness/index.ts", "readiness"),
+        ("apps/web/src/features/readiness/index.ts", "readiness"),
         ("e2e/run-smoke.sh", "release"),
     ],
 )
@@ -81,7 +81,7 @@ def test_documentation_only_selects_no_product_suite():
 
 
 def test_test_infrastructure_and_makefile_escalate():
-    for path in ("Makefile", "frontend/playwright.config.ts", "scripts/test-tier.sh"):
+    for path in ("Makefile", "apps/web/playwright.config.ts", "scripts/test-tier.sh"):
         scope = build_scope([path])
         assert scope["schema_sensitive"] is True
         assert scope["backend_full_passes_required"] == 2
@@ -119,13 +119,13 @@ def test_untracked_source_is_included(tmp_path):
 def test_every_mapped_test_exists():
     for tests in FOCUSED_TESTS.values():
         for test in tests:
-            candidate = ROOT / test if test.startswith(("backend/", "apps/api/")) else ROOT / "frontend" / test
+            candidate = ROOT / test if test.startswith(("backend/", "apps/api/")) else ROOT / "apps/web" / test
             assert candidate.exists()
 
 
 def test_no_source_change_can_return_no_category():
     representative_sources = (
-        "frontend/src/new-domain/index.ts",
+        "apps/web/src/new-domain/index.ts",
         "backend/src/new-domain/service.py",
         "scripts/new-runner.sh",
     )

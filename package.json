@@ -5,7 +5,7 @@
   "workspaces": {
     "packages": [
       "apps/api",
-      "frontend",
+      "apps/web",
       "packages/*"
     ],
     "catalog": {

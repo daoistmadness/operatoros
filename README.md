@@ -64,7 +64,7 @@ Only the backend grants access. Frontend identity and role state are navigation 
 
 ## Repository Layout
 - [`backend/`](backend/): schema, migration, fixture, and operations tooling plus raw SQL migrations
-- [`frontend/`](frontend/): React pages, shared components, API client, and Nginx config
+- [`apps/web/`](apps/web/): React pages, shared components, API client, and frontend configuration
 - [`docs/`](docs/): WSL2 guidance, utility script notes, and operational references
 - [`scratch/`](scratch/): one-off diagnostics and experiments
 - Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
@@ -90,7 +90,7 @@ are generated and drift-checked through the frontend package scripts. See
 
 ## Prerequisites
 - mise-en-place (mise) >= 2024.1.0 — controls runtime versions (Bun, Python)
-- Bun 1.4.0 (installed via `mise install`; `frontend/bun.lock` remains package lockfile)
+- Bun 1.4.0 (installed via `mise install`; the root `bun.lock` is authoritative)
 - Python 3.12.3 (installed via `mise install`)
 - Agent Browser on the PATH if you want browser verification
 
@@ -128,8 +128,8 @@ mise run doctor
 cd backend
 python -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-cd ../frontend
-bun ci
+cd ../apps/web
+bun install --frozen-lockfile
 ```
 
 `mise install` uses `mise.lock` for exact versions. `mise run doctor` verifies Bun, Python, and lockfile contracts. Bun remains the package manager authority; mise only installs the Bun runtime.
@@ -149,7 +149,7 @@ DATABASE_URL=sqlite:///./operatoros.db AUTH_COOKIE_SECRET='use-a-local-secret-wi
 ```
 
 ```bash
-cd frontend
+cd apps/web
 bun install
 bun run dev
 ```
@@ -235,12 +235,12 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 - Local blocking smoke: `timeout 300 make e2e-smoke`
 - Do not run `make e2e-full` locally without explicit owner approval; it is guarded for GitHub Actions.
 - Backend tests: `cd apps/api && bun test`
-- Frontend build: `cd frontend && bun run build`
+- Frontend build: `cd apps/web && bun run build`
 - Browser smoke: `./scripts/verify-browser.sh`
 - SQLite-only runtime contract: `cd apps/api && bun test tests/data-layer.test.ts`
 
 ## Troubleshooting
-- If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && bun install` if needed.
+- If the Vite dev server fails, verify `apps/web/node_modules/` exists. Run `cd apps/web && bun install` if needed.
 - If uploads fail, confirm the workbook is `.xlsx` and that the required columns exist on the first sheet.
 - If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
 
@@ -264,7 +264,7 @@ Implemented security does not include MFA, SSO, OAuth, LDAP, password-reset emai
 
 ## Further Reading
 - [Backend guide](backend/README.md)
-- [Frontend guide](frontend/README.md)
+- [Frontend guide](apps/web/README.md)
 - [WSL2 / DevOps guide](docs/WSL2_DEVOPS.md)
 - [Utility scripts](docs/UTILITY_SCRIPTS.md)
 - [Identity and authentication](docs/security/identity-authentication.md)

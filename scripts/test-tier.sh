@@ -97,7 +97,7 @@ api_drift_required="$(json_value api_drift_required)"
 frontend_build_required="$(json_value frontend_build_required)"
 
 frontend_static() {
-  (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
+  (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
@@ -122,10 +122,10 @@ for path in json.load(open(sys.argv[1]))["focused_tests"]:
 PY
 )
         if ((${#frontend_tests[@]})); then
-          (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test "${frontend_tests[@]}")
+          (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test "${frontend_tests[@]}")
         fi
         if [[ "$frontend_build_required" == yes ]]; then
-          (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run build)
+          (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run build)
         fi
       fi
       if [[ "$backend_changed" == yes ]]; then
@@ -144,7 +144,7 @@ PY
   pr)
     echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,api,focused-browser"
     frontend_static
-    (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
+    (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
     backend_full
     scenario_grep="$("$python" - "$scope_file" <<'PY'
@@ -174,7 +174,7 @@ PY
     fi
     for ((pass=1; pass<=passes; pass++)); do echo "backend_full_pass=$pass"; backend_full; done
     frontend_static
-    (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
+    (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     make -C "$repo" e2e-validate
     make -C "$repo" e2e-smoke
     make -C "$repo" e2e-clean

@@ -2,7 +2,7 @@
 
 Do not edit `schema.ts` by hand.
 
-- Run `bun run api:generate` from `frontend/` after an intentional backend
+- Run `bun run api:generate` from `apps/web/` after an intentional backend
   contract change.
 - Run `bun run api:check` to verify the committed specification and TypeScript
   contracts are current.
