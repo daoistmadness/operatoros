@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.3` complete. Phase 14.4 has not started.
+Status: `Phase 14.4` complete. Phase 14.5 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -25,15 +25,17 @@ The API application lives in `apps/api/`. The web application lives in
 `apps/web/`. Both application workspaces are authoritative.
 
 Phase 14.1 creates no active future application package. `packages/config`
-contains configuration skeletons. `packages/contracts`, `packages/db`,
-`packages/ui`, and `packages/excel` remain deferred to later subphases.
+contains configuration skeletons. Phase 14.4 makes `packages/db` active.
+`packages/contracts`, `packages/ui`, and `packages/excel` remain deferred.
 
 ## Workspace ownership
 
 - Bun owns the runtime, package manager, workspaces, catalog, and root `bun.lock`.
 - `apps/api/` is the `@operatoros/api` workspace.
 - `apps/web/` is the `@operatoros/web` workspace.
-- Both packages remain private and keep their existing `0.1.0` metadata.
+- `packages/db/` is the `@operatoros/db` workspace.
+- The application packages remain private and keep their existing `0.1.0`
+  metadata. The database package is private and versionless.
 - The repository has no single release-version authority.
 
 The root package is private and versionless. The root `bun.lock` is the only
@@ -49,7 +51,8 @@ Only schemas and types that cross an application or package boundary belong in
 
 Database representations belong in `@operatoros/db`. HTTP transport details,
 including query coercion, cookies, multipart parsing, file parsing, headers,
-and Elysia-only refinements, remain in `apps/api`.
+and Elysia-only refinements, remain in `apps/api`. The web application does
+not consume database representations.
 
 UI state belongs in `apps/web` or `@operatoros/ui`. Excel implementation state
 belongs in `@operatoros/excel`.
@@ -85,7 +88,8 @@ focused PR.
 1. 14.1: Bun workspace foundation.
 2. 14.2: API move.
 3. 14.3: Web move.
-4. 14.4: `packages/db` extraction.
+4. 14.4: `packages/db` extraction. The package owns the Drizzle schema, the
+SQLite client lifecycle, the schema manifest, and transaction primitives.
 5. 14.5: `packages/contracts` extraction.
 6. 14.6: `packages/ui` and shadcn/Base UI foundation.
 7. 14.7: Architecture boundary enforcement.
@@ -115,3 +119,17 @@ documentation paths. It did not move `frontend/` or extract a package.
 Phase 14.3 moved the authoritative React/Vite application from `frontend/` to
 `apps/web/`. It updated active workspace, launcher, CI, E2E, test-scope, and
 documentation paths. It did not restructure the API or extract a package.
+
+## Phase 14.4 database boundary
+
+The persistence source now lives in `packages/db/src/`. Its public exports
+provide the database handle, transaction primitive, schema manifest, and
+Drizzle schema. `apps/api` supplies the path and uses these exports. It keeps
+business services, route handlers, auth transport, report calculations,
+attendance rules, import orchestration, backup and restore policy, and
+scheduler orchestration.
+
+This repository has no TypeScript migration directory or migration runner.
+Python schema and fixture tooling remains retained tooling. It is not part of
+the Elysia runtime package. The accepted schema fingerprint and migration
+manifest remain unchanged.

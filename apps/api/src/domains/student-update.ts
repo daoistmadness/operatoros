@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 
