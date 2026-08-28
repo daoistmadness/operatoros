@@ -69,7 +69,7 @@ const catalogVersion = catalog?.["@sinclair/typebox"];
 if (!catalogVersion || !versionParts(catalogVersion)) errors.push("root workspaces.catalog must contain one exact TypeBox version");
 if (catalogVersion && /[~^*xX]|\s/.test(catalogVersion)) errors.push(`TypeBox catalog is not exact: ${catalogVersion}`);
 
-const workspacePaths = ["apps/api", "frontend"];
+const workspacePaths = ["apps/api", "apps/web"];
 const packageRoot = join(root, "packages");
 try {
   for (const entry of readdirSync(packageRoot, { withFileTypes: true })) {

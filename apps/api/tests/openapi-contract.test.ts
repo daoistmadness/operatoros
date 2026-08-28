@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
-import { openDatabase } from "../src/db/connection";
+import { openDatabase } from "@operatoros/db";
 import openApi from "../../../openapi/operatoros.openapi.json";
 
 type OpenApiDocument = {

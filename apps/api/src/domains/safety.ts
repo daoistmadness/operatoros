@@ -5,7 +5,7 @@ import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
-import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "../db/manifest";
+import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 
 type Row = Record<string, any>;
 type Context = any;

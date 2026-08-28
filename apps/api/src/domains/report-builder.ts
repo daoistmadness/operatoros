@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import { t } from "elysia";
 import { actor } from "./core";
 import { managementSummary } from "./reports";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;

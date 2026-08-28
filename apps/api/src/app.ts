@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import type { BackendConfig } from "./config";
-import { openDatabase } from "./db/connection";
+import { openDatabase } from "@operatoros/db";
 import { authRoutes } from "./auth/routes";
 import { defaultAuthConfig } from "./auth/service";
 import { coreRoutes } from "./domains/core";

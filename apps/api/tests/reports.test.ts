@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
 import ExcelJS from "exceljs";
 import { createApp } from "../src/app";
-import { openDatabase } from "../src/db/connection";
+import { openDatabase } from "@operatoros/db";
 import { calculateHeb, roundHalfEven, roundHalfUp } from "../src/domains/reports";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
