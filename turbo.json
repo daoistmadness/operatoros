@@ -1,0 +1,57 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": [
+    "bun.lock",
+    "mise.toml",
+    "mise.lock",
+    "eslint.config.mjs",
+    "scripts/check-architecture.ts",
+    "scripts/check-typebox-resolution.ts"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "e2e:release": {
+      "cache": false
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "api:generate": {
+      "cache": false
+    },
+    "api:check": {},
+    "boundaries:check": {},
+    "boundaries:test": {},
+    "check:dependencies": {},
+    "check:node-regressions": {},
+    "resolve-data-dir": {
+      "cache": false
+    },
+    "check:audit": {
+      "cache": false
+    }
+  }
+}

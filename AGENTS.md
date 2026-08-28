@@ -17,7 +17,7 @@ historical evidence unless they explicitly identify a current procedure.
 ## Environment and dependencies
 
 - Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
-- Use `mise` as runtime-version authority. `mise.toml` pins Bun 1.4.0 and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise only installs the runtime.
+- Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.0, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
 - Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
@@ -219,7 +219,20 @@ The semantic architecture checker uses the TypeScript compiler API. It scans
 source imports, type-only imports, re-exports, static dynamic imports, literal
 `require()` calls, package manifests, package exports, cross-workspace relative
 imports, and deep source imports. It reports zero real-tree exceptions. Phase
-14.8 Turbo has not started.
+Phase 14.8 establishes the tooling split. `mise` manages CLI versions. `hk`
+manages Git lifecycle hooks. Bun remains the JavaScript runtime, package
+manager, workspace resolver, and lockfile authority. Turbo 2.10.12 manages the
+dependency-aware task graph and local cache. Turbo is a root-only dependency.
+
+Use `bun run turbo:check` for cached typecheck, unit-test, and web-build tasks.
+Use `bun run test:turbo` for invalidation proofs. Do not cache E2E, database
+mutation, backup, restore, scheduler, runtime, or development-server tasks.
+Operator data never enters the Turbo or mise caches. Hooks provide early local
+feedback. CI runs the checks directly and does not require installed hooks.
+
+Run `hk check --all` for the configured fast checks. Developers may install
+repository hooks with `mise exec -- hk install --mise`. Repository setup does
+not change global Git configuration automatically. Phase 15 has not started.
 
 The canonical local data resolver is `packages/db/src/data-dir.ts`. It returns
 absolute normalized paths for the data root, database, backups, and logs.
