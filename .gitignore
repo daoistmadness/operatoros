@@ -36,6 +36,9 @@ coverage/
 *.trace
 
 # Local Backups
+/.operatoros-data/
+/backups/
+/logs/
 backups/
 
 # Python & Environment
@@ -56,6 +59,10 @@ backend/test_reset.py
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
 # Build products
 dist/
 
