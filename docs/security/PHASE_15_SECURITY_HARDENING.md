@@ -4,8 +4,8 @@ Phase 15 adds layered login limits, explicit proxy trust, exact Origin
 protection, explicit credentialed CORS, and AES-256-GCM application backup
 encryption. It also adds Bun dependency auditing and rotation runbooks.
 
-The final merged main SHA is recorded in the delivery report and signed commit
-history. The accepted Phase 14 base is
+The final merged main SHA is `f80e16d6955ecf04f87e337dfaeb7c60e1879eb8`. The
+accepted Phase 14 base is
 `52cec9cf04c29a42013fc55db8f1313454b8ab6f`.
 
 The default login limits are 20 attempts per IP, 10 per trimmed account, and
