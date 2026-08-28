@@ -4922,6 +4922,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsTrends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/cohorts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsCohorts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -18100,6 +18148,254 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getApiAnalyticsOverview: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                start_date?: string;
+                end_date?: string;
+                jenjang_id?: string;
+                class_name?: string;
+                subject_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        contract_version: "analytics.v1";
+                        filters: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            start_date: string;
+                            end_date: string;
+                            jenjang_id: number | null;
+                            class_name: string | null;
+                            subject_id: number | null;
+                        };
+                        metric_definitions: {
+                            id: string;
+                            label: string;
+                            /** @enum {string} */
+                            unit: "count" | "percent" | "score";
+                            numerator: string;
+                            denominator: string;
+                            rounding: string;
+                            missing_data: string;
+                        }[];
+                        summary: {
+                            student_count: number;
+                            attendance_counts: {
+                                present: number;
+                                sakit: number;
+                                izin: number;
+                                alfa: number;
+                                late: number;
+                            };
+                            attendance_rate: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                            grade_average: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                        };
+                        cohorts: {
+                            /** @enum {string} */
+                            dimension: "class" | "jenjang";
+                            id: number | null;
+                            label: string;
+                            student_count: number;
+                            attendance_rate: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                            grade_average: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    getApiAnalyticsTrends: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                start_date?: string;
+                end_date?: string;
+                jenjang_id?: string;
+                class_name?: string;
+                subject_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        contract_version: "analytics.v1";
+                        filters: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            start_date: string;
+                            end_date: string;
+                            jenjang_id: number | null;
+                            class_name: string | null;
+                            subject_id: number | null;
+                        };
+                        metric_definitions: {
+                            id: string;
+                            label: string;
+                            /** @enum {string} */
+                            unit: "count" | "percent" | "score";
+                            numerator: string;
+                            denominator: string;
+                            rounding: string;
+                            missing_data: string;
+                        }[];
+                        series: {
+                            /** @constant */
+                            metric_id: "attendance_rate";
+                            /** @constant */
+                            time_grain: "month";
+                            points: {
+                                period: string;
+                                start_date: string;
+                                end_date: string;
+                                metric: {
+                                    value: number | null;
+                                    numerator: number;
+                                    denominator: number;
+                                    /** @enum {string} */
+                                    unit: "count" | "percent" | "score";
+                                    /** @enum {string} */
+                                    status: "value" | "zero" | "unavailable" | "not_applicable";
+                                };
+                            }[];
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    getApiAnalyticsCohorts: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                start_date?: string;
+                end_date?: string;
+                jenjang_id?: string;
+                class_name?: string;
+                subject_id?: string;
+                dimension: "class" | "jenjang";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        contract_version: "analytics.v1";
+                        filters: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            start_date: string;
+                            end_date: string;
+                            jenjang_id: number | null;
+                            class_name: string | null;
+                            subject_id: number | null;
+                        };
+                        metric_definitions: {
+                            id: string;
+                            label: string;
+                            /** @enum {string} */
+                            unit: "count" | "percent" | "score";
+                            numerator: string;
+                            denominator: string;
+                            rounding: string;
+                            missing_data: string;
+                        }[];
+                        /** @enum {string} */
+                        dimension: "class" | "jenjang";
+                        cohorts: {
+                            /** @enum {string} */
+                            dimension: "class" | "jenjang";
+                            id: number | null;
+                            label: string;
+                            student_count: number;
+                            attendance_rate: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                            grade_average: {
+                                value: number | null;
+                                numerator: number;
+                                denominator: number;
+                                /** @enum {string} */
+                                unit: "count" | "percent" | "score";
+                                /** @enum {string} */
+                                status: "value" | "zero" | "unavailable" | "not_applicable";
+                            };
+                        }[];
+                    };
                 };
             };
         };

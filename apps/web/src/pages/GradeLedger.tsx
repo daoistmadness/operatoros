@@ -1,9 +1,11 @@
 import React, { Component, useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
 import { fetchAcademicYears, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
 import { apiRequest } from "../lib/api/client";
 import type { AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
+import { queryKeys } from "../lib/query/queryKeys";
 
 const JENJANG_OPTIONS = [
   { id: 1, label: "Primary" },
@@ -79,6 +81,7 @@ class GradeLedgerErrorBoundary extends Component<React.PropsWithChildren, Bounda
 }
 
 function GradeLedgerContent() {
+  const queryClient = useQueryClient();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(null);
   const [jenjangId, setJenjangId] = useState<number>(JENJANG_OPTIONS[0].id);
@@ -208,6 +211,7 @@ function GradeLedgerContent() {
       const results = await Promise.all(payloads.map((payload) => saveGradeLedger(payload)));
       const saved = results.reduce((total, result) => total + result.saved, 0);
       setStatusMessage(`${saved} grade line(s) saved across ${payloads.length} enrollment row(s).`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
       await loadLedgerData();
     } catch (saveError) {
       console.error("Grade Ledger save failure", saveError);

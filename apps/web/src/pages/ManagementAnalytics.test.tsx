@@ -1,12 +1,14 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ManagementAnalytics from "./ManagementAnalytics";
 import * as analyticsApi from "../api/analytics";
 import * as academicConfigApi from "../api/academicConfig";
 import * as reportBuilderApi from "../api/reportBuilder";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
+import { createTestQueryClient } from "../lib/query/queryClient";
 
 vi.mock("react-chartjs-2", () => ({
   Bar: () => <div data-testid="bar-chart" />,
@@ -15,6 +17,9 @@ vi.mock("react-chartjs-2", () => ({
 }));
 
 vi.mock("../api/analytics", () => ({
+  fetchAnalyticsCohorts: vi.fn(),
+  fetchAnalyticsOverview: vi.fn(),
+  fetchAnalyticsTrends: vi.fn(),
   fetchAnalyticsFilters: vi.fn(),
   fetchManagementSummary: vi.fn(),
   fetchHistoricalTrends: vi.fn(),
@@ -62,9 +67,11 @@ async function renderPage(auth: AuthContextValue = adminAuth) {
   await act(async () => {
     root.render(
       <MemoryRouter>
-        <AuthContext.Provider value={auth}>
-          <ManagementAnalytics />
-        </AuthContext.Provider>
+        <QueryClientProvider client={createTestQueryClient()}>
+          <AuthContext.Provider value={auth}>
+            <ManagementAnalytics />
+          </AuthContext.Provider>
+        </QueryClientProvider>
       </MemoryRouter>
     );
   });
@@ -75,6 +82,9 @@ describe("ManagementAnalytics state handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(analyticsApi.fetchAnalyticsFilters).mockResolvedValue(filters);
+    vi.mocked(analyticsApi.fetchAnalyticsCohorts).mockResolvedValue({ contract_version: "analytics.v1", filters: {} as never, metric_definitions: [], dimension: "class", cohorts: [] });
+    vi.mocked(analyticsApi.fetchAnalyticsOverview).mockResolvedValue({} as never);
+    vi.mocked(analyticsApi.fetchAnalyticsTrends).mockResolvedValue({} as never);
     vi.mocked(academicConfigApi.fetchEffectiveTerms).mockResolvedValue([]);
     vi.mocked(reportBuilderApi.fetchReportTemplates).mockResolvedValue([]);
     vi.mocked(analyticsApi.fetchHistoricalTrends).mockResolvedValue({} as never);
@@ -111,6 +121,7 @@ describe("ManagementAnalytics state handling", () => {
   it("does not render raw backend error details", async () => {
     vi.mocked(analyticsApi.fetchAnalyticsFilters).mockRejectedValue(new Error("SQLSTATE secret internal detail"));
     const view = await renderPage();
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
     expect(view.textContent).toContain("Gagal Memuat Analisis Manajemen");
     expect(view.textContent).not.toContain("SQLSTATE");
   });

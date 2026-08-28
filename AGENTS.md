@@ -257,6 +257,18 @@ identity. Startup forwards this root and does not migrate an existing database
 automatically. Tests use disposable roots. Provider-managed history cleanup
 remains separately documented as pending.
 
+## Phase 16 analytics rules
+
+- Important business metrics are computed by the API with canonical SQL
+  aggregates. Their definitions live in [the analytics metric reference](docs/analytics/METRICS.md).
+- Analytics DTOs belong in `@operatoros/contracts`. They do not contain SQL,
+  database rows, or Chart.js state.
+- The web application uses one in-memory TanStack Query client. It must not
+  persist authenticated analytics data to `localStorage`.
+- Browser code may format server metrics and adapt them for Chart.js. It must
+  not recompute important business metrics.
+- Persisted analytics rollups require benchmark evidence and explicit review.
+
 ## Stop and escalate
 
 Stop for unclear or conflicting requirements, missing credentials/data,
