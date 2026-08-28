@@ -9,12 +9,13 @@ Administrators use the canonical `/api/admin/backups` API or Backup Management p
 1. resolves the configured SQLite database to a canonical absolute path;
 2. creates a consistent snapshot with SQLite's online backup API, including WAL state;
 3. runs `PRAGMA integrity_check` and verifies required operational tables;
-4. calculates SHA-256;
-5. writes protected metadata containing timestamp, trigger, size, checksum, schema version, source basename, and tool version;
-6. publishes the database/metadata pair atomically; and
-7. applies count-based retention.
+4. encrypts the snapshot with the configured AES-256-GCM backup key;
+5. calculates SHA-256 over the final encrypted artifact;
+6. writes protected metadata containing timestamp, trigger, size, checksum, schema version, source basename, encryption version, algorithm, key ID, and tool version;
+7. publishes the database/metadata pair atomically; and
+8. applies count-based retention.
 
-Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. Backups are not encrypted by OperatorOS, so filesystem access controls and protected storage remain operational requirements.
+Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
 
 Retention keeps the configured number of manual backups and the latest safety snapshot. A backup selected for restore is protected from retention removal while a new safety snapshot is created.
 
@@ -65,4 +66,7 @@ The current two-worker Docker image therefore serves normal application traffic 
 
 ## Legacy scripts
 
-`scripts/backup.sh` and `scripts/restore.sh`, where present, are separate operator tools with different formats and safeguards. They do not replace the authenticated API chain, identity compatibility checks, browser sign-out, or Phase 7 restore audit lifecycle. Scheduled backup operations are not part of the completed Phase 6/7 API architecture.
+`scripts/backup.sh` and `scripts/restore.sh`, where present, use the same
+versioned encrypted backup envelope but remain separate operator tools. They
+do not replace the authenticated API chain, identity compatibility checks,
+browser sign-out, or Phase 7 restore audit lifecycle.
