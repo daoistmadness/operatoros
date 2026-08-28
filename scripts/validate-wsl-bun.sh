@@ -105,7 +105,7 @@ operatoros_wsl_validate_bun() {
     return 1
   fi
 
-  if [[ -f "$project_root/package-lock.json" || -f "$project_root/backend-ts/package-lock.json" || -f "$project_root/frontend/package-lock.json" ]]; then
+  if [[ -f "$project_root/package-lock.json" || -f "$project_root/apps/api/package-lock.json" || -f "$project_root/frontend/package-lock.json" ]]; then
     OPERATOROS_WSL_TOOLCHAIN_REASON="package-lock.json must not exist; root bun.lock is the sole authority"
     OPERATOROS_WSL_TOOLCHAIN_STATE="OBSOLETE_LOCKFILE"
     return 1

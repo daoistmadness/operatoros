@@ -9,12 +9,12 @@ on:
       - develop
 
 jobs:
-  backend-ts:
+  api:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: backend-ts
+        working-directory: apps/api
     env:
       OPERATOROS_PYTHON: ${{ github.workspace }}/backend/.venv/bin/python
     steps:

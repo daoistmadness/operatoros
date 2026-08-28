@@ -46,14 +46,14 @@ FOCUSED_TESTS = {
     "FRONTEND_ROUTE": ["src/routes/routeDefinitions.test.tsx", "src/routes/RouteErrorBoundary.test.tsx"],
     "FRONTEND_API_CLIENT": ["src/lib/api", "src/lib/query"],
     "FRONTEND_GENERATED_CONTRACT": ["src/generated/openapi/openapiFoundation.test.ts"],
-    "BACKEND_UNIT": ["backend-ts/tests/core.test.ts"],
-    "BACKEND_API": ["backend-ts/tests/app.test.ts"],
-    "BACKEND_AUTH": ["backend-ts/tests/auth.test.ts"],
-    "BACKEND_UPLOAD": ["backend-ts/tests/attendance-import.test.ts"],
-    "BACKEND_ATTENDANCE": ["backend-ts/tests/attendance.test.ts"],
-    "BACKEND_MODEL": ["backend-ts/tests/data-layer.test.ts"],
-    "BACKEND_MIGRATION": ["backend-ts/tests/data-layer.test.ts"],
-    "BACKEND_BOOTSTRAP": ["backend-ts/tests/data-layer.test.ts"],
+    "BACKEND_UNIT": ["apps/api/tests/core.test.ts"],
+    "BACKEND_API": ["apps/api/tests/app.test.ts"],
+    "BACKEND_AUTH": ["apps/api/tests/auth.test.ts"],
+    "BACKEND_UPLOAD": ["apps/api/tests/attendance-import.test.ts"],
+    "BACKEND_ATTENDANCE": ["apps/api/tests/attendance.test.ts"],
+    "BACKEND_MODEL": ["apps/api/tests/data-layer.test.ts"],
+    "BACKEND_MIGRATION": ["apps/api/tests/data-layer.test.ts"],
+    "BACKEND_BOOTSTRAP": ["apps/api/tests/data-layer.test.ts"],
 }
 
 BROWSER_SCENARIOS = {
@@ -76,7 +76,7 @@ def classify_path(path: str) -> set[str]:
         return {"DOCUMENTATION_ONLY"}
     if value.startswith("frontend/src/generated/"):
         return {"FRONTEND_GENERATED_CONTRACT"}
-    if value.startswith("backend-ts/src/"):
+    if value.startswith("apps/api/src/"):
         if "attendance-import" in value:
             return {"BACKEND_UPLOAD"}
         if "attendance" in value:
@@ -86,7 +86,7 @@ def classify_path(path: str) -> set[str]:
         if value.endswith("openapi-contract.ts"):
             return {"BACKEND_API"}
         return {"BACKEND_UNIT"}
-    if value.startswith("backend-ts/tests/"):
+    if value.startswith("apps/api/tests/"):
         return {"BACKEND_UNIT"}
     if value.startswith("frontend/src/routes/"):
         return {"FRONTEND_ROUTE"}
