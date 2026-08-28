@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { addWorksheet, appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
+import { addWorksheet, appendRow, createWorkbook, writeXlsxWorkbook } from "../src/index";
+import { writeLegacyXlsRows } from "../src/legacy";
 
 const [directory, date] = Bun.argv.slice(2);
 if (!directory || !date) throw new Error("fixture directory and date are required");

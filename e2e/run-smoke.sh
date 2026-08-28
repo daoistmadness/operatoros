@@ -73,7 +73,7 @@ playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
 export PATH="$bun_bin:/usr/bin:/bin"
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 fixture_dir="$workspace/state/frontend-fixtures"
-"$bun_bin/bun" "$repo_root/e2e/helpers/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
+"$bun_bin/bun" "$repo_root/packages/excel/scripts/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
 export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
 export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 
