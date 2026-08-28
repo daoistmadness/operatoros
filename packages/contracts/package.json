@@ -1,0 +1,25 @@
+{
+  "name": "@operatoros/contracts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "bun-types": "1.4.0",
+    "typescript": "5.9.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./attendance": "./src/attendance/index.ts",
+    "./grades": "./src/grades/index.ts",
+    "./reports": "./src/reports/index.ts",
+    "./students": "./src/students/index.ts"
+  }
+}

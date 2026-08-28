@@ -1,4 +1,5 @@
 import { t } from "elysia";
+import { LoginRequestSchema } from "@operatoros/contracts/auth";
 import { capabilitiesForRole } from "./capabilities";
 import {
   authenticate,
@@ -44,7 +45,7 @@ export function authRoutes(app: any, context: AuthContext): any {
         return detail(set, 401, error instanceof Error ? error.message : "Invalid username or password");
       }
     }, {
-      body: t.Object({ username: t.String({ minLength: 1, maxLength: 255 }), password: t.String({ minLength: 1, maxLength: 1024 }) }),
+      body: LoginRequestSchema,
     })
     .post("/api/auth/logout", ({ request, set, server }: any) => {
       const requestInfo = requestContext(request, server);

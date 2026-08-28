@@ -1,15 +1,22 @@
 import { describe, expect, it } from "bun:test";
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { openapi } from "@elysiajs/openapi";
+import { AuthUserSchema, LoginRequestSchema } from "@operatoros/contracts/auth";
+import { ReportScopeSchema } from "@operatoros/contracts/reports";
 import { Type } from "@sinclair/typebox";
 
-const requestSchema = Type.Object({ name: Type.String({ minLength: 1 }) });
-const responseSchema = Type.Object({ ok: Type.Boolean() });
+const requestSchema = LoginRequestSchema;
+const responseSchema = AuthUserSchema;
 
 function createInteropApp() {
   return new Elysia()
     .use(openapi({ path: "/openapi" }))
-    .post("/interop", ({ body }) => ({ ok: body.name.length > 0 }), {
+    .post("/interop", ({ body }) => ({
+      id: 1,
+      username: body.username,
+      role: "admin" as const,
+      capabilities: [],
+    }), {
       body: requestSchema,
       response: responseSchema,
     })
@@ -22,16 +29,16 @@ describe("TypeBox and Elysia interoperability", () => {
     const valid = await app.handle(new Request("http://local/interop", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name: "OperatorOS" }),
+      body: JSON.stringify({ username: "OperatorOS", password: "secret" }),
     }));
     const invalid = await app.handle(new Request("http://local/interop", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name: "" }),
+      body: JSON.stringify({ username: "", password: "secret" }),
     }));
 
     expect(valid.status).toBe(200);
-    expect(await valid.json()).toEqual({ ok: true });
+    expect(await valid.json()).toEqual({ id: 1, username: "OperatorOS", role: "admin", capabilities: [] });
     expect(invalid.status).toBe(422);
   });
 
@@ -50,4 +57,17 @@ describe("TypeBox and Elysia interoperability", () => {
       (server.server as unknown as { stop(closeActiveConnections?: boolean): void }).stop(true);
     }
   }, 15000);
+
+  it("keeps Elysia query coercion at the transport boundary", async () => {
+    const app = new Elysia().get("/query", ({ query }) => query, {
+      query: t.Object({ academic_year_id: t.Number({ minimum: 1 }), scope: ReportScopeSchema }),
+      response: Type.Object({ academic_year_id: Type.Number({ minimum: 1 }), scope: ReportScopeSchema }),
+    });
+    const valid = await app.handle(new Request("http://local/query?academic_year_id=7&scope=primary"));
+    const invalid = await app.handle(new Request("http://local/query?academic_year_id=7&scope=unknown"));
+
+    expect(valid.status).toBe(200);
+    expect(await valid.json()).toEqual({ academic_year_id: 7, scope: "primary" });
+    expect(invalid.status).toBe(422);
+  });
 });

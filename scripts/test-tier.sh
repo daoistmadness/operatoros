@@ -100,7 +100,7 @@ frontend_static() {
   (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
-  (cd "$repo" && PATH="$bun_bin:$PATH" bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
+  (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
 
@@ -111,7 +111,7 @@ case "$tier" in
     elif [[ "$schema_sensitive" == yes ]]; then
       echo "selected_suites=classifier-tests,db-package,fresh-db-parity"
       "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
-      (cd "$repo" && PATH="$bun_bin:$PATH" bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
+      (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
       make -C "$repo" fresh-db-parity
     else
       if [[ "$frontend_changed" == yes ]]; then

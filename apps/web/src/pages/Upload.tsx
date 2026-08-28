@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, FileText, History, Loader2, U
 import { Link } from "react-router-dom";
 
 import api from "../api";
+import type { AttendanceImportCommitRequest } from "@operatoros/contracts/attendance";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -83,11 +84,12 @@ export function previewAttendanceFile(file: File) {
 }
 
 export function commitAttendancePreview(batchId: string, selectedRowIds: number[], previewChecksum: string) {
-  return api.post<Omit<AttendanceCommitResult, "completed_at">>(`/api/uploads/preview/${batchId}/commit`, {
+  const payload: AttendanceImportCommitRequest = {
     selected_row_ids: Array.from(new Set(selectedRowIds)),
     confirmation: CONFIRMATION,
     preview_checksum: previewChecksum,
-  });
+  };
+  return api.post<Omit<AttendanceCommitResult, "completed_at">>(`/api/uploads/preview/${batchId}/commit`, payload);
 }
 
 export function WorkflowIndicator({ stage }: WorkflowIndicatorProps) {

@@ -1,12 +1,13 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import ExcelJS from "exceljs";
 import { t } from "elysia";
+import { ReportScopeSchema, type ReportScope } from "@operatoros/contracts/reports";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
 type Context = any;
-type Scope = "combined" | "early_year" | "primary" | "secondary";
+type Scope = ReportScope;
 
 const scopes: Record<Scope, string> = {
   combined: "Combined",
@@ -524,7 +525,7 @@ async function tardinessWorkbook(report: Row, managementOnly: boolean): Promise<
   return new Uint8Array(await workbook.xlsx.writeBuffer());
 }
 
-function bodyQuery(): any { return { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(t.Union([t.Literal("combined"), t.Literal("early_year"), t.Literal("primary"), t.Literal("secondary")])), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) }; }
+function bodyQuery(): any { return { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(ReportScopeSchema), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) }; }
 
 function queryNumber(value: unknown): number | null { if (value === undefined || value === null || value === "") return null; const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; }
 
@@ -1019,7 +1020,7 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
 }
 
 export function reportRoutes(app: any, context: AuthContext): any {
-  const reportQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(t.Union([t.Literal("combined"), t.Literal("early_year"), t.Literal("primary"), t.Literal("secondary")])), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) };
+  const reportQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(ReportScopeSchema), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) };
   app.get("/api/reports/filters", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return reportFilters(context, queryNumber(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope); } catch (error) { return sendError(ctx, error); } }, reportQuery);
   app.get("/api/reports/monthly", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildMonthly(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
   app.get("/api/reports/management/monthly", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; try { return buildManagement(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);

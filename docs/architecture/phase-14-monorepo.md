@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.4` complete. Phase 14.5 has not started.
+Status: `Phase 14.5` complete after merge. Phase 14.6 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -26,7 +26,8 @@ The API application lives in `apps/api/`. The web application lives in
 
 Phase 14.1 creates no active future application package. `packages/config`
 contains configuration skeletons. Phase 14.4 makes `packages/db` active.
-`packages/contracts`, `packages/ui`, and `packages/excel` remain deferred.
+Phase 14.5 makes `packages/contracts` active. `packages/ui` and
+`packages/excel` remain deferred.
 
 ## Workspace ownership
 
@@ -34,6 +35,7 @@ contains configuration skeletons. Phase 14.4 makes `packages/db` active.
 - `apps/api/` is the `@operatoros/api` workspace.
 - `apps/web/` is the `@operatoros/web` workspace.
 - `packages/db/` is the `@operatoros/db` workspace.
+- `packages/contracts/` is the `@operatoros/contracts` workspace.
 - The application packages remain private and keep their existing `0.1.0`
   metadata. The database package is private and versionless.
 - The repository has no single release-version authority.
@@ -47,7 +49,8 @@ dependency lockfile. Nested application lockfiles are not authoritative.
 `catalog:` and do not pin another TypeBox version.
 
 Only schemas and types that cross an application or package boundary belong in
-`@operatoros/contracts`. Phase 14.1 does not extract real contracts.
+`@operatoros/contracts`. The package uses plain TypeBox. It does not import
+Elysia, Drizzle, React, `@operatoros/db`, or an application.
 
 Database representations belong in `@operatoros/db`. HTTP transport details,
 including query coercion, cookies, multipart parsing, file parsing, headers,
@@ -133,3 +136,25 @@ This repository has no TypeScript migration directory or migration runner.
 Python schema and fixture tooling remains retained tooling. It is not part of
 the Elysia runtime package. The accepted schema fingerprint and migration
 manifest remain unchanged.
+
+## Phase 14.5 contracts boundary
+
+`packages/contracts/` owns the shared auth, student/enrollment, attendance
+import, grade/academic, and report query schemas extracted in Phase 14.5. It
+exports runtime TypeBox schemas and their derived static types.
+
+`apps/api/` consumes shared request schemas. It keeps query coercion, cookies,
+multipart parsing, file handling, headers, and other Elysia transport details.
+`apps/web/` consumes shared types with type-only imports where possible.
+
+Database rows and persistence types remain in `packages/db`. Business mapping,
+calculations, authorization, backup policy, scheduler policy, and file parsing
+remain in `apps/api`. UI state remains in `apps/web`. The UI package, Excel
+implementation package, and full architecture enforcement remain pending.
+
+Database row types stay in `@operatoros/db`. API business logic and mapping stay
+in `apps/api/`. Other report, attendance, import, and safety types remain in
+their current owners until an exact cross-boundary shape needs extraction.
+
+Phase 14.6 has not started. No UI components moved. No shadcn or Base UI work
+started. Excel implementation remains in `apps/api/`. Turbo remains deferred.
