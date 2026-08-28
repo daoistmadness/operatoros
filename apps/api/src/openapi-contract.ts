@@ -1,4 +1,4 @@
-import openApi from "../../openapi/operatoros.openapi.json";
+import openApi from "../../../openapi/operatoros.openapi.json";
 import type { OpenAPIV3 } from "openapi-types";
 
 const deprecatedOperations = new Set(["POST /api/uploads/upload"]);

@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.1` in progress.
+Status: `Phase 14.2` complete. Phase 14.3 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -21,8 +21,8 @@ operatoros/
     excel/
 ```
 
-The current applications remain in `backend-ts/` and `frontend/` during Phase
-14.1. `apps/api/` and `apps/web/` are placeholders only.
+The API application now lives in `apps/api/`. The web application remains in
+`frontend/`. `apps/web/` is still a non-authoritative placeholder.
 
 Phase 14.1 creates no active future application package. `packages/config`
 contains configuration skeletons. `packages/contracts`, `packages/db`,
@@ -31,7 +31,7 @@ contains configuration skeletons. `packages/contracts`, `packages/db`,
 ## Workspace ownership
 
 - Bun owns the runtime, package manager, workspaces, catalog, and root `bun.lock`.
-- `backend-ts/` is the `@operatoros/api` workspace.
+- `apps/api/` is the `@operatoros/api` workspace.
 - `frontend/` is the `@operatoros/web` workspace.
 - Both packages remain private and keep their existing `0.1.0` metadata.
 - The repository has no single release-version authority.
@@ -94,9 +94,9 @@ focused PR.
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
 Zod is not part of this architecture.
 
-## Phase 14.1 scope
+## Phase 14.1 and 14.2 scope
 
-Phase 14.1 provides:
+Phase 14.1 provided:
 
 - root Bun workspaces for the two existing applications;
 - one root lockfile;
@@ -105,5 +105,9 @@ Phase 14.1 provides:
 - shared TypeScript and ESLint configuration locations;
 - package and dependency-boundary documentation.
 
-It does not provide real shared contracts, move source files, extract Drizzle,
+It did not provide real shared contracts, move source files, extract Drizzle,
 add UI libraries, add Turbo, add Zod, or change application behavior.
+
+Phase 14.2 moved the authoritative Elysia application from `backend-ts/` to
+`apps/api/`. It updated active workspace, launcher, CI, E2E, test-scope, and
+documentation paths. It did not move `frontend/` or extract a package.

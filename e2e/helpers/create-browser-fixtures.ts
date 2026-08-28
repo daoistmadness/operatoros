@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import ExcelJS from "../../backend-ts/node_modules/exceljs";
-import * as XLSX from "../../backend-ts/node_modules/@e965/xlsx";
+import ExcelJS from "../../apps/api/node_modules/exceljs";
+import * as XLSX from "../../apps/api/node_modules/@e965/xlsx";
 
 const [directory, date] = Bun.argv.slice(2);
 if (!directory || !date) throw new Error("fixture directory and date are required");

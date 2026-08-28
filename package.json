@@ -4,7 +4,7 @@
   "packageManager": "bun@1.4.0",
   "workspaces": {
     "packages": [
-      "backend-ts",
+      "apps/api",
       "frontend",
       "packages/*"
     ],
