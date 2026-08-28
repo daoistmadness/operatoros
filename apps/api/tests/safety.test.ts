@@ -3,11 +3,13 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { backupScheduler } from "../src/domains/safety";
+import { isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const localPython = `${repoRoot}/backend/.venv/bin/python`;
 const python = process.env.OPERATOROS_PYTHON ?? (existsSync(localPython) ? localPython : "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python");
 const secret = "astryx-test-only-cookie-secret-32-chars";
+const backupKey = Buffer.alloc(32, 7).toString("base64");
 
 function seed(path: string): void {
   const script = [
@@ -33,7 +35,7 @@ describe("backup, restore, and scheduler safety", () => {
     const backupDir = `/tmp/operatoros-phase9-backups-${process.pid}-${Date.now()}`;
     seed(path); mkdirSync(backupDir, { recursive: true });
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, auth: { authCookieSecret: secret, auditDir: backupDir } });
+    const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
     try {
       const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
       const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie } }));
@@ -44,8 +46,21 @@ describe("backup, restore, and scheduler safety", () => {
 
       const download = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/download`, { headers: { cookie } }));
       expect(download.status).toBe(200);
+      expect(download.headers.get("content-type")).toBe("application/vnd.operatoros.backup+json");
       expect(download.headers.get("content-disposition")).toContain(backup.filename);
-      expect((await download.arrayBuffer()).byteLength).toBeGreaterThan(0);
+      const artifact = Buffer.from(await download.arrayBuffer());
+      expect(artifact.length).toBeGreaterThan(0);
+      expect(isEncryptedBackup(artifact)).toBe(true);
+
+      const wrongKeyApp = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: Buffer.alloc(32, 8).toString("base64"), activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
+      const wrongKeyCookie = await login(wrongKeyApp, "golden-admin", "golden-admin-pass-1");
+      const wrongKeyPreflight = await wrongKeyApp.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: wrongKeyCookie } }));
+      expect(wrongKeyPreflight.status).toBeGreaterThanOrEqual(400);
+
+      const plaintextApp = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: null, auth: { authCookieSecret: secret, auditDir: backupDir } });
+      const plaintextCookie = await login(plaintextApp, "golden-admin", "golden-admin-pass-1");
+      const plaintextBackup = await plaintextApp.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie: plaintextCookie } }));
+      expect(plaintextBackup.status).toBe(503);
 
       database.client.run("CREATE TABLE restore_marker (value TEXT NOT NULL)");
       database.client.run("INSERT INTO restore_marker VALUES ('after-backup')");
@@ -62,8 +77,7 @@ describe("backup, restore, and scheduler safety", () => {
       const corrupt = `${backupDir}/${backup.filename}`;
       const bytes = readFileSync(corrupt); bytes[bytes.length - 1] = (bytes[bytes.length - 1] ?? 0) ^ 1; writeFileSync(corrupt, bytes);
       const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: postRestoreCookie } }));
-      expect(corruptPreflight.status).toBe(200);
-      expect((await corruptPreflight.json() as any).source.checksum_matches_manifest).toBe(false);
+      expect(corruptPreflight.status).toBeGreaterThanOrEqual(400);
       const deleted = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie } }));
       expect(deleted.status).toBe(200);
       expect(existsSync(corrupt)).toBe(false);
