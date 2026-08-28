@@ -5,8 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-BACKUP_DIR="$PROJECT_ROOT/backups"
-
 # Load environment variables
 ENV_FILE=""
 if [ -f "$PROJECT_ROOT/backend/.env" ]; then
@@ -19,6 +17,10 @@ if [ -n "$ENV_FILE" ]; then
     echo "Sourcing environment variables from $ENV_FILE"
     export $(grep -v '^#' "$ENV_FILE" | xargs)
 fi
+
+DATA_DIR_CLI="$PROJECT_ROOT/packages/db/src/data-dir-cli.ts"
+CANONICAL_DATABASE="$(bun "$DATA_DIR_CLI" --repo "$PROJECT_ROOT" --format database)"
+BACKUP_DIR="$(bun "$DATA_DIR_CLI" --repo "$PROJECT_ROOT" --format backup-dir)"
 
 DB_URL="${DATABASE_URL:-}"
 
@@ -68,20 +70,15 @@ fi
 SQLITE_PATH=""
 if [[ "$DB_URL" =~ sqlite:\/\/\/(.+) ]]; then
     RAW_PATH="${BASH_REMATCH[1]}"
-    RAW_PATH="${RAW_PATH#./}"
-    if [ -f "$PROJECT_ROOT/backend/$RAW_PATH" ]; then
-        SQLITE_PATH="$PROJECT_ROOT/backend/$RAW_PATH"
-    elif [ -f "$PROJECT_ROOT/$RAW_PATH" ]; then
-        SQLITE_PATH="$PROJECT_ROOT/$RAW_PATH"
-    fi
+    [[ "$RAW_PATH" == /* ]] || { echo "Error: DATABASE_URL must use an absolute SQLite path."; exit 1; }
+    SQLITE_PATH="$(realpath -m "$RAW_PATH")"
+elif [ -z "$DB_URL" ]; then
+    SQLITE_PATH="$CANONICAL_DATABASE"
 fi
 
-if [ -z "$SQLITE_PATH" ] || [ ! -f "$SQLITE_PATH" ]; then
-    if [ -f "$PROJECT_ROOT/backend/attendance.db" ]; then
-        SQLITE_PATH="$PROJECT_ROOT/backend/attendance.db"
-    elif [ -f "$PROJECT_ROOT/attendance.db" ]; then
-        SQLITE_PATH="$PROJECT_ROOT/attendance.db"
-    fi
+if [[ -n "${OPERATOROS_DATA_DIR:-}${OPERATOROS_DEV_DATA_DIR:-}" && "$(realpath -m "$SQLITE_PATH")" != "$CANONICAL_DATABASE" ]]; then
+    echo "Error: DATABASE_URL conflicts with the canonical OperatorOS data root."
+    exit 1
 fi
 
 if [ -z "$SQLITE_PATH" ]; then

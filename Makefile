@@ -32,21 +32,21 @@ e2e-validate:
 	@bash e2e/run-full.sh --validate
 
 dev-db-path:
-	@backend/.venv/bin/python scripts/development_database.py path --repo "$(CURDIR)"
+	@bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format database
 
 dev-db-status:
-	@backend/.venv/bin/python scripts/development_database.py status --repo "$(CURDIR)"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py status --repo "$(CURDIR)" --data-dir "$$DATA_DIR"
 
 dev-sessions-status:
 	@backend/.venv/bin/python scripts/operatoros-dev-runtime.py status --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
 
 dev-db-reset:
 	@backend/.venv/bin/python scripts/operatoros-dev-runtime.py require-no-active-session --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
-	@backend/.venv/bin/python scripts/development_database.py reset --repo "$(CURDIR)" --confirm "$(CONFIRM)"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --confirm "$(CONFIRM)"
 
 dev-db-candidates:
-	@backend/.venv/bin/python scripts/development_database.py candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --data-dir "$$DATA_DIR"
 
 dev-db-adopt:
 	@test -n "$(SESSION)" || (echo "SESSION is required" >&2; exit 2)
-	@backend/.venv/bin/python scripts/development_database.py adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)" --data-dir "$$DATA_DIR"

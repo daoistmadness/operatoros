@@ -49,6 +49,26 @@ def test_session_directory_override_is_rejected(tmp_path, monkeypatch):
         tool.data_directory(repository, str(repository / ".runtime" / "operatoros-dev" / "sessions" / "bad"))
 
 
+def test_canonical_data_dir_precedes_legacy_environment(tmp_path, monkeypatch):
+    repository = _repository(tmp_path)
+    monkeypatch.setattr(tool, "common_directory", lambda _: tmp_path)
+    monkeypatch.setenv("OPERATOROS_DATA_DIR", str(tmp_path / "canonical"))
+    monkeypatch.setenv("OPERATOROS_DEV_DATA_DIR", str(tmp_path / "legacy"))
+    directory, _, _ = tool.data_directory(repository)
+    assert directory == tmp_path / "canonical"
+
+
+def test_old_database_requires_manual_migration(tmp_path, monkeypatch):
+    repository = _repository(tmp_path)
+    monkeypatch.setattr(tool, "common_directory", lambda _: tmp_path)
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    (directory / tool.LEGACY_DATABASE_NAME).write_text("synthetic legacy marker", encoding="utf-8")
+    with pytest.raises(SystemExit, match="REQUIRES_MANUAL_MIGRATION"):
+        tool.prepare(repository, str(directory))
+    assert not (directory / tool.DATABASE_NAME).exists()
+
+
 def test_fresh_database_is_s43_without_administrator(tmp_path, monkeypatch):
     repository = _repository(tmp_path)
     common = tmp_path / "common.git"

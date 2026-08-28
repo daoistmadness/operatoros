@@ -16,6 +16,7 @@ WSL_BUN_HELPER="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
+EXPECTED_PERSISTENT_DB=""
 
 BACKEND_PORT_CONFIGURED=0
 FRONTEND_PORT_CONFIGURED=0
@@ -75,8 +76,8 @@ fail_preflight() {
 }
 
 report_configuration_drift() {
-  EXPECTED_PERSISTENT_DB="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT")" \
-    || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DEV_DATA_DIR to an approved absolute directory."
+  EXPECTED_PERSISTENT_DB="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" path --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR")" \
+    || fail_preflight "DEVELOPMENT_DATA_PATH_REJECTED" "Set OPERATOROS_DATA_DIR to an approved absolute directory."
 
   if [[ "${DATABASE_URL+x}" == x ]]; then
     printf '[warning] DATABASE_URL is set in the current shell.\n'
@@ -86,7 +87,8 @@ report_configuration_drift() {
 
   if [[ -n "${OPERATOROS_DEV_DATA_DIR:-}" ]]; then
     printf '[warning] OPERATOROS_DEV_DATA_DIR is set for managed development.\n'
-    printf '          Resolved data root: %s\n' "$(dirname "$EXPECTED_PERSISTENT_DB")"
+    printf '          This variable is deprecated. Use OPERATOROS_DATA_DIR.\n'
+    printf '          Resolved data root: %s\n' "$OPERATOROS_DATA_DIR"
     printf '          Resolved database: %s\n' "$EXPECTED_PERSISTENT_DB"
   fi
 
@@ -113,7 +115,7 @@ PY
 }
 
 prepare_local_environment() {
-  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT")" \
+  DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR")" \
     || fail_preflight "PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE" "Use make dev-db-status to inspect the persistent development database."
   [[ "$DEV_DATABASE" == "$EXPECTED_PERSISTENT_DB" ]] \
     || fail_preflight "DEVELOPMENT_DATABASE_RESOLUTION_DRIFT" "The resolved development database changed during startup."
@@ -319,8 +321,12 @@ while (( $# )); do
   esac
 done
 
-report_configuration_drift
 run_preflight
+export OPERATOROS_REPOSITORY_ROOT="$PROJECT_ROOT"
+OPERATOROS_DATA_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format data-dir)" \
+  || fail_preflight "DATA_DIR_RESOLVER_FAILED" "The canonical OperatorOS data directory could not be resolved."
+export OPERATOROS_DATA_DIR
+report_configuration_drift
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
   session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
   [[ -n "$session_status" ]] || session_status='{"state":"STALE_SESSION_UNVERIFIED"}'
