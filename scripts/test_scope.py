@@ -32,6 +32,7 @@ RISK_CATEGORIES = (
     "BACKEND_MIGRATION",
     "BACKEND_BOOTSTRAP",
     "DATABASE_PACKAGE",
+    "CONTRACTS_PACKAGE",
     "DATABASE_FIXTURE",
     "E2E_INFRASTRUCTURE",
     "UNKNOWN_HIGH_RISK",
@@ -104,6 +105,8 @@ def classify_path(path: str) -> set[str]:
         return {"BACKEND_UNIT"}
     if value.startswith("packages/db/"):
         return {"DATABASE_PACKAGE"}
+    if value.startswith("packages/contracts/"):
+        return {"CONTRACTS_PACKAGE"}
     if web_path(value, "src/routes/"):
         return {"FRONTEND_ROUTE"}
     if web_path(value, "src/features/"):
@@ -189,10 +192,10 @@ def paths_from_name_status(output: str) -> set[str]:
 def build_scope(paths: list[str]) -> dict[str, object]:
     categories = sorted({category for path in paths for category in classify_path(path)})
     frontend = any(category.startswith("FRONTEND_") for category in categories)
-    backend = any(category.startswith("BACKEND_") or category == "DATABASE_PACKAGE" for category in categories)
+    backend = any(category.startswith("BACKEND_") or category in {"DATABASE_PACKAGE", "CONTRACTS_PACKAGE"} for category in categories)
     schema_sensitive = bool({
         "BACKEND_MODEL", "BACKEND_MIGRATION", "BACKEND_BOOTSTRAP",
-        "DATABASE_PACKAGE", "DATABASE_FIXTURE", "E2E_INFRASTRUCTURE", "UNKNOWN_HIGH_RISK",
+        "DATABASE_PACKAGE", "CONTRACTS_PACKAGE", "DATABASE_FIXTURE", "E2E_INFRASTRUCTURE", "UNKNOWN_HIGH_RISK",
     } & set(categories))
     focused = sorted({
         test for category in categories for test in FOCUSED_TESTS.get(category, [])
