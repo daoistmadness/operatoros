@@ -22,7 +22,7 @@ function fail(set: any, status: number, detail: string): { detail: string } {
 let clearDataBusy = false;
 
 function currentUser(context: AuthContext, ctx: Context): CurrentUser | null {
-  const requestInfo = requestContext(ctx.request, ctx.server);
+  const requestInfo = requestContext(ctx.request, ctx.server, context.config.trustedProxyAddresses ?? []);
   const result = authorize(context, readCookie(ctx.request, SESSION_COOKIE_NAME), {}, {
     path: ctx.path, userAgent: requestInfo.userAgent, ipAddress: requestInfo.ipAddress,
   });

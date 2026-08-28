@@ -113,6 +113,31 @@ focused PR.
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
 Zod is not part of this architecture.
 
+## Phase 15 security ownership
+
+Phase 15 keeps the Phase 14 package graph unchanged. Login rate limiting,
+proxy trust, Origin validation, CORS, and backup encryption remain in
+`apps/api/`. The DB package only owns persistence and the canonical local data
+paths. Contracts and UI do not import security, filesystem, or cryptography
+code.
+
+New application backups use version 1 AES-256-GCM envelopes. The live SQLite
+database stays unencrypted. `BACKUP_ENCRYPTION_KEY` is a separate 32-byte
+Base64 key with a stable key ID. Existing plaintext backups are not rewritten.
+Legacy restore requires explicit opt-in.
+
+The API trusts the direct socket peer by default. Forwarded headers require
+exact `TRUSTED_PROXY_ADDRESSES` entries. Cookie-authenticated unsafe requests
+require an exact configured Origin. The same list drives credentialed CORS.
+
+The repository runs `bun run security:audit` in required CI and on a weekly
+schedule. Two temporary transitive advisories are listed with owners and
+review dates in `docs/security/dependency-audit-exceptions.md`.
+
+Phase 14 remains the accepted monorepo foundation. Phase 15 does not change
+package ownership, API semantics, or database schema semantics. Provider
+history cleanup remains pending and unverified.
+
 ## Phase 14.1 and 14.2 scope
 
 Phase 14.1 provided:

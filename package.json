@@ -31,6 +31,8 @@
     "turbo:check": "turbo run typecheck test build --concurrency=1",
     "turbo:version": "turbo --version",
     "test:turbo": "bun scripts/test-turbo-invalidation.ts",
+    "security:audit": "bun audit --ignore=1102341 --ignore=1119441",
+    "test:security": "bun --filter @operatoros/api test tests/security.test.ts tests/auth.test.ts tests/safety.test.ts",
     "lint": "eslint --max-warnings=0 apps/api apps/web packages/db packages/contracts packages/ui packages/config",
     "check": "bun run lint && bun run check:typebox && bun run check:architecture && bun run test:architecture && bun run check:contracts && bun run check:ui && bun run typecheck && bun run test"
   },

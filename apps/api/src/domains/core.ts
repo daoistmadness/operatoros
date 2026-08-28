@@ -21,7 +21,7 @@ function error(set: any, status: number, message: string | Record<string, unknow
 }
 
 export function actor(context: AuthContext, ctx: Context, requirement: { role?: "admin" | "staff"; capability?: string; refreshSession?: boolean }): CurrentUser | null {
-  const requestInfo = requestContext(ctx.request, ctx.server);
+  const requestInfo = requestContext(ctx.request, ctx.server, context.config.trustedProxyAddresses ?? []);
   const result = authorize(context, readCookie(ctx.request, SESSION_COOKIE_NAME), requirement, {
     path: ctx.path, userAgent: requestInfo.userAgent, ipAddress: requestInfo.ipAddress,
   });

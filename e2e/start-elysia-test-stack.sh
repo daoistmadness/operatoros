@@ -63,6 +63,7 @@ export COOKIE_SECURE=false
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
 export BACKUP_DIR="$workspace/state/backups"
 export OPERATOROS_ISOLATED_TEST=true
+export ALLOWED_ORIGINS="http://127.0.0.1:$frontend_port,http://localhost:$frontend_port,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
 
 (
   cd "$repo_root/apps/api"
