@@ -8,7 +8,7 @@ import { calculateLateMinutes } from "../src/domains/attendance-rules";
 import { parseDuration, parseExcelDate, parseExcelTime } from "../src/import/normalization";
 import { readAttendanceWorkbook } from "../src/import/excel-reader";
 
-const repoRoot = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
+const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"];
