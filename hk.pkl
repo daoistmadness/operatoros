@@ -1,0 +1,27 @@
+amends "package://github.com/jdx/hk/releases/download/v1.56.1/hk@1.56.1#/Config.pkl"
+
+local fastChecks = new Mapping<String, Step> {
+  ["lint"] {
+    check = "bun run lint"
+  }
+  ["architecture"] {
+    check = "bun run check:architecture"
+  }
+}
+
+hooks {
+  ["check"] {
+    steps = fastChecks
+  }
+  ["pre-commit"] {
+    steps = fastChecks
+  }
+  ["pre-push"] {
+    steps {
+      ["repository-check"] {
+        check = "bun run check"
+        exclusive = true
+      }
+    }
+  }
+}
