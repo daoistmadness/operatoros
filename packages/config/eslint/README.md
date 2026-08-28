@@ -1,4 +1,6 @@
-# Shared ESLint configuration placeholder
+# Shared ESLint boundary configuration
 
-Phase 14.1 records the shared configuration location.
-Phase 14.7 will add mechanical architecture rules.
+`index.mjs` owns the reusable workspace import restrictions.
+
+The root ESLint config applies these rules to active workspace source and test
+files. The semantic architecture checker also validates manifests and paths.

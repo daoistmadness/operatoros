@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.6` complete after merge. Phase 14.7 has not started.
+Status: `Phase 14.7` complete after merge. Phase 14.8 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -86,7 +86,12 @@ The intended application edges are:
 - `@operatoros/excel` may depend on `@operatoros/contracts`.
 - `@operatoros/excel` should not depend directly on `@operatoros/db`.
 
-Mechanical boundary enforcement lands in Phase 14.7.
+Phase 14.7 adds mechanical boundary enforcement through shared ESLint rules and
+the semantic `scripts/check-architecture.ts` checker. The checker validates
+source imports, type-only imports, re-exports, static dynamic imports, literal
+`require()` calls, package manifests, package exports, deep source imports, and
+cross-workspace relative imports. It uses the TypeScript compiler API. The real
+tree has zero exceptions.
 
 ## Subphase sequence
 
@@ -100,7 +105,7 @@ focused PR.
 SQLite client lifecycle, the schema manifest, and transaction primitives.
 5. 14.5: `packages/contracts` extraction.
 6. 14.6: `packages/ui` and shadcn/Base UI foundation. Complete after merge.
-7. 14.7: Architecture boundary enforcement. Pending.
+7. 14.7: Architecture boundary enforcement. Complete after merge.
 8. 14.8: Turborepo.
 
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
@@ -181,6 +186,11 @@ React remains owned by `apps/web/` at runtime. The UI package declares React
 compatibility as peer dependencies and uses the accepted React version for
 tests.
 
-Phase 14.7 will add repository-wide mechanical architecture enforcement.
+The Phase 14.7 enforcement uses `bun run lint`, `bun run check:architecture`,
+and `bun run test:architecture`. Shared ESLint restrictions live in
+`packages/config/eslint/`. The root `check` command and required CI run the
+architecture checks and fixture tests. The repository has no architecture
+exceptions.
+
 Turbo remains deferred to Phase 14.8. Broad UI modernization remains deferred
 to Phase 18.

@@ -136,8 +136,8 @@ Phase 14.1 established workspace tooling. Phase 14.2 moved the authoritative
 API to `apps/api/`. Phase 14.3 moved the authoritative web application to
 `apps/web/`. Phase 14.4 extracted persistence to `packages/db/`. Phase 14.5
 extracted shared TypeBox contracts to `packages/contracts/`. Phase 14.6
-establishes the reusable Base UI foundation in `packages/ui/`. It is complete
-after merge. Phase 14.7 has not started.
+established the reusable Base UI foundation in `packages/ui/`. Phase 14.7
+mechanically enforces the package boundaries. It is complete after merge.
 
 Current physical structure:
 
@@ -155,8 +155,8 @@ Never pin `@sinclair/typebox` independently in a workspace package. Use
 `catalog:`. Change the root catalog entry when the OperatorOS TypeBox version
 changes.
 
-Binding dependency rules start in Phase 14.1. Mechanical enforcement starts in
-Phase 14.7:
+Binding dependency rules start in Phase 14.1. Phase 14.7 mechanically enforces
+them:
 
 - `packages/contracts` must not import `elysia`, `drizzle-orm`, `react`, or `apps/*`.
 - `packages/db` must not import `apps/*`.
@@ -166,6 +166,9 @@ Phase 14.7:
 - `packages/db` and `packages/contracts` must not import `@operatoros/ui`.
 - `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
 - `packages/*` must not import `apps/*`.
+- Cross-workspace imports must use package exports.
+- Deep `@operatoros/*/src` imports are forbidden.
+- Cross-workspace relative source imports are forbidden.
 
 `@operatoros/contracts` owns only schemas and types that cross an application
 or package boundary. It uses plain `@sinclair/typebox` through `catalog:`.
@@ -184,7 +187,7 @@ exports. It does not own routes, data fetching, business forms, or domain
 components. Existing Radix components may remain in `apps/web/`. Broad UI
 modernization is deferred to Phase 18.
 
-Phase 14.1 through 14.5 validation commands remain available. Use these
+Phase 14.1 through 14.7 validation commands remain available. Use these
 workspace commands for current application checks:
 
 - `bun --filter @operatoros/contracts test`
@@ -198,7 +201,16 @@ workspace commands for current application checks:
 - `bun run check:typebox`
 - `bun run check:contracts`
 - `bun run check:ui`
+- `bun run lint`
+- `bun run check:architecture`
+- `bun run test:architecture`
 - `bun run check`
+
+The semantic architecture checker uses the TypeScript compiler API. It scans
+source imports, type-only imports, re-exports, static dynamic imports, literal
+`require()` calls, package manifests, package exports, cross-workspace relative
+imports, and deep source imports. It reports zero real-tree exceptions. Phase
+14.8 Turbo has not started.
 
 ## Stop and escalate
 
