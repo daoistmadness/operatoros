@@ -66,6 +66,15 @@ jobs:
       - name: TypeBox resolution check
         working-directory: ${{ github.workspace }}
         run: bun run check:typebox
+      - name: ESLint workspace boundary check
+        working-directory: ${{ github.workspace }}
+        run: bun run lint
+      - name: Semantic architecture boundary check
+        working-directory: ${{ github.workspace }}
+        run: bun run check:architecture
+      - name: Architecture checker fixture tests
+        working-directory: ${{ github.workspace }}
+        run: bun run test:architecture
       - name: Contract boundary check
         working-directory: ${{ github.workspace }}
         run: bun run check:contracts
