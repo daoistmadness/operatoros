@@ -3,7 +3,7 @@ import { dirname, extname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const defaultSourceRoot = resolve(scriptDirectory, "../frontend/src");
+const defaultSourceRoot = resolve(scriptDirectory, "../apps/web/src");
 const sourceExtensions = new Set([".ts", ".tsx"]);
 
 function normalize(path) {

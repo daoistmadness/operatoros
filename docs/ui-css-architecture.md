@@ -11,7 +11,7 @@ Tailwind utilities
   → route composition
 ```
 
-`frontend/src/index.css` is the sole global CSS entry. New component-specific CSS files, inline style objects, duplicated literal colors, and feature-local theme values are not allowed. Chart.js canvas configuration remains the narrow inline-style exception.
+`apps/web/src/index.css` is the sole global CSS entry. New component-specific CSS files, inline style objects, duplicated literal colors, and feature-local theme values are not allowed. Chart.js canvas configuration remains the narrow inline-style exception.
 
 ## Ownership
 

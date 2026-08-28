@@ -17,7 +17,7 @@ function runtimeBaseUrl(): string {
   throw new Error("OperatorOS runtime state did not provide the selected frontend URL");
 }
 
-const repositoryRoot = path.resolve(__dirname, "..");
+const repositoryRoot = path.resolve(__dirname, "../..");
 const resultsRoot = path.join(repositoryRoot, "e2e-results");
 
 export default defineConfig({

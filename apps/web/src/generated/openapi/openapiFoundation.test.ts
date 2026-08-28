@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { paths } from "./schema";
 
-const repositoryRoot = resolve(import.meta.dirname, "../../../..");
+const repositoryRoot = resolve(import.meta.dirname, "../../../../..");
 const specificationPath = resolve(repositoryRoot, "openapi/operatoros.openapi.json");
 const specification = JSON.parse(readFileSync(specificationPath, "utf8")) as {
   openapi?: unknown;
@@ -48,7 +48,7 @@ describe("generated OpenAPI foundation", () => {
 
   it("prevents product UI and hooks from importing generated internals", () => {
     const roots = ["pages", "components", "routes", "hooks"].map((part) =>
-      resolve(repositoryRoot, "frontend", "src", part),
+      resolve(repositoryRoot, "apps", "web", "src", part),
     );
     const directImports = roots.flatMap(sourceFiles).filter((path) =>
       readFileSync(path, "utf8").includes("generated/openapi"),
