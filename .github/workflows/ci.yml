@@ -35,6 +35,24 @@ jobs:
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile
+      - name: Verify hk and Turbo toolchain
+        working-directory: ${{ github.workspace }}
+        env:
+          HK_MISE: "1"
+        run: |
+          hk --version | grep -Eq "^hk 1\.56\.1$"
+          bun run turbo:version | grep -Eq "^2\.10\.12$"
+      - name: Validate hk checks
+        working-directory: ${{ github.workspace }}
+        env:
+          HK_MISE: "1"
+        run: hk check --all
+      - name: Validate Turbo orchestration
+        working-directory: ${{ github.workspace }}
+        run: bun run turbo:check
+      - name: Validate Turbo invalidation proofs
+        working-directory: ${{ github.workspace }}
+        run: bun run test:turbo
       - name: Prepare Elysia runtime database
         working-directory: ${{ github.workspace }}
         run: |
@@ -121,6 +139,7 @@ jobs:
         run: |
           mise --version
           bun --version | grep -Eq "^1\.4\."
+          hk --version | grep -Eq "^hk 1\.56\.1$"
           mise ls --current
       - name: Install dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
@@ -151,6 +170,7 @@ jobs:
       - name: Verify docs toolchain
         run: |
           mise --version
+          hk --version | grep -Eq "^hk 1\.56\.1$"
           python --version
       - name: Validate relative Markdown links
         run: python .github/scripts/check_markdown_links.py
