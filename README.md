@@ -143,7 +143,7 @@ This launches the app and then runs [`scripts/verify-browser.sh`](scripts/verify
 
 ## Local Development Without start-dev.sh
 ```bash
-cd backend-ts
+cd apps/api
 bun install --frozen-lockfile
 DATABASE_URL=sqlite:///./operatoros.db AUTH_COOKIE_SECRET='use-a-local-secret-with-at-least-32-characters' bun run src/server.ts
 ```
@@ -234,10 +234,10 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 - E2E infrastructure validation: `make e2e-validate`
 - Local blocking smoke: `timeout 300 make e2e-smoke`
 - Do not run `make e2e-full` locally without explicit owner approval; it is guarded for GitHub Actions.
-- Backend tests: `cd backend-ts && bun test`
+- Backend tests: `cd apps/api && bun test`
 - Frontend build: `cd frontend && bun run build`
 - Browser smoke: `./scripts/verify-browser.sh`
-- SQLite-only runtime contract: `cd backend-ts && bun test tests/data-layer.test.ts`
+- SQLite-only runtime contract: `cd apps/api && bun test tests/data-layer.test.ts`
 
 ## Troubleshooting
 - If the Vite dev server fails, verify `frontend/node_modules/` exists. Run `cd frontend && bun install` if needed.

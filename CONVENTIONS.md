@@ -7,8 +7,8 @@
 - Utility scripts use descriptive imperative names, for example `generate_primary_lateness_dashboard.py`.
 
 ## Organization
-- Backend routes live in `backend-ts/src/domains/` and `backend-ts/src/auth/`.
-- Backend database schema lives in `backend-ts/src/db/`.
+- Backend routes live in `apps/api/src/domains/` and `apps/api/src/auth/`.
+- Backend database schema lives in `apps/api/src/db/`.
 - Backend processing logic and analytics live in the TypeScript domain modules.
 - Frontend route screens/pages live in `frontend/src/pages/`.
 - Shared UI and API helpers live in `frontend/src/components/` and `frontend/src/lib/`.
@@ -21,7 +21,7 @@
 ## Imports and Structure
 - Keep imports grouped by standard library, third-party, then local modules.
 - Prefer small helper functions over deeply nested logic.
-- Keep route registration explicit in `backend-ts/src/app.ts`.
+- Keep route registration explicit in `apps/api/src/app.ts`.
 - Keep frontend route definitions explicit in `frontend/src/App.js`.
 - Keep API URL construction centralized in `frontend/src/lib/api/client.js` rather than scattering backend URLs across pages.
 - Keep development routing centralized in `frontend/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
@@ -38,7 +38,7 @@
 - Avoid introducing noisy logging unless it helps diagnose a known issue.
 
 ## Testing Style
-- Backend behavioral tests live under `backend-ts/tests/` and use Bun.
+- Backend behavioral tests live under `apps/api/tests/` and use Bun.
 - Frontend tests live under `frontend/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
 - Validate behavior with startup checks, smoke requests, backend tests, and frontend build checks.
 - For user-visible frontend changes, run the Agent Browser smoke test when the tool is available.
