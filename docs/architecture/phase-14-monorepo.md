@@ -1,7 +1,7 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.7` complete after history remediation. The post-14.7 data
-directory insertion is complete. Phase 14.8 has not started.
+Status: `Phase 14.8` complete after merge. The post-14.7 data directory
+insertion and architecture revalidation are complete.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -108,7 +108,7 @@ focused PR.
 6. 14.6: `packages/ui` and shadcn/Base UI foundation. Complete after merge.
 7. 14.7: Architecture boundary enforcement. Complete after merge.
 8. Post-14.7 insertion: canonical local data directory. Complete after merge.
-9. 14.8: Turborepo.
+9. 14.8: Turborepo, mise, and hk. Complete after merge.
 
 Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
 Zod is not part of this architecture.
@@ -230,5 +230,34 @@ insertion. Normal retained refs are clean. GitHub-managed pull refs remain a
 separate `PROVIDER_HISTORY_CLEANUP_PENDING` risk. Provider-side garbage
 collection is unverified.
 
-Turbo remains deferred to Phase 14.8. Broad UI modernization remains deferred
-to Phase 18.
+## Phase 14.8 tooling
+
+Phase 14.8 keeps four tooling authorities separate:
+
+- `mise 2026.8.14` is the validated Mise CLI. The committed `mise.toml` and
+  `mise.lock` manage Bun `1.4.0`, hk `1.56.1`, and Python `3.12.3`.
+- hk `1.56.1` owns the committed `hk.pkl` Git lifecycle hooks. `HK_MISE=1`
+  runs hook steps through the Mise environment. Hooks are optional early
+  feedback. CI does not depend on installed hooks.
+- Bun remains the JavaScript runtime, package manager, workspace authority,
+  and root `bun.lock` authority.
+- Turbo `2.10.12` is a root-only Bun development dependency. `turbo.json`
+  orchestrates workspace `typecheck`, `test`, and `build` tasks.
+
+Turbo uses `^typecheck`, `^test`, and `^build` dependency edges. The web build
+  caches `apps/web/build/**`. Typecheck and unit-test tasks cache logs only.
+  E2E, development servers, API generation, data-directory resolution, and
+  other side-effecting tasks are uncached. Pure API, boundary, dependency, and
+  Node-regression checks use the default cache policy. Operator data under
+  `OPERATOROS_DATA_DIR` is outside Turbo's output set.
+
+`bun run test:turbo` proves contracts invalidate API and web, DB invalidates
+API but not web, UI invalidates web but not API, and shared architecture
+configuration and `bun.lock` invalidate all cached tasks. CI uses
+`jdx/mise-action@v4`, installs from the repository Mise configuration, runs
+`hk check --all`, and runs Turbo without a required remote cache.
+
+The provider-managed history cleanup remains `PROVIDER_HISTORY_CLEANUP_PENDING`
+for 72 pull references. Provider garbage collection is unverified. Broad UI
+modernization remains deferred to Phase 18. Excel consolidation remains
+deferred to Phase 17. Phase 15 has not started.
