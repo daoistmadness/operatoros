@@ -116,7 +116,7 @@ describe("analytics and report parity", () => {
           impact_rows: [],
           executive_insights: [expect.objectContaining({ title: "No intervention impact records found" })],
         });
-        const managementSummary = await app.handle(new Request(`http://local${alias}/management-summary?academic_year_id=2`, { headers: { cookie } }));
+      const managementSummary = await app.handle(new Request(`http://local${alias}/management-summary?academic_year_id=2`, { headers: { cookie } }));
         expect(managementSummary.status).toBe(200);
         const managementJson = await managementSummary.json() as any;
         expect(managementJson).toMatchObject({
@@ -125,6 +125,19 @@ describe("analytics and report parity", () => {
           thresholds: { kkm_edelweiss: 85, kkm_national: 75, legacy_fallback: 85 },
         });
         expect(managementJson.terms_breakdown).toEqual(expect.arrayContaining([expect.objectContaining({ term_number: 1, hadir: 18, sakit: 3, izin: 2, alfa: 1, total_records: 24, attendance_percentage: 75 })]));
+        const canonicalOverview = await app.handle(new Request("http://local/api/analytics/overview?academic_year_id=2", { headers: { cookie } }));
+        expect(canonicalOverview.status).toBe(200);
+        expect(await canonicalOverview.json()).toMatchObject({
+          contract_version: "analytics.v1",
+          filters: { academic_year_id: 2, start_date: "2026-07-01", end_date: "2027-06-30" },
+          summary: { attendance_rate: { value: 75, numerator: 18, denominator: 24 } },
+        });
+        const canonicalTrends = await app.handle(new Request("http://local/api/analytics/trends?academic_year_id=2", { headers: { cookie } }));
+        expect(canonicalTrends.status).toBe(200);
+        expect((await canonicalTrends.json() as any).series[0].points).toEqual(expect.arrayContaining([expect.objectContaining({ period: "2026-08", metric: expect.objectContaining({ value: 75 }) })]));
+        const canonicalCohorts = await app.handle(new Request("http://local/api/analytics/cohorts?academic_year_id=2&dimension=class", { headers: { cookie } }));
+        expect(canonicalCohorts.status).toBe(200);
+        expect((await canonicalCohorts.json() as any).cohorts).toEqual(expect.arrayContaining([expect.objectContaining({ label: "7A" })]));
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);

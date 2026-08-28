@@ -30,4 +30,11 @@ describe("query-key conventions", () => {
     expect(queryKeys.uploads.conflicts.list({ page: 1, workflow: "ROSTER" }))
       .toEqual(queryKeys.uploads.conflicts.list({ workflow: "ROSTER", page: 1 }));
   });
+
+  it("keeps analytics filters in stable, filter-complete keys", () => {
+    expect(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7A", term: "term_1" }))
+      .toEqual(queryKeys.analytics.overview({ term: "term_1", class_name: "7A", academic_year_id: 1 }));
+    expect(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7A" }))
+      .not.toEqual(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7B" }));
+  });
 });

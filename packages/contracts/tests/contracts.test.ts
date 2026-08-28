@@ -13,6 +13,7 @@ import {
   GradeSaveResponseSchema,
 } from "@operatoros/contracts/grades";
 import { ReportQuerySchema } from "@operatoros/contracts/reports";
+import { AnalyticsOverviewResponseSchema } from "@operatoros/contracts/analytics";
 import {
   CreateEnrollmentRequestSchema,
   ManagedStudentSchema,
@@ -66,6 +67,18 @@ describe("@operatoros/contracts", () => {
       class_name: null,
       subject_id: null,
     })).toBe(true);
+    expect(Value.Check(AnalyticsOverviewResponseSchema, {
+      contract_version: "analytics.v1",
+      filters: { academic_year_id: 1, academic_year_label: "2026/2027", start_date: "2026-01-01", end_date: "2026-01-31", jenjang_id: null, class_name: null, subject_id: null },
+      metric_definitions: [],
+      summary: {
+        student_count: 0,
+        attendance_counts: { present: 0, sakit: 0, izin: 0, alfa: 0, late: 0 },
+        attendance_rate: { value: null, numerator: 0, denominator: 0, unit: "percent", status: "unavailable" },
+        grade_average: { value: null, numerator: 0, denominator: 0, unit: "score", status: "unavailable" },
+      },
+      cohorts: [],
+    })).toBe(true);
   });
 
   it("rejects invalid values without changing optional and null semantics", () => {
@@ -85,6 +98,11 @@ describe("@operatoros/contracts", () => {
     })).toBe(false);
     expect(Value.Check(ReportQuerySchema, {
       academic_year_id: 1, scope: "unknown",
+    })).toBe(false);
+    expect(Value.Check(AnalyticsOverviewResponseSchema, {
+      contract_version: "analytics.v1",
+      filters: { academic_year_id: 1, academic_year_label: "2026/2027", start_date: "2026-01-01", end_date: "2026-01-31", jenjang_id: null, class_name: null, subject_id: null },
+      metric_definitions: [], cohorts: [],
     })).toBe(false);
   });
 });
