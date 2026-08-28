@@ -40,7 +40,7 @@ describe("candidate adapter (foundation)", () => {
       expect(res.status).toBe(200);
       await adapter.stop();
     }
-    const procs = Bun.spawnSync(["pgrep", "-f", "backend-ts.*server"]).stdout.toString().trim();
+    const procs = Bun.spawnSync(["pgrep", "-f", "apps/api.*server"]).stdout.toString().trim();
     expect(procs).toBe("");
   }, 20000);
 });

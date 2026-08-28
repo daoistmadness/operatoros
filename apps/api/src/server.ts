@@ -31,7 +31,7 @@ export function startServer(overrides: Partial<{ hostname: string; port: number;
 
 if (import.meta.main) {
   const instance = startServer();
-  console.log(`backend-ts listening on 127.0.0.1:${instance.port}`);
+  console.log(`operatoros-api listening on 127.0.0.1:${instance.port}`);
   process.on("SIGINT", () => instance.stop());
   process.on("SIGTERM", () => instance.stop());
 }

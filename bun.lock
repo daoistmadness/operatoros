@@ -5,7 +5,7 @@
     "": {
       "name": "operatoros",
     },
-    "backend-ts": {
+    "apps/api": {
       "name": "@operatoros/api",
       "version": "0.1.0",
       "dependencies": {
@@ -207,7 +207,7 @@
 
     "@napi-rs/lzma-linux-x64-gnu": ["@napi-rs/lzma-linux-x64-gnu@1.5.1", "", { "os": "linux", "cpu": "x64" }, "sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ=="],
 
-    "@operatoros/api": ["@operatoros/api@workspace:backend-ts"],
+    "@operatoros/api": ["@operatoros/api@workspace:apps/api"],
 
     "@operatoros/web": ["@operatoros/web@workspace:frontend"],
 
