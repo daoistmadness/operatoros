@@ -17,7 +17,7 @@ historical evidence unless they explicitly identify a current procedure.
 ## Environment and dependencies
 
 - Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
-- Use `mise` as runtime-version authority. `mise.toml` pins Bun 1.4.0 and Python 3.12.3. `frontend/bun.lock` remains the package-manager lockfile authority. Bun remains the package manager; mise only installs the runtime.
+- Use `mise` as runtime-version authority. `mise.toml` pins Bun 1.4.0 and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise only installs the runtime.
 - Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
@@ -37,8 +37,8 @@ historical evidence unless they explicitly identify a current procedure.
 - Use focused `codex/` branches unless the task specifies another name. Do not
   amend, rebase, squash, force-push, or push directly to `main`.
 - Verified primary baseline: `main` at
-  `f87b58997f474fa6bc489d158efe97096bff6e28`, matching `origin/main`. Phase 11
-  frontend verification is merged.
+  `5984a24fbe9d143fcec924d6cbe264159fbd47dc`, matching `origin/main`.
+  Post-migration stabilization is merged.
 - Stage explicit paths only; never use `git add .` or `git add -A`.
 - Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, and, when present,
   `docs/student-data/dapodik-roster-import-design.md`.
@@ -110,6 +110,9 @@ historical evidence unless they explicitly identify a current procedure.
   is for release/schema/startup-sensitive work. `make fresh-db-parity` checks
   fresh bootstrap parity. The classifier decides when duplicate backend runs
   are required; do not run the release suite for Markdown-only edits.
+- Workspace checks use `bun --filter @operatoros/api test`,
+  `bun --filter @operatoros/web test`, `bun run check:typebox`, and
+  `bun run check`.
 - Verify UI work in a real browser when available. E2E uses isolated temporary
   data and ports; never kill unknown port owners. Remove temporary artifacts.
 - Final reports state files changed, verification actually run, uncertainty,
@@ -126,6 +129,27 @@ historical evidence unless they explicitly identify a current procedure.
   shared API abstraction; do not hardcode backend domains or double-prefix.
 - Generated OpenAPI contracts are version-controlled and drift-checked. Run
   the documented generation/check workflow for API changes.
+
+## Phase 14 monorepo modernization
+
+Phase 14.1 establishes workspace and tooling structure only. Application source
+remains in `backend-ts/` and `frontend/` until its own subphases.
+
+Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
+package ownership and dependency directions.
+
+Never pin `@sinclair/typebox` independently in a workspace package. Use
+`catalog:`. Change the root catalog entry when the OperatorOS TypeBox version
+changes.
+
+Binding dependency rules start in Phase 14.1. Mechanical enforcement starts in
+Phase 14.7:
+
+- `packages/contracts` must not import `elysia`, `drizzle-orm`, `react`, or `apps/*`.
+- `packages/db` must not import `apps/*`.
+- `packages/ui` must not import `apps/*` or `packages/db`.
+- `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
+- `packages/*` must not import `apps/*`.
 
 ## Stop and escalate
 

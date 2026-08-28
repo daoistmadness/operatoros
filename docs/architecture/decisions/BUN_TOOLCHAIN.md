@@ -11,7 +11,7 @@ and fast, unified package management with frozen lockfiles (`bun.lock`).
 ## Decision
 
 OperatorOS adopts Linux Bun 1.4.x (>= 1.3) as its sole JavaScript runtime, package manager, and scripting execution environment in WSL.
-- `frontend/bun.lock` is the single dependency lockfile authority.
+- `bun.lock` at the repository root is the single dependency lockfile authority.
 - Vite and frontend CLI tools run under Bun (`bun run --bun ...`).
 - Architecture tests execute via `bun test` and `bun:test`.
 - Governance scripts (`openapi-contracts.mjs`, `frontend-boundaries.mjs`) execute directly under Bun.
