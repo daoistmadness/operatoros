@@ -36,9 +36,8 @@ historical evidence unless they explicitly identify a current procedure.
 
 - Use focused `codex/` branches unless the task specifies another name. Do not
   amend, rebase, squash, force-push, or push directly to `main`.
-- Verified primary baseline: `main` at
-  `5984a24fbe9d143fcec924d6cbe264159fbd47dc`, matching `origin/main`.
-  Post-migration stabilization is merged.
+- Accepted Phase 14.8 implementation baseline: `a203617b0a38c57213ceca514581d25bb36f7cf5`.
+  The final Phase 14 audit may add only a narrow signed documentation or hygiene repair.
 - Stage explicit paths only; never use `git add .` or `git add -A`.
 - Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, and, when present,
   `docs/student-data/dapodik-roster-import-design.md`.
@@ -219,7 +218,7 @@ The semantic architecture checker uses the TypeScript compiler API. It scans
 source imports, type-only imports, re-exports, static dynamic imports, literal
 `require()` calls, package manifests, package exports, cross-workspace relative
 imports, and deep source imports. It reports zero real-tree exceptions. Phase
-Phase 14.8 establishes the tooling split. `mise` manages CLI versions. `hk`
+14.8 establishes the tooling split. `mise` manages CLI versions. `hk`
 manages Git lifecycle hooks. Bun remains the JavaScript runtime, package
 manager, workspace resolver, and lockfile authority. Turbo 2.10.12 manages the
 dependency-aware task graph and local cache. Turbo is a root-only dependency.
