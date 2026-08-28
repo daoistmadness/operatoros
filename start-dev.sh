@@ -6,7 +6,7 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 BACKEND_DIR="$PROJECT_ROOT/backend"
-BACKEND_TS_DIR="$PROJECT_ROOT/backend-ts"
+API_DIR="$PROJECT_ROOT/apps/api"
 FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/frontend}"
 VENV="$BACKEND_DIR/.venv"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
@@ -143,7 +143,7 @@ run_preflight() {
   require_command ps "Process management" "Install procps."
   [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python for database and session management."
   [[ -f "$PROJECT_ROOT/package.json" && -f "$PROJECT_ROOT/bun.lock" ]] || fail_preflight "Workspace manifest is incomplete" "Expected root package.json and bun.lock."
-  [[ -f "$BACKEND_TS_DIR/package.json" && -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
+  [[ -f "$API_DIR/package.json" && -d "$API_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
   [[ -f "$FRONTEND_DIR/package.json" && -d "$FRONTEND_DIR/node_modules" ]] || fail_preflight "Frontend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
   [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
   # shellcheck disable=SC1090
@@ -356,8 +356,8 @@ LAUNCHER_STATE=STARTING_BACKEND
   export OPERATOROS_MANAGED_DEV_SETUP=true
   export HOST="$BACKEND_HOST"
   export PORT="$BACKEND_PORT"
-  cd "$BACKEND_TS_DIR"
-  exec setsid bun run "$BACKEND_TS_DIR/src/server.ts"
+  cd "$API_DIR"
+  exec setsid bun run "$API_DIR/src/server.ts"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"

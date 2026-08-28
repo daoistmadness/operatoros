@@ -30,7 +30,7 @@ mkdir -p "$logs" "$junit"
 
 backend_status=0
 (
-  cd "$repo_root/backend-ts"
+  cd "$repo_root/apps/api"
   PATH="$bun_bin:$PATH" bun test --reporter=junit --reporter-outfile="$junit/backend-full.xml"
 ) >"$logs/backend-full.log" 2>&1 || backend_status=$?
 

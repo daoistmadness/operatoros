@@ -1,6 +1,6 @@
 # Retained Python Tooling
 
-The production backend is `backend-ts`, built with Bun, TypeScript, Elysia,
+The production backend is `apps/api`, built with Bun, TypeScript, Elysia,
 Drizzle, and SQLite.
 
 This directory retains Python tools for disposable database bootstrapping,

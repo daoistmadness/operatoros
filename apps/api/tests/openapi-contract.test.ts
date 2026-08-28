@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "../src/db/connection";
-import openApi from "../../openapi/operatoros.openapi.json";
+import openApi from "../../../openapi/operatoros.openapi.json";
 
 type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;

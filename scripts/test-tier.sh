@@ -100,7 +100,7 @@ frontend_static() {
   (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run check:dependencies && bun run check:node-regressions && bun run boundaries:check && bun run api:check && bun run typecheck)
 }
 backend_full() {
-  (cd "$repo/backend-ts" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
+  (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
 
 case "$tier" in
@@ -132,17 +132,17 @@ PY
 mapfile -t backend_tests < <("$python" - "$scope_file" <<'PY'
 import json, sys
 for path in json.load(open(sys.argv[1]))["focused_tests"]:
-    if path.startswith(("backend/", "backend-ts/")):
+    if path.startswith(("backend/", "apps/api/")):
         print(path)
 PY
 )
-        ((${#backend_tests[@]})) || backend_tests=("backend-ts/tests/app.test.ts")
-        (cd "$repo/backend-ts" && PATH="$bun_bin:$PATH" bun test "${backend_tests[@]#backend-ts/}")
+        ((${#backend_tests[@]})) || backend_tests=("apps/api/tests/app.test.ts")
+        (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun test "${backend_tests[@]#apps/api/}")
       fi
     fi
     ;;
   pr)
-    echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,backend-ts,focused-browser"
+    echo "selected_suites=classifier,boundaries,api-drift,typecheck,bun-tests,bun-build,api,focused-browser"
     frontend_static
     (cd "$repo/frontend" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
@@ -156,7 +156,7 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,backend-ts,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,api,bun-tests,bun-build,boundaries,api-drift,typecheck,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
     passes=1
     reliable_change_context=no

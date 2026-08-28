@@ -1,6 +1,6 @@
 # Commands
 
-Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
+Verified from `README.md`, `backend/requirements.txt`, `apps/api/package.json`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
 
 ## Install
 - `mise install`  # install Bun 1.4.0 and Python 3.12.3 from mise.lock
@@ -13,7 +13,7 @@ Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`
 ## Development
 - `./start-dev.sh`  # default Elysia + Vite launcher
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
-- `cd backend-ts && bun run src/server.ts`  # standalone Elysia backend
+- `cd apps/api && bun run src/server.ts`  # standalone Elysia backend
 - `cd frontend && bun run dev`
 - `cd frontend && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
 
@@ -21,7 +21,7 @@ Verified from `README.md`, `backend/requirements.txt`, `backend-ts/package.json`
 - `cd frontend && bun run build`
 
 ## Test / Validation
-- `cd backend-ts && bun test`
+- `cd apps/api && bun test`
 - `cd frontend && bun test`  # frontend unit tests
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
