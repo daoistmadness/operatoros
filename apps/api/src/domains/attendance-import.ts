@@ -6,7 +6,7 @@ import { actor } from "../domains/core";
 import { calculateLateMinutes, deriveAttendanceStatus, deriveJenjangFromClassName } from "./attendance-rules";
 import type { AuthContext } from "../auth/service";
 import { readAttendanceWorkbook, type AttendanceSourceRow, type WorkbookRows } from "../import/excel-reader";
-import { parseStoredDuration, secondsToTimeText } from "../import/normalization";
+import { parseStoredDuration, secondsToTimeText } from "@operatoros/excel";
 
 type Row = Record<string, any>;
 type Context = any;

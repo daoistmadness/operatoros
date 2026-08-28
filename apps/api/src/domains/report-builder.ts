@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import ExcelJS from "exceljs";
+import { addWorksheet, appendRow, createWorkbook, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { t } from "elysia";
 import { actor } from "./core";
 import { managementSummary } from "./reports";
@@ -129,13 +129,12 @@ function previewBody(): any {
 }
 
 async function excel(payload: Row): Promise<Uint8Array> {
-  const book = new ExcelJS.Workbook(); const summary = payload.summary_payload;
-  const readme = book.addWorksheet("README"); readme.addRow([payload.branding?.report_header_title ?? "Management Analytics Report"]); readme.addRow([payload.branding?.report_subtitle ?? "Operational report builder output"]); readme.addRow(["Template", payload.selected_template?.name ?? "Default"]); readme.addRow(["Sections", payload.resolved_sections.join(", ")]);
-  const attendance = book.addWorksheet("Attendance_Data"); attendance.addRow(["Metric", "Value"]); for (const [key, value] of Object.entries(summary.attendance_summary?.status_counts ?? {})) attendance.addRow([key, value]);
-  const late = book.addWorksheet("Lateness_Data"); late.addRow(["Class", "Late Days", "Late Minutes"]); for (const value of summary.lateness_by_class ?? []) late.addRow([value.class_name, value.late_days, value.late_minutes]);
-  const grades = book.addWorksheet("Grade_Class_Data"); grades.addRow(["Class", "Sumatif Average", "Formatif Average"]); for (const value of summary.grade_by_class ?? []) grades.addRow([value.class_name, value.sumatif_average, value.formatif_average]);
-  for (const sheet of book.worksheets) { sheet.getRow(1).font = { bold: true }; sheet.columns.forEach((column) => { column.width = Math.max(14, Math.min(60, String(column.header ?? "").length + 4)); }); }
-  return new Uint8Array(await book.xlsx.writeBuffer());
+  const book = createWorkbook({ exportType: "report-builder" }); const summary = payload.summary_payload;
+  const readme = addWorksheet(book, "README"); appendRow(readme, [payload.branding?.report_header_title ?? "Management Analytics Report"]); appendRow(readme, [payload.branding?.report_subtitle ?? "Operational report builder output"]); appendRow(readme, ["Template", payload.selected_template?.name ?? "Default"]); appendRow(readme, ["Sections", payload.resolved_sections.join(", ")]);
+  const attendance = addWorksheet(book, "Attendance_Data"); appendRow(attendance, ["Metric", "Value"]); styleHeader(attendance); for (const [key, value] of Object.entries(summary.attendance_summary?.status_counts ?? {})) appendRow(attendance, [key, value]);
+  const late = addWorksheet(book, "Lateness_Data"); appendRow(late, ["Class", "Late Days", "Late Minutes"]); styleHeader(late); for (const value of summary.lateness_by_class ?? []) appendRow(late, [value.class_name, value.late_days, value.late_minutes]);
+  const grades = addWorksheet(book, "Grade_Class_Data"); appendRow(grades, ["Class", "Sumatif Average", "Formatif Average"]); styleHeader(grades); for (const value of summary.grade_by_class ?? []) appendRow(grades, [value.class_name, value.sumatif_average, value.formatif_average]);
+  return writeXlsxWorkbook(book);
 }
 
 async function pdf(payload: Row): Promise<Uint8Array> {

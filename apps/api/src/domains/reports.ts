@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import ExcelJS from "exceljs";
+import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { t } from "elysia";
 import { ReportScopeSchema, type ReportScope } from "@operatoros/contracts/reports";
 import { actor } from "./core";
@@ -480,49 +480,49 @@ async function reportPdf(title: string, report: Row): Promise<Uint8Array> {
 function safeName(value: string): string { return normalized(value).replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "report"; }
 
 async function reportWorkbook(report: Row): Promise<Uint8Array> {
-  const workbook = new ExcelJS.Workbook(); const executive = report.executive_summary; const add = (name: string, headers: string[], values: any[][]) => { const sheet = workbook.addWorksheet(name); sheet.addRow(headers); for (const value of values) sheet.addRow(value); sheet.getRow(1).font = { bold: true }; sheet.views = [{ state: "frozen", ySplit: 1 }]; for (const column of sheet.columns) column.width = Math.min(36, Math.max(12, ...(column.values ?? []).map((value) => String(value ?? "").length + 2))); };
+  const workbook = createWorkbook({ exportType: "report" }); const executive = report.executive_summary; const add = (name: string, headers: string[], values: any[][]) => { const sheet = addWorksheet(workbook, name); appendRow(sheet, headers); for (const value of values) appendRow(sheet, value); styleHeader(sheet); autoSizeColumns(sheet, 12, 36); };
   add("Executive Summary", ["Metric", "Value"], Object.entries(executive ?? {}).map(([key, value]) => [key, value]));
   add("Attendance", ["Level", "Present", "Sakit", "Izin", "Alfa", "Incomplete", "Late Days", "Late Minutes", "Attendance Rate", "Late Rate"], [report.attendance_summary, ...(report.attendance_by_level ?? [])].map((value: Row, index: number) => [index ? value.level : "Overall", value.present, value.sakit, value.izin, value.alfa, value.incomplete, value.late_days, value.late_minutes, value.attendance_rate, value.late_rate]));
   add("Student Distribution", ["Dimension", "Name", "Count", "Percentage"], Object.entries(report.student_distribution ?? {}).flatMap(([dimension, values]) => (values as Row[]).map((value) => [dimension, value.name, value.count, value.percentage])));
   const academic = report.academic_summary ?? {}; add("Academic Summary", ["Subject", "Level", "Sumatif Average", "Formatif Average", "Below KKM Count", "Available", "Reason"], [["Overall", null, academic.sumatif_average, academic.formatif_average, academic.below_kkm_count, academic.availability, academic.reason], ...(academic.by_subject ?? []).map((value: Row) => [value.subject_name, value.jenjang, value.sumatif_average, value.formatif_average, value.below_kkm_count, true, null])]);
   if (report.meta?.report_type === "annual") add("Annual Trends", ["Month", "Label", "Present", "Sakit", "Izin", "Alfa", "Incomplete", "Attendance Denominator", "Attendance Rate", "Late Days", "Late Minutes", "Late Rate", "Sumatif Average", "Formatif Average", "Below KKM Count"], (report.trends ?? []).map((value: Row) => Object.values(value)));
   const quality = report.data_quality ?? {}; add("Data Quality", ["Metric", "Value"], [["Missing Gender", quality.missing_gender], ["Missing Religion", quality.missing_religion], ["Missing Domicile", quality.missing_domicile], ["Incomplete Attendance", quality.incomplete_attendance], ["Empty Grade Cells", quality.empty_grade_cells], ["Unmapped Levels", (quality.unmapped_levels ?? []).join(", ")], ...(quality.warnings ?? []).map((value: string) => ["Warning", value])]);
-  return new Uint8Array(await workbook.xlsx.writeBuffer());
+  return writeXlsxWorkbook(workbook);
 }
 
 async function rekapWorkbook(report: Row): Promise<Uint8Array> {
-  const workbook = new ExcelJS.Workbook();
-  const summary = workbook.addWorksheet("Rekap Absensi");
-  summary.addRow([report.report_title]);
-  summary.addRow([report.period.label]);
-  summary.addRow(["JENJANG", "KELAS", "HEB", "HADIR", "SAKIT", "IZIN", "ALFA", "TOTAL"]);
-  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) summary.addRow([level.name, value.class_name, level.summary?.heb ?? level.classes?.[0]?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.total]);
+  const workbook = createWorkbook({ exportType: "attendance-rekap" });
+  const summary = addWorksheet(workbook, "Rekap Absensi");
+  appendRow(summary, [report.report_title]);
+  appendRow(summary, [report.period.label]);
+  appendRow(summary, ["JENJANG", "KELAS", "HEB", "HADIR", "SAKIT", "IZIN", "ALFA", "TOTAL"]);
+  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) appendRow(summary, [level.name, value.class_name, value.summary?.heb ?? level.classes?.[0]?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.total]);
   summary.getRow(3).font = { bold: true };
   summary.views = [{ state: "frozen", ySplit: 3 }];
-  const detail = workbook.addWorksheet("Detail");
-  detail.addRow(["JENJANG", "SISWA", "HEB", "HADIR (hari)", "SAKIT", "IZIN", "ALFA", "LAIN2"]);
-  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) detail.addRow([level.name, value.student_count, level.summary.heb, value.hadir, value.sakit, value.izin, value.alfa, value.lain2]);
+  const detail = addWorksheet(workbook, "Detail");
+  appendRow(detail, ["JENJANG", "SISWA", "HEB", "HADIR (hari)", "SAKIT", "IZIN", "ALFA", "LAIN2"]);
+  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) appendRow(detail, [level.name, value.student_count, value.summary?.heb ?? level.summary?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.lain2]);
   detail.getRow(1).font = { bold: true };
-  return new Uint8Array(await workbook.xlsx.writeBuffer());
+  return writeXlsxWorkbook(workbook);
 }
 
 async function tardinessWorkbook(report: Row, managementOnly: boolean): Promise<Uint8Array> {
-  const workbook = new ExcelJS.Workbook();
-  const summary = workbook.addWorksheet(managementOnly ? "Executive Summary" : "Management Summary");
-  summary.addRow(["Metric", "Value"]);
-  for (const [key, value] of Object.entries(report.management_summary ?? {})) summary.addRow([key, value]);
-  const levels = workbook.addWorksheet(managementOnly ? "Jenjang Late Summary" : "Summary by Jenjang");
-  levels.addRow(["Level", "HEB", "Total Late Incidents", "Percentage of Total", "Effective Late Days", "Late Students"]);
-  for (const value of report.summary_by_jenjang as Row[]) levels.addRow([value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_days_late, value.days_late_pct, value.total_days_late, value.late_student_count]);
+  const workbook = createWorkbook({ exportType: "tardiness-report" });
+  const summary = addWorksheet(workbook, managementOnly ? "Executive Summary" : "Management Summary");
+  appendRow(summary, ["Metric", "Value"]);
+  for (const [key, value] of Object.entries(report.management_summary ?? {})) appendRow(summary, [key, value]);
+  const levels = addWorksheet(workbook, managementOnly ? "Jenjang Late Summary" : "Summary by Jenjang");
+  appendRow(levels, ["Level", "HEB", "Total Late Incidents", "Percentage of Total", "Effective Late Days", "Late Students"]);
+  for (const value of report.summary_by_jenjang as Row[]) appendRow(levels, [value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_days_late, value.days_late_pct, value.total_days_late, value.late_student_count]);
   if (!managementOnly) {
-    const classes = workbook.addWorksheet("Class Breakdown");
-    classes.addRow(["Class", "Level", "HEB", "Total Late Duration", "% Duration", "Unique Late Days", "% Late Days", "Late Students"]);
-    for (const value of report.breakdown_by_class as Row[]) classes.addRow([value.class_name, value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_late_duration_str, value.late_duration_pct, value.total_days_late, value.days_late_pct, value.late_student_count]);
-    const students = workbook.addWorksheet("Student Details");
-    students.addRow(["ID", "Name", "Class", "Level", "Late Days", "Total Duration", "Average Duration"]);
-    for (const value of report.student_details ?? []) students.addRow([value.no_id, value.nama, value.kelas, value.jenjang, value.total_days_late, value.total_durasi, value.rata_rata_durasi]);
+    const classes = addWorksheet(workbook, "Class Breakdown");
+    appendRow(classes, ["Class", "Level", "HEB", "Total Late Duration", "% Duration", "Unique Late Days", "% Late Days", "Late Students"]);
+    for (const value of report.breakdown_by_class as Row[]) appendRow(classes, [value.class_name, value.jenjang, report.heb_by_jenjang[value.jenjang] ?? "-", value.total_late_duration_str, value.late_duration_pct, value.total_days_late, value.days_late_pct, value.late_student_count]);
+    const students = addWorksheet(workbook, "Student Details");
+    appendRow(students, ["ID", "Name", "Class", "Level", "Late Days", "Total Duration", "Average Duration"]);
+    for (const value of report.student_details ?? []) appendRow(students, [value.no_id, value.nama, value.kelas, value.jenjang, value.total_days_late, value.total_durasi, value.rata_rata_durasi]);
   }
-  return new Uint8Array(await workbook.xlsx.writeBuffer());
+  return writeXlsxWorkbook(workbook);
 }
 
 function bodyQuery(): any { return { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(ReportScopeSchema), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) }; }
@@ -917,12 +917,12 @@ function historicalTrends(context: AuthContext, query: Row): Row {
 }
 
 async function managementAnalyticsWorkbook(summary: Row): Promise<Uint8Array> {
-  const workbook = new ExcelJS.Workbook(); const add = (name: string, headers: string[], values: any[][]) => { const sheet = workbook.addWorksheet(name); sheet.addRow(headers); for (const value of values) sheet.addRow(value); sheet.getRow(1).font = { bold: true }; };
+  const workbook = createWorkbook({ exportType: "management-analytics" }); const add = (name: string, headers: string[], values: any[][]) => { const sheet = addWorksheet(workbook, name); appendRow(sheet, headers); for (const value of values) appendRow(sheet, value); styleHeader(sheet); };
   const filters = summary.filters; add("Summary", ["Metric", "Value"], [["Academic Year", filters.academic_year_label], ["Jenjang", filters.jenjang_name ?? "All"], ["Class", filters.class_name ?? "All"], ["Term", filters.term_label ?? "All"], ["Attendance Rate", summary.attendance_summary.status_percentages.hadir], ["Total Records", summary.attendance_summary.total_records]]);
   add("Attendance", ["Status", "Count", "Percentage"], Object.entries(summary.attendance_summary.status_counts).map(([key, value]) => [key, value, summary.attendance_summary.status_percentages[key]]));
   add("Lateness", ["Class", "Late Days", "Late Minutes"], summary.lateness_by_class.map((value: Row) => [value.class_name, value.late_days, value.late_minutes]));
   const trends = summary.historical_trends?.trend_series?.attendance?.by_term ?? []; add("Trend_Attendance_Data", ["Period", "Hadir", "Sakit", "Izin", "Alfa", "Total"], trends.map((value: Row) => [value.period, value.hadir, value.sakit, value.izin, value.alfa, value.total_records]));
-  return new Uint8Array(await workbook.xlsx.writeBuffer());
+  return writeXlsxWorkbook(workbook);
 }
 
 async function managementAnalyticsExport(context: AuthContext, query: Row, format: "pdf" | "xlsx"): Promise<Response> {
