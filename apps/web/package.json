@@ -25,7 +25,7 @@
     "react": "19.2.4",
     "react-chartjs-2": "5.3.1",
     "react-dom": "19.2.4",
-    "react-router-dom": "7.15.1",
+    "react-router-dom": "7.18.2",
     "tailwind-merge": "2.6.1"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "autoprefixer": "10.4.27",
     "happy-dom": "20.10.6",
     "openapi-typescript": "7.13.0",
-    "postcss": "8.5.10",
+    "postcss": "8.5.23",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
     "vite": "6.4.3",

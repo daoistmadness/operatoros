@@ -1,10 +1,13 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { appendFileSync, chmodSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { isIP } from "node:net";
 import type { Database } from "bun:sqlite";
 import { inTransaction, type DatabaseHandle } from "@operatoros/db";
 import { resolveOperatorOSPaths } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
+import { DEFAULT_LOGIN_RATE_LIMIT, type LoginRateLimitConfig, normalizeLoginAccount } from "./rate-limit";
+import { isAllowedOrigin } from "../security/http";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
 export const SETUP_COOKIE_NAME = "operatoros_setup_authorization";
@@ -22,6 +25,8 @@ export interface AuthConfig {
   managedDevSetup: boolean;
   allowedOrigins: string[];
   auditDir: string;
+  rateLimit?: LoginRateLimitConfig;
+  trustedProxyAddresses?: string[];
 }
 
 export interface UserRow {
@@ -47,6 +52,7 @@ export interface SessionRow {
 export interface AuthContext {
   database: DatabaseHandle;
   config: AuthConfig;
+  loginRateLimiter?: import("./rate-limit").LoginRateLimiter;
 }
 
 export interface CurrentUser {
@@ -75,6 +81,8 @@ export function defaultAuthConfig(overrides: Partial<AuthConfig> = {}): AuthConf
     ],
     auditDir: overrides.auditDir ?? resolveOperatorOSPaths().logDir,
     setupToken: overrides.setupToken,
+    rateLimit: overrides.rateLimit ?? DEFAULT_LOGIN_RATE_LIMIT,
+    trustedProxyAddresses: overrides.trustedProxyAddresses ?? [],
   };
 }
 
@@ -102,8 +110,18 @@ function digest(token: string, config: AuthConfig): string {
   return createHmac("sha256", requireSecret(config)).update(token).digest("hex");
 }
 
-function clientIp(request: Request, server: { requestIP(request: Request): { address: string } | null } | null): string | null {
-  return server?.requestIP(request)?.address ?? null;
+function forwardedAddress(request: Request): string | null {
+  const xForwardedFor = request.headers.get("x-forwarded-for")?.split(",").map((value) => value.trim()).find((value) => isIP(value) > 0);
+  if (xForwardedFor) return xForwardedFor;
+  const forwarded = request.headers.get("forwarded")?.match(/(?:^|;)\s*for="?\[?([^;,"]+)\]?"?/i)?.[1]?.trim();
+  return forwarded && isIP(forwarded) > 0 ? forwarded : null;
+}
+
+export function clientIp(request: Request, server: { requestIP(request: Request): { address: string } | null } | null, trustedProxyAddresses: string[] = []): string | null {
+  const direct = server?.requestIP(request)?.address ?? null;
+  if (!direct) return null;
+  if (trustedProxyAddresses.includes(direct)) return forwardedAddress(request) ?? direct;
+  return direct;
 }
 
 function audit(context: AuthContext, event: string, values: Partial<{
@@ -161,7 +179,7 @@ export async function authenticate(
   context: AuthContext,
   input: { username: string; password: string; userAgent: string | null; ipAddress: string | null },
 ): Promise<{ user: CurrentUser; token: string; tokenHash: string }> {
-  const username = input.username.trim();
+  const username = normalizeLoginAccount(input.username);
   const client = context.database.client;
   const user = findUser(client, username);
   if (!user) {
@@ -284,13 +302,8 @@ export function setupStatus(context: AuthContext): { setup_required: boolean; se
 }
 
 function localOrigin(origin: string | null, allowedOrigins: string[]): boolean {
-  if (!origin || !allowedOrigins.includes(origin)) return false;
-  try {
-    const parsed = new URL(origin);
-    return ["127.0.0.1", "localhost", "::1"].includes(parsed.hostname) && ["http:", "https:"].includes(parsed.protocol);
-  } catch {
-    return false;
-  }
+  if (!isAllowedOrigin(origin, allowedOrigins)) return false;
+  try { return ["127.0.0.1", "localhost", "::1"].includes(new URL(origin!).hostname); } catch { return false; }
 }
 
 export function issueSetupAuthorization(context: AuthContext, request: Request, server: { requestIP(request: Request): { address: string } | null } | null): string {
@@ -373,6 +386,6 @@ export function deleteCookieHeader(name: string, path: string, secure: boolean, 
   return cookieHeader(name, "", { maxAge: 0, path, secure, sameSite, expires: "Thu, 01 Jan 1970 00:00:00 GMT" });
 }
 
-export function requestContext(request: Request, server: { requestIP(request: Request): { address: string } | null } | null): { userAgent: string | null; ipAddress: string | null } {
-  return { userAgent: request.headers.get("user-agent"), ipAddress: clientIp(request, server) };
+export function requestContext(request: Request, server: { requestIP(request: Request): { address: string } | null } | null, trustedProxyAddresses: string[] = []): { userAgent: string | null; ipAddress: string | null } {
+  return { userAgent: request.headers.get("user-agent"), ipAddress: clientIp(request, server, trustedProxyAddresses) };
 }
