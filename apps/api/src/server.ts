@@ -38,10 +38,12 @@ export function startServer(overrides: Partial<import("./config").BackendConfig>
 }
 
 if (import.meta.main) {
-  const instance = startServer();
+  const config = loadConfig();
+  const instance = startServer(config);
   if (instance.paths) {
     console.log(`OperatorOS local data\n  Data: ${instance.paths.dataDir}\n  Database: ${instance.paths.databasePath}\n  Backups: ${instance.paths.backupDir}\n  Logs: ${instance.paths.logDir}`);
   }
+  console.log(`OperatorOS security\n  Backup encryption: ${config.backupEncryption ? "configured" : "not configured"}\n  Active backup key ID: ${config.backupEncryption?.activeKeyId ?? "none"}\n  Trusted proxy: ${config.auth?.trustedProxyAddresses?.length ? "enabled" : "disabled"}\n  Allowed origins: ${config.auth?.allowedOrigins?.length ?? 0}`);
   console.log(`operatoros-api listening on 127.0.0.1:${instance.port}`);
   process.on("SIGINT", () => instance.stop());
   process.on("SIGTERM", () => instance.stop());

@@ -34,8 +34,15 @@ function provisioningDetail(set: { status?: number | string }, error: unknown): 
 export function authRoutes(app: any, context: AuthContext): any {
   return app
     .post("/api/auth/login", async ({ body, request, set, server }: any) => {
+      const requestInfo = requestContext(request, server, context.config.trustedProxyAddresses ?? []);
+      const limit = context.loginRateLimiter?.consume(requestInfo.ipAddress, body.username);
+      if (limit && !limit.allowed) {
+        set.headers["retry-after"] = String(limit.retryAfterSeconds);
+        return detail(set, 429, "Too many login attempts. Try again later.");
+      }
       try {
-        const result = await authenticate(context, { ...body, ...requestContext(request, server) });
+        const result = await authenticate(context, { ...body, ...requestInfo });
+        context.loginRateLimiter?.resetAccount(body.username);
         set.headers["set-cookie"] = cookieHeader(SESSION_COOKIE_NAME, result.token, {
           maxAge: context.config.sessionAbsoluteTimeoutHours * 3600,
           path: "/", secure: context.config.cookieSecure, sameSite: "Lax",
@@ -48,7 +55,7 @@ export function authRoutes(app: any, context: AuthContext): any {
       body: LoginRequestSchema,
     })
     .post("/api/auth/logout", ({ request, set, server }: any) => {
-      const requestInfo = requestContext(request, server);
+      const requestInfo = requestContext(request, server, context.config.trustedProxyAddresses ?? []);
       logout(context, readCookie(request, SESSION_COOKIE_NAME), requestInfo.userAgent, requestInfo.ipAddress);
       set.status = 204;
       set.headers["set-cookie"] = deleteCookieHeader(SESSION_COOKIE_NAME, "/", context.config.cookieSecure, "Lax");
@@ -81,7 +88,7 @@ export function authRoutes(app: any, context: AuthContext): any {
         const setupAuthorization = validateSetupAuthorization(context, readCookie(request, SETUP_COOKIE_NAME));
         const result = await provisionFirstAdmin(context, {
           username: body.username, password: body.password, confirmation: body.password_confirmation,
-          setupToken: setupAuthorization, ...requestContext(request, server),
+          setupToken: setupAuthorization, ...requestContext(request, server, context.config.trustedProxyAddresses ?? []),
         });
         set.status = 201;
         set.headers["set-cookie"] = deleteCookieHeader(SETUP_COOKIE_NAME, "/api/setup", context.config.cookieSecure, "Strict");
