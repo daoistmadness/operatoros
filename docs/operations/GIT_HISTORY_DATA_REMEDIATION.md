@@ -37,6 +37,6 @@ current main tracks no runtime database, WAL, or SHM files.
 No credential-bearing `.env` file was found. `.env.example` is a template.
 Credential rotation is not required by this finding.
 
-Phase 14.7 architecture checks must be revalidated on the rewritten main.
-The data-directory insertion remains pending and must resume from the new
-sanitized main with a new branch.
+Phase 14.7 architecture checks passed on the rewritten main. The data-directory
+insertion remains pending and must resume from the new sanitized main with a
+new branch.
