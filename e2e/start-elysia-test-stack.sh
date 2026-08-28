@@ -7,7 +7,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="${1:?workspace required}"
 logs="${2:?log directory required}"
 database="${OPERATOROS_E2E_DATABASE:?OPERATOROS_E2E_DATABASE is required}"
-mkdir -p "$workspace/runtime" "$logs" "$workspace/backups"
+mkdir -p "$workspace/runtime" "$logs" "$workspace/state/backups"
 case "$database" in "$workspace"/*) ;; *) exit 2 ;; esac
 [[ -f "$database" ]] || exit 2
 
@@ -61,7 +61,7 @@ export NODE_ENV=test
 export AUTH_COOKIE_SECRET="${AUTH_COOKIE_SECRET:?AUTH_COOKIE_SECRET is required}"
 export COOKIE_SECURE=false
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
-export BACKUP_DIR="$workspace/backups"
+export BACKUP_DIR="$workspace/state/backups"
 export OPERATOROS_ISOLATED_TEST=true
 
 (
