@@ -29,9 +29,9 @@ jobs:
           python --version
           mise ls --current
       - name: Create disposable fixture-tool virtualenv
-        run: python -m venv ../backend/.venv
+        run: python -m venv ../../backend/.venv
       - name: Install schema and fixture tooling
-        run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
+        run: ../../backend/.venv/bin/python -m pip install -r ../../backend/requirements.txt
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile
