@@ -65,16 +65,29 @@ BROWSER_SCENARIOS = {
     "E2E_INFRASTRUCTURE": ["release"],
 }
 
+WEB_ROOTS = ("apps/web/", "frontend/")
+
+
+def is_web_path(value: str) -> bool:
+    return value.startswith(WEB_ROOTS)
+
+
+def web_path(value: str, suffix: str) -> bool:
+    return any(value.startswith(prefix + suffix) for prefix in WEB_ROOTS)
+
 
 def classify_path(path: str) -> set[str]:
     value = path.replace("\\", "/").lstrip("./")
     if value in PRESERVED:
         return set()
-    if value == "Makefile" or value.startswith(("scripts/test", "e2e/", "frontend/playwright.config")):
+    if value == "Makefile" or value.startswith(("scripts/test", "e2e/")) or value in {
+        "apps/web/playwright.config.ts",
+        "frontend/playwright.config.ts",
+    }:
         return {"E2E_INFRASTRUCTURE"}
     if value.startswith("docs/") or value.endswith((".md", ".txt")):
         return {"DOCUMENTATION_ONLY"}
-    if value.startswith("frontend/src/generated/"):
+    if web_path(value, "src/generated/"):
         return {"FRONTEND_GENERATED_CONTRACT"}
     if value.startswith("apps/api/src/"):
         if "attendance-import" in value:
@@ -88,15 +101,15 @@ def classify_path(path: str) -> set[str]:
         return {"BACKEND_UNIT"}
     if value.startswith("apps/api/tests/"):
         return {"BACKEND_UNIT"}
-    if value.startswith("frontend/src/routes/"):
+    if web_path(value, "src/routes/"):
         return {"FRONTEND_ROUTE"}
-    if value.startswith("frontend/src/features/"):
+    if web_path(value, "src/features/"):
         return {"FRONTEND_FEATURE"}
-    if value.startswith("frontend/src/components/") or value.startswith("frontend/src/pages/"):
+    if web_path(value, "src/components/") or web_path(value, "src/pages/"):
         return {"FRONTEND_COMPONENT"}
-    if value.startswith(("frontend/src/lib/api/", "frontend/src/api/")):
+    if web_path(value, "src/lib/api/") or web_path(value, "src/api/"):
         return {"FRONTEND_API_CLIENT"}
-    if value.startswith("frontend/") and Path(value).name in {
+    if is_web_path(value) and Path(value).name in {
         "package.json", "package-lock.json", "bun.lock", "vite.config.ts", "vitest.config.ts", "tsconfig.json"
     }:
         return {"FRONTEND_BUILD_CONFIG", "FRONTEND_TEST_INFRASTRUCTURE"}
@@ -125,8 +138,8 @@ def classify_path(path: str) -> set[str]:
         return {"BACKEND_API"}
     if value.startswith("backend/src/"):
         return {"BACKEND_UNIT"}
-    if value.startswith(("backend/tests/", "frontend/src/")):
-        return {"FRONTEND_TEST_INFRASTRUCTURE"} if value.startswith("frontend/") else {"BACKEND_UNIT"}
+    if value.startswith("backend/tests/") or web_path(value, "src/"):
+        return {"FRONTEND_TEST_INFRASTRUCTURE"} if is_web_path(value) else {"BACKEND_UNIT"}
     return {"UNKNOWN_HIGH_RISK"}
 
 

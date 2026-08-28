@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "../../../frontend/node_modules/@playwright/test";
+import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
 import { readFileSync, statSync } from "node:fs";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
