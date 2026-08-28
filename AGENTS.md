@@ -231,7 +231,23 @@ feedback. CI runs the checks directly and does not require installed hooks.
 
 Run `hk check --all` for the configured fast checks. Developers may install
 repository hooks with `mise exec -- hk install --mise`. Repository setup does
-not change global Git configuration automatically. Phase 15 has not started.
+not change global Git configuration automatically.
+
+## Phase 15 security rules
+
+- `astyx_session` remains an HttpOnly, server-side cookie. Do not add JWT or
+  localStorage authentication.
+- Forwarded IP headers are untrusted unless exact direct proxy IPs are listed
+  in `TRUSTED_PROXY_ADDRESSES`.
+- Cookie-authenticated unsafe requests require the configured exact Origin.
+- New application backups require authenticated AES-256-GCM encryption. The
+  `BACKUP_ENCRYPTION_KEY` must differ from `AUTH_COOKIE_SECRET`.
+- Tests use disposable data roots and never use the protected database.
+- Run `bun run test:security` for focused security tests and
+  `bun run security:audit` for the Bun dependency audit.
+- Use [the security hardening document](docs/security/SECURITY_HARDENING.md)
+  and [the rotation runbook](docs/security/ROTATION_RUNBOOK.md) for current
+  operational rules.
 
 The canonical local data resolver is `packages/db/src/data-dir.ts`. It returns
 absolute normalized paths for the data root, database, backups, and logs.
