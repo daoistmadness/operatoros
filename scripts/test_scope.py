@@ -33,6 +33,7 @@ RISK_CATEGORIES = (
     "BACKEND_BOOTSTRAP",
     "DATABASE_PACKAGE",
     "CONTRACTS_PACKAGE",
+    "UI_PACKAGE",
     "DATABASE_FIXTURE",
     "E2E_INFRASTRUCTURE",
     "UNKNOWN_HIGH_RISK",
@@ -56,6 +57,7 @@ FOCUSED_TESTS = {
     "BACKEND_MODEL": ["apps/api/tests/data-layer.test.ts"],
     "BACKEND_MIGRATION": ["apps/api/tests/data-layer.test.ts"],
     "BACKEND_BOOTSTRAP": ["apps/api/tests/data-layer.test.ts"],
+    "UI_PACKAGE": ["src/components/ui-package-consumer.test.tsx"],
 }
 
 BROWSER_SCENARIOS = {
@@ -107,6 +109,8 @@ def classify_path(path: str) -> set[str]:
         return {"DATABASE_PACKAGE"}
     if value.startswith("packages/contracts/"):
         return {"CONTRACTS_PACKAGE"}
+    if value.startswith("packages/ui/"):
+        return {"UI_PACKAGE"}
     if web_path(value, "src/routes/"):
         return {"FRONTEND_ROUTE"}
     if web_path(value, "src/features/"):
@@ -191,7 +195,8 @@ def paths_from_name_status(output: str) -> set[str]:
 
 def build_scope(paths: list[str]) -> dict[str, object]:
     categories = sorted({category for path in paths for category in classify_path(path)})
-    frontend = any(category.startswith("FRONTEND_") for category in categories)
+    ui = "UI_PACKAGE" in categories
+    frontend = any(category.startswith("FRONTEND_") for category in categories) or ui
     backend = any(category.startswith("BACKEND_") or category in {"DATABASE_PACKAGE", "CONTRACTS_PACKAGE"} for category in categories)
     schema_sensitive = bool({
         "BACKEND_MODEL", "BACKEND_MIGRATION", "BACKEND_BOOTSTRAP",
@@ -217,6 +222,7 @@ def build_scope(paths: list[str]) -> dict[str, object]:
         "focused_tests": focused,
         "browser_scenarios": browser,
         "frontend_changed": frontend,
+        "ui_changed": ui,
         "backend_changed": backend,
         "schema_sensitive": schema_sensitive,
         "full_backend_required": backend or schema_sensitive,
