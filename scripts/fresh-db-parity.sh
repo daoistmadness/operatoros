@@ -22,7 +22,7 @@ trap cleanup EXIT
 export OPERATOROS_ISOLATED_TEST=true
 export DATABASE_URL="sqlite:///$temporary_root/release-command.db"
 export AUTH_COOKIE_SECRET="fresh-parity-test-only-secret-32-chars"
-cd "$REPO/backend-ts"
+cd "$REPO/apps/api"
 PATH="${BUN_BIN:-$(dirname "$(command -v bun)")}:$PATH" OPERATOROS_PYTHON="$PYTHON" bun test tests/data-layer.test.ts
 
 test ! -e "$REPO/backend/attendance.db-wal"

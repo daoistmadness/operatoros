@@ -4,7 +4,7 @@ import { createApp } from "../src/app";
 import { openDatabase } from "../src/db/connection";
 import { backupScheduler } from "../src/domains/safety";
 
-const repoRoot = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
+const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const localPython = `${repoRoot}/backend/.venv/bin/python`;
 const python = process.env.OPERATOROS_PYTHON ?? (existsSync(localPython) ? localPython : "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python");
 const secret = "astryx-test-only-cookie-secret-32-chars";

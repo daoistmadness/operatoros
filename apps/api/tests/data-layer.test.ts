@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { unlinkSync } from "node:fs";
 import { inTransaction, openDatabase, validateDatabase } from "../src/db/connection";
 
-const repoRoot = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
+const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 
 function disposableDatabasePath(label: string): string {

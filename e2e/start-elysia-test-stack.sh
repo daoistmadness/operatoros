@@ -65,7 +65,7 @@ export BACKUP_DIR="$workspace/backups"
 export OPERATOROS_ISOLATED_TEST=true
 
 (
-  cd "$repo_root/backend-ts"
+  cd "$repo_root/apps/api"
   exec setsid env PATH="$bun_bin:/usr/bin:/bin" bun run src/server.ts
 ) >"$backend_log" 2>&1 &
 backend_pid=$!

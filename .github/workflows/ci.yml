@@ -9,12 +9,12 @@ on:
       - develop
 
 jobs:
-  backend-ts:
+  api:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: backend-ts
+        working-directory: apps/api
     env:
       OPERATOROS_PYTHON: ${{ github.workspace }}/backend/.venv/bin/python
     steps:
@@ -29,9 +29,9 @@ jobs:
           python --version
           mise ls --current
       - name: Create disposable fixture-tool virtualenv
-        run: python -m venv ../backend/.venv
+        run: python -m venv ../../backend/.venv
       - name: Install schema and fixture tooling
-        run: ../backend/.venv/bin/python -m pip install -r ../backend/requirements.txt
+        run: ../../backend/.venv/bin/python -m pip install -r ../../backend/requirements.txt
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile
