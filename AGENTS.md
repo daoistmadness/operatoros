@@ -122,7 +122,7 @@ historical evidence unless they explicitly identify a current procedure.
 
 - Use TypeScript and the existing feature ownership boundaries; do not perform
   a big-bang feature reorganization. Route modules are lazy-loaded where
-  established. Reuse shared primitives and follow `frontend/DESIGN.md`.
+  established. Reuse shared primitives and follow `apps/web/DESIGN.md`.
 - Use TanStack Query and the sanitized API-error foundation. Pages consume
   feature APIs, not generated OpenAPI code directly.
 - Browser-visible APIs use canonical `/api/<domain>/...` paths through the
@@ -132,8 +132,8 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Phase 14 monorepo modernization
 
-Phase 14.2 moved the authoritative API to `apps/api/`. The web application
-remains in `frontend/`. Phase 14.3 has not started.
+Phase 14.2 moved the authoritative API to `apps/api/`. Phase 14.3 moved the
+authoritative web application to `apps/web/`. Phase 14.4 has not started.
 
 Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
 package ownership and dependency directions.

@@ -58,7 +58,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright Chromium
-        working-directory: frontend
+        working-directory: apps/web
         run: bun run --bun playwright install --with-deps chromium
 
       - name: Run CI-only full regression

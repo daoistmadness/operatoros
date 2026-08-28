@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const frontendRoot = join(repositoryRoot, "frontend");
+const frontendRoot = join(repositoryRoot, "apps", "web");
 const generator = join(frontendRoot, "node_modules", "openapi-typescript", "bin", "cli.js");
 const committedSpec = join(repositoryRoot, "openapi", "operatoros.openapi.json");
 const committedTypes = join(frontendRoot, "src", "generated", "openapi", "schema.ts");

@@ -1,12 +1,12 @@
 # Commands
 
-Verified from `README.md`, `backend/requirements.txt`, `apps/api/package.json`, `frontend/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
+Verified from `README.md`, `backend/requirements.txt`, `apps/api/package.json`, `apps/web/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
 
 ## Install
 - `mise install`  # install Bun 1.4.0 and Python 3.12.3 from mise.lock
 - `mise run doctor`  # verify toolchain
 - `cd backend && python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt`
-- `cd frontend && bun install`
+- `cd apps/web && bun install`
 - `npm install -g agent-browser && agent-browser install`  # browser tooling
 - `agent-browser install --with-deps`  # Linux / WSL2 browser dependencies
 
@@ -14,15 +14,15 @@ Verified from `README.md`, `backend/requirements.txt`, `apps/api/package.json`, 
 - `./start-dev.sh`  # default Elysia + Vite launcher
 - `./start-dev.sh --check`  # validate prerequisites and ports without starting services
 - `cd apps/api && bun run src/server.ts`  # standalone Elysia backend
-- `cd frontend && bun run dev`
-- `cd frontend && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
+- `cd apps/web && bun run dev`
+- `cd apps/web && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
 
 ## Build
-- `cd frontend && bun run build`
+- `cd apps/web && bun run build`
 
 ## Test / Validation
 - `cd apps/api && bun test`
-- `cd frontend && bun test`  # frontend unit tests
+- `cd apps/web && bun test`  # frontend unit tests
 - `./scripts/verify-browser.sh http://127.0.0.1:5173`
 - `python3 .github/scripts/check_markdown_links.py`
 - `curl http://localhost:8000/openapi`

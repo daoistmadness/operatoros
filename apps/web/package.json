@@ -44,10 +44,10 @@
     "vitest": "4.1.10"
   },
   "scripts": {
-    "api:check": "bun ../scripts/openapi-contracts.mjs check",
-    "api:generate": "bun ../scripts/openapi-contracts.mjs generate",
-    "boundaries:check": "bun ../scripts/frontend-boundaries.mjs",
-    "boundaries:test": "bun test ../scripts/frontend-boundaries.test.mjs",
+    "api:check": "bun ../../scripts/openapi-contracts.mjs check",
+    "api:generate": "bun ../../scripts/openapi-contracts.mjs generate",
+    "boundaries:check": "bun ../../scripts/frontend-boundaries.mjs",
+    "boundaries:test": "bun test ../../scripts/frontend-boundaries.test.mjs",
     "dev": "bun run --bun vite",
     "build": "bun run --bun vite build",
     "typecheck": "bun run --bun tsc --noEmit",
@@ -56,7 +56,7 @@
     "preview": "bun run --bun vite preview",
     "test": "bun run --bun vitest run",
     "check:dependencies": "bun dedupe --check",
-    "check:node-regressions": "bun ../scripts/check-node-regressions.mjs",
+    "check:node-regressions": "bun ../../scripts/check-node-regressions.mjs",
     "check:audit": "bun audit"
   },
   "trustedDependencies": [

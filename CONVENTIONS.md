@@ -10,8 +10,8 @@
 - Backend routes live in `apps/api/src/domains/` and `apps/api/src/auth/`.
 - Backend database schema lives in `apps/api/src/db/`.
 - Backend processing logic and analytics live in the TypeScript domain modules.
-- Frontend route screens/pages live in `frontend/src/pages/`.
-- Shared UI and API helpers live in `frontend/src/components/` and `frontend/src/lib/`.
+- Frontend route screens/pages live in `apps/web/src/pages/`.
+- Shared UI and API helpers live in `apps/web/src/components/` and `apps/web/src/lib/`.
 
 ## Formatting
 - **Python**: Follow PEP8 standards. Indentation uses 4 spaces.
@@ -22,9 +22,9 @@
 - Keep imports grouped by standard library, third-party, then local modules.
 - Prefer small helper functions over deeply nested logic.
 - Keep route registration explicit in `apps/api/src/app.ts`.
-- Keep frontend route definitions explicit in `frontend/src/App.js`.
-- Keep API URL construction centralized in `frontend/src/lib/api/client.js` rather than scattering backend URLs across pages.
-- Keep development routing centralized in `frontend/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
+- Keep frontend route definitions explicit in `apps/web/src/App.tsx`.
+- Keep API URL construction centralized in `apps/web/src/lib/api/client.ts` rather than scattering backend URLs across pages.
+- Keep development routing centralized in `apps/web/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
 - Keep destructive request payloads typed with Elysia schemas rather than accepting unstructured JSON.
 
 ## Error Handling
@@ -39,7 +39,7 @@
 
 ## Testing Style
 - Backend behavioral tests live under `apps/api/tests/` and use Bun.
-- Frontend tests live under `frontend/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
+- Frontend tests live under `apps/web/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
 - Validate behavior with startup checks, smoke requests, backend tests, and frontend build checks.
 - For user-visible frontend changes, run the Agent Browser smoke test when the tool is available.
 
@@ -47,4 +47,4 @@
 - Preserve existing API shapes unless the task explicitly changes them.
 - Avoid rewriting generated build artifacts or one-off repair scripts unless that is the task.
 - Prefer targeted changes that are easy to verify and easy to roll back.
-- Do not edit `frontend/build/`, `frontend/node_modules/`, local database files, or generated reports as part of ordinary reviews.
+- Do not edit `apps/web/build/`, `apps/web/node_modules/`, local database files, or generated reports as part of ordinary reviews.

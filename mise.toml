@@ -19,8 +19,8 @@ python --version
 echo "--- mise current ---"
 mise ls --current
 echo "--- lockfiles ---"
-ls -lh frontend/bun.lock
-if [ -f frontend/package-lock.json ]; then echo "ERROR: frontend/package-lock.json exists"; exit 1; fi
+ls -lh bun.lock
+if [ -f apps/web/package-lock.json ]; then echo "ERROR: apps/web/package-lock.json exists"; exit 1; fi
 if [ -f package-lock.json ]; then echo "ERROR: package-lock.json exists"; exit 1; fi
 if [ -f yarn.lock ]; then echo "ERROR: yarn.lock exists"; exit 1; fi
 if [ -f pnpm-lock.yaml ]; then echo "ERROR: pnpm-lock.yaml exists"; exit 1; fi
