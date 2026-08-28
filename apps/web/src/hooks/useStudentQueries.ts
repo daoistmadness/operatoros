@@ -26,6 +26,7 @@ function useStudentDomainInvalidation(id?: string) {
       await client.invalidateQueries({ queryKey: queryKeys.students.enrollments(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.legacyLink(id) });
     }
+    await client.invalidateQueries({ queryKey: queryKeys.analytics.all });
   };
 }
 

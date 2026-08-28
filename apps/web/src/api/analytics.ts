@@ -1,10 +1,50 @@
 import { API_BLOB_TYPES, apiRequest } from "../lib/api/client";
 import type {
+  AnalyticsCohortsResponse,
+  AnalyticsOverviewResponse,
+  AnalyticsTrendsResponse,
+} from "@operatoros/contracts/analytics";
+import type {
   AnalyticsFiltersResponse,
   HistoricalTrendsResponse,
   InterventionImpactResponse,
   ManagementSummaryResponse,
 } from "../types/analytics";
+
+export interface CanonicalAnalyticsParams {
+  academic_year_id: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  jenjang_id?: number | null;
+  class_name?: string | null;
+  subject_id?: number | null;
+}
+
+function canonicalParams(params: CanonicalAnalyticsParams) {
+  return {
+    academic_year_id: params.academic_year_id,
+    start_date: params.start_date ?? undefined,
+    end_date: params.end_date ?? undefined,
+    jenjang_id: params.jenjang_id ?? undefined,
+    class_name: params.class_name ?? undefined,
+    subject_id: params.subject_id ?? undefined,
+  };
+}
+
+export async function fetchAnalyticsOverview(params: CanonicalAnalyticsParams): Promise<AnalyticsOverviewResponse> {
+  const response = await apiRequest<AnalyticsOverviewResponse>({ path: analyticsApiPath("/overview"), method: "GET", params: canonicalParams(params) });
+  return response.data;
+}
+
+export async function fetchAnalyticsTrends(params: CanonicalAnalyticsParams): Promise<AnalyticsTrendsResponse> {
+  const response = await apiRequest<AnalyticsTrendsResponse>({ path: analyticsApiPath("/trends"), method: "GET", params: canonicalParams(params) });
+  return response.data;
+}
+
+export async function fetchAnalyticsCohorts(params: CanonicalAnalyticsParams, dimension: "class" | "jenjang"): Promise<AnalyticsCohortsResponse> {
+  const response = await apiRequest<AnalyticsCohortsResponse>({ path: analyticsApiPath("/cohorts"), method: "GET", params: { ...canonicalParams(params), dimension } });
+  return response.data;
+}
 
 export function analyticsApiPath(path: string): string {
   return `/api/analytics${path}`;

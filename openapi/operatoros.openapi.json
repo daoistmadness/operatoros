@@ -97,7 +97,7 @@
       "AcademicInterventionCreateRequest": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -132,8 +132,8 @@
           "current_average": {
             "anyOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
+                "maximum": 100,
+                "minimum": 0,
                 "type": "number"
               },
               {
@@ -143,15 +143,15 @@
             "title": "Current Average"
           },
           "effective_threshold": {
-            "maximum": 100.0,
-            "minimum": 0.0,
+            "maximum": 100,
+            "minimum": 0,
             "title": "Effective Threshold",
             "type": "number"
           },
           "enrollment_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -174,7 +174,7 @@
           "jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -252,7 +252,7 @@
             "type": "string"
           },
           "student_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Student Id",
             "type": "integer"
           },
@@ -263,7 +263,7 @@
             "type": "string"
           },
           "subject_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Subject Id",
             "type": "integer"
           },
@@ -556,7 +556,7 @@
       "AcademicTermRequest": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -577,8 +577,8 @@
             "type": "string"
           },
           "term_number": {
-            "maximum": 4.0,
-            "minimum": 1.0,
+            "maximum": 4,
+            "minimum": 1,
             "title": "Term Number",
             "type": "integer"
           }
@@ -598,7 +598,7 @@
           "academic_year_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -647,8 +647,8 @@
           "term_number": {
             "anyOf": [
               {
-                "maximum": 4.0,
-                "minimum": 1.0,
+                "maximum": 4,
+                "minimum": 1,
                 "type": "integer"
               },
               {
@@ -1082,7 +1082,7 @@
         "additionalProperties": false,
         "properties": {
           "assigned_to_user_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Assigned To User Id",
             "type": "integer"
           },
@@ -1108,12 +1108,12 @@
         "additionalProperties": false,
         "properties": {
           "academic_class_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Class Id",
             "type": "integer"
           },
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -1157,7 +1157,7 @@
             "title": "Subject Id"
           },
           "user_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "User Id",
             "type": "integer"
           }
@@ -1589,7 +1589,7 @@
         "additionalProperties": false,
         "properties": {
           "assigned_to_user_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Assigned To User Id",
             "type": "integer"
           },
@@ -1714,7 +1714,7 @@
             "type": "string"
           },
           "legacy_student_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Legacy Student Id",
             "type": "integer"
           },
@@ -1813,7 +1813,7 @@
             "type": "string"
           },
           "student_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Student Id",
             "type": "integer"
           }
@@ -1828,7 +1828,7 @@
       "ClassBody": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -1844,7 +1844,7 @@
             "type": "string"
           },
           "grade_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Grade Id",
             "type": "integer"
           },
@@ -2052,7 +2052,7 @@
           },
           "grace_period_minutes": {
             "default": 0,
-            "minimum": 0.0,
+            "minimum": 0,
             "title": "Grace Period Minutes",
             "type": "integer"
           },
@@ -2073,8 +2073,8 @@
             "title": "Jenjang Id"
           },
           "weekday": {
-            "maximum": 6.0,
-            "minimum": 0.0,
+            "maximum": 6,
+            "minimum": 0,
             "title": "Weekday",
             "type": "integer"
           }
@@ -2700,8 +2700,8 @@
           "graduation_year": {
             "anyOf": [
               {
-                "maximum": 2200.0,
-                "minimum": 1900.0,
+                "maximum": 2200,
+                "minimum": 1900,
                 "type": "integer"
               },
               {
@@ -2769,12 +2769,12 @@
       "EnrollmentBulkRequest": {
         "properties": {
           "academic_class_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Class Id",
             "type": "integer"
           },
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -2838,12 +2838,12 @@
         "additionalProperties": false,
         "properties": {
           "academic_class_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Class Id",
             "type": "integer"
           },
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -2925,7 +2925,7 @@
       "EnrollmentPopulationPreviewRequest": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -2974,7 +2974,7 @@
             "type": "string"
           },
           "target_class_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Target Class Id",
             "type": "integer"
           }
@@ -3116,7 +3116,7 @@
           "template_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3323,7 +3323,7 @@
             "type": "boolean"
           },
           "jenjang_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Jenjang Id",
             "type": "integer"
           },
@@ -3334,12 +3334,12 @@
             "type": "string"
           },
           "program_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Program Id",
             "type": "integer"
           },
           "sequence_number": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Sequence Number",
             "type": "integer"
           }
@@ -3384,8 +3384,8 @@
           "score": {
             "anyOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
+                "maximum": 100,
+                "minimum": 0,
                 "type": "number"
               },
               {
@@ -3432,7 +3432,7 @@
             "type": "string"
           },
           "sequence_number": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Sequence Number",
             "type": "integer"
           }
@@ -3498,7 +3498,7 @@
           "id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3727,7 +3727,7 @@
       "KkmThresholdRequest": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -3743,7 +3743,7 @@
           "jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3755,7 +3755,7 @@
           "subject_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3765,8 +3765,8 @@
             "title": "Subject Id"
           },
           "threshold": {
-            "maximum": 100.0,
-            "minimum": 0.0,
+            "maximum": 100,
+            "minimum": 0,
             "title": "Threshold",
             "type": "number"
           }
@@ -3784,7 +3784,7 @@
           "academic_year_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3812,7 +3812,7 @@
           "jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3824,7 +3824,7 @@
           "subject_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -3836,8 +3836,8 @@
           "threshold": {
             "anyOf": [
               {
-                "maximum": 100.0,
-                "minimum": 0.0,
+                "maximum": 100,
+                "minimum": 0,
                 "type": "number"
               },
               {
@@ -4331,7 +4331,7 @@
             "type": "boolean"
           },
           "jenjang_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Jenjang Id",
             "type": "integer"
           },
@@ -4391,7 +4391,7 @@
             "type": "string"
           },
           "preview_version": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Preview Version",
             "type": "integer"
           }
@@ -4408,17 +4408,17 @@
         "additionalProperties": false,
         "properties": {
           "destination_grade_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Destination Grade Id",
             "type": "integer"
           },
           "destination_jenjang_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Destination Jenjang Id",
             "type": "integer"
           },
           "destination_program_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Destination Program Id",
             "type": "integer"
           },
@@ -4433,17 +4433,17 @@
             "type": "string"
           },
           "source_grade_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Source Grade Id",
             "type": "integer"
           },
           "source_jenjang_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Source Jenjang Id",
             "type": "integer"
           },
           "source_program_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Source Program Id",
             "type": "integer"
           }
@@ -4466,7 +4466,7 @@
           "destination_class_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4478,7 +4478,7 @@
           "destination_grade_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4490,7 +4490,7 @@
           "destination_jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4502,7 +4502,7 @@
           "destination_program_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4552,7 +4552,7 @@
             "title": "Reason Code"
           },
           "source_enrollment_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Source Enrollment Id",
             "type": "integer"
           }
@@ -4568,7 +4568,7 @@
         "additionalProperties": false,
         "properties": {
           "destination_academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Destination Academic Year Id",
             "type": "integer"
           },
@@ -4580,7 +4580,7 @@
             "type": "array"
           },
           "source_academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Source Academic Year Id",
             "type": "integer"
           },
@@ -4611,7 +4611,7 @@
         "additionalProperties": false,
         "properties": {
           "preview_version": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Preview Version",
             "type": "integer"
           }
@@ -4628,7 +4628,7 @@
           "destination_class_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4640,7 +4640,7 @@
           "destination_grade_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4652,7 +4652,7 @@
           "destination_jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4664,7 +4664,7 @@
           "destination_program_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -4694,7 +4694,7 @@
             "title": "Outcome"
           },
           "preview_version": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Preview Version",
             "type": "integer"
           },
@@ -5103,7 +5103,7 @@
       "ReportFiltersBody": {
         "properties": {
           "academic_year_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Academic Year Id",
             "type": "integer"
           },
@@ -5121,7 +5121,7 @@
           "jenjang_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -5133,7 +5133,7 @@
           "subject_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -5291,7 +5291,7 @@
           "template_id": {
             "anyOf": [
               {
-                "exclusiveMinimum": 0.0,
+                "exclusiveMinimum": 0,
                 "type": "integer"
               },
               {
@@ -6089,38 +6089,38 @@
             "type": "boolean"
           },
           "hour_utc": {
-            "maximum": 23.0,
-            "minimum": 0.0,
+            "maximum": 23,
+            "minimum": 0,
             "title": "Hour Utc",
             "type": "integer"
           },
           "interval_minutes": {
-            "maximum": 525600.0,
-            "minimum": 1.0,
+            "maximum": 525600,
+            "minimum": 1,
             "title": "Interval Minutes",
             "type": "integer"
           },
           "keep_daily": {
-            "maximum": 365.0,
-            "minimum": 0.0,
+            "maximum": 365,
+            "minimum": 0,
             "title": "Keep Daily",
             "type": "integer"
           },
           "keep_monthly": {
-            "maximum": 120.0,
-            "minimum": 0.0,
+            "maximum": 120,
+            "minimum": 0,
             "title": "Keep Monthly",
             "type": "integer"
           },
           "keep_weekly": {
-            "maximum": 260.0,
-            "minimum": 0.0,
+            "maximum": 260,
+            "minimum": 0,
             "title": "Keep Weekly",
             "type": "integer"
           },
           "minute_utc": {
-            "maximum": 59.0,
-            "minimum": 0.0,
+            "maximum": 59,
+            "minimum": 0,
             "title": "Minute Utc",
             "type": "integer"
           },
@@ -6130,8 +6130,8 @@
             "type": "string"
           },
           "weekday_utc": {
-            "maximum": 6.0,
-            "minimum": 0.0,
+            "maximum": 6,
+            "minimum": 0,
             "title": "Weekday Utc",
             "type": "integer"
           }
@@ -6164,7 +6164,7 @@
             "type": "string"
           },
           "expected_version": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Expected Version",
             "type": "integer"
           }
@@ -6961,7 +6961,7 @@
       "SubjectCreateRequest": {
         "properties": {
           "jenjang_id": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Jenjang Id",
             "type": "integer"
           },
@@ -7170,7 +7170,7 @@
             "type": "string"
           },
           "expected_version": {
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Expected Version",
             "type": "integer"
           },
@@ -29143,6 +29143,1125 @@
         "tags": [
           "students-legacy"
         ]
+      }
+    },
+    "/api/analytics/overview": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract_version",
+                    "filters",
+                    "metric_definitions",
+                    "summary",
+                    "cohorts"
+                  ],
+                  "properties": {
+                    "contract_version": {
+                      "const": "analytics.v1",
+                      "type": "string"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "required": [
+                        "academic_year_id",
+                        "academic_year_label",
+                        "start_date",
+                        "end_date",
+                        "jenjang_id",
+                        "class_name",
+                        "subject_id"
+                      ],
+                      "properties": {
+                        "academic_year_id": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academic_year_label": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "jenjang_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "class_name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "subject_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "metric_definitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label",
+                          "unit",
+                          "numerator",
+                          "denominator",
+                          "rounding",
+                          "missing_data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "label": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "count",
+                              "percent",
+                              "score"
+                            ]
+                          },
+                          "numerator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "denominator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "rounding": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "missing_data": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "required": [
+                        "student_count",
+                        "attendance_counts",
+                        "attendance_rate",
+                        "grade_average"
+                      ],
+                      "properties": {
+                        "student_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "attendance_counts": {
+                          "type": "object",
+                          "required": [
+                            "present",
+                            "sakit",
+                            "izin",
+                            "alfa",
+                            "late"
+                          ],
+                          "properties": {
+                            "present": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "sakit": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "izin": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "alfa": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "late": {
+                              "minimum": 0,
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "attendance_rate": {
+                          "type": "object",
+                          "required": [
+                            "value",
+                            "numerator",
+                            "denominator",
+                            "unit",
+                            "status"
+                          ],
+                          "properties": {
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "numerator": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "denominator": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "count",
+                                "percent",
+                                "score"
+                              ]
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "value",
+                                "zero",
+                                "unavailable",
+                                "not_applicable"
+                              ]
+                            }
+                          }
+                        },
+                        "grade_average": {
+                          "type": "object",
+                          "required": [
+                            "value",
+                            "numerator",
+                            "denominator",
+                            "unit",
+                            "status"
+                          ],
+                          "properties": {
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "numerator": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "denominator": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "enum": [
+                                "count",
+                                "percent",
+                                "score"
+                              ]
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "value",
+                                "zero",
+                                "unavailable",
+                                "not_applicable"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "cohorts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "dimension",
+                          "id",
+                          "label",
+                          "student_count",
+                          "attendance_rate",
+                          "grade_average"
+                        ],
+                        "properties": {
+                          "dimension": {
+                            "type": "string",
+                            "enum": [
+                              "class",
+                              "jenjang"
+                            ]
+                          },
+                          "id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "label": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "student_count": {
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "attendance_rate": {
+                            "type": "object",
+                            "required": [
+                              "value",
+                              "numerator",
+                              "denominator",
+                              "unit",
+                              "status"
+                            ],
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "numerator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "denominator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "count",
+                                  "percent",
+                                  "score"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "value",
+                                  "zero",
+                                  "unavailable",
+                                  "not_applicable"
+                                ]
+                              }
+                            }
+                          },
+                          "grade_average": {
+                            "type": "object",
+                            "required": [
+                              "value",
+                              "numerator",
+                              "denominator",
+                              "unit",
+                              "status"
+                            ],
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "numerator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "denominator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "count",
+                                  "percent",
+                                  "score"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "value",
+                                  "zero",
+                                  "unavailable",
+                                  "not_applicable"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAnalyticsOverview"
+      }
+    },
+    "/api/analytics/trends": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract_version",
+                    "filters",
+                    "metric_definitions",
+                    "series"
+                  ],
+                  "properties": {
+                    "contract_version": {
+                      "const": "analytics.v1",
+                      "type": "string"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "required": [
+                        "academic_year_id",
+                        "academic_year_label",
+                        "start_date",
+                        "end_date",
+                        "jenjang_id",
+                        "class_name",
+                        "subject_id"
+                      ],
+                      "properties": {
+                        "academic_year_id": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academic_year_label": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "jenjang_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "class_name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "subject_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "metric_definitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label",
+                          "unit",
+                          "numerator",
+                          "denominator",
+                          "rounding",
+                          "missing_data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "label": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "count",
+                              "percent",
+                              "score"
+                            ]
+                          },
+                          "numerator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "denominator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "rounding": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "missing_data": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "series": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "metric_id",
+                          "time_grain",
+                          "points"
+                        ],
+                        "properties": {
+                          "metric_id": {
+                            "const": "attendance_rate",
+                            "type": "string"
+                          },
+                          "time_grain": {
+                            "const": "month",
+                            "type": "string"
+                          },
+                          "points": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "period",
+                                "start_date",
+                                "end_date",
+                                "metric"
+                              ],
+                              "properties": {
+                                "period": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "start_date": {
+                                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                                  "type": "string"
+                                },
+                                "end_date": {
+                                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                                  "type": "string"
+                                },
+                                "metric": {
+                                  "type": "object",
+                                  "required": [
+                                    "value",
+                                    "numerator",
+                                    "denominator",
+                                    "unit",
+                                    "status"
+                                  ],
+                                  "properties": {
+                                    "value": {
+                                      "anyOf": [
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    },
+                                    "numerator": {
+                                      "minimum": 0,
+                                      "type": "number"
+                                    },
+                                    "denominator": {
+                                      "minimum": 0,
+                                      "type": "number"
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                        "count",
+                                        "percent",
+                                        "score"
+                                      ]
+                                    },
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "value",
+                                        "zero",
+                                        "unavailable",
+                                        "not_applicable"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAnalyticsTrends"
+      }
+    },
+    "/api/analytics/cohorts": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dimension",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "class",
+                "jenjang"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contract_version",
+                    "filters",
+                    "metric_definitions",
+                    "dimension",
+                    "cohorts"
+                  ],
+                  "properties": {
+                    "contract_version": {
+                      "const": "analytics.v1",
+                      "type": "string"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "required": [
+                        "academic_year_id",
+                        "academic_year_label",
+                        "start_date",
+                        "end_date",
+                        "jenjang_id",
+                        "class_name",
+                        "subject_id"
+                      ],
+                      "properties": {
+                        "academic_year_id": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academic_year_label": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "jenjang_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "class_name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "subject_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "metric_definitions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label",
+                          "unit",
+                          "numerator",
+                          "denominator",
+                          "rounding",
+                          "missing_data"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "label": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "count",
+                              "percent",
+                              "score"
+                            ]
+                          },
+                          "numerator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "denominator": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "rounding": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "missing_data": {
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "dimension": {
+                      "type": "string",
+                      "enum": [
+                        "class",
+                        "jenjang"
+                      ]
+                    },
+                    "cohorts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "dimension",
+                          "id",
+                          "label",
+                          "student_count",
+                          "attendance_rate",
+                          "grade_average"
+                        ],
+                        "properties": {
+                          "dimension": {
+                            "type": "string",
+                            "enum": [
+                              "class",
+                              "jenjang"
+                            ]
+                          },
+                          "id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "label": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "student_count": {
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "attendance_rate": {
+                            "type": "object",
+                            "required": [
+                              "value",
+                              "numerator",
+                              "denominator",
+                              "unit",
+                              "status"
+                            ],
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "numerator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "denominator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "count",
+                                  "percent",
+                                  "score"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "value",
+                                  "zero",
+                                  "unavailable",
+                                  "not_applicable"
+                                ]
+                              }
+                            }
+                          },
+                          "grade_average": {
+                            "type": "object",
+                            "required": [
+                              "value",
+                              "numerator",
+                              "denominator",
+                              "unit",
+                              "status"
+                            ],
+                            "properties": {
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "numerator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "denominator": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "enum": [
+                                  "count",
+                                  "percent",
+                                  "score"
+                                ]
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "value",
+                                  "zero",
+                                  "unavailable",
+                                  "not_applicable"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAnalyticsCohorts"
       }
     }
   }
