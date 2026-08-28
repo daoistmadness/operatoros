@@ -56,6 +56,8 @@ export DATABASE_URL="sqlite:///$database"
 ) >"$logs/fixture-initialize.log" 2>&1
 
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
+export BACKUP_ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-b3BlcmF0b3Jvcy1lMmUtYmFja3VwLWtleS0yMDI2LTA=}"
+export BACKUP_ENCRYPTION_KEY_ID="${BACKUP_ENCRYPTION_KEY_ID:-e2e-test-key}"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 source "$repo_root/scripts/validate-wsl-bun.sh"
