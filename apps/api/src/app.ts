@@ -95,7 +95,6 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
 export { t };
 export type { AppError as AppErrorShape };
 export function createTestApp() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const app = createApp({ environment: "test" }) as any;
   app.post("/diag/body", ({ body }: any) => ({ echo: body }), { body: t.Object({ name: t.String(), count: t.Number() }) });
   app.get("/diag/query", ({ query }: any) => ({ echo: query }), { query: t.Object({ limit: t.Number({ minimum: 1 }) }) });

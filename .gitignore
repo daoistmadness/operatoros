@@ -2,6 +2,7 @@
 backend/.env
 backend/.local-dev/
 apps/web/.env
+node_modules/
 
 backend/attendance.db
 backend/attendance.db-*
