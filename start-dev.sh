@@ -142,9 +142,9 @@ run_preflight() {
   require_command setsid "Process management" "Install util-linux."
   require_command ps "Process management" "Install procps."
   [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python for database and session management."
-  [[ -f "$BACKEND_TS_DIR/package.json" && -f "$BACKEND_TS_DIR/bun.lock" ]] || fail_preflight "Elysia backend manifest is incomplete" "Expected backend-ts/package.json and backend-ts/bun.lock."
-  [[ -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: cd backend-ts && bun install"
-  [[ -f "$FRONTEND_DIR/package.json" && -f "$FRONTEND_DIR/bun.lock" ]] || fail_preflight "Frontend manifest is incomplete" "Expected package.json and bun.lock."
+  [[ -f "$PROJECT_ROOT/package.json" && -f "$PROJECT_ROOT/bun.lock" ]] || fail_preflight "Workspace manifest is incomplete" "Expected root package.json and bun.lock."
+  [[ -f "$BACKEND_TS_DIR/package.json" && -d "$BACKEND_TS_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
+  [[ -f "$FRONTEND_DIR/package.json" && -d "$FRONTEND_DIR/node_modules" ]] || fail_preflight "Frontend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
   [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
   # shellcheck disable=SC1090
   source "$WSL_BUN_HELPER"
@@ -153,7 +153,7 @@ run_preflight() {
   fi
   JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
   printf '  [ok] Linux Bun %s\n' "$OPERATOROS_BUN_VERSION"
-  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && bun install"
+  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
   printf '  [ok] Backend and frontend dependencies\n'
 }
 
@@ -375,7 +375,7 @@ else
 fi
 
 VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
-[[ -x "$VITE_EXECUTABLE" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: cd frontend && bun install"
+[[ -x "$VITE_EXECUTABLE" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 LAUNCHER_STATE=STARTING_FRONTEND
 (

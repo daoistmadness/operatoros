@@ -16,7 +16,7 @@ if ! operatoros_wsl_prepare_bun "$ROOT_DIR"; then
 fi
 
 if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
-  echo "ERROR: node_modules not found. Run: cd frontend && bun install" >&2
+  echo "ERROR: node_modules not found. Run: bun install --frozen-lockfile from the repository root" >&2
   exit 1
 fi
 
