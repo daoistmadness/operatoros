@@ -3,7 +3,7 @@ import { rmSync } from "node:fs";
 import * as XLSX from "@e965/xlsx";
 import ExcelJS from "exceljs";
 import { createApp } from "../src/app";
-import { openDatabase } from "../src/db/connection";
+import { openDatabase } from "@operatoros/db";
 import { calculateLateMinutes } from "../src/domains/attendance-rules";
 import { parseDuration, parseExcelDate, parseExcelTime } from "../src/import/normalization";
 import { readAttendanceWorkbook } from "../src/import/excel-reader";

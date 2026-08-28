@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { createApp } from "../src/app";
-import { openDatabase } from "../src/db/connection";
+import { openDatabase } from "@operatoros/db";
 import { authorize } from "../src/auth/service";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");

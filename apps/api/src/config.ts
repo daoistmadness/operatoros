@@ -4,7 +4,7 @@ export interface BackendConfig {
   environment: "production" | "development" | "test";
   databasePath?: string;
   auth?: Partial<import("./auth/service").AuthConfig>;
-  databaseHandle?: import("./db/connection").DatabaseHandle;
+  databaseHandle?: import("@operatoros/db").DatabaseHandle;
   destructiveOperationsEnabled?: boolean;
   backupDir?: string;
 }

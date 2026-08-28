@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";

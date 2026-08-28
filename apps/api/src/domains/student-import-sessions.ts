@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 
 type Row = Record<string, any>;
 type Context = any;
