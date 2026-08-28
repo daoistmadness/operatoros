@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-FRONTEND_DIR="$ROOT_DIR/frontend"
+FRONTEND_DIR="$ROOT_DIR/apps/web"
 
 source "$ROOT_DIR/scripts/validate-wsl-bun.sh"
 if ! operatoros_wsl_prepare_bun "$ROOT_DIR"; then

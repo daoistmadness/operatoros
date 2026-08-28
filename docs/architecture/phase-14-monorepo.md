@@ -1,6 +1,6 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.2` complete. Phase 14.3 has not started.
+Status: `Phase 14.3` complete. Phase 14.4 has not started.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -21,8 +21,8 @@ operatoros/
     excel/
 ```
 
-The API application now lives in `apps/api/`. The web application remains in
-`frontend/`. `apps/web/` is still a non-authoritative placeholder.
+The API application lives in `apps/api/`. The web application lives in
+`apps/web/`. Both application workspaces are authoritative.
 
 Phase 14.1 creates no active future application package. `packages/config`
 contains configuration skeletons. `packages/contracts`, `packages/db`,
@@ -32,7 +32,7 @@ contains configuration skeletons. `packages/contracts`, `packages/db`,
 
 - Bun owns the runtime, package manager, workspaces, catalog, and root `bun.lock`.
 - `apps/api/` is the `@operatoros/api` workspace.
-- `frontend/` is the `@operatoros/web` workspace.
+- `apps/web/` is the `@operatoros/web` workspace.
 - Both packages remain private and keep their existing `0.1.0` metadata.
 - The repository has no single release-version authority.
 
@@ -111,3 +111,7 @@ add UI libraries, add Turbo, add Zod, or change application behavior.
 Phase 14.2 moved the authoritative Elysia application from `backend-ts/` to
 `apps/api/`. It updated active workspace, launcher, CI, E2E, test-scope, and
 documentation paths. It did not move `frontend/` or extract a package.
+
+Phase 14.3 moved the authoritative React/Vite application from `frontend/` to
+`apps/web/`. It updated active workspace, launcher, CI, E2E, test-scope, and
+documentation paths. It did not restructure the API or extract a package.

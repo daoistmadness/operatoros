@@ -18,7 +18,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `e2e/fixtures/expected/smoke-fixture.json` records the deterministic fixture contract.
 - `e2e/smoke/backend/` and `e2e/smoke/web/` contain the blocking tests.
 - `e2e/full/` is the expansion point for CI-only coverage.
-- `frontend/playwright.config.ts` reads the selected frontend URL from runtime state and stores failure evidence.
+- `apps/web/playwright.config.ts` reads the selected frontend URL from runtime state and stores failure evidence.
 - `start-dev.sh` and `stop-dev.sh` provide session-aware process ownership and dynamic ports.
 
 ## 3. Smoke execution flow
