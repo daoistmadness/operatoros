@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { t } from "elysia";
+import { AttendanceCorrectionRequestSchema } from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
@@ -97,7 +98,7 @@ function scopedRoutes(app: any, context: AuthContext): void {
 }
 
 function correctionRoutes(app: any, context: AuthContext): void {
-  const requestBody = t.Object({ attendance_id: t.Number({ minimum: 1 }), proposed_status: t.String(), proposed_check_in: t.Optional(t.String()), proposed_check_out: t.Optional(t.String()), reason_code: t.String({ minLength: 2, maxLength: 64 }), explanation: t.String({ minLength: 5, maxLength: 2000 }) });
+  const requestBody = AttendanceCorrectionRequestSchema;
   app.post("/api/attendance-corrections", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "request_attendance_correction" }); if (!user) return { detail: "Insufficient permissions" };
     const attendance = row(context, "SELECT * FROM attendance WHERE id = ?", [ctx.body.attendance_id]); if (!attendance) return fail(ctx.set, 404, "Attendance record was not found.");

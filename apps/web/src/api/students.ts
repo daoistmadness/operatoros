@@ -1,4 +1,12 @@
 import { apiRequest } from "../lib/api/client";
+import type {
+  LegacyLinkCandidate,
+  LegacyLinkStatus,
+  ManagedStudent,
+  StudentListResponse,
+} from "@operatoros/contracts/students";
+
+export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, StudentListResponse } from "@operatoros/contracts/students";
 
 export type StudentFilters = {
   search?: string;
@@ -14,32 +22,6 @@ export type StudentFilters = {
   page_size?: number;
 };
 
-export type ManagedStudent = {
-  id: string;
-  full_name: string;
-  preferred_name?: string | null;
-  nipd_masked?: string | null;
-  nisn_masked?: string | null;
-  current_jenjang?: string | null;
-  current_class?: string | null;
-  academic_year?: string | null;
-  device_identifier_masked?: string | null;
-  profile_completeness: number;
-  student_status: string;
-  quality_flags: string[];
-  age_years?: number | null;
-  current_programme?: string | null;
-  current_grade?: string | null;
-};
-
-export type StudentListResponse = {
-  items: ManagedStudent[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-};
-
 export type StudentProfile = {
   id: string;
   record_version: string;
@@ -53,20 +35,6 @@ export type StudentProfile = {
   health?: Record<string, string | null> | null;
   document_status?: Record<string, boolean> | null;
   attendance_identity?: LegacyLinkStatus;
-};
-
-export type LegacyLinkCandidate = {
-  legacy_student_id: number;
-  name: string;
-  jenjang?: string | null;
-  class_name?: string | null;
-  attendance_count: number;
-};
-
-export type LegacyLinkStatus = {
-  status: "LINKED" | "NOT_LINKED" | "REVIEW_REQUIRED";
-  legacy_student_id?: number | null;
-  candidates: LegacyLinkCandidate[];
 };
 
 export async function fetchStudents(filters: StudentFilters): Promise<StudentListResponse> {

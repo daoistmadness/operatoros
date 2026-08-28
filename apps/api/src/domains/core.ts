@@ -1,5 +1,6 @@
 import { t } from "elysia";
 import { createHash, randomUUID } from "node:crypto";
+import { CreateEnrollmentRequestSchema } from "@operatoros/contracts/students";
 import { inTransaction } from "@operatoros/db";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 
@@ -242,7 +243,7 @@ function registerStudentMasters(app: any, context: AuthContext): void {
   const createDocumentsBody = t.Object({ family_card_received: t.Optional(t.Boolean()), birth_certificate_received: t.Optional(t.Boolean()), parent_id_received: t.Optional(t.Boolean()), school_agreement_received: t.Optional(t.Boolean()), publication_consent_received: t.Optional(t.Boolean()) });
   const createGuardianBody = t.Object({ guardian_type: t.Optional(t.Union([t.Literal("father"), t.Literal("mother"), t.Literal("guardian")])), name: t.String({ minLength: 1 }), phone: t.Optional(t.Nullable(t.String())), email: t.Optional(t.Nullable(t.String())), occupation: t.Optional(t.Nullable(t.String())), education: t.Optional(t.Nullable(t.String())), address: t.Optional(t.Nullable(t.String())) });
   const createDeviceBody = t.Object({ device_identifier: t.String({ minLength: 1 }), device_source: t.Optional(t.Nullable(t.String())), effective_from: t.String(), reason: t.String({ minLength: 3 }) });
-  const createEnrollmentBody = t.Object({ academic_year_id: t.Number({ minimum: 1 }), academic_class_id: t.Number({ minimum: 1 }), effective_from: t.String() });
+  const createEnrollmentBody = CreateEnrollmentRequestSchema;
   app.post("/api/student-masters", ({ body, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "create_student" }); if (!user) return { detail: "Insufficient permissions" };
     const fullName = body.identity.full_name.replace(/\s+/g, " ").trim(); if (!fullName) return error(set, 422, "Full name is required");
