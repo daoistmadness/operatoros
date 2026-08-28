@@ -1,0 +1,26 @@
+{
+  "name": "operatoros",
+  "private": true,
+  "packageManager": "bun@1.4.0",
+  "workspaces": {
+    "packages": [
+      "backend-ts",
+      "frontend",
+      "packages/*"
+    ],
+    "catalog": {
+      "@sinclair/typebox": "0.34.52"
+    }
+  },
+  "scripts": {
+    "dev:api": "bun --filter @operatoros/api start",
+    "dev:web": "bun --filter @operatoros/web dev",
+    "test:api": "bun --filter @operatoros/api test",
+    "test:web": "bun --filter @operatoros/web test",
+    "test": "bun run test:api && bun run test:web",
+    "typecheck": "bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck",
+    "build": "bun --filter @operatoros/web build",
+    "check:typebox": "bun scripts/check-typebox-resolution.ts",
+    "check": "bun run check:typebox && bun run typecheck && bun run test"
+  }
+}
