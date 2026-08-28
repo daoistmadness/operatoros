@@ -79,6 +79,20 @@ try {
   // Future package directories are optional in Phase 14.1.
 }
 
+const contractsPath = join(root, "packages/contracts");
+const contractsManifest = await readJson(join(contractsPath, "package.json"));
+if (!contractsManifest) {
+  errors.push("packages/contracts/package.json is missing");
+} else {
+  const contractsDependencies = allDependencies(contractsManifest);
+  if (contractsDependencies["@sinclair/typebox"] !== "catalog:") {
+    errors.push("packages/contracts must use the root TypeBox catalog");
+  }
+  for (const dependency of ["elysia", "drizzle-orm", "react", "@operatoros/db", "@operatoros/api", "@operatoros/web", "zod"]) {
+    if (contractsDependencies[dependency]) errors.push(`packages/contracts declares forbidden dependency: ${dependency}`);
+  }
+}
+
 for (const relativePath of workspacePaths) {
   const manifest = await readJson(join(root, relativePath, "package.json"));
   if (!manifest) continue;

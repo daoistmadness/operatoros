@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
+import { AttendanceImportCommitRequestSchema } from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
 import { actor } from "../domains/core";
 import { calculateLateMinutes, deriveAttendanceStatus, deriveJenjangFromClassName } from "./attendance-rules";
@@ -252,5 +253,5 @@ export function attendanceImportRoutes(app: any, context: AuthContext): void {
       ctx.set.status = 409;
       return { detail: "Attendance import could not be committed. Operation rolled back." };
     }
-  }, { params: t.Object({ batch_id: t.String({ minLength: 36, maxLength: 36 }) }), body: t.Object({ selected_row_ids: t.Array(t.Number({ minimum: 1 }), { minItems: 1 }), confirmation: t.String(), preview_checksum: t.String({ minLength: 64, maxLength: 64 }) }) });
+  }, { params: t.Object({ batch_id: t.String({ minLength: 36, maxLength: 36 }) }), body: AttendanceImportCommitRequestSchema });
 }

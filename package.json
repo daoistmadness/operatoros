@@ -15,13 +15,15 @@
   "scripts": {
     "dev:api": "bun --filter @operatoros/api start",
     "dev:web": "bun --filter @operatoros/web dev",
+    "test:contracts": "bun --filter @operatoros/contracts test",
     "test:api": "bun --filter @operatoros/api test",
     "test:db": "bun --filter @operatoros/db test",
     "test:web": "bun --filter @operatoros/web test",
-    "test": "bun run test:db && bun run test:api && bun run test:web",
-    "typecheck": "bun --filter @operatoros/db typecheck && bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck",
+    "test": "bun run test:contracts && bun run test:db && bun run test:api && bun run test:web",
+    "typecheck": "bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/db typecheck && bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck",
     "build": "bun --filter @operatoros/web build",
     "check:typebox": "bun scripts/check-typebox-resolution.ts",
-    "check": "bun run check:typebox && bun run typecheck && bun run test"
+    "check:contracts": "bun scripts/check-contract-boundaries.ts",
+    "check": "bun run check:typebox && bun run check:contracts && bun run typecheck && bun run test"
   }
 }
