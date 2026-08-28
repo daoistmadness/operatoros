@@ -234,7 +234,7 @@ def stop_owned_session(args: argparse.Namespace) -> int:
         role_root = repo / role
         role_command = "vite"
         if role == "backend":
-            role_root = repo / "backend-ts"
+            role_root = repo / "apps/api"
             role_command = "server.ts"
         if (
             info

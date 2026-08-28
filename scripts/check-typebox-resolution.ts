@@ -69,7 +69,7 @@ const catalogVersion = catalog?.["@sinclair/typebox"];
 if (!catalogVersion || !versionParts(catalogVersion)) errors.push("root workspaces.catalog must contain one exact TypeBox version");
 if (catalogVersion && /[~^*xX]|\s/.test(catalogVersion)) errors.push(`TypeBox catalog is not exact: ${catalogVersion}`);
 
-const workspacePaths = ["backend-ts", "frontend"];
+const workspacePaths = ["apps/api", "frontend"];
 const packageRoot = join(root, "packages");
 try {
   for (const entry of readdirSync(packageRoot, { withFileTypes: true })) {
@@ -96,11 +96,11 @@ async function firstJson(paths: string[]) {
 
 const elysia = await firstJson([
   join(root, "node_modules/elysia/package.json"),
-  join(root, "backend-ts/node_modules/elysia/package.json"),
+  join(root, "apps/api/node_modules/elysia/package.json"),
 ]);
 const resolvedTypeBox = await firstJson([
   join(root, "node_modules/@sinclair/typebox/package.json"),
-  join(root, "backend-ts/node_modules/@sinclair/typebox/package.json"),
+  join(root, "apps/api/node_modules/@sinclair/typebox/package.json"),
 ]);
 const resolvedVersion = resolvedTypeBox?.version;
 const requirement = elysia?.peerDependencies?.["@sinclair/typebox"] ?? elysia?.dependencies?.["@sinclair/typebox"];
