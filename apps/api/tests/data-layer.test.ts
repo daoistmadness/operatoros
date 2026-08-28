@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
 import { unlinkSync } from "node:fs";
-import { inTransaction, openDatabase, validateDatabase } from "../src/db/connection";
+import { inTransaction, openDatabase, validateDatabase } from "@operatoros/db";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;

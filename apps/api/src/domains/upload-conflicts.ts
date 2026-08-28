@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { createPreview, commitPreview } from "./attendance-import";
 import type { AuthContext } from "../auth/service";

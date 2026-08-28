@@ -1,5 +1,5 @@
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { deriveDepartureStatus, parseClockMinutes } from "./attendance-rules";
 import type { AuthContext } from "../auth/service";

@@ -9,6 +9,7 @@ backend/*.db
 backend/*.sqlite3
 
 apps/web/node_modules/
+packages/*/node_modules/
 apps/web/build/
 .artifacts/
 artifacts/

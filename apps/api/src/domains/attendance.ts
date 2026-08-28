@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { t } from "elysia";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext, CurrentUser } from "../auth/service";

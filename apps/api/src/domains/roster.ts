@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
-import { inTransaction } from "../db/connection";
+import { inTransaction } from "@operatoros/db";
 import { normalizeHeader, parseExcelDate, parseOptionalString } from "../import/normalization";
 
 type Row = Record<string, any>;

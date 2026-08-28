@@ -132,8 +132,17 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Phase 14 monorepo modernization
 
-Phase 14.2 moved the authoritative API to `apps/api/`. Phase 14.3 moved the
-authoritative web application to `apps/web/`. Phase 14.4 has not started.
+Phase 14.1 established workspace tooling. Phase 14.2 moved the authoritative
+API to `apps/api/`. Phase 14.3 moved the authoritative web application to
+`apps/web/`. Phase 14.4 extracts persistence to `packages/db/`. Phase 14.5
+has not started.
+
+Current physical structure:
+
+- `apps/api/`
+- `apps/web/`
+- `packages/db/`
+- `packages/config/`
 
 Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
 package ownership and dependency directions.
@@ -150,6 +159,21 @@ Phase 14.7:
 - `packages/ui` must not import `apps/*` or `packages/db`.
 - `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
 - `packages/*` must not import `apps/*`.
+
+`@operatoros/db` owns the Drizzle schema, migrations when present, low-level
+SQLite client lifecycle, and persistence representation. Business services,
+HTTP behavior, and backup or scheduler policy remain in `apps/api/`.
+`apps/web/` must not import `@operatoros/db` or persistence dependencies.
+
+Phase 14.1 through 14.4 validation commands remain available. Use these
+workspace commands for current application checks:
+
+- `bun --filter @operatoros/db test`
+- `bun --filter @operatoros/db typecheck`
+- `bun --filter @operatoros/api test`
+- `bun --filter @operatoros/web test`
+- `bun run check:typebox`
+- `bun run check`
 
 ## Stop and escalate
 
