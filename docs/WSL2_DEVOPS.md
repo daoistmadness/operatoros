@@ -124,7 +124,7 @@ hash -r
 
 Do not use `node.exe` or `npm.cmd` from `/mnt/c` for OperatorOS development.
 
-- If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `cd frontend && bun install --frozen-lockfile`.
+- If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `bun install --frozen-lockfile` from the repository root.
 - If Bun reports a registry/network failure, restore connectivity and rerun the same Bun command. The launcher intentionally does not install dependencies automatically.
 - If a port is occupied, `./start-dev.sh --check` reports the affected service and process information when `lsof` or `ss` can provide it. Stop that process or select a different `BACKEND_PORT`/`FRONTEND_PORT`.
 - If the Python environment is missing, create `backend/.venv` with Python 3.12 and install `backend/requirements.txt` as shown in the README.

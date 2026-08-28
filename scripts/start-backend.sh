@@ -19,7 +19,7 @@ operatoros_wsl_prepare_bun "$ROOT_DIR" || {
   exit 1
 }
 [[ -d "$BACKEND_TS_DIR/node_modules" ]] || {
-  echo "ERROR: Elysia dependencies not found. Run: cd backend-ts && bun install" >&2
+  echo "ERROR: Elysia dependencies not found. Run: bun install --frozen-lockfile from the repository root" >&2
   exit 1
 }
 cd "$BACKEND_TS_DIR"
