@@ -192,8 +192,19 @@ Phase 18 merged-main CI remains the accepted `2m00s` baseline. This phase
 changed only assessment documentation. It added no package, test, workflow,
 or build work. It reintroduced no duplicate expensive validation.
 
-The final PR and merged-main workflow timings are recorded in the Phase 19
-delivery evidence after GitHub Actions completes.
+Measured Phase 19 PR CI run `33227235892` completed in about `1m45s`. Its
+critical API job took `1m42s`; frontend took `17s`; docs took `10s`.
+
+Measured merged-main CI run `33227420488` completed in about `1m56s`. Its
+critical API job took `1m53s`; frontend took `17s`; docs took `11s`.
+
+The Phase 18 concurrency `4` and cache configuration remained unchanged. No
+duplicate expensive validation returned. The measured result shows no
+material CI regression.
+
+The documentation-only runs did not trigger the path-filtered E2E workflow.
+Manual PR run `33227247699` passed in `3m25s`. Manual merged-main run
+`33227435136` passed in `3m30s`.
 
 ## Validation record
 
