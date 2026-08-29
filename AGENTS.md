@@ -284,6 +284,25 @@ remains separately documented as pending.
   not recompute important business metrics.
 - Persisted analytics rollups require benchmark evidence and explicit review.
 
+## Phase 18 dashboard and CI rules
+
+- Important dashboard metrics remain server-computed. Browser code may format
+  values and adapt them for Chart.js, but it must not recompute business metrics.
+- The web application keeps one in-memory TanStack Query client. It must not
+  persist authenticated query data to `localStorage`.
+- Dashboard query keys must include every data filter. Mutations must use
+  targeted analytics invalidation. Logout must clear protected query data.
+- `@operatoros/ui` owns reusable presentation primitives. Domain dashboard
+  components remain in `apps/web`.
+- TanStack Table is used only for a bounded, justified table. Do not add it to
+  simple dashboard lists without a scale requirement.
+- CI must not remove required security, architecture, OpenAPI, database,
+  analytics, Excel, test, typecheck, build, or docs validation to save time.
+- `bun install --frozen-lockfile` remains mandatory. Cache misses must not
+  affect correctness. E2E and stateful runtime tasks remain uncached.
+- Do not add TanStack Router, TanStack Form, Zod, or a new chart library in
+  Phase 18. Phase 19 has not started.
+
 ## Stop and escalate
 
 Stop for unclear or conflicting requirements, missing credentials/data,

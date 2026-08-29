@@ -22,6 +22,18 @@
       "dependsOn": ["^test"],
       "outputs": []
     },
+    "@operatoros/db#test": {
+      "cache": false,
+      "dependsOn": ["^test"]
+    },
+    "@operatoros/excel#test": {
+      "cache": false,
+      "dependsOn": ["^test"]
+    },
+    "@operatoros/api#test": {
+      "cache": false,
+      "dependsOn": ["^test"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
