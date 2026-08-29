@@ -54,6 +54,60 @@ describe("@operatoros/db existing-schema validation authority", () => {
     expect(declared.length).toBeGreaterThan(0);
   });
 
+  function buildValidSchema(client: Database, ledgerRows: [string, string, string][]): void {
+    client.run("CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, schema_fingerprint TEXT, applied_at TEXT)");
+    for (const table of REQUIRED_TABLES) {
+      if (table === "operatoros_schema_migrations") continue;
+      client.run(`CREATE TABLE "${table}" (id INTEGER)`);
+    }
+    for (const trigger of [
+      "trg_academic_roster_batch_session_type", "trg_academic_roster_batch_session_type_update",
+      "trg_attendance_correction_audit_no_delete", "trg_attendance_correction_audit_no_update",
+      "trg_attendance_follow_up_audit_no_delete", "trg_attendance_follow_up_audit_no_update",
+      "trg_attendance_override_history_no_delete", "trg_attendance_override_history_no_update",
+      "trg_attendance_period_audit_no_delete", "trg_attendance_period_audit_no_update",
+      "trg_student_enrollment_class_history_no_delete", "trg_student_enrollment_class_history_no_update",
+      "trg_student_enrollment_lifecycle_audit_no_delete", "trg_student_enrollment_lifecycle_audit_no_update",
+      "trg_student_import_actions_immutable", "trg_student_import_actions_no_delete",
+      "trg_student_import_batch_session_type", "trg_student_import_batch_session_type_update",
+      "trg_student_master_change_history_no_delete", "trg_student_master_change_history_no_update",
+      "trg_student_progression_audit_no_delete", "trg_student_progression_audit_no_update",
+    ]) {
+      client.run(`CREATE TRIGGER "${trigger}" BEFORE UPDATE ON operatoros_schema_migrations BEGIN SELECT RAISE(ABORT, 'append-only'); END`);
+    }
+    for (const [version, fingerprint, appliedAt] of ledgerRows) {
+      client.run("INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?)", [version, fingerprint, appliedAt]);
+    }
+  }
+
+  const CURRENT_FINGERPRINT = "b75e9774412bacf27baf5965a8267a21e58cbe4dba237cd897be9e959749bc57";
+
+  it("accepts a current-version ledger whose timestamps are not wall-clock ordered", () => {
+    const client = new Database(":memory:");
+    buildValidSchema(client, [
+      ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"],
+      ["20260725_s43", CURRENT_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"],
+    ]);
+    try {
+      expect(validateDatabase(client)).toBeUndefined();
+    } finally {
+      client.close();
+    }
+  });
+
+  it("fails closed when the ledger reports a newer schema than the application knows", () => {
+    const client = new Database(":memory:");
+    buildValidSchema(client, [
+      ["20260725_s43", CURRENT_FINGERPRINT, "2026-08-29T10:00:00+00:00"],
+      ["20990101_s99", "future", "2026-08-29T10:00:01+00:00"],
+    ]);
+    try {
+      expect(() => validateDatabase(client)).toThrow("DATABASE_MIGRATION_REQUIRED");
+    } finally {
+      client.close();
+    }
+  });
+
   it("fails closed when a schema-declared table is missing, listing the gap safely", () => {
     const client = new Database(":memory:");
     client.run("CREATE TABLE operatoros_schema_migrations (version TEXT, schema_fingerprint TEXT, applied_at TEXT)");

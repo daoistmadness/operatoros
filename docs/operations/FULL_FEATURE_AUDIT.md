@@ -100,10 +100,20 @@ Target: `OPERATOROS_FULL_FEATURE_AUDIT_COMPLETE`
 
 ## Observations (unresolved, none HIGH/CRITICAL)
 
-1. `TEST_COVERAGE_GAP` (MEDIUM): the full API suite is order-dependent —
-   exactly one different test fails per full run (login limiter on
-   unmodified main, KKM fallback and legacy `.xls` on other runs); each
-   passes in isolation. Pre-existing on `090b432c`; not caused by the repair.
+1. `TEST_COVERAGE_GAP` (MEDIUM, RESOLVED): the full API suite intermittently
+   failed one different test per run. Root cause was not test pollution:
+   fresh-bootstrap ledger writes use wall-clock `applied_at` timestamps, and
+   a backward clock step (NTP correction) between the S4.2 and S4.3 ledger
+   inserts inverted their order; the schema validator selected the migration
+   head by wall-clock ordering, so the stale S4.2 row became the head and a
+   healthy database failed with `DATABASE_MIGRATION_REQUIRED`. Captured twice
+   in diagnostics (S4.3 at 10:11:16.338 with S4.2 at 10:11:17.184, and
+   10:23:17.465/10:23:18.425). Fix: the S4.3 migration now writes a monotonic
+   `applied_at` (stepped one microsecond past the newest existing ledger row
+   when the wall clock steps backward), and the validator checks the ledger
+   by version identity (current version present with matching fingerprint;
+   any newer version fails closed) instead of wall-clock ordering. Ordinary
+   startup still never modifies an existing database.
 2. `BEHAVIOR_REVIEW_REQUIRED` (MEDIUM, RESOLVED): the canonical persistent
    development database predated the repair and contained only 65 tables. It
    was reconciled to 78/78 on 2026-08-29 under the explicit one-time
