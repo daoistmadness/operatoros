@@ -29,7 +29,7 @@
     "check:ui": "bun scripts/check-ui-boundaries.ts",
     "check:architecture": "bun scripts/check-architecture.ts",
     "test:architecture": "bun test scripts/tests/architecture.test.ts",
-    "turbo:check": "turbo run typecheck test build --concurrency=1",
+    "turbo:check": "turbo run typecheck test build --concurrency=4",
     "turbo:version": "turbo --version",
     "test:turbo": "bun scripts/test-turbo-invalidation.ts",
     "benchmark:excel": "bun --filter @operatoros/excel benchmark",
