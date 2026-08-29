@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
-import { readFileSync, unlinkSync } from "node:fs";
-import { inTransaction, openDatabase, validateDatabase } from "@operatoros/db";
+import { copyFileSync, readFileSync, unlinkSync } from "node:fs";
+import { createHash } from "node:crypto";
+
+function sha256FileSync(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+import { inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
@@ -79,10 +84,105 @@ describe("S4.3 data layer", () => {
     client.close();
   });
 
-  it("fails closed when a required trigger is missing", () => {
+  it("fails closed on the historical 65/78 S4.3 state (ledger ahead of schema)", () => {
+    const path = disposableDatabasePath("historical-65");
+    bootstrapDatabase(path);
+    try {
+      const client = new Database(path);
+      for (const table of ["staff_members", "staff_education", "staff_identifiers", "staff_contact_details", "staff_import_batches", "staff_import_rows", "staff_import_issues", "staff_job_title_mappings", "staff_jenjang_assignments", "dismissal_policies", "dismissal_policy_audits", "teacher_class_assignments", "teacher_class_assignment_audit"]) {
+        client.run(`DROP TABLE IF EXISTS "${table}"`);
+      }
+      client.close();
+      const probe = new Database(path, { readonly: true });
+      const before = (probe.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map((r) => r.name).sort().join(",");
+      const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
+      probe.close();
+      expect(before.split(",").length).toBe(65);
+      expect(ledgerBefore).toBe("20260724_s42,20260725_s43");
+      let error: unknown;
+      try {
+        openDatabase(path);
+      } catch (value) {
+        error = value;
+      }
+      expect(String(error)).toContain("EXISTING_SCHEMA_INCOMPLETE");
+      expect(String(error)).toContain("staff_members");
+      expect(String(error)).toContain("dismissal_policies");
+      expect(String(error)).toContain("teacher_class_assignments");
+    } finally {
+      unlinkSync(path);
+    }
+  }, 30000);
+
+  it("rejects a disposable valid schema with any single required table removed", () => {
+    expect.assertions(REQUIRED_TABLES.length);
+    const template = disposableDatabasePath("template");
+    bootstrapDatabase(template);
+    try {
+      for (const table of REQUIRED_TABLES) {
+        const path = disposableDatabasePath("drop-one");
+        copyFileSync(template, path);
+        try {
+          const client = new Database(path);
+          client.run(`PRAGMA foreign_keys = OFF`);
+          client.run(`DROP TABLE IF EXISTS "${table}"`);
+          client.close();
+          expect(() => openDatabase(path)).toThrow(/EXISTING_SCHEMA_INCOMPLETE|missing tables/);
+        } finally {
+          unlinkSync(path);
+        }
+      }
+    } finally {
+      unlinkSync(template);
+    }
+  }, 600000);
+
+  it("leaves an incomplete database byte-identical after failed validation", () => {
+    const path = disposableDatabasePath("nonmutation");
+    bootstrapDatabase(path);
+    try {
+      const client = new Database(path);
+      client.run("DROP TABLE staff_members");
+      client.close();
+      const before = sha256FileSync(path);
+      expect(() => openDatabase(path)).toThrow("EXISTING_SCHEMA_INCOMPLETE");
+      expect(sha256FileSync(path)).toBe(before);
+    } finally {
+      unlinkSync(path);
+    }
+  }, 30000);
+
+  it("accepts a complete schema that carries benign extra tables", () => {
+    const path = disposableDatabasePath("extras");
+    bootstrapDatabase(path);
+    try {
+      const client = new Database(path);
+      client.run("CREATE TABLE unrelated_legacy_notes (id INTEGER PRIMARY KEY, note TEXT)");
+      client.close();
+      const handle = openDatabase(path, { readonly: true });
+      expect(handle.db).toBeDefined();
+      handle.close();
+    } finally {
+      unlinkSync(path);
+    }
+  }, 30000);
+
+  it("fails closed when a required trigger is missing from an otherwise complete schema", () => {
+    const path = disposableDatabasePath("missing-trigger");
+    bootstrapDatabase(path);
+    try {
+      const client = new Database(path);
+      client.run("DROP TRIGGER trg_student_master_change_history_no_delete");
+      client.close();
+      expect(() => openDatabase(path)).toThrow("DATABASE_SCHEMA_INVALID");
+    } finally {
+      unlinkSync(path);
+    }
+  }, 30000);
+
+  it("fails closed when the migration ledger is missing entirely", () => {
     const client = new Database(":memory:");
-    client.run("CREATE TABLE operatoros_schema_migrations (version TEXT, schema_fingerprint TEXT, applied_at TEXT)");
-    expect(() => validateDatabase(client)).toThrow("DATABASE_SCHEMA_INVALID");
+    expect(() => validateDatabase(client)).toThrow();
     client.close();
   });
 });

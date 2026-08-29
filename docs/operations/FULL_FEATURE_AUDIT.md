@@ -104,13 +104,17 @@ Target: `OPERATOROS_FULL_FEATURE_AUDIT_COMPLETE`
    exactly one different test fails per full run (login limiter on
    unmodified main, KKM fallback and legacy `.xls` on other runs); each
    passes in isolation. Pre-existing on `090b432c`; not caused by the repair.
-2. `BEHAVIOR_REVIEW_REQUIRED` (MEDIUM): the canonical persistent development
-   database on this machine was created before the repair and contains only
-   65 tables; staff, teacher-assignment, and departure-policy pages will
-   return 500 against it until the operator completes its schema (ordinary
-   startup never migrates existing databases by contract). Fresh
-   environments are fixed by DEFECT-01 repair. Existing-database repair
-   requires an explicit operator decision and was not performed.
+2. `BEHAVIOR_REVIEW_REQUIRED` (MEDIUM, RESOLVED): the canonical persistent
+   development database predated the repair and contained only 65 tables. It
+   was reconciled to 78/78 on 2026-08-29 under the explicit one-time
+   authorized procedure `OPERATOROS_DEV_DB_SCHEMA_RECONCILIATION`
+   (verified pre-reconciliation backup retained; ledger untouched). A
+   verified backup remains under the development data root's
+   `reconciliation-backups/` directory. Related hardening: existing-schema
+   startup validation now derives required tables from the canonical schema
+   snapshot and fails closed with `EXISTING_SCHEMA_INCOMPLETE` when an
+   existing database is incomplete; ordinary startup still never migrates an
+   existing database.
 3. `DEAD_FEATURE_CANDIDATE` (LOW): `pages/ClassMapping.tsx` and
    `pages/Upload.tsx` are not routed; `/attendance/students/:id` (legacy
    student profile) is reachable only from the unrouted `ClassMapping`.
