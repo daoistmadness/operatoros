@@ -30263,6 +30263,94 @@
         },
         "operationId": "getApiAnalyticsCohorts"
       }
+    },
+    "/api/student-masters/{student_master_id}/attendance-history/export-excel": {
+      "get": {
+        "operationId": "export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_master_id",
+            "required": true,
+            "schema": {
+              "title": "Student Master Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Student Attendance History",
+        "tags": [
+          "student-masters"
+        ]
+      }
     }
   }
 }

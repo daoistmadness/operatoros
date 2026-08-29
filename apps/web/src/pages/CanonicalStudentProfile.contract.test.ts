@@ -17,4 +17,12 @@ describe("canonical student legacy identity contract", () => {
     expect(source).toContain("Review / link");
     expect(source).toContain("LINK_LEGACY_STUDENT");
   });
+
+  it("gates the attendance history export to the export capability and a linked identity", () => {
+    expect(source).toContain('can("export_student_data")');
+    expect(source).toContain("downloadStudentAttendanceHistoryExcel");
+    expect(source).toContain('attendanceIdentity.status === "LINKED"');
+    expect(source).toContain("Export attendance history");
+    expect(source).toContain("aria-busy={attendanceExporting}");
+  });
 });
