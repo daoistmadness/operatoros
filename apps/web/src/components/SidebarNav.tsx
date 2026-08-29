@@ -68,6 +68,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
       { name: 'Data Recapitulation', path: '/analytics/recapitulation', icon: ClipboardList },
       { name: 'Data Quality', path: '/analytics/data-quality', icon: ShieldCheck },
+      { name: 'Attendance Analytics', path: '/analytics/attendance', icon: Server },
       { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual'] },
       { name: 'Monthly Management', path: '/reports/management/monthly', icon: PieChart },
       { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },

@@ -31535,6 +31535,113 @@
           "analytics"
         ]
       }
+    },
+    "/api/analytics/attendance/options": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsOptions",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics options",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/overview": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsOverview",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics overview",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/classes": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsClasses",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics by class",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/jenjang": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsJenjang",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics by jenjang",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/daily": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsDaily",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics by date",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/students": {
+      "get": {
+        "operationId": "getAttendanceAnalyticsStudents",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_rate", "late", "alfa"] } },
+          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get attendance analytics by student",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/attendance/export-excel": {
+      "get": {
+        "operationId": "exportAttendanceAnalyticsExcel",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { "schema": {} } } } },
+        "summary": "Export attendance analytics",
+        "tags": ["analytics"]
+      }
     }
   }
 }

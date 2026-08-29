@@ -5174,6 +5174,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/attendance/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics options */
+        get: operations["getAttendanceAnalyticsOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics overview */
+        get: operations["getAttendanceAnalyticsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics by class */
+        get: operations["getAttendanceAnalyticsClasses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics by jenjang */
+        get: operations["getAttendanceAnalyticsJenjang"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics by date */
+        get: operations["getAttendanceAnalyticsDaily"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance analytics by student */
+        get: operations["getAttendanceAnalyticsStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export attendance analytics */
+        get: operations["exportAttendanceAnalyticsExcel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -19032,6 +19151,190 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsOptions: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsOverview: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsClasses: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsJenjang: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsDaily: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceAnalyticsStudents: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+                search?: string;
+                sort?: "name" | "attendance_rate" | "late" | "alfa";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    exportAttendanceAnalyticsExcel: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                date_from: string;
+                date_to: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                 };
             };
         };
