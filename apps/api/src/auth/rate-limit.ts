@@ -15,6 +15,13 @@ export const DEFAULT_LOGIN_RATE_LIMIT: LoginRateLimitConfig = {
 };
 
 type Clock = () => number;
+
+// Rate-limit windows and Retry-After are relative durations. A monotonic clock
+// keeps them correct across wall-clock steps (NTP corrections), which would
+// otherwise extend windows backward or silently drop limiting forward.
+function monotonicClockMs(): number {
+  return Number(process.hrtime.bigint() / 1_000_000n);
+}
 type Bucket = { count: number; resetAt: number; lastSeen: number };
 
 export type LoginRateLimitResult = {
@@ -32,7 +39,7 @@ export class LoginRateLimiter {
   private readonly config: LoginRateLimitConfig;
   private readonly clock: Clock;
 
-  constructor(config: Partial<LoginRateLimitConfig> = {}, clock: Clock = Date.now) {
+  constructor(config: Partial<LoginRateLimitConfig> = {}, clock: Clock = monotonicClockMs) {
     this.config = { ...DEFAULT_LOGIN_RATE_LIMIT, ...config };
     if (this.config.windowMs <= 0 || this.config.perIp <= 0 || this.config.perAccount <= 0 || this.config.global <= 0 || this.config.maxEntries < 3) {
       throw new Error("Login rate-limit configuration is invalid.");
