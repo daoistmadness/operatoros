@@ -1,13 +1,21 @@
 import { Database } from "bun:sqlite";
+import { getTableName, is, Table } from "drizzle-orm";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
 import {
   CURRENT_SCHEMA_FINGERPRINT,
   CURRENT_SCHEMA_VERSION,
   PROTECTED_DATABASE_BASENAME,
-  REQUIRED_TABLES,
   REQUIRED_TRIGGERS,
 } from "./manifest";
+
+// The canonical required-table authority: every table declared by the accepted
+// schema snapshot. Deriving the set from the schema exports keeps validation in
+// lockstep with schema.ts; a manually maintained list would silently drift.
+export const REQUIRED_TABLES: readonly string[] = Object.values(schema)
+  .filter((value) => is(value, Table))
+  .map(getTableName)
+  .sort();
 
 export type AppDatabase = BunSQLiteDatabase<typeof schema>;
 
@@ -47,7 +55,15 @@ function validateSchema(client: Database): void {
   const tables = new Set(objects.filter((object) => object.type === "table").map((object) => object.name));
   const triggers = new Set(objects.filter((object) => object.type === "trigger").map((object) => object.name));
   const missingTables = REQUIRED_TABLES.filter((table) => !tables.has(table));
-  if (missingTables.length > 0) fail("DATABASE_SCHEMA_INVALID", `missing tables: ${missingTables.join(", ")}`);
+  if (missingTables.length > 0) {
+    fail(
+      "EXISTING_SCHEMA_INCOMPLETE",
+      `existing database schema is incomplete for ${CURRENT_SCHEMA_VERSION}; ` +
+        `missing required tables: ${missingTables.join(", ")}. ` +
+        "Ordinary startup will not modify an existing database. " +
+        "Identify the database, back it up, and run the approved schema reconciliation procedure before starting OperatorOS.",
+    );
+  }
   const missingTriggers = REQUIRED_TRIGGERS.filter((trigger) => !triggers.has(trigger));
   if (missingTriggers.length > 0) fail("DATABASE_SCHEMA_INVALID", `missing triggers: ${missingTriggers.join(", ")}`);
 
