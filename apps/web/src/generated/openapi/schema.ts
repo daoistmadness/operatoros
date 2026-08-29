@@ -5004,6 +5004,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/recapitulation/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Recapitulation */
+        get: operations["recapitulation_students_api_analytics_recapitulation_students_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/recapitulation/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff Recapitulation */
+        get: operations["recapitulation_staff_api_analytics_recapitulation_staff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/recapitulation/students/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Student Recapitulation */
+        get: operations["export_student_recapitulation_api_analytics_recapitulation_students_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/recapitulation/staff/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Staff Recapitulation */
+        get: operations["export_staff_recapitulation_api_analytics_recapitulation_staff_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -18480,6 +18548,148 @@ export interface operations {
             path: {
                 class_id: number;
             };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recapitulation_students_api_analytics_recapitulation_students_get: {
+        parameters: {
+            query?: {
+                dimension?: string | null;
+                academic_year_id?: string | null;
+                status?: string | null;
+                jenjang_id?: string | null;
+                class_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recapitulation_staff_api_analytics_recapitulation_staff_get: {
+        parameters: {
+            query?: {
+                dimension?: string | null;
+                employment_status?: string | null;
+                jenjang_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_student_recapitulation_api_analytics_recapitulation_students_export_excel_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: string | null;
+                status?: string | null;
+                jenjang_id?: string | null;
+                class_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_staff_recapitulation_api_analytics_recapitulation_staff_export_excel_get: {
+        parameters: {
+            query?: {
+                employment_status?: string | null;
+                jenjang_id?: string | null;
+            };
+            header?: never;
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
