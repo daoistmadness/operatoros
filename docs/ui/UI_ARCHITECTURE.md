@@ -1,6 +1,6 @@
 # OperatorOS dashboard UI architecture
 
-Status: Phase 18 implementation.
+Status: Phase 19 assessment complete. Phase 18 implementation remains active.
 
 ## Dashboard hierarchy
 
@@ -60,3 +60,14 @@ tablet, and narrow mobile layouts.
 The dashboard makes one snapshot query for its dashboard data. Period changes
 change the query key. Class mapping invalidates only the active dashboard
 snapshot. Chart adapters do not own query state or business formulas.
+
+## Phase 19 routing and forms decision
+
+The current React Router 7 route table remains the navigation authority. The
+assessment found no real routing limitation. `ROUTER_NOT_REQUIRED`.
+
+Forms remain native controlled forms with the shared field primitives in
+`apps/web`. TanStack Query owns server mutations. The assessment found no real
+form-management limitation. `FORM_NOT_REQUIRED`.
+
+TanStack Router and TanStack Form are not dependencies. Zod remains absent.
