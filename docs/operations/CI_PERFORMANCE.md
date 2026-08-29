@@ -91,6 +91,26 @@ Measured local results:
 The final GitHub Actions timing is recorded after the PR and merged-main
 runs. It must not be inferred from local timings.
 
+## Phase 19 assessment measurement
+
+Phase 19 changed only UI assessment documentation. It changed no workflow,
+package, test, or Turbo task. It therefore reintroduced no duplicate
+validation and did not change the Phase 18 CI graph.
+
+The Phase 19 PR CI run `33227235892` measured about `1m45s` overall. The API
+job took `1m42s`, frontend took `17s`, and docs took `10s`.
+
+The merged-main CI run `33227420488` measured about `1m56s` overall. The API
+job took `1m53s`, frontend took `17s`, and docs took `11s`.
+
+The Phase 18 merged-main baseline was `2m00s`. The Phase 19 result has no
+material regression. Turbo concurrency remains `4`. New duplicate expensive
+validation is `0`.
+
+Because documentation-only changes match the E2E workflow path exclusions,
+the full E2E workflow was dispatched manually. PR run `33227247699` passed in
+`3m25s`. Merged-main run `33227435136` passed in `3m30s`.
+
 ## Safety rules
 
 - `--frozen-lockfile` remains mandatory.
