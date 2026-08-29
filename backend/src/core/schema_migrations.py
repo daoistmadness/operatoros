@@ -404,6 +404,44 @@ def migrate_database_to_current(path: Path) -> str:
     return migrate_attendance_followup_sqlite(target)
 
 
+def _complete_model_schema(target: Path) -> None:
+    """Create remaining ORM-defined tables on a freshly bootstrapped database.
+
+    The registered migration chain owns identity tables (users, sessions) and
+    audited history tables. Every other model-defined table must exist before
+    the application serves requests; without this step a fresh database passes
+    the ledger check but staff, dismissal-policy, and teacher-assignment
+    handlers fail at runtime. Fresh bootstraps only; existing databases are
+    never modified.
+    """
+    from core import database as core_database
+
+    previous_url = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = f"sqlite:///{target.resolve().as_posix()}"
+    os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
+    try:
+        models_package = Path(__file__).resolve().parents[1] / "models"
+        for model_file in sorted(models_package.glob("*.py")):
+            if model_file.stem != "__init__":
+                importlib.import_module(f"models.{model_file.stem}")
+        core_database.engine.dispose()
+        core_database.engine = create_engine(os.environ["DATABASE_URL"])
+        core_database.SessionLocal.configure(bind=core_database.engine)
+        # Schema-only completion: create missing model tables. Data seeding and
+        # upgrade patches stay owned by the migrations and the application.
+        startup_tables = [
+            table for table in core_database.Base.metadata.sorted_tables
+            if table.name not in {"users", "sessions"}
+        ]
+        core_database.Base.metadata.create_all(bind=core_database.engine, tables=startup_tables)
+    finally:
+        core_database.engine.dispose()
+        if previous_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = previous_url
+
+
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
     """Create the S4.2 baseline, then run registered migrations to S4.3."""
     target = path.resolve(strict=False)
@@ -417,6 +455,7 @@ def bootstrap_fresh_sqlite_database(path: Path) -> str:
         raise RuntimeError("DATABASE_ALREADY_EXISTS")
     initialize_s42_baseline_sqlite_database(target)
     migrate_database_to_current(target)
+    _complete_model_schema(target)
     return "MIGRATION_COMPLETE"
 
 
