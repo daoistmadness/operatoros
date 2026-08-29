@@ -39,6 +39,10 @@ export const queryKeys = {
     metadata: (academicYearId?: number | null, scope?: ReportScope) => ["management-reports", "metadata", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
     monthly: (query: ReportQuery) => ["management-reports", "monthly", query] as const,
   },
+  dashboard: {
+    all: ["dashboard"] as const,
+    snapshot: (month: number, year: number) => ["dashboard", "snapshot", { month, year }] as const,
+  },
   analytics: {
     all: ["analytics"] as const,
     filters: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["analytics", "filters", canonicalizeQueryFilters(filters)] as const,
