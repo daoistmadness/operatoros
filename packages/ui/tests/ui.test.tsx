@@ -22,6 +22,7 @@ Object.assign(globalThis, {
 });
 
 const { Button } = await import("../src/components/button");
+const { Card } = await import("../src/components/card");
 const { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } = await import("../src/components/dialog");
 const { Input } = await import("../src/components/input");
 
@@ -63,6 +64,14 @@ describe("Base UI foundation", () => {
 
     expect(ref.current).toBe(container.querySelector("input"));
     expect(ref.current?.getAttribute("aria-label")).toBe("Search");
+  });
+
+  test("provides a reusable card surface", async () => {
+    const container = await render(<Card className="test-card">Summary</Card>);
+    const card = container.querySelector("[data-slot='card']");
+
+    expect(card?.textContent).toBe("Summary");
+    expect(card?.className).toContain("test-card");
   });
 
   test("supports keyboard focus and opens and closes a dialog", async () => {

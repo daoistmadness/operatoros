@@ -37,4 +37,9 @@ describe("query-key conventions", () => {
     expect(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7A" }))
       .not.toEqual(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7B" }));
   });
+
+  it("changes dashboard keys when the selected period changes", () => {
+    expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
+    expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));
+  });
 });

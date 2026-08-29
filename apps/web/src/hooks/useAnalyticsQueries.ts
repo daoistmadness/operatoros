@@ -12,12 +12,21 @@ import {
   type FetchInterventionImpactParams,
   type FetchSummaryParams,
 } from "../api/analytics";
+import { getDashboardSnapshot } from "../lib/api/endpoints";
 import { queryKeys } from "../lib/query/queryKeys";
 
 const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: number | null }) => ({
   academic_year_id: filters.academic_year_id ?? null,
   jenjang_id: filters.jenjang_id ?? null,
 });
+
+export function useDashboardSnapshotQuery(month: number, year: number, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.dashboard.snapshot(month, year),
+    queryFn: () => getDashboardSnapshot(new Date(year, month - 1, 1)),
+    enabled,
+  });
+}
 
 export function useAnalyticsFiltersQuery(filters: { academic_year_id?: number | null; jenjang_id?: number | null }, enabled = true) {
   return useQuery({

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@operatoros/ui/components/card";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
