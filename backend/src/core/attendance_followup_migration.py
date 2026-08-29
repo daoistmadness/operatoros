@@ -7,7 +7,7 @@ import os
 import shutil
 import sqlite3
 import hashlib
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -24,6 +24,23 @@ PROTECTED_DATABASES = {
     (ROOT / "attendance.db").resolve(),
 }
 
+
+def monotonic_applied_at(connection: sqlite3.Connection) -> str:
+    """Return a ledger timestamp that is strictly newer than every existing row.
+
+    applied_at values come from the wall clock. A backward clock step (for
+    example an NTP correction) would otherwise give a later migration row an
+    earlier timestamp than its predecessor and break head selection, which
+    orders by applied_at.
+    """
+    proposed = datetime.now(timezone.utc)
+    row = connection.execute(f"SELECT MAX(applied_at) FROM {LEDGER_TABLE}").fetchone()
+    previous = row[0] if row else None
+    if previous:
+        previous_timestamp = datetime.fromisoformat(previous)
+        if proposed <= previous_timestamp:
+            proposed = previous_timestamp + timedelta(microseconds=1)
+    return proposed.isoformat()
 
 def migrate_attendance_followup_sqlite(path: Path) -> str:
     source = path.resolve(strict=True)
@@ -111,7 +128,7 @@ def migrate_attendance_followup_sqlite(path: Path) -> str:
                     fingerprint,
                     json.dumps({"students": student_count, "attendance": attendance_count}),
                     "S43_MIGRATION",
-                    datetime.now(timezone.utc).isoformat(),
+                    monotonic_applied_at(connection),
                 ),
             )
         connection.close()

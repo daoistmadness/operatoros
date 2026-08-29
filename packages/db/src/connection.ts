@@ -67,16 +67,21 @@ function validateSchema(client: Database): void {
   const missingTriggers = REQUIRED_TRIGGERS.filter((trigger) => !triggers.has(trigger));
   if (missingTriggers.length > 0) fail("DATABASE_SCHEMA_INVALID", `missing triggers: ${missingTriggers.join(", ")}`);
 
-  const ledger = client
-    .query(
-      "SELECT version, schema_fingerprint FROM operatoros_schema_migrations " +
-        "ORDER BY applied_at DESC, version DESC LIMIT 1",
-    )
-    .get() as LedgerRow | null;
-  if (!ledger || ledger.version !== CURRENT_SCHEMA_VERSION) {
+  // Ledger validation is version-identity based, not wall-clock ordered:
+  // applied_at timestamps come from datetime.now() and a backward clock step
+  // (NTP correction) can otherwise make an older migration row look like the
+  // head and fail a healthy database.
+  const ledgerRows = client
+    .query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations")
+    .all() as LedgerRow[];
+  const currentRow = ledgerRows.find((row) => row.version === CURRENT_SCHEMA_VERSION);
+  if (!currentRow) {
     fail("DATABASE_MIGRATION_REQUIRED", `expected ${CURRENT_SCHEMA_VERSION}`);
   }
-  if (ledger.schema_fingerprint !== CURRENT_SCHEMA_FINGERPRINT) {
+  if (ledgerRows.some((row) => row.version > CURRENT_SCHEMA_VERSION)) {
+    fail("DATABASE_MIGRATION_REQUIRED", `database reports a schema newer than ${CURRENT_SCHEMA_VERSION}`);
+  }
+  if (currentRow.schema_fingerprint !== CURRENT_SCHEMA_FINGERPRINT) {
     fail("DATABASE_CHECKSUM_MISMATCH", "schema fingerprint differs from the accepted S4.3 baseline");
   }
 }
