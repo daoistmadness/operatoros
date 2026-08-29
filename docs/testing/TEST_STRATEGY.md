@@ -19,4 +19,4 @@ uses observable readiness rather than arbitrary sleeps and removes successful
 run artifacts. Each tier snapshots the protected S4.3 database before and after
 the run using immutable read-only SQLite; it rejects handles, sidecars, invalid
 schema state, or any mutation during that run without treating a live checksum
-as a permanent repository constant. See the historical [orchestration evidence](../product-audit/TEST_ORCHESTRATION_AND_PLAYWRIGHT_RELEASE.md).
+as a permanent repository constant. Historical orchestration evidence remains in Git history.
