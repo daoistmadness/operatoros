@@ -23,7 +23,8 @@
 
 - [Database operations](operations/DATABASE_OPERATIONS.md) — current protected-database, backup, migration, and rollback safeguards.
 
-## Product audits and historical records
+## Product references
 
-- [Product audits](product-audit/) — milestone evidence; consult current documents above for operating instructions.
-- [Releases](releases/) and [reports](reports/) — historical release and assessment records.
+- [Product terminology glossary](product-audit/PRODUCT_TERMINOLOGY_GLOSSARY.md) — canonical product terms.
+- [Student progression and rollover audit](product-audit/STUDENT_PROGRESSION_ROLLOVER.md) — progression rules referenced by the migration tooling.
+- Completed milestone audits, releases, and reports remain available in Git history.
