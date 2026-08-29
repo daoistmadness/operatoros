@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { createApp } from "../src/app";
+import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { openDatabase } from "@operatoros/db";
 import { authorize } from "../src/auth/service";
 
@@ -100,6 +101,20 @@ describe("authentication parity", () => {
       cleanup(value);
     }
   }, 30000);
+
+  it("keeps limiter windows stable across a backward wall-clock step", () => {
+    // Regression: the limiter must run on a monotonic clock. A backward NTP
+    // step previously stretched Retry-After from 60 to 61 seconds and could
+    // extend windows unpredictably.
+    const limiter = new LoginRateLimiter({ windowMs: 60_000, perIp: 20, perAccount: 2, global: 20, maxEntries: 20 });
+    const first = limiter.consume("203.0.113.9", "clock-user");
+    expect(first.allowed).toBe(true);
+    const second = limiter.consume("203.0.113.9", "clock-user");
+    expect(second.allowed).toBe(true);
+    const third = limiter.consume("203.0.113.9", "clock-user");
+    expect(third.allowed).toBe(false);
+    expect(third.retryAfterSeconds).toBe(60);
+  });
 
   it("applies a second layered login limiter without changing generic failures", async () => {
     const value = setup("rate-limit", true, { rateLimit: { windowMs: 60_000, perIp: 20, perAccount: 2, global: 20, maxEntries: 20 } });
