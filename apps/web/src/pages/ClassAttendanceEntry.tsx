@@ -11,8 +11,10 @@ import {
   Lock,
   RefreshCw,
   Info,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
+  exportAssignedClassAttendanceExcel,
   fetchAssignedClasses,
   fetchClassAttendanceForDate,
   submitClassAttendanceEntries,
@@ -26,6 +28,9 @@ import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
 import { FieldLabel } from "../components/ui/field";
 import { queryKeys } from "../lib/query/queryKeys";
+import { useAuth } from "../context/AuthContext";
+import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 
 type AttendanceStatus = "on-time" | "late" | "sick" | "leave" | "absent";
 
@@ -81,10 +86,14 @@ const STATUS_CONFIG: Record<
 
 export default function ClassAttendanceEntry() {
   const queryClient = useQueryClient();
+  const { can } = useAuth();
 
   const todayStr = new Date().toISOString().split("T")[0];
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [exportMonth, setExportMonth] = useState<string>(todayStr.slice(0, 7));
+  const [exportingExcel, setExportingExcel] = useState<boolean>(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const [formState, setFormState] = useState<RosterFormState>({});
   const [isDirty, setIsDirty] = useState<boolean>(false);
@@ -202,6 +211,22 @@ export default function ClassAttendanceEntry() {
 
     submitMutation.mutate(entries);
   };
+  const handleExportExcel = async () => {
+    if (!classIdNum) return;
+    setExportingExcel(true); setExportError(null);
+    try {
+      const [year, month] = exportMonth.split("-").map(Number);
+      const blob = await exportAssignedClassAttendanceExcel({ classId: classIdNum, month, year });
+      const url = createDownloadUrl(blob);
+      const link = document.createElement("a"); link.href = url;
+      link.download = `absensi_kelas_${exportMonth}.xlsx`;
+      link.click(); revokeDownloadUrl(url);
+    } catch (error) {
+      setExportError((error as { message?: string })?.message || "Export absensi kelas gagal.");
+    } finally {
+      setExportingExcel(false);
+    }
+  };
 
   const isFinalized = rosterData?.is_finalized ?? false;
 
@@ -229,6 +254,19 @@ export default function ClassAttendanceEntry() {
             <RefreshCw className={`h-4 w-4 ${loadingRoster ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+          {can("export_assigned_class_attendance") && classIdNum && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportExcel}
+              disabled={exportingExcel}
+              aria-busy={exportingExcel}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              {exportingExcel ? "Menyiapkan…" : "Export Excel"}
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={handleSave}
@@ -240,6 +278,22 @@ export default function ClassAttendanceEntry() {
           </Button>
         </div>
       </div>
+
+      {can("export_assigned_class_attendance") && classIdNum && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3" data-testid="class-attendance-export">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <FieldLabel htmlFor="export-month">Bulan export</FieldLabel>
+              <Input id="export-month" type="month" value={exportMonth} onChange={(event) => setExportMonth(event.target.value)} className="w-44" />
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExportExcel} disabled={exportingExcel} aria-busy={exportingExcel} className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              {exportingExcel ? "Menyiapkan…" : "Export Excel Bulanan"}
+            </Button>
+          </div>
+          {exportError && <Alert variant="danger"><AlertTitle>Export gagal</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
+        </div>
+      )}
 
       {/* Class & Date Selector Header Card */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm space-y-4">

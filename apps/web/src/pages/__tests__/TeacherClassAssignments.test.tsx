@@ -11,6 +11,9 @@ vi.mock("../../lib/api/client", () => ({
   apiRequest: vi.fn(() => Promise.resolve({ data: [] })),
 }));
 
+vi.mock("../../context/AuthContext", () => ({
+  useAuth: () => ({ can: (capability: string) => capability === "enter_assigned_class_attendance" || capability === "export_assigned_class_attendance" }),
+}));
 vi.mock("../../api/teacherClassAssignments", () => ({
   fetchTeacherClassAssignments: vi.fn(() => Promise.resolve([])),
   createTeacherClassAssignment: vi.fn(),
