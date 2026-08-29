@@ -113,7 +113,11 @@ Target: `OPERATOROS_FULL_FEATURE_AUDIT_COMPLETE`
    when the wall clock steps backward), and the validator checks the ledger
    by version identity (current version present with matching fingerprint;
    any newer version fails closed) instead of wall-clock ordering. Ordinary
-   startup still never modifies an existing database.
+   startup still never modifies an existing database. A second, related
+   wall-clock dependence surfaced during merged-main stress (Retry-After 61
+   instead of 60 after an NTP step); the login rate limiter now runs on a
+   monotonic clock, keeping windows and Retry-After exact across clock
+   steps without weakening limiting.
 2. `BEHAVIOR_REVIEW_REQUIRED` (MEDIUM, RESOLVED): the canonical persistent
    development database predated the repair and contained only 65 tables. It
    was reconciled to 78/78 on 2026-08-29 under the explicit one-time
