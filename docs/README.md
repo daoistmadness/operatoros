@@ -25,6 +25,8 @@
 
 ## Product references
 
+- Student profiles (`/students/:id`) offer an **Export attendance history** action (capability `export_student_data`, linked identity required): the API builds an Excel workbook server-side with a monthly recap and the selected month's daily breakdown, applying attendance overrides as the effective status.
+
 - [Product terminology glossary](product-audit/PRODUCT_TERMINOLOGY_GLOSSARY.md) — canonical product terms.
 - [Student progression and rollover audit](product-audit/STUDENT_PROGRESSION_ROLLOVER.md) — progression rules referenced by the migration tooling.
 - Completed milestone audits, releases, and reports remain available in Git history.

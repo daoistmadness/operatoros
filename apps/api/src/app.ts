@@ -19,6 +19,7 @@ import { safetyRoutes } from "./domains/safety";
 import { operatorRoutes } from "./domains/operator";
 import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
 import { studentExportRoutes } from "./domains/student-exports";
+import { studentAttendanceExportRoutes } from "./domains/student-attendance-export";
 import { rosterRoutes } from "./domains/roster";
 import { studentImportSessionRoutes } from "./domains/student-import-sessions";
 import { dataPortabilityRoutes } from "./domains/data-portability";
@@ -73,6 +74,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     operatorRoutes(app, context);
     teacherAssignmentRoutes(app, context);
     studentExportRoutes(app, context);
+    studentAttendanceExportRoutes(app, context);
     rosterRoutes(app, context);
     studentImportSessionRoutes(app, context);
     dataPortabilityRoutes(app, context);

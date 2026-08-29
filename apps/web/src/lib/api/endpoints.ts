@@ -212,6 +212,17 @@ export async function getRekapAbsensiReport(params: ReportQuery): Promise<RekapR
   return ensureRekapReportShape(response.data);
 }
 
+export async function downloadStudentAttendanceHistoryExcel(params: { studentMasterId: string; month?: number; year?: number }): Promise<Blob> {
+  const response = await apiRequest({
+    path: `/api/student-masters/${params.studentMasterId}/attendance-history/export-excel`,
+    params: { month: params.month, year: params.year },
+    responseType: 'blob',
+    timeout: 60000,
+    expectedBlobTypes: API_BLOB_TYPES.excel,
+  });
+  return response.data;
+}
+
 export async function downloadRekapAbsensiExcel(params: ReportQuery): Promise<Blob> {
   const response = await apiRequest({
     path: '/api/analytics/v2/rekap-absensi/export-excel',
