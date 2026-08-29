@@ -4970,6 +4970,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/student-masters/{student_master_id}/attendance-history/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Student Attendance History */
+        get: operations["export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -18396,6 +18413,42 @@ export interface operations {
                             };
                         }[];
                     };
+                };
+            };
+        };
+    };
+    export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                year?: string | null;
+            };
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
