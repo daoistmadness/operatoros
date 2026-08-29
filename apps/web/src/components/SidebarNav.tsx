@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Database, Edit3, FileClock, FileText, GraduationCap, History, LayoutDashboard,
-  Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
+  ClipboardList, Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
   UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
 } from 'lucide-react';
 
@@ -66,6 +66,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
     id: 'insights', title: 'Analytics & Reports',
     items: [
       { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
+      { name: 'Data Recapitulation', path: '/analytics/recapitulation', icon: ClipboardList },
       { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual'] },
       { name: 'Monthly Management', path: '/reports/management/monthly', icon: PieChart },
       { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },

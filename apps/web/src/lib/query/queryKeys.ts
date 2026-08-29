@@ -50,6 +50,7 @@ export const queryKeys = {
     historicalTrends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "historical-trends", canonicalizeQueryFilters(filters)] as const,
     interventionImpact: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "intervention-impact", canonicalizeQueryFilters(filters)] as const,
     overview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "overview", canonicalizeQueryFilters(filters)] as const,
+    recap: (kind: "students" | "staff", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "recap", kind, canonicalizeQueryFilters(filters)] as const,
     trends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "trends", canonicalizeQueryFilters(filters)] as const,
     cohorts: (dimension: "class" | "jenjang", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "cohorts", dimension, canonicalizeQueryFilters(filters)] as const,
   },

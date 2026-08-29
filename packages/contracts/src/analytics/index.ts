@@ -123,3 +123,5 @@ export const AnalyticsCohortsResponseSchema = Type.Object({
 });
 
 export type AnalyticsCohortsResponse = Static<typeof AnalyticsCohortsResponseSchema>;
+
+export * from "./recapitulation";
