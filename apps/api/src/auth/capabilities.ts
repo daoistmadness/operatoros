@@ -3,7 +3,8 @@ const ADMIN_CAPABILITIES = [
   "commit_progression_batch", "commit_student_roster", "commit_student_updates", "create_attendance_followup",
   "create_progression_preview", "create_student", "delete_enrollment_draft", "edit_sensitive_identifiers",
   "edit_student", "end_enrollment", "enter_assigned_class_attendance", "execute_cross_jenjang_transition",
-  "export_sensitive_student_fields", "export_staff", "export_student_data", "finalize_attendance_period",
+  "export_assigned_class_attendance", "export_sensitive_student_fields", "export_staff",
+  "export_student_data", "finalize_attendance_period",
   "graduate_students", "import_attendance", "import_staff", "import_student_roster", "import_student_updates",
   "manage_all_attendance", "manage_all_attendance_followups", "manage_attendance", "manage_device_identity",
   "manage_early_departure_policy", "manage_enrollment", "manage_enrollment_lifecycle", "manage_staff",
@@ -21,7 +22,8 @@ const ADMIN_CAPABILITIES = [
 
 const STAFF_CAPABILITIES = [
   "assign_attendance_followup", "cancel_attendance_correction", "create_attendance_followup",
-  "enter_assigned_class_attendance", "record_early_departure_excuse", "reopen_attendance_followup",
+  "enter_assigned_class_attendance", "export_assigned_class_attendance", "record_early_departure_excuse",
+  "reopen_attendance_followup",
   "request_assigned_attendance_correction", "request_attendance_correction", "resolve_attendance_followup",
   "update_attendance_followup", "view_assigned_attendance", "view_attendance", "view_attendance_corrections",
   "view_attendance_followup_audit", "view_attendance_followups", "view_early_departure", "view_progression_preview",

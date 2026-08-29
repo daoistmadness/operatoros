@@ -174,3 +174,18 @@ export async function submitClassAttendanceEntries(
   });
   return response.data;
 }
+
+export async function exportAssignedClassAttendanceExcel(params: {
+  classId: number;
+  month: number;
+  year: number;
+}): Promise<Blob> {
+  const response = await apiRequest<Blob>({
+    path: `/api/attendance/classes/${params.classId}/attendance/export-excel`,
+    params: { month: params.month, year: params.year },
+    responseType: "blob",
+    timeout: 60000,
+    expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+  });
+  return response.data;
+}
