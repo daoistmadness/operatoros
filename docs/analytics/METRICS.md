@@ -2,6 +2,47 @@
 
 These definitions apply to the Phase 16 canonical analytics routes.
 
+## Attendance Analytics Expansion
+
+The attendance expansion uses one event-level source. It joins attendance to
+the selected academic enrollment for the attendance date. An enrollment is
+selected once per attendance event. This prevents duplicate counting when
+enrollment history overlaps.
+
+### Effective status
+
+Every count uses `COALESCE(attendance_overrides.override_status,
+attendance.status)`. An override is authoritative. The API reports
+`on-time` as Present and keeps `late`, `incomplete`, `absent`, `sakit`,
+`izin`, and `alfa` as separate statuses. Null or unknown statuses are
+reported as Unrecorded.
+
+### Attendance expansion rates
+
+- Attendance rate = `(Present + Late) / (Present + Late + Sakit + Izin + Alfa) * 100`.
+- Late counts as attended.
+- Tardiness rate = `Late / (Present + Late) * 100`.
+- Unexcused absence rate = `Alfa / (Present + Late + Sakit + Izin + Alfa) * 100`.
+- Incomplete, Absent, and Unrecorded remain visible as counts. They are not
+  added to the established attendance-rate denominator.
+- Percentages use the 0–100 scale and round to two decimals. A zero
+  denominator returns `0`.
+- Total records includes every selected effective-status event.
+- Override percentage uses override-corrected records divided by total
+  selected records.
+
+### Scope and data limits
+
+The scope requires an academic year and an inclusive attendance date range.
+Optional filters use canonical jenjang and academic class IDs. The API
+returns zero-valued aggregates for a valid empty scope.
+
+The daily and grouped views use event-level attendance statuses. The legacy
+monthly `absence_reasons` ledger has no attendance-date key, so it is not
+joined into these event aggregates. This avoids double counting and avoids
+inventing a date for a monthly reason. HEB is reported from the existing
+monthly `heb_overrides` values and does not change attendance rates.
+
 ## `attendance_rate`
 
 - Meaning: observed attendance rate for the selected enrollment population.

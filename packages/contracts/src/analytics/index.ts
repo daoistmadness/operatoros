@@ -126,3 +126,5 @@ export type AnalyticsCohortsResponse = Static<typeof AnalyticsCohortsResponseSch
 
 export * from "./recapitulation";
 export * from "./data-quality";
+
+export * from "./attendance-expansion";
