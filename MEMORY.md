@@ -49,4 +49,4 @@ This file records durable project decisions and stable context for future agent 
 - See [COMMANDS.md](COMMANDS.md) for verified commands.
 - See [ERRORS.md](ERRORS.md) for fragile areas and recurring issues.
 - See [CONVENTIONS.md](CONVENTIONS.md) for observed code conventions.
-- See [Phase 10 release notes](docs/releases/phase-10-design-system-modernization.md) for the current completed milestone and [Phase 8–10 consolidated status](docs/project-status/phases-8-to-10.md) for the foundation history.
+- Historical milestone notes (Phase 8-10 foundation, Phase 10 design-system modernization) remain available in Git history.
