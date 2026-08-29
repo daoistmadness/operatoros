@@ -2,17 +2,6 @@ export const CURRENT_SCHEMA_VERSION = "20260725_s43";
 export const CURRENT_SCHEMA_FINGERPRINT =
   "b75e9774412bacf27baf5965a8267a21e58cbe4dba237cd897be9e959749bc57";
 
-export const REQUIRED_TABLES = [
-  "attendance",
-  "first_admin_setup_state",
-  "operatoros_schema_migrations",
-  "sessions",
-  "student_enrollments",
-  "student_masters",
-  "students",
-  "users",
-] as const;
-
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
   "trg_academic_roster_batch_session_type_update",
