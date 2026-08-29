@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, useRef, type SVGProps } from "react";
+import { useEffect, useMemo, useRef, useState, type SVGProps } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import ChartMonthly from "../components/ChartMonthly";
 import ChartClass from "../components/ChartClass";
 import {
@@ -24,10 +25,9 @@ import {
   FileText
 } from "lucide-react";
 import { motion } from "framer-motion";
-import api from "../api";
+import { Card } from "@operatoros/ui/components/card";
 import { cn } from "../lib/cn";
 import { Button, buttonVariants } from "../components/ui/button";
-import { Card } from "../components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { FieldError } from "../components/ui/field-error";
 import { FieldLabel, FormField } from "../components/ui/field";
@@ -38,23 +38,14 @@ import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
 import { SetupOverview, useReadinessQuery } from "../features/readiness";
 import { useAuth } from "../context/AuthContext";
+import { useDashboardSnapshotQuery } from "../hooks/useAnalyticsQueries";
+import { queryKeys } from "../lib/query/queryKeys";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
   assignStudentClass,
-  deleteHebOverride,
-  getDashboardSnapshot,
-  getHebOverview,
   normalizeAbsenceTotals,
-  saveHebOverride,
-  type AbsenceTotalRow,
-  type DashboardClassRow,
-  type DashboardIncompleteSummary,
-  type DashboardMonthlyRow,
-  type DashboardOffender,
   type DashboardPendingStudent,
-  type DashboardSummary,
-  type RekapReport,
 } from "../lib/api/endpoints";
 
 const MONTH_OPTIONS = [
@@ -81,53 +72,28 @@ const snappySpring = { type: "spring", stiffness: 400, damping: 30 };
 export default function Dashboard() {
   const { user, can } = useAuth();
   const readiness = useReadinessQuery(user?.id ?? null);
+  const queryClient = useQueryClient();
   const today = useMemo(() => new Date(), []);
-  const [loading, setLoading] = useState(true);
-  const [dashboardError, setDashboardError] = useState("");
-  const [monthlyData, setMonthlyData] = useState<DashboardMonthlyRow[]>([]);
-  const [classData, setClassData] = useState<DashboardClassRow[]>([]);
-  const [offenders, setOffenders] = useState<DashboardOffender[]>([]);
-  const [pending, setPending] = useState<DashboardPendingStudent[]>([]);
-  const [summary, setSummary] = useState<DashboardSummary>({ total_late: 0, total_incomplete: 0, total_offenders: 0 });
-  const [incompleteSummary, setIncompleteSummary] = useState<DashboardIncompleteSummary | null>(null);
-  const [absenceSummary, setAbsenceSummary] = useState<AbsenceTotalRow[]>([]);
-  const [rekapAbsensiSummary, setRekapAbsensiSummary] = useState<RekapReport | null>(null);
-  const [existingClasses, setExistingClasses] = useState<string[]>([]);
-  const [mappingWarning, setMappingWarning] = useState("");
 
-  // Filters state (visual only for now per spec design)
   const [selectedMonth, setSelectedMonth] = useState(String(today.getMonth() + 1));
   const [selectedYear, setSelectedYear] = useState(String(today.getFullYear()));
-  const [selectedJenjang, setSelectedJenjang] = useState("All Jenjang");
+  const monthNumber = Number(selectedMonth);
+  const yearNumber = Number(selectedYear);
+  const dashboardQuery = useDashboardSnapshotQuery(monthNumber, yearNumber);
+  const snapshot = dashboardQuery.data;
+  const monthlyData = snapshot?.monthlyData ?? [];
+  const classData = snapshot?.classData ?? [];
+  const offenders = snapshot?.offenders ?? [];
+  const pending = snapshot?.pending ?? [];
+  const summary = snapshot?.summary ?? { total_late: 0, total_incomplete: 0, total_offenders: 0 };
+  const incompleteSummary = snapshot?.incompleteSummary ?? null;
+  const absenceSummary = snapshot?.absenceSummary ?? [];
+  const rekapAbsensiSummary = snapshot?.rekapAbsensiSummary ?? null;
+  const existingClasses = snapshot?.existingClasses ?? [];
+  const mappingWarning = snapshot?.mappingWarning ?? "";
 
   // Class mapping modal state
   const [modalStudent, setModalStudent] = useState<DashboardPendingStudent | null>(null);
-
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
-    setDashboardError("");
-    try {
-      const snapshot = await getDashboardSnapshot(today);
-      setMonthlyData(snapshot.monthlyData);
-      setClassData(snapshot.classData);
-      setOffenders(snapshot.offenders);
-      setPending(snapshot.pending);
-      setSummary(snapshot.summary);
-      setExistingClasses(snapshot.existingClasses);
-      setIncompleteSummary(snapshot.incompleteSummary);
-      setAbsenceSummary(snapshot.absenceSummary);
-      setRekapAbsensiSummary(snapshot.rekapAbsensiSummary);
-      setMappingWarning(snapshot.mappingWarning);
-    } catch (error) {
-      setDashboardError(error instanceof Error ? error.message : "Dashboard analytics could not be loaded.");
-    } finally {
-      setLoading(false);
-    }
-  }, [today]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
 
   const handleOpenMapping = (student: DashboardPendingStudent) => setModalStudent(student);
 
@@ -141,20 +107,17 @@ export default function Dashboard() {
 
   const handleMapped = async (_mappedStudentId: number | string) => {
     setModalStudent(null);
-    await loadDashboardData();
+    await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.snapshot(monthNumber, yearNumber) });
   };
 
-  if (loading) {
+  if (dashboardQuery.isPending && !snapshot) {
     return <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />;
   }
-  if (dashboardError) {
-    return <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={dashboardError}><Button className="mt-4" onClick={() => void loadDashboardData()}>Retry</Button></ErrorState>;
+  if (dashboardQuery.isError && !snapshot) {
+    const message = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : "Dashboard analytics could not be loaded.";
+    return <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={message}><Button className="mt-4" onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>;
   }
 
-  const totalLate = monthlyData.reduce((acc, curr) => acc + curr.late_count, 0);
-  const avgPunctuality = classData.length > 0 
-    ? Math.round(classData.reduce((acc, curr) => acc + curr.punctuality_score, 0) / classData.length) 
-    : 0;
   const absenceTotals = normalizeAbsenceTotals(absenceSummary);
 
   const totalClasses = Number(absenceTotals.total || 0);
@@ -162,15 +125,16 @@ export default function Dashboard() {
   const missingClasses = Math.max(0, totalClasses - enteredClasses);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
+    <div aria-busy={dashboardQuery.isFetching} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
       <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />
+      {dashboardQuery.isFetching && snapshot && <p role="status" className="text-sm font-semibold text-muted-foreground">Updating dashboard data…</p>}
+      {dashboardQuery.isError && snapshot && <ErrorState title="Dashboard refresh failed" description="Showing the last successful dashboard result."><Button onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>}
       <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
         <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
-        <FormField id="dashboard-level"><FieldLabel>Jenjang</FieldLabel><NativeSelect value={selectedJenjang} onChange={(e) => setSelectedJenjang(e.target.value)}><option value="All Jenjang">All Jenjang</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option></NativeSelect></FormField>
-        <Button><Download size={16} /> Export</Button>
+        <Link to="/reports/rekap-absensi" className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto")}><Download size={16} /> Open report</Link>
       </FilterBar>
 
       {/* 2. Alert Banner */}
@@ -213,7 +177,7 @@ export default function Dashboard() {
         <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
         <div className="flex items-center gap-2">
           <Activity size={18} className="text-emerald-500" />
-          <div className="text-slate-600 font-medium"><span className="text-slate-900 font-bold">{avgPunctuality}%</span> avg punctuality</div>
+          <div className="text-slate-600 font-medium"><span className="text-slate-900 font-bold">{classData.length}</span> class groups tracked</div>
         </div>
         <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
         <div className="flex items-center gap-2">
@@ -362,7 +326,7 @@ export default function Dashboard() {
             {monthlyData.length > 0 ? (
               <div className="h-[300px] w-full"><ChartMonthly data={monthlyData} /></div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center"><EmptyState message="No monthly data recorded yet." /></div>
+              <div className="h-[300px] flex items-center justify-center"><SharedEmptyState title="No monthly data recorded yet." /></div>
             )}
           </div>
         </Card>
@@ -377,7 +341,7 @@ export default function Dashboard() {
             {classData.length > 0 ? (
               <div className="h-[300px] w-full"><ChartClass data={classData.slice(0, 5)} /></div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center"><EmptyState message="No class data available to rank." /></div>
+              <div className="h-[300px] flex items-center justify-center"><SharedEmptyState title="No class data available to rank." /></div>
             )}
           </div>
         </Card>
@@ -472,20 +436,10 @@ function MetricBlock({ label, value, color }: { label: string; value?: number | 
   return (
     <div>
       <div className="text-xs font-bold text-slate-400 uppercase mb-1">{label}</div>
-      <div className={cn("text-2xl lg:text-3xl font-black", color)}>{value ?? 0}%</div>
+      <div className={cn("text-2xl lg:text-3xl font-black", color)}>{value == null ? "Not available" : `${value}%`}</div>
     </div>
   );
 }
-
-
-const EmptyState = ({ message }: { message: string }) => (
-  <div className="flex flex-col items-center justify-center text-center">
-    <div className="w-12 h-12 bg-slate-100 rounded-[9999px] flex items-center justify-center mb-3">
-      <AlertTriangle className="text-slate-400" size={20} />
-    </div>
-    <p className="text-slate-500 text-sm max-w-[200px] mb-4 font-medium">{message}</p>
-  </div>
-);
 
 function UsersIcon({ size = 24, ...props }: SVGProps<SVGSVGElement> & { size?: number }) {
   return (
