@@ -1,7 +1,6 @@
 # OperatorOS post-migration modernization final audit
 
-Status: `OPERATOROS_POST_MIGRATION_MODERNIZATION_COMPLETE` pending closure
-merge and final-main validation.
+Status: `OPERATOROS_POST_MIGRATION_MODERNIZATION_COMPLETE`
 
 Audit base: `74d92ef2f7a1d3355fd2b6a2990695683a3fe8f0`
 
@@ -202,5 +201,5 @@ No product, API, DB, security, analytics, Excel, or UI regression was found.
 No Phase 20 was created. Future work must start from a new, independently
 justified objective.
 
-The final gate is issued only after this documentation change is merged and
-its required CI and merged-main E2E checks pass.
+The final gate is issued after this closure document and its required CI and
+merged-main E2E checks pass.
