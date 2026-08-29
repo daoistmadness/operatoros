@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
-import { unlinkSync } from "node:fs";
+import { readFileSync, unlinkSync } from "node:fs";
 import { inTransaction, openDatabase, validateDatabase } from "@operatoros/db";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
@@ -38,6 +38,25 @@ describe("S4.3 data layer", () => {
       const handle = openDatabase(path, { readonly: true });
       expect(handle.db).toBeDefined();
       handle.close();
+    } finally {
+      unlinkSync(path);
+    }
+  }, 30000);
+
+  it("creates every table declared by the S4.3 schema snapshot", () => {
+    const path = disposableDatabasePath("fresh-parity");
+    bootstrapDatabase(path);
+    try {
+      const client = new Database(path, { readonly: true });
+      const present = new Set(
+        (client.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map((row) => row.name),
+      );
+      client.close();
+      const schemaSource = readFileSync(`${repoRoot}/packages/db/src/schema.ts`, "utf8");
+      const declared = [...schemaSource.matchAll(/sqliteTable\("([^"]+)"/g)].map((match) => match[1] as string);
+      expect(declared.length).toBeGreaterThan(0);
+      const missing = declared.filter((table) => !present.has(table));
+      expect(missing).toEqual([]);
     } finally {
       unlinkSync(path);
     }
