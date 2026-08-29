@@ -40,3 +40,43 @@ These definitions apply to the Phase 16 canonical analytics routes.
 - Zero, unavailable, and not-applicable states are distinct contract values.
 - The existing report service keeps its accepted report-specific formulas.
   Phase 16 does not silently change those response semantics.
+
+
+## Data Recapitulation (2026-08)
+
+Descriptive counts computed server-side from canonical data.
+
+### Active student
+
+A canonical `student_masters` row that currently has a
+`student_enrollments` row with `effective_to IS NULL` and
+`lifecycle_state = 'ACTIVE'` for the selected academic year (default: the
+`academic_years` row with `is_default = 1`). Each student is counted once
+per recap request even if duplicate enrollment rows exist.
+
+### Active staff
+
+A `staff_members` row with `employment_status = 'ACTIVE'`.
+
+### Category rows
+
+- Gender/religion come from `student_masters` (optional fields; missing
+  values surface as an explicit "Unknown" category and in `unknownCount`).
+- Jenjang comes from the enrollment's `jenjang_id`; class/rombel from the
+  enrollment's `academic_class_id` (missing class -> "Unknown").
+- Age is derived server-side from `student_masters.birth_date` against the
+  current date and returned only as bands (<=5, 6-7, 8-9, 10-11, 12-13,
+  14-15, 16+). Birth dates never leave the API.
+- Staff employment status uses `staff_members.employment_status`
+  (ACTIVE/FORMER/UNKNOWN); job title uses `job_title_normalized` with
+  `job_title_raw` as fallback; education uses the highest
+  `staff_education.education_level`; jenjang assignment counts distinct
+  staff per assigned jenjang (staff with no assignment -> "Unknown").
+  Staff gender and PTK type/rank/certification are not available in the
+  canonical schema and are intentionally absent.
+
+### Percentage
+
+`count / total in current filtered scope * 100`, rounded to 2 decimals;
+0 when the scope total is 0. Class/rombel matrices are generated
+server-side with row totals, column totals, and a grand total.
