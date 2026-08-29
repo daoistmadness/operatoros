@@ -53,7 +53,7 @@ describe("S4.3 data layer", () => {
       );
       client.close();
       const schemaSource = readFileSync(`${repoRoot}/packages/db/src/schema.ts`, "utf8");
-      const declared = [...schemaSource.matchAll(/sqliteTable\("([^"]+)"/g)].map((match) => match[1]);
+      const declared = [...schemaSource.matchAll(/sqliteTable\("([^"]+)"/g)].map((match) => match[1] as string);
       expect(declared.length).toBeGreaterThan(0);
       const missing = declared.filter((table) => !present.has(table));
       expect(missing).toEqual([]);
