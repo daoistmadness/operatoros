@@ -38,6 +38,12 @@ describe("query-key conventions", () => {
       .not.toEqual(queryKeys.analytics.overview({ academic_year_id: 1, class_name: "7B" }));
   });
 
+  it("isolates attendance analytics by every data filter", () => {
+    const first = queryKeys.analytics.attendance("overview", { academic_year_id: 1, date_from: "2026-08-01", date_to: "2026-08-31", jenjang_id: 2, class_id: 7 });
+    const second = queryKeys.analytics.attendance("overview", { academic_year_id: 1, date_from: "2026-08-01", date_to: "2026-08-31", jenjang_id: 2, class_id: 8 });
+    expect(first).not.toEqual(second);
+  });
+
   it("changes dashboard keys when the selected period changes", () => {
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));
