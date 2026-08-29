@@ -80,3 +80,49 @@ A `staff_members` row with `employment_status = 'ACTIVE'`.
 `count / total in current filtered scope * 100`, rounded to 2 decimals;
 0 when the scope total is 0. Class/rombel matrices are generated
 server-side with row totals, column totals, and a grand total.
+
+
+## Data Quality and Completeness (2026-08)
+
+Diagnostic view of missing and unmapped canonical master data. Read-only;
+no automatic repair, no risk scores, no persisted snapshots.
+
+### Scope
+
+- Student quality applies to current enrollments (effective_to IS NULL,
+  lifecycle filter default ACTIVE) for the selected academic year.
+- Staff quality applies to `staff_members.employment_status` (default ACTIVE).
+
+### Required vs optional
+
+- REQUIRED (conditionally): class/rombel assignment is required for ACTIVE
+  students; a missing class on a non-ACTIVE enrollment is reported as an
+  optional-field gap instead.
+- OPTIONAL_BUT_TRACKED: student gender, religion, birth date; staff
+  education, jenjang assignment, job title.
+- Missing enrollment: an `active` student master with no current enrollment
+  row is reported separately (MISSING_ENROLLMENT) and excluded from the
+  enrollment-based denominators.
+
+### Missing vs unknown vs unmapped
+
+- NULL/empty value -> Missing.
+- A recorded but unknown category value (for example
+  `employment_status = 'UNKNOWN'`) -> Unknown (UNKNOWN_CATEGORY_VALUE).
+- A raw value that has no normalization mapping (job_title_raw present,
+  job_title_normalized absent) -> Unmapped (UNMAPPED_JOB_TITLE).
+
+### Denominators
+
+Field completeness = populated applicable records / applicable records,
+rounded to 2 decimals. Conditional fields use only applicable records (for
+example class assignment uses ACTIVE students only). Applicability is
+stated per field in the response.
+
+### Issue drilldown
+
+Issues endpoints return the affected record name, context (jenjang/class or
+employment/job title), and typed issues, filtered by field and issue type
+and paginated server-side (page/page_size, max 200). Capabilities:
+students `view_student`, staff `view_staff`; exports
+`export_student_data` / `export_staff`.

@@ -19,6 +19,7 @@ const Settings = lazy(() => import('../pages/Settings'));
 const TardinessReport = lazy(() => import('../pages/TardinessReport'));
 const RekapAbsensi = lazy(() => import('../pages/RekapAbsensi'));
 const DataRecapitulation = lazy(() => import('../pages/DataRecapitulation'));
+const DataQuality = lazy(() => import('../pages/DataQuality'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const StudentManagement = lazy(() => import('../pages/StudentManagement'));
 const StaffManagement = lazy(() => import('../pages/StaffManagement'));
@@ -90,6 +91,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/reports/tardiness', element: <TardinessReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/reports/rekap-absensi', element: <RekapAbsensi />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/recapitulation', element: <DataRecapitulation />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/analytics/data-quality', element: <DataQuality />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/attendance-review', element: <AttendanceReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance-corrections', element: <AttendanceCorrections />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
   defineRoute({ path: '/attendance/followups', element: <AttendanceFollowUpQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),

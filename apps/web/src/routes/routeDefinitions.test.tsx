@@ -19,6 +19,7 @@ const expectedPaths = [
   '/reports/tardiness',
   '/reports/rekap-absensi',
   '/analytics/recapitulation',
+  '/analytics/data-quality',
   '/attendance-review',
   '/attendance-corrections',
   '/attendance/followups',
