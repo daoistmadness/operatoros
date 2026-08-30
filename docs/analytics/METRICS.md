@@ -264,3 +264,45 @@ The current grade schema stores scores without a date or term. Academic trend
 values therefore remain explicitly unavailable. The feature does not infer a
 time axis from score IDs or write trend snapshots, rollups, thresholds, risk
 labels, alerts, or interventions.
+
+## Student Indicator Discovery (2026-08)
+
+Student indicators are transparent measurements. They are not classifications.
+The endpoint is `/api/analytics/student-indicators` and reuses the existing
+student-trend attendance windows and academic-year scope.
+
+### Candidate registry
+
+| ID | Domain | Canonical source | Unit | Status |
+| --- | --- | --- | --- | --- |
+| `attendance_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
+| `tardiness_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
+| `alfa_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
+| `academic_average` | Academic | Academic Analytics score average | Score | Accepted for Stage 2 |
+| `academic_participation` | Academic | Academic Analytics result-slot participation | Percent | Accepted for Stage 2 |
+| Attendance override prevalence | Attendance | No student-level interpretation | Count/percent | Rejected: diagnostic context only |
+| Data-quality issue count | Data quality | Data Quality | Count | Rejected: confidence context, not a student indicator |
+| Academic trend | Academic | Grade rows have no date or term | Score | Deferred: no trustworthy time axis |
+| Mastery proportion | Academic | KKM exists for aggregate reporting only | Percent | Deferred: no existing student-level indicator contract |
+
+Accepted attendance values use the canonical effective status. An override
+replaces the original status before aggregation. Attendance rate is
+`(Present + Late) / (Present + Late + Sakit + Izin + Alfa) * 100`. Tardiness
+rate is `Late / (Present + Late) * 100`. Alfa rate uses the attendance-rate
+denominator. Percent deltas use percentage points.
+
+Academic average uses the stored non-null 0–100 scores and the existing
+round-half-even rule to one decimal. Academic participation is scored result
+slots divided by expected result slots. Missing scores are not numeric zero.
+Academic indicators expose current values only. They do not expose academic
+change because canonical grade rows have no date or term field.
+
+### Missing data and boundary
+
+Each value includes sample sizes and a data status. `not_applicable` means the
+student has no applicable data. `insufficient_data` means a current value may
+exist, but a comparable previous value is unavailable. No zero is substituted.
+
+The Stage 2 surface contains no threshold, risk score, risk level, alert,
+intervention, recommendation, or prediction. Staff judgment remains
+authoritative. Threshold validation is a later stage.

@@ -23,6 +23,7 @@ const DataQuality = lazy(() => import('../pages/DataQuality'));
 const AttendanceAnalytics = lazy(() => import('../pages/AttendanceAnalytics'));
 const AcademicAnalytics = lazy(() => import('../pages/AcademicAnalytics'));
 const StudentTrendInsights = lazy(() => import('../pages/StudentTrendInsights'));
+const StudentIndicatorInsights = lazy(() => import('../pages/StudentIndicatorInsights'));
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const StudentManagement = lazy(() => import('../pages/StudentManagement'));
 const StaffManagement = lazy(() => import('../pages/StaffManagement'));
@@ -98,6 +99,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/analytics/attendance', element: <AttendanceAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/academic', element: <AcademicAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/trends', element: <StudentTrendInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
+  defineRoute({ path: '/analytics/indicators', element: <StudentIndicatorInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
   defineRoute({ path: '/attendance-review', element: <AttendanceReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance-corrections', element: <AttendanceCorrections />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
   defineRoute({ path: '/attendance/followups', element: <AttendanceFollowUpQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),

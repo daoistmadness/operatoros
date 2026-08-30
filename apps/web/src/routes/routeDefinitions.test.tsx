@@ -23,6 +23,7 @@ const expectedPaths = [
   '/analytics/attendance',
   '/analytics/academic',
   '/analytics/trends',
+  '/analytics/indicators',
   '/attendance-review',
   '/attendance-corrections',
   '/attendance/followups',
