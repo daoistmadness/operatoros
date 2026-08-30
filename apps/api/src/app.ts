@@ -20,6 +20,7 @@ import { dataQualityRoutes } from "./domains/data-quality";
 import { attendanceAnalyticsRoutes } from "./domains/attendance-analytics";
 import { academicAnalyticsRoutes } from "./domains/academic-analytics";
 import { managementOverviewRoutes } from "./domains/management-overview";
+import { studentTrendRoutes } from "./domains/student-trends";
 import { safetyRoutes } from "./domains/safety";
 import { operatorRoutes } from "./domains/operator";
 import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
@@ -81,6 +82,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     attendanceAnalyticsRoutes(app, context);
     academicAnalyticsRoutes(app, context);
     managementOverviewRoutes(app, context);
+    studentTrendRoutes(app, context);
     operatorRoutes(app, context);
     teacherAssignmentRoutes(app, context);
     studentExportRoutes(app, context);
