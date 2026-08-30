@@ -167,3 +167,46 @@ employment/job title), and typed issues, filtered by field and issue type
 and paginated server-side (page/page_size, max 200). Capabilities:
 students `view_student`, staff `view_staff`; exports
 `export_student_data` / `export_staff`.
+
+## Academic Analytics Expansion (2026-08)
+
+Academic analytics uses the canonical `student_subject_grades` rows joined to
+the selected academic-year enrollment, subject, and assessment component.
+Each student is counted once per academic year. The API performs all business
+aggregates. The browser only formats returned values.
+
+### Score and averages
+
+- Scores use the stored 0–100 `student_subject_grades.score` value.
+- The overall average is the sum of non-null scores divided by the count of
+  non-null scores. It does not average group averages.
+- Formatif and sumatif averages use the same rule within each type.
+- The current schema has no grade weights. Academic analytics applies no
+  invented weight.
+- Displayed averages use the existing `ROUND_HALF_EVEN` rule to one decimal.
+- Minimum and maximum use the raw non-null score values.
+
+### Missing and participation
+
+- The expected result set is the selected enrollment population crossed with
+  the canonical subject/component catalog for that jenjang.
+- A result with a null score is missing. It is not treated as score zero.
+- Participation percentage is scored result slots divided by expected result
+  slots, on the 0–100 scale. A zero denominator returns `0`.
+- Grade rows have no date or term column. The feature supports academic year,
+  jenjang, class, subject, and assessment-type filters. Term is returned as
+  unavailable instead of being inferred from dates.
+
+### Mastery
+
+KKM comparisons reuse the existing threshold precedence and legacy fallback of
+85. They compare each student-subject-assessment-type average with its
+effective threshold. The output reports counts only. It does not create risk,
+intervention, or performance labels.
+
+### Scope and safety
+
+Authorization uses `view_student` for analytics and the existing
+`export_student_data` capability for Excel. Filters narrow the server-side
+authorized scope. Subject-specific and global assessment components are
+counted once. No persisted academic rollups are created.
