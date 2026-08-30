@@ -56,6 +56,12 @@ describe("query-key conventions", () => {
     expect(first).not.toEqual(second);
   });
 
+  it("isolates student trends by window, scope, search, sort, and page", () => {
+    const first = queryKeys.analytics.studentTrends({ window: "rolling_4w", academic_year_id: 1, jenjang_id: 2, class_id: 7, search: "Alya", sort: "attendance_delta", order: "desc", page: 1, page_size: 25 });
+    const second = queryKeys.analytics.studentTrends({ window: "term", academic_year_id: 1, jenjang_id: 2, class_id: 8, search: "Bima", sort: "alfa_delta", order: "asc", page: 2, page_size: 25 });
+    expect(first).not.toEqual(second);
+  });
+
   it("changes dashboard keys when the selected period changes", () => {
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));
