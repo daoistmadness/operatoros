@@ -31720,6 +31720,25 @@
         "tags": ["analytics"]
       }
     },
+    "/api/analytics/student-indicators": {
+      "get": {
+        "operationId": "getStudentIndicatorInsights",
+        "parameters": [
+          { "name": "window", "in": "query", "required": false, "schema": { "type": "string", "enum": ["rolling_4w", "term"] } },
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_rate", "attendance_delta", "tardiness_rate", "tardiness_delta", "alfa_rate", "alfa_delta", "academic_average", "academic_participation"] } },
+          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get student indicator insights",
+        "tags": ["analytics"]
+      }
+    },
     "/api/analytics/student-trends": {
       "get": {
         "operationId": "getStudentTrendInsights",

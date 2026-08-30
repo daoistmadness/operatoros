@@ -5378,6 +5378,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/student-indicators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get student indicator insights */
+        get: operations["getStudentIndicatorInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/student-trends": {
         parameters: {
             query?: never;
@@ -19569,6 +19586,36 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+        };
+    };
+    getStudentIndicatorInsights: {
+        parameters: {
+            query: {
+                window?: "rolling_4w" | "term";
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                search?: string;
+                sort?: "name" | "attendance_rate" | "attendance_delta" | "tardiness_rate" | "tardiness_delta" | "alfa_rate" | "alfa_delta" | "academic_average" | "academic_participation";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

@@ -71,7 +71,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete administrator inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(33);
+    expect(container.querySelectorAll('nav a')).toHaveLength(34);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
@@ -133,7 +133,7 @@ describe('role-aware sidebar navigation', () => {
       ['Dashboard'],
       ['Operator Work Queue', 'Class Attendance', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger'],
-      ['Management Analytics', 'Data Recapitulation', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Executive Reports', 'Monthly Management', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
+      ['Management Analytics', 'Data Recapitulation', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
       ['Data Import Center', 'Data Import & Export', 'Import History'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Absence Reasons', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);

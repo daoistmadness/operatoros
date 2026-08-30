@@ -131,3 +131,4 @@ export * from "./attendance-expansion";
 export * from "./academic-expansion";
 export * from "./management-overview";
 export * from "./student-trends";
+export * from "./student-indicators";

@@ -7,7 +7,7 @@ type Row = Record<string, any>;
 type Context = any;
 type WindowKind = "rolling_4w" | "term";
 
-interface Scope {
+export interface StudentTrendScope {
   academicYearId: number;
   academicYearLabel: string;
   yearStart: string;
@@ -16,7 +16,7 @@ interface Scope {
   classId: number | null;
 }
 
-interface DateWindow {
+export interface StudentTrendDateWindow {
   currentStart: string;
   currentEnd: string;
   previousStart: string | null;
@@ -63,7 +63,7 @@ function roundPercent(value: number): number {
   return Number(value.toFixed(2));
 }
 
-function buildScope(context: AuthContext, query: Row): Scope {
+export function buildStudentTrendScope(context: AuthContext, query: Row): StudentTrendScope {
   const academicYearId = id(query.academic_year_id);
   if (academicYearId === null) fail(400, "academic_year_id is invalid.");
   const year = row(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
@@ -81,7 +81,7 @@ function buildScope(context: AuthContext, query: Row): Scope {
   return { academicYearId, academicYearLabel: String(year.label), yearStart: String(year.start_date), yearEnd: String(year.end_date), jenjangId: jenjangId ?? (classRow ? Number(classRow.jenjang_id) : null), classId };
 }
 
-function scopeCte(scope: Scope, search = ""): { sql: string; params: unknown[] } {
+export function studentTrendScopeCte(scope: StudentTrendScope, search = ""): { sql: string; params: unknown[] } {
   const filters = ["e.academic_year_id = ?", "e.student_master_id IS NOT NULL"];
   const params: unknown[] = [scope.academicYearId];
   if (scope.jenjangId !== null) { filters.push("e.jenjang_id = ?"); params.push(scope.jenjangId); }
@@ -112,8 +112,8 @@ function scopeCte(scope: Scope, search = ""): { sql: string; params: unknown[] }
   };
 }
 
-function latestAttendanceDate(context: AuthContext, scope: Scope): string | null {
-  const base = scopeCte(scope);
+function latestAttendanceDate(context: AuthContext, scope: StudentTrendScope): string | null {
+  const base = studentTrendScopeCte(scope);
   const value = row(context, `${base.sql}
     SELECT MAX(a.date) AS anchor_date
       FROM scope_students ss
@@ -127,7 +127,7 @@ function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function effectiveTerms(context: AuthContext, scope: Scope): Row[] {
+function effectiveTerms(context: AuthContext, scope: StudentTrendScope): Row[] {
   const configured = rows(context, "SELECT id, term_number, label, start_date, end_date FROM academic_term_configs WHERE academic_year_id = ? ORDER BY term_number", [scope.academicYearId]);
   const byNumber = new Map(configured.map((value) => [Number(value.term_number), value]));
   const defaults: [number, number, number, string][] = [[1, 7, 9, "Term 1"], [2, 10, 12, "Term 2"], [3, 1, 3, "Term 3"], [4, 4, 6, "Term 4"]];
@@ -141,7 +141,7 @@ function effectiveTerms(context: AuthContext, scope: Scope): Row[] {
   });
 }
 
-function resolveWindow(context: AuthContext, scope: Scope, kind: WindowKind): DateWindow {
+export function resolveStudentTrendWindow(context: AuthContext, scope: StudentTrendScope, kind: WindowKind): StudentTrendDateWindow {
   const anchorDate = latestAttendanceDate(context, scope) ?? scope.yearEnd;
   if (kind === "rolling_4w") {
     const currentStart = anchorDate > dateAdd(scope.yearStart, 27) ? dateAdd(anchorDate, -27) : scope.yearStart;
@@ -185,8 +185,8 @@ function attendanceMetric(value: Row, period: "current" | "previous", kind: "att
   return metric("percent", denominator ? roundPercent(attended / denominator * 100) : null, null, denominator, 0);
 }
 
-function aggregateQuery(scope: Scope, window: DateWindow, search: string, sort: string, order: "ASC" | "DESC", page: number, pageSize: number): { sql: string; params: unknown[] } {
-  const base = scopeCte(scope, search);
+function aggregateQuery(scope: StudentTrendScope, window: StudentTrendDateWindow, search: string, sort: string, order: "ASC" | "DESC", page: number, pageSize: number): { sql: string; params: unknown[] } {
+  const base = studentTrendScopeCte(scope, search);
   const hasPrevious = window.previousStart !== null && window.previousEnd !== null;
   const periodCase = hasPrevious ? "CASE WHEN a.date >= ? AND a.date <= ? THEN 'current' ELSE 'previous' END" : "'current'";
   const periodWhere = hasPrevious ? "(a.date >= ? AND a.date <= ? OR a.date >= ? AND a.date <= ?)" : "a.date >= ? AND a.date <= ?";
@@ -247,9 +247,9 @@ function aggregateQuery(scope: Scope, window: DateWindow, search: string, sort: 
 }
 
 export function studentTrendInsights(context: AuthContext, query: Row, canAttendance = true): StudentTrendInsightsResponse {
-  const scope = buildScope(context, query);
+  const scope = buildStudentTrendScope(context, query);
   const windowKind: WindowKind = query.window === "term" ? "term" : "rolling_4w";
-  const window = resolveWindow(context, scope, windowKind);
+  const window = resolveStudentTrendWindow(context, scope, windowKind);
   const page = Math.max(1, Number(query.page ?? 1));
   const pageSize = Math.min(200, Math.max(1, Number(query.page_size ?? 25)));
   const search = String(query.search ?? "").trim();
