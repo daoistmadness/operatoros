@@ -128,3 +128,4 @@ export * from "./recapitulation";
 export * from "./data-quality";
 
 export * from "./attendance-expansion";
+export * from "./academic-expansion";

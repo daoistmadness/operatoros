@@ -31642,6 +31642,68 @@
         "summary": "Export attendance analytics",
         "tags": ["analytics"]
       }
+    },
+    "/api/analytics/academic/options": {
+      "get": {
+        "operationId": "getAcademicAnalyticsOptions",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get academic analytics options",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/academic/overview": {
+      "get": {
+        "operationId": "getAcademicAnalyticsOverview",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get academic analytics overview",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/academic/students": {
+      "get": {
+        "operationId": "getAcademicAnalyticsStudents",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "average", "formative", "summative", "missing"] } },
+          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get academic analytics by student",
+        "tags": ["analytics"]
+      }
+    },
+    "/api/analytics/academic/export-excel": {
+      "get": {
+        "operationId": "exportAcademicAnalyticsExcel",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { "schema": {} } } } },
+        "summary": "Export academic analytics",
+        "tags": ["analytics"]
+      }
     }
   }
 }

@@ -21,6 +21,7 @@ const expectedPaths = [
   '/analytics/recapitulation',
   '/analytics/data-quality',
   '/analytics/attendance',
+  '/analytics/academic',
   '/attendance-review',
   '/attendance-corrections',
   '/attendance/followups',

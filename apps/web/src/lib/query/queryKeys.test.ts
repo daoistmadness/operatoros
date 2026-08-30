@@ -44,6 +44,12 @@ describe("query-key conventions", () => {
     expect(first).not.toEqual(second);
   });
 
+  it("isolates academic analytics by every data filter", () => {
+    const first = queryKeys.analytics.academicOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 7, subject_id: 2, assessment_type: "sumatif" });
+    const second = queryKeys.analytics.academicOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 7, subject_id: 3, assessment_type: "sumatif" });
+    expect(first).not.toEqual(second);
+  });
+
   it("changes dashboard keys when the selected period changes", () => {
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));
