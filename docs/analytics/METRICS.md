@@ -236,3 +236,31 @@ compatible academic-year, jenjang, and class filters.
 
 The overview has no dedicated export. Detailed analytics pages remain the
 authoritative export surfaces.
+
+## Student Trend Insights (2026-08)
+
+Student Trends compares descriptive attendance values for one student across
+two deterministic windows. It reuses effective attendance status, where an
+attendance override replaces the original status.
+
+- `rolling_4w`: the latest observed attendance date in the selected scope and
+  the preceding 28 calendar days, compared with the preceding 28 calendar
+  days. The current schema has no instructional-day calendar.
+- `term`: the configured or existing default term containing the latest
+  observed attendance date, compared with the equivalent elapsed calendar-day
+  portion of the preceding term.
+- Attendance rate is `(Present + Late) / (Present + Late + Sakit + Izin + Alfa)
+  * 100`, with Late counted as attended.
+- Tardiness is `Late / (Present + Late) * 100`.
+- Alfa is reported as the canonical unexcused absence rate using the
+  attendance-rate denominator.
+- Percent deltas use percentage points. Values use the existing two-decimal
+  attendance convention.
+- A missing current or previous denominator returns `null` and
+  `insufficient_data`; it never becomes a zero comparison.
+- Every metric returns its current and previous sample size.
+
+The current grade schema stores scores without a date or term. Academic trend
+values therefore remain explicitly unavailable. The feature does not infer a
+time axis from score IDs or write trend snapshots, rollups, thresholds, risk
+labels, alerts, or interventions.
