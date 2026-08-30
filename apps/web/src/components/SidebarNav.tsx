@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { AuthUser } from '../api/auth';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  BarChart3, BookOpen, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
+  Activity, BarChart3, BookOpen, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Database, Edit3, FileClock, FileText, GraduationCap, History, LayoutDashboard,
   ClipboardList, Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
   UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
@@ -70,6 +70,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Data Quality', path: '/analytics/data-quality', icon: ShieldCheck },
       { name: 'Attendance Analytics', path: '/analytics/attendance', icon: Server },
       { name: 'Academic Analytics', path: '/analytics/academic', icon: BookOpen },
+      { name: 'Student Trends', path: '/analytics/trends', icon: Activity },
       { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual'] },
       { name: 'Monthly Management', path: '/reports/management/monthly', icon: PieChart },
       { name: 'Attendance Report', path: '/reports/attendance', icon: FileText },
