@@ -13,7 +13,7 @@ import {
   GradeSaveResponseSchema,
 } from "@operatoros/contracts/grades";
 import { ReportQuerySchema } from "@operatoros/contracts/reports";
-import { AnalyticsOverviewResponseSchema } from "@operatoros/contracts/analytics";
+import { AnalyticsOverviewResponseSchema, ManagementOverviewResponseSchema } from "@operatoros/contracts/analytics";
 import { ExcelWorksheetDtoSchema } from "@operatoros/contracts/excel";
 import {
   CreateEnrollmentRequestSchema,
@@ -79,6 +79,17 @@ describe("@operatoros/contracts", () => {
         grade_average: { value: null, numerator: 0, denominator: 0, unit: "score", status: "unavailable" },
       },
       cohorts: [],
+    })).toBe(true);
+    expect(Value.Check(ManagementOverviewResponseSchema, {
+      scope: { academicYearId: 1, academicYearLabel: "2026/2027", jenjangId: null, classId: null, attendanceDateFrom: "2026-07-01", attendanceDateTo: "2027-06-30" },
+      school: {
+        students: { status: "available", activeStudents: 0, jenjangCount: 0, classCount: 0, byJenjang: [] },
+        staff: { status: "unavailable", reason: "unauthorized" },
+      },
+      attendance: { status: "unavailable", reason: "unauthorized" },
+      academic: { status: "unavailable", reason: "unauthorized" },
+      dataQuality: { students: { status: "unavailable", reason: "unauthorized" }, staff: { status: "unavailable", reason: "unauthorized" } },
+      links: { recapitulation: "/analytics/recapitulation", attendance: "/analytics/attendance", academic: "/analytics/academic", dataQuality: "/analytics/data-quality" },
     })).toBe(true);
     expect(Value.Check(ExcelWorksheetDtoSchema, { name: "Attendance", headers: ["ID"], rows: [[1]] })).toBe(true);
   });

@@ -205,48 +205,70 @@ function staffJenjangRows(context: AuthContext, employmentStatus: string, total:
   return result;
 }
 
+export function studentRecapitulation(context: AuthContext, query: Row): StudentRecapResponse {
+  const scope = studentScope(context, query);
+  const dimension = STUDENT_DIMENSIONS.includes(query.dimension) ? (query.dimension as StudentRecapDimension) : "gender";
+  const values = studentRows(context, scope);
+  const today = new Date().toISOString().slice(0, 10);
+  const counts = new Map<string, number>();
+  let unknownCount = 0;
+  for (const value of values) {
+    const key = categoryKey(value, dimension, today);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+    if (key === "Unknown") unknownCount += 1;
+  }
+  const male = values.filter((value) => String(value.gender ?? "") === "L" || String(value.gender ?? "").toLowerCase() === "male" || String(value.gender ?? "").toLowerCase() === "laki-laki").length;
+  const female = values.filter((value) => String(value.gender ?? "") === "P" || String(value.gender ?? "").toLowerCase() === "female" || String(value.gender ?? "").toLowerCase() === "perempuan").length;
+  return {
+    scope: { academicYearLabel: scope.academicYearLabel, status: scope.status, jenjangId: scope.jenjangId, classId: scope.classId },
+    total: values.length,
+    summary: { male, female, genderUnknown: values.length - male - female, classes: new Set(values.map((value) => value.class_name).filter(Boolean)).size, jenjangCount: new Set(values.map((value) => value.jenjang).filter(Boolean)).size },
+    dimension, rows: recapRows(counts, values.length), matrix: buildMatrix(values, dimension, values.length), unknownCount, generatedAt: new Date().toISOString(),
+  };
+}
+
+export function staffRecapitulation(context: AuthContext, query: Row): StaffRecapResponse {
+  const dimension = STAFF_DIMENSIONS.includes(query.dimension) ? (query.dimension as StaffRecapDimension) : "employment";
+  const employmentStatus = query.employment_status === undefined ? "ACTIVE" : String(query.employment_status).toUpperCase();
+  const jenjangId = query.jenjang_id === undefined ? null : Number(query.jenjang_id);
+  const filters = ["s.employment_status = ?"];
+  const params: unknown[] = [employmentStatus];
+  let jenjangJoin = "";
+  if (jenjangId !== null) {
+    jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
+    params.unshift(jenjangId);
+    filters.push("sja.jenjang_id IS NOT NULL");
+  }
+  const values = rows(context, `SELECT s.id, s.employment_status, s.job_title_normalized, s.job_title_raw,
+              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
+              (SELECT GROUP_CONCAT(DISTINCT j.name) FROM staff_jenjang_assignments sja JOIN jenjangs j ON j.id = sja.jenjang_id WHERE sja.staff_member_id = s.id) AS jenjang
+         FROM staff_members s ${jenjangJoin} WHERE ${filters.join(" AND ")} GROUP BY s.id ORDER BY s.id`, params);
+  let staffRows: RecapRow[];
+  let unknownCount: number;
+  if (dimension === "jenjang") {
+    staffRows = staffJenjangRows(context, employmentStatus, values.length);
+    unknownCount = staffRows.find((value) => value.key === "Unknown")?.count ?? 0;
+  } else {
+    const counts = new Map<string, number>();
+    unknownCount = 0;
+    for (const value of values) {
+      const key = staffCategoryKey(value, dimension);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (key === "Unknown" || key === "UNKNOWN") unknownCount += 1;
+    }
+    staffRows = recapRows(counts, values.length);
+  }
+  return { scope: { employmentStatus, jenjangId }, total: values.length, dimension, rows: staffRows, unknownCount, generatedAt: new Date().toISOString() };
+}
+
 export function recapitulationRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/recapitulation/students", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_student" });
     if (!user) return { detail: "Insufficient permissions" };
-    const scope = studentScope(context, ctx.query);
     if (ctx.query.academic_year_id !== undefined && (!/^\d+$/.test(String(ctx.query.academic_year_id)) || Number(ctx.query.academic_year_id) < 1)) {
       return error(ctx.set, 400, "academic_year_id must be a positive integer");
     }
-    const dimension = STUDENT_DIMENSIONS.includes(ctx.query.dimension) ? (ctx.query.dimension as StudentRecapDimension) : "gender";
-    const values = studentRows(context, scope);
-    const today = new Date().toISOString().slice(0, 10);
-    const counts = new Map<string, number>();
-    let unknownCount = 0;
-    for (const value of values) {
-      const key = categoryKey(value, dimension, today);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-      if (key === "Unknown") unknownCount += 1;
-    }
-    const male = values.filter((value) => String(value.gender ?? "") === "L" || String(value.gender ?? "").toLowerCase() === "male" || String(value.gender ?? "").toLowerCase() === "laki-laki").length;
-    const female = values.filter((value) => String(value.gender ?? "") === "P" || String(value.gender ?? "").toLowerCase() === "female" || String(value.gender ?? "").toLowerCase() === "perempuan").length;
-    const response: StudentRecapResponse = {
-      scope: {
-        academicYearLabel: scope.academicYearLabel,
-        status: scope.status,
-        jenjangId: scope.jenjangId,
-        classId: scope.classId,
-      },
-      total: values.length,
-      summary: {
-        male,
-        female,
-        genderUnknown: values.length - male - female,
-        classes: new Set(values.map((value) => value.class_name).filter(Boolean)).size,
-        jenjangCount: new Set(values.map((value) => value.jenjang).filter(Boolean)).size,
-      },
-      dimension,
-      rows: recapRows(counts, values.length),
-      matrix: buildMatrix(values, dimension, values.length),
-      unknownCount,
-      generatedAt: new Date().toISOString(),
-    };
-    return response;
+    return studentRecapitulation(context, ctx.query);
   }, {
     query: t.Object({
       dimension: t.Optional(t.String()),
@@ -261,53 +283,7 @@ export function recapitulationRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/recapitulation/staff", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_staff" });
     if (!user) return { detail: "Insufficient permissions" };
-    const dimension = STAFF_DIMENSIONS.includes(ctx.query.dimension) ? (ctx.query.dimension as StaffRecapDimension) : "employment";
-    const employmentStatus = ctx.query.employment_status === undefined ? "ACTIVE" : String(ctx.query.employment_status).toUpperCase();
-    const jenjangId = ctx.query.jenjang_id === undefined ? null : Number(ctx.query.jenjang_id);
-    const filters = ["s.employment_status = ?"];
-    const params: unknown[] = [employmentStatus];
-    let jenjangJoin = "";
-    if (jenjangId !== null) {
-      jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
-      params.unshift(jenjangId);
-      filters.push("sja.jenjang_id IS NOT NULL");
-    }
-    const values = rows(
-      context,
-      `SELECT s.id, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT GROUP_CONCAT(DISTINCT j.name) FROM staff_jenjang_assignments sja JOIN jenjangs j ON j.id = sja.jenjang_id WHERE sja.staff_member_id = s.id) AS jenjang
-         FROM staff_members s
-         ${jenjangJoin}
-        WHERE ${filters.join(" AND ")}
-        GROUP BY s.id
-        ORDER BY s.id`,
-      params,
-    );
-    let staffRows: RecapRow[];
-    let unknownCount: number;
-    if (dimension === "jenjang") {
-      staffRows = staffJenjangRows(context, employmentStatus, values.length);
-      unknownCount = staffRows.find((row) => row.key === "Unknown")?.count ?? 0;
-    } else {
-      const counts = new Map<string, number>();
-      unknownCount = 0;
-      for (const value of values) {
-        const key = staffCategoryKey(value, dimension);
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-        if (key === "Unknown" || key === "UNKNOWN") unknownCount += 1;
-      }
-      staffRows = recapRows(counts, values.length);
-    }
-    const response: StaffRecapResponse = {
-      scope: { employmentStatus, jenjangId },
-      total: values.length,
-      dimension,
-      rows: staffRows,
-      unknownCount,
-      generatedAt: new Date().toISOString(),
-    };
-    return response;
+    return staffRecapitulation(context, ctx.query);
   }, {
     query: t.Object({
       dimension: t.Optional(t.String()),

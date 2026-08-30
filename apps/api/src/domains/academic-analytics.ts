@@ -6,6 +6,7 @@ import {
   AcademicAnalyticsOverviewResponseSchema,
   AcademicAnalyticsQuerySchema,
   AcademicAnalyticsStudentsResponseSchema,
+  type AcademicAnalyticsOverviewResponse,
 } from "@operatoros/contracts/analytics";
 import { roundHalfEven } from "../analytics/queries";
 import { actor } from "./core";
@@ -295,6 +296,11 @@ function overview(context: AuthContext, scope: AcademicScope): Row {
     },
     generatedAt: new Date().toISOString(),
   };
+}
+
+export function academicOverview(context: AuthContext, query: Row): AcademicAnalyticsOverviewResponse | null {
+  const scope = buildScope(context, query);
+  return scope ? overview(context, scope) as AcademicAnalyticsOverviewResponse : null;
 }
 
 function studentRows(context: AuthContext, scope: AcademicScope, query: Row, includeAll = false): Row {

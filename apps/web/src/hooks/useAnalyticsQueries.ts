@@ -14,6 +14,7 @@ import {
 } from "../api/analytics";
 import { getDashboardSnapshot } from "../lib/api/endpoints";
 import { queryKeys } from "../lib/query/queryKeys";
+import { fetchManagementOverview, type ManagementOverviewFilters } from "../api/managementOverview";
 
 const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: number | null }) => ({
   academic_year_id: filters.academic_year_id ?? null,
@@ -40,6 +41,14 @@ export function useManagementSummaryQuery(params: FetchSummaryParams | null, ena
   return useQuery({
     queryKey: params ? queryKeys.analytics.managementSummary({ ...params }) : [...queryKeys.analytics.all, "management-summary", "idle"],
     queryFn: () => fetchManagementSummary(params as FetchSummaryParams),
+    enabled: enabled && params !== null,
+  });
+}
+
+export function useManagementOverviewQuery(params: ManagementOverviewFilters | null, enabled = true) {
+  return useQuery({
+    queryKey: params ? queryKeys.analytics.managementOverview({ ...params }) : [...queryKeys.analytics.all, "management-overview", "idle"],
+    queryFn: () => fetchManagementOverview(params as ManagementOverviewFilters),
     enabled: enabled && params !== null,
   });
 }
