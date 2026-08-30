@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from "chart.js";
@@ -105,6 +106,7 @@ function RecapChart({ rows, title }: { rows: { key: string; label: string; count
 
 export default function DataRecapitulation() {
   const { can } = useAuth();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"students" | "staff">("students");
   const [studentDimension, setStudentDimension] = useState<string>("gender");
   const [staffDimension, setStaffDimension] = useState<string>("employment");
@@ -113,8 +115,9 @@ export default function DataRecapitulation() {
   const [exporting, setExporting] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const studentFilters = { dimension: studentDimension, status: studentStatus };
-  const staffFilters = { dimension: staffDimension, employment_status: staffEmploymentStatus };
+  const scope = { academic_year_id: searchParams.get("academic_year_id") ?? undefined, jenjang_id: searchParams.get("jenjang_id") ?? undefined, class_id: searchParams.get("class_id") ?? undefined };
+  const studentFilters = { ...scope, dimension: studentDimension, status: studentStatus };
+  const staffFilters = { ...scope, dimension: staffDimension, employment_status: staffEmploymentStatus };
   const studentQuery = useQuery({
     queryKey: queryKeys.analytics.recap("students", studentFilters),
     queryFn: () => fetchStudentRecap(studentFilters),
@@ -130,8 +133,8 @@ export default function DataRecapitulation() {
     setExporting(kind); setExportError(null);
     try {
       const blob = kind === "students"
-        ? await downloadStudentRecapExcel({ status: studentStatus })
-        : await downloadStaffRecapExcel({ employment_status: staffEmploymentStatus });
+        ? await downloadStudentRecapExcel({ ...scope, status: studentStatus })
+        : await downloadStaffRecapExcel({ ...scope, employment_status: staffEmploymentStatus });
       const url = createDownloadUrl(blob);
       const link = document.createElement("a");
       link.href = url;

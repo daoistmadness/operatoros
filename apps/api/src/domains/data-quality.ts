@@ -165,72 +165,76 @@ function metric(field: string, labels: Record<string, string>, applicability: "O
   };
 }
 
+export function studentQuality(context: AuthContext, query: Row): StudentDataQualityResponse {
+  const scope = studentScope(context, query);
+  const values = studentQualityRows(context, scope);
+  const perRecord = values.map((value) => ({ value, issues: studentIssuesFor(value) }));
+  const missingOptional = perRecord.filter(({ issues }) => issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")).length;
+  const withRequired = perRecord.filter(({ issues }) => requiredIssueCount(issues) > 0).length;
+  const missingEnrollmentCount = Number(row(context, `SELECT COUNT(*) AS count FROM student_masters m WHERE m.student_status = 'active' AND NOT EXISTS (SELECT 1 FROM student_enrollments e WHERE e.student_master_id = m.id AND e.effective_to IS NULL AND (? = 0 OR e.academic_year_id = ?))`, [scope.academicYearId, scope.academicYearId])?.count ?? 0);
+  const fieldCompleteness: DataQualityFieldMetric[] = [];
+  for (const field of ["gender", "religion", "birth_date"] as const) {
+    const populated = values.filter((value) => value[field] !== null && value[field] !== undefined && value[field] !== "").length;
+    fieldCompleteness.push(metric(field, STUDENT_FIELD_LABELS, "OPTIONAL_BUT_TRACKED", values.length, populated, values.length - populated, 0, 0));
+  }
+  const activeValues = values.filter((value) => String(value.lifecycle_state ?? "") === "ACTIVE");
+  const withClass = activeValues.filter((value) => Boolean(value.class_name)).length;
+  fieldCompleteness.push(metric("class_assignment", STUDENT_FIELD_LABELS, "CONDITIONALLY_REQUIRED", activeValues.length, withClass, activeValues.length - withClass, 0, 0));
+  const classes = new Map<string, { students: number; fullyComplete: number; withRequiredIssues: number; missingOptionalFields: number }>();
+  for (const { value, issues } of perRecord) {
+    const className = value.class_name ? String(value.class_name) : "Unknown";
+    const entry = classes.get(className) ?? { students: 0, fullyComplete: 0, withRequiredIssues: 0, missingOptionalFields: 0 };
+    entry.students += 1;
+    if (issues.length === 0) entry.fullyComplete += 1;
+    if (requiredIssueCount(issues) > 0) entry.withRequiredIssues += 1;
+    if (issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")) entry.missingOptionalFields += 1;
+    classes.set(className, entry);
+  }
+  return {
+    scope: { academicYearLabel: scope.academicYearLabel, status: scope.status, jenjangId: scope.jenjangId, classId: scope.classId },
+    totalStudents: values.length, cleanRecords: perRecord.filter(({ issues }) => issues.length === 0).length,
+    recordsWithRequiredIssues: withRequired, recordsWithOptionalIssues: missingOptional, missingEnrollmentCount, fieldCompleteness,
+    classBreakdown: [...classes.entries()].map(([className, entry]) => ({ class: className, students: entry.students, fullyComplete: entry.fullyComplete, withRequiredIssues: entry.withRequiredIssues, missingOptionalFields: entry.missingOptionalFields, completenessPercentage: percentage(entry.fullyComplete, entry.students) })).sort((a, b) => a.class.localeCompare(b.class)),
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+export function staffQuality(context: AuthContext, query: Row): StaffDataQualityResponse {
+  const employmentStatus = query.employment_status === undefined ? "ACTIVE" : String(query.employment_status).toUpperCase();
+  const jenjangId = query.jenjang_id === undefined ? null : Number(query.jenjang_id);
+  const filters = ["s.employment_status = ?"];
+  const params: unknown[] = [employmentStatus];
+  let jenjangJoin = "";
+  if (jenjangId !== null) {
+    jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
+    params.unshift(jenjangId);
+    filters.push("sja.jenjang_id IS NOT NULL");
+  }
+  const values = rows(context, `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
+              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
+              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
+         FROM staff_members s ${jenjangJoin} WHERE ${filters.join(" AND ")} GROUP BY s.id ORDER BY s.id`, params);
+  const perRecord = values.map((value) => ({ value, issues: staffIssuesFor(value) }));
+  const fieldCompleteness: DataQualityFieldMetric[] = [];
+  for (const field of ["education", "jenjang_assignment", "job_title"] as const) {
+    let complete = 0; let missing = 0; let unknown = 0; let unmapped = 0;
+    for (const value of values) {
+      const issues = staffIssuesFor(value).filter((issue) => issue.field === field);
+      if (issues.length === 0) complete += 1;
+      else if (issues.some((issue) => issue.type === "UNMAPPED_JOB_TITLE")) unmapped += 1;
+      else if (issues.some((issue) => issue.type === "UNKNOWN_CATEGORY_VALUE")) unknown += 1;
+      else missing += 1;
+    }
+    fieldCompleteness.push(metric(field, STAFF_FIELD_LABELS, "OPTIONAL_BUT_TRACKED", values.length, complete, missing, unknown, unmapped));
+  }
+  return { scope: { employmentStatus, jenjangId }, totalStaff: values.length, cleanRecords: perRecord.filter(({ issues }) => issues.length === 0).length, recordsWithIssues: perRecord.filter(({ issues }) => issues.length > 0).length, fieldCompleteness, generatedAt: new Date().toISOString() };
+}
+
 export function dataQualityRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/data-quality/students", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_student" });
     if (!user) return { detail: "Insufficient permissions" };
-    const scope = studentScope(context, ctx.query);
-    const values = studentQualityRows(context, scope);
-    const perRecord = values.map((value) => ({ value, issues: studentIssuesFor(value) }));
-    const missingOptional = perRecord.filter(({ issues }) => issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")).length;
-    const withRequired = perRecord.filter(({ issues }) => requiredIssueCount(issues) > 0).length;
-    const missingEnrollmentCount = Number(
-      row(
-        context,
-        `SELECT COUNT(*) AS count FROM student_masters m
-          WHERE m.student_status = 'active'
-            AND NOT EXISTS (
-              SELECT 1 FROM student_enrollments e
-               WHERE e.student_master_id = m.id AND e.effective_to IS NULL
-                 AND (? = 0 OR e.academic_year_id = ?)
-            )`,
-        [scope.academicYearId, scope.academicYearId],
-      )?.count ?? 0,
-    );
-    const fieldCompleteness: DataQualityFieldMetric[] = [];
-    for (const field of ["gender", "religion", "birth_date"] as const) {
-      const populated = values.filter((value) => value[field] !== null && value[field] !== undefined && value[field] !== "").length;
-      fieldCompleteness.push(metric(field, STUDENT_FIELD_LABELS, "OPTIONAL_BUT_TRACKED", values.length, populated, values.length - populated, 0, 0));
-    }
-    const activeValues = values.filter((value) => String(value.lifecycle_state ?? "") === "ACTIVE");
-    const withClass = activeValues.filter((value) => Boolean(value.class_name)).length;
-    fieldCompleteness.push(metric("class_assignment", STUDENT_FIELD_LABELS, "CONDITIONALLY_REQUIRED", activeValues.length, withClass, activeValues.length - withClass, 0, 0));
-    const classes = new Map<string, { students: number; fullyComplete: number; withRequiredIssues: number; missingOptionalFields: number }>();
-    for (const { value, issues } of perRecord) {
-      const className = value.class_name ? String(value.class_name) : "Unknown";
-      const entry = classes.get(className) ?? { students: 0, fullyComplete: 0, withRequiredIssues: 0, missingOptionalFields: 0 };
-      entry.students += 1;
-      if (issues.length === 0) entry.fullyComplete += 1;
-      if (requiredIssueCount(issues) > 0) entry.withRequiredIssues += 1;
-      if (issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")) entry.missingOptionalFields += 1;
-      classes.set(className, entry);
-    }
-    const response: StudentDataQualityResponse = {
-      scope: {
-        academicYearLabel: scope.academicYearLabel,
-        status: scope.status,
-        jenjangId: scope.jenjangId,
-        classId: scope.classId,
-      },
-      totalStudents: values.length,
-      cleanRecords: perRecord.filter(({ issues }) => issues.length === 0).length,
-      recordsWithRequiredIssues: withRequired,
-      recordsWithOptionalIssues: missingOptional,
-      missingEnrollmentCount,
-      fieldCompleteness,
-      classBreakdown: [...classes.entries()]
-        .map(([className, entry]) => ({
-          class: className,
-          students: entry.students,
-          fullyComplete: entry.fullyComplete,
-          withRequiredIssues: entry.withRequiredIssues,
-          missingOptionalFields: entry.missingOptionalFields,
-          completenessPercentage: percentage(entry.fullyComplete, entry.students),
-        }))
-        .sort((a, b) => a.class.localeCompare(b.class)),
-      generatedAt: new Date().toISOString(),
-    };
-    return response;
+    return studentQuality(context, ctx.query);
   }, {
     query: t.Object({
       academic_year_id: t.Optional(t.String()),
@@ -304,51 +308,7 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/data-quality/staff", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_staff" });
     if (!user) return { detail: "Insufficient permissions" };
-    const employmentStatus = ctx.query.employment_status === undefined ? "ACTIVE" : String(ctx.query.employment_status).toUpperCase();
-    const jenjangId = ctx.query.jenjang_id === undefined ? null : Number(ctx.query.jenjang_id);
-    const filters = ["s.employment_status = ?"];
-    const params: unknown[] = [employmentStatus];
-    let jenjangJoin = "";
-    if (jenjangId !== null) {
-      jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
-      params.unshift(jenjangId);
-      filters.push("sja.jenjang_id IS NOT NULL");
-    }
-    const values = rows(
-      context,
-      `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
-         FROM staff_members s
-         ${jenjangJoin}
-        WHERE ${filters.join(" AND ")}
-        GROUP BY s.id
-        ORDER BY s.id`,
-      params,
-    );
-    const perRecord = values.map((value) => ({ value, issues: staffIssuesFor(value) }));
-    const fieldCompleteness: DataQualityFieldMetric[] = [];
-    for (const field of ["education", "jenjang_assignment", "job_title"] as const) {
-      const applicableValues = perRecord.map(({ value }) => value);
-      let complete = 0; let missing = 0; let unknown = 0; let unmapped = 0;
-      for (const value of applicableValues) {
-        const issues = staffIssuesFor(value).filter((issue) => issue.field === field);
-        if (issues.length === 0) complete += 1;
-        else if (issues.some((issue) => issue.type === "UNMAPPED_JOB_TITLE")) unmapped += 1;
-        else if (issues.some((issue) => issue.type === "UNKNOWN_CATEGORY_VALUE")) unknown += 1;
-        else missing += 1;
-      }
-      fieldCompleteness.push(metric(field, STAFF_FIELD_LABELS, "OPTIONAL_BUT_TRACKED", applicableValues.length, complete, missing, unknown, unmapped));
-    }
-    const response: StaffDataQualityResponse = {
-      scope: { employmentStatus, jenjangId },
-      totalStaff: values.length,
-      cleanRecords: perRecord.filter(({ issues }) => issues.length === 0).length,
-      recordsWithIssues: perRecord.filter(({ issues }) => issues.length > 0).length,
-      fieldCompleteness,
-      generatedAt: new Date().toISOString(),
-    };
-    return response;
+    return staffQuality(context, ctx.query);
   }, {
     query: t.Object({
       employment_status: t.Optional(t.String()),

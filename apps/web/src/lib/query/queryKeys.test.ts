@@ -50,6 +50,12 @@ describe("query-key conventions", () => {
     expect(first).not.toEqual(second);
   });
 
+  it("isolates management overview by shared scope filters", () => {
+    const first = queryKeys.analytics.managementOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 7 });
+    const second = queryKeys.analytics.managementOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 8 });
+    expect(first).not.toEqual(second);
+  });
+
   it("changes dashboard keys when the selected period changes", () => {
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));

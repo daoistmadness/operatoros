@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { Download } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState, SetupRequiredState } from "../components/common/state-message";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -20,14 +20,16 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 function score(value: number | null): string { return value === null ? "—" : value.toFixed(1); }
 function pct(value: number): string { return `${value.toFixed(1)}%`; }
+function queryId(value: string | null): number | null { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : null; }
 
 export default function AcademicAnalytics() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { can } = useAuth();
   const allowed = can("view_student");
-  const [academicYearId, setAcademicYearId] = useState<number | null>(null);
-  const [jenjangId, setJenjangId] = useState<number | null>(null);
-  const [classId, setClassId] = useState<number | null>(null);
+  const [academicYearId, setAcademicYearId] = useState<number | null>(() => queryId(searchParams.get("academic_year_id")));
+  const [jenjangId, setJenjangId] = useState<number | null>(() => queryId(searchParams.get("jenjang_id")));
+  const [classId, setClassId] = useState<number | null>(() => queryId(searchParams.get("class_id")));
   const [subjectId, setSubjectId] = useState<number | null>(null);
   const [assessmentType, setAssessmentType] = useState<"sumatif" | "formatif" | null>(null);
   const [search, setSearch] = useState("");
@@ -40,8 +42,8 @@ export default function AcademicAnalytics() {
   const years = filterQuery.data?.academic_years ?? [];
   useEffect(() => { if (academicYearId === null) setAcademicYearId((years.find((value) => value.is_default) ?? years[0])?.id ?? null); }, [academicYearId, years]);
   const options = useAcademicAnalyticsOptionsQuery(academicYearId, jenjangId, allowed);
-  useEffect(() => { if (classId !== null && !options.data?.classes.some((value) => value.id === classId)) setClassId(null); }, [classId, options.data]);
-  useEffect(() => { if (subjectId !== null && !options.data?.subjects.some((value) => value.id === subjectId)) setSubjectId(null); }, [options.data, subjectId]);
+  useEffect(() => { if (classId !== null && options.data && !options.data.classes.some((value) => value.id === classId)) setClassId(null); }, [classId, options.data]);
+  useEffect(() => { if (subjectId !== null && options.data && !options.data.subjects.some((value) => value.id === subjectId)) setSubjectId(null); }, [options.data, subjectId]);
   useEffect(() => { setPage(1); }, [academicYearId, jenjangId, classId, subjectId, assessmentType, search, sort, order]);
   const filters: AcademicAnalyticsFilters | null = academicYearId === null ? null : { academic_year_id: academicYearId, jenjang_id: jenjangId, class_id: classId, subject_id: subjectId, assessment_type: assessmentType };
   const overview = useAcademicAnalyticsOverviewQuery(filters, allowed);
