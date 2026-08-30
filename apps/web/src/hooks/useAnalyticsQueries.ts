@@ -16,6 +16,7 @@ import { getDashboardSnapshot } from "../lib/api/endpoints";
 import { queryKeys } from "../lib/query/queryKeys";
 import { fetchManagementOverview, type ManagementOverviewFilters } from "../api/managementOverview";
 import { fetchStudentTrendInsights, type StudentTrendFilters } from "../api/studentTrends";
+import { fetchStudentIndicatorInsights, type StudentIndicatorFilters } from "../api/studentIndicators";
 
 const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: number | null }) => ({
   academic_year_id: filters.academic_year_id ?? null,
@@ -58,6 +59,14 @@ export function useStudentTrendInsightsQuery(params: StudentTrendFilters | null,
   return useQuery({
     queryKey: params ? queryKeys.analytics.studentTrends(params) : ["analytics", "student-trends", "idle"],
     queryFn: () => fetchStudentTrendInsights(params as StudentTrendFilters),
+    enabled: enabled && params !== null,
+  });
+}
+
+export function useStudentIndicatorInsightsQuery(params: StudentIndicatorFilters | null, enabled = true) {
+  return useQuery({
+    queryKey: params ? queryKeys.analytics.studentIndicators(params) : ["analytics", "student-indicators", "idle"],
+    queryFn: () => fetchStudentIndicatorInsights(params as StudentIndicatorFilters),
     enabled: enabled && params !== null,
   });
 }
