@@ -210,3 +210,29 @@ Authorization uses `view_student` for analytics and the existing
 `export_student_data` capability for Excel. Filters narrow the server-side
 authorized scope. Subject-specific and global assessment components are
 counted once. No persisted academic rollups are created.
+
+## Management Analytics Overview (2026-08)
+
+The management overview is a concise entry point. It composes the existing
+recapitulation, attendance, academic, and data-quality authorities. It does
+not define a new cross-domain score or duplicate their formulas.
+
+### Sections and authority
+
+- School Snapshot uses active student enrollment and active staff records from
+  Data Recapitulation.
+- Attendance uses the effective-status and rate rules in Attendance Analytics.
+- Academic uses the score, average, and participation rules in Academic
+  Analytics.
+- Data Quality uses the student and staff completeness rules in Data Quality.
+
+### Scope and access
+
+The overview requires an academic year. Jenjang and class filters narrow the
+server-side scope. Attendance uses the selected academic-year date range by
+default. The overview returns only sections allowed by the actor's existing
+capabilities; hidden sections are not returned as data. Detail links preserve
+compatible academic-year, jenjang, and class filters.
+
+The overview has no dedicated export. Detailed analytics pages remain the
+authoritative export surfaces.

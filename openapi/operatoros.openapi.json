@@ -31643,6 +31643,21 @@
         "tags": ["analytics"]
       }
     },
+    "/api/analytics/management-overview": {
+      "get": {
+        "operationId": "getManagementAnalyticsOverview",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "attendance_date_from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
+          { "name": "attendance_date_to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get management analytics overview",
+        "tags": ["analytics"]
+      }
+    },
     "/api/analytics/academic/options": {
       "get": {
         "operationId": "getAcademicAnalyticsOptions",

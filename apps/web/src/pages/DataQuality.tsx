@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from "chart.js";
@@ -36,6 +37,7 @@ const issueTypeLabels: Record<string, string> = {
 
 export default function DataQuality() {
   const { can } = useAuth();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"students" | "staff">("students");
   const [studentStatus, setStudentStatus] = useState<string>("ACTIVE");
   const [staffEmploymentStatus, setStaffEmploymentStatus] = useState<string>("ACTIVE");
@@ -44,8 +46,9 @@ export default function DataQuality() {
   const [exporting, setExporting] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const studentScope = { status: studentStatus };
-  const staffScope = { employment_status: staffEmploymentStatus };
+  const scope = { academic_year_id: searchParams.get("academic_year_id") ?? undefined, jenjang_id: searchParams.get("jenjang_id") ?? undefined, class_id: searchParams.get("class_id") ?? undefined };
+  const studentScope = { ...scope, status: studentStatus };
+  const staffScope = { ...scope, employment_status: staffEmploymentStatus };
   const studentOverview = useQuery({
     queryKey: queryKeys.analytics.dataQuality("students", studentScope),
     queryFn: () => fetchStudentQuality(studentScope),

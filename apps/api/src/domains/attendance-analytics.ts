@@ -10,6 +10,7 @@ import {
   AttendanceOverviewResponseSchema,
   AttendanceStudentsResponseSchema,
   type AttendanceAnalyticsStatusCounts,
+  type AttendanceOverviewResponse,
 } from "@operatoros/contracts/analytics";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
@@ -243,6 +244,20 @@ function auditExport(context: AuthContext, user: { username: string; role: strin
   );
 }
 
+export function attendanceOverview(context: AuthContext, query: Row): AttendanceOverviewResponse | null {
+  const scope = buildScope(context, query);
+  if (!scope) return null;
+  const value = aggregate(context, scope, "overview");
+  const counts = countsFrom(value);
+  const total = totalRecords(counts);
+  return { scope: scopeMetadata(scope, total), totalRecords: total, students: Number(value.students ?? 0), classes: Number(value.classes ?? 0), counts, attendanceRate: attendanceRate(counts), tardinessRate: tardinessRate(counts), unexcusedAbsenceRate: unexcusedAbsenceRate(counts), overriddenRecords: Number(value.overridden ?? 0), overridePercentage: percentage(Number(value.overridden ?? 0), total), hebTotal: hebTotal(context, scope), generatedAt: new Date().toISOString() };
+}
+
+export function attendanceJenjangOverview(context: AuthContext, query: Row): Row[] | null {
+  const scope = buildScope(context, query);
+  return scope ? groupedRows(context, scope, "jenjang") : null;
+}
+
 export function attendanceAnalyticsRoutes(app: any, context: AuthContext): void {
   const options = { query: AttendanceAnalyticsQuerySchema };
   const authorized = (ctx: Context) => actor(context, ctx, { capability: "view_attendance" });
@@ -266,12 +281,7 @@ export function attendanceAnalyticsRoutes(app: any, context: AuthContext): void 
   app.get("/api/analytics/attendance/overview", (ctx: Context) => {
     const user = authorized(ctx);
     if (!user) return { detail: "Insufficient permissions" };
-    const scope = buildScope(context, ctx.query);
-    if (!scope) return fail(ctx.set, "The attendance analytics scope is invalid.");
-    const value = aggregate(context, scope, "overview");
-    const counts = countsFrom(value);
-    const total = totalRecords(counts);
-    return { scope: scopeMetadata(scope, total), totalRecords: total, students: Number(value.students ?? 0), classes: Number(value.classes ?? 0), counts, attendanceRate: attendanceRate(counts), tardinessRate: tardinessRate(counts), unexcusedAbsenceRate: unexcusedAbsenceRate(counts), overriddenRecords: Number(value.overridden ?? 0), overridePercentage: percentage(Number(value.overridden ?? 0), total), hebTotal: hebTotal(context, scope), generatedAt: new Date().toISOString() };
+    return attendanceOverview(context, ctx.query);
   }, { ...options, response: AttendanceOverviewResponseSchema });
 
   app.get("/api/analytics/attendance/classes", (ctx: Context) => {
