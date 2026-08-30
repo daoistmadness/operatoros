@@ -57,6 +57,9 @@ export const queryKeys = {
     cohorts: (dimension: "class" | "jenjang", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "cohorts", dimension, canonicalizeQueryFilters(filters)] as const,
     attendanceOptions: (academicYearId: number | null, jenjangId: number | null) => ["analytics", "attendance", "options", { academicYearId, jenjangId }] as const,
     attendance: (section: "overview" | "classes" | "jenjang" | "daily" | "students", filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "attendance", section, canonicalizeQueryFilters(filters)] as const,
+    academicOptions: (academicYearId: number | null, jenjangId: number | null) => ["analytics", "academic", "options", { academicYearId, jenjangId }] as const,
+    academicOverview: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "overview", canonicalizeQueryFilters(filters)] as const,
+    academicStudents: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "students", canonicalizeQueryFilters(filters)] as const,
   },
   students: {
     all: ["students"] as const,

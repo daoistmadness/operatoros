@@ -251,6 +251,7 @@ def main() -> int:
         connection.execute("INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('E2E Progression Subject',?,1,1)", (jenjang_id,))
         progression_subject_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute("INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES ('E2E Progression Score','sumatif',?)", (progression_subject_id,))
+        progression_component_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
 
         names = ("E2E Ada", "E2E Bima", "E2E Citra")
         source_classes = ("Legacy P1A", "Legacy P1B", "Legacy P1B")
@@ -316,6 +317,11 @@ def main() -> int:
         connection.execute(
             "INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from) VALUES (?,?,?,?,?,'Primary 1A',1,'2026-07-01')",
             (student_ids[0], master_ids[0], year_id, jenjang_id, active_class_id),
+        )
+        analytics_enrollment_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO student_subject_grades (enrollment_id,subject_id,component_id,score) VALUES (?,?,?,87.0)",
+            (analytics_enrollment_id, progression_subject_id, progression_component_id),
         )
     connection.close()
     seed_upload_conflicts(backend_src)

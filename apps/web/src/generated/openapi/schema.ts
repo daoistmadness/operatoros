@@ -5293,6 +5293,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/academic/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get academic analytics options */
+        get: operations["getAcademicAnalyticsOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/academic/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get academic analytics overview */
+        get: operations["getAcademicAnalyticsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/academic/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get academic analytics by student */
+        get: operations["getAcademicAnalyticsStudents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/academic/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export academic analytics */
+        get: operations["exportAcademicAnalyticsExcel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -19321,6 +19389,112 @@ export interface operations {
                 date_to: string;
                 jenjang_id?: string;
                 class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsOptions: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsOverview: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsStudents: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
+                search?: string;
+                sort?: "name" | "average" | "formative" | "summative" | "missing";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    exportAcademicAnalyticsExcel: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
             };
             header?: never;
             path?: never;
