@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { Download } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState, SetupRequiredState } from "../components/common/state-message";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -22,14 +22,16 @@ const STATUS_LABELS = { present: "Present", late: "Late", incomplete: "Incomplet
 type Sort = "name" | "attendance_rate" | "late" | "alfa";
 
 function pct(value: number) { return `${value.toFixed(2)}%`; }
+function queryId(value: string | null): number | null { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : null; }
 
 export default function AttendanceAnalytics() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { can } = useAuth();
   const allowed = can("view_attendance");
-  const [academicYearId, setAcademicYearId] = useState<number | null>(null);
-  const [jenjangId, setJenjangId] = useState<number | null>(null);
-  const [classId, setClassId] = useState<number | null>(null);
+  const [academicYearId, setAcademicYearId] = useState<number | null>(() => queryId(searchParams.get("academic_year_id")));
+  const [jenjangId, setJenjangId] = useState<number | null>(() => queryId(searchParams.get("jenjang_id")));
+  const [classId, setClassId] = useState<number | null>(() => queryId(searchParams.get("class_id")));
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
@@ -53,7 +55,7 @@ export default function AttendanceAnalytics() {
     const year = optionsQuery.data?.academicYears.find((item) => item.id === academicYearId);
     if (year && (!dateFrom || !dateTo)) { setDateFrom(year.startDate); setDateTo(year.endDate); }
   }, [academicYearId, dateFrom, dateTo, optionsQuery.data]);
-  useEffect(() => { if (classId !== null && !optionsQuery.data?.classes.some((item) => item.id === classId)) setClassId(null); }, [classId, optionsQuery.data]);
+  useEffect(() => { if (classId !== null && optionsQuery.data && !optionsQuery.data.classes.some((item) => item.id === classId)) setClassId(null); }, [classId, optionsQuery.data]);
   useEffect(() => { setPage(1); }, [academicYearId, jenjangId, classId, dateFrom, dateTo, search, sort, order]);
 
   const filters = useMemo<AttendanceAnalyticsFilters | null>(() => {

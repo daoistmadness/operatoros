@@ -5293,6 +5293,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/management-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get management analytics overview */
+        get: operations["getManagementAnalyticsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/academic/options": {
         parameters: {
             query?: never;
@@ -19403,6 +19420,32 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+        };
+    };
+    getManagementAnalyticsOverview: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                attendance_date_from?: string;
+                attendance_date_to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

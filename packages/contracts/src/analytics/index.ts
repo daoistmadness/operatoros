@@ -129,3 +129,4 @@ export * from "./data-quality";
 
 export * from "./attendance-expansion";
 export * from "./academic-expansion";
+export * from "./management-overview";
