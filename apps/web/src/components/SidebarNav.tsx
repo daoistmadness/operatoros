@@ -46,6 +46,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
     items: [
       { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck },
       { name: 'Class Attendance', path: '/attendance/class-entry', icon: CalendarDays },
+      { name: 'Daily Attendance', path: '/attendance/daily', icon: ClipboardList },
       { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },

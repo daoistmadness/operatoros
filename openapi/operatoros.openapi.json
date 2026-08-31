@@ -15162,6 +15162,20 @@
         ]
       }
     },
+    "/api/attendance/daily-status": {
+      "get": {
+        "operationId": "getDailyAttendanceStatus",
+        "parameters": [
+          { "name": "date", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
+          { "name": "academic_year_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get daily attendance recording coverage",
+        "tags": ["attendance"]
+      }
+    },
     "/api/attendance/classes/assigned": {
       "get": {
         "description": "Return active classes assigned to the current user (or all active classes for admin).",

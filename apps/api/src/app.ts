@@ -37,6 +37,7 @@ import { uploadConflictRoutes } from "./domains/upload-conflicts";
 import { studentUpdateRoutes } from "./domains/student-update";
 import { studentOverviewRoutes } from "./domains/student-overview";
 import { classOverviewRoutes } from "./domains/class-overview";
+import { dailyAttendanceRoutes } from "./domains/daily-attendance";
 import { openApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
@@ -101,6 +102,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     studentUpdateRoutes(app, context);
     studentOverviewRoutes(app, context);
     classOverviewRoutes(app, context);
+    dailyAttendanceRoutes(app, context);
     safetyRoutes(app, context, {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,

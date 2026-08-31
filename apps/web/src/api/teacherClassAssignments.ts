@@ -143,11 +143,11 @@ export async function reactivateTeacherClassAssignment(id: number): Promise<Teac
 }
 
 export async function fetchAssignedClasses(): Promise<AssignedClassSummary[]> {
-  const response = await apiRequest<AssignedClassSummary[]>({
+  const response = await apiRequest<{ classes: AssignedClassSummary[] }>({
     path: "/api/attendance/classes/assigned",
     method: "GET",
   });
-  return response.data;
+  return response.data.classes;
 }
 
 export async function fetchClassAttendanceForDate(

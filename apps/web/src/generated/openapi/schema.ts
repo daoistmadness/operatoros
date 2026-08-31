@@ -1749,6 +1749,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/daily-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get daily attendance recording coverage */
+        get: operations["getDailyAttendanceStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/classes/assigned": {
         parameters: {
             query?: never;
@@ -11577,6 +11594,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getDailyAttendanceStatus: {
+        parameters: {
+            query: {
+                date: string;
+                academic_year_id?: string;
+                jenjang_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };
