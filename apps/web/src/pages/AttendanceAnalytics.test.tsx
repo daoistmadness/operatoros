@@ -56,7 +56,6 @@ describe("AttendanceAnalytics", () => {
   it("renders server-computed attendance sections and filters", async () => {
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
     await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 500)); });
     await vi.waitFor(() => expect(container.textContent).toContain("Attendance Analytics"), { timeout: 3000 });
     expect(container.textContent).toContain("Attendance Analytics");
     expect(container.textContent).toContain("62.50%");

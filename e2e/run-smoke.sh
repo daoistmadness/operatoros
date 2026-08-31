@@ -26,6 +26,12 @@ cleanup_runtime_root() {
 
 export OPERATOROS_E2E_ADMIN_USERNAME="${OPERATOROS_E2E_ADMIN_USERNAME:-operatoros_e2e_admin}"
 export OPERATOROS_E2E_ADMIN_PASSWORD="${OPERATOROS_E2E_ADMIN_PASSWORD:-E2E-Admin-2026-Secure!}"
+# The browser suite logs the same disposable account once per test. Keep the
+# fixture's login budget above the suite count; rate-limit behavior is covered
+# by the API security tests, not by repeated browser setup.
+export LOGIN_RATE_LIMIT_PER_IP="${LOGIN_RATE_LIMIT_PER_IP:-1000}"
+export LOGIN_RATE_LIMIT_PER_ACCOUNT="${LOGIN_RATE_LIMIT_PER_ACCOUNT:-1000}"
+export LOGIN_RATE_LIMIT_GLOBAL="${LOGIN_RATE_LIMIT_GLOBAL:-1000}"
 export OPERATOROS_E2E_DATABASE="$database"
 export OPERATOROS_DATA_DIR="$workspace/state"
 export BACKUP_DIR="$workspace/state/backups"
