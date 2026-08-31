@@ -30,6 +30,7 @@ const expectedPaths = [
   '/academic-management',
   '/teacher-class-assignments',
   '/attendance/class-entry',
+  '/attendance/daily',
   '/classes/:id',
   '/attendance/departure-policies',
   '/attendance/class-departures',
