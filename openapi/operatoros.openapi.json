@@ -31728,6 +31728,7 @@
           { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
           { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
           { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "student_id", "in": "query", "required": false, "schema": { "type": "string", "minLength": 1, "maxLength": 64 } },
           { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
           { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_rate", "attendance_delta", "tardiness_rate", "tardiness_delta", "alfa_rate", "alfa_delta", "academic_average", "academic_participation"] } },
           { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
@@ -31747,6 +31748,7 @@
           { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
           { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
           { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "student_id", "in": "query", "required": false, "schema": { "type": "string", "minLength": 1, "maxLength": 64 } },
           { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
           { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_delta", "academic_delta", "tardiness_delta", "alfa_delta"] } },
           { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
@@ -31756,6 +31758,15 @@
         "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
         "summary": "Get student trend insights",
         "tags": ["analytics"]
+      }
+    },
+    "/api/student-masters/{student_master_id}/overview": {
+      "get": {
+        "operationId": "getStudentOverview",
+        "parameters": [{ "name": "student_master_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get integrated student overview",
+        "tags": ["student-masters"]
       }
     }
   }

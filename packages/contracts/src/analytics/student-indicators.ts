@@ -7,6 +7,7 @@ export const StudentIndicatorQuerySchema = Type.Object({
   academic_year_id: Id,
   jenjang_id: Type.Optional(Id),
   class_id: Type.Optional(Id),
+  student_id: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
   search: Type.Optional(Type.String({ maxLength: 120 })),
   sort: Type.Optional(Type.Union([
     Type.Literal("name"),

@@ -83,8 +83,8 @@ function academicParticipation(value: Row): number | null {
   return expected > 0 ? roundHalfEven(Number(value.academic_scored_results ?? 0) / expected * 100, 1) : null;
 }
 
-function aggregateQuery(scope: StudentTrendScope, window: StudentTrendDateWindow, search: string, sort: string, order: "ASC" | "DESC", page: number, pageSize: number): { sql: string; params: unknown[] } {
-  const base = studentTrendScopeCte(scope, search);
+function aggregateQuery(scope: StudentTrendScope, window: StudentTrendDateWindow, search: string, sort: string, order: "ASC" | "DESC", page: number, pageSize: number, studentMasterId = ""): { sql: string; params: unknown[] } {
+  const base = studentTrendScopeCte(scope, search, studentMasterId);
   const hasPrevious = window.previousStart !== null && window.previousEnd !== null;
   const periodCase = hasPrevious ? "CASE WHEN a.date >= ? AND a.date <= ? THEN 'current' ELSE 'previous' END" : "'current'";
   const periodWhere = hasPrevious ? "(a.date >= ? AND a.date <= ? OR a.date >= ? AND a.date <= ?)" : "(a.date >= ? AND a.date <= ?)";
@@ -195,13 +195,14 @@ function responseMetric(value: Row, id: string, label: string, domain: "attendan
 export function studentIndicatorInsights(context: AuthContext, query: Row, canAttendance = true): StudentIndicatorInsightsResponse {
   const scope = buildStudentTrendScope(context, query);
   const windowKind = query.window === "term" ? "term" : "rolling_4w";
-  const window = resolveStudentTrendWindow(context, scope, windowKind);
+  const studentMasterId = String(query.student_id ?? "");
+  const window = resolveStudentTrendWindow(context, scope, windowKind, studentMasterId);
   const page = Math.max(1, Number(query.page ?? 1));
   const pageSize = Math.min(200, Math.max(1, Number(query.page_size ?? 25)));
   const search = String(query.search ?? "").trim();
   const sort = String(query.sort ?? "name");
   const order = String(query.order ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
-  const built = aggregateQuery(scope, window, search, sort, order, page, pageSize);
+  const built = aggregateQuery(scope, window, search, sort, order, page, pageSize, studentMasterId);
   const values = rows(context, built.sql, built.params);
   const comparisonAvailable = window.previousStart !== null;
   const resultRows = values.map((value) => {
