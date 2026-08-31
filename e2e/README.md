@@ -84,6 +84,12 @@ The full suite is for GitHub Actions. Local execution is rejected unless an owne
 
 The backend smoke suite covers health/authentication and the approved critical API scenarios. The web smoke suite covers login-state detection, attendance navigation, synthetic upload behavior, preview-only Class Allocation, grades, both Excel formats, report downloads, backup download, and read-only restore preflight. All E2E workflows run against Elysia.
 
+The browser suite logs the same disposable account once per test. The E2E
+launcher raises only the disposable server's login buckets above the suite
+count so repeated browser setup does not become a cross-test rate-limit
+collision. Login rate-limit behavior remains covered by the API security
+suite.
+
 ## 9. Generated directories
 
 - `.runtime/operatoros-e2e/` contains per-invocation database, runtime state, backups, session identity, and selected ports.
