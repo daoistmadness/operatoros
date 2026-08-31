@@ -1,5 +1,6 @@
 import React, { Component, useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
 import { createAssessmentSession, fetchAcademicYears, fetchAssessmentSessions, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
@@ -18,6 +19,11 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "Grade data could not be processed. Check your connection and retry.";
+}
+
+function queryNumber(value: string | null): number | null {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 async function fetchLedgerRows(academicYearId: number, jenjangId: number, assessmentSessionId: number): Promise<GradeMatrixEnrollment[]> {
@@ -83,14 +89,18 @@ class GradeLedgerErrorBoundary extends Component<React.PropsWithChildren, Bounda
 
 function GradeLedgerContent() {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const requestedAcademicYearId = queryNumber(searchParams.get("academic_year_id"));
+  const requestedAssessmentSessionId = queryNumber(searchParams.get("assessment_session_id"));
+  const requestedSubjectId = queryNumber(searchParams.get("subject_id"));
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(null);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(requestedAcademicYearId);
   const [assessmentSessions, setAssessmentSessions] = useState<AcademicAssessmentSession[]>([]);
   const [selectedAssessmentSessionId, setSelectedAssessmentSessionId] = useState<number | null>(null);
   const [newSessionTerm, setNewSessionTerm] = useState(1);
   const [newSessionLabel, setNewSessionLabel] = useState("");
   const [newSessionDate, setNewSessionDate] = useState("");
-  const [jenjangId, setJenjangId] = useState<number>(JENJANG_OPTIONS[0].id);
+  const [jenjangId, setJenjangId] = useState<number>(queryNumber(searchParams.get("jenjang_id")) ?? JENJANG_OPTIONS[0].id);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [components, setComponents] = useState<AssessmentComponent[]>([]);
@@ -138,7 +148,7 @@ function GradeLedgerContent() {
 
       setAcademicYears(yearsPayload);
       setComponents(componentsPayload);
-      setSelectedAcademicYearId(defaultYear?.id ?? null);
+      setSelectedAcademicYearId(yearsPayload.some((year) => year.id === requestedAcademicYearId) ? requestedAcademicYearId : defaultYear?.id ?? null);
       setAssessmentSessions([]);
       setSelectedAssessmentSessionId(null);
     } catch (loadError) {
@@ -150,7 +160,7 @@ function GradeLedgerContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [requestedAcademicYearId]);
 
   const loadAssessmentSessionData = useCallback(async (academicYearId: number) => {
     setSelectedAssessmentSessionId(null);
@@ -159,12 +169,12 @@ function GradeLedgerContent() {
     try {
       const sessions = await fetchAssessmentSessions(academicYearId);
       setAssessmentSessions(sessions);
-      setSelectedAssessmentSessionId(sessions[0]?.id ?? null);
+      setSelectedAssessmentSessionId(sessions.some((session) => session.id === requestedAssessmentSessionId) ? requestedAssessmentSessionId : sessions[0]?.id ?? null);
     } catch (loadError) {
       console.error("Grade Ledger assessment session failure", loadError);
       setError(getErrorMessage(loadError));
     }
-  }, []);
+  }, [requestedAssessmentSessionId]);
 
   const loadSubjects = useCallback(async (nextJenjangId: number) => {
     setError("");
@@ -177,6 +187,10 @@ function GradeLedgerContent() {
           return currentSubjectId;
         }
 
+        if (requestedSubjectId && subjectsPayload.some((subject) => subject.id === requestedSubjectId)) {
+          return requestedSubjectId;
+        }
+
         return subjectsPayload[0]?.id ?? null;
       });
     } catch (loadError) {
@@ -185,7 +199,7 @@ function GradeLedgerContent() {
       setSubjects([]);
       setSelectedSubjectId(null);
     }
-  }, []);
+  }, [requestedSubjectId]);
 
   const loadLedgerData = useCallback(async () => {
     if (!selectedAcademicYearId || selectedAssessmentSessionId === null) {

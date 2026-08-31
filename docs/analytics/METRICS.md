@@ -362,3 +362,45 @@ distinct students with an attendance row for that date.
 - No school-day, deadline, or submission calendar exists in the current
   model. `NONE` therefore means `No attendance recorded`, not overdue or
   failed submission.
+
+## Academic Assessment Operations (2026-09)
+
+Assessment Operations reports score-entry coverage for session-backed academic
+records. Its API is `/api/grades/assessment-operations` and is available under
+the current administrator-only grade-entry authority.
+
+The operational row is a `session × class × subject` scope. The current
+assessment-session table stores the academic year, term, label, and optional
+assessment date, but it does not store class or subject ownership. The page
+therefore does not claim that a session belongs to one class or subject.
+
+- Sessions with a non-null assessment date use active, class-assigned,
+  canonical student-master enrollments effective on that date.
+- Sessions without an assessment date use the active enrollment snapshot for
+  the selected academic year. The UI shows `Date not recorded` and never uses
+  `created_at` as a substitute.
+- `applicableStudentCount` is the distinct active canonical student count for
+  the class scope. Duplicate enrollment rows contribute one student.
+- `recordedScoreCount` is the distinct applicable-student count with at least
+  one canonical non-null score for the session and subject. A valid score of
+  zero is recorded data. A null score is not recorded.
+- Legacy grade rows without `assessment_session_id` are period-unknown and are
+  excluded from operational session coverage. Out-of-scope score rows do not
+  increase coverage.
+- `unrecordedScoreCount` is the server-side difference between applicable and
+  recorded students. It is not a failure, absence, overdue state, or risk
+  signal.
+
+Coverage states are neutral data-entry states:
+
+- `COMPLETE`: applicable students are greater than zero and all have a
+  recorded score.
+- `PARTIAL`: at least one, but not all, applicable students have a recorded
+  score.
+- `NONE`: applicable students exist and no score is recorded.
+- `EMPTY`: no applicable students exist.
+
+Coverage percentages use the existing round-half-even convention to one
+decimal place and are null for `EMPTY`. The endpoint uses bounded server-side
+aggregation and returns only the requested page. It does not create scores,
+averages, KKM decisions, deadlines, rollups, alerts, or risk classifications.
