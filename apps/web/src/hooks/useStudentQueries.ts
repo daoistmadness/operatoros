@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   commitRoster, commitStudentUpdate, createEnrollment, createStudent, endEnrollment, exportStudentTemplate,
-  fetchStudent, fetchStudentEnrollments, fetchStudentHistory, fetchStudentQuality, fetchStudents, exportStudentsCsv, updateStudentHealth, updateStudentDocuments, addStudentGuardian, updateStudentGuardian, deleteStudentGuardian,
+  fetchStudent, fetchStudentOverview, fetchStudentEnrollments, fetchStudentHistory, fetchStudentQuality, fetchStudents, exportStudentsCsv, updateStudentHealth, updateStudentDocuments, addStudentGuardian, updateStudentGuardian, deleteStudentGuardian,
   previewRoster, previewStudentUpdate, reassignDeviceIdentity, replaceDeviceIdentity, retireDeviceIdentity, StudentFilters, transferEnrollment,
   updateStudent,
   fetchLegacyLinkStatus, linkLegacyStudent,
@@ -10,6 +10,7 @@ import { queryKeys } from "../lib/query/queryKeys";
 
 export const useStudents = (filters: StudentFilters) => useQuery({ queryKey: queryKeys.students.list(filters), queryFn: () => fetchStudents(filters), placeholderData: (previous) => previous });
 export const useStudent = (id?: string) => useQuery({ queryKey: queryKeys.students.detail(id || ""), queryFn: () => fetchStudent(id!), enabled: Boolean(id) });
+export const useStudentOverview = (id?: string) => useQuery({ queryKey: queryKeys.students.overview(id || ""), queryFn: () => fetchStudentOverview(id!), enabled: Boolean(id) });
 export const useLegacyLinkStatus = (id?: string) => useQuery({ queryKey: queryKeys.students.legacyLink(id || ""), queryFn: () => fetchLegacyLinkStatus(id!), enabled: Boolean(id) });
 export const useStudentQuality = () => useQuery({ queryKey: queryKeys.students.quality, queryFn: fetchStudentQuality });
 export const useStudentHistory = (id?: string) => useQuery({ queryKey: queryKeys.students.history(id || ""), queryFn: () => fetchStudentHistory(id!), enabled: Boolean(id) });
@@ -22,6 +23,7 @@ function useStudentDomainInvalidation(id?: string) {
     await client.invalidateQueries({ queryKey: queryKeys.students.quality });
     if (id) {
       await client.invalidateQueries({ queryKey: queryKeys.students.detail(id) });
+      await client.invalidateQueries({ queryKey: queryKeys.students.overview(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.history(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.enrollments(id) });
       await client.invalidateQueries({ queryKey: queryKeys.students.legacyLink(id) });

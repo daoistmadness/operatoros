@@ -8,6 +8,7 @@ export const StudentTrendQuerySchema = Type.Object({
   academic_year_id: Id,
   jenjang_id: Type.Optional(Id),
   class_id: Type.Optional(Id),
+  student_id: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
   search: Type.Optional(Type.String({ maxLength: 120 })),
   sort: Type.Optional(Type.Union([
     Type.Literal("name"),
@@ -21,7 +22,7 @@ export const StudentTrendQuerySchema = Type.Object({
   page_size: Type.Optional(Type.String({ pattern: "^[1-9]\\d*$" })),
 });
 
-const TrendMetricSchema = Type.Object({
+export const StudentTrendMetricSchema = Type.Object({
   unit: Type.Union([Type.Literal("percent"), Type.Literal("score"), Type.Literal("count")]),
   current: Type.Union([Type.Number(), Type.Null()]),
   previous: Type.Union([Type.Number(), Type.Null()]),
@@ -60,10 +61,10 @@ const StudentTrendRowSchema = Type.Object({
   studentName: Type.String({ minLength: 1 }),
   className: Type.Union([Type.String(), Type.Null()]),
   jenjang: Type.Union([Type.String(), Type.Null()]),
-  attendance: Type.Union([TrendMetricSchema, Type.Null()]),
-  academic: TrendMetricSchema,
-  tardiness: Type.Union([TrendMetricSchema, Type.Null()]),
-  alfa: Type.Union([TrendMetricSchema, Type.Null()]),
+  attendance: Type.Union([StudentTrendMetricSchema, Type.Null()]),
+  academic: StudentTrendMetricSchema,
+  tardiness: Type.Union([StudentTrendMetricSchema, Type.Null()]),
+  alfa: Type.Union([StudentTrendMetricSchema, Type.Null()]),
 });
 
 export const StudentTrendInsightsResponseSchema = Type.Object({
@@ -78,5 +79,5 @@ export const StudentTrendInsightsResponseSchema = Type.Object({
 
 export type StudentTrendQuery = Static<typeof StudentTrendQuerySchema>;
 export type StudentTrendWindow = Static<typeof StudentTrendWindowSchema>;
-export type StudentTrendMetric = Static<typeof TrendMetricSchema>;
+export type StudentTrendMetric = Static<typeof StudentTrendMetricSchema>;
 export type StudentTrendInsightsResponse = Static<typeof StudentTrendInsightsResponseSchema>;

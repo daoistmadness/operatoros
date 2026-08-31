@@ -120,6 +120,23 @@ function studentIssuesFor(value: Row): DataQualityIssueEntry[] {
   return issues;
 }
 
+export function studentQualityIssues(context: AuthContext, studentMasterId: string, academicYearId: number): DataQualityIssueEntry[] {
+  const value = row(context, `SELECT m.gender, m.religion, m.birth_date,
+      e.lifecycle_state, c.class_name
+    FROM student_masters m
+    LEFT JOIN student_enrollments e ON e.id = (
+      SELECT e2.id FROM student_enrollments e2
+       WHERE e2.student_master_id = m.id AND e2.academic_year_id = ? AND e2.effective_to IS NULL
+       ORDER BY CASE WHEN e2.lifecycle_state = 'ACTIVE' THEN 0 ELSE 1 END, e2.id DESC LIMIT 1
+    )
+    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
+    WHERE m.id = ?`, [academicYearId, studentMasterId]);
+  if (!value) return [];
+  const issues = studentIssuesFor(value);
+  if (!value.lifecycle_state) issues.unshift({ field: "enrollment", type: "MISSING_ENROLLMENT", label: "Missing current enrollment" });
+  return issues;
+}
+
 function requiredIssueCount(issues: DataQualityIssueEntry[]): number {
   return issues.filter((issue) => issue.type !== "MISSING_OPTIONAL_FIELD").length;
 }
