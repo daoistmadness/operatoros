@@ -103,11 +103,12 @@ function buildScope(context: AuthContext, query: Row): AttendanceScope | null {
 
 interface BuiltQuery { sql: string; params: unknown[] }
 
-function scopedCte(scope: AttendanceScope, search = ""): BuiltQuery {
+function scopedCte(scope: AttendanceScope, search = "", studentId: number | null = null): BuiltQuery {
   const filters = ["a.date >= ?", "a.date <= ?"];
   const params: unknown[] = [scope.dateFrom, scope.dateTo, scope.academicYearId];
   if (scope.jenjangId !== null) { filters.push("e.jenjang_id = ?"); params.push(scope.jenjangId); }
   if (scope.classId !== null) { filters.push("e.academic_class_id = ?"); params.push(scope.classId); }
+  if (studentId !== null) { filters.push("a.student_id = ?"); params.push(studentId); }
   if (search) { filters.push("lower(s.name) LIKE ?"); params.push(`%${search.toLowerCase()}%`); }
   return {
     sql: `WITH ranked AS (
@@ -211,8 +212,8 @@ function groupedRows(context: AuthContext, scope: AttendanceScope, group: Exclud
   return values.map((value) => responseRow(value, group)).sort((left, right) => String(left.date ?? left.className ?? left.jenjang ?? "").localeCompare(String(right.date ?? right.className ?? right.jenjang ?? "")));
 }
 
-function studentRows(context: AuthContext, scope: AttendanceScope, search: string, sort: string, direction: "ASC" | "DESC", page: number, pageSize: number): { rows: Row[]; total: number; records: number } {
-  const base = scopedCte(scope, search);
+function studentRows(context: AuthContext, scope: AttendanceScope, search: string, sort: string, direction: "ASC" | "DESC", page: number, pageSize: number, studentId: number | null = null): { rows: Row[]; total: number; records: number } {
+  const base = scopedCte(scope, search, studentId);
   const order = sort === "late" ? "late" : sort === "alfa" ? "alfa" : sort === "attendance_rate" ? "attendance_rate" : "label";
   const offset = (page - 1) * pageSize;
   const sql = `${base.sql}, aggregated AS (
@@ -251,6 +252,13 @@ export function attendanceOverview(context: AuthContext, query: Row): Attendance
   const counts = countsFrom(value);
   const total = totalRecords(counts);
   return { scope: scopeMetadata(scope, total), totalRecords: total, students: Number(value.students ?? 0), classes: Number(value.classes ?? 0), counts, attendanceRate: attendanceRate(counts), tardinessRate: tardinessRate(counts), unexcusedAbsenceRate: unexcusedAbsenceRate(counts), overriddenRecords: Number(value.overridden ?? 0), overridePercentage: percentage(Number(value.overridden ?? 0), total), hebTotal: hebTotal(context, scope), generatedAt: new Date().toISOString() };
+}
+
+export function attendanceStudentSummary(context: AuthContext, query: Row, studentId: number): Row | null {
+  const scope = buildScope(context, query);
+  if (!scope) return null;
+  const result = studentRows(context, scope, "", "name", "ASC", 1, 1, studentId);
+  return result.rows[0] ?? null;
 }
 
 export function attendanceJenjangOverview(context: AuthContext, query: Row): Row[] | null {

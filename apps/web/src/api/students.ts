@@ -4,9 +4,11 @@ import type {
   LegacyLinkStatus,
   ManagedStudent,
   StudentListResponse,
+  StudentOverviewResponse,
 } from "@operatoros/contracts/students";
 
 export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, StudentListResponse } from "@operatoros/contracts/students";
+export type { StudentOverviewResponse } from "@operatoros/contracts/students";
 
 export type StudentFilters = {
   search?: string;
@@ -43,6 +45,10 @@ export async function fetchStudents(filters: StudentFilters): Promise<StudentLis
 
 export async function fetchStudent(id: string): Promise<StudentProfile> {
   return (await apiRequest<StudentProfile>({ path: `/api/student-masters/${id}/profile` })).data;
+}
+
+export async function fetchStudentOverview(id: string): Promise<StudentOverviewResponse> {
+  return (await apiRequest<StudentOverviewResponse>({ path: `/api/student-masters/${id}/overview` })).data;
 }
 
 export async function fetchLegacyLinkStatus(id: string): Promise<LegacyLinkStatus> {
