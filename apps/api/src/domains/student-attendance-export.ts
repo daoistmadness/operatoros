@@ -61,6 +61,18 @@ function clockText(value: unknown): string | null {
   return String(value).slice(0, 5);
 }
 
+export function recentStudentAttendance(context: AuthContext, studentMasterId: string, limit = 10): Array<{ date: string; status: string; checkIn: string | null; checkOut: string | null; corrected: boolean }> {
+  const studentIds = rows(context, "SELECT legacy_student_id FROM student_device_identities WHERE student_master_id = ? AND is_active = 1", [studentMasterId]).map((value) => Number(value.legacy_student_id));
+  if (!studentIds.length) return [];
+  return effectiveRows(context, studentIds, null, null).slice(-limit).reverse().map((value) => ({
+    date: String(value.date),
+    status: effectiveStatus(value),
+    checkIn: clockText(value.override_check_in ?? value.check_in),
+    checkOut: clockText(value.override_check_out ?? value.check_out),
+    corrected: Boolean(value.override_status),
+  }));
+}
+
 function lateText(value: Row): string {
   const minutes = lateDurationMinutes(value);
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;

@@ -84,7 +84,7 @@ function masterSummary(value: Row): Row {
   };
 }
 
-function studentDetail(client: AuthContext["database"]["client"], value: Row, includeAttendanceIdentity = false): Row {
+export function studentDetail(client: AuthContext["database"]["client"], value: Row, includeAttendanceIdentity = false): Row {
   const identityFields = ["full_name", "preferred_name", "nipd", "nisn", "nik", "birth_place", "birth_date", "gender", "religion", "citizenship", "blood_type", "student_status", "admission_date", "admission_type", "previous_school"];
   const identity = Object.fromEntries(identityFields.map((field) => [field, value[field] ?? null]));
   const address = row(client, "SELECT * FROM student_addresses WHERE student_master_id = ?", [value.id]);
