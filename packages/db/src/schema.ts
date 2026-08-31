@@ -1,4 +1,4 @@
-// Accepted S4.3 schema snapshot. Runtime schema is validated by the migration manifest.
+// Accepted S4.4 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -133,6 +133,15 @@ export const academic_term_configs = sqliteTable("academic_term_configs", {
     "label": text().notNull(),
     "start_date": text().notNull(),
     "end_date": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const academic_assessment_sessions = sqliteTable("academic_assessment_sessions", {
+    "id": integer().primaryKey(),
+    "academic_year_id": integer().notNull(),
+    "term_number": integer().notNull(),
+    "label": text().notNull(),
+    "assessment_date": text(),
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -948,6 +957,7 @@ export const student_subject_grades = sqliteTable("student_subject_grades", {
     "enrollment_id": integer().notNull(),
     "subject_id": integer().notNull(),
     "component_id": integer().notNull(),
+    "assessment_session_id": integer(),
     "score": real(),
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),

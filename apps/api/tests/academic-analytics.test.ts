@@ -62,7 +62,7 @@ describe("academic analytics expansion", () => {
       expect(body.jenjang).toHaveLength(1);
       expect(body.assessments).toHaveLength(3);
       expect(body.scope.term).toBeNull();
-      expect(body.metricDefinitions.term).toContain("no term field");
+      expect(body.metricDefinitions.term).toContain("period-unknown");
     } finally { value.cleanup(); }
   }, 30000);
 
@@ -97,6 +97,43 @@ describe("academic analytics expansion", () => {
       expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(["Summary", "Subjects", "Classes", "Jenjang", "Assessments", "Students", "Distribution"]);
       expect(workbook.getWorksheet("Summary")?.getRow(2).getCell(2).value).toBe("2026/2027-academic");
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM student_subject_grades").get() as { count: number }).count)).toBe(before);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("filters session-attributed scores and compares adjacent academic terms", async () => {
+    const value = await setup("timeline");
+    try {
+      const enrollment = value.database.client.query("SELECT id, student_master_id FROM student_enrollments WHERE student_id = 701 AND academic_year_id = ?").get(value.yearId) as { id: number; student_master_id: string };
+      const math = value.database.client.query("SELECT id FROM subjects WHERE name = 'Mathematics'").get() as { id: number };
+      const quiz = value.database.client.query("SELECT id FROM assessment_components WHERE name = 'Quiz'").get() as { id: number };
+      const invalidDate = await value.app.handle(new Request("http://local/api/grades/assessment-sessions", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: value.yearId, term_number: 1, label: "Invalid date", assessment_date: "not-a-date" }) }));
+      expect(invalidDate.status).toBe(400);
+      const outsideTerm = await value.app.handle(new Request("http://local/api/grades/assessment-sessions", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: value.yearId, term_number: 1, label: "Outside term", assessment_date: "2026-11-15" }) }));
+      expect(outsideTerm.status).toBe(400);
+      const makeSession = async (term: number, label: string, date: string) => {
+        const response = await value.app.handle(new Request("http://local/api/grades/assessment-sessions", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: value.yearId, term_number: term, label, assessment_date: date }) }));
+        expect(response.status).toBe(200);
+        return await response.json() as { id: number };
+      };
+      const first = await makeSession(1, "Term 1 quiz", "2026-08-15");
+      const second = await makeSession(2, "Term 2 quiz", "2026-11-15");
+      value.database.client.run("INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)", [enrollment.id, math.id, quiz.id, first.id, 70, enrollment.id, math.id, quiz.id, second.id, 80]);
+
+      const termOne = await value.app.handle(new Request(`http://local/api/analytics/academic/overview?academic_year_id=${value.yearId}&term=term_1`, { headers: { cookie: value.admin } }));
+      expect(termOne.status).toBe(200);
+      expect(await termOne.json()).toMatchObject({ scope: { term: 1 }, summary: { scoredResults: 1, score: { average: 70 } } });
+      const trends = await value.app.handle(new Request(`http://local/api/analytics/student-trends?academic_year_id=${value.yearId}&student_id=${enrollment.student_master_id}&window=term`, { headers: { cookie: value.admin } }));
+      expect(trends.status).toBe(200);
+      expect((await trends.json() as any).rows[0].academic).toMatchObject({ current: 80, previous: 70, delta: 10, currentSampleSize: 1, previousSampleSize: 1 });
+      const overview = await value.app.handle(new Request(`http://local/api/student-masters/${enrollment.student_master_id}/overview`, { headers: { cookie: value.admin } }));
+      expect(overview.status).toBe(200);
+      const overviewBody = await overview.json() as any;
+      expect(overviewBody).toMatchObject({ academic: { temporalTrend: "available" } });
+      expect(overviewBody.academic.history.filter((value: any) => value.periodStatus === "known")).toEqual([
+        expect.objectContaining({ periodStatus: "known", termNumber: 1 }),
+        expect.objectContaining({ periodStatus: "known", termNumber: 2 }),
+      ]);
+      expect(overviewBody.academic.history.filter((value: any) => value.periodStatus === "unknown")).toHaveLength(3);
     } finally { value.cleanup(); }
   }, 30000);
 });

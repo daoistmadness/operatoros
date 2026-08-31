@@ -1,8 +1,9 @@
 import { t } from "elysia";
-import { GradeGridSaveRequestSchema } from "@operatoros/contracts/grades";
+import { AcademicAssessmentSessionSchema, CreateAcademicAssessmentSessionSchema, GradeGridSaveRequestSchema } from "@operatoros/contracts/grades";
 import { inTransaction } from "@operatoros/db";
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
+import { validateAssessmentDate } from "./academic-timeline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -90,20 +91,54 @@ function serializeEnrollment(context: AuthContext, value: Row): Row {
 }
 
 export function gradeRoutes(app: any, context: AuthContext): any {
+  app.get("/api/grades/assessment-sessions", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const yearId = Number(ctx.query.academic_year_id);
+    if (!row(context, "SELECT id FROM academic_years WHERE id = ?", [yearId])) return fail(ctx.set, 404, "Academic year not found");
+    return rows(context, `SELECT id, academic_year_id, term_number, label, assessment_date
+      FROM academic_assessment_sessions WHERE academic_year_id = ? ORDER BY term_number, assessment_date IS NULL, assessment_date, id`, [yearId]);
+  }, { query: t.Object({ academic_year_id: t.String() }), response: t.Array(AcademicAssessmentSessionSchema) });
+
+  app.post("/api/grades/assessment-sessions", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const year = row(context, "SELECT id, start_date, end_date, status FROM academic_years WHERE id = ?", [ctx.body.academic_year_id]);
+    if (!year) return fail(ctx.set, 404, "Academic year not found");
+    if (year.status === "closed") return fail(ctx.set, 409, "Closed academic years cannot receive new assessment sessions");
+    const label = ctx.body.label.trim();
+    if (!label) return fail(ctx.set, 400, "Assessment session label is required");
+    const assessmentDate = ctx.body.assessment_date ?? null;
+    const dateError = validateAssessmentDate(context, Number(ctx.body.academic_year_id), Number(ctx.body.term_number), assessmentDate);
+    if (dateError) return fail(ctx.set, 400, dateError);
+    try {
+      const result = context.database.client.run(
+        "INSERT INTO academic_assessment_sessions (academic_year_id, term_number, label, assessment_date) VALUES (?, ?, ?, ?)",
+        [ctx.body.academic_year_id, ctx.body.term_number, label, assessmentDate],
+      );
+      return row(context, "SELECT id, academic_year_id, term_number, label, assessment_date FROM academic_assessment_sessions WHERE id = ?", [Number(result.lastInsertRowid)]);
+    } catch {
+      return fail(ctx.set, 409, "Assessment session could not be created");
+    }
+  }, { body: CreateAcademicAssessmentSessionSchema, response: AcademicAssessmentSessionSchema });
+
   app.get("/api/grades/ledger", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
     const yearId = Number(ctx.query.academic_year_id);
     const jenjangClause = ctx.query.jenjang_id === undefined ? "" : " AND e.jenjang_id = ?";
     const params = ctx.query.jenjang_id === undefined ? [yearId] : [yearId, Number(ctx.query.jenjang_id)];
+    const sessionId = ctx.query.assessment_session_id === undefined ? null : Number(ctx.query.assessment_session_id);
+    if (sessionId !== null && !row(context, "SELECT id FROM academic_assessment_sessions WHERE id = ? AND academic_year_id = ?", [sessionId, yearId])) return fail(ctx.set, 404, "Assessment session not found in the academic year");
     const values = rows(context, `SELECT e.id AS enrollment_id, e.student_id, s.name AS student_name, e.academic_year_id, e.jenjang_id, j.name AS jenjang, e.class_name, e.class_assigned FROM student_enrollments e JOIN students s ON s.id = e.student_id JOIN jenjangs j ON j.id = e.jenjang_id WHERE e.academic_year_id = ?${jenjangClause} ORDER BY s.name`, params);
     const byEnrollment = new Map<number, Row[]>();
-    for (const grade of rows(context, "SELECT id, enrollment_id, subject_id, component_id, score FROM student_subject_grades WHERE enrollment_id IN (SELECT id FROM student_enrollments WHERE academic_year_id = ?) ORDER BY id", [yearId])) {
+    const gradeFilter = sessionId === null ? "" : " AND assessment_session_id = ?";
+    const gradeParams = sessionId === null ? [yearId] : [yearId, sessionId];
+    for (const grade of rows(context, `SELECT id, enrollment_id, subject_id, component_id, assessment_session_id, score FROM student_subject_grades WHERE enrollment_id IN (SELECT id FROM student_enrollments WHERE academic_year_id = ?)${gradeFilter} ORDER BY id`, gradeParams)) {
       const list = byEnrollment.get(Number(grade.enrollment_id)) ?? [];
       list.push(grade);
       byEnrollment.set(Number(grade.enrollment_id), list);
     }
     return values.map((value) => ({ ...value, class_assigned: bool(value.class_assigned), grades: byEnrollment.get(Number(value.enrollment_id)) ?? [] }));
-  }, { query: t.Object({ academic_year_id: t.String(), jenjang_id: t.Optional(t.String()) }) });
+  }, { query: t.Object({ academic_year_id: t.String(), jenjang_id: t.Optional(t.String()), assessment_session_id: t.Optional(t.String()) }) });
 
   app.get("/api/grades/enrollment/candidates", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
@@ -178,6 +213,12 @@ export function gradeRoutes(app: any, context: AuthContext): any {
     const enrollment = row(context, "SELECT * FROM student_enrollments WHERE id = ?", [ctx.body.enrollment_id]);
     if (!enrollment) return fail(ctx.set, 404, "Enrollment not found");
     if (enrollment.lifecycle_state !== "ACTIVE") return fail(ctx.set, 409, { code: "ENROLLMENT_NOT_ACTIVE", message: "Grades may only be recorded for an active enrollment." });
+    const assessmentSessionId = ctx.body.assessment_session_id;
+    if (assessmentSessionId !== null) {
+      const session = row(context, "SELECT id, academic_year_id FROM academic_assessment_sessions WHERE id = ?", [assessmentSessionId]);
+      if (!session) return fail(ctx.set, 404, "Assessment session not found");
+      if (Number(session.academic_year_id) !== Number(enrollment.academic_year_id)) return fail(ctx.set, 400, "Assessment session does not belong to the enrollment academic year");
+    }
     const keys = new Set<string>();
     const subjectIds: number[] = [...new Set<number>(ctx.body.grades.map((value: Row) => Number(value.subject_id)))];
     const componentIds: number[] = [...new Set<number>(ctx.body.grades.map((value: Row) => Number(value.component_id)))];
@@ -198,9 +239,12 @@ export function gradeRoutes(app: any, context: AuthContext): any {
     try {
       inTransaction(client, () => {
         for (const item of ctx.body.grades as Row[]) {
-          const existing = row(context, "SELECT id FROM student_subject_grades WHERE enrollment_id = ? AND subject_id = ? AND component_id = ?", [ctx.body.enrollment_id, item.subject_id, item.component_id]);
-          if (existing) { client.run("UPDATE student_subject_grades SET score = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [item.score ?? null, existing.id]); updated++; saved.push({ id: existing.id, enrollment_id: ctx.body.enrollment_id, subject_id: item.subject_id, component_id: item.component_id, score: item.score ?? null }); }
-          else { const result = client.run("INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, score) VALUES (?, ?, ?, ?)", [ctx.body.enrollment_id, item.subject_id, item.component_id, item.score ?? null]); inserted++; saved.push({ id: Number(result.lastInsertRowid), enrollment_id: ctx.body.enrollment_id, subject_id: item.subject_id, component_id: item.component_id, score: item.score ?? null }); }
+          const existing = assessmentSessionId === null
+            ? row(context, "SELECT id FROM student_subject_grades WHERE enrollment_id = ? AND subject_id = ? AND component_id = ? AND assessment_session_id IS NULL", [ctx.body.enrollment_id, item.subject_id, item.component_id])
+            : row(context, "SELECT id FROM student_subject_grades WHERE enrollment_id = ? AND subject_id = ? AND component_id = ? AND assessment_session_id = ?", [ctx.body.enrollment_id, item.subject_id, item.component_id, assessmentSessionId]);
+          if (existing) { client.run("UPDATE student_subject_grades SET score = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [item.score ?? null, existing.id]); updated++; saved.push({ id: existing.id, enrollment_id: ctx.body.enrollment_id, subject_id: item.subject_id, component_id: item.component_id, assessment_session_id: assessmentSessionId, score: item.score ?? null }); }
+          else if (assessmentSessionId === null) throw new Error("LEGACY_INSERT_REQUIRES_TEMPORAL_CONTEXT");
+          else { const result = client.run("INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, ?)", [ctx.body.enrollment_id, item.subject_id, item.component_id, assessmentSessionId, item.score ?? null]); inserted++; saved.push({ id: Number(result.lastInsertRowid), enrollment_id: ctx.body.enrollment_id, subject_id: item.subject_id, component_id: item.component_id, assessment_session_id: assessmentSessionId, score: item.score ?? null }); }
         }
       });
       return { status: "success", inserted, updated, saved: inserted + updated, grades: saved };

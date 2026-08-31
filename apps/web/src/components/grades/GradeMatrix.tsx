@@ -22,6 +22,7 @@ interface GradeMatrixProps {
   rows: GradeMatrixEnrollment[];
   subject: Subject | null;
   components: AssessmentComponent[];
+  assessmentSessionId: number;
   isSaving: boolean;
   onSave: (payloads: GradeGridSaveRequest[]) => Promise<void>;
 }
@@ -57,7 +58,7 @@ function buildDraft(rows: GradeMatrixEnrollment[], components: AssessmentCompone
   }, {});
 }
 
-function GradeMatrix({ rows, subject, components, isSaving, onSave }: GradeMatrixProps) {
+function GradeMatrix({ rows, subject, components, assessmentSessionId, isSaving, onSave }: GradeMatrixProps) {
   const [draft, setDraft] = useState<DraftGrid>(() => buildDraft(rows, components));
 
   useEffect(() => {
@@ -85,8 +86,7 @@ function GradeMatrix({ rows, subject, components, isSaving, onSave }: GradeMatri
       return [];
     }
 
-    return rows
-      .map((row) => {
+    return rows.flatMap((row) => {
         const grades = components.reduce<GradeLineItem[]>((acc, component) => {
           const nextScore = parseScore(draft[row.enrollment_id]?.[component.id] ?? "");
           const originalScore = originalScores.get(`${row.enrollment_id}:${component.id}`) ?? null;
@@ -100,10 +100,9 @@ function GradeMatrix({ rows, subject, components, isSaving, onSave }: GradeMatri
           return acc;
         }, []);
 
-        return grades.length > 0 ? { enrollment_id: row.enrollment_id, grades } : null;
-      })
-      .filter((payload): payload is GradeGridSaveRequest => payload !== null);
-  }, [components, draft, originalScores, rows, subject]);
+        return grades.length > 0 ? [{ enrollment_id: row.enrollment_id, assessment_session_id: assessmentSessionId, grades }] : [];
+      });
+  }, [assessmentSessionId, components, draft, originalScores, rows, subject]);
 
   const dirtyCellCount = dirtyRows.reduce((total, row) => total + row.grades.length, 0);
 

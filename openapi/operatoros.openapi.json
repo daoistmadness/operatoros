@@ -18931,6 +18931,238 @@
         ]
       }
     },
+    "/api/grades/assessment-sessions": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "academic_year_id",
+                      "term_number",
+                      "label",
+                      "assessment_date"
+                    ],
+                    "properties": {
+                      "id": {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      "academic_year_id": {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      "term_number": {
+                        "minimum": 1,
+                        "maximum": 4,
+                        "type": "number"
+                      },
+                      "label": {
+                        "minLength": 1,
+                        "maxLength": 120,
+                        "type": "string"
+                      },
+                      "assessment_date": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiGradesAssessment-sessions"
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "term_number",
+                  "label"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "number"
+                  },
+                  "term_number": {
+                    "minimum": 1,
+                    "maximum": 4,
+                    "type": "number"
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "term_number",
+                  "label"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "number"
+                  },
+                  "term_number": {
+                    "minimum": 1,
+                    "maximum": 4,
+                    "type": "number"
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "term_number",
+                  "label"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "number"
+                  },
+                  "term_number": {
+                    "minimum": 1,
+                    "maximum": 4,
+                    "type": "number"
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "academic_year_id",
+                    "term_number",
+                    "label",
+                    "assessment_date"
+                  ],
+                  "properties": {
+                    "id": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "academic_year_id": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "term_number": {
+                      "minimum": 1,
+                      "maximum": 4,
+                      "type": "number"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "maxLength": 120,
+                      "type": "string"
+                    },
+                    "assessment_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiGradesAssessment-sessions"
+      }
+    },
     "/api/grades/ledger": {
       "get": {
         "operationId": "get_grade_ledger_api_grades_ledger_get",

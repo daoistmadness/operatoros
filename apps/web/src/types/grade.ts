@@ -1,5 +1,6 @@
 export type {
   AcademicYear,
+  AcademicAssessmentSession,
   AssessmentComponent,
   GradeGridSaveRequest,
   GradeLineItem,

@@ -14,14 +14,16 @@ from core.database import engine, validate_student_linking_gate
 
 
 BASELINE_SCHEMA_VERSION = "20260724_s42"
-CURRENT_SCHEMA_VERSION = "20260725_s43"
+CURRENT_SCHEMA_VERSION = "20260831_s44"
 PREVIOUS_SCHEMA_VERSION = BASELINE_SCHEMA_VERSION
+S43_SCHEMA_VERSION = "20260725_s43"
 LEGACY_SCHEMA_VERSION = "20260722_s41"
 LEDGER_TABLE = "operatoros_schema_migrations"
 CURRENT_SCHEMA_TABLES = {
     "attendance_follow_ups",
     "attendance_follow_up_notes",
     "attendance_follow_up_audit",
+    "academic_assessment_sessions",
 }
 CURRENT_SCHEMA_TRIGGERS = {
     "trg_attendance_follow_up_audit_no_update",
@@ -72,7 +74,7 @@ def _validate_sqlite_file(path: Path) -> None:
             f"SELECT version, schema_fingerprint FROM {LEDGER_TABLE} "
             "ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
-        if row and row[0] == PREVIOUS_SCHEMA_VERSION:
+        if row and row[0] in {PREVIOUS_SCHEMA_VERSION, S43_SCHEMA_VERSION}:
             raise DatabaseStartupError(
                 f"DATABASE_MIGRATION_REQUIRED: eligible {PREVIOUS_SCHEMA_VERSION} -> {CURRENT_SCHEMA_VERSION}"
             )
@@ -86,7 +88,7 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TABLES.issubset(tables):
             missing = sorted(CURRENT_SCHEMA_TABLES - tables)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.3 tables missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.4 tables missing: " + ", ".join(missing)
             )
         if "student_enrollment_lifecycle_audit" not in tables:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
@@ -117,8 +119,11 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TRIGGERS.issubset(triggers):
             missing = sorted(CURRENT_SCHEMA_TRIGGERS - triggers)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.3 triggers missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.4 triggers missing: " + ", ".join(missing)
             )
+        grade_columns = {item[1] for item in connection.execute("PRAGMA table_info(student_subject_grades)")}
+        if "assessment_session_id" not in grade_columns:
+            raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: student_subject_grades.assessment_session_id missing")
         for table in ("student_import_batches", "academic_roster_import_batches"):
             session_column = next(
                 (item for item in connection.execute(f"PRAGMA table_info({table})") if item[1] == "session_id"),
