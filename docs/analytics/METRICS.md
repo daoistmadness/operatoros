@@ -321,3 +321,24 @@ exist, but a comparable previous value is unavailable. No zero is substituted.
 The Stage 2 surface contains no threshold, risk score, risk level, alert,
 intervention, recommendation, or prediction. Staff judgment remains
 authoritative. Threshold validation is a later stage.
+
+## Class Overview (2026-08)
+
+Class Overview is the canonical class-level operational surface at
+`/classes/:id`. It uses the selected academic class and its current canonical
+enrollment roster. Duplicate enrollment rows are reduced to one student.
+
+- The class header uses the academic class, jenjang, grade, and academic year
+  masters.
+- Attendance reuses Attendance Analytics effective-status counts and rates.
+  The default date range is the class academic-year range.
+- Academic results reuse Academic Analytics score and participation rules.
+  A selected term uses session-backed results. All-period results may include
+  legacy scores with unknown period attribution and state that limitation.
+- Data completeness reuses Data Quality student issue semantics. It provides
+  context only. It does not classify students.
+- Non-admin staff can open a class only when an active current assignment
+  exists for that class and academic year. Filters narrow this server-side
+  scope.
+- The page links to Student 360 and the detailed Attendance, Academic, and
+  Data Quality surfaces. It adds no rollups, formulas, roles, or exports.

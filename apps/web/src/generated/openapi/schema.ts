@@ -5428,6 +5428,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/classes/{class_id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get class overview */
+        get: operations["getClassOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student-masters/{student_master_id}/overview": {
         parameters: {
             query?: never;
@@ -19745,6 +19762,33 @@ export interface operations {
             };
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getClassOverview: {
+        parameters: {
+            query?: {
+                term?: "term_1" | "term_2" | "term_3" | "term_4";
+                attendance_date_from?: string;
+                attendance_date_to?: string;
+                search?: string;
+            };
+            header?: never;
+            path: {
+                class_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

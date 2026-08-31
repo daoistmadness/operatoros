@@ -79,6 +79,10 @@ export const queryKeys = {
     importSessions: ["students", "imports"] as const,
     importSession: (id: string) => ["students", "imports", id] as const,
   },
+  classes: {
+    all: ["classes"] as const,
+    overview: (classId: string, filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["classes", "overview", classId, canonicalizeQueryFilters(filters)] as const,
+  },
   uploads: {
     all: ["uploads"] as const,
     history: {
