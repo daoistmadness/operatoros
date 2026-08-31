@@ -20,3 +20,39 @@ run artifacts. Each tier snapshots the protected S4.3 database before and after
 the run using immutable read-only SQLite; it rejects handles, sidecars, invalid
 schema state, or any mutation during that run without treating a live checksum
 as a permanent repository constant. Historical orchestration evidence remains in Git history.
+
+## Audit execution policy
+
+For direct Bun runs by an agent, use `AGENT=1`, `--dots`, and `--parallel` for
+file-level suites proven to be independent. `--concurrent` is reserved for
+tests whose in-file concurrency has been separately audited. Use
+`--randomize --seed=<value>` to reproduce ordering issues and
+`--rerun-each=<n>` for focused flake investigation; retries must not hide a
+failure.
+
+The API suite remains serial in the normal gate. Its attendance-import and
+Excel-heavy tests use disposable per-process databases and spawn the retained
+Python tooling, but the suite timed out under Bun worker contention during the
+audit. It is not safe to enable API `--parallel` until that resource and timing
+boundary is repaired and remeasured. The small contracts, database, Excel, UI,
+architecture, and boundary suites passed the parallel audit.
+
+Tests that allocate worker-sensitive resources should use `BUN_TEST_WORKER_ID`
+when process identity alone is insufficient. Current API tests use unique
+process/time paths, and each E2E run owns its own data root, ports, browser
+session, and output directory; no shared worker allocation is currently
+required.
+
+Coverage is diagnostic evidence, not an arbitrary repository-wide percentage
+gate. Keep reports temporary unless a machine consumer is justified. The API
+coverage baseline is collected with Bun's text reporter; Web remains on Vitest
+because its React Testing Library, happy-dom, and Vite transform setup is
+material to the tests. No Web coverage provider or test-runner migration is
+added without a concrete consumer and reproducibility evidence.
+
+E2E remains serial (`workers: 1`) because one run owns the application stack and
+evidence directory. The launcher creates a unique disposable data root,
+selects runtime ports, polls readiness, records process ownership, and cleans
+successful output; failure logs, JUnit, screenshots, and traces are retained
+only for diagnosis. Browser assertions should wait on semantic UI or network
+state rather than fixed sleeps.
