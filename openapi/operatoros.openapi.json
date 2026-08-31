@@ -31992,6 +31992,21 @@
         "tags": ["analytics"]
       }
     },
+    "/api/classes/{class_id}/overview": {
+      "get": {
+        "operationId": "getClassOverview",
+        "parameters": [
+          { "name": "class_id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "term", "in": "query", "required": false, "schema": { "type": "string", "enum": ["term_1", "term_2", "term_3", "term_4"] } },
+          { "name": "attendance_date_from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
+          { "name": "attendance_date_to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get class overview",
+        "tags": ["classes"]
+      }
+    },
     "/api/student-masters/{student_master_id}/overview": {
       "get": {
         "operationId": "getStudentOverview",
