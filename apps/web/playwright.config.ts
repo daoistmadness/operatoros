@@ -24,7 +24,7 @@ export default defineConfig({
   testDir: path.join(repositoryRoot, "e2e/smoke/web"),
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   timeout: 30_000,
   expect: { timeout: 8_000 },
   reporter: [["line"], ["junit", { outputFile: path.join(resultsRoot, "junit/web.xml") }]],
