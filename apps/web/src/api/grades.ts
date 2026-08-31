@@ -6,6 +6,7 @@ import type {
   GradeGridSaveRequest,
   GradeSaveResult,
   Subject,
+  AssessmentOperationsResponse,
 } from "../types/grade";
 
 export interface CreateAcademicYearPayload {
@@ -107,5 +108,38 @@ export async function saveGradeLedger(payload: GradeGridSaveRequest): Promise<Gr
     body: payload,
   });
 
+  return response.data;
+}
+
+export type AssessmentOperationsFilters = {
+  academic_year_id: number;
+  term?: "term_1" | "term_2" | "term_3" | "term_4" | null;
+  class_id?: number | null;
+  subject_id?: number | null;
+  coverage_state?: "ALL" | "COMPLETE" | "PARTIAL" | "NONE" | "EMPTY";
+  search?: string;
+  sort?: "assessment_date" | "assessment" | "class" | "subject" | "term" | "applicable" | "recorded" | "unrecorded" | "coverage";
+  order?: "asc" | "desc";
+  page?: number;
+  page_size?: number;
+};
+
+export async function fetchAssessmentOperations(filters: AssessmentOperationsFilters): Promise<AssessmentOperationsResponse> {
+  const response = await apiRequest<AssessmentOperationsResponse>({
+    path: gradeApiPath("/assessment-operations"),
+    method: "GET",
+    params: {
+      academic_year_id: filters.academic_year_id,
+      term: filters.term ?? undefined,
+      class_id: filters.class_id ?? undefined,
+      subject_id: filters.subject_id ?? undefined,
+      coverage_state: filters.coverage_state && filters.coverage_state !== "ALL" ? filters.coverage_state : undefined,
+      search: filters.search || undefined,
+      sort: filters.sort ?? "assessment_date",
+      order: filters.order ?? "asc",
+      page: filters.page ?? 1,
+      page_size: filters.page_size ?? 25,
+    },
+  });
   return response.data;
 }

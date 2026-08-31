@@ -36,6 +36,7 @@ const expectedPaths = [
   '/attendance/class-departures',
   '/enrollment',
   '/grades',
+  '/grades/operations',
   '/config/jenjang',
   '/config/heb',
   '/config/absence-reasons',
@@ -65,6 +66,7 @@ describe('route definitions', () => {
   it('keeps every route behind authentication metadata', () => {
     expect(authenticatedRoutes.every(({ authorization }) => Boolean(authorization))).toBe(true);
     expect(authenticatedRoutes.find(({ path }) => path === '/grades')?.authorization).toEqual({ type: 'role', role: 'admin' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/grades/operations')?.authorization).toEqual({ type: 'role', role: 'admin' });
     expect(authenticatedRoutes.find(({ path }) => path === '/enrollment')?.authorization).toEqual({ type: 'capability', capability: 'manage_enrollment' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
   });

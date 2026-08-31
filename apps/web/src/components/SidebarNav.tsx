@@ -61,6 +61,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Academic Management', path: '/academic-management', icon: Layers3 },
       { name: 'Teacher Assignments', path: '/teacher-class-assignments', icon: UserCheck },
       { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
+      { name: 'Assessment Operations', path: '/grades/operations', icon: ClipboardList },
     ],
   },
   {

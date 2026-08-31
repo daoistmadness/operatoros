@@ -2732,6 +2732,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grades/assessment-operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get academic assessment operations */
+        get: operations["getAssessmentOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grades/subjects": {
         parameters: {
             query?: never;
@@ -13794,6 +13811,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAssessmentOperations: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term?: "term_1" | "term_2" | "term_3" | "term_4";
+                class_id?: string;
+                subject_id?: string;
+                coverage_state?: "COMPLETE" | "PARTIAL" | "NONE" | "EMPTY";
+                search?: string;
+                sort?: "assessment_date" | "assessment" | "class" | "subject" | "term" | "applicable" | "recorded" | "unrecorded" | "coverage";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

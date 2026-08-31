@@ -64,6 +64,7 @@ export const queryKeys = {
     academicOverview: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "overview", canonicalizeQueryFilters(filters)] as const,
     academicStudents: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "students", canonicalizeQueryFilters(filters)] as const,
     dailyAttendance: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "daily-status", canonicalizeQueryFilters(filters)] as const,
+    assessmentOperations: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["grades", "assessment-operations", canonicalizeQueryFilters(filters)] as const,
   },
   students: {
     all: ["students"] as const,
