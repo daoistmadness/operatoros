@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
@@ -87,9 +88,10 @@ const STATUS_CONFIG: Record<
 export default function ClassAttendanceEntry() {
   const queryClient = useQueryClient();
   const { can } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>(() => searchParams.get("class_id") ?? "");
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [exportMonth, setExportMonth] = useState<string>(todayStr.slice(0, 7));
   const [exportingExcel, setExportingExcel] = useState<boolean>(false);
@@ -267,6 +269,7 @@ export default function ClassAttendanceEntry() {
               {exportingExcel ? "Menyiapkan…" : "Export Excel"}
             </Button>
           )}
+          {classIdNum && <Link className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" to={`/classes/${classIdNum}`}>Class overview</Link>}
           <Button
             size="sm"
             onClick={handleSave}

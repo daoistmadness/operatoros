@@ -137,6 +137,11 @@ export function studentQualityIssues(context: AuthContext, studentMasterId: stri
   return issues;
 }
 
+export function studentQualityIssueCounts(context: AuthContext, query: Row): Map<string, number> {
+  const scope = studentScope(context, query);
+  return new Map(studentQualityRows(context, scope).map((value) => [String(value.id), studentIssuesFor(value).length]));
+}
+
 function requiredIssueCount(issues: DataQualityIssueEntry[]): number {
   return issues.filter((issue) => issue.type !== "MISSING_OPTIONAL_FIELD").length;
 }
@@ -188,7 +193,9 @@ export function studentQuality(context: AuthContext, query: Row): StudentDataQua
   const perRecord = values.map((value) => ({ value, issues: studentIssuesFor(value) }));
   const missingOptional = perRecord.filter(({ issues }) => issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")).length;
   const withRequired = perRecord.filter(({ issues }) => requiredIssueCount(issues) > 0).length;
-  const missingEnrollmentCount = Number(row(context, `SELECT COUNT(*) AS count FROM student_masters m WHERE m.student_status = 'active' AND NOT EXISTS (SELECT 1 FROM student_enrollments e WHERE e.student_master_id = m.id AND e.effective_to IS NULL AND (? = 0 OR e.academic_year_id = ?))`, [scope.academicYearId, scope.academicYearId])?.count ?? 0);
+  const missingEnrollmentCount = scope.classId === null
+    ? Number(row(context, `SELECT COUNT(*) AS count FROM student_masters m WHERE m.student_status = 'active' AND NOT EXISTS (SELECT 1 FROM student_enrollments e WHERE e.student_master_id = m.id AND e.effective_to IS NULL AND (? = 0 OR e.academic_year_id = ?))`, [scope.academicYearId, scope.academicYearId])?.count ?? 0)
+    : 0;
   const fieldCompleteness: DataQualityFieldMetric[] = [];
   for (const field of ["gender", "religion", "birth_date"] as const) {
     const populated = values.filter((value) => value[field] !== null && value[field] !== undefined && value[field] !== "").length;
