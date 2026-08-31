@@ -55,11 +55,23 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
   await login(page);
   await page.goto("/grades");
   await expect(page.getByRole("heading", { name: "Dynamic normalized grade matrix" })).toBeVisible();
-  await expect(page.getByText("E2E Ada")).toBeVisible();
+  await page.getByLabel("New assessment label").fill("E2E Term 1 Assessment");
+  await page.getByLabel("Assessment date").fill("2026-08-15");
+  await page.getByRole("button", { name: "Create" }).click();
+  await expect(page.getByText("is ready for score entry.")).toBeVisible();
   const score = page.locator('input[type="number"]').first();
   await score.fill("88");
   await page.getByRole("button", { name: "Save Ledger Matrix" }).click();
   await expect(page.getByText(/grade line\(s\) saved/)).toBeVisible();
+  await page.goto("/students");
+  const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
+  await page.goto(await studentLink.getAttribute("href") as string);
+  await expect(page.getByRole("heading", { name: "Academic", exact: true })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "E2E Progression Score", exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Term 1 · 2026-08-15")).toBeVisible();
+  await page.goto("/analytics/academic");
+  await page.getByLabel("Term").selectOption("term_1");
+  await expect(page.getByText("Expected results", { exact: true })).toBeVisible();
 });
 
 test("@phase11 @imports .xlsx and .xls attendance workflows validate and apply", async ({ page }) => {

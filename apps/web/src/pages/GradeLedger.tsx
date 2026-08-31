@@ -2,9 +2,9 @@ import React, { Component, useCallback, useEffect, useMemo, useState } from "rea
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
-import { fetchAcademicYears, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
+import { createAssessmentSession, fetchAcademicYears, fetchAssessmentSessions, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
 import { apiRequest } from "../lib/api/client";
-import type { AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
+import type { AcademicAssessmentSession, AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
 import { queryKeys } from "../lib/query/queryKeys";
 
 const JENJANG_OPTIONS = [
@@ -20,13 +20,14 @@ function getErrorMessage(error: unknown): string {
   return "Grade data could not be processed. Check your connection and retry.";
 }
 
-async function fetchLedgerRows(academicYearId: number, jenjangId: number): Promise<GradeMatrixEnrollment[]> {
+async function fetchLedgerRows(academicYearId: number, jenjangId: number, assessmentSessionId: number): Promise<GradeMatrixEnrollment[]> {
   const response = await apiRequest<GradeMatrixEnrollment[]>({
     path: gradeApiPath("/ledger"),
     method: "GET",
     params: {
       academic_year_id: academicYearId,
       jenjang_id: jenjangId,
+      assessment_session_id: assessmentSessionId,
     },
   });
 
@@ -84,6 +85,11 @@ function GradeLedgerContent() {
   const queryClient = useQueryClient();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(null);
+  const [assessmentSessions, setAssessmentSessions] = useState<AcademicAssessmentSession[]>([]);
+  const [selectedAssessmentSessionId, setSelectedAssessmentSessionId] = useState<number | null>(null);
+  const [newSessionTerm, setNewSessionTerm] = useState(1);
+  const [newSessionLabel, setNewSessionLabel] = useState("");
+  const [newSessionDate, setNewSessionDate] = useState("");
   const [jenjangId, setJenjangId] = useState<number>(JENJANG_OPTIONS[0].id);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
@@ -133,6 +139,8 @@ function GradeLedgerContent() {
       setAcademicYears(yearsPayload);
       setComponents(componentsPayload);
       setSelectedAcademicYearId(defaultYear?.id ?? null);
+      setAssessmentSessions([]);
+      setSelectedAssessmentSessionId(null);
     } catch (loadError) {
       console.error("Grade Ledger master data failure", loadError);
       setError(getErrorMessage(loadError));
@@ -141,6 +149,20 @@ function GradeLedgerContent() {
       setSelectedAcademicYearId(null);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const loadAssessmentSessionData = useCallback(async (academicYearId: number) => {
+    setSelectedAssessmentSessionId(null);
+    setAssessmentSessions([]);
+    setLedgerRows([]);
+    try {
+      const sessions = await fetchAssessmentSessions(academicYearId);
+      setAssessmentSessions(sessions);
+      setSelectedAssessmentSessionId(sessions[0]?.id ?? null);
+    } catch (loadError) {
+      console.error("Grade Ledger assessment session failure", loadError);
+      setError(getErrorMessage(loadError));
     }
   }, []);
 
@@ -166,8 +188,9 @@ function GradeLedgerContent() {
   }, []);
 
   const loadLedgerData = useCallback(async () => {
-    if (!selectedAcademicYearId) {
+    if (!selectedAcademicYearId || selectedAssessmentSessionId === null) {
       setLedgerRows([]);
+      setIsLoading(false);
       return;
     }
 
@@ -175,7 +198,7 @@ function GradeLedgerContent() {
     setError("");
 
     try {
-      const ledgerPayload = await fetchLedgerRows(selectedAcademicYearId, jenjangId);
+      const ledgerPayload = await fetchLedgerRows(selectedAcademicYearId, jenjangId, selectedAssessmentSessionId);
       setLedgerRows(ledgerPayload);
     } catch (loadError) {
       console.error("Grade Ledger matrix failure", loadError);
@@ -184,7 +207,7 @@ function GradeLedgerContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [jenjangId, selectedAcademicYearId]);
+  }, [jenjangId, selectedAcademicYearId, selectedAssessmentSessionId]);
 
   useEffect(() => {
     loadMasters();
@@ -193,6 +216,15 @@ function GradeLedgerContent() {
   useEffect(() => {
     loadSubjects(jenjangId);
   }, [jenjangId, loadSubjects]);
+
+  useEffect(() => {
+    if (selectedAcademicYearId === null) {
+      setAssessmentSessions([]);
+      setSelectedAssessmentSessionId(null);
+      return;
+    }
+    void loadAssessmentSessionData(selectedAcademicYearId);
+  }, [loadAssessmentSessionData, selectedAcademicYearId]);
 
   useEffect(() => {
     loadLedgerData();
@@ -221,6 +253,29 @@ function GradeLedgerContent() {
     }
   };
 
+  const handleCreateSession = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedAcademicYearId || !newSessionLabel.trim()) return;
+    setError("");
+    setStatusMessage("");
+    try {
+      const created = await createAssessmentSession({
+        academic_year_id: selectedAcademicYearId,
+        term_number: newSessionTerm,
+        label: newSessionLabel.trim(),
+        assessment_date: newSessionDate || null,
+      });
+      setAssessmentSessions((current) => [...current, created].sort((left, right) => left.term_number - right.term_number || left.id - right.id));
+      setSelectedAssessmentSessionId(created.id);
+      setNewSessionLabel("");
+      setNewSessionDate("");
+      setStatusMessage(`${created.label} is ready for score entry.`);
+    } catch (createError) {
+      console.error("Grade Ledger assessment session creation failure", createError);
+      setError(getErrorMessage(createError));
+    }
+  };
+
   return (
     <div className="space-y-6 pb-16">
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-sm">
@@ -245,7 +300,7 @@ function GradeLedgerContent() {
                 Academic Year
                 <select
                   value={selectedAcademicYearId ?? ""}
-                  onChange={(event) => setSelectedAcademicYearId(Number(event.target.value) || null)}
+                  onChange={(event) => { setSelectedAcademicYearId(Number(event.target.value) || null); setSelectedAssessmentSessionId(null); }}
                   className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
                 >
                   {academicYears.length === 0 ? <option value="">No year data</option> : null}
@@ -299,6 +354,31 @@ function GradeLedgerContent() {
                 <RefreshCw className="h-4 w-4" />
               </button>
             </div>
+
+            <label className="grid gap-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-300">
+              Assessment session
+              <select
+                value={selectedAssessmentSessionId ?? ""}
+                onChange={(event) => setSelectedAssessmentSessionId(Number(event.target.value) || null)}
+                className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+              >
+                <option value="">Select a session</option>
+                {assessmentSessions.map((session) => <option key={session.id} value={session.id}>{session.label} · Term {session.term_number}{session.assessment_date ? ` · ${session.assessment_date}` : ""}</option>)}
+              </select>
+            </label>
+
+            <form className="grid gap-2 border-t border-white/10 pt-3" onSubmit={handleCreateSession}>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-300">Create assessment session</p>
+              <div className="grid gap-2 sm:grid-cols-[7rem_1fr_10rem_auto]">
+                <select aria-label="New assessment term" value={newSessionTerm} onChange={(event) => setNewSessionTerm(Number(event.target.value))} className="rounded-2xl border border-white/10 bg-white px-3 py-2 text-sm font-bold text-slate-950">
+                  {[1, 2, 3, 4].map((term) => <option key={term} value={term}>Term {term}</option>)}
+                </select>
+                <input aria-label="New assessment label" value={newSessionLabel} onChange={(event) => setNewSessionLabel(event.target.value)} placeholder="e.g. Midterm" className="rounded-2xl border border-white/10 bg-white px-3 py-2 text-sm font-bold text-slate-950 placeholder:text-slate-400" />
+                <input aria-label="Assessment date" type="date" value={newSessionDate} onChange={(event) => setNewSessionDate(event.target.value)} className="rounded-2xl border border-white/10 bg-white px-3 py-2 text-sm font-bold text-slate-950" />
+                <button type="submit" disabled={!selectedAcademicYearId || !newSessionLabel.trim()} className="rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">Create</button>
+              </div>
+              <p className="text-[11px] leading-4 text-slate-300">Term is required. The date is optional and must fall within the selected term.</p>
+            </form>
           </div>
         </div>
       </section>
@@ -350,13 +430,19 @@ function GradeLedgerContent() {
             </div>
           </section>
 
-          <GradeMatrix
+          {selectedAssessmentSessionId === null ? (
+            <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+              <h2 className="font-black">Select or create an assessment session</h2>
+              <p className="mt-1 text-sm font-semibold">New score entries require an explicit term. Older period-unknown records remain available through student academic history.</p>
+            </section>
+          ) : <GradeMatrix
             rows={ledgerRows}
             subject={selectedSubject}
             components={matrixComponents}
+            assessmentSessionId={selectedAssessmentSessionId}
             isSaving={isSaving}
             onSave={handleMatrixSave}
-          />
+          />}
         </>
       )}
     </div>

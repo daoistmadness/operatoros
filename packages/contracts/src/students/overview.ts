@@ -9,6 +9,12 @@ const SectionStatus = Type.Union([
   Type.Literal("available"), Type.Literal("no_data"), Type.Literal("unauthorized"),
   Type.Literal("insufficient_data"), Type.Literal("not_applicable"),
 ]);
+const AcademicHistoryRowSchema = Type.Object({
+  id: Type.Number({ minimum: 1 }), subjectId: Type.Number({ minimum: 1 }), subjectName: Type.String({ minLength: 1 }),
+  assessmentLabel: Type.String({ minLength: 1 }), assessmentType: Type.Union([Type.Literal("sumatif"), Type.Literal("formatif")]),
+  score: NullableNumber, assessmentDate: NullableString, termNumber: Type.Union([Type.Number({ minimum: 1, maximum: 4 }), Type.Null()]),
+  termLabel: NullableString, periodStatus: Type.Union([Type.Literal("known"), Type.Literal("unknown")]),
+});
 
 export const StudentOverviewResponseSchema = Type.Object({
   student: Type.Object({
@@ -32,11 +38,13 @@ export const StudentOverviewResponseSchema = Type.Object({
   academic: Type.Object({
     status: SectionStatus, average: NullableNumber, participation: NullableNumber,
     scoredResults: Type.Number({ minimum: 0 }), expectedResults: Type.Number({ minimum: 0 }),
-    temporalTrend: Type.Literal("unavailable_no_time_axis"),
+    temporalTrend: Type.Union([Type.Literal("available"), Type.Literal("insufficient_data"), Type.Literal("unavailable_no_time_axis")]),
+    history: Type.Array(AcademicHistoryRowSchema),
   }),
   trends: Type.Object({
     status: SectionStatus, window: Type.Union([StudentTrendWindowSchema, Type.Null()]),
     attendance: Type.Union([StudentTrendMetricSchema, Type.Null()]),
+    academic: Type.Union([StudentTrendMetricSchema, Type.Null()]),
     tardiness: Type.Union([StudentTrendMetricSchema, Type.Null()]),
     alfa: Type.Union([StudentTrendMetricSchema, Type.Null()]),
   }),

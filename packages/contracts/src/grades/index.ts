@@ -41,6 +41,25 @@ export const AssessmentComponentSchema = Type.Object({
 
 export type AssessmentComponent = Static<typeof AssessmentComponentSchema>;
 
+export const AcademicAssessmentSessionSchema = Type.Object({
+  id: Type.Number({ minimum: 1 }),
+  academic_year_id: Type.Number({ minimum: 1 }),
+  term_number: Type.Number({ minimum: 1, maximum: 4 }),
+  label: Type.String({ minLength: 1, maxLength: 120 }),
+  assessment_date: Type.Union([Type.String(), Type.Null()]),
+});
+
+export type AcademicAssessmentSession = Static<typeof AcademicAssessmentSessionSchema>;
+
+export const CreateAcademicAssessmentSessionSchema = Type.Object({
+  academic_year_id: Type.Number({ minimum: 1 }),
+  term_number: Type.Number({ minimum: 1, maximum: 4 }),
+  label: Type.String({ minLength: 1, maxLength: 120 }),
+  assessment_date: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+});
+
+export type CreateAcademicAssessmentSession = Static<typeof CreateAcademicAssessmentSessionSchema>;
+
 export const GradeLineItemSchema = Type.Object({
   subject_id: Type.Number({ minimum: 1 }),
   component_id: Type.Number({ minimum: 1 }),
@@ -54,6 +73,7 @@ export type GradeLineItem = Static<typeof GradeLineItemSchema>;
 
 export const GradeGridSaveRequestSchema = Type.Object({
   enrollment_id: Type.Number({ minimum: 1 }),
+  assessment_session_id: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
   grades: Type.Array(GradeLineItemSchema, { minItems: 1 }),
 });
 
@@ -69,6 +89,7 @@ export const GradeSaveResponseSchema = Type.Object({
     enrollment_id: Type.Number({ minimum: 1 }),
     subject_id: Type.Number({ minimum: 1 }),
     component_id: Type.Number({ minimum: 1 }),
+    assessment_session_id: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
     score: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   })),
 });

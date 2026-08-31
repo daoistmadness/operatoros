@@ -82,7 +82,7 @@ function validateSchema(client: Database): void {
     fail("DATABASE_MIGRATION_REQUIRED", `database reports a schema newer than ${CURRENT_SCHEMA_VERSION}`);
   }
   if (currentRow.schema_fingerprint !== CURRENT_SCHEMA_FINGERPRINT) {
-    fail("DATABASE_CHECKSUM_MISMATCH", "schema fingerprint differs from the accepted S4.3 baseline");
+    fail("DATABASE_CHECKSUM_MISMATCH", "schema fingerprint differs from the accepted S4.4 baseline");
   }
 }
 

@@ -193,9 +193,20 @@ aggregates. The browser only formats returned values.
 - A result with a null score is missing. It is not treated as score zero.
 - Participation percentage is scored result slots divided by expected result
   slots, on the 0–100 scale. A zero denominator returns `0`.
-- Grade rows have no date or term column. The feature supports academic year,
-  jenjang, class, subject, and assessment-type filters. Term is returned as
-  unavailable instead of being inferred from dates.
+- New score entries belong to an `academic_assessment_sessions` parent with a
+  required canonical term number and an optional known assessment date. Term
+  numbers use the existing `academic_term_configs` authority, including its
+  explicit ordering; default periods are used only where that authority has no
+  custom row. Academic year remains a broad scope, not a precise assessment
+  period.
+- Historical grade rows migrated from S4.3 retain a null session and are
+  explicitly period-unknown. They are included in the unfiltered view but are
+  excluded from term-filtered results. No date is inferred from `created_at`,
+  import time, row order, or filename.
+- Academic analytics supports the existing academic-year, jenjang, class,
+  subject, assessment-type, and session-backed term filters. Term-filtered
+  participation counts enrollment/component/session slots; missing scores are
+  not zero.
 
 ### Mastery
 
@@ -260,10 +271,13 @@ attendance override replaces the original status.
   `insufficient_data`; it never becomes a zero comparison.
 - Every metric returns its current and previous sample size.
 
-The current grade schema stores scores without a date or term. Academic trend
-values therefore remain explicitly unavailable. The feature does not infer a
-time axis from score IDs or write trend snapshots, rollups, thresholds, risk
-labels, alerts, or interventions.
+Academic trend is available only when session-attributed scores exist for two
+adjacent canonical terms. It compares the mean scored result in the latest
+observed term with the immediately preceding observed term and returns both
+sample sizes. If either period is absent, the value is `null` with
+`insufficient_data`. Legacy period-unknown rows remain excluded. The feature
+does not infer a time axis from score IDs or write trend snapshots, rollups,
+thresholds, risk labels, alerts, or interventions.
 
 ## Student Indicator Discovery (2026-08)
 
@@ -282,7 +296,7 @@ student-trend attendance windows and academic-year scope.
 | `academic_participation` | Academic | Academic Analytics result-slot participation | Percent | Accepted for Stage 2 |
 | Attendance override prevalence | Attendance | No student-level interpretation | Count/percent | Rejected: diagnostic context only |
 | Data-quality issue count | Data quality | Data Quality | Count | Rejected: confidence context, not a student indicator |
-| Academic trend | Academic | Grade rows have no date or term | Score | Deferred: no trustworthy time axis |
+| Academic trend | Academic | Session-attributed scores only | Score | Technically available for comparable session-backed terms; not added to the Stage 2 risk registry |
 | Mastery proportion | Academic | KKM exists for aggregate reporting only | Percent | Deferred: no existing student-level indicator contract |
 
 Accepted attendance values use the canonical effective status. An override
@@ -294,8 +308,9 @@ denominator. Percent deltas use percentage points.
 Academic average uses the stored non-null 0–100 scores and the existing
 round-half-even rule to one decimal. Academic participation is scored result
 slots divided by expected result slots. Missing scores are not numeric zero.
-Academic indicators expose current values only. They do not expose academic
-change because canonical grade rows have no date or term field.
+Academic indicators continue to expose current values only. Session-backed
+academic trend is descriptive Student Trend output and is not automatically a
+Stage 2 risk indicator.
 
 ### Missing data and boundary
 

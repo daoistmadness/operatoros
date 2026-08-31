@@ -1,6 +1,8 @@
 import { StudentTrendInsightsResponseSchema, StudentTrendQuerySchema, type StudentTrendInsightsResponse, type StudentTrendMetric, type StudentTrendWindow } from "@operatoros/contracts/analytics";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { actor } from "./core";
+import { effectiveAcademicTerms, hasAcademicTimelineTable } from "./academic-timeline";
+import { roundHalfEven } from "../analytics/queries";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -124,22 +126,8 @@ function latestAttendanceDate(context: AuthContext, scope: StudentTrendScope, st
   return value?.anchor_date ? String(value.anchor_date) : null;
 }
 
-function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
-
 function effectiveTerms(context: AuthContext, scope: StudentTrendScope): Row[] {
-  const configured = rows(context, "SELECT id, term_number, label, start_date, end_date FROM academic_term_configs WHERE academic_year_id = ? ORDER BY term_number", [scope.academicYearId]);
-  const byNumber = new Map(configured.map((value) => [Number(value.term_number), value]));
-  const defaults: [number, number, number, string][] = [[1, 7, 9, "Term 1"], [2, 10, 12, "Term 2"], [3, 1, 3, "Term 3"], [4, 4, 6, "Term 4"]];
-  return defaults.map(([termNumber, startMonth, endMonth, label]) => {
-    const configuredTerm = byNumber.get(termNumber);
-    if (configuredTerm) return configuredTerm;
-    const year = termNumber <= 2 ? Number(scope.yearStart.slice(0, 4)) : Number(scope.yearEnd.slice(0, 4));
-    const start = `${year}-${String(startMonth).padStart(2, "0")}-01`;
-    const end = `${year}-${String(endMonth).padStart(2, "0")}-${String(daysInMonth(year, endMonth)).padStart(2, "0")}`;
-    return { term_number: termNumber, label, start_date: start < scope.yearStart ? scope.yearStart : start, end_date: end > scope.yearEnd ? scope.yearEnd : end };
-  });
+  return effectiveAcademicTerms(context, { id: scope.academicYearId, start_date: scope.yearStart, end_date: scope.yearEnd });
 }
 
 export function resolveStudentTrendWindow(context: AuthContext, scope: StudentTrendScope, kind: WindowKind, studentMasterId = ""): StudentTrendDateWindow {
@@ -171,6 +159,34 @@ function metric(unit: StudentTrendMetric["unit"], current: number | null, previo
     direction: delta === null ? "insufficient_data" : delta > 0 ? "up" : delta < 0 ? "down" : "flat",
     currentSampleSize, previousSampleSize,
   };
+}
+
+function academicMetrics(context: AuthContext, scope: StudentTrendScope, studentMasterId = ""): Map<string, StudentTrendMetric> {
+  if (!hasAcademicTimelineTable(context)) return new Map();
+  const base = studentTrendScopeCte(scope, "", studentMasterId);
+  const values = rows(context, `${base.sql}
+    SELECT ss.student_master_id AS student_id, aas.term_number,
+           SUM(g.score) AS score_sum, COUNT(g.score) AS score_count
+      FROM scope_students ss
+      JOIN student_subject_grades g ON g.enrollment_id = ss.enrollment_id AND g.score IS NOT NULL
+      JOIN academic_assessment_sessions aas ON aas.id = g.assessment_session_id AND aas.academic_year_id = ?
+     GROUP BY ss.student_master_id, aas.term_number`, [...base.params, scope.academicYearId]);
+  const grouped = new Map<string, Row[]>();
+  for (const value of values) {
+    const list = grouped.get(String(value.student_id)) ?? [];
+    list.push(value);
+    grouped.set(String(value.student_id), list);
+  }
+  const result = new Map<string, StudentTrendMetric>();
+  for (const [studentId, terms] of grouped) {
+    const currentTerm = terms.reduce((latest, value) => Math.max(latest, Number(value.term_number)), 0);
+    const current = terms.find((value) => Number(value.term_number) === currentTerm);
+    const previous = terms.find((value) => Number(value.term_number) === currentTerm - 1);
+    const currentValue = current ? roundHalfEven(Number(current.score_sum) / Number(current.score_count), 1) : null;
+    const previousValue = previous ? roundHalfEven(Number(previous.score_sum) / Number(previous.score_count), 1) : null;
+    result.set(studentId, metric("score", currentValue, previousValue, Number(current?.score_count ?? 0), Number(previous?.score_count ?? 0)));
+  }
+  return result;
 }
 
 function attendanceMetric(value: Row, period: "current" | "previous", kind: "attendance" | "tardiness" | "alfa"): StudentTrendMetric {
@@ -259,7 +275,7 @@ export function studentTrendInsights(context: AuthContext, query: Row, canAttend
   const order = String(query.order ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
   const built = aggregateQuery(scope, window, search, sort, order, page, pageSize, studentMasterId);
   const values = rows(context, built.sql, built.params);
-  const academic = metric("score", null, null, 0, 0);
+  const academicByStudent = academicMetrics(context, scope, studentMasterId);
   const resultRows = values.map((value) => {
     const currentValue = canAttendance ? attendanceMetric(value, "current", "attendance") : null;
     const previousValue = canAttendance ? attendanceMetric(value, "previous", "attendance") : null;
@@ -270,7 +286,7 @@ export function studentTrendInsights(context: AuthContext, query: Row, canAttend
     const combine = (current: StudentTrendMetric | null, previous: StudentTrendMetric | null): StudentTrendMetric | null => current === null || previous === null ? null : metric(current.unit, current.current, previous.current, current.currentSampleSize, previous.currentSampleSize);
     return {
       studentId: String(value.student_id), studentName: String(value.student_name), className: value.class_name === null ? null : String(value.class_name), jenjang: value.jenjang === null ? null : String(value.jenjang),
-      attendance: combine(currentValue, previousValue), academic,
+      attendance: combine(currentValue, previousValue), academic: academicByStudent.get(String(value.student_id)) ?? metric("score", null, null, 0, 0),
       tardiness: combine(currentTardiness, previousTardiness), alfa: combine(currentAlfa, previousAlfa),
     };
   });
@@ -280,7 +296,7 @@ export function studentTrendInsights(context: AuthContext, query: Row, canAttend
     totalStudents: Number(values[0]?.total_students ?? 0), page, pageSize, rows: resultRows,
     limitations: [
       "Rolling and term windows use calendar dates because the current schema has no instructional-day calendar.",
-      "Academic trend values are unavailable because canonical grade rows have no date or term field.",
+      "Legacy grade rows with no date or term field remain period-unknown and are excluded from session-backed academic comparisons.",
       "Teacher class-assignment scoping is not applied because the current analytics capability model does not provide an assignment-scoped student capability.",
     ],
   };

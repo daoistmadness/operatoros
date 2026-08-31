@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "baseline_schema": "20260724_s42",
-  "current_schema": "20260725_s43",
+  "current_schema": "20260831_s44",
   "startup_is_migration_runner": false,
   "states": [
     {
@@ -51,7 +51,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260725_s43",
+      "detection": "ledger head and immutable schema fingerprint equal 20260831_s44",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -83,7 +83,7 @@
       "description": "Atomically create the S4.2 empty baseline, then apply registered incremental migrations",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260725_s43",
+      "resulting_schema": "20260831_s44",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.bootstrap_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
@@ -175,6 +175,20 @@
       "schema_objects": ["attendance_follow_ups", "attendance_follow_up_notes", "attendance_follow_up_audit", "append-only attendance follow-up audit triggers"],
       "validation_queries": ["source revision exactly S4.2", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
       "downgrade_policy": "automatic downgrade forbidden"
+    },
+    {
+      "id": "20260725_s43_to_20260831_s44",
+      "description": "Add canonical academic assessment sessions and preserve period-unknown historical grade rows",
+      "predecessor": "20260725_s43",
+      "supported_source_schema": "ledger-validated 20260725_s43",
+      "resulting_schema": "20260831_s44",
+      "checksum": "3b1224ddc662b30cb367004d09f262bfa499b404b2f1f5648e4195716535140c",
+      "sqlite_migration": "core.academic_timeline_migration.migrate_academic_timeline_sqlite",
+      "schema_objects": ["academic_assessment_sessions", "student_subject_grades.assessment_session_id", "temporal and legacy grade uniqueness indexes"],
+      "historical_backfill": "none; existing grade rows retain NULL assessment_session_id and remain period-unknown",
+      "validation_queries": ["source revision exactly 20260725_s43", "protected row counts unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
+      "protected_data_expectation": "existing student, identity, enrollment, attendance, and grade values remain unchanged"
     }
   ]
 }

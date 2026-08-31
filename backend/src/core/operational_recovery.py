@@ -2,7 +2,7 @@
 
 Recovers OperatorOS operational database from an authorized complete operational backup
 (e.g., operatoros_v0.9.0_production_20260716_135924.db) to the current protected database
-target (backend/attendance.db) at the latest accepted operational schema (S4.2 / 20260724_s42)
+target (backend/attendance.db) at the latest accepted operational schema.
 with 100% preservation of all 117 students and 3651 attendance rows.
 """
 
@@ -39,6 +39,7 @@ from core.enrollment_ledger_migration import migrate_enrollment_ledger_sqlite
 from core.student_progression_migration import migrate_student_progression_sqlite
 from core.attendance_correction_migration import migrate_attendance_corrections_sqlite
 from core.attendance_followup_migration import migrate_attendance_followup_sqlite
+from core.academic_timeline_migration import migrate_academic_timeline_sqlite
 
 LOGGER = logging.getLogger("operatoros.operational_recovery")
 
@@ -278,13 +279,17 @@ def run_operational_recovery(
         # Step F: S4.2 -> S4.3 migration
         migrate_attendance_followup_sqlite(temporary_path)
 
-        # Step G: Import all ORM models explicitly to ensure metadata table registration
+        # Step G: S4.3 -> S4.4 migration
+        migrate_academic_timeline_sqlite(temporary_path)
+
+        # Step H: Import all ORM models explicitly to ensure metadata table registration
         from sqlalchemy import create_engine
         from sqlalchemy.pool import NullPool
         from core.database import Base
 
         import models.absence_reason
         import models.absence_reason_class_entry
+        import models.academic_assessment_session
         import models.academic_config
         import models.academic_intervention
         import models.academic_mapping
