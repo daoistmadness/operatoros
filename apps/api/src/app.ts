@@ -11,6 +11,7 @@ import { configRoutes, readinessRoutes, systemRoutes } from "./domains/config";
 import { attendanceRoutes } from "./domains/attendance";
 import { attendanceImportRoutes } from "./domains/attendance-import";
 import { gradeRoutes } from "./domains/grades";
+import { assessmentOperationsRoutes } from "./domains/assessment-operations";
 import { interventionRoutes } from "./domains/interventions";
 import { progressionRoutes } from "./domains/progression";
 import { reportRoutes } from "./domains/reports";
@@ -77,6 +78,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     attendanceRoutes(app, context);
     attendanceImportRoutes(app, context);
     gradeRoutes(app, context);
+    assessmentOperationsRoutes(app, context);
     interventionRoutes(app, context);
     progressionRoutes(app, context);
     reportRoutes(app, context);
