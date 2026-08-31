@@ -6,6 +6,11 @@ export type {
   GradeLineItem,
   GradeSaveResponse,
   Subject,
+  AssessmentOperationsCoverageState,
+  AssessmentOperationsResponse,
+  AssessmentOperationsScope,
+  AssessmentOperationsSession,
+  AssessmentOperationsTotals,
 } from "@operatoros/contracts/grades";
 
 export type GradeSaveResult = import("@operatoros/contracts/grades").GradeSaveResponse;

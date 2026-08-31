@@ -19306,6 +19306,26 @@
         ]
       }
     },
+    "/api/grades/assessment-operations": {
+      "get": {
+        "operationId": "getAssessmentOperations",
+        "parameters": [
+          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "term", "in": "query", "required": false, "schema": { "type": "string", "enum": ["term_1", "term_2", "term_3", "term_4"] } },
+          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "coverage_state", "in": "query", "required": false, "schema": { "type": "string", "enum": ["COMPLETE", "PARTIAL", "NONE", "EMPTY"] } },
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["assessment_date", "assessment", "class", "subject", "term", "applicable", "recorded", "unrecorded", "coverage"] } },
+          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
+          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+        ],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Get academic assessment operations",
+        "tags": ["grades"]
+      }
+    },
     "/api/grades/subjects": {
       "get": {
         "operationId": "get_subjects_api_grades_subjects_get",

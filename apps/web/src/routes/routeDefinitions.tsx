@@ -30,6 +30,7 @@ const StaffManagement = lazy(() => import('../pages/StaffManagement'));
 const StaffDetail = lazy(() => import('../pages/StaffDetail'));
 const CanonicalStudentProfile = lazy(() => import('../pages/CanonicalStudentProfile'));
 const GradeLedger = lazy(() => import('../pages/GradeLedger'));
+const AcademicAssessmentOperations = lazy(() => import('../pages/AcademicAssessmentOperations'));
 const Enrollment = lazy(() => import('../pages/Enrollment'));
 const AcademicManagement = lazy(() => import('../pages/AcademicManagement'));
 const ManagementAnalytics = lazy(() => import('../pages/ManagementAnalytics'));
@@ -114,6 +115,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/attendance/class-departures', element: <ClassEarlyDeparture />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_early_departure') }),
   defineRoute({ path: '/enrollment', element: <Enrollment />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('manage_enrollment') }),
   defineRoute({ path: '/grades', element: <GradeLedger />, group: ROUTE_GROUPS.GRADES, authorization: adminOnly() }),
+  defineRoute({ path: '/grades/operations', element: <AcademicAssessmentOperations />, group: ROUTE_GROUPS.GRADES, authorization: adminOnly() }),
   defineRoute({ path: '/config/jenjang', element: <JenjangConfig />, group: ROUTE_GROUPS.ACADEMIC, authorization: authenticated() }),
   defineRoute({ path: '/config/heb', element: <HebConfig />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
   defineRoute({ path: '/config/absence-reasons', element: <AbsenceReasons />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
