@@ -92,7 +92,7 @@ export default function ClassAttendanceEntry() {
 
   const todayStr = new Date().toISOString().split("T")[0];
   const [selectedClassId, setSelectedClassId] = useState<string>(() => searchParams.get("class_id") ?? "");
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [selectedDate, setSelectedDate] = useState<string>(() => searchParams.get("date") ?? todayStr);
   const [exportMonth, setExportMonth] = useState<string>(todayStr.slice(0, 7));
   const [exportingExcel, setExportingExcel] = useState<boolean>(false);
   const [exportError, setExportError] = useState<string | null>(null);

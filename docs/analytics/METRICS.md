@@ -342,3 +342,23 @@ enrollment roster. Duplicate enrollment rows are reduced to one student.
   scope.
 - The page links to Student 360 and the detailed Attendance, Academic, and
   Data Quality surfaces. It adds no rollups, formulas, roles, or exports.
+
+## Daily Attendance Operations (2026-09)
+
+Daily Attendance Operations reports attendance-recording coverage for one
+selected `YYYY-MM-DD` date. It uses active, date-effective enrollments and
+distinct students with an attendance row for that date.
+
+- `COMPLETE` means recorded students equal expected active enrolled students.
+- `PARTIAL` means recorded students are greater than zero and lower than the
+  expected count.
+- `NONE` means no attendance record exists for a non-empty class.
+- `EMPTY_CLASS` means the date-effective expected student count is zero.
+- `unrecordedStudentCount` is the server-side difference between expected and
+  recorded students. It is never converted to `Alfa`.
+- Status counts use effective status. `COALESCE(override_status, status)` is
+  counted once per student.
+- A `coveragePercent` is not applicable for an empty class and returns `null`.
+- No school-day, deadline, or submission calendar exists in the current
+  model. `NONE` therefore means `No attendance recorded`, not overdue or
+  failed submission.
