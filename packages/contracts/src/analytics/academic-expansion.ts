@@ -9,6 +9,7 @@ export const AcademicAnalyticsQuerySchema = Type.Object({
   class_id: Type.Optional(Type.String({ pattern: "^[1-9]\\d*$" })),
   subject_id: Type.Optional(Type.String({ pattern: "^[1-9]\\d*$" })),
   assessment_type: Type.Optional(AssessmentType),
+  term: Type.Optional(Type.Union([Type.Literal("term_1"), Type.Literal("term_2"), Type.Literal("term_3"), Type.Literal("term_4")])),
   search: Type.Optional(Type.String({ maxLength: 120 })),
   sort: Type.Optional(Type.Union([Type.Literal("name"), Type.Literal("average"), Type.Literal("formative"), Type.Literal("summative"), Type.Literal("missing")])),
   order: Type.Optional(Type.Union([Type.Literal("asc"), Type.Literal("desc")])),
@@ -35,7 +36,7 @@ export const AcademicAnalyticsOptionsResponseSchema = Type.Object({
 });
 
 export const AcademicAnalyticsScopeSchema = Type.Object({
-  academicYearId: Type.Number({ minimum: 1 }), academicYearLabel: Type.String({ minLength: 1 }), term: Type.Null(),
+  academicYearId: Type.Number({ minimum: 1 }), academicYearLabel: Type.String({ minLength: 1 }), term: Type.Union([Type.Number({ minimum: 1, maximum: 4 }), Type.Null()]),
   jenjangId: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]), classId: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
   subjectId: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]), assessmentType: Type.Union([AssessmentType, Type.Null()]),
   includedStudentCount: Type.Number({ minimum: 0 }), includedAssessmentCount: Type.Number({ minimum: 0 }),

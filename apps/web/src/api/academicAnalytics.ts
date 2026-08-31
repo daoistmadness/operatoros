@@ -7,6 +7,7 @@ export type AcademicAnalyticsFilters = {
   class_id?: number | null;
   subject_id?: number | null;
   assessment_type?: "sumatif" | "formatif" | null;
+  term?: "term_1" | "term_2" | "term_3" | "term_4" | null;
 };
 
 export type AcademicStudentFilters = AcademicAnalyticsFilters & {
@@ -18,7 +19,7 @@ export type AcademicStudentFilters = AcademicAnalyticsFilters & {
 };
 
 function params(filters: AcademicAnalyticsFilters) {
-  return { academic_year_id: filters.academic_year_id, jenjang_id: filters.jenjang_id ?? undefined, class_id: filters.class_id ?? undefined, subject_id: filters.subject_id ?? undefined, assessment_type: filters.assessment_type ?? undefined };
+  return { academic_year_id: filters.academic_year_id, jenjang_id: filters.jenjang_id ?? undefined, class_id: filters.class_id ?? undefined, subject_id: filters.subject_id ?? undefined, assessment_type: filters.assessment_type ?? undefined, term: filters.term ?? undefined };
 }
 
 export async function fetchAcademicAnalyticsOptions(academicYearId: number, jenjangId?: number | null): Promise<AcademicAnalyticsOptionsResponse> {

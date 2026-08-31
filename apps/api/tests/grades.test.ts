@@ -43,11 +43,14 @@ describe("grades and academic parity slices", () => {
       database.client.run("INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('Exam', 'sumatif', ?)", [subjectId]);
       const subject = database.client.query("SELECT id FROM subjects ORDER BY id LIMIT 1").get() as { id: number };
       const component = database.client.query("SELECT id FROM assessment_components WHERE subject_id = ? ORDER BY id LIMIT 1").get(subjectId) as { id: number };
-      const body = { enrollment_id: enrollment.id, grades: [{ subject_id: subject.id, component_id: component.id, score: 88 }] };
+      const sessionResponse = await app.handle(new Request("http://local/api/grades/assessment-sessions", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: year.id, term_number: 1, label: "Exam", assessment_date: "2026-08-15" }) }));
+      expect(sessionResponse.status).toBe(200);
+      const session = await sessionResponse.json() as { id: number };
+      const body = { enrollment_id: enrollment.id, assessment_session_id: session.id, grades: [{ subject_id: subject.id, component_id: component.id, score: 88 }] };
       const saved = await app.handle(new Request("http://local/api/grades/save", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }));
       expect(saved.status).toBe(200);
       expect(await saved.json()).toMatchObject({ status: "success", inserted: 1, updated: 0, saved: 1 });
-      expect(() => database.client.run("INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, score) VALUES (?, ?, ?, ?)", [enrollment.id, subject.id, component.id, 91])).toThrow();
+      expect(() => database.client.run("INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, ?)", [enrollment.id, subject.id, component.id, session.id, 91])).toThrow();
       expect(() => database.client.run("INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('Broken', 'invalid', ?)", [subject.id])).toThrow();
       expect(() => database.client.run("DELETE FROM subjects WHERE id = ?", [subject.id])).toThrow();
       const duplicate = await app.handle(new Request("http://local/api/grades/save", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ ...body, grades: [body.grades[0], body.grades[0]] }) }));

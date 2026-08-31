@@ -7,6 +7,7 @@ import { studentQualityIssues } from "./data-quality";
 import { recentStudentAttendance } from "./student-attendance-export";
 import { studentIndicatorInsights } from "./student-indicators";
 import { studentTrendInsights } from "./student-trends";
+import { hasAcademicTimelineTable, studentAcademicHistory } from "./academic-timeline";
 import { actor, studentDetail } from "./core";
 
 type Row = Record<string, any>;
@@ -46,8 +47,16 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
   const scope = enrollment ? { academic_year_id: String(academicYearId), class_id: classId === null ? undefined : String(classId), student_id: studentMasterId, page_size: "1" } : null;
   const indicators = scope ? studentIndicatorInsights(context, scope, canAttendance) : null;
   const indicator = indicators?.rows[0] ?? null;
-  const trends = scope && canAttendance ? studentTrendInsights(context, scope, true) : null;
+  const trends = scope ? studentTrendInsights(context, scope, canAttendance) : null;
   const trend = trends?.rows[0] ?? null;
+  const academicHistory = enrollment ? studentAcademicHistory(context, Number(enrollment.id)) : [];
+  const timelineSupported = hasAcademicTimelineTable(context);
+  const academicTrend = trend?.academic ?? null;
+  const temporalTrend = !timelineSupported || !academicHistory.some((value) => value.periodStatus === "known")
+    ? "unavailable_no_time_axis"
+    : academicTrend?.current !== null && academicTrend?.previous !== null
+      ? "available"
+      : "insufficient_data";
   const dateEnd = enrollment ? (today < String(enrollment.start_date) ? String(enrollment.start_date) : today > String(enrollment.end_date) ? String(enrollment.end_date) : today) : null;
   const attendanceQuery = enrollment && dateEnd ? { academic_year_id: String(academicYearId), date_from: String(enrollment.start_date), date_to: dateEnd, class_id: classId === null ? undefined : String(classId) } : null;
   const attendance = canAttendance && attendanceQuery && enrollment?.student_id != null ? attendanceStudentSummary(context, attendanceQuery, Number(enrollment.student_id)) : null;
@@ -80,12 +89,13 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
       average: academicAverage, participation: academicParticipation,
       scoredResults: indicator?.academicAverage.currentSampleSize ?? 0,
       expectedResults: indicator?.academicParticipation.currentSampleSize ?? 0,
-      temporalTrend: "unavailable_no_time_axis",
+      temporalTrend,
+      history: academicHistory,
     },
     trends: {
       status: !canAttendance ? "unauthorized" : !trend ? "no_data" : trendComparison,
       window: canAttendance ? trends?.window ?? null : null,
-      attendance: trend?.attendance ?? null, tardiness: trend?.tardiness ?? null, alfa: trend?.alfa ?? null,
+      attendance: trend?.attendance ?? null, academic: academicTrend, tardiness: trend?.tardiness ?? null, alfa: trend?.alfa ?? null,
     },
     dataCompleteness: { status: "available", issues: studentQualityIssues(context, studentMasterId, academicYearId) },
     availability: {

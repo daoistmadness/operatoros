@@ -59,6 +59,7 @@ S39_TRIGGERS = {
 MODEL_MODULES = (
     "models.absence_reason",
     "models.absence_reason_class_entry",
+    "models.academic_assessment_session",
     "models.academic_config",
     "models.academic_intervention",
     "models.academic_mapping",
@@ -95,6 +96,8 @@ POST_BASELINE_MODEL_TABLES = frozenset({
     "attendance_follow_up_notes",
     "attendance_follow_up_audit",
 })
+
+TIMELINE_MODEL_TABLES = frozenset({"academic_assessment_sessions", "student_subject_grades"})
 
 
 @dataclass(frozen=True)
@@ -305,13 +308,30 @@ def initialize_s42_baseline_sqlite_database(path: Path) -> str:
     baseline_tables = [
         table
         for table in Base.metadata.sorted_tables
-        if table.name not in POST_BASELINE_MODEL_TABLES
+        if table.name not in POST_BASELINE_MODEL_TABLES and table.name not in TIMELINE_MODEL_TABLES
     ]
     migration_engine = create_engine(f"sqlite:///{temporary}")
     try:
         Base.metadata.create_all(migration_engine, tables=baseline_tables)
         migration_engine.dispose()
         with sqlite3.connect(temporary) as connection:
+            connection.executescript(
+                """
+                CREATE TABLE student_subject_grades (
+                  id INTEGER NOT NULL PRIMARY KEY,
+                  enrollment_id INTEGER NOT NULL REFERENCES student_enrollments(id) ON DELETE RESTRICT,
+                  subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE RESTRICT,
+                  component_id INTEGER NOT NULL REFERENCES assessment_components(id) ON DELETE RESTRICT,
+                  score FLOAT,
+                  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  CONSTRAINT _grade_component_uc UNIQUE (enrollment_id, subject_id, component_id)
+                );
+                CREATE INDEX ix_student_subject_grades_enrollment_id ON student_subject_grades (enrollment_id);
+                CREATE INDEX ix_student_subject_grades_subject_id ON student_subject_grades (subject_id);
+                CREATE INDEX ix_student_subject_grades_component_id ON student_subject_grades (component_id);
+                """
+            )
             connection.execute(
                 "CREATE INDEX IF NOT EXISTS idx_attendance_student_date ON attendance(student_id, date)"
             )
@@ -388,6 +408,7 @@ def initialize_s42_baseline_sqlite_database(path: Path) -> str:
 def migrate_database_to_current(path: Path) -> str:
     """Apply every registered migration after the S4.2 fresh baseline."""
     from core.attendance_followup_migration import migrate_attendance_followup_sqlite
+    from core.academic_timeline_migration import migrate_academic_timeline_sqlite
 
     target = path.resolve(strict=True)
     with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
@@ -396,12 +417,17 @@ def migrate_database_to_current(path: Path) -> str:
         ).fetchone()
     if row == (CURRENT_SCHEMA_VERSION,):
         return "MIGRATION_ALREADY_CURRENT"
-    if row != (BASELINE_SCHEMA_VERSION,):
+    if row == (BASELINE_SCHEMA_VERSION,):
+        migrate_attendance_followup_sqlite(target)
+        row = ("20260725_s43",)
+    if row == ("20260725_s43",):
+        return migrate_academic_timeline_sqlite(target)
+    if row != (CURRENT_SCHEMA_VERSION,):
         actual = row[0] if row else "missing"
         raise RuntimeError(
-            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION}, found {actual}"
+            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION} or 20260725_s43, found {actual}"
         )
-    return migrate_attendance_followup_sqlite(target)
+    return "MIGRATION_ALREADY_CURRENT"
 
 
 def _complete_model_schema(target: Path) -> None:
@@ -443,7 +469,7 @@ def _complete_model_schema(target: Path) -> None:
 
 
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
-    """Create the S4.2 baseline, then run registered migrations to S4.3."""
+    """Create the S4.2 baseline, then run registered migrations to S4.4."""
     target = path.resolve(strict=False)
     if target.exists():
         with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
@@ -456,6 +482,13 @@ def bootstrap_fresh_sqlite_database(path: Path) -> str:
     initialize_s42_baseline_sqlite_database(target)
     migrate_database_to_current(target)
     _complete_model_schema(target)
+    with sqlite3.connect(target) as connection:
+        final_fingerprint = _schema_fingerprint(connection)
+        connection.execute(
+            f"UPDATE {LEDGER_TABLE} SET schema_fingerprint = ? WHERE version = ?",
+            (final_fingerprint, CURRENT_SCHEMA_VERSION),
+        )
+        connection.commit()
     return "MIGRATION_COMPLETE"
 
 
@@ -656,6 +689,8 @@ def main(argv: list[str] | None = None) -> int:
     upgrade_s42.add_argument("--database", required=True, type=Path)
     upgrade_s43 = commands.add_parser("upgrade-s43")
     upgrade_s43.add_argument("--database", required=True, type=Path)
+    upgrade_s44 = commands.add_parser("upgrade-s44")
+    upgrade_s44.add_argument("--database", required=True, type=Path)
     baseline = commands.add_parser("initialize-s42-baseline")
     baseline.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
@@ -685,6 +720,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s43":
         from core.attendance_followup_migration import migrate_attendance_followup_sqlite
         print(json.dumps({"status": migrate_attendance_followup_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s44":
+        from core.academic_timeline_migration import migrate_academic_timeline_sqlite
+        print(json.dumps({"status": migrate_academic_timeline_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")

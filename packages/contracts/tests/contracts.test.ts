@@ -27,6 +27,7 @@ describe("@operatoros/contracts", () => {
     expect(Value.Check(AuthUserSchema, { id: 1, username: "admin", role: "admin", capabilities: [] })).toBe(true);
     expect(Value.Check(GradeGridSaveRequestSchema, {
       enrollment_id: 1,
+      assessment_session_id: null,
       grades: [{ subject_id: 2, component_id: 3, score: null }],
     })).toBe(true);
     expect(Value.Check(GradeSaveResponseSchema, {
@@ -34,7 +35,7 @@ describe("@operatoros/contracts", () => {
       inserted: 1,
       updated: 0,
       saved: 1,
-      grades: [{ id: 4, enrollment_id: 1, subject_id: 2, component_id: 3, score: 88 },],
+      grades: [{ id: 4, enrollment_id: 1, subject_id: 2, component_id: 3, assessment_session_id: 7, score: 88 },],
     })).toBe(true);
     expect(Value.Check(CreateEnrollmentRequestSchema, {
       academic_year_id: 1,
@@ -97,13 +98,15 @@ describe("@operatoros/contracts", () => {
   it("rejects invalid values without changing optional and null semantics", () => {
     expect(Value.Check(LoginRequestSchema, { username: "", password: "secret" })).toBe(false);
     expect(Value.Check(AuthUserSchema, { id: 1, username: "admin", role: "owner", capabilities: [] })).toBe(false);
-    expect(Value.Check(GradeGridSaveRequestSchema, { enrollment_id: 1, grades: [] })).toBe(false);
+    expect(Value.Check(GradeGridSaveRequestSchema, { enrollment_id: 1, assessment_session_id: null, grades: [] })).toBe(false);
     expect(Value.Check(GradeGridSaveRequestSchema, {
       enrollment_id: 1,
+      assessment_session_id: 7,
       grades: [{ subject_id: 2, component_id: 3, score: 101 }],
     })).toBe(false);
     expect(Value.Check(GradeGridSaveRequestSchema, {
       enrollment_id: 1,
+      assessment_session_id: 7,
       grades: [{ subject_id: 2, component_id: 3 }],
     })).toBe(true);
     expect(Value.Check(AttendanceImportCommitRequestSchema, {
