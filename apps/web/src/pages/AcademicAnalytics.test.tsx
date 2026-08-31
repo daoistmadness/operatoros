@@ -36,6 +36,6 @@ describe("AcademicAnalytics", () => {
     await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AcademicAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
     await vi.waitFor(() => expect(container.textContent).toContain("Academic Analytics"), { timeout: 3000 });
     expect(container.textContent).toContain("85.0"); expect(container.textContent).toContain("By Subject"); expect(container.textContent).toContain("Assessments"); expect(container.textContent).toContain("A Student"); expect(container.querySelector('[data-testid="academic-chart"]')).not.toBeNull();
-    expect(academicApi.fetchAcademicAnalyticsOverview).toHaveBeenCalledWith({ academic_year_id: 1, jenjang_id: null, class_id: null, subject_id: null, assessment_type: null });
+    expect(academicApi.fetchAcademicAnalyticsOverview).toHaveBeenCalledWith({ academic_year_id: 1, jenjang_id: null, class_id: null, subject_id: null, assessment_type: null, term: null });
   });
 });

@@ -9,6 +9,7 @@ import {
   type AcademicAnalyticsOverviewResponse,
 } from "@operatoros/contracts/analytics";
 import { roundHalfEven } from "../analytics/queries";
+import { hasAcademicTimelineTable } from "./academic-timeline";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 
@@ -54,6 +55,7 @@ interface AcademicScope {
   classId: number | null;
   subjectId: number | null;
   assessmentType: "sumatif" | "formatif" | null;
+  term: number | null;
 }
 
 interface BuiltQuery { sql: string; params: unknown[] }
@@ -92,17 +94,45 @@ function buildScope(context: AuthContext, query: Row): AcademicScope | null {
   }
   const assessmentType = query.assessment_type === undefined ? null : query.assessment_type;
   if (assessmentType !== null && !TYPES.includes(assessmentType)) return null;
-  return { academicYearId, academicYearLabel: String(year.label), jenjangId, classId, subjectId, assessmentType };
+  const termValue = query.term === undefined ? null : Number(String(query.term).replace("term_", ""));
+  if (termValue !== null && (!Number.isInteger(termValue) || termValue < 1 || termValue > 4 || !String(query.term).startsWith("term_"))) return null;
+  return { academicYearId, academicYearLabel: String(year.label), jenjangId, classId, subjectId, assessmentType, term: termValue };
 }
 
-function scopedCte(scope: AcademicScope): BuiltQuery {
+function scopedCte(context: AuthContext, scope: AcademicScope): BuiltQuery {
   const filters = ["e.academic_year_id = ?"];
-  const params: unknown[] = [scope.academicYearId];
-  if (scope.jenjangId !== null) { filters.push("e.jenjang_id = ?"); params.push(scope.jenjangId); }
-  if (scope.classId !== null) { filters.push("e.academic_class_id = ?"); params.push(scope.classId); }
+  const enrollmentParams: unknown[] = [scope.academicYearId];
+  if (scope.jenjangId !== null) { filters.push("e.jenjang_id = ?"); enrollmentParams.push(scope.jenjangId); }
+  if (scope.classId !== null) { filters.push("e.academic_class_id = ?"); enrollmentParams.push(scope.classId); }
   const catalogFilters = ["sub.jenjang_id IN (SELECT DISTINCT jenjang_id FROM scope_enrollments)"];
-  if (scope.subjectId !== null) { catalogFilters.push("sub.id = ?"); params.push(scope.subjectId); }
-  if (scope.assessmentType !== null) { catalogFilters.push("ac.assessment_type = ?"); params.push(scope.assessmentType); }
+  const catalogParams: unknown[] = [];
+  if (scope.subjectId !== null) { catalogFilters.push("sub.id = ?"); catalogParams.push(scope.subjectId); }
+  if (scope.assessmentType !== null) { catalogFilters.push("ac.assessment_type = ?"); catalogParams.push(scope.assessmentType); }
+  const timelineAvailable = hasAcademicTimelineTable(context);
+  const catalogWhere = catalogFilters.join(" AND ");
+  const legacyCatalog = `SELECT sub.id AS subject_id, sub.name AS subject_name, sub.jenjang_id,
+             ac.id AS component_id, ac.name AS component_name, ac.assessment_type,
+             NULL AS assessment_session_id
+        FROM subjects sub
+        JOIN assessment_components ac ON ac.subject_id IS NULL OR ac.subject_id = sub.id
+       WHERE ${catalogWhere}`;
+  const sessionCatalog = `SELECT sub.id AS subject_id, sub.name AS subject_name, sub.jenjang_id,
+             ac.id AS component_id, ac.name AS component_name, ac.assessment_type,
+             aas.id AS assessment_session_id
+        FROM subjects sub
+        JOIN assessment_components ac ON ac.subject_id IS NULL OR ac.subject_id = sub.id
+        JOIN academic_assessment_sessions aas ON aas.academic_year_id = ?${scope.term === null ? "" : " AND aas.term_number = ?"}
+       WHERE ${catalogWhere}`;
+  const catalogSql = scope.term !== null
+    ? sessionCatalog
+    : timelineAvailable ? `${legacyCatalog} UNION ALL ${sessionCatalog}` : legacyCatalog;
+  const params: unknown[] = [...enrollmentParams];
+  if (scope.term !== null) params.push(scope.academicYearId, scope.term, ...catalogParams);
+  else {
+    params.push(...catalogParams);
+    if (timelineAvailable) params.push(scope.academicYearId, ...catalogParams);
+  }
+  const scoreSessionFilter = timelineAvailable ? " AND g.assessment_session_id IS c.assessment_session_id" : "";
   return {
     sql: `WITH ranked_enrollments AS (
       SELECT e.id AS enrollment_id, e.student_id, e.jenjang_id, e.academic_class_id AS class_id,
@@ -121,29 +151,23 @@ function scopedCte(scope: AcademicScope): BuiltQuery {
        WHERE ${filters.join(" AND ")}
     ), scope_enrollments AS (
       SELECT * FROM ranked_enrollments WHERE enrollment_rank = 1
-    ), catalog AS (
-      SELECT sub.id AS subject_id, sub.name AS subject_name, sub.jenjang_id,
-             ac.id AS component_id, ac.name AS component_name, ac.assessment_type
-        FROM subjects sub
-        JOIN assessment_components ac ON ac.subject_id IS NULL OR ac.subject_id = sub.id
-       WHERE ${catalogFilters.join(" AND ")}
-    ), score_slots AS (
+    ), catalog AS (${catalogSql}), score_slots AS (
       SELECT e.enrollment_id, e.student_id, e.student_name, e.class_id, e.class_name,
              e.jenjang_id, e.jenjang_name, c.subject_id, c.subject_name, c.component_id,
-             c.component_name, c.assessment_type, g.score
+             c.component_name, c.assessment_type, c.assessment_session_id, g.score
         FROM scope_enrollments e
         JOIN catalog c ON c.jenjang_id = e.jenjang_id
         LEFT JOIN student_subject_grades g
           ON g.enrollment_id = e.enrollment_id
          AND g.subject_id = c.subject_id
-         AND g.component_id = c.component_id
+         AND g.component_id = c.component_id${scoreSessionFilter}
     )`,
     params,
   };
 }
 
 function scopeCounts(context: AuthContext, scope: AcademicScope): Row {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   return row(context, `${built.sql}, counts AS (
     SELECT (SELECT COUNT(*) FROM scope_enrollments) AS students,
            (SELECT COUNT(*) FROM catalog) AS assessments
@@ -151,7 +175,7 @@ function scopeCounts(context: AuthContext, scope: AcademicScope): Row {
 }
 
 function summaryQuery(context: AuthContext, scope: AcademicScope): Row {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   return row(context, `${built.sql}
     SELECT
       (SELECT COUNT(*) FROM scope_enrollments) AS students,
@@ -183,7 +207,7 @@ function scoreSummary(value: Row, prefix = ""): Row {
 }
 
 function groupRows(context: AuthContext, scope: AcademicScope, group: Group): Row[] {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   const groupId = group === "subjects" ? "subject_id" : group === "classes" ? "class_id" : "jenjang_id";
   const groupLabel = group === "subjects" ? "subject_name" : group === "classes" ? "class_name" : "jenjang_name";
   const values = rows(context, `${built.sql}
@@ -212,7 +236,7 @@ function groupRows(context: AuthContext, scope: AcademicScope, group: Group): Ro
 }
 
 function assessmentRows(context: AuthContext, scope: AcademicScope): Row[] {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   return rows(context, `${built.sql}
     SELECT component_id AS id, component_name AS label, subject_id, subject_name, assessment_type,
            COUNT(DISTINCT CASE WHEN score IS NOT NULL THEN student_id END) AS participants,
@@ -229,7 +253,7 @@ function assessmentRows(context: AuthContext, scope: AcademicScope): Row[] {
 }
 
 function distribution(context: AuthContext, scope: AcademicScope): Row[] {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   const values = rows(context, `${built.sql} SELECT score FROM score_slots WHERE score IS NOT NULL`, built.params);
   return DISTRIBUTION.map(([bucket, min, max]) => ({ bucket, min, max, count: values.filter((value) => Number(value.score) >= min && Number(value.score) <= max).length }));
 }
@@ -245,7 +269,7 @@ function thresholdFor(values: Row[], jenjangId: number, subjectId: number, asses
 }
 
 function mastery(context: AuthContext, scope: AcademicScope): Row {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   const values = rows(context, `${built.sql}
     SELECT student_id, jenjang_id, subject_id, assessment_type, SUM(score) AS score_sum, COUNT(score) AS score_count
       FROM score_slots WHERE score IS NOT NULL
@@ -267,7 +291,7 @@ function mastery(context: AuthContext, scope: AcademicScope): Row {
 
 function scopeMetadata(scope: AcademicScope, counts: Row): Row {
   return {
-    academicYearId: scope.academicYearId, academicYearLabel: scope.academicYearLabel, term: null,
+    academicYearId: scope.academicYearId, academicYearLabel: scope.academicYearLabel, term: scope.term,
     jenjangId: scope.jenjangId, classId: scope.classId, subjectId: scope.subjectId, assessmentType: scope.assessmentType,
     includedStudentCount: Number(counts.students ?? 0), includedAssessmentCount: Number(counts.assessments ?? 0),
   };
@@ -292,7 +316,7 @@ function overview(context: AuthContext, scope: AcademicScope): Row {
       missing: "Expected catalog slots with no score. Missing scores are not zero.",
       rounding: "Displayed averages use the existing round-half-even rule to one decimal place.",
       mastery: "Student-subject-assessment-type averages compared with existing KKM precedence; fallback is 85.",
-      term: "Not available because student grade rows have no term field.",
+      term: scope.term === null ? "Term filtering is available for session-attributed grade rows; period-unknown legacy rows remain in the unfiltered view." : "Expected results are enrollment slots across assessment sessions in the selected canonical term.",
     },
     generatedAt: new Date().toISOString(),
   };
@@ -304,7 +328,7 @@ export function academicOverview(context: AuthContext, query: Row): AcademicAnal
 }
 
 function studentRows(context: AuthContext, scope: AcademicScope, query: Row, includeAll = false): Row {
-  const built = scopedCte(scope);
+  const built = scopedCte(context, scope);
   const search = String(query.search ?? "").trim().toLowerCase();
   const filter = search ? "WHERE lower(student_name) LIKE ?" : "";
   const filteredParams = search ? [...built.params, `%${search}%`] : built.params;

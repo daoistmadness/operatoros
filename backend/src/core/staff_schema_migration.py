@@ -1,4 +1,4 @@
-"""Explicit additive staff schema extension for current S4.3 SQLite databases."""
+"""Explicit additive staff schema extension for the current SQLite schema."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, inspect, text
 
 from core.database import Base
+from core.schema_guard import CURRENT_SCHEMA_VERSION
 from models.user import User  # noqa: F401 - resolve the batch actor FK
 from models.staff import (
     StaffContactDetail, StaffIdentifier, StaffImportBatch, StaffImportIssue,
@@ -54,8 +55,8 @@ def ensure_staff_schema(database: str | Path) -> str:
         current = connection.execute(
             "SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC LIMIT 1"
         ).fetchone()
-        if not current or current[0] != "20260725_s43":
-            raise ValueError("UNSUPPORTED_SCHEMA_REQUIRES_S43")
+        if not current or current[0] != CURRENT_SCHEMA_VERSION:
+            raise ValueError(f"UNSUPPORTED_SCHEMA_REQUIRES_{CURRENT_SCHEMA_VERSION}")
     engine = create_engine(f"sqlite:///{path}")
     try:
         inspector = inspect(engine)

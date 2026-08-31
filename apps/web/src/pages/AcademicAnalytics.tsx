@@ -32,6 +32,7 @@ export default function AcademicAnalytics() {
   const [classId, setClassId] = useState<number | null>(() => queryId(searchParams.get("class_id")));
   const [subjectId, setSubjectId] = useState<number | null>(null);
   const [assessmentType, setAssessmentType] = useState<"sumatif" | "formatif" | null>(null);
+  const [term, setTerm] = useState<"term_1" | "term_2" | "term_3" | "term_4" | null>(null);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"name" | "average" | "formative" | "summative" | "missing">("name");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
@@ -44,8 +45,8 @@ export default function AcademicAnalytics() {
   const options = useAcademicAnalyticsOptionsQuery(academicYearId, jenjangId, allowed);
   useEffect(() => { if (classId !== null && options.data && !options.data.classes.some((value) => value.id === classId)) setClassId(null); }, [classId, options.data]);
   useEffect(() => { if (subjectId !== null && options.data && !options.data.subjects.some((value) => value.id === subjectId)) setSubjectId(null); }, [options.data, subjectId]);
-  useEffect(() => { setPage(1); }, [academicYearId, jenjangId, classId, subjectId, assessmentType, search, sort, order]);
-  const filters: AcademicAnalyticsFilters | null = academicYearId === null ? null : { academic_year_id: academicYearId, jenjang_id: jenjangId, class_id: classId, subject_id: subjectId, assessment_type: assessmentType };
+  useEffect(() => { setPage(1); }, [academicYearId, jenjangId, classId, subjectId, assessmentType, term, search, sort, order]);
+  const filters: AcademicAnalyticsFilters | null = academicYearId === null ? null : { academic_year_id: academicYearId, jenjang_id: jenjangId, class_id: classId, subject_id: subjectId, assessment_type: assessmentType, term };
   const overview = useAcademicAnalyticsOverviewQuery(filters, allowed);
   const students = useAcademicAnalyticsStudentsQuery(filters ? { ...filters, search, sort, order, page, page_size: 25 } : null, allowed);
   if (!allowed) return <PermissionRestrictedState title="Access restricted" description="You do not have permission to view academic analytics." />;
@@ -63,8 +64,9 @@ export default function AcademicAnalytics() {
   return <div className="space-y-7">
     <PageHeader eyebrow="Management Analytics" title="Academic Analytics" description="Descriptive academic performance from canonical server-side score aggregates." actions={<Button onClick={() => void exportReport()} disabled={exporting || !can("export_student_data")}><Download className="h-4 w-4" aria-hidden="true" />{exporting ? "Exporting…" : "Export Academic Analytics"}</Button>} />
     {exportError && <ErrorState title="Export failed" description={exportError} />}
-    <Card><CardHeader><CardTitle>Filters</CardTitle></CardHeader><CardContent><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <Card><CardHeader><CardTitle>Filters</CardTitle></CardHeader><CardContent><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
       <div><FieldLabel htmlFor="academic-year">Academic year</FieldLabel><NativeSelect id="academic-year" value={academicYearId ?? ""} onChange={(event) => { setAcademicYearId(Number(event.target.value)); setJenjangId(null); setClassId(null); setSubjectId(null); }}><option value="">Select year</option>{years.map((value) => <option key={value.id} value={value.id}>{value.label}</option>)}</NativeSelect></div>
+      <div><FieldLabel htmlFor="academic-term">Term</FieldLabel><NativeSelect id="academic-term" value={term ?? ""} onChange={(event) => setTerm((event.target.value || null) as typeof term)}><option value="">All periods</option><option value="term_1">Term 1</option><option value="term_2">Term 2</option><option value="term_3">Term 3</option><option value="term_4">Term 4</option></NativeSelect></div>
       <div><FieldLabel htmlFor="academic-jenjang">Jenjang</FieldLabel><NativeSelect id="academic-jenjang" value={jenjangId ?? ""} onChange={(event) => { setJenjangId(event.target.value ? Number(event.target.value) : null); setClassId(null); setSubjectId(null); }}><option value="">All jenjang</option>{options.data?.jenjangs.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</NativeSelect></div>
       <div><FieldLabel htmlFor="academic-class">Class / Rombel</FieldLabel><NativeSelect id="academic-class" value={classId ?? ""} onChange={(event) => setClassId(event.target.value ? Number(event.target.value) : null)}><option value="">All classes</option>{options.data?.classes.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</NativeSelect></div>
       <div><FieldLabel htmlFor="academic-subject">Subject</FieldLabel><NativeSelect id="academic-subject" value={subjectId ?? ""} onChange={(event) => setSubjectId(event.target.value ? Number(event.target.value) : null)}><option value="">All subjects</option>{options.data?.subjects.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}</NativeSelect></div>

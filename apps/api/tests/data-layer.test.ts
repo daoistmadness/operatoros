@@ -35,8 +35,8 @@ function bootstrapDatabase(path: string): void {
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
 }
 
-describe("S4.3 data layer", () => {
-  it("opens and validates a fresh disposable S4.3 database", () => {
+describe("S4.4 data layer", () => {
+  it("opens and validates a fresh disposable S4.4 database", () => {
     const path = disposableDatabasePath("fresh");
     bootstrapDatabase(path);
     try {
@@ -48,7 +48,7 @@ describe("S4.3 data layer", () => {
     }
   }, 30000);
 
-  it("creates every table declared by the S4.3 schema snapshot", () => {
+  it("creates every table declared by the S4.4 schema snapshot", () => {
     const path = disposableDatabasePath("fresh-parity");
     bootstrapDatabase(path);
     try {
@@ -84,7 +84,7 @@ describe("S4.3 data layer", () => {
     client.close();
   });
 
-  it("fails closed on the historical 65/78 S4.3 state (ledger ahead of schema)", () => {
+  it("fails closed on an incomplete current-schema state", () => {
     const path = disposableDatabasePath("historical-65");
     bootstrapDatabase(path);
     try {
@@ -97,8 +97,8 @@ describe("S4.3 data layer", () => {
       const before = (probe.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map((r) => r.name).sort().join(",");
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
-      expect(before.split(",").length).toBe(65);
-      expect(ledgerBefore).toBe("20260724_s42,20260725_s43");
+      expect(before.split(",").length).toBe(66);
+      expect(ledgerBefore).toBe("20260724_s42,20260725_s43,20260831_s44");
       let error: unknown;
       try {
         openDatabase(path);

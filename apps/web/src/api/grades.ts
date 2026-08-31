@@ -1,5 +1,6 @@
 import { apiRequest } from "../lib/api/client";
 import type {
+  AcademicAssessmentSession,
   AcademicYear,
   AssessmentComponent,
   GradeGridSaveRequest,
@@ -20,6 +21,13 @@ export interface CreateSubjectPayload {
   jenjang_id: number;
   supports_sumatif: boolean;
   supports_formatif: boolean;
+}
+
+export interface CreateAcademicAssessmentSessionPayload {
+  academic_year_id: number;
+  term_number: number;
+  label: string;
+  assessment_date?: string | null;
 }
 
 export function gradeApiPath(path: string): string {
@@ -71,6 +79,24 @@ export async function fetchComponents(): Promise<AssessmentComponent[]> {
     method: "GET",
   });
 
+  return response.data;
+}
+
+export async function fetchAssessmentSessions(academicYearId: number): Promise<AcademicAssessmentSession[]> {
+  const response = await apiRequest<AcademicAssessmentSession[]>({
+    path: gradeApiPath("/assessment-sessions"),
+    method: "GET",
+    params: { academic_year_id: academicYearId },
+  });
+  return response.data;
+}
+
+export async function createAssessmentSession(payload: CreateAcademicAssessmentSessionPayload): Promise<AcademicAssessmentSession> {
+  const response = await apiRequest<AcademicAssessmentSession>({
+    path: gradeApiPath("/assessment-sessions"),
+    method: "POST",
+    body: payload,
+  });
   return response.data;
 }
 

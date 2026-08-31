@@ -2665,6 +2665,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grades/assessment-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiGradesAssessment-sessions"];
+        put?: never;
+        post: operations["postApiGradesAssessment-sessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grades/ledger": {
         parameters: {
             query?: never;
@@ -13575,6 +13591,81 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    "getApiGradesAssessment-sessions": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        academic_year_id: number;
+                        term_number: number;
+                        label: string;
+                        assessment_date: string | null;
+                    }[];
+                };
+            };
+        };
+    };
+    "postApiGradesAssessment-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+                "multipart/form-data": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        academic_year_id: number;
+                        term_number: number;
+                        label: string;
+                        assessment_date: string | null;
+                    };
                 };
             };
         };
