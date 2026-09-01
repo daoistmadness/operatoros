@@ -41,6 +41,7 @@ from core.attendance_correction_migration import migrate_attendance_corrections_
 from core.attendance_followup_migration import migrate_attendance_followup_sqlite
 from core.academic_timeline_migration import migrate_academic_timeline_sqlite
 from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
+from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
 
 LOGGER = logging.getLogger("operatoros.operational_recovery")
 
@@ -286,7 +287,10 @@ def run_operational_recovery(
         # Step H: S4.4 -> S4.5 migration
         migrate_attendance_calendar_sqlite(temporary_path)
 
-        # Step I: Import all ORM models explicitly to ensure metadata table registration
+        # Step I: S4.5 -> S4.6 migration
+        migrate_attendance_submission_deadline_sqlite(temporary_path)
+
+        # Step J: Import all ORM models explicitly to ensure metadata table registration
         from sqlalchemy import create_engine
         from sqlalchemy.pool import NullPool
         from core.database import Base
@@ -303,6 +307,7 @@ def run_operational_recovery(
         import models.assessment_component
         import models.attendance
         import models.attendance_calendar
+        import models.attendance_submission_deadline
         import models.attendance_import
         import models.attendance_review
         import models.backup_operation
@@ -332,7 +337,7 @@ def run_operational_recovery(
         finally:
             recovery_engine.dispose()
 
-        # Step J: Update ledger fingerprint to exact current schema fingerprint
+        # Step K: Update ledger fingerprint to exact current schema fingerprint
         conn = sqlite3.connect(temporary_path)
         try:
             actual_fp = _schema_fingerprint(conn)

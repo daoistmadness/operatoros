@@ -7415,9 +7415,10 @@
                     "type": "object"
                   },
                   "type": "array"
-                }
+                },
+                "submissionDeadlineLocalTime": { "anyOf": [{ "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string" }, { "type": "null" }] }
               },
-              "required": ["id", "name", "weekdays", "exceptions"],
+              "required": ["id", "name", "weekdays", "exceptions", "submissionDeadlineLocalTime"],
               "type": "object"
             },
             "type": "array"
@@ -32175,6 +32176,7 @@
         "summary": "Delete attendance calendar exception",
         "tags": ["attendance"]
       }
-    }
+    },
+    "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}}
   }
 }

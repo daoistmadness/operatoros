@@ -10,12 +10,12 @@ import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 vi.mock("../api/grades", () => ({ fetchAcademicYears: vi.fn() }));
-vi.mock("../api/attendanceCalendar", () => ({ fetchAttendanceCalendar: vi.fn(), saveAttendanceCalendarWeekday: vi.fn(), saveAttendanceCalendarException: vi.fn(), deleteAttendanceCalendarException: vi.fn() }));
+vi.mock("../api/attendanceCalendar", () => ({ fetchAttendanceCalendar: vi.fn(), saveAttendanceCalendarWeekday: vi.fn(), saveAttendanceCalendarException: vi.fn(), deleteAttendanceCalendarException: vi.fn(), saveAttendanceSubmissionDeadline: vi.fn() }));
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const overview = {
   scope: { academicYearId: 1, academicYearLabel: "2026/2027", startDate: "2026-07-01", endDate: "2027-06-30" },
-  jenjangs: [{ id: 1, name: "SMP", weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 1 ? "EXPECTED" : null })), exceptions: [{ id: 5, date: "2026-08-17", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }] }],
+  jenjangs: [{ id: 1, name: "SMP", weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 1 ? "EXPECTED" : null })), exceptions: [{ id: 5, date: "2026-08-17", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }], submissionDeadlineLocalTime: "08:00" }],
 };
 
 let container: HTMLDivElement;
@@ -38,7 +38,7 @@ describe("AttendanceCalendar", () => {
     await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
     expect(container.textContent).toContain("Not configured resolves to UNKNOWN");
     expect(container.textContent).toContain("Holiday");
-    expect(container.textContent).toContain("does not establish a submission deadline");
+    expect(container.textContent).toContain("Submission deadline");
     expect(container.querySelector("table")).not.toBeNull();
   });
 
@@ -48,7 +48,8 @@ describe("AttendanceCalendar", () => {
     await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={viewer}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
     await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
     expect((container.querySelector("#weekday-1") as HTMLSelectElement).disabled).toBe(true);
-    expect(container.querySelector("form")).toBeNull();
+    expect((container.querySelector("#submission-deadline") as HTMLInputElement).disabled).toBe(true);
+    expect(container.querySelector("button[type=submit]")).toBeNull();
     expect(container.textContent).toContain("read-only");
   });
 });

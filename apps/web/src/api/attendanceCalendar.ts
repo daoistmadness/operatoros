@@ -1,4 +1,4 @@
-import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarWeekdayRequest } from "@operatoros/contracts/attendance";
+import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarWeekdayRequest, AttendanceSubmissionDeadlineRequest } from "@operatoros/contracts/attendance";
 import { apiRequest } from "../lib/api/client";
 
 export type AttendanceCalendarRuleValue = "EXPECTED" | "NOT_EXPECTED";
@@ -18,4 +18,8 @@ export async function saveAttendanceCalendarException(payload: AttendanceCalenda
 
 export async function deleteAttendanceCalendarException(id: number): Promise<void> {
   await apiRequest({ path: `/api/attendance/calendar/exception/${id}`, method: "DELETE" });
+}
+
+export async function saveAttendanceSubmissionDeadline(payload: AttendanceSubmissionDeadlineRequest): Promise<void> {
+  await apiRequest({ path: "/api/attendance/calendar/deadline", method: "PUT", body: payload });
 }

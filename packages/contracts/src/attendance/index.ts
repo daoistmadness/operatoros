@@ -1,6 +1,8 @@
 import { Type, type Static } from "@sinclair/typebox";
 export * from "./calendar";
+export * from "./submission-deadline";
 import { AttendanceCalendarExpectationSchema } from "./calendar";
+import { AttendanceSubmissionTimingSchema } from "./submission-deadline";
 
 export const AttendanceCorrectionRequestSchema = Type.Object({
   attendance_id: Type.Number({ minimum: 1 }),
@@ -54,6 +56,7 @@ const DailyAttendanceClassSchema = Type.Object({
   counts: DailyAttendanceCountsSchema,
   periodFinalized: Type.Boolean(),
   attendanceExpectation: AttendanceCalendarExpectationSchema,
+  submissionTiming: AttendanceSubmissionTimingSchema,
 });
 
 export const DailyAttendanceOperationsResponseSchema = Type.Object({
