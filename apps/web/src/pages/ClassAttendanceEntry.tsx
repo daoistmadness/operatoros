@@ -28,7 +28,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
 import { FieldLabel } from "../components/ui/field";
-import { queryKeys } from "../lib/query/queryKeys";
+import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 import { useAuth } from "../context/AuthContext";
 import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
@@ -154,7 +154,7 @@ export default function ClassAttendanceEntry() {
       setSaveError(null);
       setIsDirty(false);
       refetchRoster();
-      await queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+      await invalidateAttendanceQueries(queryClient);
       setTimeout(() => setSaveSuccess(null), 4000);
     },
     onError: (err: any) => {

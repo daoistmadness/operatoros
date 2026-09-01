@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
+import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
 
@@ -64,6 +66,7 @@ const getStatusBadgeClass = (status: AttendanceStatus, effective = false) => {
 
 function AttendanceReview() {
   const { user, can } = useAuth();
+  const queryClient = useQueryClient();
   const canManageAttendance = can("manage_attendance");
   const [searchParams] = useSearchParams();
   const [classes, setClasses] = useState<AcademicClass[]>([]);
@@ -189,7 +192,7 @@ function AttendanceReview() {
         note: trimmed,
       });
       closeOverrideModal();
-      await loadAttendance();
+      await Promise.all([loadAttendance(), invalidateAttendanceQueries(queryClient)]);
     } catch (err: unknown) {
       setError(getAttendanceReviewError(err, "Failed to submit override."));
     } finally {
@@ -217,7 +220,7 @@ function AttendanceReview() {
       setMassSuccessMsg(`✅ ${overridden} records overridden to on-time by ${response.data.reviewed_by}`);
       setMassModalOpen(false);
       setMassOverrideNote("Mass override: student consistently does not scan out");
-      await loadAttendance();
+      await Promise.all([loadAttendance(), invalidateAttendanceQueries(queryClient)]);
     } catch (err: unknown) {
       setError(getAttendanceReviewError(err, "Failed to submit mass override."));
     } finally {
