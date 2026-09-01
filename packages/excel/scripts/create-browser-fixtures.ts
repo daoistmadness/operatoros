@@ -22,6 +22,7 @@ const machineSheet = addWorksheet(machine, "Machine Attendance");
 appendRow(machineSheet, machineHeaders);
 for (const machineRow of [
   ["100001", "E2E Ada", date, "07:10", "14:00", "", "", "", "", "Tuesday"],
+  ["100001", "E2E Ada", "10/08/2026", "07:10", "14:00", "", "", "", "", "Monday"],
   ["100001", "E2E Ada", "08/08/2026", "", "", "", "", "", "", "Saturday"],
   ["100001", "E2E Ada", "14/12/2026", "", "", "", "", "", "", "Monday"],
   ["100001", "E2E Ada", "15/12/2026", "", "", "", "", "", "", "Tuesday"],

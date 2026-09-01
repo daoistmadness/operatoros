@@ -1,4 +1,4 @@
-export type LateSource = "excel" | "calculated" | "none";
+export type LateSource = "excel" | "calculated" | "manual" | "none";
 
 export function parseClockMinutes(value: unknown): number | null {
   if (typeof value !== "string") return null;
@@ -30,6 +30,11 @@ export function deriveAttendanceStatus(checkIn: string | null, checkOut: string 
   if (checkIn && checkOut) return (lateMinutes ?? 0) > 0 ? "late" : "on-time";
   if (Boolean(checkIn) !== Boolean(checkOut)) return "incomplete";
   return "absent";
+}
+
+export function insertCanonicalAttendanceRecord(client: any, input: { studentId: number; date: string; checkIn: string | null; checkOut: string | null; lateDuration: number; lateSource: LateSource; status: string }): number {
+  const result = client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [input.studentId, input.date, input.checkIn, input.checkOut, input.lateDuration, input.lateSource, ["absent", "sakit", "izin", "alfa"].includes(input.status) ? 1 : 0, input.status]);
+  return Number(result.lastInsertRowid);
 }
 
 export function calculateLateMinutes(checkIn: string | null, terlambat: unknown, jenjang: string | null, cutoffs: Record<string, string | undefined>): [number, LateSource] {
