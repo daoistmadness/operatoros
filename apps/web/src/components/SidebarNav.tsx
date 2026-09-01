@@ -51,6 +51,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },
+      { name: 'Correction Review', path: '/attendance/override-review', icon: FileClock },
       { name: 'Follow-Up Queue', path: '/attendance/followups', icon: UserCheck },
     ],
   },

@@ -32249,6 +32249,392 @@
         "tags": ["attendance"]
       }
     },
-    "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}}
+    "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}},
+    "/api/attendance/override-review":     {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "base_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "name": "effective_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "name": "student_search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "scope",
+                    "summary",
+                    "total",
+                    "page",
+                    "pageSize",
+                    "items"
+                  ],
+                  "properties": {
+                    "scope": {
+                      "type": "object",
+                      "required": [
+                        "academicYearId",
+                        "academicYearLabel",
+                        "jenjangId",
+                        "classId",
+                        "dateFrom",
+                        "dateTo"
+                      ],
+                      "properties": {
+                        "academicYearId": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academicYearLabel": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "jenjangId": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "classId": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "dateFrom": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        },
+                        "dateTo": {
+                          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "required": [
+                        "corrections"
+                      ],
+                      "properties": {
+                        "corrections": {
+                          "minimum": 0,
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "total": {
+                      "minimum": 0,
+                      "type": "number"
+                    },
+                    "page": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "pageSize": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "attendanceId",
+                          "studentId",
+                          "studentMasterId",
+                          "studentName",
+                          "classId",
+                          "className",
+                          "jenjang",
+                          "academicYearId",
+                          "date",
+                          "baseStatus",
+                          "effectiveStatus",
+                          "correction",
+                          "canEdit",
+                          "links"
+                        ],
+                        "properties": {
+                          "attendanceId": {
+                            "minimum": 1,
+                            "type": "number"
+                          },
+                          "studentId": {
+                            "minimum": 1,
+                            "type": "number"
+                          },
+                          "studentMasterId": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "studentName": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "classId": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "className": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "jenjang": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "academicYearId": {
+                            "minimum": 1,
+                            "type": "number"
+                          },
+                          "date": {
+                            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                            "type": "string"
+                          },
+                          "baseStatus": {
+                            "minLength": 1,
+                            "maxLength": 64,
+                            "type": "string"
+                          },
+                          "effectiveStatus": {
+                            "minLength": 1,
+                            "maxLength": 64,
+                            "type": "string"
+                          },
+                          "correction": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "note",
+                              "reviewedBy",
+                              "reviewedAt",
+                              "overrideCheckIn",
+                              "overrideCheckOut",
+                              "active"
+                            ],
+                            "properties": {
+                              "id": {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              "note": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "reviewedBy": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "reviewedAt": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "overrideCheckIn": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "overrideCheckOut": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "active": {
+                                "const": true,
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "canEdit": {
+                            "type": "boolean"
+                          },
+                          "links": {
+                            "type": "object",
+                            "required": [
+                              "correctionReview",
+                              "editCorrection",
+                              "student360",
+                              "class360",
+                              "dailyAttendance"
+                            ],
+                            "properties": {
+                              "correctionReview": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "editCorrection": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "student360": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "class360": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "dailyAttendance": {
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAttendanceOverride-review"
+      }
+    }
   }
 }
