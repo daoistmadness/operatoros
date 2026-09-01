@@ -29,6 +29,7 @@ test("@attendance @machine-preview @release previews scan evidence against calen
   await expect(page.getByRole("heading", { name: "Workbook recognized" })).toBeVisible();
   await expect(page.getByText("E2E Ada", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("E2E Unmapped", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Review student mapping", exact: true })).toHaveAttribute("href", "/students");
   await expect(page.getByText("No scan on expected date")).toBeVisible();
   await expect(page.getByText("No scan on non-school date")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Create 1 attendance records" })).toBeVisible();
