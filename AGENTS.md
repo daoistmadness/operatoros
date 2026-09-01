@@ -19,6 +19,10 @@ historical evidence unless they explicitly identify a current procedure.
 - Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
 - Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.0, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
 - Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
+- Use `mise run dev`, `mise run check:affected`, `mise run test:fast`, and
+  `mise run check:full` as the developer-facing command surface. These tasks
+  delegate to `start-dev.sh`, Turbo, Make, and Bun without duplicating their
+  implementation logic.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
 
@@ -125,11 +129,12 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Testing and reporting
 
-- `make test-fast` is focused and changed-path-aware; use it for docs-only and
-  iterative work. `make test-pr` is the ordinary PR gate. `make test-release`
-  is for release/schema/startup-sensitive work. `make fresh-db-parity` checks
-  fresh bootstrap parity. The classifier decides when duplicate backend runs
-  are required; do not run the release suite for Markdown-only edits.
+- `mise run test:fast` is focused and changed-path-aware; use it for docs-only
+  and iterative work. `mise run check:full` delegates to the complete
+  release-sensitive authority. `mise run db:fresh` checks fresh bootstrap
+  parity. The underlying Make targets remain implementation authorities. The
+  classifier decides when duplicate backend runs are required; do not run the
+  release suite for Markdown-only edits.
 - Workspace checks use `bun --filter @operatoros/api test`,
   `bun --filter @operatoros/web test`, `bun run check:typebox`, and
   `bun run check`.
@@ -237,8 +242,10 @@ manages Git lifecycle hooks. Bun remains the JavaScript runtime, package
 manager, workspace resolver, and lockfile authority. Turbo 2.10.12 manages the
 dependency-aware task graph and local cache. Turbo is a root-only dependency.
 
-Use `bun run turbo:check` for cached typecheck, unit-test, and web-build tasks.
-Use `bun run test:turbo` for invalidation proofs. Do not cache E2E, database
+Use `mise run check:affected` for cached typecheck, unit-test, and web-build
+tasks affected since `origin/main`; use `bun run turbo:check` for the full
+Turbo task graph. Use `bun run test:turbo` for invalidation proofs. Do not
+cache E2E, database
 mutation, backup, restore, scheduler, runtime, or development-server tasks.
 Operator data never enters the Turbo or mise caches. Hooks provide early local
 feedback. CI runs the checks directly and does not require installed hooks.

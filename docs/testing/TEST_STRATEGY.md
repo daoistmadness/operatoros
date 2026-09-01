@@ -5,11 +5,16 @@ Docker nor PostgreSQL. Database configuration, startup, path-safety, and schema
 changes escalate through the classifier to the PR or release tier; migration
 sensitivity also selects fresh parity and duplicate backend passes.
 
-`make test-fast` is the iterative, changed-path-aware gate. It is the normal
-gate for documentation-only work. `make test-pr` is the ordinary PR gate.
-`make test-release` adds complete release coverage, fresh parity, deterministic
-Playwright scenarios, and duplicate backend passes when schema/startup risk
-requires them. `make fresh-db-parity` validates the fresh bootstrap sequence.
+`mise run test:fast` is the iterative, changed-path-aware gate. It is the
+normal gate for documentation-only work. `mise run check:full` delegates to
+`make test-release`, the complete release-sensitive authority. The underlying
+`make test-pr` and `make test-release` targets remain the implementation
+authority. `mise run db:fresh` delegates to `make fresh-db-parity`.
+
+`mise run check:affected` is a separate Turbo package check. It uses the
+current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
+replace the classifier or the full PR/release gate. Use
+`mise run check:affected -- --dry=json` to inspect selection without running.
 
 The classifier fails safe for unknown paths and automatically escalates schema,
 migration, startup, and test-infrastructure work. All tests are not run after
