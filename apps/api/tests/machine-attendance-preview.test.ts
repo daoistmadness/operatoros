@@ -22,6 +22,7 @@ function seed(path: string): void {
     "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-456',456,'00456','attendance_machine','2026-01-01',1)\")",
     "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-999',999,'00999','attendance_machine','2026-01-01',1)\")",
     "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-1000',1000,'00999','secondary_machine','2026-01-01',1)\")",
+    "for sid,master,klass in [(123,'master-123','7A'),(456,'master-456','7A'),(999,'master-999','7B'),(1000,'master-1000','7C')]: db.execute(\"INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (?,?,1,1,?,1,'2026-01-01','ACTIVE')\",(sid,master,klass))",
     "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,1,'EXPECTED')\")",
     "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,5,'EXPECTED')\")",
     "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,6,'EXPECTED')\")",
@@ -37,13 +38,21 @@ async function fixture(): Promise<Uint8Array> {
   const sheet = book.addWorksheet("Synthetic Machine Export");
   appendRow(sheet, headers);
   [
-    ["00123", "Synthetic One", "03/04/2026", "07:00", "15:00", "", "", "", "", "Friday"],
+    ["00123", "Synthetic One", "03/04/2026", "07:00", "15:00", "00:10", "", "", "", "Friday"],
     ["00123", "Synthetic One", "04/04/2026", "", "", "", "", "", "", "Saturday"],
     ["00456", "Synthetic Two", "06/04/2026", "", "", "", "", "", "", "Monday"],
     ["00123", "Synthetic One", "05/04/2026", "07:05", "15:00", "", "", "", "", "Sunday"],
     ["88888", "Not Mapped", "03/04/2026", "07:10", "15:00", "", "", "", "", "Friday"],
     ["00999", "Ambiguous", "03/04/2026", "07:10", "15:00", "", "", "", "", "Friday"],
   ].forEach((row) => appendRow(sheet, row));
+  return writeXlsxWorkbook(book);
+}
+
+async function twoEligibleFixture(): Promise<Uint8Array> {
+  const book = createWorkbook({ exportType: "machine-controlled-import-test" });
+  const sheet = book.addWorksheet("Synthetic Machine Export");
+  appendRow(sheet, headers);
+  [["00123", "Synthetic One", "03/04/2026", "07:00", "15:00", "", "", "", "", "Friday"], ["00456", "Synthetic Two", "03/04/2026", "07:05", "15:00", "", "", "", "", "Friday"]].forEach((row) => appendRow(sheet, row));
   return writeXlsxWorkbook(book);
 }
 
@@ -91,6 +100,73 @@ describe("attendance machine preview", () => {
       const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ detail: "Only Excel OOXML .xlsx workbooks are supported." });
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("applies only eligible complete scans and records transactional provenance", async () => {
+    const value = await setup("apply");
+    try {
+      const form = new FormData();
+      form.append("file", new File([await fixture()], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      expect(preview.status).toBe(200);
+      const previewBody = await preview.json() as any;
+      expect(previewBody.summary).toMatchObject({ eligibleCreates: 1, alreadyCanonical: 0, conflicts: 0 });
+      expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "ELIGIBLE_CREATE", canonicalStatus: "late" });
+      const applyForm = new FormData();
+      applyForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      expect(applied.status).toBe(200);
+      const appliedBody = await applied.json() as any;
+      expect(appliedBody).toMatchObject({ status: "APPLIED", summary: { rowsInspected: 6, created: 1, alreadyCanonical: 0 } });
+      expect(value.database.client.query("SELECT status, check_in, check_out, late_duration FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "late", check_in: "07:00", check_out: "15:00", late_duration: 10 });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE import_session_id = ? AND operation = 'MACHINE_IMPORT_CREATE'").get(appliedBody.batchId) as any).count).toBe(1);
+
+      const secondPreviewForm = new FormData();
+      secondPreviewForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); secondPreviewForm.append("academic_year_id", "1"); secondPreviewForm.append("jenjang_id", "1");
+      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: secondPreviewForm }));
+      const secondBody = await secondPreview.json() as any;
+      expect(secondBody.summary.alreadyCanonical).toBe(1);
+      const secondApplyForm = new FormData();
+      secondApplyForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); secondApplyForm.append("academic_year_id", "1"); secondApplyForm.append("jenjang_id", "1"); secondApplyForm.append("expected_preview_digest", secondBody.previewDigest); secondApplyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const secondApplied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: secondApplyForm }));
+      expect(secondApplied.status).toBe(200);
+      expect((await secondApplied.json() as any).summary).toMatchObject({ created: 0, alreadyCanonical: 1 });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).count).toBe(1);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("rejects a stale preview without changing attendance", async () => {
+    const value = await setup("stale");
+    try {
+      const source = await fixture();
+      const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const previewBody = await preview.json() as any;
+      value.database.client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (123, '2026-04-03', '07:00', '15:00', 0, 'manual', 0, 'sakit')");
+      const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({ detail: { code: "PREVIEW_STALE" } });
+      expect(value.database.client.query("SELECT status FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "sakit" });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation LIKE 'MACHINE_IMPORT_%'").get() as any).count).toBe(0);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("rolls back the whole batch when one canonical insert fails", async () => {
+    const value = await setup("transaction");
+    try {
+      const source = await twoEligibleFixture();
+      value.database.client.run("CREATE TRIGGER machine_import_test_failure AFTER INSERT ON attendance WHEN NEW.student_id = 456 BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const previewBody = await preview.json() as any;
+      expect(previewBody.summary.eligibleCreates).toBe(2);
+      const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      expect(applied.status).toBe(409);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(0);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation LIKE 'MACHINE_IMPORT_%'").get() as any).count).toBe(0);
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 });

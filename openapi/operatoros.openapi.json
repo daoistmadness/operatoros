@@ -32279,6 +32279,36 @@
         "tags": ["attendance"]
       }
     },
+    "/api/attendance/machine-import/apply": {
+      "post": {
+        "operationId": "applyAttendanceMachineImport",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "academic_year_id", "jenjang_id", "expected_preview_digest", "confirmation"],
+                "properties": {
+                  "file": {"type": "string", "format": "binary"},
+                  "academic_year_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
+                  "jenjang_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
+                  "expected_preview_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+                  "confirmation": {"type": "string", "const": "IMPORT_MACHINE_ATTENDANCE"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}},
+          "400": {"description": "Controlled import validation error"},
+          "409": {"description": "Preview is stale or import was not applied"}
+        },
+        "summary": "Apply controlled attendance-machine XLSX import",
+        "tags": ["attendance"]
+      }
+    },
     "/api/attendance/override-review":     {
       "get": {
         "parameters": [

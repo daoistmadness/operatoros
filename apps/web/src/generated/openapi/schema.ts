@@ -5614,6 +5614,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/machine-import/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply controlled attendance-machine XLSX import */
+        post: operations["applyAttendanceMachineImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/override-review": {
         parameters: {
             query?: never;
@@ -20324,6 +20341,52 @@ export interface operations {
             };
             /** @description Controlled workbook validation error */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    applyAttendanceMachineImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    academic_year_id: string;
+                    jenjang_id: string;
+                    expected_preview_digest: string;
+                    /** @constant */
+                    confirmation: "IMPORT_MACHINE_ATTENDANCE";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Controlled import validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preview is stale or import was not applied */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

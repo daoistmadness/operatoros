@@ -155,6 +155,10 @@ function getErrorMessage(status: number, data: unknown): string {
       return payload.detail;
     }
 
+    if (payload.detail && typeof payload.detail === 'object' && typeof (payload.detail as Record<string, unknown>).message === 'string') {
+      return String((payload.detail as Record<string, unknown>).message);
+    }
+
     if (typeof payload.message === 'string') {
       return payload.message;
     }

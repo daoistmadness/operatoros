@@ -15,6 +15,11 @@ function localParts(now: Date): Record<string, string> {
   return Object.fromEntries(formatter.formatToParts(now).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
 }
 
+export function schoolLocalDate(now: Date): string {
+  const current = localParts(now);
+  return `${current.year}-${current.month}-${current.day}`;
+}
+
 export function resolveAttendanceSubmissionTiming(input: { date: string; expectation: AttendanceCalendarStatus; cutoffTime: string | null | undefined; now: Date }): SubmissionTiming {
   if (input.expectation === "NOT_EXPECTED") return { status: "NOT_APPLICABLE", deadlineLocalTime: null, deadlineAt: null, authorityAvailable: true };
   if (input.expectation !== "EXPECTED" || !validSubmissionDeadlineTime(input.cutoffTime)) return { status: "DEADLINE_UNKNOWN", deadlineLocalTime: null, deadlineAt: null, authorityAvailable: false };
