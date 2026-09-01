@@ -1,43 +1,50 @@
 # Commands
 
-Verified from `README.md`, `backend/requirements.txt`, `apps/api/package.json`, `apps/web/package.json`, `start-dev.sh`, `scripts/verify-browser.sh`, and `.github/workflows/ci.yml`.
+`mise tasks` is the current command index. Mise owns developer-facing
+commands; the underlying tools retain their existing responsibilities.
 
 ## Install
-- `mise install`  # install Bun 1.4.0 and Python 3.12.3 from mise.lock
-- `mise run doctor`  # verify toolchain
-- `cd backend && python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt`
-- `cd apps/web && bun install`
-- `npm install -g agent-browser && agent-browser install`  # browser tooling
-- `agent-browser install --with-deps`  # Linux / WSL2 browser dependencies
+
+- `mise install` — install the pinned Bun, hk, and Python tools.
+- `bun install --frozen-lockfile` — install workspace dependencies from the repository root.
+- `mise exec -- python -m venv backend/.venv` — create the retained Python tooling environment.
+- `backend/.venv/bin/python -m pip install -r backend/requirements.txt` — install retained tooling.
+- `mise run doctor` — verify the active checkout and toolchain.
+
+Optional browser tooling is external to the workspace:
+
+- `npm install -g agent-browser && agent-browser install`
+- `agent-browser install --with-deps` — Linux / WSL2 browser dependencies.
 
 ## Development
-- `./start-dev.sh`  # default Elysia + Vite launcher
-- `./start-dev.sh --check`  # validate prerequisites and ports without starting services
-- `cd apps/api && bun run src/server.ts`  # standalone Elysia backend
-- `cd apps/web && bun run dev`
-- `cd apps/web && DEV_API_PROXY_TARGET=http://localhost:8000 bun run dev`
 
-## Build
-- `cd apps/web && bun run build`
+- `mise run dev` — start the managed Elysia and Vite stack through `start-dev.sh`.
+- `./start-dev.sh --check` — validate startup prerequisites without starting services.
+- `make dev-db-status` — inspect the managed development database.
+- `make dev-sessions-status` — inspect managed development sessions.
 
-## Test / Validation
-- `cd apps/api && bun test`
-- `cd apps/web && bun test`  # frontend unit tests
-- `./scripts/verify-browser.sh http://127.0.0.1:5173`
-- `python3 .github/scripts/check_markdown_links.py`
-- `curl http://localhost:8000/openapi`
-- `PYTHONPATH=backend:backend/src backend/.venv/bin/python -m core.performance_benchmark all --scale SCHOOL_CURRENT --runs 7 --json`  # retained tooling; never point output at a database
+## Validation
 
-## Formatting / Lint / Typecheck
-- Not declared in the repository root, backend, or frontend scripts.
-- TODO: add repo-specific lint/typecheck/formatting commands if they are introduced later.
+- `mise run check:affected` — run Turbo `typecheck`, `test`, and `build` for packages affected since `origin/main`.
+- `mise run check:affected -- --dry=json` — inspect Turbo's selected tasks without running them.
+- `mise run test:fast` — run the changed-path-aware validation tier.
+- `mise run check:full` — run the complete release-sensitive repository gate.
+- `mise run db:fresh` — run fresh SQLite database parity.
+- `python .github/scripts/check_markdown_links.py` — validate Markdown links.
+- `python .github/scripts/check_current_developer_docs.py` — validate current command documentation.
 
-## Database Migration / Generation
-- No manual migration tool (like Alembic) is configured.
-- The Elysia runtime validates the accepted Drizzle schema and migration manifest at startup.
-- Schema updates/patches are programmatically run on startup via database patches (e.g. `run_grade_ledger_patches` in `backend/src/core/database.py`).
-- Raw SQL files in `backend/migrations/` represent the repository's migration history.
+The affected check requires a current `origin/main`; run `git fetch origin
+main` first when the remote-tracking ref is stale or missing. Full PR and CI
+validation remains authoritative even when affected checks pass.
 
-## Database / Ops
-- `./scripts/backup.sh`  # SQLite backup
-- `./scripts/restore.sh <backup-file>`  # guarded SQLite restore
+## Lower-level ownership commands
+
+- `bun run turbo:check` — run the full Turbo task graph.
+- `bun run test:turbo` — verify Turbo invalidation behavior.
+- `bun run check` — run the root Bun static and package-test authority.
+- `make test-pr` — ordinary PR gate.
+- `make test-release` — release, startup, script, and test-infrastructure gate.
+- `./scripts/verify-browser.sh` — run the browser smoke test against a live local stack.
+
+Git policy remains owned by hk. Worktree lifecycle remains owned by Worktrunk
+and Git. Normal application startup remains owned by `start-dev.sh`.
