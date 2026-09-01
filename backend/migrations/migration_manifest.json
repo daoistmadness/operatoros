@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "baseline_schema": "20260724_s42",
-  "current_schema": "20260831_s44",
+  "current_schema": "20260901_s45",
   "startup_is_migration_runner": false,
   "states": [
     {
@@ -51,7 +51,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260831_s44",
+      "detection": "ledger head and immutable schema fingerprint equal 20260901_s45",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -83,7 +83,7 @@
       "description": "Atomically create the S4.2 empty baseline, then apply registered incremental migrations",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260831_s44",
+      "resulting_schema": "20260901_s45",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.bootstrap_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
@@ -189,6 +189,25 @@
       "validation_queries": ["source revision exactly 20260725_s43", "protected row counts unchanged", "PRAGMA integrity_check", "PRAGMA foreign_key_check", "migration idempotence"],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
       "protected_data_expectation": "existing student, identity, enrollment, attendance, and grade values remain unchanged"
+    },
+    {
+      "id": "20260831_s44_to_20260901_s45",
+      "description": "Add explicit per-jenjang attendance weekday rules and date exceptions without inferring historical calendar truth",
+      "predecessor": "20260831_s44",
+      "supported_source_schema": "ledger-validated 20260831_s44",
+      "resulting_schema": "20260901_s45",
+      "sqlite_migration": "core.attendance_calendar_migration.migrate_attendance_calendar_sqlite",
+      "schema_objects": ["attendance_calendar_weekday_rules", "attendance_calendar_exceptions", "per-jenjang/date uniqueness constraints"],
+      "historical_backfill": "none; unconfigured dates resolve to UNKNOWN and existing attendance rows do not create calendar rules",
+      "validation_queries": [
+        "source revision exactly 20260831_s44",
+        "protected row counts unchanged",
+        "PRAGMA integrity_check",
+        "PRAGMA foreign_key_check",
+        "migration idempotence"
+      ],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
+      "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, and audit values remain unchanged"
     }
   ]
 }

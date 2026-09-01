@@ -41,6 +41,7 @@ const OperationsAudit = lazy(() => import('../pages/OperationsAudit'));
 const TeacherClassAssignments = lazy(() => import('../pages/TeacherClassAssignments'));
 const ClassAttendanceEntry = lazy(() => import('../pages/ClassAttendanceEntry'));
 const DailyAttendanceOperations = lazy(() => import('../pages/DailyAttendanceOperations'));
+const AttendanceCalendar = lazy(() => import('../pages/AttendanceCalendar'));
 const ClassOverview = lazy(() => import('../pages/ClassOverview'));
 const DismissalPolicies = lazyNamedRoute(() => import('../pages/DismissalPolicies'), 'DismissalPolicies');
 const ClassEarlyDeparture = lazyNamedRoute(() => import('../pages/ClassEarlyDeparture'), 'ClassEarlyDeparture');
@@ -110,6 +111,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/teacher-class-assignments', element: <TeacherClassAssignments />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
   defineRoute({ path: '/attendance/class-entry', element: <ClassAttendanceEntry />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('enter_assigned_class_attendance') }),
   defineRoute({ path: '/attendance/daily', element: <DailyAttendanceOperations />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
+  defineRoute({ path: '/attendance/calendar', element: <AttendanceCalendar />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/classes/:id', element: <ClassOverview />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),
   defineRoute({ path: '/attendance/departure-policies', element: <DismissalPolicies />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
   defineRoute({ path: '/attendance/class-departures', element: <ClassEarlyDeparture />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_early_departure') }),

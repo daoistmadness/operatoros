@@ -40,6 +40,7 @@ from core.student_progression_migration import migrate_student_progression_sqlit
 from core.attendance_correction_migration import migrate_attendance_corrections_sqlite
 from core.attendance_followup_migration import migrate_attendance_followup_sqlite
 from core.academic_timeline_migration import migrate_academic_timeline_sqlite
+from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
 
 LOGGER = logging.getLogger("operatoros.operational_recovery")
 
@@ -282,7 +283,10 @@ def run_operational_recovery(
         # Step G: S4.3 -> S4.4 migration
         migrate_academic_timeline_sqlite(temporary_path)
 
-        # Step H: Import all ORM models explicitly to ensure metadata table registration
+        # Step H: S4.4 -> S4.5 migration
+        migrate_attendance_calendar_sqlite(temporary_path)
+
+        # Step I: Import all ORM models explicitly to ensure metadata table registration
         from sqlalchemy import create_engine
         from sqlalchemy.pool import NullPool
         from core.database import Base
@@ -298,6 +302,7 @@ def run_operational_recovery(
         import models.academic_year
         import models.assessment_component
         import models.attendance
+        import models.attendance_calendar
         import models.attendance_import
         import models.attendance_review
         import models.backup_operation
@@ -327,7 +332,7 @@ def run_operational_recovery(
         finally:
             recovery_engine.dispose()
 
-        # Step H: Update ledger fingerprint to exact current schema fingerprint
+        # Step J: Update ledger fingerprint to exact current schema fingerprint
         conn = sqlite3.connect(temporary_path)
         try:
             actual_fp = _schema_fingerprint(conn)
@@ -340,7 +345,7 @@ def run_operational_recovery(
         finally:
             conn.close()
 
-        # Step I: Post-recovery verification on temporary database
+        # Step K: Post-recovery verification on temporary database
         conn = sqlite3.connect(temporary_path)
         try:
             conn.execute("PRAGMA foreign_keys=ON")

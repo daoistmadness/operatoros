@@ -46,7 +46,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(79);
+    expect(REQUIRED_TABLES.length).toBe(81);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
     for (const domain of ["staff_members", "dismissal_policies", "teacher_class_assignments"]) {
       expect(REQUIRED_TABLES).toContain(domain);
@@ -80,13 +80,13 @@ describe("@operatoros/db existing-schema validation authority", () => {
     }
   }
 
-  const CURRENT_FINGERPRINT = "af09d1d7b3cb248f00962bbc522670e2764374e06a75300fa62ea7b204440be1";
+  const CURRENT_FINGERPRINT = "48fbeb6424d0475a3c8bbb7b944a52afb17fc2b73edbb25a721a3f1083e896d6";
 
   it("accepts a current-version ledger whose timestamps are not wall-clock ordered", () => {
     const client = new Database(":memory:");
     buildValidSchema(client, [
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"],
-      ["20260831_s44", CURRENT_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"],
+      ["20260901_s45", CURRENT_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"],
     ]);
     try {
       expect(validateDatabase(client)).toBeUndefined();

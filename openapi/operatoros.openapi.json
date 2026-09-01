@@ -7336,6 +7336,96 @@
         ],
         "title": "ImportCommitRequest",
         "type": "object"
+      },
+      "AttendanceCalendarOverviewQuery": {
+        "properties": { "academic_year_id": { "pattern": "^[1-9]\\d*$", "type": "string" } },
+        "required": ["academic_year_id"],
+        "title": "AttendanceCalendarOverviewQuery",
+        "type": "object"
+      },
+      "AttendanceCalendarWeekdayRequest": {
+        "properties": {
+          "academic_year_id": { "exclusiveMinimum": 0, "type": "integer" },
+          "jenjang_id": { "exclusiveMinimum": 0, "type": "integer" },
+          "weekday": { "maximum": 6, "minimum": 0, "type": "integer" },
+          "expectation": { "anyOf": [{ "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" }, { "type": "null" }] }
+        },
+        "required": ["academic_year_id", "jenjang_id", "weekday", "expectation"],
+        "title": "AttendanceCalendarWeekdayRequest",
+        "type": "object"
+      },
+      "AttendanceCalendarExceptionRequest": {
+        "properties": {
+          "id": { "anyOf": [{ "exclusiveMinimum": 0, "type": "integer" }, { "type": "null" }] },
+          "academic_year_id": { "exclusiveMinimum": 0, "type": "integer" },
+          "jenjang_id": { "exclusiveMinimum": 0, "type": "integer" },
+          "date": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
+          "expectation": { "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" },
+          "reason": { "enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string" }
+        },
+        "required": ["academic_year_id", "jenjang_id", "date", "expectation", "reason"],
+        "title": "AttendanceCalendarExceptionRequest",
+        "type": "object"
+      },
+      "AttendanceCalendarExceptionParams": {
+        "properties": { "id": { "pattern": "^[1-9]\\d*$", "type": "string" } },
+        "required": ["id"],
+        "title": "AttendanceCalendarExceptionParams",
+        "type": "object"
+      },
+      "AttendanceCalendarOverview": {
+        "properties": {
+          "scope": {
+            "properties": {
+              "academicYearId": { "exclusiveMinimum": 0, "type": "integer" },
+              "academicYearLabel": { "minLength": 1, "type": "string" },
+              "startDate": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
+              "endDate": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" }
+            },
+            "required": ["academicYearId", "academicYearLabel", "startDate", "endDate"],
+            "type": "object"
+          },
+          "jenjangs": {
+            "items": {
+              "properties": {
+                "id": { "exclusiveMinimum": 0, "type": "integer" },
+                "name": { "minLength": 1, "type": "string" },
+                "weekdays": {
+                  "items": {
+                    "properties": {
+                      "weekday": { "maximum": 6, "minimum": 0, "type": "integer" },
+                      "expectation": { "anyOf": [{ "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" }, { "type": "null" }] }
+                    },
+                    "required": ["weekday", "expectation"],
+                    "type": "object"
+                  },
+                  "maxItems": 7,
+                  "minItems": 7,
+                  "type": "array"
+                },
+                "exceptions": {
+                  "items": {
+                    "properties": {
+                      "id": { "exclusiveMinimum": 0, "type": "integer" },
+                      "date": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
+                      "expectation": { "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" },
+                      "reason": { "enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string" }
+                    },
+                    "required": ["id", "date", "expectation", "reason"],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": ["id", "name", "weekdays", "exceptions"],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": ["scope", "jenjangs"],
+        "title": "AttendanceCalendarOverview",
+        "type": "object"
       }
     }
   },
@@ -32048,6 +32138,42 @@
         "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
         "summary": "Get integrated student overview",
         "tags": ["student-masters"]
+      }
+    },
+    "/api/attendance/calendar": {
+      "get": {
+        "operationId": "getAttendanceCalendar",
+        "parameters": [{ "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarOverview" } } } } },
+        "summary": "Get attendance calendar",
+        "tags": ["attendance"]
+      }
+    },
+    "/api/attendance/calendar/weekday": {
+      "put": {
+        "operationId": "saveAttendanceCalendarWeekday",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarWeekdayRequest" } } }, "required": true },
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Save attendance calendar weekday rule",
+        "tags": ["attendance"]
+      }
+    },
+    "/api/attendance/calendar/exception": {
+      "put": {
+        "operationId": "saveAttendanceCalendarException",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarExceptionRequest" } } }, "required": true },
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Save attendance calendar exception",
+        "tags": ["attendance"]
+      }
+    },
+    "/api/attendance/calendar/exception/{id}": {
+      "delete": {
+        "operationId": "deleteAttendanceCalendarException",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "summary": "Delete attendance calendar exception",
+        "tags": ["attendance"]
       }
     }
   }
