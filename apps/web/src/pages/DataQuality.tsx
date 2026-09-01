@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from "chart.js";
-import { Download, FileSpreadsheet, Users, UserRound } from "lucide-react";
+import { FileSpreadsheet, Users, UserRound } from "lucide-react";
 import { PageHeader } from "../components/common/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -14,7 +14,8 @@ import { ErrorState, LoadingState } from "../components/common/state-message";
 import { useAuth } from "../context/AuthContext";
 import { queryKeys } from "../lib/query/queryKeys";
 import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
-import { downloadStaffQualityExcel, downloadStudentQualityExcel, fetchStaffQuality, fetchStaffQualityIssues, fetchStudentQuality, fetchStudentQualityIssues } from "../api/dataQuality";
+import { downloadStaffQualityExcel, downloadStudentQualityExcel, fetchDataQualityResolution, fetchStaffQuality, fetchStaffQualityIssues, fetchStudentQuality, fetchStudentQualityIssues } from "../api/dataQuality";
+import type { DataQualityResolutionItem, DataQualityResolutionTarget } from "@operatoros/contracts/analytics";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -35,9 +36,72 @@ const issueTypeLabels: Record<string, string> = {
   UNKNOWN_CATEGORY_VALUE: "Recorded as Unknown",
 };
 
+const resolutionLabels: Record<string, string> = {
+  EDITABLE_IN_OPERATOROS: "Editable in OperatorOS",
+  VIEW_ONLY_IN_OPERATOROS: "View only",
+  EXTERNAL_SOURCE_REQUIRED: "External source required",
+  UNSUPPORTED_CORRECTION: "No correction workflow",
+};
+
+const qualityStateLabels: Record<string, string> = { MISSING: "Missing", UNKNOWN: "Unknown", UNMAPPED: "Unmapped" };
+
+function resolutionPath(target: DataQualityResolutionTarget): string {
+  const id = encodeURIComponent(target.entityId);
+  return target.type === "STAFF_PROFILE" ? `/staff/${id}` : `/students/${id}`;
+}
+
+function ResolutionWorkspace({ scope, can }: { scope: Record<string, string | undefined>; can: (capability: string) => boolean }) {
+  const [qualityState, setQualityState] = useState("");
+  const [resolutionClass, setResolutionClass] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const filters = {
+    ...scope,
+    entity_type: "ALL",
+    quality_state: qualityState || undefined,
+    resolution_class: resolutionClass || undefined,
+    search: search.trim() || undefined,
+    page,
+    page_size: 10,
+  };
+  const query = useQuery({
+    queryKey: queryKeys.analytics.dataQualityResolution(filters),
+    queryFn: () => fetchDataQualityResolution(filters),
+    placeholderData: keepPreviousData,
+  });
+  const total = query.data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / (query.data?.pageSize ?? 10)));
+  const reset = () => setPage(1);
+  return <div className="space-y-4" aria-labelledby="data-quality-resolution-heading">
+    <div><h2 id="data-quality-resolution-heading" className="text-xl font-black">Resolution workspace</h2><p className="text-sm text-muted-foreground">Derived findings with a controlled path to the canonical source. Corrected findings disappear after refresh.</p></div>
+    <div className="flex flex-wrap items-end gap-3">
+      <div><FieldLabel htmlFor="quality-resolution-search">Search entity or issue</FieldLabel><input id="quality-resolution-search" className="mt-1 h-10 rounded-md border border-input bg-background px-3 text-sm" value={search} onChange={(event) => { setSearch(event.target.value); reset(); }} /></div>
+      <div><FieldLabel htmlFor="quality-resolution-state">Quality state</FieldLabel><NativeSelect id="quality-resolution-state" value={qualityState} onChange={(event) => { setQualityState(event.target.value); reset(); }}><option value="">All states</option>{Object.entries(qualityStateLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</NativeSelect></div>
+      <div><FieldLabel htmlFor="quality-resolution-class">Resolution</FieldLabel><NativeSelect id="quality-resolution-class" value={resolutionClass} onChange={(event) => { setResolutionClass(event.target.value); reset(); }}><option value="">All resolutions</option>{Object.entries(resolutionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</NativeSelect></div>
+    </div>
+    {query.isPending && <LoadingState title="Loading resolution findings" />}
+    {query.isError && <ErrorState title="Resolution findings could not be loaded" description={query.error?.message} />}
+    {query.data && <>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {([["Issues", query.data.summary.totalIssues], ["Editable here", query.data.summary.editableIssues], ["View only", query.data.summary.viewOnlyIssues], ["External source", query.data.summary.externalIssues], ["No workflow", query.data.summary.unsupportedIssues]] as const).map(([label, value]) => <Card key={label}><CardHeader><CardTitle className="text-sm font-black text-muted-foreground">{label}</CardTitle></CardHeader><CardContent className="text-2xl font-black">{value}</CardContent></Card>)}
+      </div>
+      {query.data.items.length === 0 ? <p className="text-sm text-muted-foreground">No data-quality issues found in this scope.</p> : <Card><CardHeader><CardTitle>Findings</CardTitle></CardHeader><CardContent><div className="overflow-x-auto"><table className="w-full text-sm"><caption className="sr-only">Data-quality resolution findings</caption><thead><tr className="border-b border-slate-200 text-left"><th scope="col" className="py-2 pr-4 font-black">Entity</th><th scope="col" className="py-2 pr-4 font-black">Field</th><th scope="col" className="py-2 pr-4 font-black">Issue</th><th scope="col" className="py-2 pr-4 font-black">Current value</th><th scope="col" className="py-2 pr-4 font-black">Resolution</th><th scope="col" className="py-2 pr-4 font-black">Action</th></tr></thead><tbody>{query.data.items.map((item) => <ResolutionRow key={item.issueKey} item={item} can={can} />)}</tbody></table></div><div className="mt-4 flex items-center justify-between"><p className="text-sm text-muted-foreground">Page {query.data.page} of {pageCount} · {query.data.total} findings</p><div className="flex gap-2"><Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Previous</Button><Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>Next</Button></div></div></CardContent></Card>}
+    </>}
+  </div>;
+}
+
+function ResolutionRow({ item, can }: { item: DataQualityResolutionItem; can: (capability: string) => boolean }) {
+  const target = item.resolutionTarget;
+  const action = target && can(target.capability)
+    ? <Link className="font-black text-brand hover:underline" to={resolutionPath(target)}>Fix source</Link>
+    : <span className="text-muted-foreground">{item.resolutionClass === "EDITABLE_IN_OPERATOROS" ? "Permission required" : "No local edit"}</span>;
+  return <tr className="border-b border-slate-100"><th scope="row" className="py-2 pr-4 text-left font-semibold">{item.entityLabel}<span className="block text-xs font-normal text-muted-foreground">{item.entityType} · {item.context}</span></th><td className="py-2 pr-4">{fieldLabels[item.field] ?? item.field}</td><td className="py-2 pr-4">{item.label}<span className="block text-xs text-muted-foreground">{qualityStateLabels[item.qualityState] ?? item.qualityState}</span></td><td className="py-2 pr-4">{item.currentValue ?? "Not recorded"}</td><td className="py-2 pr-4"><span>{resolutionLabels[item.resolutionClass] ?? item.resolutionClass}</span><span className="block text-xs text-muted-foreground">{item.resolutionNote}</span></td><td className="py-2 pr-4">{action}</td></tr>;
+}
+
 export default function DataQuality() {
   const { can } = useAuth();
   const [searchParams] = useSearchParams();
+  const [workspace, setWorkspace] = useState<"analytics" | "resolution">("analytics");
   const [tab, setTab] = useState<"students" | "staff">("students");
   const [studentStatus, setStudentStatus] = useState<string>("ACTIVE");
   const [staffEmploymentStatus, setStaffEmploymentStatus] = useState<string>("ACTIVE");
@@ -104,7 +168,7 @@ export default function DataQuality() {
         eyebrow="Analytics"
         title="Data Quality"
         description="Completeness and consistency of canonical student and staff master data, computed server-side."
-        actions={can(tab === "students" ? "export_student_data" : "export_staff") && (
+        actions={workspace === "analytics" && can(tab === "students" ? "export_student_data" : "export_staff") && (
           <Button variant="outline" onClick={download} disabled={exporting !== null} aria-busy={exporting === tab} className="gap-2">
             <FileSpreadsheet className="size-4" />
             {exporting === tab ? "Preparing…" : "Export Excel"}
@@ -112,6 +176,12 @@ export default function DataQuality() {
         )}
       />
       {exportError && <Alert variant="danger"><AlertTitle>Export failed</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Data quality workspace">
+        <Button variant={workspace === "analytics" ? "primary" : "outline"} size="sm" onClick={() => setWorkspace("analytics")} aria-pressed={workspace === "analytics"}>Analytics</Button>
+        <Button variant={workspace === "resolution" ? "primary" : "outline"} size="sm" onClick={() => setWorkspace("resolution")} aria-pressed={workspace === "resolution"}>Resolution workspace</Button>
+      </div>
+
+      {workspace === "resolution" ? <ResolutionWorkspace scope={scope} can={can} /> : <>
       <div className="flex gap-2" role="tablist" aria-label="Data quality target">
         <Button variant={tab === "students" ? "primary" : "outline"} size="sm" onClick={() => { setTab("students"); setSelectedField(null); setIssuePage(1); }} aria-pressed={tab === "students"} className="gap-2"><Users className="size-4" />Students</Button>
         {can("view_staff") && <Button variant={tab === "staff" ? "primary" : "outline"} size="sm" onClick={() => { setTab("staff"); setSelectedField(null); setIssuePage(1); }} aria-pressed={tab === "staff"} className="gap-2"><UserRound className="size-4" />Staff / PTK</Button>}
@@ -282,6 +352,7 @@ export default function DataQuality() {
           </Card>
         </div>
       )}
+      </>}
     </div>
   );
 }
