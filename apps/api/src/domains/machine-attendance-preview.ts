@@ -14,6 +14,7 @@ import {
   type MachineAttendanceRow,
 } from "@operatoros/excel";
 import type { AuthContext, CurrentUser } from "../auth/service";
+import { capabilitiesForRole } from "../auth/capabilities";
 import { actor } from "./core";
 import { deriveAttendanceStatus, insertCanonicalAttendanceRecord } from "./attendance-rules";
 import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
@@ -40,6 +41,7 @@ const MAX_MACHINE_WORKBOOK_BYTES = 10 * 1024 * 1024;
 const PAGE_SIZE = 50;
 const CONFIRMATION = "IMPORT_MACHINE_ATTENDANCE";
 const CONFLICTS = new Set<MachineImportApplyClassification>(["CONFLICT_EXISTING_ATTENDANCE", "CONFLICT_EXISTING_OVERRIDE"]);
+type ResolutionTargetType = NonNullable<PreviewItem["resolution"]["target"]>["type"];
 
 function row(context: AuthContext, sql: string, params: unknown[] = []): Row | null {
   return (context.database.client.query(sql).get(...(params as never[])) as Row | null) ?? null;
@@ -170,6 +172,59 @@ function sameCanonical(existing: Row, source: MachineAttendanceRow, status: stri
     && Number(existing.late_duration ?? 0) === (source.lateMinutes ?? 0);
 }
 
+function appLink(path: string, values: Record<string, string | number | null | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) if (value !== null && value !== undefined && value !== "") params.set(key, String(value));
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function resolution(
+  classification: MachineImportApplyClassification,
+  student: Row | null,
+  enrollment: Row | null,
+  date: string | null,
+  academicYearId: number,
+  jenjangId: number,
+  capabilities: ReadonlySet<string>,
+): PreviewItem["resolution"] {
+  const attendancePath = appLink("/attendance/daily", { date, academic_year_id: academicYearId, class_id: enrollment?.academic_class_id ?? null });
+  const correctionPath = appLink("/attendance/override-review", { academic_year_id: academicYearId, class_id: enrollment?.academic_class_id ?? null, date_from: date, date_to: date });
+  const calendarPath = appLink("/attendance/calendar", { academic_year_id: academicYearId, jenjang_id: jenjangId, date });
+  const studentPath = student?.student_master_id == null ? "/students" : `/students/${encodeURIComponent(String(student.student_master_id))}`;
+  const definition: { class: PreviewItem["resolution"]["class"]; note: string; target: { type: ResolutionTargetType; path: string; label: string; capability: string } | null } = (() => {
+    switch (classification) {
+      case "CONFLICT_EXISTING_ATTENDANCE": return { class: "ATTENDANCE_REVIEW", note: "Review the existing attendance record before importing.", target: { type: "ATTENDANCE_REVIEW", path: attendancePath, label: "Review attendance", capability: "view_attendance" } };
+      case "CONFLICT_EXISTING_OVERRIDE": return { class: "ATTENDANCE_CORRECTION", note: "A canonical correction exists. Review it before any further change.", target: { type: "ATTENDANCE_CORRECTION", path: correctionPath, label: "Review correction", capability: "view_attendance_corrections" } };
+      case "BLOCKED_UNMAPPED":
+      case "BLOCKED_AMBIGUOUS": return { class: "STUDENT_DATA_RESOLUTION", note: "Review the canonical student/device identity mapping. No approximate match is used.", target: { type: "STUDENT_DATA_RESOLUTION", path: studentPath, label: "Review student mapping", capability: "view_student" } };
+      case "BLOCKED_NO_ACTIVE_ENROLLMENT":
+      case "BLOCKED_AMBIGUOUS_ENROLLMENT":
+      case "BLOCKED_OUT_OF_SCOPE": return { class: "ENROLLMENT_RESOLUTION", note: "Review the date-correct canonical enrollment before importing.", target: { type: "ENROLLMENT_RESOLUTION", path: studentPath, label: "Review enrollment", capability: "view_student" } };
+      case "BLOCKED_CALENDAR_NOT_EXPECTED": return { class: "CALENDAR_RESOLUTION", note: "The calendar does not expect attendance on this date. Review the calendar authority if this is an intended school day.", target: { type: "CALENDAR_RESOLUTION", path: calendarPath, label: "Review calendar", capability: "view_attendance" } };
+      case "BLOCKED_CALENDAR_UNKNOWN": return { class: "CALENDAR_RESOLUTION", note: "Calendar expectation is unknown, so the row is not safe to import.", target: { type: "CALENDAR_RESOLUTION", path: calendarPath, label: "Review calendar", capability: "view_attendance" } };
+      case "BLOCKED_FINALIZED_PERIOD": return { class: "ATTENDANCE_REVIEW", note: "The attendance period is finalized. Use the canonical attendance workflow if reopening is authorized.", target: { type: "ATTENDANCE_REVIEW", path: attendancePath, label: "Review attendance", capability: "view_attendance" } };
+      case "BLOCKED_NO_SCAN": return { class: "NO_ACTION_REQUIRED", note: "No machine scan is present. No attendance status is inferred or created." , target: null };
+      case "BLOCKED_FUTURE_DATE": return { class: "NO_ACTION_REQUIRED", note: "Future attendance dates are not imported. Review the source again after the date.", target: null };
+      case "BLOCKED_MULTIPLE_SCANS_UNCLEAR":
+      case "BLOCKED_INVALID_SCAN":
+      case "BLOCKED_UNSUPPORTED_SOURCE_STATUS":
+      case "BLOCKED_INCOMPLETE_SCAN":
+      case "BLOCKED_INVALID_SOURCE_ROW": return { class: "SOURCE_FILE_REVIEW", note: "Review the source workbook row and preview it again after correction.", target: null };
+      case "ELIGIBLE_CREATE": return { class: "NO_ACTION_REQUIRED", note: "This row is eligible for the explicit import confirmation.", target: null };
+      case "NOOP_ALREADY_CANONICAL": return { class: "NO_ACTION_REQUIRED", note: "The canonical attendance record already matches. No change is needed.", target: null };
+      default: return { class: "NOT_RESOLVABLE_IN_OPERATOROS", note: "No safe resolution workflow is available for this row.", target: null };
+    }
+  })();
+  return {
+    class: definition.class,
+    note: definition.note,
+    target: definition.target && capabilities.has(definition.target.capability)
+      ? { type: definition.target.type, path: definition.target.path, label: definition.target.label }
+      : null,
+  };
+}
+
 function classify(source: MachineAttendanceRow, state: PreviewItem["matchingState"], expectation: string, enrollment: { value: Row | null; classification: MachineImportApplyClassification | null }, existing: Row | null, finalized: boolean, today: string, canonicalStatus: string | null): MachineImportApplyClassification {
   if (state === "INVALID_SOURCE_ROW" || state === "INVALID_IDENTIFIER") return "BLOCKED_INVALID_SOURCE_ROW";
   if (state === "UNMAPPED") return "BLOCKED_UNMAPPED";
@@ -205,7 +260,7 @@ function digestFor(fileFingerprint: string, academicYearId: number, jenjangId: n
   return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
-function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof parseMachineAttendanceWorkbook>>, academicYearId: number, jenjangId: number, year: Row, fileFingerprint: string, evaluatedOn: string): Projection {
+function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof parseMachineAttendanceWorkbook>>, academicYearId: number, jenjangId: number, year: Row, fileFingerprint: string, evaluatedOn: string, capabilities: ReadonlySet<string>): Projection {
   const identifiers = parsed.rows.map((value) => value.machineStudentIdentifier).filter((value): value is string => value !== null);
   const identityByIdentifier = identityMap(context, identifiers);
   const dates = parsed.rows.map((value) => value.date).filter((value): value is string => value !== null);
@@ -250,6 +305,8 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
       student: canonical ? { id: Number(canonical.student_id), masterId: canonical.student_master_id == null ? null : String(canonical.student_master_id), name: String(canonical.student_name), className: canonical.class_name == null ? null : String(canonical.class_name), jenjang: canonical.jenjang == null ? null : String(canonical.jenjang) } : null,
       machineEvidence: source.machineEvidence, scanTimes: source.scanTimes, expectation,
       reconciliationState: reconciliation(state, source.machineEvidence, expectation.status), applyClassification, canonicalStatus,
+      existingAttendance: existing ? { baseStatus: String(existing.status), effectiveStatus: String(existing.override_status ?? existing.status), hasOverride: existing.override_id != null } : null,
+      resolution: resolution(applyClassification, canonical ?? null, enrollment.value ?? null, source.date, academicYearId, jenjangId, capabilities),
     };
     return { source, response, studentId, enrollmentId: enrollment.value?.id == null ? null : Number(enrollment.value.id), existing };
   });
@@ -309,7 +366,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       if (buffer.byteLength > MAX_MACHINE_WORKBOOK_BYTES) return fail(ctx.set, 413, "The attendance-machine workbook is too large.");
       const parsed = await parseMachineAttendanceWorkbook(buffer);
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
-      const projection = buildProjection(context, parsed, scope.academicYearId, scope.jenjangId, scope.year, fingerprint(buffer), evaluatedOn);
+      const projection = buildProjection(context, parsed, scope.academicYearId, scope.jenjangId, scope.year, fingerprint(buffer), evaluatedOn, new Set(capabilitiesForRole(user.role)));
       const page = Math.max(1, positive(ctx.body?.page) ?? 1);
       const pageSize = Math.min(100, positive(ctx.body?.page_size) ?? PAGE_SIZE);
       const response: MachineImportPreviewResponse = {
@@ -343,12 +400,13 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       const fileFingerprint = fingerprint(buffer);
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
       const previewParsed = await parseMachineAttendanceWorkbook(buffer);
-      const previewProjection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn);
+      const capabilities = new Set(capabilitiesForRole(user.role));
+      const previewProjection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
       if (previewProjection.previewDigest !== expectedDigest) return stale(ctx.set);
       const applyParsed = await parseMachineAttendanceWorkbook(buffer);
       const appliedAt = (context.now?.() ?? new Date()).toISOString();
       const result = inTransaction(context.database.client, () => {
-        const projection = buildProjection(context, applyParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn);
+        const projection = buildProjection(context, applyParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
         if (projection.previewDigest !== expectedDigest) throw new Error("PREVIEW_STALE");
         const batchId = randomUUID();
         auditEvent(context.database.client, user, { entityType: "MACHINE_IMPORT", entityReference: batchId, operation: "MACHINE_IMPORT_APPLY", importSessionId: batchId, metadata: { file_sha256: fileFingerprint, academic_year_id: scope.academicYearId, jenjang_id: scope.jenjangId, rows_inspected: projection.items.length, eligible: projection.summary.eligibleCreates } });

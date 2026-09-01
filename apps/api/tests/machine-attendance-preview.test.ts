@@ -86,7 +86,25 @@ describe("attendance machine preview", () => {
       expect(find("88888", "2026-04-03")).toMatchObject({ matchingState: "UNMAPPED", reconciliationState: "UNMAPPED" });
       expect(find("00999", "2026-04-03")).toMatchObject({ matchingState: "AMBIGUOUS", reconciliationState: "AMBIGUOUS" });
       expect(find("00123", "2026-04-05")).toMatchObject({ expectation: { status: "UNKNOWN" }, reconciliationState: "EXPECTATION_UNKNOWN" });
+      expect(find("00456", "2026-04-06")).toMatchObject({ resolution: { class: "CALENDAR_RESOLUTION", target: { type: "CALENDAR_RESOLUTION", path: "/attendance/calendar?academic_year_id=1&jenjang_id=1&date=2026-04-06" } } });
+      expect(find("88888", "2026-04-03")).toMatchObject({ resolution: { class: "STUDENT_DATA_RESOLUTION", target: { type: "STUDENT_DATA_RESOLUTION", path: "/students" } } });
+      expect(find("00123", "2026-04-04")).toMatchObject({ resolution: { class: "NO_ACTION_REQUIRED", target: null } });
       for (const [table, count] of Object.entries(before)) expect((value.database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count).toBe(count);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("maps existing attendance and override conflicts to canonical review workflows", async () => {
+    const value = await setup("resolution");
+    try {
+      value.database.client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (123, '2026-04-03', '07:00', '15:00', 0, 'manual', 0, 'sakit')");
+      const form = new FormData(); form.append("file", new File([await fixture()], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const body = await response.json() as any;
+      expect(body.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "CONFLICT_EXISTING_ATTENDANCE", existingAttendance: { baseStatus: "sakit", effectiveStatus: "sakit", hasOverride: false }, resolution: { class: "ATTENDANCE_REVIEW", target: { type: "ATTENDANCE_REVIEW", path: "/attendance/daily?date=2026-04-03&academic_year_id=1" } } });
+      value.database.client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, note, reviewed_by, reviewed_at) VALUES ((SELECT id FROM attendance WHERE student_id = 123 AND date = '2026-04-03'), 'sakit', 'izin', 'Synthetic review', 'preview-admin', CURRENT_TIMESTAMP)");
+      const second = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const secondBody = await second.json() as any;
+      expect(secondBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE", existingAttendance: { baseStatus: "sakit", effectiveStatus: "izin", hasOverride: true }, resolution: { class: "ATTENDANCE_CORRECTION", target: { type: "ATTENDANCE_CORRECTION", path: "/attendance/override-review?academic_year_id=1&date_from=2026-04-03&date_to=2026-04-03" } } });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 
