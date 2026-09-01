@@ -47,6 +47,20 @@ historical evidence unless they explicitly identify a current procedure.
   `07b7211b73a59f0032dc33c0c43741d884b38741`: never merge, copy, modify, or
   delete it.
 
+## Worktree lifecycle
+
+- Protect `~/projects/absensi`, the primary checkout at
+  `~/projects/absensi/school-attendance-analytics`, and the root files
+  `absen anak sd bro.xls.xlsx` and `Data Anak 2026-2027 - Example.xlsx`.
+- Before a feature loop, fetch `origin`, verify the previous feature on
+  `origin/main`, audit worktrees, and prune only clean worktrees whose content
+  is integrated into the current default branch. Preserve dirty, unmerged,
+  locked, unknown, audit, archive, recovery, and reference entries.
+- After merged-main verification, run
+  `wt step prune --dry-run --min-age=0s`, independently verify candidates, and
+  then run `wt step prune --min-age=0s --foreground`. Never use force deletion
+  or `wt merge`; never clean a feature worktree before merged-main verification.
+
 ## Protected operational data
 
 - `backend/attendance.db` is the protected operational database. Its expected
