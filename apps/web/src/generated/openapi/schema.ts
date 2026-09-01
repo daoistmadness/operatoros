@@ -5564,6 +5564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/calendar/deadline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiAttendanceCalendarDeadline"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7997,6 +8013,7 @@ export interface components {
                     /** @enum {string} */
                     reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
                 }[];
+                submissionDeadlineLocalTime: string | null;
             }[];
         };
     };
@@ -20126,5 +20143,33 @@ export interface operations {
                 };
             };
         };
+    };
+    putApiAttendanceCalendarDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+                "multipart/form-data": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+            };
+        };
+        responses: never;
     };
 }

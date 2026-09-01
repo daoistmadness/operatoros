@@ -1,6 +1,6 @@
-export const CURRENT_SCHEMA_VERSION = "20260901_s45";
+export const CURRENT_SCHEMA_VERSION = "20260901_s46";
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "48fbeb6424d0475a3c8bbb7b944a52afb17fc2b73edbb25a721a3f1083e896d6";
+  "dd798cf0171b3221577774cc1396cb5e1d57c33d927587fc2fc0c2cd45a88b0a";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",

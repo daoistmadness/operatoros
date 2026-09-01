@@ -14,7 +14,7 @@ vi.mock("../hooks/useDailyAttendanceQuery", () => ({ useDailyAttendanceQuery: vi
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: ["view_attendance", "enter_assigned_class_attendance"] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const filters = { academic_years: [{ id: 1, label: "2026/2027", is_default: true }], jenjangs: [{ id: 1, name: "SMP" }], class_names: [], subjects: [] };
-const row = (classId: number, className: string, state: "PARTIAL" | "EMPTY_CLASS") => ({ classId, className, jenjang: "SMP", academicYearId: 1, academicYearLabel: "2026/2027", expectedStudentCount: state === "PARTIAL" ? 2 : 0, recordedStudentCount: state === "PARTIAL" ? 1 : 0, unrecordedStudentCount: state === "PARTIAL" ? 1 : 0, coverageState: state, coveragePercent: state === "PARTIAL" ? 50 : null, counts: { present: state === "PARTIAL" ? 1 : 0, late: 0, sakit: 0, izin: 0, alfa: 0, absent: 0, incomplete: 0 }, periodFinalized: false, attendanceExpectation: { status: "UNKNOWN", reason: null, source: "NONE" } });
+const row = (classId: number, className: string, state: "PARTIAL" | "EMPTY_CLASS") => ({ classId, className, jenjang: "SMP", academicYearId: 1, academicYearLabel: "2026/2027", expectedStudentCount: state === "PARTIAL" ? 2 : 0, recordedStudentCount: state === "PARTIAL" ? 1 : 0, unrecordedStudentCount: state === "PARTIAL" ? 1 : 0, coverageState: state, coveragePercent: state === "PARTIAL" ? 50 : null, counts: { present: state === "PARTIAL" ? 1 : 0, late: 0, sakit: 0, izin: 0, alfa: 0, absent: 0, incomplete: 0 }, periodFinalized: false, attendanceExpectation: { status: "UNKNOWN", reason: null, source: "NONE" }, submissionTiming: { status: "DEADLINE_UNKNOWN", deadlineLocalTime: null, deadlineAt: null, authorityAvailable: false } });
 const response = { scope: { date: "2026-08-03", academicYearId: 1, academicYearLabel: "2026/2027", jenjangId: null, classId: null, schoolDayAuthority: "AVAILABLE" }, totals: { classes: 2, expectedStudents: 2, recordedStudents: 1, unrecordedStudents: 1, completeClasses: 0, partialClasses: 1, noRecordClasses: 0, emptyClasses: 1, expectedClasses: 0, notExpectedClasses: 0, unknownClasses: 2 }, classes: [row(1, "7A", "PARTIAL"), row(2, "7B", "EMPTY_CLASS")] };
 const mocked = (value: unknown) => value as { mockReturnValue: (result: unknown) => void };
 
@@ -34,7 +34,7 @@ describe("DailyAttendanceOperations", () => {
     expect(container.textContent).toContain("Daily Attendance");
     expect(container.textContent).toContain("Recorded / expected");
     expect(container.textContent).toContain("Empty class");
-    expect(container.textContent).toContain("do not establish a submission deadline");
+    expect(container.textContent).toContain("submission timing");
     expect(container.querySelector('a[href="/attendance/class-entry?class_id=1&date=2026-08-03"]')?.textContent).toContain("Continue attendance");
     expect(container.querySelector('a[href="/classes/1?attendance_date_from=2026-08-03&attendance_date_to=2026-08-03"]')).not.toBeNull();
     expect(container.textContent).not.toMatch(/risk|alert|intervention/i);
