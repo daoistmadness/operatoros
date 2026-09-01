@@ -88,6 +88,38 @@ export function resolveAttendanceExpectations(
   return result;
 }
 
+export function resolveAttendanceExpectationsForDates(
+  context: AuthContext,
+  input: { academicYearId: number; dates: string[]; startDate: string; endDate: string; jenjangIds: number[] },
+): Map<string, Map<number, AttendanceCalendarExpectation>> {
+  const dates = [...new Set(input.dates)].filter(validCalendarDate);
+  const jenjangIds = [...new Set(input.jenjangIds)].filter((value) => Number.isInteger(value) && value > 0);
+  const result = new Map<string, Map<number, AttendanceCalendarExpectation>>();
+  if (!dates.length || !jenjangIds.length) return result;
+  const jenjangPlaceholders = jenjangIds.map(() => "?").join(", ");
+  const datePlaceholders = dates.map(() => "?").join(", ");
+  const exceptionRows = rows(context, `SELECT jenjang_id, date, expectation, reason FROM attendance_calendar_exceptions WHERE academic_year_id = ? AND date IN (${datePlaceholders}) AND jenjang_id IN (${jenjangPlaceholders})`, [input.academicYearId, ...dates, ...jenjangIds]);
+  const weekdayRows = rows(context, `SELECT jenjang_id, weekday, expectation FROM attendance_calendar_weekday_rules WHERE academic_year_id = ? AND jenjang_id IN (${jenjangPlaceholders})`, [input.academicYearId, ...jenjangIds]);
+  const exceptions = new Map(exceptionRows.map((value) => [`${String(value.date)}:${Number(value.jenjang_id)}`, value]));
+  const weekdayRules = new Map(weekdayRows.map((value) => [`${Number(value.jenjang_id)}:${Number(value.weekday)}`, value]));
+  for (const date of dates) {
+    const byJenjang = new Map<number, AttendanceCalendarExpectation>();
+    for (const jenjangId of jenjangIds) {
+      const exception = exceptions.get(`${date}:${jenjangId}`);
+      const rule = weekdayRules.get(`${jenjangId}:${calendarWeekday(date)}`);
+      byJenjang.set(jenjangId, resolveAttendanceExpectation(
+        date,
+        input.startDate,
+        input.endDate,
+        exception ? { expectation: exception.expectation, reason: exception.reason } : null,
+        rule ? { expectation: rule.expectation } : null,
+      ));
+    }
+    result.set(date, byJenjang);
+  }
+  return result;
+}
+
 function positiveId(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;

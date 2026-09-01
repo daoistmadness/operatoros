@@ -55,7 +55,8 @@ historical evidence unless they explicitly identify a current procedure.
 
 - Protect `~/projects/absensi`, the primary checkout at
   `~/projects/absensi/school-attendance-analytics`, and the root files
-  `absen anak sd bro.xls.xlsx` and `Data Anak 2026-2027 - Example.xlsx`.
+  `absen anak sd bro.xls.xlsx`, `absen smp term 4.xls.xlsx`, and
+  `Data Anak 2026-2027 - Example.xlsx`.
 - Before a feature loop, fetch `origin`, verify the previous feature on
   `origin/main`, audit worktrees, and prune only clean worktrees whose content
   is integrated into the current default branch. Preserve dirty, unmerged,

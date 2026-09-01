@@ -11,6 +11,7 @@ export type { ExcelCell, ExcelWorkbook, ExcelWorksheet, WorkbookMetadata } from 
 export { readLegacyXlsRows, writeLegacyXlsRows } from "./legacy";
 export type { LegacyWorksheetRows } from "./legacy";
 export * from "./normalization";
+export * from "./machine-attendance";
 export {
   addWorksheet,
   appendRow,
