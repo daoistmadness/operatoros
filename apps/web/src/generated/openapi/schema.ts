@@ -5190,6 +5190,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/data-quality/resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data Quality Resolution */
+        get: operations["data_quality_resolution_api_analytics_data_quality_resolution_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/data-quality/students/export-excel": {
         parameters: {
             query?: never;
@@ -6356,6 +6373,44 @@ export interface components {
             unmapped_levels: string[];
             /** Warnings */
             warnings: string[];
+        };
+        /** DataQualityResolutionItem */
+        DataQualityResolutionItem: {
+            issueKey: string;
+            /** @enum {string} */
+            entityType: "STUDENT" | "STAFF";
+            entityId: string;
+            entityLabel: string;
+            context: string;
+            field: string;
+            /** @enum {string} */
+            qualityState: "MISSING" | "UNKNOWN" | "UNMAPPED";
+            qualityType: string;
+            label: string;
+            currentValue: string | null;
+            /** @enum {string} */
+            resolutionClass: "EDITABLE_IN_OPERATOROS" | "VIEW_ONLY_IN_OPERATOROS" | "EXTERNAL_SOURCE_REQUIRED" | "UNSUPPORTED_CORRECTION";
+            resolutionNote: string;
+            resolutionTarget: {
+                /** @enum {string} */
+                type: "STUDENT_PROFILE" | "STUDENT_ENROLLMENT" | "STAFF_PROFILE";
+                entityId: string;
+                capability: string;
+            } | null;
+        };
+        /** DataQualityResolutionResponse */
+        DataQualityResolutionResponse: {
+            summary: {
+                totalIssues: number;
+                editableIssues: number;
+                viewOnlyIssues: number;
+                externalIssues: number;
+                unsupportedIssues: number;
+            };
+            page: number;
+            pageSize: number;
+            total: number;
+            items: components["schemas"]["DataQualityResolutionItem"][];
         };
         /** DeactivatePolicyRequest */
         DeactivatePolicyRequest: {
@@ -19551,6 +19606,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    data_quality_resolution_api_analytics_data_quality_resolution_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: string;
+                status?: string;
+                jenjang_id?: string;
+                class_id?: string;
+                employment_status?: string;
+                entity_type?: "ALL" | "STUDENT" | "STAFF";
+                quality_state?: "MISSING" | "UNKNOWN" | "UNMAPPED";
+                resolution_class?: "EDITABLE_IN_OPERATOROS" | "VIEW_ONLY_IN_OPERATOROS" | "EXTERNAL_SOURCE_REQUIRED" | "UNSUPPORTED_CORRECTION";
+                field?: string;
+                search?: string;
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataQualityResolutionResponse"];
                 };
             };
         };

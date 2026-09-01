@@ -54,6 +54,7 @@ export const queryKeys = {
     recap: (kind: "students" | "staff", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "recap", kind, canonicalizeQueryFilters(filters)] as const,
     dataQuality: (kind: "students" | "staff", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "data-quality", kind, canonicalizeQueryFilters(filters)] as const,
     dataQualityIssues: (kind: "students" | "staff", filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "data-quality-issues", kind, canonicalizeQueryFilters(filters)] as const,
+    dataQualityResolution: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "data-quality-resolution", canonicalizeQueryFilters(filters)] as const,
     trends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "trends", canonicalizeQueryFilters(filters)] as const,
     studentTrends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "student-trends", canonicalizeQueryFilters(filters)] as const,
     studentIndicators: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "student-indicators", canonicalizeQueryFilters(filters)] as const,
