@@ -1,4 +1,4 @@
-// Accepted S4.5 schema snapshot. Runtime schema is validated by the migration manifest.
+// Accepted S4.6 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -195,6 +195,17 @@ export const attendance_calendar_weekday_rules = sqliteTable("attendance_calenda
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const attendance_submission_deadlines = sqliteTable("attendance_submission_deadlines", {
+    "id": integer().primaryKey(),
+    "academic_year_id": integer().notNull(),
+    "jenjang_id": integer().notNull(),
+    "cutoff_time": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("attendance_submission_deadlines_scope_uc").on(table.academic_year_id, table.jenjang_id),
+    check("ck_attendance_submission_deadline_time", sql`${table.cutoff_time} GLOB '[0-9][0-9]:[0-9][0-9]' AND substr(${table.cutoff_time}, 1, 2) BETWEEN '00' AND '23' AND substr(${table.cutoff_time}, 4, 2) BETWEEN '00' AND '59'`),
+]);
 export const attendance_correction_audit = sqliteTable("attendance_correction_audit", {
     "id": integer().primaryKey(),
     "request_id": integer().notNull(),

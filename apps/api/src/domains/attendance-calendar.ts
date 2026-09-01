@@ -5,11 +5,13 @@ import {
   AttendanceCalendarOverviewQuerySchema,
   AttendanceCalendarOverviewResponseSchema,
   AttendanceCalendarWeekdayRequestSchema,
+  AttendanceSubmissionDeadlineRequestSchema,
   type AttendanceCalendarExpectation,
   type AttendanceCalendarReason,
 } from "@operatoros/contracts/attendance";
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
+import { validSubmissionDeadlineTime } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -110,6 +112,8 @@ export function attendanceCalendarRoutes(app: any, context: AuthContext): any {
     const jenjangs = rows(context, "SELECT id, name FROM jenjangs WHERE active = 1 ORDER BY id");
     const ruleRows = rows(context, "SELECT jenjang_id, weekday, expectation FROM attendance_calendar_weekday_rules WHERE academic_year_id = ?", [yearId]);
     const exceptionRows = rows(context, "SELECT id, jenjang_id, date, expectation, reason FROM attendance_calendar_exceptions WHERE academic_year_id = ? ORDER BY date, jenjang_id, id", [yearId]);
+    const deadlineRows = rows(context, "SELECT jenjang_id, cutoff_time FROM attendance_submission_deadlines WHERE academic_year_id = ?", [yearId]);
+    const deadlines = new Map(deadlineRows.map((value) => [Number(value.jenjang_id), String(value.cutoff_time)]));
     const rules = new Map(ruleRows.map((value) => [`${Number(value.jenjang_id)}:${Number(value.weekday)}`, String(value.expectation) as RuleValue]));
     const exceptions = new Map<number, Row[]>();
     for (const value of exceptionRows) {
@@ -124,9 +128,25 @@ export function attendanceCalendarRoutes(app: any, context: AuthContext): any {
         name: String(jenjang.name),
         weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: rules.get(`${Number(jenjang.id)}:${weekday}`) ?? null })),
         exceptions: (exceptions.get(Number(jenjang.id)) ?? []).map((value) => ({ id: Number(value.id), date: String(value.date), expectation: String(value.expectation) as RuleValue, reason: String(value.reason) as AttendanceCalendarReason })),
+        submissionDeadlineLocalTime: deadlines.get(Number(jenjang.id)) ?? null,
       })),
     };
   }, { query: AttendanceCalendarOverviewQuerySchema, response: AttendanceCalendarOverviewResponseSchema });
+
+  app.put("/api/attendance/calendar/deadline", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const body = ctx.body as { academic_year_id: number; jenjang_id: number; cutoff_time: string | null };
+    if (!selectedYear(context, body.academic_year_id)) return fail(ctx.set, 404, "Academic year not found");
+    if (!selectedJenjang(context, body.jenjang_id)) return fail(ctx.set, 404, "Jenjang not found");
+    if (body.cutoff_time !== null && !validSubmissionDeadlineTime(body.cutoff_time)) return fail(ctx.set, 400, "cutoff_time must be in HH:MM format");
+    try {
+      if (body.cutoff_time === null) context.database.client.run("DELETE FROM attendance_submission_deadlines WHERE academic_year_id = ? AND jenjang_id = ?", [body.academic_year_id, body.jenjang_id]);
+      else context.database.client.run("INSERT INTO attendance_submission_deadlines (academic_year_id, jenjang_id, cutoff_time) VALUES (?, ?, ?) ON CONFLICT(academic_year_id, jenjang_id) DO UPDATE SET cutoff_time = excluded.cutoff_time, updated_at = CURRENT_TIMESTAMP", [body.academic_year_id, body.jenjang_id, body.cutoff_time]);
+      return { status: "saved" };
+    } catch {
+      return fail(ctx.set, 409, "Attendance submission deadline conflict");
+    }
+  }, { body: AttendanceSubmissionDeadlineRequestSchema });
 
   app.put("/api/attendance/calendar/weekday", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };

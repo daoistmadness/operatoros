@@ -386,6 +386,27 @@ submission lateness, or overdue state.
 - Daily Attendance displays calendar expectation separately from recording
   coverage. `EXPECTED` with no records is not an overdue status.
 
+## Attendance Submission Deadline Authority (2026-09)
+
+Submission timing is a third independent dimension beside calendar expectation
+and attendance recording coverage. The authority is scoped to one academic
+year and jenjang, stores an optional same-day local `HH:MM` cutoff, and uses
+`Asia/Jakarta`, the existing school timezone authority.
+
+- `BEFORE_DEADLINE` means the date is `EXPECTED`, a cutoff is configured, and
+  school-local time is at or before the configured minute.
+- `DEADLINE_PASSED` means the date is `EXPECTED`, a cutoff is configured, and
+  school-local time is after that cutoff. Exact equality is before deadline.
+- `DEADLINE_UNKNOWN` means expectation is unknown or expected attendance has no
+  configured deadline. No default cutoff is invented.
+- `NOT_APPLICABLE` means calendar expectation is `NOT_EXPECTED`.
+- Configuration applies to the selected academic year as current policy. No
+  historical deadline backfill or versioned past-policy claim is made.
+- `DEADLINE_PASSED` is a factual timing state. It does not mean staff failure,
+  negligence, poor performance, violation, alert, or intervention.
+- Daily Attendance keeps expectation, recording coverage, and submission timing
+  separate. Expected plus no records is never automatically called overdue.
+
 ## Academic Assessment Operations (2026-09)
 
 Assessment Operations reports score-entry coverage for session-backed academic

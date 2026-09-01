@@ -53,6 +53,7 @@ export interface AuthContext {
   database: DatabaseHandle;
   config: AuthConfig;
   loginRateLimiter?: import("./rate-limit").LoginRateLimiter;
+  now?: () => Date;
 }
 
 export interface CurrentUser {

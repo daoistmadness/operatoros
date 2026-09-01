@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+import { AttendanceSubmissionDeadlineTimeSchema } from "./submission-deadline";
 
 export const AttendanceCalendarDateSchema = Type.String({ pattern: "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$" });
 export const AttendanceCalendarRuleValueSchema = Type.Union([
@@ -61,6 +62,7 @@ export const AttendanceCalendarOverviewResponseSchema = Type.Object({
     name: Type.String({ minLength: 1 }),
     weekdays: Type.Array(AttendanceCalendarWeekdaySchema, { minItems: 7, maxItems: 7 }),
     exceptions: Type.Array(AttendanceCalendarExceptionSchema),
+    submissionDeadlineLocalTime: Type.Union([AttendanceSubmissionDeadlineTimeSchema, Type.Null()]),
   })),
 });
 

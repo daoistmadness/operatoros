@@ -61,6 +61,7 @@ MODEL_MODULES = (
     "models.absence_reason_class_entry",
     "models.academic_assessment_session",
     "models.attendance_calendar",
+    "models.attendance_submission_deadline",
     "models.academic_config",
     "models.academic_intervention",
     "models.academic_mapping",
@@ -100,6 +101,7 @@ POST_BASELINE_MODEL_TABLES = frozenset({
 
 TIMELINE_MODEL_TABLES = frozenset({"academic_assessment_sessions", "student_subject_grades"})
 CALENDAR_MODEL_TABLES = frozenset({"attendance_calendar_weekday_rules", "attendance_calendar_exceptions"})
+DEADLINE_MODEL_TABLES = frozenset({"attendance_submission_deadlines"})
 
 
 @dataclass(frozen=True)
@@ -310,7 +312,7 @@ def initialize_s42_baseline_sqlite_database(path: Path) -> str:
     baseline_tables = [
         table
         for table in Base.metadata.sorted_tables
-        if table.name not in POST_BASELINE_MODEL_TABLES and table.name not in TIMELINE_MODEL_TABLES and table.name not in CALENDAR_MODEL_TABLES
+        if table.name not in POST_BASELINE_MODEL_TABLES and table.name not in TIMELINE_MODEL_TABLES and table.name not in CALENDAR_MODEL_TABLES and table.name not in DEADLINE_MODEL_TABLES
     ]
     migration_engine = create_engine(f"sqlite:///{temporary}")
     try:
@@ -412,6 +414,7 @@ def migrate_database_to_current(path: Path) -> str:
     from core.attendance_followup_migration import migrate_attendance_followup_sqlite
     from core.academic_timeline_migration import migrate_academic_timeline_sqlite
     from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
+    from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
 
     target = path.resolve(strict=True)
     with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
@@ -427,11 +430,14 @@ def migrate_database_to_current(path: Path) -> str:
         migrate_academic_timeline_sqlite(target)
         row = ("20260831_s44",)
     if row == ("20260831_s44",):
-        return migrate_attendance_calendar_sqlite(target)
+        migrate_attendance_calendar_sqlite(target)
+        row = ("20260901_s45",)
+    if row == ("20260901_s45",):
+        return migrate_attendance_submission_deadline_sqlite(target)
     if row != (CURRENT_SCHEMA_VERSION,):
         actual = row[0] if row else "missing"
         raise RuntimeError(
-            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION}, 20260725_s43, or 20260831_s44, found {actual}"
+            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION}, 20260725_s43, 20260831_s44, or 20260901_s45, found {actual}"
         )
     return "MIGRATION_ALREADY_CURRENT"
 
@@ -475,7 +481,7 @@ def _complete_model_schema(target: Path) -> None:
 
 
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
-    """Create the S4.2 baseline, then run registered migrations to S4.5."""
+    """Create the S4.2 baseline, then run registered migrations to S4.6."""
     target = path.resolve(strict=False)
     if target.exists():
         with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
@@ -699,6 +705,8 @@ def main(argv: list[str] | None = None) -> int:
     upgrade_s44.add_argument("--database", required=True, type=Path)
     upgrade_s45 = commands.add_parser("upgrade-s45")
     upgrade_s45.add_argument("--database", required=True, type=Path)
+    upgrade_s46 = commands.add_parser("upgrade-s46")
+    upgrade_s46.add_argument("--database", required=True, type=Path)
     baseline = commands.add_parser("initialize-s42-baseline")
     baseline.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
@@ -736,6 +744,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s45":
         from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
         print(json.dumps({"status": migrate_attendance_calendar_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s46":
+        from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
+        print(json.dumps({"status": migrate_attendance_submission_deadline_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")

@@ -15,6 +15,7 @@ export interface BackendConfig {
   backupDir?: string;
   dataPaths?: OperatorOSPaths;
   backupEncryption?: BackupEncryptionConfig | null;
+  clock?: () => Date;
 }
 
 function sqlitePath(value: string | undefined): string | undefined {
