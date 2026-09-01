@@ -5597,6 +5597,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/calendar/period/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview attendance calendar period */
+        post: operations["previewAttendanceCalendarPeriod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/period/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply attendance calendar period */
+        post: operations["applyAttendanceCalendarPeriod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/machine-import/preview": {
         parameters: {
             query?: never;
@@ -20309,6 +20343,96 @@ export interface operations {
             };
         };
         responses: never;
+    };
+    previewAttendanceCalendarPeriod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    start_date: string;
+                    end_date: string;
+                    /** @enum {string} */
+                    expectation: "EXPECTED" | "NOT_EXPECTED";
+                    /** @enum {string} */
+                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid or out-of-scope period */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    applyAttendanceCalendarPeriod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    start_date: string;
+                    end_date: string;
+                    /** @enum {string} */
+                    expectation: "EXPECTED" | "NOT_EXPECTED";
+                    /** @enum {string} */
+                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+                    preview_digest: string;
+                    /** @constant */
+                    confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid or out-of-scope period */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Period preview is stale or application conflicted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
     previewAttendanceMachineImport: {
         parameters: {

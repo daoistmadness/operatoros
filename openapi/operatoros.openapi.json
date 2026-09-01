@@ -32250,6 +32250,24 @@
       }
     },
     "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}},
+    "/api/attendance/calendar/period/preview": {
+      "post": {
+        "operationId": "previewAttendanceCalendarPeriod",
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "start_date", "end_date", "expectation", "reason"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "start_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "end_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "expectation": {"enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string"}, "reason": {"enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string"}}}}}},
+        "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}}, "400": {"description": "Invalid or out-of-scope period"}},
+        "summary": "Preview attendance calendar period",
+        "tags": ["attendance"]
+      }
+    },
+    "/api/attendance/calendar/period/apply": {
+      "post": {
+        "operationId": "applyAttendanceCalendarPeriod",
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "start_date", "end_date", "expectation", "reason", "preview_digest", "confirmation"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "start_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "end_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "expectation": {"enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string"}, "reason": {"enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string"}, "preview_digest": {"pattern": "^[a-f0-9]{64}$", "type": "string"}, "confirmation": {"const": "APPLY_ATTENDANCE_CALENDAR_PERIOD", "type": "string"}}}}}},
+        "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}}, "400": {"description": "Invalid or out-of-scope period"}, "409": {"description": "Period preview is stale or application conflicted"}},
+        "summary": "Apply attendance calendar period",
+        "tags": ["attendance"]
+      }
+    },
     "/api/attendance/machine-import/preview": {
       "post": {
         "operationId": "previewAttendanceMachineImport",
