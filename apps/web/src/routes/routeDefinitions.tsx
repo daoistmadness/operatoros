@@ -11,6 +11,7 @@ const UploadHistory = lazy(() => import('../pages/UploadHistory'));
 const AttendanceReport = lazy(() => import('../pages/AttendanceReport'));
 const AttendanceReview = lazy(() => import('../pages/AttendanceReview'));
 const AttendanceCorrections = lazy(() => import('../pages/AttendanceCorrections'));
+const AttendanceCorrectionReview = lazy(() => import('../pages/AttendanceCorrectionReview'));
 const AttendanceFollowUpQueue = lazy(() => import('../pages/AttendanceFollowUpQueue'));
 const AbsenceReasons = lazy(() => import('../pages/AbsenceReasons'));
 const HebConfig = lazy(() => import('../pages/HebConfig'));
@@ -106,6 +107,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/analytics/indicators', element: <StudentIndicatorInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
   defineRoute({ path: '/attendance-review', element: <AttendanceReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance-corrections', element: <AttendanceCorrections />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
+  defineRoute({ path: '/attendance/override-review', element: <AttendanceCorrectionReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
   defineRoute({ path: '/attendance/followups', element: <AttendanceFollowUpQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),
   defineRoute({ path: '/academic-management', element: <AcademicManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),
   defineRoute({ path: '/teacher-class-assignments', element: <TeacherClassAssignments />, group: ROUTE_GROUPS.ACADEMIC, authorization: adminOnly() }),

@@ -1,7 +1,13 @@
 import { createHash, randomUUID } from "node:crypto";
 import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, safeExportFilename, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { t } from "elysia";
-import { AttendanceCorrectionRequestSchema } from "@operatoros/contracts/attendance";
+import {
+  AttendanceCorrectionRequestSchema,
+  AttendanceCorrectionReviewQuerySchema,
+  AttendanceCorrectionReviewResponseSchema,
+  type AttendanceCorrectionReviewItem,
+  type AttendanceCorrectionReviewResponse,
+} from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
@@ -18,12 +24,148 @@ function row(context: AuthContext, sql: string, params: any[] = []): Row | null 
 function fail(set: any, status: number, detail: string | Record<string, unknown>): { detail: string | Record<string, unknown> } { set.status = status; return { detail }; }
 function validation(set: any, details: Record<string, unknown>[]): { detail: Record<string, unknown>[] } { set.status = 422; return { detail: details }; }
 function time(value: string | null): string | null { return value ? value.slice(0, 5) : null; }
+function validAttendanceDate(value: unknown): value is string { if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false; const date = new Date(`${value}T00:00:00Z`); return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value; }
+function parsePositiveInteger(value: unknown, fallback: number): number { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback; }
 function periodOpen(context: AuthContext, date: string): boolean { return !row(context, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [date]); }
 function currentStatus(value: Row): string { return value.override_status ?? value.status; }
 function snapshot(value: Row): Row { return { attendance_id: value.id, status: currentStatus(value), check_in: time(value.override_check_in ?? value.check_in), check_out: time(value.override_check_out ?? value.check_out), override_id: value.override_id ?? null, override_reviewed_at: value.reviewed_at ?? null }; }
 function fingerprint(value: Row): string { return createHash("sha256").update(JSON.stringify(value, Object.keys(value).sort())).digest("hex"); }
 function requestPayload(context: AuthContext, value: Row): Row {
   return { id: value.id, attendance_id: value.attendance_id, original_snapshot: JSON.parse(value.original_snapshot), proposed_status: value.proposed_status, proposed_check_in: time(value.proposed_check_in), proposed_check_out: time(value.proposed_check_out), reason_code: value.reason_code, explanation: value.explanation, requester: value.requester, submitted_at: value.submitted_at, state: value.state, version: value.version, approver: value.approver, decided_at: value.decided_at, rejection_reason: value.rejection_reason, resulting_override_id: value.resulting_override_id, created_at: value.created_at, updated_at: value.updated_at, audit: rows(context, "SELECT action, prior_state, new_state, actor, reason_code, created_at FROM attendance_correction_audit WHERE request_id = ? ORDER BY id", [value.id]) };
+}
+
+function appLink(path: string, values: Record<string, string | number | null | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) if (value !== null && value !== undefined && value !== "") params.set(key, String(value));
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function correctionReviewRoutes(app: any, context: AuthContext): void {
+  app.get("/api/attendance/override-review", (ctx: Context) => {
+    const user = actor(context, ctx, { capability: "view_attendance_corrections" });
+    if (!user) return { detail: "Insufficient permissions" };
+
+    const query = ctx.query as Row;
+    const defaultYear = row(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE is_default = 1 LIMIT 1");
+    const academicYearId = Number(query.academic_year_id ?? defaultYear?.id ?? 0);
+    const academicYear = row(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
+    if (!academicYear) return fail(ctx.set, 400, "The academic year scope is invalid.");
+
+    const jenjangId = query.jenjang_id === undefined ? null : Number(query.jenjang_id);
+    const classId = query.class_id === undefined ? null : Number(query.class_id);
+    if (jenjangId !== null && (!Number.isInteger(jenjangId) || jenjangId < 1)) return fail(ctx.set, 400, "The jenjang scope is invalid.");
+    if (classId !== null && (!Number.isInteger(classId) || classId < 1)) return fail(ctx.set, 400, "The class scope is invalid.");
+
+    const dateFrom = String(query.date_from ?? academicYear.start_date);
+    const dateTo = String(query.date_to ?? academicYear.end_date);
+    if (!validAttendanceDate(dateFrom) || !validAttendanceDate(dateTo) || dateFrom > dateTo) return fail(ctx.set, 400, "The attendance date range is invalid.");
+
+    const allowedStatuses = new Set<string>(manualStatuses);
+    for (const key of ["base_status", "effective_status"]) {
+      if (query[key] !== undefined && !allowedStatuses.has(String(query[key]))) return fail(ctx.set, 400, `The ${key} filter is invalid.`);
+    }
+
+    const page = parsePositiveInteger(query.page, 1);
+    const pageSize = Math.min(100, parsePositiveInteger(query.page_size, 25));
+    const filters = [
+      "a.date >= ?",
+      "a.date <= ?",
+      "a.date >= COALESCE(e.effective_from, '0000-01-01')",
+      "a.date <= COALESCE(e.effective_to, '9999-12-31')",
+    ];
+    const params: unknown[] = [academicYearId, dateFrom, dateTo];
+    if (jenjangId !== null) { filters.push("e.jenjang_id = ?"); params.push(jenjangId); }
+    if (classId !== null) { filters.push("e.academic_class_id = ?"); params.push(classId); }
+    if (query.base_status !== undefined) { filters.push("o.original_status = ?"); params.push(String(query.base_status)); }
+    if (query.effective_status !== undefined) { filters.push("COALESCE(o.override_status, a.status) = ?"); params.push(String(query.effective_status)); }
+    const search = String(query.student_search ?? "").trim().toLowerCase();
+    if (search) { filters.push("lower(s.name) LIKE ?"); params.push(`%${search}%`); }
+    if (user.role !== "admin") {
+      filters.push(`EXISTS (
+        SELECT 1 FROM teacher_class_assignments ta
+         WHERE ta.user_id = ? AND ta.academic_year_id = e.academic_year_id
+           AND ta.academic_class_id = e.academic_class_id AND ta.active = 1
+           AND (ta.effective_from IS NULL OR ta.effective_from <= a.date)
+           AND (ta.effective_to IS NULL OR ta.effective_to >= a.date)
+      )`);
+      params.push(user.id);
+    }
+    const baseSql = `WITH ranked AS (
+      SELECT a.id AS attendance_id, a.student_id, e.student_master_id, a.date,
+             o.id AS override_id, o.original_status AS base_status,
+             COALESCE(o.override_status, a.status) AS effective_status,
+             o.note AS correction_note, o.reviewed_by, o.reviewed_at,
+             o.override_check_in, o.override_check_out,
+             s.name AS student_name, e.academic_class_id AS class_id,
+             COALESCE(c.class_name, e.class_name, s.class_name) AS class_name,
+             j.name AS jenjang,
+             ROW_NUMBER() OVER (
+               PARTITION BY a.id
+               ORDER BY CASE WHEN e.effective_from IS NULL THEN 1 ELSE 0 END,
+                        e.effective_from DESC, e.id DESC
+             ) AS enrollment_rank
+        FROM attendance a
+        JOIN attendance_overrides o ON o.attendance_id = a.id
+        JOIN students s ON s.id = a.student_id
+        JOIN student_enrollments e
+          ON e.student_id = a.student_id
+         AND e.academic_year_id = ?
+        LEFT JOIN academic_classes c ON c.id = e.academic_class_id
+        LEFT JOIN jenjangs j ON j.id = e.jenjang_id
+       WHERE ${filters.join(" AND ")}
+    ), selected AS (
+      SELECT * FROM ranked WHERE enrollment_rank = 1
+    )`;
+    const count = Number(row(context, `${baseSql} SELECT COUNT(*) AS total FROM selected`, params)?.total ?? 0);
+    const offset = (page - 1) * pageSize;
+    const values = rows(context, `${baseSql}
+      SELECT * FROM selected
+       ORDER BY date DESC, lower(student_name), attendance_id DESC
+       LIMIT ? OFFSET ?`, [...params, pageSize, offset]);
+    const canEdit = capabilitiesForRole(user.role).includes("manage_attendance");
+    const items: AttendanceCorrectionReviewItem[] = values.map((value) => {
+      const resolvedClassId = value.class_id === null || value.class_id === undefined ? null : Number(value.class_id);
+      const date = String(value.date);
+      const studentId = Number(value.student_id);
+      const studentMasterId = value.student_master_id === null || value.student_master_id === undefined ? null : String(value.student_master_id);
+      return {
+        attendanceId: Number(value.attendance_id),
+        studentId,
+        studentMasterId,
+        studentName: String(value.student_name),
+        classId: resolvedClassId,
+        className: String(value.class_name ?? "Unknown class"),
+        jenjang: value.jenjang === null || value.jenjang === undefined ? null : String(value.jenjang),
+        academicYearId,
+        date,
+        baseStatus: String(value.base_status),
+        effectiveStatus: String(value.effective_status),
+        correction: {
+          id: Number(value.override_id),
+          note: String(value.correction_note),
+          reviewedBy: String(value.reviewed_by),
+          reviewedAt: String(value.reviewed_at),
+          overrideCheckIn: value.override_check_in ? String(value.override_check_in).slice(0, 5) : null,
+          overrideCheckOut: value.override_check_out ? String(value.override_check_out).slice(0, 5) : null,
+          active: true,
+        },
+        canEdit,
+        links: {
+          correctionReview: appLink("/attendance/override-review", { academic_year_id: academicYearId, class_id: resolvedClassId, date_from: dateFrom, date_to: dateTo }),
+          editCorrection: canEdit && resolvedClassId !== null ? appLink("/attendance-review", { academic_year_id: academicYearId, academic_class_id: resolvedClassId, date }) : null,
+          student360: studentMasterId ? `/students/${encodeURIComponent(studentMasterId)}` : `/attendance/students/${studentId}`,
+          class360: resolvedClassId === null ? null : appLink(`/classes/${resolvedClassId}`, { attendance_date_from: date, attendance_date_to: date }),
+          dailyAttendance: appLink("/attendance/daily", { date, academic_year_id: academicYearId, class_id: resolvedClassId }),
+        },
+      };
+    });
+    const response: AttendanceCorrectionReviewResponse = {
+      scope: { academicYearId, academicYearLabel: String(academicYear.label), jenjangId, classId, dateFrom, dateTo },
+      summary: { corrections: count }, total: count, page, pageSize, items,
+    };
+    return response;
+  }, { query: AttendanceCorrectionReviewQuerySchema, response: AttendanceCorrectionReviewResponseSchema });
 }
 
 function reviewRoutes(app: any, context: AuthContext): void {
@@ -174,4 +316,4 @@ function selfConfirmRoute(app: any, context: AuthContext): void {
   }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }), body: t.Any() });
 }
 
-export function attendanceRoutes(app: any, context: AuthContext): any { reviewRoutes(app, context); scopedRoutes(app, context); correctionRoutes(app, context); selfConfirmRoute(app, context); earlyDepartureRoutes(app, context); return app; }
+export function attendanceRoutes(app: any, context: AuthContext): any { correctionReviewRoutes(app, context); reviewRoutes(app, context); scopedRoutes(app, context); correctionRoutes(app, context); selfConfirmRoute(app, context); earlyDepartureRoutes(app, context); return app; }

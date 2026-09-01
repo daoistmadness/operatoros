@@ -26,6 +26,7 @@ const expectedPaths = [
   '/analytics/indicators',
   '/attendance-review',
   '/attendance-corrections',
+  '/attendance/override-review',
   '/attendance/followups',
   '/academic-management',
   '/teacher-class-assignments',
@@ -71,6 +72,7 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.find(({ path }) => path === '/enrollment')?.authorization).toEqual({ type: 'capability', capability: 'manage_enrollment' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/calendar')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/attendance/override-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance_corrections' });
   });
 
   it('keeps the current not-found behavior', () => {
