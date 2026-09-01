@@ -5597,6 +5597,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/machine-import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview attendance-machine XLSX */
+        post: operations["previewAttendanceMachineImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/override-review": {
         parameters: {
             query?: never;
@@ -20275,6 +20292,44 @@ export interface operations {
             };
         };
         responses: never;
+    };
+    previewAttendanceMachineImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    academic_year_id: string;
+                    jenjang_id: string;
+                    page?: string;
+                    page_size?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Controlled workbook validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
     "getApiAttendanceOverride-review": {
         parameters: {

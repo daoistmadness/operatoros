@@ -48,6 +48,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Class Attendance', path: '/attendance/class-entry', icon: CalendarDays },
       { name: 'Daily Attendance', path: '/attendance/daily', icon: ClipboardList },
       { name: 'Attendance Calendar', path: '/attendance/calendar', icon: CalendarCheck },
+      { name: 'Machine Import Preview', path: '/attendance/machine-import', icon: UploadCloud },
       { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },

@@ -82,6 +82,7 @@ fixture_dir="$workspace/state/frontend-fixtures"
 "$bun_bin/bun" "$repo_root/packages/excel/scripts/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
 export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
 export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
+export OPERATOROS_E2E_MACHINE_IMPORT_XLSX="$fixture_dir/machine-attendance.xlsx"
 
 "$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
 import hashlib, json, sqlite3, sys
