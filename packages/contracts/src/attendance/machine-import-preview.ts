@@ -25,6 +25,27 @@ const ApplyClassification = Type.Union([
 ]);
 export type MachineImportApplyClassification = Static<typeof ApplyClassification>;
 
+const ResolutionClass = Type.Union([
+  Type.Literal("ATTENDANCE_REVIEW"), Type.Literal("ATTENDANCE_CORRECTION"),
+  Type.Literal("STUDENT_DATA_RESOLUTION"), Type.Literal("ENROLLMENT_RESOLUTION"),
+  Type.Literal("CALENDAR_RESOLUTION"), Type.Literal("SOURCE_FILE_REVIEW"),
+  Type.Literal("NO_ACTION_REQUIRED"), Type.Literal("NOT_RESOLVABLE_IN_OPERATOROS"),
+]);
+const ResolutionTarget = Type.Object({
+  type: Type.Union([
+    Type.Literal("ATTENDANCE_REVIEW"), Type.Literal("ATTENDANCE_CORRECTION"),
+    Type.Literal("STUDENT_DATA_RESOLUTION"), Type.Literal("ENROLLMENT_RESOLUTION"),
+    Type.Literal("CALENDAR_RESOLUTION"),
+  ]),
+  path: Type.String({ pattern: "^/" }),
+  label: Type.String({ minLength: 1 }),
+});
+const Resolution = Type.Object({
+  class: ResolutionClass,
+  note: Type.String({ minLength: 1 }),
+  target: Type.Union([ResolutionTarget, Type.Null()]),
+});
+
 const StudentSchema = Type.Object({
   id: Type.Number({ minimum: 1 }),
   masterId: NullableString,
@@ -73,6 +94,8 @@ export const MachineImportPreviewResponseSchema = Type.Object({
     reconciliationState: ReconciliationState,
     applyClassification: ApplyClassification,
     canonicalStatus: NullableString,
+    existingAttendance: Type.Union([Type.Object({ baseStatus: Type.String({ minLength: 1 }), effectiveStatus: Type.String({ minLength: 1 }), hasOverride: Type.Boolean() }), Type.Null()]),
+    resolution: Resolution,
   })),
   pagination: Type.Object({ page: Type.Number({ minimum: 1 }), pageSize: Type.Number({ minimum: 1 }), total: Type.Number({ minimum: 0 }) }),
 });
