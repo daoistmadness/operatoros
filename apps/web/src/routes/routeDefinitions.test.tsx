@@ -33,6 +33,7 @@ const expectedPaths = [
   '/attendance/class-entry',
   '/attendance/daily',
   '/attendance/calendar',
+  '/attendance/machine-import',
   '/classes/:id',
   '/attendance/departure-policies',
   '/attendance/class-departures',
