@@ -1,4 +1,4 @@
-import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarWeekdayRequest, AttendanceSubmissionDeadlineRequest } from "@operatoros/contracts/attendance";
+import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarPeriodApplyRequest, AttendanceCalendarPeriodApplyResponse, AttendanceCalendarPeriodPreviewResponse, AttendanceCalendarPeriodRequest, AttendanceCalendarWeekdayRequest, AttendanceSubmissionDeadlineRequest } from "@operatoros/contracts/attendance";
 import { apiRequest } from "../lib/api/client";
 
 export type AttendanceCalendarRuleValue = "EXPECTED" | "NOT_EXPECTED";
@@ -22,4 +22,14 @@ export async function deleteAttendanceCalendarException(id: number): Promise<voi
 
 export async function saveAttendanceSubmissionDeadline(payload: AttendanceSubmissionDeadlineRequest): Promise<void> {
   await apiRequest({ path: "/api/attendance/calendar/deadline", method: "PUT", body: payload });
+}
+
+export async function previewAttendanceCalendarPeriod(payload: AttendanceCalendarPeriodRequest): Promise<AttendanceCalendarPeriodPreviewResponse> {
+  const response = await apiRequest<AttendanceCalendarPeriodPreviewResponse>({ path: "/api/attendance/calendar/period/preview", method: "POST", body: payload });
+  return response.data;
+}
+
+export async function applyAttendanceCalendarPeriod(payload: AttendanceCalendarPeriodApplyRequest): Promise<AttendanceCalendarPeriodApplyResponse> {
+  const response = await apiRequest<AttendanceCalendarPeriodApplyResponse>({ path: "/api/attendance/calendar/period/apply", method: "POST", body: payload });
+  return response.data;
 }
