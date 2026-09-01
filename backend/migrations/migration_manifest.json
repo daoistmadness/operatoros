@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "baseline_schema": "20260724_s42",
-  "current_schema": "20260901_s45",
+  "current_schema": "20260901_s46",
   "startup_is_migration_runner": false,
   "states": [
     {
@@ -208,6 +208,25 @@
       ],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
       "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, and audit values remain unchanged"
+    },
+    {
+      "id": "20260901_s45_to_20260901_s46",
+      "description": "Add explicit same-day local attendance submission deadlines per academic year and jenjang without guessed defaults",
+      "predecessor": "20260901_s45",
+      "supported_source_schema": "ledger-validated 20260901_s45",
+      "resulting_schema": "20260901_s46",
+      "sqlite_migration": "core.attendance_submission_deadline_migration.migrate_attendance_submission_deadline_sqlite",
+      "schema_objects": ["attendance_submission_deadlines", "academic-year/jenjang uniqueness and local HH:MM constraint"],
+      "historical_backfill": "none; absent configuration resolves to DEADLINE_UNKNOWN and existing attendance rows do not create deadlines",
+      "validation_queries": [
+        "source revision exactly 20260901_s45",
+        "protected row counts unchanged",
+        "PRAGMA integrity_check",
+        "PRAGMA foreign_key_check",
+        "migration idempotence"
+      ],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
+      "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, calendar, and audit values remain unchanged"
     }
   ]
 }

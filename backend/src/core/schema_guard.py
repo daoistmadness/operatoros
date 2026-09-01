@@ -14,7 +14,7 @@ from core.database import engine, validate_student_linking_gate
 
 
 BASELINE_SCHEMA_VERSION = "20260724_s42"
-CURRENT_SCHEMA_VERSION = "20260901_s45"
+CURRENT_SCHEMA_VERSION = "20260901_s46"
 PREVIOUS_SCHEMA_VERSION = BASELINE_SCHEMA_VERSION
 S43_SCHEMA_VERSION = "20260725_s43"
 LEGACY_SCHEMA_VERSION = "20260722_s41"
@@ -26,6 +26,7 @@ CURRENT_SCHEMA_TABLES = {
     "academic_assessment_sessions",
     "attendance_calendar_weekday_rules",
     "attendance_calendar_exceptions",
+    "attendance_submission_deadlines",
 }
 CURRENT_SCHEMA_TRIGGERS = {
     "trg_attendance_follow_up_audit_no_update",
@@ -90,7 +91,7 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TABLES.issubset(tables):
             missing = sorted(CURRENT_SCHEMA_TABLES - tables)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.5 tables missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.6 tables missing: " + ", ".join(missing)
             )
         if "student_enrollment_lifecycle_audit" not in tables:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
@@ -121,7 +122,7 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TRIGGERS.issubset(triggers):
             missing = sorted(CURRENT_SCHEMA_TRIGGERS - triggers)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.5 triggers missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.6 triggers missing: " + ", ".join(missing)
             )
         grade_columns = {item[1] for item in connection.execute("PRAGMA table_info(student_subject_grades)")}
         if "assessment_session_id" not in grade_columns:

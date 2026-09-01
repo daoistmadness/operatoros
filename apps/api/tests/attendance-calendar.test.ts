@@ -3,6 +3,7 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calendarWeekday, resolveAttendanceExpectation } from "../src/domains/attendance-calendar";
+import { resolveAttendanceSubmissionTiming } from "../src/domains/attendance-submission-deadline";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const python = `${repoRoot}/backend/.venv/bin/python`;
@@ -37,11 +38,11 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function setup(label: string) {
+async function setup(label: string, clock?: Date) {
   const path = `/tmp/operatoros-calendar-${label}-${process.pid}-${Date.now()}.db`;
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-calendar-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, clock: clock ? () => clock : undefined, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-calendar-audit-${process.pid}` } });
   const adminResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "calendar-admin", password: "calendar-admin-pass-1" }) }));
   const staffResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "calendar-staff", password: "calendar-staff-pass-1" }) }));
   return { app, database, admin: cookie(adminResponse), staff: cookie(staffResponse), cleanup: () => { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); } };
@@ -90,6 +91,39 @@ describe("attendance calendar authority", () => {
       expect(body.classes[0]).toMatchObject({ coverageState: "COMPLETE", recordedStudentCount: 1, counts: { alfa: 0 } });
       expect(body.totals).toMatchObject({ expectedClasses: 0, notExpectedClasses: 1, unknownClasses: 0 });
       expect(JSON.stringify(body)).not.toMatch(/overdue|risk|alert|intervention/i);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("resolves local deadline boundaries without browser or UTC clock semantics", () => {
+    const before = { date: "2026-08-03", expectation: "EXPECTED" as const, cutoffTime: "08:00", now: new Date("2026-08-03T00:59:59Z") };
+    expect(resolveAttendanceSubmissionTiming(before)).toMatchObject({ status: "BEFORE_DEADLINE", deadlineAt: "2026-08-03T08:00:00+07:00" });
+    expect(resolveAttendanceSubmissionTiming({ ...before, now: new Date("2026-08-03T01:00:00Z") }).status).toBe("BEFORE_DEADLINE");
+    expect(resolveAttendanceSubmissionTiming({ ...before, now: new Date("2026-08-03T01:00:01Z") }).status).toBe("DEADLINE_PASSED");
+    expect(resolveAttendanceSubmissionTiming({ ...before, now: new Date("2026-08-02T23:00:00Z") }).status).toBe("BEFORE_DEADLINE");
+    expect(resolveAttendanceSubmissionTiming({ ...before, now: new Date("2026-08-04T00:00:00Z") }).status).toBe("DEADLINE_PASSED");
+    expect(resolveAttendanceSubmissionTiming({ ...before, expectation: "NOT_EXPECTED", now: new Date("2026-08-04T00:00:00Z") }).status).toBe("NOT_APPLICABLE");
+    expect(resolveAttendanceSubmissionTiming({ ...before, expectation: "UNKNOWN", now: new Date("2026-08-04T00:00:00Z") }).status).toBe("DEADLINE_UNKNOWN");
+    expect(resolveAttendanceSubmissionTiming({ ...before, cutoffTime: null }).status).toBe("DEADLINE_UNKNOWN");
+  });
+
+  it("keeps deadline configuration admin-only and composes timing in daily operations", async () => {
+    const value = await setup("deadline", new Date("2026-08-03T00:59:59Z"));
+    try {
+      const payload = { academic_year_id: 1, jenjang_id: 1, cutoff_time: "08:00" };
+      const staffWrite = await value.app.handle(new Request("http://local/api/attendance/calendar/deadline", { method: "PUT", headers: { cookie: value.staff, "content-type": "application/json" }, body: JSON.stringify(payload) }));
+      expect(staffWrite.status).toBe(403);
+      const saved = await value.app.handle(new Request("http://local/api/attendance/calendar/deadline", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify(payload) }));
+      expect(saved.status).toBe(200);
+      const weekday = await value.app.handle(new Request("http://local/api/attendance/calendar/weekday", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekday: 1, expectation: "EXPECTED" }) }));
+      expect(weekday.status).toBe(200);
+      const overview = await value.app.handle(new Request("http://local/api/attendance/calendar?academic_year_id=1", { headers: { cookie: value.admin } }));
+      expect((await overview.json() as any).jenjangs[0].submissionDeadlineLocalTime).toBe("08:00");
+      const daily = await value.app.handle(new Request("http://local/api/attendance/daily-status?date=2026-08-03", { headers: { cookie: value.admin } }));
+      expect((await daily.json() as any).classes[0].submissionTiming).toMatchObject({ status: "BEFORE_DEADLINE", deadlineLocalTime: "08:00" });
+      const invalid = await value.app.handle(new Request("http://local/api/attendance/calendar/deadline", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...payload, cutoff_time: "25:00" }) }));
+      expect(invalid.status).toBe(400);
+      const cleared = await value.app.handle(new Request("http://local/api/attendance/calendar/deadline", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...payload, cutoff_time: null }) }));
+      expect(cleared.status).toBe(200);
     } finally { value.cleanup(); }
   }, 30000);
 });

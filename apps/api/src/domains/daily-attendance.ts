@@ -3,6 +3,7 @@ import { DailyAttendanceOperationsQuerySchema, DailyAttendanceOperationsResponse
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { resolveAttendanceExpectations } from "./attendance-calendar";
+import { resolveAttendanceSubmissionTiming, resolveSubmissionDeadlines } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -121,10 +122,13 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
         endDate: String(year.end_date),
         jenjangIds: resultRows.map((value) => number(value.jenjang_id)),
       });
+      const now = context.now?.() ?? new Date();
+      const deadlineByJenjang = resolveSubmissionDeadlines(context, { academicYearId, jenjangIds: resultRows.map((value) => number(value.jenjang_id)) });
       const classes = resultRows.map((value) => {
         const expected = number(value.expected_students);
         const recorded = number(value.recorded_students);
         const coverageState = coverage(expected, recorded);
+        const attendanceExpectation = expectationByJenjang.get(number(value.jenjang_id)) ?? { status: "UNKNOWN", reason: null, source: "NONE" };
         return {
           classId: number(value.class_id), className: String(value.class_name), jenjang: String(value.jenjang),
           academicYearId: number(value.academic_year_id), academicYearLabel: String(value.academic_year_label),
@@ -132,7 +136,8 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
           coverageState, coveragePercent: expected > 0 ? Number(((recorded / expected) * 100).toFixed(2)) : null,
           counts: { present: number(value.present), late: number(value.late), sakit: number(value.sakit), izin: number(value.izin), alfa: number(value.alfa), absent: number(value.absent), incomplete: number(value.incomplete) },
           periodFinalized: Boolean(value.period_finalized),
-          attendanceExpectation: expectationByJenjang.get(number(value.jenjang_id)) ?? { status: "UNKNOWN", reason: null, source: "NONE" },
+          attendanceExpectation,
+          submissionTiming: resolveAttendanceSubmissionTiming({ date, expectation: attendanceExpectation.status, cutoffTime: deadlineByJenjang.get(number(value.jenjang_id)), now }),
         };
       });
       const totals = classes.reduce((sum, value) => ({

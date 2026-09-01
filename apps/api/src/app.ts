@@ -51,7 +51,7 @@ function errorBody(code: string, message: string) {
 export function createApp(_config: Partial<BackendConfig> = {}) {
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const securityConfig = defaultAuthConfig(_config.auth);
-  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit) } : null;
+  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
   const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
