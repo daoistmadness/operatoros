@@ -32250,6 +32250,35 @@
       }
     },
     "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}},
+    "/api/attendance/machine-import/preview": {
+      "post": {
+        "operationId": "previewAttendanceMachineImport",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "academic_year_id", "jenjang_id"],
+                "properties": {
+                  "file": {"type": "string", "format": "binary"},
+                  "academic_year_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
+                  "jenjang_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
+                  "page": {"type": "string", "pattern": "^[1-9]\\d*$"},
+                  "page_size": {"type": "string", "pattern": "^[1-9]\\d*$"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}},
+          "400": {"description": "Controlled workbook validation error"}
+        },
+        "summary": "Preview attendance-machine XLSX",
+        "tags": ["attendance"]
+      }
+    },
     "/api/attendance/override-review":     {
       "get": {
         "parameters": [

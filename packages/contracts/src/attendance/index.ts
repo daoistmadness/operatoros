@@ -2,6 +2,7 @@ import { Type, type Static } from "@sinclair/typebox";
 export * from "./calendar";
 export * from "./submission-deadline";
 export * from "./correction-review";
+export * from "./machine-import-preview";
 import { AttendanceCalendarExpectationSchema } from "./calendar";
 import { AttendanceSubmissionTimingSchema } from "./submission-deadline";
 
