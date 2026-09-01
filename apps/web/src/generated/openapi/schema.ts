@@ -5496,6 +5496,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance calendar */
+        get: operations["getAttendanceCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/weekday": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save attendance calendar weekday rule */
+        put: operations["saveAttendanceCalendarWeekday"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/exception": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save attendance calendar exception */
+        put: operations["saveAttendanceCalendarException"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/exception/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete attendance calendar exception */
+        delete: operations["deleteAttendanceCalendarException"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7879,6 +7947,57 @@ export interface components {
             preview_checksum: string;
             /** Selected Row Ids */
             selected_row_ids: number[];
+        };
+        /** AttendanceCalendarOverviewQuery */
+        AttendanceCalendarOverviewQuery: {
+            academic_year_id: string;
+        };
+        /** AttendanceCalendarWeekdayRequest */
+        AttendanceCalendarWeekdayRequest: {
+            academic_year_id: number;
+            jenjang_id: number;
+            weekday: number;
+            expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+        };
+        /** AttendanceCalendarExceptionRequest */
+        AttendanceCalendarExceptionRequest: {
+            id?: number | null;
+            academic_year_id: number;
+            jenjang_id: number;
+            date: string;
+            /** @enum {string} */
+            expectation: "EXPECTED" | "NOT_EXPECTED";
+            /** @enum {string} */
+            reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+        };
+        /** AttendanceCalendarExceptionParams */
+        AttendanceCalendarExceptionParams: {
+            id: string;
+        };
+        /** AttendanceCalendarOverview */
+        AttendanceCalendarOverview: {
+            scope: {
+                academicYearId: number;
+                academicYearLabel: string;
+                startDate: string;
+                endDate: string;
+            };
+            jenjangs: {
+                id: number;
+                name: string;
+                weekdays: {
+                    weekday: number;
+                    expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+                }[];
+                exceptions: {
+                    id: number;
+                    date: string;
+                    /** @enum {string} */
+                    expectation: "EXPECTED" | "NOT_EXPECTED";
+                    /** @enum {string} */
+                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+                }[];
+            }[];
         };
     };
     responses: never;
@@ -19900,6 +20019,98 @@ export interface operations {
             header?: never;
             path: {
                 student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAttendanceCalendar: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCalendarOverview"];
+                };
+            };
+        };
+    };
+    saveAttendanceCalendarWeekday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceCalendarWeekdayRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    saveAttendanceCalendarException: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceCalendarExceptionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    deleteAttendanceCalendarException: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
             cookie?: never;
         };

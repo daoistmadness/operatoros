@@ -359,9 +359,32 @@ distinct students with an attendance row for that date.
 - Status counts use effective status. `COALESCE(override_status, status)` is
   counted once per student.
 - A `coveragePercent` is not applicable for an empty class and returns `null`.
-- No school-day, deadline, or submission calendar exists in the current
-  model. `NONE` therefore means `No attendance recorded`, not overdue or
-  failed submission.
+- Recording coverage remains separate from the School Calendar expectation.
+  `NONE` means `No attendance recorded`; it is not an overdue or failed
+  submission state.
+
+## School Calendar & Attendance Expectation (2026-09)
+
+The Attendance Calendar is the canonical, local authority for whether
+attendance is expected for a date and jenjang. It does not define a deadline,
+submission lateness, or overdue state.
+
+- `EXPECTED` comes from a configured jenjang weekday rule or an explicit date
+  exception.
+- `NOT_EXPECTED` comes from an explicit date exception or configured jenjang
+  weekday rule.
+- `UNKNOWN` means no configured rule applies, or the date is outside the
+  selected academic year. It is never converted to either other state.
+- A date exception overrides the recurring weekday rule. This also supports a
+  replacement school day by explicitly setting `EXPECTED` on a normally
+  non-attendance weekday.
+- Rules are scoped by academic year and jenjang. Class-specific and
+  school-wide exceptions are not represented because current school data does
+  not establish those authorities.
+- Existing attendance rows are evidence that records exist. They do not
+  create recurring calendar rules or backfill historical expectation.
+- Daily Attendance displays calendar expectation separately from recording
+  coverage. `EXPECTED` with no records is not an overdue status.
 
 ## Academic Assessment Operations (2026-09)
 

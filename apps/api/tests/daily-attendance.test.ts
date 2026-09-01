@@ -59,7 +59,9 @@ describe("daily attendance operations", () => {
       expect(response.status).toBe(200);
       const body = await response.json() as any;
       expect(body.totals).toMatchObject({ classes: 3, expectedStudents: 3, recordedStudents: 2, unrecordedStudents: 1, completeClasses: 1, noRecordClasses: 1, emptyClasses: 1 });
-      expect(body.scope).toMatchObject({ date: "2026-08-03", schoolDayAuthority: "NOT_AVAILABLE" });
+      expect(body.scope).toMatchObject({ date: "2026-08-03", schoolDayAuthority: "AVAILABLE" });
+      expect(body.totals).toMatchObject({ expectedClasses: 0, notExpectedClasses: 0, unknownClasses: 3 });
+      expect(body.classes[0].attendanceExpectation).toEqual({ status: "UNKNOWN", reason: null, source: "NONE" });
       expect(body.classes[0]).toMatchObject({ className: "7A", coverageState: "COMPLETE", expectedStudentCount: 2, recordedStudentCount: 2, unrecordedStudentCount: 0, coveragePercent: 100, counts: { present: 2, late: 0 } });
       expect(body.classes[1]).toMatchObject({ className: "7B", coverageState: "NONE", expectedStudentCount: 1, recordedStudentCount: 0, unrecordedStudentCount: 1, counts: { alfa: 0 } });
       expect(body.classes[2]).toMatchObject({ className: "7C", coverageState: "EMPTY_CLASS", expectedStudentCount: 0, recordedStudentCount: 0, unrecordedStudentCount: 0, coveragePercent: null });
