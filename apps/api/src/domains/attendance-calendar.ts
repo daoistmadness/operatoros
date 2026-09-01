@@ -1,21 +1,30 @@
+import { createHash } from "node:crypto";
 import {
   AttendanceCalendarExceptionParamsSchema,
   AttendanceCalendarExceptionRequestSchema,
   AttendanceCalendarExpectationSchema,
   AttendanceCalendarOverviewQuerySchema,
   AttendanceCalendarOverviewResponseSchema,
+  AttendanceCalendarPeriodApplyRequestSchema,
+  AttendanceCalendarPeriodApplyResponseSchema,
+  AttendanceCalendarPeriodPreviewResponseSchema,
+  AttendanceCalendarPeriodRequestSchema,
   AttendanceCalendarWeekdayRequestSchema,
   AttendanceSubmissionDeadlineRequestSchema,
   type AttendanceCalendarExpectation,
   type AttendanceCalendarReason,
+  type AttendanceCalendarPeriodRequest,
+  type AttendanceCalendarPeriodPreviewResponse,
 } from "@operatoros/contracts/attendance";
 import type { AuthContext } from "../auth/service";
+import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { validSubmissionDeadlineTime } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
 type RuleValue = "EXPECTED" | "NOT_EXPECTED";
+type PeriodRow = AttendanceCalendarPeriodPreviewResponse["rows"][number];
 
 const reasons = new Set<AttendanceCalendarReason>([
   "HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY",
@@ -135,6 +144,54 @@ function selectedJenjang(context: AuthContext, id: unknown): Row | null {
   return jenjangId === null ? null : row(context, "SELECT id, name FROM jenjangs WHERE id = ? AND active = 1", [jenjangId]);
 }
 
+function calendarDates(startDate: string, endDate: string): string[] {
+  const result: string[] = [];
+  const cursor = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`).getTime();
+  while (cursor.getTime() <= end) {
+    result.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return result;
+}
+
+function periodValidation(context: AuthContext, input: AttendanceCalendarPeriodRequest): { year: Row; dates: string[] } | string {
+  const year = selectedYear(context, input.academic_year_id);
+  if (!year) return "Academic year not found";
+  if (!selectedJenjang(context, input.jenjang_id)) return "Jenjang not found";
+  if (!validCalendarDate(input.start_date) || !validCalendarDate(input.end_date) || input.start_date > input.end_date) return "start_date and end_date must be a valid ordered range";
+  if (input.start_date < String(year.start_date) || input.end_date > String(year.end_date)) return "date range must be within the selected academic year";
+  const dates = calendarDates(input.start_date, input.end_date);
+  if (dates.length > 366) return "date range cannot exceed 366 days";
+  return { year, dates };
+}
+
+function periodProjection(context: AuthContext, input: AttendanceCalendarPeriodRequest, dates: string[]): { rows: PeriodRow[]; previewDigest: string } {
+  const placeholders = dates.map(() => "?").join(", ");
+  const existing = rows(context, `SELECT date, expectation, reason FROM attendance_calendar_exceptions WHERE academic_year_id = ? AND jenjang_id = ? AND date IN (${placeholders})`, [input.academic_year_id, input.jenjang_id, ...dates]);
+  const byDate = new Map(existing.map((value) => [String(value.date), value]));
+  const projected = dates.map((date): PeriodRow => {
+    const value = byDate.get(date);
+    const expectation = value?.expectation as RuleValue | undefined;
+    return {
+      date,
+      classification: value === undefined ? "CREATE" : expectation === input.expectation ? "NOOP_SAME" : "CONFLICT_EXISTING_EXCEPTION",
+      existingExpectation: expectation ?? null,
+      existingReason: (value?.reason as AttendanceCalendarReason | undefined) ?? null,
+    };
+  });
+  const digest = createHash("sha256").update(JSON.stringify({
+    academic_year_id: input.academic_year_id,
+    jenjang_id: input.jenjang_id,
+    start_date: input.start_date,
+    end_date: input.end_date,
+    expectation: input.expectation,
+    reason: input.reason,
+    rows: projected,
+  })).digest("hex");
+  return { rows: projected, previewDigest: digest };
+}
+
 export function attendanceCalendarRoutes(app: any, context: AuthContext): any {
   app.get("/api/attendance/calendar", (ctx: Context) => {
     if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
@@ -164,6 +221,47 @@ export function attendanceCalendarRoutes(app: any, context: AuthContext): any {
       })),
     };
   }, { query: AttendanceCalendarOverviewQuerySchema, response: AttendanceCalendarOverviewResponseSchema });
+
+  app.post("/api/attendance/calendar/period/preview", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const input = ctx.body as AttendanceCalendarPeriodRequest;
+    const validation = periodValidation(context, input);
+    if (typeof validation === "string") return fail(ctx.set, 400, validation);
+    const projection = periodProjection(context, input, validation.dates);
+    return { request: input, summary: {
+      totalDates: projection.rows.length,
+      creates: projection.rows.filter((value) => value.classification === "CREATE").length,
+      noops: projection.rows.filter((value) => value.classification === "NOOP_SAME").length,
+      conflicts: projection.rows.filter((value) => value.classification === "CONFLICT_EXISTING_EXCEPTION").length,
+    }, rows: projection.rows, previewDigest: projection.previewDigest };
+  }, { body: AttendanceCalendarPeriodRequestSchema, response: AttendanceCalendarPeriodPreviewResponseSchema });
+
+  app.post("/api/attendance/calendar/period/apply", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const input = ctx.body as AttendanceCalendarPeriodRequest & { preview_digest: string; confirmation: string };
+    const validation = periodValidation(context, input);
+    if (typeof validation === "string") return fail(ctx.set, 400, validation);
+    const projection = periodProjection(context, input, validation.dates);
+    if (projection.previewDigest !== input.preview_digest) return fail(ctx.set, 409, "Calendar period preview is stale; review the current range again");
+    let created = 0;
+    try {
+      inTransaction(context.database.client, () => {
+        for (const value of projection.rows) {
+          if (value.classification !== "CREATE") continue;
+          context.database.client.run("INSERT INTO attendance_calendar_exceptions (academic_year_id, jenjang_id, date, expectation, reason, created_by) VALUES (?, ?, ?, ?, ?, ?)", [input.academic_year_id, input.jenjang_id, value.date, input.expectation, input.reason, String(user.username)]);
+          created++;
+        }
+      });
+    } catch {
+      return fail(ctx.set, 409, "Calendar period changed while applying; review the current range again");
+    }
+    return { status: "applied", summary: {
+      created,
+      noops: projection.rows.filter((value) => value.classification === "NOOP_SAME").length,
+      conflicts: projection.rows.filter((value) => value.classification === "CONFLICT_EXISTING_EXCEPTION").length,
+    } };
+  }, { body: AttendanceCalendarPeriodApplyRequestSchema, response: AttendanceCalendarPeriodApplyResponseSchema });
 
   app.put("/api/attendance/calendar/deadline", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };

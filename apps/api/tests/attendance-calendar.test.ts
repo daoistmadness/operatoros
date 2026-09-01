@@ -126,4 +126,47 @@ describe("attendance calendar authority", () => {
       expect(cleared.status).toBe(200);
     } finally { value.cleanup(); }
   }, 30000);
+
+  it("previews and applies calendar periods across weekends without overwriting conflicts", async () => {
+    const value = await setup("period");
+    try {
+      const request = { academic_year_id: 1, jenjang_id: 1, start_date: "2026-08-07", end_date: "2026-08-10", expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" };
+      expect((await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request) }))).status).toBe(401);
+      expect((await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.staff, "content-type": "application/json" }, body: JSON.stringify(request) }))).status).toBe(403);
+      await value.app.handle(new Request("http://local/api/attendance/calendar/exception", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, date: "2026-08-08" }) }));
+      await value.app.handle(new Request("http://local/api/attendance/calendar/exception", { method: "PUT", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, date: "2026-08-09", expectation: "EXPECTED", reason: "REPLACEMENT_SCHOOL_DAY" }) }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify(request) }));
+      expect(preview.status).toBe(200);
+      const body = await preview.json() as any;
+      expect(body.summary).toEqual({ totalDates: 4, creates: 2, noops: 1, conflicts: 1 });
+      expect(body.rows.map((item: any) => item.date)).toEqual(["2026-08-07", "2026-08-08", "2026-08-09", "2026-08-10"]);
+      expect(body.rows[2]).toMatchObject({ classification: "CONFLICT_EXISTING_EXCEPTION", existingExpectation: "EXPECTED", existingReason: "REPLACEMENT_SCHOOL_DAY" });
+      const applied = await value.app.handle(new Request("http://local/api/attendance/calendar/period/apply", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, preview_digest: body.previewDigest, confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD" }) }));
+      expect(applied.status).toBe(200);
+      expect(await applied.json()).toEqual({ status: "applied", summary: { created: 2, noops: 1, conflicts: 1 } });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_calendar_exceptions WHERE academic_year_id = 1 AND jenjang_id = 1 AND date BETWEEN '2026-08-07' AND '2026-08-10'").get() as any).count).toBe(4);
+      expect(value.database.client.query("SELECT expectation, reason FROM attendance_calendar_exceptions WHERE date = '2026-08-09'").get()).toMatchObject({ expectation: "EXPECTED", reason: "REPLACEMENT_SCHOOL_DAY" });
+      const stale = await value.app.handle(new Request("http://local/api/attendance/calendar/period/apply", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, preview_digest: body.previewDigest, confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD" }) }));
+      expect(stale.status).toBe(409);
+      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify(request) }));
+      const secondBody = await secondPreview.json() as any;
+      expect(secondBody.summary).toEqual({ totalDates: 4, creates: 0, noops: 3, conflicts: 1 });
+      expect((await value.app.handle(new Request("http://local/api/attendance/calendar/period/apply", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, preview_digest: secondBody.previewDigest, confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD" }) }))).status).toBe(200);
+      expect((await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, start_date: "2026-08-10", end_date: "2026-08-07" }) }))).status).toBe(400);
+      expect((await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, start_date: "2025-12-31", end_date: "2026-01-02" }) }))).status).toBe(400);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("rolls back every new exception when a range insert fails", async () => {
+    const value = await setup("period-rollback");
+    try {
+      value.database.client.run("CREATE TRIGGER calendar_period_test_failure AFTER INSERT ON attendance_calendar_exceptions WHEN NEW.date = '2026-08-04' BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const request = { academic_year_id: 1, jenjang_id: 1, start_date: "2026-08-03", end_date: "2026-08-04", expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" };
+      const preview = await value.app.handle(new Request("http://local/api/attendance/calendar/period/preview", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify(request) }));
+      const body = await preview.json() as any;
+      const applied = await value.app.handle(new Request("http://local/api/attendance/calendar/period/apply", { method: "POST", headers: { cookie: value.admin, "content-type": "application/json" }, body: JSON.stringify({ ...request, preview_digest: body.previewDigest, confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD" }) }));
+      expect(applied.status).toBe(409);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_calendar_exceptions WHERE academic_year_id = 1 AND jenjang_id = 1").get() as any).count).toBe(0);
+    } finally { value.cleanup(); }
+  }, 30000);
 });
