@@ -66,6 +66,9 @@ export const queryKeys = {
     dailyAttendance: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "daily-status", canonicalizeQueryFilters(filters)] as const,
     assessmentOperations: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["grades", "assessment-operations", canonicalizeQueryFilters(filters)] as const,
   },
+  attendance: {
+    calendar: (academicYearId: number | null) => ["attendance", "calendar", { academicYearId }] as const,
+  },
   students: {
     all: ["students"] as const,
     lists: ["students", "list"] as const,

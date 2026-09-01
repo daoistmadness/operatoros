@@ -29,7 +29,7 @@ from core.development_database import (  # noqa: E402
     resolve_data_directory,
 )
 
-SCHEMA_HEAD = "20260831_s44"
+SCHEMA_HEAD = "20260901_s45"
 
 
 def fail(code: str) -> None:

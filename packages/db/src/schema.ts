@@ -1,4 +1,4 @@
-// Accepted S4.4 schema snapshot. Runtime schema is validated by the migration manifest.
+// Accepted S4.5 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -174,6 +174,26 @@ export const attendance = sqliteTable("attendance", {
     "exception": text(),
     "week": text(),
     "status": text().notNull(),
+});
+export const attendance_calendar_exceptions = sqliteTable("attendance_calendar_exceptions", {
+    "id": integer().primaryKey(),
+    "academic_year_id": integer().notNull(),
+    "jenjang_id": integer().notNull(),
+    "date": text().notNull(),
+    "expectation": text().notNull(),
+    "reason": text().notNull(),
+    "created_by": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+export const attendance_calendar_weekday_rules = sqliteTable("attendance_calendar_weekday_rules", {
+    "id": integer().primaryKey(),
+    "academic_year_id": integer().notNull(),
+    "jenjang_id": integer().notNull(),
+    "weekday": integer().notNull(),
+    "expectation": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 export const attendance_correction_audit = sqliteTable("attendance_correction_audit", {
     "id": integer().primaryKey(),

@@ -31,6 +31,7 @@ const expectedPaths = [
   '/teacher-class-assignments',
   '/attendance/class-entry',
   '/attendance/daily',
+  '/attendance/calendar',
   '/classes/:id',
   '/attendance/departure-policies',
   '/attendance/class-departures',
@@ -69,6 +70,7 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.find(({ path }) => path === '/grades/operations')?.authorization).toEqual({ type: 'role', role: 'admin' });
     expect(authenticatedRoutes.find(({ path }) => path === '/enrollment')?.authorization).toEqual({ type: 'capability', capability: 'manage_enrollment' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/attendance/calendar')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
   });
 
   it('keeps the current not-found behavior', () => {
