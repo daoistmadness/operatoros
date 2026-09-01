@@ -32,4 +32,14 @@ describe("data quality page contract", () => {
     expect(source).toContain("aria-busy={exporting === tab}");
     expect(source).toContain("Data quality export failed.");
   });
+
+  it("provides a derived resolution workspace with controlled editor links", () => {
+    expect(source).toContain("Resolution workspace");
+    expect(source).toContain("queryKeys.analytics.dataQualityResolution(filters)");
+    expect(source).toContain("resolutionTarget");
+    expect(source).toContain("Fix source");
+    expect(source).toContain("No data-quality issues found in this scope.");
+    expect(source).not.toContain("Mark resolved");
+    expect(source).not.toContain("Date.now()");
+  });
 });
