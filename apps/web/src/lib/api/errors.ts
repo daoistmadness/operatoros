@@ -110,6 +110,7 @@ function payloadMessage(data: unknown): unknown {
 
 function payloadCode(data: unknown): string | null {
   if (!isRecord(data)) return null;
+  if (isRecord(data.detail) && typeof data.detail.code === "string") return sanitizeText(data.detail.code, "").slice(0, 80) || null;
   return typeof data.code === "string" ? sanitizeText(data.code, "").slice(0, 80) || null : null;
 }
 

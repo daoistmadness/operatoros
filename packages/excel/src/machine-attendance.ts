@@ -1,5 +1,5 @@
 import { getCellValue, loadXlsxWorkbook } from "./workbook";
-import { isBlank, normalizeHeader, parseExcelDate, parseExcelTime, type CellValue } from "./normalization";
+import { isAbsentFlagTrue, isBlank, normalizeHeader, parseDuration, parseExcelDate, parseExcelTime, parseOptionalString, type CellValue } from "./normalization";
 
 export const MACHINE_ATTENDANCE_HEADERS = [
   "No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat",
@@ -7,13 +7,16 @@ export const MACHINE_ATTENDANCE_HEADERS = [
 ] as const;
 
 export const MACHINE_ATTENDANCE_PROFILE = "ATTENDANCE_MACHINE_TABULAR_V1" as const;
-export type MachineEvidenceState = "SCAN_PRESENT" | "NO_SCAN" | "MULTIPLE_SCANS" | "INVALID_SCAN_VALUE";
+export type MachineEvidenceState = "SCAN_PRESENT" | "NO_SCAN" | "MULTIPLE_SCANS" | "INVALID_SCAN_VALUE" | "UNSUPPORTED_SOURCE_STATUS";
 
 export type MachineAttendanceRow = {
   sourceRows: number[];
   machineStudentIdentifier: string | null;
   sourceStudentName: string | null;
   date: string | null;
+  checkIn: string | null;
+  checkOut: string | null;
+  lateMinutes: number | null;
   scanTimes: string[];
   machineEvidence: MachineEvidenceState;
   invalidReason: string | null;
@@ -53,8 +56,9 @@ export function isXlsxZipSignature(value: ArrayBuffer | Uint8Array): boolean {
   return bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
 }
 
-function evidence(scanTimes: string[], invalid: boolean, sourceRowCount: number): MachineEvidenceState {
+function evidence(scanTimes: string[], invalid: boolean, unsupported: boolean, sourceRowCount: number): MachineEvidenceState {
   if (invalid) return "INVALID_SCAN_VALUE";
+  if (unsupported) return "UNSUPPORTED_SOURCE_STATUS";
   if (sourceRowCount > 1) return "MULTIPLE_SCANS";
   return scanTimes.length ? "SCAN_PRESENT" : "NO_SCAN";
 }
@@ -88,9 +92,13 @@ export async function parseMachineAttendanceWorkbook(buffer: ArrayBuffer | Uint8
     const scanOutValue = values.get("Scan Pulang");
     const scanIn = isBlank(scanInValue) ? null : parseExcelTime(scanInValue);
     const scanOut = isBlank(scanOutValue) ? null : parseExcelTime(scanOutValue);
-    const invalidScan = (!isBlank(scanInValue) && scanIn === null) || (!isBlank(scanOutValue) && scanOut === null);
+    const lateValue = values.get("Terlambat");
+    const lateSeconds = isBlank(lateValue) ? null : parseDuration(lateValue);
+    const invalidScan = (!isBlank(scanInValue) && scanIn === null) || (!isBlank(scanOutValue) && scanOut === null) || (!isBlank(lateValue) && lateSeconds === null);
+    const unsupportedSourceStatus = isAbsentFlagTrue(values.get("Absent")) || parseOptionalString(values.get("Pengecualian")) !== null;
+    const lateMinutes = lateSeconds === null ? null : Math.floor(lateSeconds / 60);
     if (!identifier || !date) {
-      invalidRows.push({ sourceRows: [rowNumber], machineStudentIdentifier: identifier, sourceStudentName: sourceName, date, scanTimes: [scanIn, scanOut].filter((value): value is string => value !== null), machineEvidence: invalidScan ? "INVALID_SCAN_VALUE" : "NO_SCAN", invalidReason: !identifier ? "The machine identifier is missing or invalid." : "The attendance date is missing or invalid." });
+      invalidRows.push({ sourceRows: [rowNumber], machineStudentIdentifier: identifier, sourceStudentName: sourceName, date, checkIn: scanIn, checkOut: scanOut, lateMinutes, scanTimes: [scanIn, scanOut].filter((value): value is string => value !== null), machineEvidence: invalidScan ? "INVALID_SCAN_VALUE" : unsupportedSourceStatus ? "UNSUPPORTED_SOURCE_STATUS" : "NO_SCAN", invalidReason: !identifier ? "The machine identifier is missing or invalid." : "The attendance date is missing or invalid." });
       continue;
     }
     dates.add(date);
@@ -102,9 +110,12 @@ export async function parseMachineAttendanceWorkbook(buffer: ArrayBuffer | Uint8
       machineStudentIdentifier: identifier,
       sourceStudentName: current?.sourceStudentName ?? sourceName,
       date,
+      checkIn: current?.checkIn ?? scanIn,
+      checkOut: current?.checkOut ?? scanOut,
+      lateMinutes: current?.lateMinutes ?? lateMinutes,
       scanTimes,
-      machineEvidence: evidence(scanTimes, invalidScan || current?.machineEvidence === "INVALID_SCAN_VALUE", (current?.sourceRows.length ?? 0) + 1),
-      invalidReason: invalidScan || current?.invalidReason === "The scan time is invalid." ? "The scan time is invalid." : null,
+      machineEvidence: evidence(scanTimes, invalidScan || current?.machineEvidence === "INVALID_SCAN_VALUE", unsupportedSourceStatus || current?.machineEvidence === "UNSUPPORTED_SOURCE_STATUS", (current?.sourceRows.length ?? 0) + 1),
+      invalidReason: invalidScan ? "A scan or delay value is invalid." : unsupportedSourceStatus ? "The workbook records a source status that is not safe to import automatically." : current?.invalidReason ?? null,
     };
     groups.set(key, merged);
   }
@@ -117,7 +128,7 @@ export async function parseMachineAttendanceWorkbook(buffer: ArrayBuffer | Uint8
     dimensions: String(sheet.dimensions),
     sourceRows,
     dateCoverage: { from: sortedDates[0] ?? null, to: sortedDates[sortedDates.length - 1] ?? null, distinctDates: dates.size },
-    warnings: [duplicateRows ? `${duplicateRows} duplicate source row(s) were collapsed by exact machine identifier and date.` : null, rows.some((row) => row.machineEvidence === "INVALID_SCAN_VALUE") ? "Some scan values could not be parsed and remain explicit invalid evidence." : null].filter((value): value is string => value !== null),
+    warnings: [duplicateRows ? `${duplicateRows} duplicate source row(s) were collapsed by exact machine identifier and date.` : null, rows.some((row) => row.machineEvidence === "INVALID_SCAN_VALUE") ? "Some scan or delay values could not be parsed and remain explicit invalid evidence." : null, rows.some((row) => row.machineEvidence === "UNSUPPORTED_SOURCE_STATUS") ? "Some workbook source statuses remain explicit and are not imported automatically." : null].filter((value): value is string => value !== null),
     rows,
   };
 }
