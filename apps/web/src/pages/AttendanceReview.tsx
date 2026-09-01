@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api";
@@ -64,11 +65,12 @@ const getStatusBadgeClass = (status: AttendanceStatus, effective = false) => {
 function AttendanceReview() {
   const { user, can } = useAuth();
   const canManageAttendance = can("manage_attendance");
+  const [searchParams] = useSearchParams();
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState("");
-  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState(() => searchParams.get("academic_year_id") ?? "");
+  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(() => searchParams.get("academic_class_id") ?? "");
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") ?? new Date().toISOString().slice(0, 10));
   const [rows, setRows] = useState<AttendanceReviewRow[]>([]);
 
   const [loadingClasses, setLoadingClasses] = useState(true);
@@ -95,13 +97,13 @@ function AttendanceReview() {
       const response = await api.get<AcademicYear[]>("/api/academic-masters/academic-years");
       setAcademicYears(response.data || []);
       const defaultYear = response.data.find(y => y.is_default) || response.data[0];
-      if (defaultYear) {
+      if (defaultYear && !searchParams.get("academic_year_id")) {
         setSelectedAcademicYearId(String(defaultYear.id));
       }
     } catch (err: unknown) {
       setError(getAttendanceReviewError(err, "Failed to load academic years."));
     }
-  }, []);
+  }, [searchParams]);
 
   const fetchClasses = useCallback(async () => {
     if (!selectedAcademicYearId) return;
@@ -113,7 +115,8 @@ function AttendanceReview() {
       const availableClasses = response.data.classes || [];
       setClasses(availableClasses);
       if (availableClasses.length > 0) {
-        setSelectedAcademicClassId(String(availableClasses[0].id));
+        const requestedClass = searchParams.get("academic_class_id");
+        setSelectedAcademicClassId(requestedClass && availableClasses.some((value) => String(value.id) === requestedClass) ? requestedClass : String(availableClasses[0].id));
       } else {
         setSelectedAcademicClassId("");
       }
@@ -122,7 +125,7 @@ function AttendanceReview() {
     } finally {
       setLoadingClasses(false);
     }
-  }, [selectedAcademicYearId]);
+  }, [searchParams, selectedAcademicYearId]);
 
   const loadAttendance = useCallback(async () => {
     if (!selectedDate || !selectedAcademicYearId || !selectedAcademicClassId) {
