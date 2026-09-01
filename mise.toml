@@ -15,20 +15,32 @@ python = "3.12.3"
 HK_MISE = "1"
 
 [tasks.doctor]
-description = "Report toolchain versions and verify lockfile contracts"
+description = "Check the local toolchain, workspace install, and Git base"
 run = """
-mise --version
-bun --version
-python --version
-echo "--- mise current ---"
-mise ls --current
-echo "--- lockfiles ---"
-ls -lh bun.lock
-if [ -f apps/web/package-lock.json ]; then echo "ERROR: apps/web/package-lock.json exists"; exit 1; fi
-if [ -f package-lock.json ]; then echo "ERROR: package-lock.json exists"; exit 1; fi
-if [ -f yarn.lock ]; then echo "ERROR: yarn.lock exists"; exit 1; fi
-if [ -f pnpm-lock.yaml ]; then echo "ERROR: pnpm-lock.yaml exists"; exit 1; fi
-echo "doctor: ok"
+set -eu
+fail() {
+  printf 'FAIL: %s\n' "$1" >&2
+  printf 'Next: %s\n' "$2" >&2
+  exit 1
+}
+git rev-parse --show-toplevel >/dev/null 2>&1 || fail "not inside a Git checkout" "cd to the repository root"
+git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/main is unavailable" "git fetch origin main"
+command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
+[ "$(bun --version)" = "1.4.0" ] || fail "Bun 1.4.0 is not active" "mise install"
+command -v python >/dev/null 2>&1 || fail "Python is unavailable" "mise install"
+command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
+[ -x backend/.venv/bin/python ] || fail "backend/.venv is missing" "mise exec -- python -m venv backend/.venv && backend/.venv/bin/python -m pip install -r backend/requirements.txt"
+[ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
+[ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"
+[ -d node_modules ] && [ -x node_modules/.bin/turbo ] || fail "workspace dependencies are missing" "bun install --frozen-lockfile"
+bash scripts/validate-wsl-bun.sh --probe . >/dev/null || fail "the active Bun is not a native WSL runtime" "mise install"
+for forbidden_lockfile in package-lock.json apps/web/package-lock.json yarn.lock pnpm-lock.yaml; do
+  [ ! -e "$forbidden_lockfile" ] || fail "$forbidden_lockfile exists" "remove the obsolete project lockfile and use bun.lock"
+done
+printf 'PASS: toolchain Bun=%s Python=%s hk=%s\n' "$(bun --version)" "$(python --version 2>&1)" "$(hk --version)"
+printf 'PASS: workspace dependencies and native WSL Bun\n'
+printf 'PASS: origin/main=%s\n' "$(git rev-parse 'origin/main^{commit}')"
+printf 'PASS: checkout=%s branch=%s\n' "$(git rev-parse --show-toplevel)" "$(git branch --show-current)"
 """
 
 [tasks.test]
@@ -37,3 +49,23 @@ run = """
 bun --version
 python --version
 """
+
+[tasks.dev]
+description = "Start the managed local Elysia and Vite development stack"
+run = "./start-dev.sh"
+
+[tasks."check:affected"]
+description = "Run Turbo checks for packages affected since origin/main"
+run = "bash scripts/check-affected.sh"
+
+[tasks."check:full"]
+description = "Run the complete repository validation authority"
+run = "make test-release"
+
+[tasks."test:fast"]
+description = "Run the changed-path-aware fast validation tier"
+run = "make test-fast"
+
+[tasks."db:fresh"]
+description = "Run the authoritative fresh SQLite database parity gate"
+run = "make fresh-db-parity"

@@ -75,14 +75,15 @@ Only the backend grants access. Frontend identity and role state are navigation 
 ## Core validation
 
 ```bash
-make test-fast
-make test-pr
-make test-release
-make fresh-db-parity
+mise run check:affected
+mise run test:fast
+mise run check:full
+mise run db:fresh
 ```
 
-`test-fast` is changed-path-aware; `test-pr` is the ordinary PR gate; and
-`test-release` is for release/schema/startup-sensitive work. OpenAPI contracts
+`check:affected` runs Turbo checks for packages changed since `origin/main`.
+`test-fast` is the changed-path-aware repository tier. `check:full` delegates
+to the complete release-sensitive authority. OpenAPI contracts
 are generated and drift-checked through the frontend package scripts. See
 [Contributing](CONTRIBUTING.md), [test strategy](docs/testing/TEST_STRATEGY.md),
 [frontend architecture](docs/architecture/FRONTEND_ARCHITECTURE.md), and
@@ -102,7 +103,7 @@ historical migration evidence. Containers are not required.
 
 ### Local Development Launcher
 ```bash
-./start-dev.sh
+mise run dev
 ```
 
 The launcher starts Elysia. It validates Bun, locked dependencies, the Python
@@ -124,15 +125,16 @@ Initial runtime and dependency setup:
 
 ```bash
 mise install
-mise run doctor
-cd backend
-python -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-cd ../apps/web
 bun install --frozen-lockfile
+mise exec -- python -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r backend/requirements.txt
+mise run doctor
 ```
 
-`mise install` uses `mise.lock` for exact versions. `mise run doctor` verifies Bun, Python, and lockfile contracts. Bun remains the package manager authority; mise only installs the Bun runtime.
+`mise install` uses `mise.lock` for exact versions. `mise run doctor` checks
+the checkout, toolchain, workspace installation, native WSL Bun, and
+`origin/main`. Bun remains the package manager authority; mise owns the
+developer-facing command surface.
 
 ### Browser smoke test
 ```bash
@@ -144,13 +146,11 @@ This launches the app and then runs [`scripts/verify-browser.sh`](scripts/verify
 ## Local Development Without start-dev.sh
 ```bash
 cd apps/api
-bun install --frozen-lockfile
 DATABASE_URL=sqlite:///./operatoros.db AUTH_COOKIE_SECRET='use-a-local-secret-with-at-least-32-characters' bun run src/server.ts
 ```
 
 ```bash
 cd apps/web
-bun install
 bun run dev
 ```
 
@@ -234,13 +234,15 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 - E2E infrastructure validation: `make e2e-validate`
 - Local blocking smoke: `timeout 300 make e2e-smoke`
 - Do not run `make e2e-full` locally without explicit owner approval; it is guarded for GitHub Actions.
-- Backend tests: `cd apps/api && bun test`
-- Frontend build: `cd apps/web && bun run build`
+- Affected package checks: `mise run check:affected`
+- Full repository gate: `mise run check:full`
+- Backend tests: `bun --filter @operatoros/api test`
+- Frontend build: `bun --filter @operatoros/web build`
 - Browser smoke: `./scripts/verify-browser.sh`
 - SQLite-only runtime contract: `cd apps/api && bun test tests/data-layer.test.ts`
 
 ## Troubleshooting
-- If the Vite dev server fails, verify `apps/web/node_modules/` exists. Run `cd apps/web && bun install` if needed.
+- If the Vite dev server fails, verify workspace dependencies exist. Run `bun install --frozen-lockfile` from the repository root if needed.
 - If uploads fail, confirm the workbook is `.xlsx` and that the required columns exist on the first sheet.
 - If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
 

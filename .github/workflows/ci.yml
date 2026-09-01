@@ -184,3 +184,5 @@ jobs:
           python --version
       - name: Validate relative Markdown links
         run: python .github/scripts/check_markdown_links.py
+      - name: Validate current developer commands
+        run: python .github/scripts/check_current_developer_docs.py
