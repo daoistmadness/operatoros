@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { AuthUser } from '../api/auth';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Activity, BarChart3, BookOpen, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
+  Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Database, Edit3, FileClock, FileText, Gauge, GraduationCap, History, LayoutDashboard,
   ClipboardList, Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
   UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
@@ -47,6 +47,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck },
       { name: 'Class Attendance', path: '/attendance/class-entry', icon: CalendarDays },
       { name: 'Daily Attendance', path: '/attendance/daily', icon: ClipboardList },
+      { name: 'Attendance Calendar', path: '/attendance/calendar', icon: CalendarCheck },
       { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
       { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
       { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },

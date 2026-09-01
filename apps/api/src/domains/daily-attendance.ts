@@ -2,6 +2,7 @@ import { t } from "elysia";
 import { DailyAttendanceOperationsQuerySchema, DailyAttendanceOperationsResponseSchema, type DailyAttendanceOperationsResponse } from "@operatoros/contracts/attendance";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { resolveAttendanceExpectations } from "./attendance-calendar";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -47,7 +48,7 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
     if (!Number.isInteger(academicYearId) || academicYearId < 1) return fail(ctx.set, 400, "academic_year_id is invalid");
     if (jenjangId !== null && (!Number.isInteger(jenjangId) || jenjangId < 1)) return fail(ctx.set, 400, "jenjang_id is invalid");
     if (classId !== null && (!Number.isInteger(classId) || classId < 1)) return fail(ctx.set, 400, "class_id is invalid");
-    const year = row(context, "SELECT id, label FROM academic_years WHERE id = ?", [academicYearId]);
+    const year = row(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
     if (!year) return fail(ctx.set, 404, "Academic year not found");
     if (classId !== null && !row(context, "SELECT id FROM academic_classes WHERE id = ? AND academic_year_id = ?", [classId, academicYearId])) return fail(ctx.set, 400, "class_id is outside the selected academic year");
 
@@ -66,7 +67,7 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
       scopeParams.push(user.id, date, date);
     }
     const resultRows = rows(context, `WITH authorized_classes AS (
-      SELECT c.id AS class_id, c.class_name, j.name AS jenjang, c.academic_year_id, ay.label AS academic_year_label
+      SELECT c.id AS class_id, c.class_name, j.id AS jenjang_id, j.name AS jenjang, c.academic_year_id, ay.label AS academic_year_label
       FROM academic_classes c
       JOIN academic_grades g ON g.id = c.grade_id
       JOIN jenjangs j ON j.id = g.jenjang_id
@@ -113,6 +114,13 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
     CROSS JOIN finalized f
     ORDER BY c.class_name, c.class_id`, [...scopeParams, date, date, date, date]);
     try {
+      const expectationByJenjang = resolveAttendanceExpectations(context, {
+        academicYearId,
+        date,
+        startDate: String(year.start_date),
+        endDate: String(year.end_date),
+        jenjangIds: resultRows.map((value) => number(value.jenjang_id)),
+      });
       const classes = resultRows.map((value) => {
         const expected = number(value.expected_students);
         const recorded = number(value.recorded_students);
@@ -124,13 +132,15 @@ export function dailyAttendanceRoutes(app: any, context: AuthContext): any {
           coverageState, coveragePercent: expected > 0 ? Number(((recorded / expected) * 100).toFixed(2)) : null,
           counts: { present: number(value.present), late: number(value.late), sakit: number(value.sakit), izin: number(value.izin), alfa: number(value.alfa), absent: number(value.absent), incomplete: number(value.incomplete) },
           periodFinalized: Boolean(value.period_finalized),
+          attendanceExpectation: expectationByJenjang.get(number(value.jenjang_id)) ?? { status: "UNKNOWN", reason: null, source: "NONE" },
         };
       });
       const totals = classes.reduce((sum, value) => ({
         classes: sum.classes + 1, expectedStudents: sum.expectedStudents + value.expectedStudentCount, recordedStudents: sum.recordedStudents + value.recordedStudentCount,
         unrecordedStudents: sum.unrecordedStudents + value.unrecordedStudentCount, completeClasses: sum.completeClasses + (value.coverageState === "COMPLETE" ? 1 : 0), partialClasses: sum.partialClasses + (value.coverageState === "PARTIAL" ? 1 : 0), noRecordClasses: sum.noRecordClasses + (value.coverageState === "NONE" ? 1 : 0), emptyClasses: sum.emptyClasses + (value.coverageState === "EMPTY_CLASS" ? 1 : 0),
-      }), { classes: 0, expectedStudents: 0, recordedStudents: 0, unrecordedStudents: 0, completeClasses: 0, partialClasses: 0, noRecordClasses: 0, emptyClasses: 0 });
-      const response: DailyAttendanceOperationsResponse = { scope: { date, academicYearId, academicYearLabel: String(year.label), jenjangId, classId, schoolDayAuthority: "NOT_AVAILABLE" }, totals, classes };
+        expectedClasses: sum.expectedClasses + (value.attendanceExpectation.status === "EXPECTED" ? 1 : 0), notExpectedClasses: sum.notExpectedClasses + (value.attendanceExpectation.status === "NOT_EXPECTED" ? 1 : 0), unknownClasses: sum.unknownClasses + (value.attendanceExpectation.status === "UNKNOWN" ? 1 : 0),
+      }), { classes: 0, expectedStudents: 0, recordedStudents: 0, unrecordedStudents: 0, completeClasses: 0, partialClasses: 0, noRecordClasses: 0, emptyClasses: 0, expectedClasses: 0, notExpectedClasses: 0, unknownClasses: 0 });
+      const response: DailyAttendanceOperationsResponse = { scope: { date, academicYearId, academicYearLabel: String(year.label), jenjangId, classId, schoolDayAuthority: "AVAILABLE" }, totals, classes };
       return response;
     } catch (error) {
       if (error instanceof Error && error.message === "DAILY_ATTENDANCE_ROSTER_RECORD_INTEGRITY_DEFECT") return fail(ctx.set, 500, error.message);

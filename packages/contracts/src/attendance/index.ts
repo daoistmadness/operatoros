@@ -1,4 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
+export * from "./calendar";
+import { AttendanceCalendarExpectationSchema } from "./calendar";
 
 export const AttendanceCorrectionRequestSchema = Type.Object({
   attendance_id: Type.Number({ minimum: 1 }),
@@ -51,6 +53,7 @@ const DailyAttendanceClassSchema = Type.Object({
   coveragePercent: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   counts: DailyAttendanceCountsSchema,
   periodFinalized: Type.Boolean(),
+  attendanceExpectation: AttendanceCalendarExpectationSchema,
 });
 
 export const DailyAttendanceOperationsResponseSchema = Type.Object({
@@ -60,7 +63,7 @@ export const DailyAttendanceOperationsResponseSchema = Type.Object({
     academicYearLabel: Type.String({ minLength: 1 }),
     jenjangId: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
     classId: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
-    schoolDayAuthority: Type.Literal("NOT_AVAILABLE"),
+    schoolDayAuthority: Type.Literal("AVAILABLE"),
   }),
   totals: Type.Object({
     classes: Type.Number({ minimum: 0 }),
@@ -71,6 +74,9 @@ export const DailyAttendanceOperationsResponseSchema = Type.Object({
     partialClasses: Type.Number({ minimum: 0 }),
     noRecordClasses: Type.Number({ minimum: 0 }),
     emptyClasses: Type.Number({ minimum: 0 }),
+    expectedClasses: Type.Number({ minimum: 0 }),
+    notExpectedClasses: Type.Number({ minimum: 0 }),
+    unknownClasses: Type.Number({ minimum: 0 }),
   }),
   classes: Type.Array(DailyAttendanceClassSchema),
 });

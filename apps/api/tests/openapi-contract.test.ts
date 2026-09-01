@@ -19,6 +19,10 @@ function canonicalPath(path: string): string {
   return path.replace(/:([^/]+)/g, "{$1}");
 }
 
+function operationKey(path: string, method: string): string {
+  return `${method.toUpperCase()} ${canonicalPath(path)}`;
+}
+
 function operations(document: OpenApiDocument): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [path, pathItem] of Object.entries(document.paths)) {
@@ -31,6 +35,12 @@ function operations(document: OpenApiDocument): Record<string, unknown> {
 
 function withoutSpecialRoutes(values: Record<string, unknown>, excluded: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(values).filter(([key]) => key !== excluded));
+}
+
+function publicPaths(document: OpenApiDocument, excludedOperation: string): Set<string> {
+  return new Set(Object.entries(document.paths).filter(([path, pathItem]) =>
+    Object.keys(pathItem).some((method) => methods.has(method) && operationKey(path, method) !== excludedOperation),
+  ).map(([path]) => path));
 }
 
 describe("full OpenAPI contract", () => {
@@ -57,11 +67,11 @@ describe("full OpenAPI contract", () => {
       expect(candidateOperations).toEqual(referenceOperations);
       expect(candidate.components?.schemas).toEqual(reference.components?.schemas);
 
-      const referencePaths = new Set(Object.keys(reference.paths));
-      const candidatePaths = new Set(Object.keys(candidate.paths));
+      const referencePaths = publicPaths(reference, deprecated);
+      const candidatePaths = publicPaths(candidate, candidateOnly);
       expect(candidatePaths.size).toBe(referencePaths.size);
-      expect(Object.keys(candidateOperations)).toHaveLength(361);
-      expect(Object.keys(operations(reference))).toHaveLength(362);
+      expect(Object.keys(candidateOperations)).toHaveLength(365);
+      expect(Object.keys(operations(reference))).toHaveLength(366);
     } finally {
       database.close();
       await rm(directory, { recursive: true, force: true });
