@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle, CheckCircle2, Clock, LockKeyhole, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { Card } from "../components/ui/card";
+import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 
 type CorrectionAuditEvent = {
   action: string;
@@ -60,6 +62,7 @@ const safeError = (error: unknown): string => {
 
 export default function AttendanceCorrections() {
   const { user, can } = useAuth();
+  const queryClient = useQueryClient();
   const [requests, setRequests] = useState<CorrectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -88,7 +91,7 @@ export default function AttendanceCorrections() {
   const run = async (key: string, action: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(key); setError("");
-    try { await action(); await load(); }
+    try { await action(); await invalidateAttendanceQueries(queryClient); await load(); }
     catch (err) { setError(safeError(err)); }
     finally { setBusy(""); }
   };

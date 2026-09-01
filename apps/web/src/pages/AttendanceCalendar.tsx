@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Button } from "../components/ui/button";
@@ -11,7 +12,7 @@ import { applyAttendanceCalendarPeriod, deleteAttendanceCalendarException, previ
 import type { AttendanceCalendarPeriodPreviewResponse } from "@operatoros/contracts/attendance";
 import { useAttendanceCalendarQuery } from "../hooks/useAttendanceCalendarQuery";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "../lib/query/queryKeys";
+import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const reasons = ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"] as const;
@@ -33,13 +34,13 @@ export default function AttendanceCalendar() {
   const [periodConfirmed, setPeriodConfirmed] = useState(false);
   const calendar = useAttendanceCalendarQuery(academicYearId, allowed);
   const client = useQueryClient();
-  const invalidate = () => client.invalidateQueries({ queryKey: queryKeys.attendance.calendar(academicYearId) });
+  const invalidate = () => invalidateAttendanceQueries(client);
   const saveWeekday = useMutation({ mutationFn: saveAttendanceCalendarWeekday, onSuccess: invalidate });
-  const saveException = useMutation({ mutationFn: saveAttendanceCalendarException, onSuccess: () => { setForm({ date: "", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }); void invalidate(); } });
+  const saveException = useMutation({ mutationFn: saveAttendanceCalendarException, onSuccess: async () => { setForm({ date: "", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }); await invalidate(); } });
   const deleteException = useMutation({ mutationFn: deleteAttendanceCalendarException, onSuccess: invalidate });
   const saveDeadline = useMutation({ mutationFn: saveAttendanceSubmissionDeadline, onSuccess: invalidate });
   const previewPeriod = useMutation({ mutationFn: previewAttendanceCalendarPeriod, onSuccess: (value) => { setPeriodPreview(value); setPeriodConfirmed(false); } });
-  const applyPeriod = useMutation({ mutationFn: applyAttendanceCalendarPeriod, onSuccess: () => { setPeriodPreview(null); setPeriodConfirmed(false); void invalidate(); } });
+  const applyPeriod = useMutation({ mutationFn: applyAttendanceCalendarPeriod, onSuccess: async () => { setPeriodPreview(null); setPeriodConfirmed(false); await invalidate(); } });
   const selectedJenjang = useMemo(() => calendar.data?.jenjangs.find((item) => item.id === jenjangId) ?? calendar.data?.jenjangs[0] ?? null, [calendar.data?.jenjangs, jenjangId]);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function AttendanceCalendar() {
   const submitDeadline = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); const value = new FormData(event.currentTarget).get("submission-deadline"); saveDeadline.mutate({ academic_year_id: year.academicYearId, jenjang_id: current.id, cutoff_time: value ? String(value) : null }); };
   const submitPeriod = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); applyPeriod.reset(); previewPeriod.mutate({ ...period, academic_year_id: year.academicYearId, jenjang_id: current.id }); };
   return <div className="space-y-7 pb-16">
-    <PageHeader eyebrow="Attendance Administration" title="Attendance Calendar" description="Configure when attendance is expected for each jenjang. An unconfigured date remains unknown; this does not establish a submission deadline." />
+    <PageHeader eyebrow="Attendance Administration" title="Attendance Calendar" description="Configure when attendance is expected for each jenjang. An unconfigured date remains unknown; this does not establish a submission deadline." actions={<div className="flex flex-wrap gap-2"><Link className="rounded-md border border-border px-3 py-2 text-sm font-bold hover:bg-surface-muted" to="/attendance/daily">Open Daily Attendance</Link>{can("import_attendance") && <Link className="rounded-md border border-border px-3 py-2 text-sm font-bold hover:bg-surface-muted" to="/attendance/machine-import">Open Machine Import</Link>}</div>} />
     <Card><CardHeader><CardTitle>Calendar scope</CardTitle><p className="text-sm text-muted-foreground">Rules use the school date exactly as entered. Date exceptions override the recurring weekday rule.</p></CardHeader><CardContent><div className="grid gap-4 sm:grid-cols-2"><div><FieldLabel htmlFor="calendar-year">Academic year</FieldLabel><NativeSelect id="calendar-year" value={year.academicYearId} onChange={(event) => { setAcademicYearId(Number(event.target.value)); setJenjangId(null); }}><option value="">Select year</option>{years.data?.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect><p className="mt-1 text-xs text-muted-foreground">{year.startDate} to {year.endDate}</p></div><div><FieldLabel htmlFor="calendar-jenjang">Jenjang</FieldLabel><NativeSelect id="calendar-jenjang" value={current.id} onChange={(event) => setJenjangId(Number(event.target.value))}>{calendar.data.jenjangs.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div></div></CardContent></Card>
     <Card><CardHeader><CardTitle>Recurring weekdays · {current.name}</CardTitle><p className="text-sm text-muted-foreground">Choose Expected, Not expected, or Not configured. Not configured resolves to UNKNOWN.</p></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{current.weekdays.map((item) => <div key={item.weekday}><FieldLabel htmlFor={`weekday-${item.weekday}`}>{weekdays[item.weekday]}</FieldLabel><NativeSelect id={`weekday-${item.weekday}`} value={item.expectation ?? ""} onChange={(event) => updateWeekday(item.weekday, event.target.value)} disabled={!canEdit || saveWeekday.isPending}><option value="">Not configured</option><option value="EXPECTED">Expected</option><option value="NOT_EXPECTED">Not expected</option></NativeSelect></div>)}</div></CardContent></Card>
     <Card><CardHeader><CardTitle>Submission deadline · {current.name}</CardTitle><p className="text-sm text-muted-foreground">Same-day local cutoff for expected attendance. Timezone: Asia/Jakarta. An unset deadline stays unavailable.</p></CardHeader><CardContent><form key={`${year.academicYearId}-${current.id}-${current.submissionDeadlineLocalTime ?? "unset"}`} className="flex flex-wrap items-end gap-4" onSubmit={submitDeadline}><div><FieldLabel htmlFor="submission-deadline">Cutoff time</FieldLabel><input id="submission-deadline" name="submission-deadline" type="time" step="60" defaultValue={current.submissionDeadlineLocalTime ?? ""} disabled={!canEdit || saveDeadline.isPending} className="h-11 rounded-md border border-border bg-surface px-3 text-sm" /></div>{canEdit && <><Button type="submit" disabled={saveDeadline.isPending}>Save deadline</Button><Button type="button" variant="outline" disabled={saveDeadline.isPending || current.submissionDeadlineLocalTime === null} onClick={() => saveDeadline.mutate({ academic_year_id: year.academicYearId, jenjang_id: current.id, cutoff_time: null })}>Clear</Button></>}<p className="text-sm text-muted-foreground">{current.submissionDeadlineLocalTime ? `Configured: ${current.submissionDeadlineLocalTime} Asia/Jakarta` : "Submission deadline not configured"}</p></form>{!canEdit && <p className="mt-3 text-sm text-muted-foreground">Deadline configuration is read-only for this account.</p>}</CardContent></Card>
