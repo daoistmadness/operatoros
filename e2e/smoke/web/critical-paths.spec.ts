@@ -117,6 +117,35 @@ test("@attendance @corrections @release attendance review filters disposable att
   await expect(page.getByText(/\d+ records/)).toBeVisible();
 });
 
+test("@attendance @correction-review @release creates and reviews a canonical correction", async ({ page }) => {
+  await login(page);
+  const date = new Date().toISOString().slice(0, 10);
+  await page.goto(`/attendance-review?academic_year_id=1&date=${date}`);
+  await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
+  await page.getByRole("button", { name: "Load" }).click();
+  await expect(page.getByText("E2E Ada")).toBeVisible();
+
+  const attendanceRow = page.getByRole("row").filter({ hasText: "E2E Ada" }).first();
+  await attendanceRow.getByRole("button", { name: "Override", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Override Attendance Status" })).toBeVisible();
+  await page.getByLabel("New attendance status").selectOption("late");
+  await page.getByLabel("Justification note").fill("E2E correction review");
+  const save = page.waitForResponse((response) => response.url().includes("/api/review/attendance/") && response.url().endsWith("/override") && response.request().method() === "POST" && response.status() === 200);
+  await page.getByRole("button", { name: "Save Override" }).click();
+  await save;
+
+  const reviewLoad = page.waitForResponse((response) => response.url().includes("/api/attendance/override-review") && response.status() === 200);
+  await page.goto(`/attendance/override-review?academic_year_id=1&date_from=${date}&date_to=${date}`);
+  await reviewLoad;
+  await expect(page.getByRole("heading", { name: "Correction Review" })).toBeVisible();
+  const correctionRow = page.getByRole("row").filter({ hasText: "E2E Ada" }).first();
+  await expect(correctionRow).toContainText("Present");
+  await expect(correctionRow).toContainText("Late");
+  await expect(correctionRow).toContainText("E2E correction review");
+  await expect(correctionRow.getByRole("link", { name: "E2E Ada" })).toHaveAttribute("href", /\/students\//);
+  await expect(correctionRow.getByRole("link", { name: "Open Class 360" })).toHaveAttribute("href", /\/classes\//);
+});
+
 test("@operator-queue @release student management creates edits and links a synthetic canonical profile", async ({ page }) => {
   await login(page);
   await page.goto("/students");

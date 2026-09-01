@@ -5597,6 +5597,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/override-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAttendanceOverride-review"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -20259,5 +20275,82 @@ export interface operations {
             };
         };
         responses: never;
+    };
+    "getApiAttendanceOverride-review": {
+        parameters: {
+            query?: {
+                academic_year_id?: string;
+                jenjang_id?: string;
+                class_id?: string;
+                date_from?: string;
+                date_to?: string;
+                base_status?: string;
+                effective_status?: string;
+                student_search?: string;
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        scope: {
+                            academicYearId: number;
+                            academicYearLabel: string;
+                            jenjangId: number | null;
+                            classId: number | null;
+                            dateFrom: string;
+                            dateTo: string;
+                        };
+                        summary: {
+                            corrections: number;
+                        };
+                        total: number;
+                        page: number;
+                        pageSize: number;
+                        items: {
+                            attendanceId: number;
+                            studentId: number;
+                            studentMasterId: string | null;
+                            studentName: string;
+                            classId: number | null;
+                            className: string;
+                            jenjang: string | null;
+                            academicYearId: number;
+                            date: string;
+                            baseStatus: string;
+                            effectiveStatus: string;
+                            correction: {
+                                id: number;
+                                note: string;
+                                reviewedBy: string;
+                                reviewedAt: string;
+                                overrideCheckIn: string | null;
+                                overrideCheckOut: string | null;
+                                /** @constant */
+                                active: true;
+                            };
+                            canEdit: boolean;
+                            links: {
+                                correctionReview: string;
+                                editCorrection: string | null;
+                                student360: string;
+                                class360: string | null;
+                                dailyAttendance: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+        };
     };
 }
