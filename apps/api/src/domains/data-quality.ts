@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { t } from "elysia";
 import {
   DataQualityIssuesResponseSchema,
+  DataQualityResolutionResponseSchema,
   StaffDataQualityResponseSchema,
   StudentDataQualityResponseSchema,
   type DataQualityFieldMetric,
@@ -10,10 +11,14 @@ import {
   type DataQualityIssue,
   type DataQualityIssueEntry,
   type DataQualityIssueType,
+  type DataQualityResolutionClass,
+  type DataQualityResolutionItem,
+  type DataQualityResolutionResponse,
   type StaffDataQualityResponse,
   type StudentDataQualityResponse,
 } from "@operatoros/contracts/analytics";
 import { actor } from "./core";
+import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -167,6 +172,119 @@ function staffIssuesFor(value: Row): DataQualityIssueEntry[] {
   return issues;
 }
 
+type QualityIssueRecord = {
+  entityType: "STUDENT" | "STAFF";
+  entityId: string;
+  entityName: string;
+  context: string;
+  value: Row;
+  issue: DataQualityIssueEntry;
+};
+
+function studentIssueRecords(context: AuthContext, scope: StudentScope): QualityIssueRecord[] {
+  const records: QualityIssueRecord[] = [];
+  for (const value of studentQualityRows(context, scope)) {
+    for (const issue of studentIssuesFor(value)) {
+      records.push({ entityType: "STUDENT", entityId: String(value.id), entityName: String(value.full_name), context: `${value.jenjang ?? "Unknown"} · ${value.class_name ?? "No class"}`, value, issue });
+    }
+  }
+  const missingEnrollmentMasters = scope.classId === null && scope.jenjangId === null && ["ACTIVE", "ALL"].includes(scope.status)
+    ? rows(
+      context,
+      `SELECT m.id, m.full_name FROM student_masters m
+        WHERE m.student_status = 'active'
+          AND NOT EXISTS (
+            SELECT 1 FROM student_enrollments e
+             WHERE e.student_master_id = m.id AND e.effective_to IS NULL
+               AND (? = 0 OR e.academic_year_id = ?)
+          )
+        ORDER BY m.full_name`,
+      [scope.academicYearId, scope.academicYearId],
+    )
+    : [];
+  for (const value of missingEnrollmentMasters) {
+    records.push({
+      entityType: "STUDENT", entityId: String(value.id), entityName: String(value.full_name),
+      context: "Active master without current enrollment", value,
+      issue: { field: "enrollment", type: "MISSING_ENROLLMENT", label: "No current enrollment" },
+    });
+  }
+  return records;
+}
+
+function staffQualityRows(context: AuthContext, query: Row): Row[] {
+  const employmentStatus = query.employment_status === undefined ? "ACTIVE" : String(query.employment_status).toUpperCase();
+  const jenjangId = query.jenjang_id === undefined ? null : Number(query.jenjang_id);
+  const filters = ["s.employment_status = ?"];
+  const params: unknown[] = [employmentStatus];
+  let jenjangJoin = "";
+  if (jenjangId !== null) {
+    jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
+    params.unshift(jenjangId);
+    filters.push("sja.jenjang_id IS NOT NULL");
+  }
+  return rows(context, `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
+              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
+              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
+         FROM staff_members s ${jenjangJoin} WHERE ${filters.join(" AND ")} GROUP BY s.id ORDER BY s.id`, params);
+}
+
+function staffIssueRecords(context: AuthContext, query: Row): QualityIssueRecord[] {
+  return staffQualityRows(context, query).flatMap((value) => staffIssuesFor(value).map((issue) => ({
+    entityType: "STAFF" as const,
+    entityId: String(value.id),
+    entityName: String(value.full_name),
+    context: `${value.employment_status} · ${value.job_title_normalized ?? value.job_title_raw ?? "No job title"}`,
+    value,
+    issue,
+  })));
+}
+
+function qualityState(issue: DataQualityIssueEntry): "MISSING" | "UNKNOWN" | "UNMAPPED" {
+  if (issue.type === "UNKNOWN_CATEGORY_VALUE") return "UNKNOWN";
+  if (issue.type === "UNMAPPED_JOB_TITLE") return "UNMAPPED";
+  return "MISSING";
+}
+
+function resolutionDefinition(record: QualityIssueRecord): { resolutionClass: DataQualityResolutionClass; targetType: "STUDENT_PROFILE" | "STUDENT_ENROLLMENT" | "STAFF_PROFILE" | null; capability: string | null; note: string } {
+  const { issue, entityType } = record;
+  if (entityType === "STUDENT" && issue.type === "MISSING_CLASS_ASSIGNMENT") return { resolutionClass: "EDITABLE_IN_OPERATOROS", targetType: "STUDENT_ENROLLMENT", capability: "manage_enrollment", note: "Open the canonical student enrollment editor." };
+  if (entityType === "STUDENT" && issue.type === "MISSING_ENROLLMENT") return { resolutionClass: "EDITABLE_IN_OPERATOROS", targetType: "STUDENT_ENROLLMENT", capability: "manage_enrollment", note: "Open the canonical student enrollment editor." };
+  if (entityType === "STUDENT" && issue.type === "MISSING_OPTIONAL_FIELD" && ["gender", "religion", "birth_date"].includes(issue.field)) return { resolutionClass: "EDITABLE_IN_OPERATOROS", targetType: "STUDENT_PROFILE", capability: "edit_student", note: "Open the canonical student profile editor." };
+  if (entityType === "STAFF" && ["education", "jenjang_assignment"].includes(issue.field)) return { resolutionClass: "EDITABLE_IN_OPERATOROS", targetType: "STAFF_PROFILE", capability: "manage_staff", note: "Open the canonical staff editor." };
+  if (entityType === "STAFF" && ["employment_status", "job_title"].includes(issue.field)) return { resolutionClass: "EXTERNAL_SOURCE_REQUIRED", targetType: null, capability: null, note: "Correct this imported staff value in its source workflow, then refresh Data Quality." };
+  if (entityType === "STUDENT" && issue.field === "class_assignment") return { resolutionClass: "VIEW_ONLY_IN_OPERATOROS", targetType: null, capability: null, note: "This optional historical field has no mapped correction action." };
+  return { resolutionClass: "UNSUPPORTED_CORRECTION", targetType: null, capability: null, note: "No supported correction workflow is available." };
+}
+
+function currentValue(record: QualityIssueRecord): string | null {
+  if (record.issue.type === "UNKNOWN_CATEGORY_VALUE") return "Unknown";
+  if (record.issue.type === "UNMAPPED_JOB_TITLE") return record.value.job_title_raw == null ? null : String(record.value.job_title_raw);
+  return null;
+}
+
+function resolutionItems(records: QualityIssueRecord[], capabilities: string[]): DataQualityResolutionItem[] {
+  return records.map((record) => {
+    const definition = resolutionDefinition(record);
+    const canEdit = definition.capability !== null && capabilities.includes(definition.capability);
+    return {
+      issueKey: `${record.entityType}:${record.entityId}:${record.issue.field}:${record.issue.type}`,
+      entityType: record.entityType,
+      entityId: record.entityId,
+      entityLabel: record.entityName,
+      context: record.context,
+      field: record.issue.field,
+      qualityState: qualityState(record.issue),
+      qualityType: record.issue.type,
+      label: record.issue.label,
+      currentValue: currentValue(record),
+      resolutionClass: definition.resolutionClass,
+      resolutionNote: definition.resolutionClass === "EDITABLE_IN_OPERATOROS" && !canEdit ? "You need the canonical write permission to edit this source." : definition.note,
+      resolutionTarget: canEdit && definition.targetType && definition.capability ? { type: definition.targetType, entityId: record.entityId, capability: definition.capability } : null,
+    };
+  });
+}
+
 const STUDENT_FIELD_LABELS: Record<string, string> = {
   gender: "Gender",
   religion: "Religion",
@@ -226,18 +344,7 @@ export function studentQuality(context: AuthContext, query: Row): StudentDataQua
 export function staffQuality(context: AuthContext, query: Row): StaffDataQualityResponse {
   const employmentStatus = query.employment_status === undefined ? "ACTIVE" : String(query.employment_status).toUpperCase();
   const jenjangId = query.jenjang_id === undefined ? null : Number(query.jenjang_id);
-  const filters = ["s.employment_status = ?"];
-  const params: unknown[] = [employmentStatus];
-  let jenjangJoin = "";
-  if (jenjangId !== null) {
-    jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
-    params.unshift(jenjangId);
-    filters.push("sja.jenjang_id IS NOT NULL");
-  }
-  const values = rows(context, `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
-         FROM staff_members s ${jenjangJoin} WHERE ${filters.join(" AND ")} GROUP BY s.id ORDER BY s.id`, params);
+  const values = staffQualityRows(context, { employment_status: employmentStatus, jenjang_id: jenjangId === null ? undefined : String(jenjangId) });
   const perRecord = values.map((value) => ({ value, issues: staffIssuesFor(value) }));
   const fieldCompleteness: DataQualityFieldMetric[] = [];
   for (const field of ["education", "jenjang_assignment", "job_title"] as const) {
@@ -277,33 +384,13 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
     const type = ctx.query.type === undefined ? null : String(ctx.query.type).toUpperCase();
     const page = Math.max(1, Number(ctx.query.page ?? 1));
     const pageSize = Math.min(200, Math.max(1, Number(ctx.query.page_size ?? 50)));
-    const values = studentQualityRows(context, scope);
-    const missingEnrollmentMasters = rows(
-      context,
-      `SELECT m.id, m.full_name FROM student_masters m
-        WHERE m.student_status = 'active'
-          AND NOT EXISTS (
-            SELECT 1 FROM student_enrollments e
-             WHERE e.student_master_id = m.id AND e.effective_to IS NULL
-               AND (? = 0 OR e.academic_year_id = ?)
-          )
-        ORDER BY m.full_name`,
-      [scope.academicYearId, scope.academicYearId],
-    );
-    const items: DataQualityIssue[] = values.map((value) => ({
-      entityId: String(value.id),
-      entityName: String(value.full_name),
-      context: `${value.jenjang ?? "Unknown"} · ${value.class_name ?? "No class"}`,
-      issues: studentIssuesFor(value),
+    const records = studentIssueRecords(context, scope);
+    const items = [...new Map(records.map((record) => [record.entityId, record])).values()].map((record) => ({
+      entityId: record.entityId,
+      entityName: record.entityName,
+      context: record.context,
+      issues: records.filter((item) => item.entityId === record.entityId).map((item) => item.issue),
     }));
-    for (const master of missingEnrollmentMasters) {
-      items.push({
-        entityId: String(master.id),
-        entityName: String(master.full_name),
-        context: "Active master without current enrollment",
-        issues: [{ field: "enrollment", type: "MISSING_ENROLLMENT", label: "No current enrollment" }],
-      });
-    }
     const filtered = items
       .map((item) => ({ ...item, issues: item.issues.filter((issue) => (field === null || issue.field === field) && (type === null || issue.type === type)) }))
       .filter((item) => item.issues.length > 0)
@@ -350,31 +437,12 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
     const type = ctx.query.type === undefined ? null : String(ctx.query.type).toUpperCase();
     const page = Math.max(1, Number(ctx.query.page ?? 1));
     const pageSize = Math.min(200, Math.max(1, Number(ctx.query.page_size ?? 50)));
-    const filters = ["s.employment_status = ?"];
-    const params: unknown[] = [employmentStatus];
-    let jenjangJoin = "";
-    if (jenjangId !== null) {
-      jenjangJoin = "LEFT JOIN staff_jenjang_assignments sja ON sja.staff_member_id = s.id AND sja.jenjang_id = ?";
-      params.unshift(jenjangId);
-      filters.push("sja.jenjang_id IS NOT NULL");
-    }
-    const values = rows(
-      context,
-      `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
-         FROM staff_members s
-         ${jenjangJoin}
-        WHERE ${filters.join(" AND ")}
-        GROUP BY s.id
-        ORDER BY s.id`,
-      params,
-    );
-    const items: DataQualityIssue[] = values.map((value) => ({
-      entityId: String(value.id),
-      entityName: String(value.full_name),
-      context: `${value.employment_status} · ${value.job_title_normalized ?? value.job_title_raw ?? "No job title"}`,
-      issues: staffIssuesFor(value),
+    const records = staffIssueRecords(context, { employment_status: employmentStatus, jenjang_id: jenjangId === null ? undefined : String(jenjangId) });
+    const items = [...new Map(records.map((record) => [record.entityId, record])).values()].map((record) => ({
+      entityId: record.entityId,
+      entityName: record.entityName,
+      context: record.context,
+      issues: records.filter((item) => item.entityId === record.entityId).map((item) => item.issue),
     }));
     const filtered = items
       .map((item) => ({ ...item, issues: item.issues.filter((issue) => (field === null || issue.field === field) && (type === null || issue.type === type)) }))
@@ -397,6 +465,53 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
       page_size: t.Optional(t.String()),
     }),
     response: DataQualityIssuesResponseSchema,
+  });
+
+  app.get("/api/analytics/data-quality/resolution", (ctx: Context) => {
+    const user = actor(context, ctx, {});
+    if (!user) return { detail: "Authentication required" };
+    const capabilities = capabilitiesForRole(user.role);
+    const canViewStudents = capabilities.includes("view_student");
+    const canViewStaff = capabilities.includes("view_staff");
+    const requestedEntity = ctx.query.entity_type === undefined ? "ALL" : String(ctx.query.entity_type).toUpperCase();
+    if ((requestedEntity === "STUDENT" && !canViewStudents) || (requestedEntity === "STAFF" && !canViewStaff) || (!canViewStudents && !canViewStaff)) {
+      return error(ctx.set, 403, "Insufficient permissions");
+    }
+    const records: QualityIssueRecord[] = [];
+    if (canViewStudents && requestedEntity !== "STAFF") records.push(...studentIssueRecords(context, studentScope(context, ctx.query)));
+    if (canViewStaff && requestedEntity !== "STUDENT") records.push(...staffIssueRecords(context, ctx.query));
+    const allItems = resolutionItems(records, capabilities);
+    const search = ctx.query.search?.trim().toLowerCase();
+    const field = ctx.query.field === undefined ? null : String(ctx.query.field);
+    const state = ctx.query.quality_state === undefined ? null : String(ctx.query.quality_state).toUpperCase();
+    const resolution = ctx.query.resolution_class === undefined ? null : String(ctx.query.resolution_class).toUpperCase();
+    const filtered = allItems.filter((item) =>
+      (field === null || item.field === field)
+      && (state === null || item.qualityState === state)
+      && (resolution === null || item.resolutionClass === resolution)
+      && (!search || `${item.entityLabel} ${item.context} ${item.field} ${item.label}`.toLowerCase().includes(search)),
+    ).sort((left, right) => left.entityLabel.localeCompare(right.entityLabel) || left.issueKey.localeCompare(right.issueKey));
+    const page = Math.max(1, Number(ctx.query.page ?? 1));
+    const pageSize = Math.min(100, Math.max(1, Number(ctx.query.page_size ?? 25)));
+    const summary = {
+      totalIssues: filtered.length,
+      editableIssues: filtered.filter((item) => item.resolutionClass === "EDITABLE_IN_OPERATOROS").length,
+      viewOnlyIssues: filtered.filter((item) => item.resolutionClass === "VIEW_ONLY_IN_OPERATOROS").length,
+      externalIssues: filtered.filter((item) => item.resolutionClass === "EXTERNAL_SOURCE_REQUIRED").length,
+      unsupportedIssues: filtered.filter((item) => item.resolutionClass === "UNSUPPORTED_CORRECTION").length,
+    };
+    const response: DataQualityResolutionResponse = { summary, page, pageSize, total: filtered.length, items: filtered.slice((page - 1) * pageSize, page * pageSize) };
+    return response;
+  }, {
+    query: t.Object({
+      academic_year_id: t.Optional(t.String()), status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_id: t.Optional(t.String()),
+      employment_status: t.Optional(t.String()),
+      entity_type: t.Optional(t.Union([t.Literal("ALL"), t.Literal("STUDENT"), t.Literal("STAFF")])),
+      quality_state: t.Optional(t.Union([t.Literal("MISSING"), t.Literal("UNKNOWN"), t.Literal("UNMAPPED")])),
+      resolution_class: t.Optional(t.Union([t.Literal("EDITABLE_IN_OPERATOROS"), t.Literal("VIEW_ONLY_IN_OPERATOROS"), t.Literal("EXTERNAL_SOURCE_REQUIRED"), t.Literal("UNSUPPORTED_CORRECTION")])),
+      field: t.Optional(t.String()), search: t.Optional(t.String()), page: t.Optional(t.String()), page_size: t.Optional(t.String()),
+    }),
+    response: DataQualityResolutionResponseSchema,
   });
 
   app.get("/api/analytics/data-quality/students/export-excel", async (ctx: Context) => {

@@ -5,7 +5,7 @@ vi.mock("../lib/api/client", () => ({
   apiRequest: (...args: unknown[]) => apiRequest(...args),
 }));
 
-import { downloadStudentQualityExcel, fetchStudentQuality, fetchStudentQualityIssues } from "./dataQuality";
+import { downloadStudentQualityExcel, fetchDataQualityResolution, fetchStudentQuality, fetchStudentQualityIssues } from "./dataQuality";
 
 describe("data quality API adapter", () => {
   beforeEach(() => apiRequest.mockReset());
@@ -40,5 +40,14 @@ describe("data quality API adapter", () => {
       responseType: "blob",
       expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
     }));
+  });
+
+  it("fetches the derived resolution workspace with all filters", async () => {
+    apiRequest.mockResolvedValue({ data: { summary: { totalIssues: 1 }, items: [] } });
+    await fetchDataQualityResolution({ entity_type: "ALL", quality_state: "MISSING", resolution_class: "EDITABLE_IN_OPERATOROS", search: "student", page: 2, page_size: 10 });
+    expect(apiRequest).toHaveBeenCalledWith({
+      path: "/api/analytics/data-quality/resolution",
+      params: { entity_type: "ALL", quality_state: "MISSING", resolution_class: "EDITABLE_IN_OPERATOROS", search: "student", page: 2, page_size: 10 },
+    });
   });
 });

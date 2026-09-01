@@ -1,10 +1,25 @@
 import { apiRequest } from "../lib/api/client";
-import type { DataQualityIssuesResponse, StaffDataQualityResponse, StudentDataQualityResponse } from "@operatoros/contracts/analytics";
+import type { DataQualityIssuesResponse, DataQualityResolutionResponse, StaffDataQualityResponse, StudentDataQualityResponse } from "@operatoros/contracts/analytics";
 import type { QueryParams } from "../lib/api/client";
 
 export type StudentQualityFilters = QueryParams & { status?: string };
 
 export type StaffQualityFilters = QueryParams & { employment_status?: string };
+
+export type DataQualityResolutionFilters = QueryParams & {
+  entity_type?: string;
+  quality_state?: string;
+  resolution_class?: string;
+  field?: string;
+  search?: string;
+  page?: number;
+  page_size?: number;
+};
+
+export async function fetchDataQualityResolution(filters: DataQualityResolutionFilters = {}): Promise<DataQualityResolutionResponse> {
+  const response = await apiRequest<DataQualityResolutionResponse>({ path: "/api/analytics/data-quality/resolution", params: filters });
+  return response.data;
+}
 
 export async function fetchStudentQuality(filters: StudentQualityFilters): Promise<StudentDataQualityResponse> {
   const response = await apiRequest<StudentDataQualityResponse>({ path: "/api/analytics/data-quality/students", params: filters });

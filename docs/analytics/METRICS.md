@@ -168,6 +168,22 @@ and paginated server-side (page/page_size, max 200). Capabilities:
 students `view_student`, staff `view_staff`; exports
 `export_student_data` / `export_staff`.
 
+The Data Quality resolution workspace is a derived read-only projection of
+these same findings. Each finding is classified as `MISSING`, `UNKNOWN`, or
+`UNMAPPED`, then mapped to `EDITABLE_IN_OPERATOROS`,
+`VIEW_ONLY_IN_OPERATOROS`, `EXTERNAL_SOURCE_REQUIRED`, or
+`UNSUPPORTED_CORRECTION`. An edit action is returned only when the existing
+canonical editor and the actor's write capability both apply. The workspace
+does not persist issue rows, provide a mark-resolved action, or perform
+automatic or bulk correction. After a canonical source edit, the finding
+disappears when the projection is queried again.
+
+Student profile and enrollment findings use `/students/:id`, with
+`edit_student` or `manage_enrollment` respectively. Staff education and
+jenjang findings use `/staff/:id` with `manage_staff`. Imported staff
+employment-status and job-title findings remain external-source findings
+because no local canonical editor exists for those fields.
+
 ## Academic Analytics Expansion (2026-08)
 
 Academic analytics uses the canonical `student_subject_grades` rows joined to

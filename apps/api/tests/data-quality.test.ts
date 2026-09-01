@@ -166,6 +166,63 @@ describe("data quality analytics", () => {
     }
   }, 30000);
 
+  it("projects derived findings to controlled correction authorities", async () => {
+    const value = await setup("resolution");
+    try {
+      const response = await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution?page_size=100", { headers: { cookie: value.admin.cookie } }));
+      expect(response.status).toBe(200);
+      const body = await response.json() as any;
+      expect(body.summary.totalIssues).toBe(body.total);
+      const profile = body.items.find((item: any) => item.entityLabel === "Partial Student" && item.field === "gender");
+      expect(profile).toMatchObject({ entityType: "STUDENT", qualityState: "MISSING", resolutionClass: "EDITABLE_IN_OPERATOROS", resolutionTarget: { type: "STUDENT_PROFILE", capability: "edit_student" } });
+      const enrollment = body.items.find((item: any) => item.entityLabel === "No Class Student" && item.field === "class_assignment");
+      expect(enrollment.resolutionTarget).toMatchObject({ type: "STUDENT_ENROLLMENT", capability: "manage_enrollment" });
+      const external = body.items.find((item: any) => item.entityLabel === "Unmapped Staff" && item.field === "job_title");
+      expect(external).toMatchObject({ entityType: "STAFF", qualityState: "UNMAPPED", resolutionClass: "EXTERNAL_SOURCE_REQUIRED", resolutionTarget: null });
+      const filtered = await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution?quality_state=UNMAPPED&entity_type=STAFF&page_size=100", { headers: { cookie: value.admin.cookie } }));
+      const filteredBody = await filtered.json() as any;
+      expect(filteredBody.items.every((item: any) => item.entityType === "STAFF" && item.qualityState === "UNMAPPED")).toBe(true);
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
+  it("applies view and write authorization without leaking another entity scope", async () => {
+    const value = await setup("resolution-auth");
+    try {
+      const anonymous = await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution"));
+      expect(anonymous.status).toBe(401);
+      const staffView = await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution?page_size=100", { headers: { cookie: value.staff.cookie } }));
+      expect(staffView.status).toBe(200);
+      const staffBody = await staffView.json() as any;
+      expect(staffBody.items.every((item: any) => item.entityType === "STUDENT")).toBe(true);
+      expect(staffBody.items.filter((item: any) => item.resolutionClass === "EDITABLE_IN_OPERATOROS").every((item: any) => item.resolutionTarget === null)).toBe(true);
+      const deniedStaffScope = await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution?entity_type=STAFF", { headers: { cookie: value.staff.cookie } }));
+      expect(deniedStaffScope.status).toBe(403);
+      const before = value.database.client.query("SELECT COUNT(*) AS count FROM student_masters").get() as { count: number };
+      await value.app.handle(new Request("http://local/api/analytics/data-quality/resolution", { headers: { cookie: value.admin.cookie } }));
+      const after = value.database.client.query("SELECT COUNT(*) AS count FROM student_masters").get() as { count: number };
+      expect(after.count).toBe(before.count);
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
+  it("recomputes findings after the canonical student editor changes source data", async () => {
+    const value = await setup("resolution-disappearance");
+    try {
+      const student = value.database.client.query("SELECT id, full_name FROM student_masters WHERE full_name = 'Partial Student'").get() as { id: string; full_name: string };
+      const before = await value.app.handle(new Request(`http://local/api/analytics/data-quality/resolution?search=Partial%20Student&field=gender&page_size=100`, { headers: { cookie: value.admin.cookie } }));
+      expect((await before.json() as any).items).toHaveLength(1);
+      const update = await value.app.handle(new Request(`http://local/api/student-masters/${student.id}/profile`, { method: "PATCH", headers: { cookie: value.admin.cookie, "content-type": "application/json" }, body: JSON.stringify({ identity: { full_name: student.full_name, gender: "L" } }) }));
+      expect(update.status).toBe(200);
+      const after = await value.app.handle(new Request(`http://local/api/analytics/data-quality/resolution?search=Partial%20Student&field=gender&page_size=100`, { headers: { cookie: value.admin.cookie } }));
+      expect((await after.json() as any).items).toHaveLength(0);
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
   it("enforces server-side authorization and read-only behavior", async () => {
     const value = await setup("auth");
     try {
@@ -210,4 +267,3 @@ describe("data quality analytics", () => {
     }
   }, 30000);
 });
-

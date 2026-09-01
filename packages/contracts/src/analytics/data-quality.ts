@@ -96,9 +96,73 @@ export const DataQualityIssuesResponseSchema = Type.Object({
   items: Type.Array(DataQualityIssueSchema),
 });
 
+export const DataQualityEntityTypeSchema = Type.Union([
+  Type.Literal("STUDENT"),
+  Type.Literal("STAFF"),
+]);
+
+export const DataQualityStateSchema = Type.Union([
+  Type.Literal("MISSING"),
+  Type.Literal("UNKNOWN"),
+  Type.Literal("UNMAPPED"),
+]);
+
+export const DataQualityResolutionClassSchema = Type.Union([
+  Type.Literal("EDITABLE_IN_OPERATOROS"),
+  Type.Literal("VIEW_ONLY_IN_OPERATOROS"),
+  Type.Literal("EXTERNAL_SOURCE_REQUIRED"),
+  Type.Literal("UNSUPPORTED_CORRECTION"),
+]);
+
+export const DataQualityResolutionTargetSchema = Type.Object({
+  type: Type.Union([
+    Type.Literal("STUDENT_PROFILE"),
+    Type.Literal("STUDENT_ENROLLMENT"),
+    Type.Literal("STAFF_PROFILE"),
+  ]),
+  entityId: Type.String({ minLength: 1 }),
+  capability: Type.String({ minLength: 1 }),
+});
+
+export const DataQualityResolutionItemSchema = Type.Object({
+  issueKey: Type.String({ minLength: 1 }),
+  entityType: DataQualityEntityTypeSchema,
+  entityId: Type.String({ minLength: 1 }),
+  entityLabel: Type.String({ minLength: 1 }),
+  context: Type.String({ minLength: 1 }),
+  field: Type.String({ minLength: 1 }),
+  qualityState: DataQualityStateSchema,
+  qualityType: DataQualityIssueTypeSchema,
+  label: Type.String({ minLength: 1 }),
+  currentValue: Type.Union([Type.String(), Type.Null()]),
+  resolutionClass: DataQualityResolutionClassSchema,
+  resolutionNote: Type.String({ minLength: 1 }),
+  resolutionTarget: Type.Union([DataQualityResolutionTargetSchema, Type.Null()]),
+});
+
+export const DataQualityResolutionResponseSchema = Type.Object({
+  summary: Type.Object({
+    totalIssues: Type.Number({ minimum: 0 }),
+    editableIssues: Type.Number({ minimum: 0 }),
+    viewOnlyIssues: Type.Number({ minimum: 0 }),
+    externalIssues: Type.Number({ minimum: 0 }),
+    unsupportedIssues: Type.Number({ minimum: 0 }),
+  }),
+  page: Type.Number({ minimum: 1 }),
+  pageSize: Type.Number({ minimum: 1 }),
+  total: Type.Number({ minimum: 0 }),
+  items: Type.Array(DataQualityResolutionItemSchema),
+});
+
 export type DataQualityIssueType = Static<typeof DataQualityIssueTypeSchema>;
 export type DataQualityFieldMetric = Static<typeof DataQualityFieldMetricSchema>;
 export type StudentDataQualityResponse = Static<typeof StudentDataQualityResponseSchema>;
 export type StaffDataQualityResponse = Static<typeof StaffDataQualityResponseSchema>;
 export type DataQualityIssue = Static<typeof DataQualityIssueSchema>;
 export type DataQualityIssuesResponse = Static<typeof DataQualityIssuesResponseSchema>;
+export type DataQualityEntityType = Static<typeof DataQualityEntityTypeSchema>;
+export type DataQualityState = Static<typeof DataQualityStateSchema>;
+export type DataQualityResolutionClass = Static<typeof DataQualityResolutionClassSchema>;
+export type DataQualityResolutionTarget = Static<typeof DataQualityResolutionTargetSchema>;
+export type DataQualityResolutionItem = Static<typeof DataQualityResolutionItemSchema>;
+export type DataQualityResolutionResponse = Static<typeof DataQualityResolutionResponseSchema>;
