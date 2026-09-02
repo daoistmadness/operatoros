@@ -51,7 +51,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260901_s45",
+      "detection": "ledger head and immutable schema fingerprint equal 20260901_s46",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",

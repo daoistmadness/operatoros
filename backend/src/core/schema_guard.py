@@ -11,13 +11,7 @@ from sqlalchemy.engine import make_url
 
 from core.config import settings
 from core.database import engine, validate_student_linking_gate
-from core.schema_versions import (
-    BASELINE_SCHEMA_VERSION,
-    CURRENT_SCHEMA_VERSION,
-    LEGACY_SCHEMA_VERSION,
-    PREVIOUS_SCHEMA_VERSION,
-    S43_SCHEMA_VERSION,
-)
+from core.schema_authority import current_schema_version, schema_head_order
 
 LEDGER_TABLE = "operatoros_schema_migrations"
 CURRENT_SCHEMA_TABLES = {
@@ -78,13 +72,15 @@ def _validate_sqlite_file(path: Path) -> None:
             f"SELECT version, schema_fingerprint FROM {LEDGER_TABLE} "
             "ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
-        if row and row[0] in {PREVIOUS_SCHEMA_VERSION, S43_SCHEMA_VERSION}:
+        source_head = current_schema_version()
+        known_heads = schema_head_order()
+        if row and row[0] in known_heads[:-1]:
             raise DatabaseStartupError(
-                f"DATABASE_MIGRATION_REQUIRED: eligible {PREVIOUS_SCHEMA_VERSION} -> {CURRENT_SCHEMA_VERSION}"
+                f"DATABASE_MIGRATION_REQUIRED: eligible {row[0]} -> {source_head}"
             )
-        if not row or row[0] != CURRENT_SCHEMA_VERSION:
+        if not row or row[0] != source_head:
             raise DatabaseStartupError(
-                f"DATABASE_MIGRATION_REQUIRED: expected {CURRENT_SCHEMA_VERSION}"
+                f"DATABASE_MIGRATION_REQUIRED: expected {source_head}"
             )
         required_tables = {"student_import_sessions", "student_import_applied_actions"}
         if not required_tables.issubset(tables):

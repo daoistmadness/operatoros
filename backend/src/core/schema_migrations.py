@@ -19,9 +19,8 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 from core.database import Base
+from core.schema_authority import current_schema_version, schema_head_order
 from core.schema_guard import (
-    BASELINE_SCHEMA_VERSION,
-    CURRENT_SCHEMA_VERSION,
     LEDGER_TABLE,
 )
 
@@ -284,6 +283,7 @@ def adopt_current_sqlite_schema(
 
 def initialize_s42_baseline_sqlite_database(path: Path) -> str:
     """Create only the approved S4.2 baseline, atomically and without seed data."""
+    baseline_schema_version = schema_head_order()[4]
     if not path.is_absolute():
         raise RuntimeError("DATABASE_PATH_INVALID: path must be absolute")
     target = path.resolve(strict=False)
@@ -294,7 +294,7 @@ def initialize_s42_baseline_sqlite_database(path: Path) -> str:
                 row = connection.execute(
                     f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC LIMIT 1"
                 ).fetchone()
-                if row == (BASELINE_SCHEMA_VERSION,):
+                if row == (baseline_schema_version,):
                     return "MIGRATION_COMPLETE"
         raise RuntimeError("DATABASE_ALREADY_EXISTS")
     if not target.parent.exists() or not target.parent.is_dir():
@@ -379,7 +379,7 @@ def initialize_s42_baseline_sqlite_database(path: Path) -> str:
                 f"INSERT INTO {LEDGER_TABLE} "
                 "(version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (BASELINE_SCHEMA_VERSION, None, fingerprint,
+                (baseline_schema_version, None, fingerprint,
                  json.dumps(protected, sort_keys=True, separators=(",", ":")),
                  "FRESH_INSTALL", datetime.now(timezone.utc).isoformat()),
             )
@@ -416,28 +416,30 @@ def migrate_database_to_current(path: Path) -> str:
     from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
     from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
 
+    baseline_schema_version, s43_schema_version, s44_schema_version, s45_schema_version = schema_head_order()[4:8]
+    current_version = current_schema_version()
     target = path.resolve(strict=True)
     with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
         row = connection.execute(
             f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
         ).fetchone()
-    if row == (CURRENT_SCHEMA_VERSION,):
+    if row == (current_version,):
         return "MIGRATION_ALREADY_CURRENT"
-    if row == (BASELINE_SCHEMA_VERSION,):
+    if row == (baseline_schema_version,):
         migrate_attendance_followup_sqlite(target)
-        row = ("20260725_s43",)
-    if row == ("20260725_s43",):
+        row = (s43_schema_version,)
+    if row == (s43_schema_version,):
         migrate_academic_timeline_sqlite(target)
-        row = ("20260831_s44",)
-    if row == ("20260831_s44",):
+        row = (s44_schema_version,)
+    if row == (s44_schema_version,):
         migrate_attendance_calendar_sqlite(target)
-        row = ("20260901_s45",)
-    if row == ("20260901_s45",):
+        row = (s45_schema_version,)
+    if row == (s45_schema_version,):
         return migrate_attendance_submission_deadline_sqlite(target)
-    if row != (CURRENT_SCHEMA_VERSION,):
+    if row != (current_version,):
         actual = row[0] if row else "missing"
         raise RuntimeError(
-            f"UNSUPPORTED_SCHEMA: expected {BASELINE_SCHEMA_VERSION}, 20260725_s43, 20260831_s44, or 20260901_s45, found {actual}"
+            f"UNSUPPORTED_SCHEMA: expected a supported migration before {current_version}, found {actual}"
         )
     return "MIGRATION_ALREADY_CURRENT"
 
@@ -482,13 +484,14 @@ def _complete_model_schema(target: Path) -> None:
 
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
     """Create the S4.2 baseline, then run registered migrations to S4.6."""
+    current_version = current_schema_version()
     target = path.resolve(strict=False)
     if target.exists():
         with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
             row = connection.execute(
                 f"SELECT version FROM {LEDGER_TABLE} ORDER BY applied_at DESC, version DESC LIMIT 1"
             ).fetchone()
-        if row == (CURRENT_SCHEMA_VERSION,):
+        if row == (current_version,):
             return "MIGRATION_COMPLETE"
         raise RuntimeError("DATABASE_ALREADY_EXISTS")
     initialize_s42_baseline_sqlite_database(target)
@@ -498,7 +501,7 @@ def bootstrap_fresh_sqlite_database(path: Path) -> str:
         final_fingerprint = _schema_fingerprint(connection)
         connection.execute(
             f"UPDATE {LEDGER_TABLE} SET schema_fingerprint = ? WHERE version = ?",
-            (final_fingerprint, CURRENT_SCHEMA_VERSION),
+            (final_fingerprint, current_version),
         )
         connection.commit()
     return "MIGRATION_COMPLETE"

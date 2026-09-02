@@ -23,11 +23,8 @@ from pathlib import Path
 os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
 os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/operatoros_isolated_recovery.db")
 
-from core.schema_guard import (
-    CURRENT_SCHEMA_VERSION,
-    LEDGER_TABLE,
-    _validate_sqlite_file,
-)
+from core.schema_authority import current_schema_version
+from core.schema_guard import LEDGER_TABLE, _validate_sqlite_file
 from core.schema_migrations import (
     adopt_current_sqlite_schema,
     migrate_s38_to_s39_sqlite,
@@ -176,6 +173,7 @@ def run_operational_recovery(
     enforce_sha_validation: bool = True,
 ) -> RecoveryResult:
     """Execute operational database recovery cleanly, atomically, and with strict contract enforcement."""
+    source_head = current_schema_version()
     source_resolved = source_path.resolve(strict=True)
     target_resolved = target_path.resolve(strict=True)
 
@@ -343,7 +341,7 @@ def run_operational_recovery(
             actual_fp = _schema_fingerprint(conn)
             conn.execute(
                 f"UPDATE {LEDGER_TABLE} SET schema_fingerprint=? WHERE version=?",
-                (actual_fp, CURRENT_SCHEMA_VERSION),
+                (actual_fp, source_head),
             )
             conn.commit()
             conn.execute("PRAGMA journal_mode=DELETE")
@@ -410,7 +408,7 @@ def run_operational_recovery(
             extra={
                 "target_path": str(target_resolved),
                 "final_sha256": final_target_sha,
-                "schema_version": CURRENT_SCHEMA_VERSION,
+                "schema_version": source_head,
             },
         )
 
@@ -425,7 +423,7 @@ def run_operational_recovery(
             students_count=students_cnt,
             attendance_count=attendance_cnt,
             enrollments_count=enrollments_cnt,
-            schema_version=CURRENT_SCHEMA_VERSION,
+            schema_version=source_head,
         )
 
     except Exception:

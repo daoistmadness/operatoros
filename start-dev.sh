@@ -17,6 +17,7 @@ DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
 EXPECTED_PERSISTENT_DB=""
+CURRENT_SCHEMA_VERSION=""
 
 BACKEND_PORT_CONFIGURED=0
 FRONTEND_PORT_CONFIGURED=0
@@ -115,7 +116,7 @@ PY
 }
 
 prepare_local_environment() {
-  if ! DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR")"; then
+  if ! DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR" --expected-schema "$CURRENT_SCHEMA_VERSION")"; then
     fail_preflight "${DEV_DATABASE:-PERSISTENT_DEVELOPMENT_DATABASE_OPERATION_FAILED}" "Use make dev-db-status to inspect the persistent development database."
   fi
   [[ "$DEV_DATABASE" == "$EXPECTED_PERSISTENT_DB" ]] \
@@ -247,8 +248,6 @@ cleanup() {
       stop_group Frontend "$FRONTEND_PID"
       stop_group Backend "$BACKEND_PID"
     fi
-  elif [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 ]]; then
-    printf 'No OperatorOS services were started.\n'
   fi
   if [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 && "$FINALIZATION_STARTED" == 0 && -f "$SESSION_DIR/session.json" ]]; then
     FINALIZATION_STARTED=1
@@ -328,6 +327,9 @@ if ! OPERATOROS_DATA_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" 
   fail_preflight "${OPERATOROS_DATA_DIR:-DATA_DIR_RESOLVER_FAILED}" "Set OPERATOROS_DATA_DIR to an approved absolute directory."
 fi
 export OPERATOROS_DATA_DIR
+if ! CURRENT_SCHEMA_VERSION="$(bun "$PROJECT_ROOT/packages/db/src/schema-version-cli.ts" --format current)"; then
+  fail_preflight "SCHEMA_VERSION_RESOLVER_FAILED" "The canonical OperatorOS schema head could not be resolved."
+fi
 report_configuration_drift
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
   session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
@@ -409,7 +411,7 @@ fi
 "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
-printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    20260901_s46\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE"
+printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
 LAUNCHER_STATE=RUNNING
 while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
