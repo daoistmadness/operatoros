@@ -421,7 +421,7 @@ export default function ClassAttendanceEntry() {
                       <tr key={st.student_id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 text-xs text-slate-400 font-mono">{idx + 1}</td>
                         <td className="px-4 py-3 font-semibold text-slate-900">
-                          <div>{st.full_name}</div>
+                          <div>{st.student_name}</div>
                           {st.nisn && <div className="text-xs font-normal text-slate-400">NISN: {st.nisn}</div>}
                         </td>
                         <td className="px-4 py-3">
@@ -498,7 +498,7 @@ export default function ClassAttendanceEntry() {
                       <span className="text-xs text-slate-400 font-mono">{st.nisn ? `NISN: ${st.nisn}` : ""}</span>
                     </div>
 
-                    <div className="font-semibold text-slate-900 text-sm">{st.full_name}</div>
+                    <div className="font-semibold text-slate-900 text-sm">{st.student_name}</div>
 
                     {/* Status Button Grid */}
                     <div className="grid grid-cols-5 gap-1">
