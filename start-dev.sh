@@ -40,6 +40,7 @@ BACKEND_PID=""
 FRONTEND_PID=""
 SESSION_ID=""
 SESSION_TOKEN=""
+SESSION_INITIALIZED=0
 CLEANUP_STARTED=0
 LOCK_HELD=0
 FINALIZATION_STARTED=0
@@ -246,10 +247,10 @@ cleanup() {
       stop_group Frontend "$FRONTEND_PID"
       stop_group Backend "$BACKEND_PID"
     fi
-  elif [[ -n "$SESSION_ID" ]]; then
+  elif [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 ]]; then
     printf 'No OperatorOS services were started.\n'
   fi
-  if [[ -n "$SESSION_ID" && "$FINALIZATION_STARTED" == 0 ]]; then
+  if [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 && "$FINALIZATION_STARTED" == 0 && -f "$SESSION_DIR/session.json" ]]; then
     FINALIZATION_STARTED=1
     setsid "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status stopped || true
     setsid "$VENV/bin/python" "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
@@ -348,6 +349,7 @@ prepare_local_environment
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
 "$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --backend-runtime "$BACKEND_RUNTIME" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
+SESSION_INITIALIZED=1
 
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
   printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
