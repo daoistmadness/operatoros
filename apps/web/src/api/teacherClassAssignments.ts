@@ -56,7 +56,7 @@ export interface StudentRosterItem {
   student_id: number;
   student_master_id?: string | null;
   nisn?: string | null;
-  full_name: string;
+  student_name: string;
   attendance_id?: number | null;
   status?: string | null;
   check_in?: string | null;
