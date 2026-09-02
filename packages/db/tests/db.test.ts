@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
-import { assertDatabasePath, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, validateDatabase } from "../src/index";
+import { assertDatabasePath, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
 import * as schema from "../src/schema";
 
 describe("@operatoros/db", () => {
@@ -41,6 +41,11 @@ describe("@operatoros/db", () => {
 });
 
 describe("@operatoros/db existing-schema validation authority", () => {
+  it("derives the current schema head from migration order", () => {
+    expect(CURRENT_SCHEMA_VERSION).toBe(SCHEMA_MIGRATIONS.at(-1)!);
+    expect(SCHEMA_MIGRATIONS).toContain(SCHEMA_MIGRATIONS.at(-1)!);
+  });
+
   it("derives the required-table authority from the canonical schema exports", () => {
     const declared = Object.keys(schema).filter((key) => {
       const value = (schema as Record<string, unknown>)[key];

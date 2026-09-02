@@ -35,18 +35,18 @@ dev-db-path:
 	@bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format database
 
 dev-db-status:
-	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py status --repo "$(CURDIR)" --data-dir "$$DATA_DIR"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && backend/.venv/bin/python scripts/development_database.py status --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
 
 dev-sessions-status:
 	@backend/.venv/bin/python scripts/operatoros-dev-runtime.py status --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
 
 dev-db-reset:
 	@backend/.venv/bin/python scripts/operatoros-dev-runtime.py require-no-active-session --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
-	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --confirm "$(CONFIRM)"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && backend/.venv/bin/python scripts/development_database.py reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA" --confirm "$(CONFIRM)"
 
 dev-db-candidates:
-	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --data-dir "$$DATA_DIR"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && backend/.venv/bin/python scripts/development_database.py candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
 
 dev-db-adopt:
 	@test -n "$(SESSION)" || (echo "SESSION is required" >&2; exit 2)
-	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && backend/.venv/bin/python scripts/development_database.py adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)" --data-dir "$$DATA_DIR"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && backend/.venv/bin/python scripts/development_database.py adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"

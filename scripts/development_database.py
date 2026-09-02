@@ -29,9 +29,7 @@ from core.development_database import (  # noqa: E402
     common_directory as _common_directory,
     resolve_data_directory,
 )
-from core.schema_versions import CURRENT_SCHEMA_VERSION, SUPPORTED_SCHEMA_HEADS  # noqa: E402
-
-SCHEMA_HEAD = CURRENT_SCHEMA_VERSION
+from core.schema_authority import schema_head_order  # noqa: E402
 REQUIRED_BASE_TABLES = frozenset({
     "operatoros_schema_migrations",
     "students",
@@ -91,7 +89,7 @@ def database_layout(directory: Path) -> str:
     return "MISSING"
 
 
-def metadata(directory: Path, repository_id: str, common: Path) -> dict:
+def metadata(directory: Path, repository_id: str, common: Path, expected_schema: str) -> dict:
     return {
         "format_version": 1,
         "application": "OperatorOS",
@@ -99,7 +97,7 @@ def metadata(directory: Path, repository_id: str, common: Path) -> dict:
         "git_common_directory_hash": hashlib.sha256(str(common).encode()).hexdigest(),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "database_relative_filename": DATABASE_NAME,
-        "schema_expectation": SCHEMA_HEAD,
+        "schema_expectation": expected_schema,
         "persistence_classification": "PERSISTENT_LOCAL_DEVELOPMENT_DATABASE",
     }
 
@@ -114,7 +112,7 @@ def dotenv_defines_database_url(path: Path) -> bool:
     return any(assignment.match(line.strip()) for line in lines if line.strip() and not line.lstrip().startswith("#"))
 
 
-def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
+def prepare(repo: Path, override: str | None = None, *, expected_schema: str) -> tuple[Path, Path]:
     directory, identifier, common = data_directory(repo, override)
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(directory, 0o700)
@@ -122,14 +120,14 @@ def prepare(repo: Path, override: str | None = None) -> tuple[Path, Path]:
     if not metadata_path.exists():
         fd, temporary = tempfile.mkstemp(prefix=".database.", dir=directory)
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            json.dump(metadata(directory, identifier, common), handle, indent=2, sort_keys=True)
+            json.dump(metadata(directory, identifier, common, expected_schema), handle, indent=2, sort_keys=True)
             handle.write("\n")
         os.chmod(temporary, 0o600)
         os.replace(temporary, metadata_path)
     return directory, directory / DATABASE_NAME
 
 
-def inspect(database: Path) -> dict:
+def inspect(database: Path, *, expected_schema: str | None = None, known_heads: tuple[str, ...] | None = None) -> dict:
     kind = entry_kind(database)
     if kind == "missing":
         return {"exists": False, "regular_file": False, "schema_head": None, "ledger": "absent", "integrity": "absent", "foreign_key_violations": 0, "schema_recognized": False, "schema_checksum_valid": False, "administrator_configured": False, "users_count": 0, "file_size": 0}
@@ -138,6 +136,7 @@ def inspect(database: Path) -> dict:
     # Read-only mode still observes a live SQLite WAL during managed startup;
     # immutable mode would report stale pre-provisioning state.
     uri = f"file:{database.as_posix()}?mode=ro"
+    supported_heads = known_heads if known_heads is not None else schema_head_order()
     try:
         with sqlite3.connect(uri, uri=True) as connection:
             ledger_rows = connection.execute("SELECT version, schema_fingerprint FROM operatoros_schema_migrations ORDER BY applied_at ASC, version ASC").fetchall()
@@ -154,7 +153,7 @@ def inspect(database: Path) -> dict:
             integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
             foreign_key_violations = len(connection.execute("PRAGMA foreign_key_check").fetchall())
             schema_head = head[0] if head else None
-            ledger_valid = bool(ledger_rows) and all(row[0] in SUPPORTED_SCHEMA_HEADS for row in ledger_rows) and schema_head in SUPPORTED_SCHEMA_HEADS
+            ledger_valid = bool(ledger_rows) and all(row[0] in supported_heads for row in ledger_rows) and schema_head in supported_heads
             return {
                 "exists": True,
                 "regular_file": True,
@@ -163,8 +162,8 @@ def inspect(database: Path) -> dict:
                 "integrity": integrity,
                 "quick_check": connection.execute("PRAGMA quick_check").fetchone()[0],
                 "foreign_key_violations": foreign_key_violations,
-                "schema_recognized": schema_head in SUPPORTED_SCHEMA_HEADS and REQUIRED_BASE_TABLES <= tables,
-                "schema_checksum_valid": schema_head == SCHEMA_HEAD and ledger_valid and actual_fingerprint == head[1],
+                "schema_recognized": schema_head in supported_heads and REQUIRED_BASE_TABLES <= tables,
+                "schema_checksum_valid": expected_schema is not None and schema_head == expected_schema and ledger_valid and actual_fingerprint == head[1],
                 "administrator_configured": bool(users),
                 "users_count": users_count,
                 "file_size": database.stat().st_size,
@@ -173,29 +172,34 @@ def inspect(database: Path) -> dict:
         return {"exists": True, "regular_file": True, "schema_head": None, "ledger": "invalid", "integrity": "unreadable", "foreign_key_violations": 0, "schema_recognized": False, "schema_checksum_valid": False, "administrator_configured": False, "users_count": 0, "file_size": database.stat().st_size}
 
 
-def compatibility(layout: str, state: dict) -> str:
+def compatibility(layout: str, state: dict, expected_schema: str | None = None, known_heads: tuple[str, ...] | None = None) -> str:
+    supported_heads = known_heads if known_heads is not None else schema_head_order()
+    source_head = expected_schema if expected_schema is not None else supported_heads[-1]
+    if source_head not in supported_heads:
+        return "INVALID_SCHEMA_STATE"
     if layout == "MISSING":
         return "MISSING"
     if layout == "LEGACY":
-        return "NEEDS_FORWARD_MIGRATION" if state.get("integrity") == "ok" and state.get("schema_recognized") else "INVALID"
-    if layout != "CANONICAL" or state.get("integrity") != "ok" or state.get("ledger") != "valid":
-        return "INVALID"
-    head = state.get("schema_head")
-    if head == SCHEMA_HEAD:
-        return "COMPATIBLE" if state.get("schema_checksum_valid") else "INVALID"
-    if head in SUPPORTED_SCHEMA_HEADS:
+        if state.get("integrity") != "ok" or not state.get("schema_recognized"):
+            return "INVALID_SCHEMA_STATE"
+        head = state.get("schema_head")
+        if head in supported_heads and supported_heads.index(head) > supported_heads.index(source_head):
+            return "DATABASE_AHEAD_OF_SOURCE"
         return "NEEDS_FORWARD_MIGRATION"
-    if isinstance(head, str):
-        match = re.fullmatch(r"(\d{8})_s(\d+)", head)
-        current_match = re.fullmatch(r"(\d{8})_s(\d+)", SCHEMA_HEAD)
-        if match and current_match:
-            version = (int(match.group(1)), int(match.group(2)))
-            current_version = (int(current_match.group(1)), int(current_match.group(2)))
-            return "DATABASE_AHEAD_OF_SOURCE" if version > current_version else "INVALID"
-    return "INVALID"
+    if layout != "CANONICAL" or state.get("integrity") != "ok" or state.get("ledger") != "valid":
+        return "INVALID_SCHEMA_STATE"
+    head = state.get("schema_head")
+    if head == source_head:
+        return "COMPATIBLE" if state.get("schema_checksum_valid") else "INVALID_SCHEMA_STATE"
+    if head in supported_heads:
+        if supported_heads.index(head) < supported_heads.index(source_head):
+            return "NEEDS_FORWARD_MIGRATION"
+        if supported_heads.index(head) > supported_heads.index(source_head):
+            return "DATABASE_AHEAD_OF_SOURCE"
+    return "INVALID_SCHEMA_STATE"
 
 
-def manifest_consistency(directory: Path) -> str:
+def manifest_consistency(directory: Path, expected_schema: str) -> str:
     path = directory / "database.json"
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -203,7 +207,7 @@ def manifest_consistency(directory: Path) -> str:
         return "MISSING"
     except (OSError, json.JSONDecodeError):
         return "INVALID"
-    return "CURRENT" if value.get("schema_expectation") == SCHEMA_HEAD else "STALE"
+    return "CURRENT" if value.get("schema_expectation") == expected_schema else "STALE"
 
 
 def table_counts(connection: sqlite3.Connection) -> dict[str, int]:
@@ -220,7 +224,7 @@ def remove_sidecars(database: Path) -> None:
         Path(f"{database}{suffix}").unlink(missing_ok=True)
 
 
-def migrate_legacy_database(directory: Path) -> bool:
+def migrate_legacy_database(directory: Path, expected_schema: str, known_heads: tuple[str, ...] | None = None) -> bool:
     legacy = directory / LEGACY_DATABASE_NAME
     database = directory / DATABASE_NAME
     layout = database_layout(directory)
@@ -243,7 +247,7 @@ def migrate_legacy_database(directory: Path) -> bool:
         if sidecar.is_symlink() or (sidecar.exists() and not sidecar.is_file()):
             fail("DEVELOPMENT_DATABASE_WAL_MIGRATION_UNSAFE")
 
-    source_state = inspect(legacy)
+    source_state = inspect(legacy, expected_schema=expected_schema, known_heads=known_heads)
     if source_state["integrity"] != "ok" or source_state["foreign_key_violations"]:
         fail("DEVELOPMENT_DATABASE_INTEGRITY_FAILURE")
     if not source_state["schema_recognized"]:
@@ -270,7 +274,7 @@ def migrate_legacy_database(directory: Path) -> bool:
             fail("DEVELOPMENT_DATABASE_BUSY")
 
         source_counts = table_counts(source_connection)
-        locked_state = inspect(legacy)
+        locked_state = inspect(legacy, expected_schema=expected_schema, known_heads=known_heads)
         if locked_state["integrity"] != "ok" or locked_state["foreign_key_violations"]:
             fail("DEVELOPMENT_DATABASE_INTEGRITY_FAILURE")
         if locked_state["schema_head"] != source_state["schema_head"]:
@@ -283,7 +287,7 @@ def migrate_legacy_database(directory: Path) -> bool:
             source_reader.backup(destination_connection, sleep=0)
         os.chmod(temporary, 0o600)
 
-        if locked_state["schema_head"] != SCHEMA_HEAD:
+        if locked_state["schema_head"] != expected_schema:
             previous_database_url = os.environ.get("DATABASE_URL")
             os.environ["DATABASE_URL"] = f"sqlite:///{temporary.resolve().as_posix()}"
             os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
@@ -299,8 +303,8 @@ def migrate_legacy_database(directory: Path) -> bool:
                 else:
                     os.environ["DATABASE_URL"] = previous_database_url
 
-        destination_state = inspect(temporary)
-        if destination_state["schema_head"] != SCHEMA_HEAD or destination_state["ledger"] != "valid" or destination_state["integrity"] != "ok" or destination_state["foreign_key_violations"] or not destination_state["schema_checksum_valid"]:
+        destination_state = inspect(temporary, expected_schema=expected_schema, known_heads=known_heads)
+        if destination_state["schema_head"] != expected_schema or destination_state["ledger"] != "valid" or destination_state["integrity"] != "ok" or destination_state["foreign_key_violations"] or not destination_state["schema_checksum_valid"]:
             fail("DEVELOPMENT_DATABASE_MIGRATION_VALIDATION_FAILED")
         with sqlite3.connect(f"file:{temporary.as_posix()}?mode=ro", uri=True) as destination_connection:
             destination_counts = table_counts(destination_connection)
@@ -353,10 +357,10 @@ def migrate_legacy_database(directory: Path) -> bool:
     return True
 
 
-def initialize(database: Path) -> None:
+def initialize(database: Path, expected_schema: str, known_heads: tuple[str, ...] | None = None) -> None:
     if database.exists():
-        state = inspect(database)
-        if state["schema_head"] != SCHEMA_HEAD or state["ledger"] != "valid" or state["integrity"] != "ok" or not state["schema_checksum_valid"]:
+        state = inspect(database, expected_schema=expected_schema, known_heads=known_heads)
+        if state["schema_head"] != expected_schema or state["ledger"] != "valid" or state["integrity"] != "ok" or not state["schema_checksum_valid"]:
             fail("PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE")
         return
     # Migration modules import the application database layer.  Point that
@@ -365,8 +369,8 @@ def initialize(database: Path) -> None:
     os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
     from core.schema_migrations import bootstrap_fresh_sqlite_database
     bootstrap_fresh_sqlite_database(database)
-    state = inspect(database)
-    if state["schema_head"] != SCHEMA_HEAD or state["ledger"] != "valid" or state["integrity"] != "ok" or state["administrator_configured"]:
+    state = inspect(database, expected_schema=expected_schema, known_heads=known_heads)
+    if state["schema_head"] != expected_schema or state["ledger"] != "valid" or state["integrity"] != "ok" or state["administrator_configured"]:
         fail("PERSISTENT_DEVELOPMENT_DATABASE_INITIALIZATION_FAILED")
 
 
@@ -383,34 +387,34 @@ def session_source(runtime: Path, session: str) -> Path:
     return source
 
 
-def candidates(runtime: Path) -> list[dict]:
+def candidates(runtime: Path, expected_schema: str, known_heads: tuple[str, ...] | None = None) -> list[dict]:
     values = []
     for marker in (runtime / "sessions").glob("*/ownership.json"):
         try:
             ownership = json.loads(marker.read_text(encoding="utf-8"))
             session = ownership["session_id"]
             source = session_source(runtime, session)
-            state = inspect(source)
-            values.append({"session_id": session, "database_size": state["file_size"], "schema_head": state["schema_head"], "administrator_present": state["administrator_configured"], "compatibility": "compatible" if state["schema_head"] == SCHEMA_HEAD and state["ledger"] == "valid" and state["integrity"] == "ok" else "incompatible"})
+            state = inspect(source, expected_schema=expected_schema, known_heads=known_heads)
+            values.append({"session_id": session, "database_size": state["file_size"], "schema_head": state["schema_head"], "administrator_present": state["administrator_configured"], "compatibility": "compatible" if state["schema_head"] == expected_schema and state["ledger"] == "valid" and state["integrity"] == "ok" else "incompatible"})
         except (OSError, KeyError, ValueError, json.JSONDecodeError, SystemExit):
             continue
     return values
 
 
-def adopt(repo: Path, runtime: Path, session: str, override: str | None) -> Path:
-    directory, destination = prepare(repo, override)
+def adopt(repo: Path, runtime: Path, session: str, override: str | None, expected_schema: str, known_heads: tuple[str, ...] | None = None) -> Path:
+    directory, destination = prepare(repo, override, expected_schema=expected_schema)
     if database_layout(directory) != "MISSING":
         fail("PERSISTENT_DESTINATION_ALREADY_EXISTS")
     source = session_source(runtime, session)
-    source_state = inspect(source)
-    if source_state["schema_head"] != SCHEMA_HEAD or source_state["ledger"] != "valid" or source_state["integrity"] != "ok":
+    source_state = inspect(source, expected_schema=expected_schema, known_heads=known_heads)
+    if source_state["schema_head"] != expected_schema or source_state["ledger"] != "valid" or source_state["integrity"] != "ok":
         fail("SESSION_DATABASE_INCOMPATIBLE")
     temporary = destination.with_name(f".{destination.name}.adopting")
     with sqlite3.connect(f"file:{source.as_posix()}?mode=ro&immutable=1", uri=True) as source_connection:
         with sqlite3.connect(temporary) as destination_connection:
             source_connection.backup(destination_connection)
-    adopted = inspect(temporary)
-    if adopted["schema_head"] != SCHEMA_HEAD or adopted["ledger"] != "valid" or adopted["integrity"] != "ok":
+    adopted = inspect(temporary, expected_schema=expected_schema, known_heads=known_heads)
+    if adopted["schema_head"] != expected_schema or adopted["ledger"] != "valid" or adopted["integrity"] != "ok":
         temporary.unlink(missing_ok=True); fail("SESSION_ADOPTION_VALIDATION_FAILED")
     os.replace(temporary, destination)
     return destination
@@ -423,29 +427,33 @@ def command(args: argparse.Namespace) -> int:
         directory, _, _ = data_directory(repo, override)
         print(directory / DATABASE_NAME)
         return 0
+    expected_schema = args.expected_schema
+    known_heads = schema_head_order()
+    if expected_schema != known_heads[-1]:
+        fail("SCHEMA_VERSION_EXPECTATION_MISMATCH")
     if args.command == "status":
         directory, _, _ = data_directory(repo, override)
         layout = database_layout(directory)
-        state = inspect(directory / DATABASE_NAME) if layout == "CANONICAL" else (
-            inspect(directory / LEGACY_DATABASE_NAME) if layout == "LEGACY" else {"exists": False, "schema_head": None}
+        state = inspect(directory / DATABASE_NAME, expected_schema=expected_schema, known_heads=known_heads) if layout == "CANONICAL" else (
+            inspect(directory / LEGACY_DATABASE_NAME, expected_schema=expected_schema, known_heads=known_heads) if layout == "LEGACY" else {"exists": False, "schema_head": None}
         )
         state.update(
             path=str(directory / DATABASE_NAME),
             legacy_path=str(directory / LEGACY_DATABASE_NAME),
             layout=layout,
             migration_required=layout == "LEGACY",
-            expected_schema_head=SCHEMA_HEAD,
-            compatibility=compatibility(layout, state),
-            manifest_consistency=manifest_consistency(directory),
+            expected_schema_head=expected_schema,
+            compatibility=compatibility(layout, state, expected_schema, known_heads),
+            manifest_consistency=manifest_consistency(directory, expected_schema),
             protected=False,
             persistence_classification="PERSISTENT_LOCAL_DEVELOPMENT_DATABASE",
         )
         print(json.dumps(state, sort_keys=True))
         return 0
-    directory, database = prepare(repo, override)
+    directory, database = prepare(repo, override, expected_schema=expected_schema)
     if args.command == "ensure":
-        migrate_legacy_database(directory)
-        initialize(database)
+        migrate_legacy_database(directory, expected_schema, known_heads)
+        initialize(database, expected_schema, known_heads)
         print(database)
     elif args.command == "reset":
         if args.confirm != "RESET": fail("DEVELOPMENT_DATABASE_RESET_CONFIRMATION_REQUIRED")
@@ -454,12 +462,12 @@ def command(args: argparse.Namespace) -> int:
         for suffix in ("", "-wal", "-shm", "-journal"):
             candidate = Path(str(database) + suffix)
             if candidate.exists(): candidate.unlink()
-        initialize(database)
+        initialize(database, expected_schema, known_heads)
         print(database)
     elif args.command == "candidates":
-        print(json.dumps(candidates(Path(args.runtime).resolve()), sort_keys=True))
+        print(json.dumps(candidates(Path(args.runtime).resolve(), expected_schema, known_heads), sort_keys=True))
     elif args.command == "adopt":
-        print(adopt(Path(args.repo), Path(args.runtime).resolve(), args.session, getattr(args, "data_dir", None)))
+        print(adopt(Path(args.repo), Path(args.runtime).resolve(), args.session, getattr(args, "data_dir", None), expected_schema, known_heads))
     return 0
 
 
@@ -473,10 +481,11 @@ def parser() -> argparse.ArgumentParser:
     commands = root.add_subparsers(dest="command", required=True)
     for name in ("path", "ensure", "status", "reset"):
         item = commands.add_parser(name); item.add_argument("--repo", required=True); item.add_argument("--data-dir")
+        if name != "path": item.add_argument("--expected-schema", required=True)
         if name == "reset": item.add_argument("--confirm", default="")
         item.set_defaults(func=command)
-    candidate = commands.add_parser("candidates"); candidate.add_argument("--repo", required=True); candidate.add_argument("--runtime", required=True); candidate.add_argument("--data-dir"); candidate.set_defaults(func=command)
-    adopt_command = commands.add_parser("adopt"); adopt_command.add_argument("--repo", required=True); adopt_command.add_argument("--runtime", required=True); adopt_command.add_argument("--session", required=True); adopt_command.add_argument("--data-dir"); adopt_command.set_defaults(func=command)
+    candidate = commands.add_parser("candidates"); candidate.add_argument("--repo", required=True); candidate.add_argument("--runtime", required=True); candidate.add_argument("--data-dir"); candidate.add_argument("--expected-schema", required=True); candidate.set_defaults(func=command)
+    adopt_command = commands.add_parser("adopt"); adopt_command.add_argument("--repo", required=True); adopt_command.add_argument("--runtime", required=True); adopt_command.add_argument("--session", required=True); adopt_command.add_argument("--data-dir"); adopt_command.add_argument("--expected-schema", required=True); adopt_command.set_defaults(func=command)
     dotenv = commands.add_parser("dotenv-database-url"); dotenv.add_argument("--env-file", required=True); dotenv.set_defaults(func=dotenv_database_url_command)
     return root
 

@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy.dialects.sqlite import dialect as sqlite_dialect
 
 from core.database import Base
+from core.schema_authority import current_schema_version
 from core.schema_guard import LEDGER_TABLE
 from core.schema_migrations import MODEL_MODULES
 
@@ -263,6 +264,8 @@ def validate_migration_manifest(manifest: dict[str, Any]) -> list[tuple[str, str
 
 def load_migration_manifest(path: Path) -> dict[str, Any]:
     manifest = json.loads(path.read_text(encoding="utf-8"))
+    if manifest.get("current_schema") != current_schema_version():
+        raise RuntimeError("MIGRATION_HEAD_MISMATCH")
     validate_migration_manifest(manifest)
     return manifest
 
