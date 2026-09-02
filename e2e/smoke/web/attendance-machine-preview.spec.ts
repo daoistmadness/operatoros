@@ -29,7 +29,8 @@ test("@attendance @machine-preview @release previews scan evidence against calen
   await expect(page.getByRole("heading", { name: "Workbook recognized" })).toBeVisible();
   await expect(page.getByText("E2E Ada", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("E2E Unmapped", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: "Review student mapping", exact: true })).toHaveAttribute("href", "/students");
+  const previewTable = page.getByRole("table", { name: "Machine attendance preview reconciliation, canonical context, and resolution" });
+  await expect(previewTable.getByRole("row").filter({ hasText: "E2E Unmapped" }).getByRole("link", { name: "Review student mapping", exact: true })).toHaveAttribute("href", "/students");
   await expect(page.getByText("No scan on expected date")).toBeVisible();
   await expect(page.getByText("No scan on non-school date")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Create 1 attendance records" })).toBeVisible();
@@ -40,4 +41,42 @@ test("@attendance @machine-preview @release previews scan evidence against calen
   await expect(page.getByRole("status")).toContainText("Import applied: 1 created");
   const attendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-10")).json()) as { items: Array<{ student_name: string; effective_status: string }> });
   expect(attendance.items.find((item) => item.student_name === "E2E Ada")?.effective_status).toBe("on-time");
+});
+
+test("@attendance @machine-onboarding @release resolves existing and new machine identities explicitly", async ({ page }) => {
+  await login(page);
+  const beforeAttendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-08")).json()) as { items: unknown[] });
+  await page.goto("/attendance/machine-import");
+  await page.locator("#machine-preview-file").setInputFiles({ name: "machine-onboarding.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });
+  const firstPreview = page.waitForResponse((response) => response.url().includes("/api/attendance/machine-import/preview") && response.status() === 200);
+  await page.getByRole("button", { name: "Preview workbook" }).click();
+  await firstPreview;
+  await expect(page.getByRole("heading", { name: "Identity mapping review" })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "999999" }).last()).toContainText("E2E Unmapped");
+  await expect(page.getByRole("row").filter({ hasText: "999998" }).last()).toContainText("E2E New Machine Student");
+
+  const identityTable = page.getByRole("table", { name: "Unique unmatched attendance Device IDs" });
+  await identityTable.getByRole("row").filter({ hasText: "999999" }).getByRole("button", { name: "Link existing student" }).click();
+  await expect(page.getByRole("dialog")).toContainText("999999");
+  await page.getByLabel("Search active student").fill("E2E Link Target");
+  await expect(page.getByRole("option", { name: /E2E Link Target/ })).toBeVisible();
+  await page.getByRole("option", { name: /E2E Link Target/ }).click();
+  const linkResponse = page.waitForResponse((response) => response.url().includes("/api/attendance/machine-import/device-identities/link"));
+  await page.getByRole("button", { name: "Link Device ID" }).click();
+  const linked = await linkResponse;
+  expect(linked.status()).toBe(201);
+  await expect(identityTable.getByRole("row").filter({ hasText: "999999" })).toHaveCount(0);
+
+  await expect(page.getByRole("row").filter({ hasText: "999998" }).last()).toContainText("E2E New Machine Student");
+  await identityTable.getByRole("row").filter({ hasText: "999998" }).getByRole("button", { name: "Create student" }).click();
+  await expect(page.getByRole("dialog")).toContainText("999998");
+  await page.getByRole("checkbox").check();
+  const createResponse = page.waitForResponse((response) => response.url().includes("/api/student-masters") && response.request().method() === "POST" && response.status() === 201);
+  await page.getByRole("button", { name: "Create student and link Device ID" }).click();
+  await createResponse;
+  await expect(page.getByRole("heading", { name: "Identity mapping review" })).toHaveCount(0);
+  const afterAttendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-08")).json()) as { items: unknown[] });
+  const beforeRecorded = beforeAttendance.items.filter((item) => (item as { attendance_id: number | null }).attendance_id !== null).length;
+  const afterRecorded = afterAttendance.items.filter((item) => (item as { attendance_id: number | null }).attendance_id !== null).length;
+  expect(afterRecorded).toBe(beforeRecorded);
 });

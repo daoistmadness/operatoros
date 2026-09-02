@@ -15,7 +15,7 @@ import {
 } from "@operatoros/excel";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
-import { actor } from "./core";
+import { actor, legacyName } from "./core";
 import { deriveAttendanceStatus, insertCanonicalAttendanceRecord } from "./attendance-rules";
 import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 import { schoolLocalDate } from "./attendance-submission-deadline";
@@ -33,6 +33,7 @@ type ProjectedRow = {
 type Projection = {
   items: ProjectedRow[];
   summary: MachineImportPreviewResponse["summary"];
+  identityReview: MachineImportPreviewResponse["identityReview"];
   fileFingerprint: string;
   previewDigest: string;
 };
@@ -40,6 +41,8 @@ type Projection = {
 const MAX_MACHINE_WORKBOOK_BYTES = 10 * 1024 * 1024;
 const PAGE_SIZE = 50;
 const CONFIRMATION = "IMPORT_MACHINE_ATTENDANCE";
+const DEVICE_LINK_CONFIRMATION = "LINK_ATTENDANCE_DEVICE_ID";
+const DEVICE_SOURCE = "attendance_machine";
 const CONFLICTS = new Set<MachineImportApplyClassification>(["CONFLICT_EXISTING_ATTENDANCE", "CONFLICT_EXISTING_OVERRIDE"]);
 type ResolutionTargetType = NonNullable<PreviewItem["resolution"]["target"]>["type"];
 
@@ -59,6 +62,10 @@ function fail(set: any, status: number, detail: string | Record<string, unknown>
 function positive(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function validDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime());
 }
 
 function unknownExpectation() {
@@ -315,7 +322,19 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
   const conflicts = items.filter((value) => CONFLICTS.has(value.response.applyClassification)).length;
   const blocked = items.filter((value) => value.response.applyClassification.startsWith("BLOCKED_")).length;
   const summary = { matchedStudents: matched.size, unmappedStudents: unmapped.size, ambiguousStudents: ambiguous.size, invalidIdentifiers, scanFacts, multipleScans, expectedNoScan, notExpectedNoScan, expectationUnknown, eligibleCreates, alreadyCanonical, conflicts, blocked, blockedByClassification };
-  return { items, summary, fileFingerprint, previewDigest: digestFor(fileFingerprint, academicYearId, jenjangId, evaluatedOn, items) };
+  const identityReview = [...items.reduce((review, value) => {
+    const identifier = value.response.matchingState === "UNMAPPED" ? value.source.machineStudentIdentifier : null;
+    if (!identifier) return review;
+    const current = review.get(identifier);
+    review.set(identifier, {
+      deviceIdentifier: identifier,
+      machineName: current?.machineName ?? value.source.sourceStudentName,
+      effectiveFrom: current?.effectiveFrom ?? value.source.date,
+      occurrences: (current?.occurrences ?? 0) + 1,
+    });
+    return review;
+  }, new Map<string, MachineImportPreviewResponse["identityReview"][number]>()).values()].sort((left, right) => left.deviceIdentifier.localeCompare(right.deviceIdentifier));
+  return { items, summary, identityReview, fileFingerprint, previewDigest: digestFor(fileFingerprint, academicYearId, jenjangId, evaluatedOn, items) };
 }
 
 function toBuffer(value: ArrayBuffer | Uint8Array): Buffer {
@@ -355,7 +374,84 @@ function stale(set: any): { detail: Record<string, string> } {
   return { detail: { code: "PREVIEW_STALE", message: "Attendance data changed after this preview. Review the updated preview before importing." } };
 }
 
+function deviceIdentityLinkRoute(app: any, context: AuthContext): void {
+  app.post("/api/attendance/machine-import/device-identities/link", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_device_identity" });
+    if (!user) return { detail: "Insufficient permissions" };
+    if (body.confirmation !== DEVICE_LINK_CONFIRMATION) return fail(set, 400, "Explicit Device ID link confirmation is required.");
+    const deviceIdentifier = body.device_identifier.trim();
+    if (!/^\d+$/.test(deviceIdentifier)) return fail(set, 400, "Attendance Device ID must contain digits only.");
+    const legacyStudentId = Number(deviceIdentifier);
+    if (!Number.isSafeInteger(legacyStudentId) || legacyStudentId < 1) return fail(set, 400, "Attendance Device ID is outside the supported numeric range.");
+    const effectiveFrom = String(body.effective_from);
+    if (!validDate(effectiveFrom)) return fail(set, 400, "The Device ID effective date must be a valid date.");
+    const client = context.database.client;
+    const student = row(context, "SELECT id, full_name, student_status FROM student_masters WHERE id = ?", [body.student_master_id]);
+    if (!student) return fail(set, 404, "Student not found.");
+    if (String(student.student_status) !== "active") return fail(set, 409, "Only an active student can receive an attendance Device ID.");
+    const existingMappings = rows(context, "SELECT id, student_master_id, device_identifier, device_source, effective_from, effective_to, is_active FROM student_device_identities WHERE device_identifier = ? AND is_active = 1 ORDER BY id", [deviceIdentifier]);
+    if (existingMappings.length > 1) return fail(set, 409, { code: "DEVICE_IDENTITY_AMBIGUOUS", message: "This Device ID has multiple active canonical mappings." });
+    const existing = existingMappings[0] ?? null;
+    if (existing) {
+      if (String(existing.student_master_id) === String(student.id)) return { status: "NOOP_ALREADY_LINKED", device_identity: existing, student: { id: String(student.id), full_name: String(student.full_name) } };
+      return fail(set, 409, { code: "DEVICE_IDENTITY_ALREADY_LINKED", message: "This Device ID is already linked to another active student." });
+    }
+    if (row(context, "SELECT id FROM student_device_identities WHERE student_master_id = ? AND device_source = ? AND is_active = 1", [student.id, DEVICE_SOURCE])) return fail(set, 409, "This student already has an active attendance Device ID. Use Student Management to replace it.");
+    try {
+      let identityId = 0;
+      inTransaction(client, () => {
+        const conflictingEnrollment = row(context, "SELECT id FROM student_enrollments WHERE student_master_id = ? AND student_id IS NOT NULL AND student_id != ? LIMIT 1", [student.id, legacyStudentId]);
+        if (conflictingEnrollment) throw new Error("ENROLLMENT_LEGACY_LINK_CONFLICT");
+        if (!row(context, "SELECT id FROM students WHERE id = ?", [legacyStudentId])) client.run("INSERT INTO students (id, name) VALUES (?, ?)", [legacyStudentId, legacyName(client, legacyStudentId, String(student.full_name))]);
+        const inserted = client.run("INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active, created_by) VALUES (?, ?, ?, ?, ?, 1, ?)", [student.id, legacyStudentId, deviceIdentifier, DEVICE_SOURCE, effectiveFrom, user.username]);
+        identityId = Number(inserted.lastInsertRowid);
+        client.run("UPDATE student_enrollments SET student_id = ? WHERE student_master_id = ? AND student_id IS NULL", [legacyStudentId, student.id]);
+        client.run("INSERT INTO student_master_change_history (student_master_id, action, field_name, new_value, source, changed_by) VALUES (?, 'device_identity_added', 'device_identifier', ?, 'machine_import_onboarding', ?)", [student.id, deviceIdentifier, user.username]);
+      });
+      set.status = 201;
+      return { status: "LINKED", device_identity: row(context, "SELECT id, device_identifier, device_source, effective_from, effective_to, is_active FROM student_device_identities WHERE id = ?", [identityId]), student: { id: String(student.id), full_name: String(student.full_name) } };
+    } catch (error) {
+      if (error instanceof Error && error.message === "ENROLLMENT_LEGACY_LINK_CONFLICT") return fail(set, 409, "The student has an existing canonical enrollment with a different legacy identity.");
+      return fail(set, 409, { code: "DEVICE_IDENTITY_ALREADY_LINKED", message: "This Device ID link changed before it could be saved." });
+    }
+  }, {
+    body: t.Object({ device_identifier: t.String({ minLength: 1, maxLength: 255 }), student_master_id: t.String({ minLength: 1 }), effective_from: t.String({ minLength: 1 }), confirmation: t.String() }),
+  });
+}
+
+function studentSearchRoute(app: any, context: AuthContext): void {
+  app.get("/api/attendance/machine-import/student-search", ({ query, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "view_student" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const academicYearId = positive(query.academic_year_id);
+    const jenjangId = positive(query.jenjang_id);
+    if (!academicYearId || !jenjangId) return fail(set, 400, "Academic year and jenjang are required.");
+    const search = String(query.search ?? "").trim().toLowerCase();
+    const params: unknown[] = [academicYearId, jenjangId, academicYearId, jenjangId];
+    const searchSql = search ? "AND (lower(m.full_name) LIKE ? OR lower(COALESCE(m.nipd, '')) LIKE ? OR lower(COALESCE(m.nisn, '')) LIKE ? OR EXISTS (SELECT 1 FROM student_device_identities sd WHERE sd.student_master_id = m.id AND sd.is_active = 1 AND lower(sd.device_identifier) LIKE ?))" : "";
+    if (search) params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    const values = rows(context, `SELECT m.id, m.full_name, j.name AS jenjang, COALESCE(c.class_name, e.class_name) AS class_name
+      FROM student_masters m
+      LEFT JOIN student_enrollments e ON e.student_master_id = m.id
+        AND e.academic_year_id = ? AND e.jenjang_id = ? AND e.lifecycle_state = 'ACTIVE'
+        AND e.class_assigned = 1 AND e.effective_to IS NULL
+      LEFT JOIN academic_classes c ON c.id = e.academic_class_id
+      LEFT JOIN jenjangs j ON j.id = e.jenjang_id
+      WHERE m.student_status = 'active'
+        AND EXISTS (SELECT 1 FROM student_enrollments scope WHERE scope.student_master_id = m.id
+          AND scope.academic_year_id = ? AND scope.jenjang_id = ? AND scope.lifecycle_state = 'ACTIVE'
+          AND scope.class_assigned = 1 AND scope.effective_to IS NULL)
+        ${searchSql}
+      ORDER BY m.full_name, m.id LIMIT 10`, params);
+    return { items: values.map((value) => ({ id: String(value.id), full_name: String(value.full_name), current_jenjang: value.jenjang == null ? null : String(value.jenjang), current_class: value.class_name == null ? null : String(value.class_name) })) };
+  }, {
+    query: t.Object({ search: t.Optional(t.String({ maxLength: 100 })), academic_year_id: t.String({ pattern: "^[1-9]\\d*$" }), jenjang_id: t.String({ pattern: "^[1-9]\\d*$" }) }),
+  });
+}
+
 export function machineAttendancePreviewRoutes(app: any, context: AuthContext): void {
+  deviceIdentityLinkRoute(app, context);
+  studentSearchRoute(app, context);
   app.post("/api/attendance/machine-import/preview", async (ctx: Context) => {
     const user = actor(context, ctx, { capability: "import_attendance" });
     if (!user) return { detail: "Insufficient permissions" };
@@ -372,7 +468,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       const response: MachineImportPreviewResponse = {
         previewOnly: true, fileFingerprint: projection.fileFingerprint, previewDigest: projection.previewDigest,
         workbook: { detectedProfile: parsed.detectedProfile, sheet: parsed.sheet, dimensions: parsed.dimensions, sourceRows: parsed.sourceRows, dateCoverage: parsed.dateCoverage, warnings: parsed.warnings },
-        summary: projection.summary, rows: projection.items.slice((page - 1) * pageSize, page * pageSize).map((value) => value.response),
+        summary: projection.summary, identityReview: projection.identityReview, rows: projection.items.slice((page - 1) * pageSize, page * pageSize).map((value) => value.response),
         pagination: { page, pageSize, total: projection.items.length },
       };
       return response;

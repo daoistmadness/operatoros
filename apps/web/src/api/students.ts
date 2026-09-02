@@ -83,6 +83,14 @@ export async function replaceDeviceIdentity(id: string, payload: unknown) {
   return (await apiRequest({ path: `/api/student-masters/${id}/device-identities`, method: "POST", body: payload })).data;
 }
 
+export async function linkDeviceIdentity(payload: { device_identifier: string; student_master_id: string; effective_from: string; confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) {
+  return (await apiRequest({ path: "/api/attendance/machine-import/device-identities/link", method: "POST", body: payload })).data;
+}
+
+export async function searchMachineImportStudents(filters: { search: string; academicYearId: number; jenjangId: number }): Promise<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }> {
+  return (await apiRequest<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }>({ path: "/api/attendance/machine-import/student-search", params: { search: filters.search || undefined, academic_year_id: filters.academicYearId, jenjang_id: filters.jenjangId } })).data;
+}
+
 export async function reassignDeviceIdentity(id: string, payload: unknown) {
   return (await apiRequest({ path: `/api/student-masters/${id}/device-identities/reassign`, method: "POST", body: payload })).data;
 }

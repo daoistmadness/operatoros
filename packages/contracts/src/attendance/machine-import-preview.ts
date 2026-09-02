@@ -53,6 +53,12 @@ const StudentSchema = Type.Object({
   className: NullableString,
   jenjang: NullableString,
 });
+const IdentityReview = Type.Object({
+  deviceIdentifier: Type.String({ minLength: 1 }),
+  machineName: NullableString,
+  effectiveFrom: NullableString,
+  occurrences: Type.Number({ minimum: 1 }),
+});
 
 export const MachineImportPreviewResponseSchema = Type.Object({
   previewOnly: Type.Literal(true),
@@ -82,6 +88,7 @@ export const MachineImportPreviewResponseSchema = Type.Object({
     blocked: Type.Number({ minimum: 0 }),
     blockedByClassification: Type.Record(Type.String(), Type.Number({ minimum: 0 })),
   }),
+  identityReview: Type.Array(IdentityReview),
   rows: Type.Array(Type.Object({
     date: NullableString,
     sourceStudentName: NullableString,
