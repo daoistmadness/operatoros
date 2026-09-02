@@ -5665,6 +5665,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/machine-import/device-identities/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiAttendanceMachine-importDevice-identitiesLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/machine-import/student-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAttendanceMachine-importStudent-search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/override-review": {
         parameters: {
             query?: never;
@@ -20517,6 +20549,51 @@ export interface operations {
                 content?: never;
             };
         };
+    };
+    "postApiAttendanceMachine-importDevice-identitiesLink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
+                };
+                "multipart/form-data": {
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiAttendanceMachine-importStudent-search": {
+        parameters: {
+            query: {
+                search?: string;
+                academic_year_id: string;
+                jenjang_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
     };
     "getApiAttendanceOverride-review": {
         parameters: {

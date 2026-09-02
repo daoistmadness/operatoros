@@ -276,6 +276,17 @@ def main() -> int:
                 (master_id, student_id, f"10000{index}", "E2E_NUMERIC_FIXTURE", "2026-07-01"),
             )
 
+        link_target_master = "00000000-0000-4000-8000-000000000004"
+        connection.execute(
+            "INSERT INTO students (name,jenjang,class_name) VALUES (?,?,?)",
+            ("E2E Link Target", "Primary", "Legacy P1A"),
+        )
+        link_target_student_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO student_masters (id,full_name,normalized_name,nipd,student_status,created_by,updated_by) VALUES (?,?,?,?, 'active','e2e','e2e')",
+            (link_target_master, "E2E Link Target", "e2e link target", "E2E-004"),
+        )
+
         attendance_rows = (
             (student_ids[0], today, "07:10:00", "14:00:00", 0, "on-time"),
             (student_ids[1], today, "07:35:00", "14:05:00", 20, "late"),
@@ -317,6 +328,10 @@ def main() -> int:
         connection.execute(
             "INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from) VALUES (?,?,?,?,?,'Primary 1A',1,'2026-07-01')",
             (student_ids[0], master_ids[0], year_id, jenjang_id, active_class_id),
+        )
+        connection.execute(
+            "INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from) VALUES (NULL,?,?,?,?, 'Primary 1A',1,'2026-07-01')",
+            (link_target_master, year_id, jenjang_id, active_class_id),
         )
         analytics_enrollment_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(
