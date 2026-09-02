@@ -23,6 +23,12 @@ Optional browser tooling is external to the workspace:
 - `make dev-db-status` — inspect the managed development database.
 - `make dev-sessions-status` — inspect managed development sessions.
 
+The default development root is resolved under `XDG_DATA_HOME` (or
+`~/.local/share`) and uses `operatoros.sqlite`. A legacy-only
+`operatoros-development.db` is migrated safely by startup after validation;
+dual, invalid, busy, and unsupported layouts fail closed. Set
+`OPERATOROS_DATA_DIR` only when an approved absolute override is intentional.
+
 ## Validation
 
 - `mise run check:affected` — run Turbo `typecheck`, `test`, and `build` for packages affected since `origin/main`.
