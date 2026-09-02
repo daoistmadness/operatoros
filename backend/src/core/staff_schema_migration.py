@@ -8,7 +8,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, inspect, text
 
 from core.database import Base
-from core.schema_guard import CURRENT_SCHEMA_VERSION
+from core.schema_authority import current_schema_version
 from models.user import User  # noqa: F401 - resolve the batch actor FK
 from models.staff import (
     StaffContactDetail, StaffIdentifier, StaffImportBatch, StaffImportIssue,
@@ -55,8 +55,9 @@ def ensure_staff_schema(database: str | Path) -> str:
         current = connection.execute(
             "SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC LIMIT 1"
         ).fetchone()
-        if not current or current[0] != CURRENT_SCHEMA_VERSION:
-            raise ValueError(f"UNSUPPORTED_SCHEMA_REQUIRES_{CURRENT_SCHEMA_VERSION}")
+        source_head = current_schema_version()
+        if not current or current[0] != source_head:
+            raise ValueError(f"UNSUPPORTED_SCHEMA_REQUIRES_{source_head}")
     engine = create_engine(f"sqlite:///{path}")
     try:
         inspector = inspect(engine)

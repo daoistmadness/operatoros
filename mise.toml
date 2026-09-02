@@ -42,8 +42,10 @@ printf 'PASS: workspace dependencies and native WSL Bun\n'
 printf 'PASS: origin/main=%s\n' "$(git rev-parse 'origin/main^{commit}')"
 printf 'PASS: checkout=%s branch=%s\n' "$(git rev-parse --show-toplevel)" "$(git branch --show-current)"
 development_data_dir="$(bun packages/db/src/data-dir-cli.ts --repo . --format data-dir)" || fail "development data directory cannot be resolved" "Set OPERATOROS_DATA_DIR to an approved absolute directory"
-development_database_status="$(backend/.venv/bin/python scripts/development_database.py status --repo . --data-dir "$development_data_dir")" || fail "development database status cannot be read" "Run make dev-db-status"
+development_schema_head="$(bun packages/db/src/schema-version-cli.ts --format current)" || fail "canonical schema head cannot be resolved" "Run bun install --frozen-lockfile"
+development_database_status="$(backend/.venv/bin/python scripts/development_database.py status --repo . --data-dir "$development_data_dir" --expected-schema "$development_schema_head")" || fail "development database status cannot be read" "Run make dev-db-status"
 printf 'PASS: development data directory=%s\n' "$development_data_dir"
+printf 'PASS: source schema head=%s\n' "$development_schema_head"
 printf 'PASS: development database=%s\n' "$development_database_status"
 """
 

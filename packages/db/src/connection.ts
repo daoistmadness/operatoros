@@ -5,6 +5,7 @@ import * as schema from "./schema";
 import {
   CURRENT_SCHEMA_FINGERPRINT,
   CURRENT_SCHEMA_VERSION,
+  compareSchemaVersions,
   PROTECTED_DATABASE_BASENAME,
   REQUIRED_TRIGGERS,
 } from "./manifest";
@@ -78,7 +79,7 @@ function validateSchema(client: Database): void {
   if (!currentRow) {
     fail("DATABASE_MIGRATION_REQUIRED", `expected ${CURRENT_SCHEMA_VERSION}`);
   }
-  if (ledgerRows.some((row) => row.version > CURRENT_SCHEMA_VERSION)) {
+  if (ledgerRows.some((row) => compareSchemaVersions(row.version, CURRENT_SCHEMA_VERSION) === 1)) {
     fail("DATABASE_MIGRATION_REQUIRED", `database reports a schema newer than ${CURRENT_SCHEMA_VERSION}`);
   }
   if (currentRow.schema_fingerprint !== CURRENT_SCHEMA_FINGERPRINT) {
