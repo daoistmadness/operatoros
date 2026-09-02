@@ -21,6 +21,8 @@ export type { OperatorOSPaths, ResolveDataDirOptions } from "./data-dir";
 export {
   CURRENT_SCHEMA_FINGERPRINT,
   CURRENT_SCHEMA_VERSION,
+  SCHEMA_MIGRATIONS,
+  compareSchemaVersions,
   PROTECTED_DATABASE_BASENAME,
   REQUIRED_TRIGGERS,
 } from "./manifest";

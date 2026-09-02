@@ -358,10 +358,17 @@ def init_session(args: argparse.Namespace) -> int:
 def finalize_session(args: argparse.Namespace) -> int:
     """Remove one exact, stopped owned session directory; never its database path."""
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
-    directory = (runtime / "sessions" / args.session).resolve(strict=True)
+    sessions = runtime / "sessions"
+    directory = (sessions / args.session).resolve(strict=False)
     if directory.parent != runtime / "sessions" or directory.name != args.session or directory.is_symlink():
         raise RuntimeError("SESSION_PATH_ESCAPE_REJECTED")
-    ownership = json.loads((directory / "ownership.json").read_text(encoding="utf-8"))
+    if not directory.exists():
+        return 0
+    ownership_path = directory / "ownership.json"
+    try:
+        ownership = json.loads(ownership_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise RuntimeError("CORRUPT_OWNERSHIP_MARKER") from None
     if ownership.get("application") != "OperatorOS" or ownership.get("session_id") != args.session:
         raise RuntimeError("CORRUPT_OWNERSHIP_MARKER")
     for role in ("backend", "frontend"):
@@ -371,7 +378,10 @@ def finalize_session(args: argparse.Namespace) -> int:
             valid, info = valid_record(record, repo, role)
             if valid:
                 raise RuntimeError(f"ACTIVE_OWNED_SESSION:{role}")
-    session = json.loads((directory / "session.json").read_text(encoding="utf-8"))
+    try:
+        session = json.loads((directory / "session.json").read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return 0
     database = Path(session.get("database_path", "")).resolve(strict=False)
     if contained(database, directory):
         raise RuntimeError("SESSION_DATABASE_OWNERSHIP_FORBIDDEN")
@@ -457,7 +467,10 @@ def register(args: argparse.Namespace) -> int:
 def mark(args: argparse.Namespace) -> int:
     runtime = Path(args.runtime).resolve()
     path = runtime / "sessions" / args.session / "session.json"
-    value = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return 0
     value["status"] = args.status
     value[f"{args.status}_at"] = now()
     atomic_json(path, value)

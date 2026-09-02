@@ -15,6 +15,19 @@ SPEC = importlib.util.spec_from_file_location("development_database", ROOT / "sc
 assert SPEC and SPEC.loader
 tool = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(tool)
+CURRENT_SCHEMA = tool.schema_head_order()[-1]
+
+
+def _prepare(repository: Path, override: str) -> tuple[Path, Path]:
+    return tool.prepare(repository, override, expected_schema=CURRENT_SCHEMA)
+
+
+def _initialize(database: Path) -> None:
+    tool.initialize(database, CURRENT_SCHEMA)
+
+
+def _migrate(directory: Path) -> bool:
+    return tool.migrate_legacy_database(directory, CURRENT_SCHEMA)
 
 
 def _repository(tmp_path: Path) -> Path:
@@ -102,14 +115,14 @@ def test_legacy_current_database_is_migrated_once_and_recovered(tmp_path, monkey
     directory = tmp_path / "persistent"
     directory.mkdir()
     legacy = directory / tool.LEGACY_DATABASE_NAME
-    tool.initialize(legacy)
+    _initialize(legacy)
     with sqlite3.connect(legacy) as connection:
         before = tool.table_counts(connection)
     legacy_sidecars = [(suffix, Path(f"{legacy}{suffix}").exists()) for suffix in tool.MIGRATION_SIDE_CAR_SUFFIXES]
-    assert tool.migrate_legacy_database(directory) is True
+    assert _migrate(directory) is True
     destination = directory / tool.DATABASE_NAME
     assert tool.database_layout(directory) == "CANONICAL"
-    assert tool.inspect(destination)["schema_head"] == tool.SCHEMA_HEAD
+    assert tool.inspect(destination, expected_schema=CURRENT_SCHEMA)["schema_head"] == CURRENT_SCHEMA
     assert not legacy.exists()
     assert (directory / f"{tool.LEGACY_DATABASE_NAME}.migrated").is_file()
     assert all(Path(f"{directory / (tool.LEGACY_DATABASE_NAME + '.migrated')}{suffix}").exists() == existed for suffix, existed in legacy_sidecars)
@@ -118,7 +131,7 @@ def test_legacy_current_database_is_migrated_once_and_recovered(tmp_path, monkey
     with sqlite3.connect(destination) as connection:
         after = tool.table_counts(connection)
     assert {name: count for name, count in after.items() if name != "operatoros_schema_migrations"} == {name: count for name, count in before.items() if name != "operatoros_schema_migrations"}
-    assert tool.migrate_legacy_database(directory) is False
+    assert _migrate(directory) is False
 
 
 def test_legacy_s43_database_is_migrated_without_data_loss(tmp_path):
@@ -126,12 +139,12 @@ def test_legacy_s43_database_is_migrated_without_data_loss(tmp_path):
     directory.mkdir()
     legacy = directory / tool.LEGACY_DATABASE_NAME
     _s43_database(legacy)
-    assert tool.migrate_legacy_database(directory) is True
+    assert _migrate(directory) is True
     destination = directory / tool.DATABASE_NAME
     with sqlite3.connect(destination) as connection:
         assert connection.execute("SELECT name FROM students").fetchone() == ("synthetic student",)
         assert connection.execute("SELECT score FROM student_subject_grades").fetchone() == (76.5,)
-    assert tool.inspect(destination)["schema_head"] == tool.SCHEMA_HEAD
+    assert tool.inspect(destination, expected_schema=CURRENT_SCHEMA)["schema_head"] == CURRENT_SCHEMA
     temporary = destination.with_name(f".{destination.name}.migrating")
     assert all(not Path(f"{temporary}{suffix}").exists() for suffix in tool.MIGRATION_SIDE_CAR_SUFFIXES)
 
@@ -142,7 +155,7 @@ def test_legacy_invalid_database_is_preserved_and_fails_closed(tmp_path):
     legacy = directory / tool.LEGACY_DATABASE_NAME
     legacy.write_text("not sqlite", encoding="utf-8")
     with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_INTEGRITY_FAILURE"):
-        tool.migrate_legacy_database(directory)
+        _migrate(directory)
     assert legacy.read_text(encoding="utf-8") == "not sqlite"
     assert not (directory / tool.DATABASE_NAME).exists()
 
@@ -152,24 +165,24 @@ def test_legacy_and_canonical_database_fail_closed_without_writes(tmp_path):
     directory.mkdir()
     legacy = directory / tool.LEGACY_DATABASE_NAME
     canonical = directory / tool.DATABASE_NAME
-    tool.initialize(canonical)
+    _initialize(canonical)
     legacy.write_text("synthetic", encoding="utf-8")
     with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_MIGRATION_CONFLICT"):
-        tool.migrate_legacy_database(directory)
+        _migrate(directory)
     assert legacy.read_text(encoding="utf-8") == "synthetic"
-    assert tool.inspect(canonical)["schema_head"] == tool.SCHEMA_HEAD
+    assert tool.inspect(canonical, expected_schema=CURRENT_SCHEMA)["schema_head"] == CURRENT_SCHEMA
 
 
 def test_active_legacy_writer_blocks_migration(tmp_path):
     directory = tmp_path / "persistent"
     directory.mkdir()
     legacy = directory / tool.LEGACY_DATABASE_NAME
-    tool.initialize(legacy)
+    _initialize(legacy)
     connection = sqlite3.connect(legacy, timeout=0)
     connection.execute("BEGIN IMMEDIATE")
     try:
         with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_BUSY"):
-            tool.migrate_legacy_database(directory)
+            _migrate(directory)
     finally:
         connection.rollback()
         connection.close()
@@ -181,26 +194,26 @@ def test_interrupted_migration_marker_is_preserved_and_blocks_retry(tmp_path):
     directory = tmp_path / "persistent"
     directory.mkdir()
     legacy = directory / tool.LEGACY_DATABASE_NAME
-    tool.initialize(legacy)
+    _initialize(legacy)
     marker = directory / f".{tool.DATABASE_NAME}.migrating"
     marker.write_text("synthetic interruption marker", encoding="utf-8")
     with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_MIGRATION_TEMPORARY_EXISTS"):
-        tool.migrate_legacy_database(directory)
+        _migrate(directory)
     assert legacy.exists()
     assert marker.read_text(encoding="utf-8") == "synthetic interruption marker"
     assert not (directory / tool.DATABASE_NAME).exists()
 
 
-def test_fresh_database_is_s43_without_administrator(tmp_path, monkeypatch):
+def test_fresh_database_uses_canonical_schema_head_without_administrator(tmp_path, monkeypatch):
     repository = _repository(tmp_path)
     common = tmp_path / "common.git"
     common.mkdir()
     monkeypatch.setattr(tool, "common_directory", lambda _: common)
-    directory, database = tool.prepare(repository, str(tmp_path / "persistent"))
-    tool.initialize(database)
-    state = tool.inspect(database)
+    directory, database = _prepare(repository, str(tmp_path / "persistent"))
+    _initialize(database)
+    state = tool.inspect(database, expected_schema=CURRENT_SCHEMA)
     assert directory.exists()
-    assert state["schema_head"] == tool.SCHEMA_HEAD
+    assert state["schema_head"] == CURRENT_SCHEMA
     assert state["ledger"] == "valid"
     assert state["administrator_configured"] is False
 
@@ -210,20 +223,20 @@ def test_status_reports_schema_compatibility_and_manifest_consistency(tmp_path, 
     common = tmp_path / "common.git"
     common.mkdir()
     monkeypatch.setattr(tool, "common_directory", lambda _: common)
-    directory, database = tool.prepare(repository, str(tmp_path / "persistent"))
-    tool.initialize(database)
+    directory, database = _prepare(repository, str(tmp_path / "persistent"))
+    _initialize(database)
     status = {
-        **tool.inspect(database),
+        **tool.inspect(database, expected_schema=CURRENT_SCHEMA),
         "layout": tool.database_layout(directory),
     }
-    assert tool.compatibility(status["layout"], status) == "COMPATIBLE"
-    assert tool.manifest_consistency(directory) == "CURRENT"
+    assert tool.compatibility(status["layout"], status, CURRENT_SCHEMA) == "COMPATIBLE"
+    assert tool.manifest_consistency(directory, CURRENT_SCHEMA) == "CURRENT"
 
 
 @pytest.mark.parametrize(
     "schema_head, expected",
     [
-        ("20260901_s46", "COMPATIBLE"),
+        (CURRENT_SCHEMA, "COMPATIBLE"),
         ("20260725_s43", "NEEDS_FORWARD_MIGRATION"),
         ("20260902_s47", "DATABASE_AHEAD_OF_SOURCE"),
     ],
@@ -233,9 +246,10 @@ def test_schema_compatibility_classification(schema_head, expected):
         "integrity": "ok",
         "ledger": "valid",
         "schema_head": schema_head,
-        "schema_checksum_valid": schema_head == tool.SCHEMA_HEAD,
+        "schema_checksum_valid": schema_head == CURRENT_SCHEMA,
     }
-    assert tool.compatibility("CANONICAL", state) == expected
+    known_heads = (*tool.schema_head_order(), "20260902_s47")
+    assert tool.compatibility("CANONICAL", state, CURRENT_SCHEMA, known_heads) == expected
 
 
 @pytest.mark.parametrize(
@@ -276,6 +290,6 @@ def test_make_path_and_status_report_the_same_canonical_database(tmp_path):
 
     assert Path(path) == Path(status["path"])
     assert Path(path).name == tool.DATABASE_NAME
-    assert status["expected_schema_head"] == tool.SCHEMA_HEAD
+    assert status["expected_schema_head"] == CURRENT_SCHEMA
     assert status["compatibility"] == "MISSING"
     assert status["manifest_consistency"] == "MISSING"
