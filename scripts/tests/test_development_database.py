@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import sqlite3
 import subprocess
 
 import pytest
@@ -21,6 +22,43 @@ def _repository(tmp_path: Path) -> Path:
     (repository / ".runtime" / "operatoros-dev" / "sessions").mkdir(parents=True)
     (repository / "backend").mkdir()
     return repository
+
+
+def _s43_database(path: Path) -> None:
+    with sqlite3.connect(path) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE operatoros_schema_migrations (
+              version TEXT PRIMARY KEY, predecessor TEXT, schema_fingerprint TEXT NOT NULL,
+              protected_fingerprints TEXT NOT NULL, approved_by TEXT NOT NULL, applied_at TEXT NOT NULL
+            );
+            CREATE TABLE academic_years (id INTEGER PRIMARY KEY, start_date TEXT, end_date TEXT);
+            CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT);
+            CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT);
+            CREATE TABLE student_masters (id TEXT PRIMARY KEY, full_name TEXT);
+            CREATE TABLE student_device_identities (id INTEGER PRIMARY KEY, student_master_id TEXT, legacy_student_id INTEGER);
+            CREATE TABLE attendance (id INTEGER PRIMARY KEY, student_id INTEGER, date TEXT);
+            CREATE TABLE student_enrollments (id INTEGER PRIMARY KEY, student_id INTEGER, student_master_id TEXT, academic_year_id INTEGER);
+            CREATE TABLE subjects (id INTEGER PRIMARY KEY, name TEXT);
+            CREATE TABLE assessment_components (id INTEGER PRIMARY KEY, name TEXT, assessment_type TEXT);
+            CREATE TABLE student_subject_grades (
+              id INTEGER PRIMARY KEY, enrollment_id INTEGER NOT NULL, subject_id INTEGER NOT NULL,
+              component_id INTEGER NOT NULL, score REAL, created_at TEXT, updated_at TEXT,
+              UNIQUE (enrollment_id, subject_id, component_id)
+            );
+            INSERT INTO academic_years VALUES (1, '2026-07-01', '2027-06-30');
+            INSERT INTO jenjangs VALUES (1, 'SD');
+            INSERT INTO students VALUES (1, 'synthetic student');
+            INSERT INTO student_masters VALUES ('master-1', 'synthetic student');
+            INSERT INTO student_device_identities VALUES (1, 'master-1', 1);
+            INSERT INTO attendance VALUES (1, 1, '2026-08-15');
+            INSERT INTO student_enrollments VALUES (1, 1, 'master-1', 1);
+            INSERT INTO subjects VALUES (1, 'Mathematics');
+            INSERT INTO assessment_components VALUES (1, 'Exam', 'sumatif');
+            INSERT INTO student_subject_grades VALUES (1, 1, 1, 1, 76.5, '2026-08-20T10:00:00', '2026-08-20T10:00:00');
+            INSERT INTO operatoros_schema_migrations VALUES ('20260725_s43', '20260724_s42', 'synthetic', '{}', 'TEST', '2026-08-21T10:00:00+00:00');
+            """
+        )
 
 
 def test_default_path_is_stable_for_shared_common_directory(tmp_path, monkeypatch):
@@ -58,14 +96,98 @@ def test_canonical_data_dir_precedes_legacy_environment(tmp_path, monkeypatch):
     assert directory == tmp_path / "canonical"
 
 
-def test_old_database_requires_manual_migration(tmp_path, monkeypatch):
+def test_legacy_current_database_is_migrated_once_and_recovered(tmp_path, monkeypatch):
     repository = _repository(tmp_path)
     monkeypatch.setattr(tool, "common_directory", lambda _: tmp_path)
     directory = tmp_path / "persistent"
     directory.mkdir()
-    (directory / tool.LEGACY_DATABASE_NAME).write_text("synthetic legacy marker", encoding="utf-8")
-    with pytest.raises(SystemExit, match="REQUIRES_MANUAL_MIGRATION"):
-        tool.prepare(repository, str(directory))
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    tool.initialize(legacy)
+    with sqlite3.connect(legacy) as connection:
+        before = tool.table_counts(connection)
+    legacy_sidecars = [(suffix, Path(f"{legacy}{suffix}").exists()) for suffix in tool.MIGRATION_SIDE_CAR_SUFFIXES]
+    assert tool.migrate_legacy_database(directory) is True
+    destination = directory / tool.DATABASE_NAME
+    assert tool.database_layout(directory) == "CANONICAL"
+    assert tool.inspect(destination)["schema_head"] == tool.SCHEMA_HEAD
+    assert not legacy.exists()
+    assert (directory / f"{tool.LEGACY_DATABASE_NAME}.migrated").is_file()
+    assert all(Path(f"{directory / (tool.LEGACY_DATABASE_NAME + '.migrated')}{suffix}").exists() == existed for suffix, existed in legacy_sidecars)
+    temporary = destination.with_name(f".{destination.name}.migrating")
+    assert all(not Path(f"{temporary}{suffix}").exists() for suffix in tool.MIGRATION_SIDE_CAR_SUFFIXES)
+    with sqlite3.connect(destination) as connection:
+        after = tool.table_counts(connection)
+    assert {name: count for name, count in after.items() if name != "operatoros_schema_migrations"} == {name: count for name, count in before.items() if name != "operatoros_schema_migrations"}
+    assert tool.migrate_legacy_database(directory) is False
+
+
+def test_legacy_s43_database_is_migrated_without_data_loss(tmp_path):
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    _s43_database(legacy)
+    assert tool.migrate_legacy_database(directory) is True
+    destination = directory / tool.DATABASE_NAME
+    with sqlite3.connect(destination) as connection:
+        assert connection.execute("SELECT name FROM students").fetchone() == ("synthetic student",)
+        assert connection.execute("SELECT score FROM student_subject_grades").fetchone() == (76.5,)
+    assert tool.inspect(destination)["schema_head"] == tool.SCHEMA_HEAD
+    temporary = destination.with_name(f".{destination.name}.migrating")
+    assert all(not Path(f"{temporary}{suffix}").exists() for suffix in tool.MIGRATION_SIDE_CAR_SUFFIXES)
+
+
+def test_legacy_invalid_database_is_preserved_and_fails_closed(tmp_path):
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    legacy.write_text("not sqlite", encoding="utf-8")
+    with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_INTEGRITY_FAILURE"):
+        tool.migrate_legacy_database(directory)
+    assert legacy.read_text(encoding="utf-8") == "not sqlite"
+    assert not (directory / tool.DATABASE_NAME).exists()
+
+
+def test_legacy_and_canonical_database_fail_closed_without_writes(tmp_path):
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    canonical = directory / tool.DATABASE_NAME
+    tool.initialize(canonical)
+    legacy.write_text("synthetic", encoding="utf-8")
+    with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_MIGRATION_CONFLICT"):
+        tool.migrate_legacy_database(directory)
+    assert legacy.read_text(encoding="utf-8") == "synthetic"
+    assert tool.inspect(canonical)["schema_head"] == tool.SCHEMA_HEAD
+
+
+def test_active_legacy_writer_blocks_migration(tmp_path):
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    tool.initialize(legacy)
+    connection = sqlite3.connect(legacy, timeout=0)
+    connection.execute("BEGIN IMMEDIATE")
+    try:
+        with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_BUSY"):
+            tool.migrate_legacy_database(directory)
+    finally:
+        connection.rollback()
+        connection.close()
+    assert legacy.exists()
+    assert not (directory / tool.DATABASE_NAME).exists()
+
+
+def test_interrupted_migration_marker_is_preserved_and_blocks_retry(tmp_path):
+    directory = tmp_path / "persistent"
+    directory.mkdir()
+    legacy = directory / tool.LEGACY_DATABASE_NAME
+    tool.initialize(legacy)
+    marker = directory / f".{tool.DATABASE_NAME}.migrating"
+    marker.write_text("synthetic interruption marker", encoding="utf-8")
+    with pytest.raises(SystemExit, match="DEVELOPMENT_DATABASE_MIGRATION_TEMPORARY_EXISTS"):
+        tool.migrate_legacy_database(directory)
+    assert legacy.exists()
+    assert marker.read_text(encoding="utf-8") == "synthetic interruption marker"
     assert not (directory / tool.DATABASE_NAME).exists()
 
 
