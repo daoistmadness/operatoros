@@ -48,6 +48,7 @@ const ClassOverview = lazy(() => import('../pages/ClassOverview'));
 const DismissalPolicies = lazyNamedRoute(() => import('../pages/DismissalPolicies'), 'DismissalPolicies');
 const ClassEarlyDeparture = lazyNamedRoute(() => import('../pages/ClassEarlyDeparture'), 'ClassEarlyDeparture');
 const OperatorWorkQueue = lazy(() => import('../features/operator-work-queue'));
+const SetupReadiness = lazy(() => import('../features/readiness'));
 
 export type AppRouteDefinition = {
   path: string;
@@ -87,6 +88,7 @@ const notFound = (
 
 export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/', element: <Dashboard />, group: ROUTE_GROUPS.CORE, authorization: authenticated() }),
+  defineRoute({ path: '/setup', element: <SetupReadiness />, group: ROUTE_GROUPS.CORE, authorization: authenticated() }),
   defineRoute({ path: '/operator/work-queue', element: <OperatorWorkQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),
   defineRoute({ path: '/upload', element: <UploadCenter />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
   defineRoute({ path: '/data-portability', element: <DataPortability />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),

@@ -39,7 +39,7 @@ type NavigationGroupInput = Omit<NavigationGroup, 'items'> & { items: Navigation
 const RAW_NAV_GROUPS: NavigationGroupInput[] = [
   {
     id: 'overview', title: 'Overview',
-    items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard, matches: ['/'] }],
+    items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard, matches: ['/'] }, { name: 'Setup & Readiness', path: '/setup', icon: SettingsIcon }],
   },
   {
     id: 'attendance', title: 'Attendance',

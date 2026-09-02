@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { getReadiness } from "../api/readiness";
 import { queryKeys } from "../../../lib/query/queryKeys";
 
@@ -10,4 +10,8 @@ export function useReadinessQuery(userId: number | null) {
     staleTime: 0,
     refetchOnMount: "always",
   });
+}
+
+export function invalidateReadiness(queryClient: Pick<QueryClient, "invalidateQueries">) {
+  return queryClient.invalidateQueries({ queryKey: queryKeys.readiness.all });
 }

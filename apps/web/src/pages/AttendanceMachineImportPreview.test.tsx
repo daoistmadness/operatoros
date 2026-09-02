@@ -8,15 +8,18 @@ import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import * as analyticsHooks from "../hooks/useAnalyticsQueries";
 import * as machineApi from "../api/machineAttendancePreview";
 import * as studentApi from "../api/students";
+import * as readinessQueries from "../features/readiness/queries/useReadinessQuery";
 import { vi } from "vitest";
 
 vi.mock("../hooks/useAnalyticsQueries", () => ({ useAnalyticsFiltersQuery: vi.fn() }));
 vi.mock("../api/machineAttendancePreview", () => ({ previewMachineAttendance: vi.fn(), applyMachineAttendance: vi.fn() }));
 vi.mock("../api/students", () => ({ createStudent: vi.fn(), linkDeviceIdentity: vi.fn(), searchMachineImportStudents: vi.fn() }));
+vi.mock("../features/readiness/queries/useReadinessQuery", () => ({ useReadinessQuery: vi.fn(), invalidateReadiness: vi.fn() }));
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: ["import_attendance"] }, loading: false, authenticated: true, can: (value) => value === "import_attendance", login: vi.fn(), logout: vi.fn() };
 const resolutionAuth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: ["import_attendance", "manage_device_identity", "create_student", "view_student"] }, loading: false, authenticated: true, can: (value) => ["import_attendance", "manage_device_identity", "create_student", "view_student"].includes(value), login: vi.fn(), logout: vi.fn() };
 const filters = { academic_years: [{ id: 1, label: "2026/2027", is_default: true }], jenjangs: [{ id: 1, name: "SMP" }], class_names: [], subjects: [] };
+const readyImportReadiness = { overall: { state: "READY", summary: "Foundation is configured." }, foundation: [], operational: [], features: [{ key: "MACHINE_IMPORT", label: "Machine Import", route: "/attendance/machine-import", state: "READY", blockers: [], actions: [] }], overall_status: "OPERATIONALLY_READY", steps: [] };
 
 describe("AttendanceMachineImportPreview", () => {
   let container: HTMLDivElement;
@@ -24,6 +27,7 @@ describe("AttendanceMachineImportPreview", () => {
   let client: QueryClient;
   beforeEach(() => {
     vi.mocked(analyticsHooks.useAnalyticsFiltersQuery).mockReturnValue({ data: filters, isPending: false, error: null, refetch: vi.fn() } as never);
+    vi.mocked(readinessQueries.useReadinessQuery).mockReturnValue({ data: readyImportReadiness, isPending: false, isError: false, error: null, refetch: vi.fn() } as never);
     client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
   });

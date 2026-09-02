@@ -13,6 +13,7 @@ import type { AttendanceCalendarPeriodPreviewResponse } from "@operatoros/contra
 import { useAttendanceCalendarQuery } from "../hooks/useAttendanceCalendarQuery";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
+import { invalidateReadiness } from "../features/readiness";
 
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const reasons = ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"] as const;
@@ -34,7 +35,7 @@ export default function AttendanceCalendar() {
   const [periodConfirmed, setPeriodConfirmed] = useState(false);
   const calendar = useAttendanceCalendarQuery(academicYearId, allowed);
   const client = useQueryClient();
-  const invalidate = () => invalidateAttendanceQueries(client);
+  const invalidate = async () => { await invalidateAttendanceQueries(client); await invalidateReadiness(client); };
   const saveWeekday = useMutation({ mutationFn: saveAttendanceCalendarWeekday, onSuccess: invalidate });
   const saveException = useMutation({ mutationFn: saveAttendanceCalendarException, onSuccess: async () => { setForm({ date: "", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }); await invalidate(); } });
   const deleteException = useMutation({ mutationFn: deleteAttendanceCalendarException, onSuccess: invalidate });
