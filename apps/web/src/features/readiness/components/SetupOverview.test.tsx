@@ -14,6 +14,18 @@ const steps: ReadinessResponse["steps"] = [
   { code: "cutoff_jenjang", name: "Review Cutoff Jenjang overrides", status: "OPTIONAL", requirement: "OPTIONAL", reason: "Automatic fallback remains active.", destination: "/config/jenjang", can_manage: true, responsibility: null },
 ];
 
+function readinessData(overrides: Partial<ReadinessResponse> = {}): ReadinessResponse {
+  return {
+    overall: { state: "ACTION_REQUIRED", summary: "Setup needs attention." },
+    foundation: [],
+    operational: [],
+    features: [],
+    overall_status: "FIRST_RUN",
+    steps,
+    ...overrides,
+  };
+}
+
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
 
@@ -21,7 +33,7 @@ async function renderOverview(props: Partial<React.ComponentProps<typeof SetupOv
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
-  await act(async () => root?.render(<MemoryRouter><SetupOverview data={{ overall_status: "FIRST_RUN", steps }} isLoading={false} isError={false} onRetry={vi.fn()} {...props} /></MemoryRouter>));
+  await act(async () => root?.render(<MemoryRouter><SetupOverview data={readinessData()} isLoading={false} isError={false} onRetry={vi.fn()} {...props} /></MemoryRouter>));
   return container;
 }
 
@@ -54,7 +66,7 @@ describe("SetupOverview", () => {
     ["OPERATIONALLY_READY", "OperatorOS is ready"],
     ["READ_ONLY_GUIDANCE", "Setup needs administrator attention"],
   ] as const)("renders the %s state", async (overall_status, title) => {
-    const view = await renderOverview({ data: { overall_status, steps } });
+    const view = await renderOverview({ data: readinessData({ overall_status }) });
     expect(view.querySelector("h2")?.textContent).toBe(title);
   });
 
@@ -70,14 +82,14 @@ describe("SetupOverview", () => {
   });
 
   it("renders completion text as well as an icon", async () => {
-    const view = await renderOverview({ data: { overall_status: "SETUP_PARTIAL", steps: [{ ...steps[0], status: "COMPLETE" }, ...steps.slice(1)] } });
+    const view = await renderOverview({ data: readinessData({ overall_status: "SETUP_PARTIAL", steps: [{ ...steps[0], status: "COMPLETE" }, ...steps.slice(1)] }) });
     expect(view.textContent).toContain("Complete");
     expect(view.querySelector('[aria-label="Complete"]')).not.toBeNull();
   });
 
   it("removes mutation actions for restricted required steps", async () => {
     const restricted = steps.map((step) => ({ ...step, destination: step.requirement === "REQUIRED" ? null : step.destination, can_manage: false, responsibility: "An administrator can complete this step." }));
-    const view = await renderOverview({ data: { overall_status: "READ_ONLY_GUIDANCE", steps: restricted } });
+    const view = await renderOverview({ data: readinessData({ overall_status: "READ_ONLY_GUIDANCE", steps: restricted }) });
     expect(view.textContent).not.toContain("Continue setup");
     expect(view.textContent?.match(/An administrator can complete this step\./g)).toHaveLength(6);
   });
