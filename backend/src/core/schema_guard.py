@@ -11,13 +11,14 @@ from sqlalchemy.engine import make_url
 
 from core.config import settings
 from core.database import engine, validate_student_linking_gate
+from core.schema_versions import (
+    BASELINE_SCHEMA_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    LEGACY_SCHEMA_VERSION,
+    PREVIOUS_SCHEMA_VERSION,
+    S43_SCHEMA_VERSION,
+)
 
-
-BASELINE_SCHEMA_VERSION = "20260724_s42"
-CURRENT_SCHEMA_VERSION = "20260901_s46"
-PREVIOUS_SCHEMA_VERSION = BASELINE_SCHEMA_VERSION
-S43_SCHEMA_VERSION = "20260725_s43"
-LEGACY_SCHEMA_VERSION = "20260722_s41"
 LEDGER_TABLE = "operatoros_schema_migrations"
 CURRENT_SCHEMA_TABLES = {
     "attendance_follow_ups",
