@@ -418,6 +418,7 @@ while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   # terminal delivers Ctrl-C to that whole group under load.
   wait -n -t 1 "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
 done
+if (( SHUTDOWN_REQUESTED == 1 )); then exit "$REQUESTED_EXIT_CODE"; fi
 if ! group_is_running "$BACKEND_PID"; then error_box "Backend stopped unexpectedly"
 else error_box "Frontend stopped unexpectedly"
 fi

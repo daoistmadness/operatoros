@@ -205,6 +205,39 @@ def test_fresh_database_is_s43_without_administrator(tmp_path, monkeypatch):
     assert state["administrator_configured"] is False
 
 
+def test_status_reports_schema_compatibility_and_manifest_consistency(tmp_path, monkeypatch):
+    repository = _repository(tmp_path)
+    common = tmp_path / "common.git"
+    common.mkdir()
+    monkeypatch.setattr(tool, "common_directory", lambda _: common)
+    directory, database = tool.prepare(repository, str(tmp_path / "persistent"))
+    tool.initialize(database)
+    status = {
+        **tool.inspect(database),
+        "layout": tool.database_layout(directory),
+    }
+    assert tool.compatibility(status["layout"], status) == "COMPATIBLE"
+    assert tool.manifest_consistency(directory) == "CURRENT"
+
+
+@pytest.mark.parametrize(
+    "schema_head, expected",
+    [
+        ("20260901_s46", "COMPATIBLE"),
+        ("20260725_s43", "NEEDS_FORWARD_MIGRATION"),
+        ("20260902_s47", "DATABASE_AHEAD_OF_SOURCE"),
+    ],
+)
+def test_schema_compatibility_classification(schema_head, expected):
+    state = {
+        "integrity": "ok",
+        "ledger": "valid",
+        "schema_head": schema_head,
+        "schema_checksum_valid": schema_head == tool.SCHEMA_HEAD,
+    }
+    assert tool.compatibility("CANONICAL", state) == expected
+
+
 @pytest.mark.parametrize(
     "contents, expected",
     [
@@ -243,3 +276,6 @@ def test_make_path_and_status_report_the_same_canonical_database(tmp_path):
 
     assert Path(path) == Path(status["path"])
     assert Path(path).name == tool.DATABASE_NAME
+    assert status["expected_schema_head"] == tool.SCHEMA_HEAD
+    assert status["compatibility"] == "MISSING"
+    assert status["manifest_consistency"] == "MISSING"

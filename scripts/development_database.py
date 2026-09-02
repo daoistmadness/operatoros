@@ -29,9 +29,9 @@ from core.development_database import (  # noqa: E402
     common_directory as _common_directory,
     resolve_data_directory,
 )
+from core.schema_versions import CURRENT_SCHEMA_VERSION, SUPPORTED_SCHEMA_HEADS  # noqa: E402
 
-SCHEMA_HEAD = "20260901_s46"
-SUPPORTED_SCHEMA_HEADS = frozenset({"20260724_s42", "20260725_s43", "20260831_s44", "20260901_s45", SCHEMA_HEAD})
+SCHEMA_HEAD = CURRENT_SCHEMA_VERSION
 REQUIRED_BASE_TABLES = frozenset({
     "operatoros_schema_migrations",
     "students",
@@ -171,6 +171,39 @@ def inspect(database: Path) -> dict:
             }
     except (OSError, sqlite3.Error):
         return {"exists": True, "regular_file": True, "schema_head": None, "ledger": "invalid", "integrity": "unreadable", "foreign_key_violations": 0, "schema_recognized": False, "schema_checksum_valid": False, "administrator_configured": False, "users_count": 0, "file_size": database.stat().st_size}
+
+
+def compatibility(layout: str, state: dict) -> str:
+    if layout == "MISSING":
+        return "MISSING"
+    if layout == "LEGACY":
+        return "NEEDS_FORWARD_MIGRATION" if state.get("integrity") == "ok" and state.get("schema_recognized") else "INVALID"
+    if layout != "CANONICAL" or state.get("integrity") != "ok" or state.get("ledger") != "valid":
+        return "INVALID"
+    head = state.get("schema_head")
+    if head == SCHEMA_HEAD:
+        return "COMPATIBLE" if state.get("schema_checksum_valid") else "INVALID"
+    if head in SUPPORTED_SCHEMA_HEADS:
+        return "NEEDS_FORWARD_MIGRATION"
+    if isinstance(head, str):
+        match = re.fullmatch(r"(\d{8})_s(\d+)", head)
+        current_match = re.fullmatch(r"(\d{8})_s(\d+)", SCHEMA_HEAD)
+        if match and current_match:
+            version = (int(match.group(1)), int(match.group(2)))
+            current_version = (int(current_match.group(1)), int(current_match.group(2)))
+            return "DATABASE_AHEAD_OF_SOURCE" if version > current_version else "INVALID"
+    return "INVALID"
+
+
+def manifest_consistency(directory: Path) -> str:
+    path = directory / "database.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return "MISSING"
+    except (OSError, json.JSONDecodeError):
+        return "INVALID"
+    return "CURRENT" if value.get("schema_expectation") == SCHEMA_HEAD else "STALE"
 
 
 def table_counts(connection: sqlite3.Connection) -> dict[str, int]:
@@ -393,12 +426,17 @@ def command(args: argparse.Namespace) -> int:
     if args.command == "status":
         directory, _, _ = data_directory(repo, override)
         layout = database_layout(directory)
-        state = inspect(directory / DATABASE_NAME) if layout == "CANONICAL" else {"exists": False}
+        state = inspect(directory / DATABASE_NAME) if layout == "CANONICAL" else (
+            inspect(directory / LEGACY_DATABASE_NAME) if layout == "LEGACY" else {"exists": False, "schema_head": None}
+        )
         state.update(
             path=str(directory / DATABASE_NAME),
             legacy_path=str(directory / LEGACY_DATABASE_NAME),
             layout=layout,
             migration_required=layout == "LEGACY",
+            expected_schema_head=SCHEMA_HEAD,
+            compatibility=compatibility(layout, state),
+            manifest_consistency=manifest_consistency(directory),
             protected=False,
             persistence_classification="PERSISTENT_LOCAL_DEVELOPMENT_DATABASE",
         )
