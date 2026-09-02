@@ -156,6 +156,19 @@ historical evidence unless they explicitly identify a current procedure.
 - Generated OpenAPI contracts are version-controlled and drift-checked. Run
   the documented generation/check workflow for API changes.
 
+## Change safety and feature golden path
+
+- For new or substantially changed cross-layer work, follow the [Change Safety
+  & Feature Golden Path](docs/architecture/change-safety-golden-path.md).
+- Name the canonical authority, API/domain owner, shared TypeBox DTO, explicit
+  internal-to-DTO mapper, authorization scope, query-key owner, and mutation
+  invalidations before implementation.
+- Preserve loading, empty, error, conflict, and authorization distinctions.
+- Use disposable synthetic data for tests and E2E. Decide BrowserUse acceptance
+  for operator-facing or cross-feature changes.
+- Use the linked document's concise Feature Definition of Done; do not move
+  stable features only to satisfy folder conventions.
+
 ## Phase 14 monorepo modernization
 
 Phase 14.1 established workspace tooling. Phase 14.2 moved the authoritative
