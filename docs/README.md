@@ -15,6 +15,7 @@
 - [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.3 runtime model.
 - [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
 - [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — workspace ownership and modernization boundaries.
+- [Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md) — ownership, contracts, query invalidation, state semantics, and feature validation conventions.
 - [Platform portability](architecture/PLATFORM_PORTABILITY.md) — current SQLite-only local runtime contract.
 - [SQLite-only desktop ADR](architecture/decisions/SQLITE_ONLY_DESKTOP_RUNTIME.md) — accepted database and deployment decision.
 - [Ingestion dependency strategy](architecture/INGESTION_DEPENDENCY_STRATEGY.md) — current pandas/openpyxl decision and benchmark criteria.
