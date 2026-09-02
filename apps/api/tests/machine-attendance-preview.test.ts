@@ -56,6 +56,14 @@ async function twoEligibleFixture(): Promise<Uint8Array> {
   return writeXlsxWorkbook(book);
 }
 
+async function identityFixture(identifier: string, name: string): Promise<Uint8Array> {
+  const book = createWorkbook({ exportType: "machine-identity-onboarding-test" });
+  const sheet = book.addWorksheet("Synthetic Machine Export");
+  appendRow(sheet, headers);
+  appendRow(sheet, [identifier, name, "03/04/2026", "07:00", "15:00", "", "", "", "", "Friday"]);
+  return writeXlsxWorkbook(book);
+}
+
 async function setup(label: string) {
   const path = `/tmp/operatoros-machine-preview-${label}-${process.pid}-${Date.now()}.db`;
   seed(path);
@@ -124,15 +132,16 @@ describe("attendance machine preview", () => {
   it("applies only eligible complete scans and records transactional provenance", async () => {
     const value = await setup("apply");
     try {
+      const source = await fixture();
       const form = new FormData();
-      form.append("file", new File([await fixture()], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
       const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
       expect(preview.status).toBe(200);
       const previewBody = await preview.json() as any;
       expect(previewBody.summary).toMatchObject({ eligibleCreates: 1, alreadyCanonical: 0, conflicts: 0 });
       expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "ELIGIBLE_CREATE", canonicalStatus: "late" });
       const applyForm = new FormData();
-      applyForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
       const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
       expect(applied.status).toBe(200);
       const appliedBody = await applied.json() as any;
@@ -141,12 +150,12 @@ describe("attendance machine preview", () => {
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE import_session_id = ? AND operation = 'MACHINE_IMPORT_CREATE'").get(appliedBody.batchId) as any).count).toBe(1);
 
       const secondPreviewForm = new FormData();
-      secondPreviewForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); secondPreviewForm.append("academic_year_id", "1"); secondPreviewForm.append("jenjang_id", "1");
+      secondPreviewForm.append("file", new File([source], "synthetic-machine.xlsx")); secondPreviewForm.append("academic_year_id", "1"); secondPreviewForm.append("jenjang_id", "1");
       const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: secondPreviewForm }));
       const secondBody = await secondPreview.json() as any;
       expect(secondBody.summary.alreadyCanonical).toBe(1);
       const secondApplyForm = new FormData();
-      secondApplyForm.append("file", new File([await fixture()], "synthetic-machine.xlsx")); secondApplyForm.append("academic_year_id", "1"); secondApplyForm.append("jenjang_id", "1"); secondApplyForm.append("expected_preview_digest", secondBody.previewDigest); secondApplyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      secondApplyForm.append("file", new File([source], "synthetic-machine.xlsx")); secondApplyForm.append("academic_year_id", "1"); secondApplyForm.append("jenjang_id", "1"); secondApplyForm.append("expected_preview_digest", secondBody.previewDigest); secondApplyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
       const secondApplied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: secondApplyForm }));
       expect(secondApplied.status).toBe(200);
       expect((await secondApplied.json() as any).summary).toMatchObject({ created: 0, alreadyCanonical: 1 });
@@ -185,6 +194,66 @@ describe("attendance machine preview", () => {
       expect(applied.status).toBe(409);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(0);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation LIKE 'MACHINE_IMPORT_%'").get() as any).count).toBe(0);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("resolves one unmatched Device ID through bounded search and canonical link authority", async () => {
+    const value = await setup("identity-link");
+    try {
+      value.database.client.run("INSERT INTO students (id, name, jenjang, class_name) VALUES (88888, 'Existing Canonical Student', 'SMP', '7A')");
+      value.database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES ('identity-target', 'Existing Canonical Student', 'existing canonical student', 'active')");
+      value.database.client.run("INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, class_name, class_assigned, effective_from, lifecycle_state) VALUES (88888, 'identity-target', 1, 1, '7A', 1, '2026-01-01', 'ACTIVE')");
+      const search = await value.app.handle(new Request("http://local/api/attendance/machine-import/student-search?search=Existing%20Canonical&academic_year_id=1&jenjang_id=1", { headers: { cookie: value.cookie } }));
+      expect(search.status).toBe(200);
+      expect(await search.json()).toEqual({ items: [{ id: "identity-target", full_name: "Existing Canonical Student", current_jenjang: "SMP", current_class: "7A" }] });
+      const source = await fixture();
+      const before = (value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count;
+      const previewForm = new FormData(); previewForm.append("file", new File([source], "synthetic-machine.xlsx")); previewForm.append("academic_year_id", "1"); previewForm.append("jenjang_id", "1");
+      const beforePreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: previewForm }));
+      expect((await beforePreview.json() as any).identityReview).toEqual([{ deviceIdentifier: "88888", machineName: "Not Mapped", effectiveFrom: "2026-04-03", occurrences: 1 }]);
+      const linked = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      expect(linked.status).toBe(201);
+      expect(await linked.json()).toMatchObject({ status: "LINKED", student: { id: "identity-target", full_name: "Existing Canonical Student" } });
+      const afterPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: previewForm }));
+      const afterBody = await afterPreview.json() as any;
+      expect(afterBody.identityReview).toEqual([]);
+      expect(afterBody.rows.find((item: any) => item.machineStudentIdentifier === "88888")).toMatchObject({ matchingState: "MATCHED", applyClassification: "ELIGIBLE_CREATE" });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(before);
+      const repeated = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      expect(repeated.status).toBe(200);
+      expect(await repeated.json()).toMatchObject({ status: "NOOP_ALREADY_LINKED" });
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("creates a canonical student and Device ID through the existing transactional authority", async () => {
+    const value = await setup("identity-create");
+    try {
+      const create = await value.app.handle(new Request("http://local/api/student-masters", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ identity: { full_name: "New Onboarded Student", student_status: "active" }, device_identity: { device_identifier: "77777", device_source: "attendance_machine", effective_from: "2026-04-03", reason: "Machine identity onboarding" }, enrollment: null }) }));
+      expect(create.status).toBe(201);
+      const created = await create.json() as any;
+      expect(created.identity.full_name).toBe("New Onboarded Student");
+      const mapping = value.database.client.query("SELECT student_master_id, device_identifier, device_source FROM student_device_identities WHERE device_identifier = '77777'").get() as any;
+      expect(mapping).toMatchObject({ device_identifier: "77777", device_source: "attendance_machine", student_master_id: created.id });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 77777").get() as any).count).toBe(0);
+      const source = await identityFixture("77777", "New Onboarded Student");
+      const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      expect(preview.status).toBe(200);
+      expect((await preview.json() as any).identityReview).toEqual([]);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
+  it("blocks Device ID reassignment and unauthorized identity search", async () => {
+    const value = await setup("identity-conflict");
+    try {
+      value.database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES ('identity-other', 'Other Canonical Student', 'other canonical student', 'active')");
+      value.database.client.run("INSERT INTO students (id, name) VALUES (77776, 'Other Canonical Student')");
+      value.database.client.run("INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active) VALUES ('identity-other', 77776, '77776', 'attendance_machine', '2026-01-01', 1)");
+      const conflict = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "77776", student_master_id: "master-123", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      expect(conflict.status).toBe(409);
+      expect(await conflict.json()).toMatchObject({ detail: { code: "DEVICE_IDENTITY_ALREADY_LINKED" } });
+      const anonymous = await value.app.handle(new Request("http://local/api/attendance/machine-import/student-search?search=Other&academic_year_id=1&jenjang_id=1"));
+      expect(anonymous.status).toBe(401);
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 });

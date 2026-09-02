@@ -32327,6 +32327,77 @@
         "tags": ["attendance"]
       }
     },
+    "/api/attendance/machine-import/device-identities/link": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "properties": {
+                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
+                  "student_master_id": {"minLength": 1, "type": "string"},
+                  "effective_from": {"minLength": 1, "type": "string"},
+                  "confirmation": {"type": "string"}
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "properties": {
+                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
+                  "student_master_id": {"minLength": 1, "type": "string"},
+                  "effective_from": {"minLength": 1, "type": "string"},
+                  "confirmation": {"type": "string"}
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "properties": {
+                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
+                  "student_master_id": {"minLength": 1, "type": "string"},
+                  "effective_from": {"minLength": 1, "type": "string"},
+                  "confirmation": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiAttendanceMachine-importDevice-identitiesLink"
+      }
+    },
+    "/api/attendance/machine-import/student-search": {
+      "get": {
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {"maxLength": 100, "type": "string"}
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {"pattern": "^[1-9]\\d*$", "type": "string"}
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": true,
+            "schema": {"pattern": "^[1-9]\\d*$", "type": "string"}
+          }
+        ],
+        "operationId": "getApiAttendanceMachine-importStudent-search"
+      }
+    },
     "/api/attendance/override-review":     {
       "get": {
         "parameters": [

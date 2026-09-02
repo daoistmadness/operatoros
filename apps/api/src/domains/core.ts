@@ -40,7 +40,7 @@ function mask(value: string | null): string | null {
 
 function normalizedName(value: string | null): string { return (value ?? "").replace(/\s+/g, " ").trim().toLowerCase(); }
 
-function legacyName(client: AuthContext["database"]["client"], id: number, name: string): string {
+export function legacyName(client: AuthContext["database"]["client"], id: number, name: string): string {
   return row(client, "SELECT id FROM students WHERE lower(name) = lower(?) LIMIT 1", [name]) ? `${name} [Device ${id}]` : name;
 }
 
@@ -246,6 +246,7 @@ function registerStudentMasters(app: any, context: AuthContext): void {
   const createEnrollmentBody = CreateEnrollmentRequestSchema;
   app.post("/api/student-masters", ({ body, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "create_student" }); if (!user) return { detail: "Insufficient permissions" };
+    if (body.device_identity && !actor(context, { set, ...ctx }, { capability: "manage_device_identity" })) return { detail: "Insufficient permissions" };
     const fullName = body.identity.full_name.replace(/\s+/g, " ").trim(); if (!fullName) return error(set, 422, "Full name is required");
     const duplicate = row(context.database.client, "SELECT id FROM student_masters WHERE normalized_name = ? LIMIT 1", [fullName.toLowerCase()]); if (duplicate && !body.duplicate_override_reason) return error(set, 409, "Potential duplicate student found.");
     const id = randomUUID(); const value = body.identity; const client = context.database.client;

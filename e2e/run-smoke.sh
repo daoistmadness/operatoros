@@ -92,7 +92,7 @@ with sqlite3.connect(database) as connection:
     enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments ORDER BY id").fetchall()
 checksum = hashlib.sha256(open(database, "rb").read()).hexdigest()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-json.dump({"disposable_database": database, "production_checksum": production_checksum, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
+json.dump({"disposable_database": database, "production_checksum": production_checksum, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "enrollments": enrollments, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
 PY
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
@@ -138,7 +138,19 @@ with sqlite3.connect(database) as connection:
     attendance_count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
     enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments WHERE id <= ? ORDER BY id", (baseline_max_id,)).fetchall()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-json.dump({"production_checksum_before": production_before, "production_checksum_after": production_after, "disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
+before = json.load(open(before_file))
+before_rows = {tuple(row) for row in before.get("enrollments", [])}
+after_rows = {tuple(row) for row in enrollments}
+expected_onboarding_change = {
+    row for row in after_rows - before_rows
+    if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] == 999999
+}
+expected_onboarding_before = {
+    row for row in before_rows
+    if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] is None
+}
+unexpected_changes = (before_rows - after_rows - expected_onboarding_before) | (after_rows - before_rows - expected_onboarding_change)
+json.dump({"production_checksum_before": production_before, "production_checksum_after": production_after, "disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": len(unexpected_changes), "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
 PY
 enrollment_before_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
 enrollment_after_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
@@ -146,12 +158,13 @@ enrollment_after_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import j
 status=PASS
 failed_args=()
 evidence_args=()
-if (( backend_status != 0 || web_status != 0 )) || [[ "$production_before" != "$production_after" || "$enrollment_before_fingerprint" != "$enrollment_after_fingerprint" ]]; then
+unexpected_enrollment_changes="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
+if (( backend_status != 0 || web_status != 0 )) || [[ "$production_before" != "$production_after" || "$unexpected_enrollment_changes" != "0" ]]; then
   status=FAIL
   evidence_args+=(--evidence "e2e-results/logs" --evidence "e2e-results/playwright" --evidence "e2e-results/database-after.json")
 fi
 if [[ "$production_before" != "$production_after" ]]; then failed_args+=(--failed-test "Production database checksum changed"); fi
-if [[ "$enrollment_before_fingerprint" != "$enrollment_after_fingerprint" ]]; then failed_args+=(--failed-test "Disposable enrollment fingerprint changed"); fi
+if [[ "$unexpected_enrollment_changes" != "0" ]]; then failed_args+=(--failed-test "Unexpected disposable enrollment changes"); fi
 duration=$((SECONDS - started_at))
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/write-summary.py" \
   --output "$results/summary.txt" --status "$status" \
