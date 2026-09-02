@@ -23,6 +23,7 @@
     "./students": "./src/students/index.ts",
     "./analytics": "./src/analytics/index.ts",
     "./classes": "./src/classes/index.ts",
+    "./readiness": "./src/readiness/index.ts",
     "./excel": "./src/excel.ts"
   }
 }

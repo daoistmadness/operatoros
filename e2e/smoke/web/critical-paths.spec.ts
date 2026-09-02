@@ -3,6 +3,11 @@ import { expect, test, type Page } from "../../../apps/web/node_modules/@playwri
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 
+function localDate(): string {
+  const now = new Date();
+  return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-");
+}
+
 async function login(page: Page) {
   await page.goto("/login");
   await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
@@ -111,7 +116,7 @@ test("@attendance @corrections @release attendance review filters disposable att
   await login(page);
   await page.goto("/attendance-review");
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
-  await page.locator('input[type="date"]').fill(new Date().toISOString().slice(0, 10));
+  await page.locator('input[type="date"]').fill(localDate());
   await page.getByRole("button", { name: "Load" }).click();
   await expect(page.getByText("E2E Ada")).toBeVisible();
   await expect(page.getByText(/\d+ records/)).toBeVisible();
@@ -119,7 +124,7 @@ test("@attendance @corrections @release attendance review filters disposable att
 
 test("@attendance @correction-review @release creates and reviews a canonical correction", async ({ page }) => {
   await login(page);
-  const date = new Date().toISOString().slice(0, 10);
+  const date = localDate();
   await page.goto(`/attendance-review?academic_year_id=1&date=${date}`);
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
   await page.getByRole("button", { name: "Load" }).click();

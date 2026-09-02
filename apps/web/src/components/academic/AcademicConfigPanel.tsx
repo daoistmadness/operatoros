@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Edit3, Plus, RefreshCw, RotateCcw, Save, Trash2 } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ import { fetchAcademicYears, fetchSubjects } from "../../api/grades";
 import { fetchJenjangs, type JenjangOption } from "../../api/enrollment";
 import type { AcademicYear, Subject } from "../../types/grade";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from "../ui/alert-dialog";
+import { invalidateReadiness } from "../../features/readiness";
 
 interface KkmFormState {
   id: number | null;
@@ -85,6 +87,7 @@ function sourceBadge(source: string) {
 }
 
 export function AcademicConfigPanel() {
+  const queryClient = useQueryClient();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [jenjangs, setJenjangs] = useState<JenjangOption[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -257,6 +260,7 @@ export function AcademicConfigPanel() {
         setStatus("Term range created.");
       }
       setTermForm(emptyTermForm(selectedYearId));
+      await invalidateReadiness(queryClient);
       await loadConfig(payload.academic_year_id);
     } catch (saveError) {
       console.error("Term save failure", saveError);
@@ -287,6 +291,7 @@ export function AcademicConfigPanel() {
         await deleteTermConfig(confirmation.row.id!);
         setStatus("Term default mapping restored.");
       }
+      await invalidateReadiness(queryClient);
       await loadConfig(confirmation.row.academic_year_id);
       setConfirmation(null);
     } catch (actionError) {

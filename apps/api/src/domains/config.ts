@@ -165,31 +165,6 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
   return app;
 }
 
-function setStatus(ctx: Context, status: number): void { ctx.set.status = status; }
-
-export function readinessRoutes(app: any, context: AuthContext): any {
-  app.get("/api/readiness", (ctx: Context) => {
-    const user = currentUser(context, ctx); if (!user) return { detail: "Authentication required" };
-    const year = row(context, "SELECT id FROM academic_years WHERE start_date <= end_date AND (is_default = 1 OR status = 'active') ORDER BY is_default DESC, start_date DESC LIMIT 1");
-    const has = (sql: string, params: any[] = []) => Boolean(row(context, sql, params));
-    const required = [
-      { code: "academic_year", name: "Configure an academic year", complete: Boolean(year), requirement: "REQUIRED", reason: "A valid active or default academic year anchors enrollment, grades, and reports.", destination: user.role === "admin" ? "/academic-management" : null },
-      { code: "students", name: "Add or import students", complete: has("SELECT id FROM student_masters UNION SELECT id FROM students LIMIT 1"), requirement: "REQUIRED", reason: "Student records are required before class placement and attendance workflows can begin.", destination: user.role === "admin" ? "/upload" : null },
-      { code: "enrollment", name: "Assign students to active classes", complete: Boolean(year && has("SELECT id FROM student_enrollments WHERE academic_year_id = ? AND lifecycle_state = 'ACTIVE' AND class_assigned = 1 AND (academic_class_id IS NOT NULL OR trim(coalesce(class_name, '')) <> '') LIMIT 1", [year.id])), requirement: "REQUIRED", reason: "At least one class-assigned enrollment in the usable academic year is required for current workflows.", destination: user.role === "admin" ? "/enrollment" : null },
-    ];
-    const optional = [
-      { code: "device_link", name: "Link attendance devices", complete: has("SELECT id FROM student_device_identities WHERE is_active = 1 UNION SELECT id FROM attendance LIMIT 1"), requirement: "RECOMMENDED", reason: "Academic enrollment is ready without biometrics; a device link is only required for attendance-machine matching.", destination: user.role === "admin" ? "/students" : null },
-      { code: "academic_terms", name: "Configure academic periods", complete: Boolean(year && has("SELECT id FROM academic_term_configs WHERE academic_year_id = ? AND start_date <= end_date LIMIT 1", [year.id])), requirement: "WORKFLOW", reason: "Academic periods are required for term-based grade and academic reporting workflows.", destination: user.role === "admin" ? "/academic-management" : null },
-      { code: "attendance", name: "Record or import attendance", complete: has("SELECT id FROM attendance LIMIT 1"), requirement: "RECOMMENDED", reason: "Attendance data enables daily review, dashboards, reports, and Management Analytics.", destination: user.role === "admin" ? "/upload" : "/attendance-review" },
-    ];
-    const requiredComplete = required.filter((item) => item.complete).length;
-    const overall = user.role !== "admin" && requiredComplete < required.length ? "READ_ONLY_GUIDANCE" : requiredComplete === 0 ? "FIRST_RUN" : requiredComplete < required.length ? "SETUP_PARTIAL" : optional.some((item) => !item.complete) ? "READY_WITH_RECOMMENDATIONS" : "OPERATIONALLY_READY";
-    const responsibility = user.role === "admin" ? null : "An administrator can complete this step.";
-    return { overall_status: overall, steps: [...required, ...optional].map((item) => ({ code: item.code, name: item.name, status: item.complete ? "COMPLETE" : item.requirement === "RECOMMENDED" ? "OPTIONAL" : "NOT_STARTED", requirement: item.requirement, reason: item.reason, destination: item.destination, can_manage: user.role === "admin", responsibility })) };
-  });
-  return app;
-}
-
 export function systemRoutes(app: any, context: AuthContext | null = null, config: { destructiveOperationsEnabled?: boolean } = {}): any {
   app.get("/api/system/health", () => ({ status: "ok", service: "System API", destructive_operations_enabled: config.destructiveOperationsEnabled ?? false }));
   if (context) app.post("/api/system/clear-data", (ctx: Context) => {

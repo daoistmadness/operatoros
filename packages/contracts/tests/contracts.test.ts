@@ -15,6 +15,7 @@ import {
 import { ReportQuerySchema } from "@operatoros/contracts/reports";
 import { AnalyticsOverviewResponseSchema, ManagementOverviewResponseSchema } from "@operatoros/contracts/analytics";
 import { ExcelWorksheetDtoSchema } from "@operatoros/contracts/excel";
+import { ReadinessResponseSchema } from "@operatoros/contracts/readiness";
 import {
   CreateEnrollmentRequestSchema,
   ManagedStudentSchema,
@@ -93,6 +94,14 @@ describe("@operatoros/contracts", () => {
       links: { recapitulation: "/analytics/recapitulation", attendance: "/analytics/attendance", academic: "/analytics/academic", dataQuality: "/analytics/data-quality" },
     })).toBe(true);
     expect(Value.Check(ExcelWorksheetDtoSchema, { name: "Attendance", headers: ["ID"], rows: [[1]] })).toBe(true);
+    expect(Value.Check(ReadinessResponseSchema, {
+      overall: { state: "READY", summary: "The configured foundation is ready." },
+      foundation: [{ key: "jenjang", label: "Programs / Jenjang", state: "READY", summary: "Configured.", actions: [] }],
+      operational: [],
+      features: [{ key: "MACHINE_IMPORT", label: "Machine Import", route: "/attendance/machine-import", state: "READY", blockers: [], actions: [] }],
+      overall_status: "READY_WITH_RECOMMENDATIONS",
+      steps: [],
+    })).toBe(true);
   });
 
   it("rejects invalid values without changing optional and null semantics", () => {
@@ -121,5 +130,9 @@ describe("@operatoros/contracts", () => {
       metric_definitions: [], cohorts: [],
     })).toBe(false);
     expect(Value.Check(ExcelWorksheetDtoSchema, { name: "A".repeat(32), headers: ["ID"], rows: [] })).toBe(false);
+    expect(Value.Check(ReadinessResponseSchema, {
+      overall: { state: "READY", summary: "Configured." }, foundation: [], operational: [], features: [], overall_status: "READY_WITH_RECOMMENDATIONS",
+      steps: [{ code: "jenjang", name: "Programs", status: "COMPLETE", requirement: "REQUIRED", reason: "Configured.", destination: null, can_manage: true, responsibility: null, full_name: "never-public" }],
+    })).toBe(false);
   });
 });
