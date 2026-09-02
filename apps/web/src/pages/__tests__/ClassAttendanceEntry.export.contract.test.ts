@@ -19,3 +19,10 @@ describe("class attendance entry export contract", () => {
     expect(source).toContain('link.download = `absensi_kelas_${exportMonth}.xlsx`');
   });
 });
+
+describe("class attendance entry roster contract", () => {
+  it("renders the API's canonical student_name field", () => {
+    expect(source).toContain("st.student_name");
+    expect(source).not.toContain("st.full_name");
+  });
+});
