@@ -27,6 +27,7 @@ for (const machineRow of [
   ["100001", "E2E Ada", "14/12/2026", "", "", "", "", "", "", "Monday"],
   ["100001", "E2E Ada", "15/12/2026", "", "", "", "", "", "", "Tuesday"],
   ["999999", "E2E Unmapped", "08/08/2026", "07:15", "14:00", "", "", "", "", "Saturday"],
+  ["999998", "E2E New Machine Student", "08/08/2026", "07:20", "14:00", "", "", "", "", "Saturday"],
 ]) appendRow(machineSheet, machineRow);
 await Bun.write(join(directory, "machine-attendance.xlsx"), await writeXlsxWorkbook(machine));
 
