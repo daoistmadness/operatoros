@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import type { MachineImportPreviewResponse } from "@operatoros/contracts/attendance";
 import { PageHeader } from "../components/common/page-header";
-import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState, SetupRequiredState } from "../components/common/state-message";
+import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
@@ -16,6 +16,7 @@ import { createStudent, linkDeviceIdentity, searchMachineImportStudents } from "
 import { isApiError, getPageApiError } from "../lib/api/errors";
 import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FeatureReadinessCard, useReadinessQuery } from "../features/readiness";
 
 const stateLabel: Record<string, string> = {
   SCAN_PRESENT: "Scan present", NO_SCAN: "No scan", MULTIPLE_SCANS: "Multiple scans", INVALID_SCAN_VALUE: "Invalid scan value", UNSUPPORTED_SOURCE_STATUS: "Unsupported source status",
@@ -38,9 +39,10 @@ type IdentityAction = { item: IdentityReview; mode: "link" | "create" };
 function label(value: string): string { return stateLabel[value] ?? value.replaceAll("_", " "); }
 
 export default function AttendanceMachineImportPreview() {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const queryClient = useQueryClient();
   const allowed = can("import_attendance");
+  const readiness = useReadinessQuery(user?.id ?? null);
   const filters = useAnalyticsFiltersQuery({}, allowed);
   const years = filters.data?.academic_years ?? [];
   const jenjangs = filters.data?.jenjangs ?? [];
@@ -84,9 +86,14 @@ export default function AttendanceMachineImportPreview() {
   useEffect(() => { if (jenjangId === null && jenjangs.length) setJenjangId(jenjangs[0].id); }, [jenjangId, jenjangs]);
 
   if (!allowed) return <PermissionRestrictedState title="Access restricted" description="Your account cannot preview attendance-machine workbooks." />;
+  if (readiness.isPending) return <LoadingState title="Checking import readiness" description="Reading the canonical academic setup required for machine import." />;
+  if (readiness.isError || !readiness.data) return <ErrorState title="Import scope unavailable" description="The server could not determine machine-import readiness. Setup has not been classified as incomplete." action={<Button onClick={() => void readiness.refetch()}>Try again</Button>} />;
+  const machineReadiness = readiness.data.features.find((feature) => feature.key === "MACHINE_IMPORT");
+  if (!machineReadiness) return <ErrorState title="Import scope unavailable" description="The server returned no machine-import readiness result." action={<Button onClick={() => void readiness.refetch()}>Try again</Button>} />;
+  if (machineReadiness.state !== "READY") return <div className="space-y-7 pb-16"><PageHeader eyebrow="Attendance Operations" title="Machine Import" description="Resolve the required canonical setup before previewing a workbook." /><FeatureReadinessCard feature={machineReadiness} /></div>;
   if (filters.isPending) return <LoadingState title="Loading import scope" description="Preparing academic-year and jenjang choices." />;
   if (filters.error) return <ErrorState title="Import scope unavailable" description="The server could not load the academic scope." action={<Button onClick={() => void filters.refetch()}>Try again</Button>} />;
-  if (!years.length || !jenjangs.length) return <SetupRequiredState title="Academic setup required" description="Add an academic year and active jenjang before previewing a machine workbook." />;
+  if (!years.length || !jenjangs.length) return <EmptyState title="No import scope available" description="No academic year or canonical jenjang is available for this import scope." />;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();

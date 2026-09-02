@@ -5,6 +5,7 @@ import { RouteLoadingFallback } from './RouteLoadingFallback';
 
 const expectedPaths = [
   '/',
+  '/setup',
   '/operator/work-queue',
   '/upload',
   '/data-portability',

@@ -7,6 +7,7 @@ import {
   fetchLegacyLinkStatus, linkLegacyStudent,
 } from "../api/students";
 import { queryKeys } from "../lib/query/queryKeys";
+import { invalidateReadiness } from "../features/readiness";
 
 export const useStudents = (filters: StudentFilters) => useQuery({ queryKey: queryKeys.students.list(filters), queryFn: () => fetchStudents(filters), placeholderData: (previous) => previous });
 export const useStudent = (id?: string) => useQuery({ queryKey: queryKeys.students.detail(id || ""), queryFn: () => fetchStudent(id!), enabled: Boolean(id) });
@@ -19,6 +20,7 @@ export const useStudentEnrollments = (id?: string) => useQuery({ queryKey: query
 function useStudentDomainInvalidation(id?: string) {
   const client = useQueryClient();
   return async () => {
+    await invalidateReadiness(client);
     await client.invalidateQueries({ queryKey: queryKeys.students.lists });
     await client.invalidateQueries({ queryKey: queryKeys.students.quality });
     if (id) {

@@ -71,7 +71,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete administrator inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(38);
+    expect(container.querySelectorAll('nav a')).toHaveLength(39);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
@@ -130,7 +130,7 @@ describe('role-aware sidebar navigation', () => {
       'Overview', 'Attendance', 'Academic & Students', 'Analytics & Reports', 'Data Management', 'Administration',
     ]);
     expect(NAV_GROUPS.map((group) => group.items.map((item) => item.name))).toEqual([
-      ['Dashboard'],
+      ['Dashboard', 'Setup & Readiness'],
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Machine Import Preview', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
       ['Management Analytics', 'Data Recapitulation', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],

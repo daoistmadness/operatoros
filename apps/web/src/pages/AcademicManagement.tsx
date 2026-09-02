@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, Repeat2, Settings, UserCheck } from "lucide-react";
 import {
   createAcademicYear,
@@ -27,8 +29,10 @@ import {
   DataTableRow,
 } from "../components/common/data-table";
 import type { AcademicYear, Subject } from "../types/grade";
+import { invalidateReadiness } from "../features/readiness";
+import { AcademicFoundationPanel } from "../components/academic/AcademicFoundationPanel";
 
-type ManagementTab = "calendar" | "allocation" | "progression" | "settings" | "report-builder";
+type ManagementTab = "calendar" | "foundation" | "allocation" | "progression" | "settings" | "report-builder";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -68,6 +72,8 @@ function CapabilityBadge({ enabled, label }: { enabled: boolean; label: string }
 }
 
 export default function AcademicManagement() {
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ManagementTab>("calendar");
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [jenjangs, setJenjangs] = useState<JenjangOption[]>([]);
@@ -143,6 +149,11 @@ export default function AcademicManagement() {
   }, [loadMasters]);
 
   useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "calendar" || tab === "foundation" || tab === "allocation" || tab === "progression" || tab === "settings" || tab === "report-builder") setActiveTab(tab);
+  }, [searchParams]);
+
+  useEffect(() => {
     loadSubjects();
   }, [loadSubjects]);
 
@@ -170,6 +181,7 @@ export default function AcademicManagement() {
         status: "active",
         is_default: false,
       });
+      await invalidateReadiness(queryClient);
       await loadMasters();
     } catch (saveError) {
       console.error("Academic year create failure", saveError);
@@ -262,6 +274,7 @@ export default function AcademicManagement() {
       <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
         {[
           { id: "calendar" as const, label: "Calendar & Subjects", icon: CalendarDays },
+          { id: "foundation" as const, label: "Foundation Masters", icon: Layers3 },
           { id: "allocation" as const, label: "Class Allocation", icon: UserCheck },
           { id: "progression" as const, label: "Progression", icon: Repeat2 },
           { id: "settings" as const, label: "KKM & Term Settings", icon: Settings },
@@ -546,6 +559,8 @@ export default function AcademicManagement() {
             </form>
           </div>
         </div>
+      ) : activeTab === "foundation" ? (
+        <AcademicFoundationPanel academicYears={academicYears} onChanged={loadMasters} />
       ) : activeTab === "allocation" ? (
         <div className="space-y-5">
           <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
