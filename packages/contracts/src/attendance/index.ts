@@ -1,5 +1,6 @@
 import { Type, type Static } from "@sinclair/typebox";
 export * from "./calendar";
+export * from "./class-attendance";
 export * from "./submission-deadline";
 export * from "./correction-review";
 export * from "./machine-import-preview";
