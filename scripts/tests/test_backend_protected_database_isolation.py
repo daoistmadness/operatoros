@@ -35,3 +35,14 @@ def test_test_tier_unsets_guard_only_environment_before_running_suites():
     source = (ROOT / "scripts" / "test-tier.sh").read_text(encoding="utf-8")
     assert "unset PROTECTED_DB_PATH" in source
     assert source.index("unset PROTECTED_DB_PATH") < source.index("backend_full()")
+
+
+def test_e2e_fixture_scripts_only_allow_protected_path_in_preopen_guard():
+    allowed = {"e2e/helpers/create-test-workspace.py"}
+    offenders: list[str] = []
+    for path in (ROOT / "e2e").rglob("*"):
+        if path.is_file() and path.suffix in {".py", ".sh"}:
+            source = path.read_text(encoding="utf-8")
+            if "backend/attendance.db" in source and str(path.relative_to(ROOT)) not in allowed:
+                offenders.append(str(path.relative_to(ROOT)))
+    assert offenders == []
