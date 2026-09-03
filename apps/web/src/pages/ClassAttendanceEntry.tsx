@@ -20,10 +20,9 @@ import {
   fetchClassAttendanceForDate,
   submitClassAttendanceEntries,
   type AssignedClassSummary,
-  type ClassDateAttendanceResponse,
-  type StudentRosterItem,
   type AttendanceEntryPayload,
 } from "../api/teacherClassAssignments";
+import type { ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
@@ -42,6 +41,19 @@ interface RosterFormState {
     checkOut: string;
     note: string;
   };
+}
+
+function toFormStatus(status: string): AttendanceStatus {
+  switch (status) {
+    case "late": return "late";
+    case "sakit":
+    case "sick": return "sick";
+    case "izin":
+    case "leave": return "leave";
+    case "absent":
+    case "alfa": return "absent";
+    default: return "on-time";
+  }
 }
 
 const STATUS_CONFIG: Record<
@@ -122,7 +134,7 @@ export default function ClassAttendanceEntry() {
     isLoading: loadingRoster,
     error: rosterError,
     refetch: refetchRoster,
-  } = useQuery<ClassDateAttendanceResponse>({
+  } = useQuery<ClassAttendanceResponse>({
     queryKey: ["classAttendanceRoster", classIdNum, selectedDate],
     queryFn: () => fetchClassAttendanceForDate(classIdNum!, selectedDate),
     enabled: !!classIdNum && !!selectedDate,
@@ -134,10 +146,10 @@ export default function ClassAttendanceEntry() {
       const initial: RosterFormState = {};
       rosterData.items.forEach((st) => {
         initial[st.student_id] = {
-          status: (st.status as AttendanceStatus) || "on-time",
-          checkIn: st.check_in || "",
-          checkOut: st.check_out || "",
-          note: st.note || "",
+          status: toFormStatus(st.effective_status),
+          checkIn: st.scan_in || "",
+          checkOut: st.scan_out || "",
+          note: "",
         };
       });
       setFormState(initial);
@@ -422,7 +434,6 @@ export default function ClassAttendanceEntry() {
                         <td className="px-4 py-3 text-xs text-slate-400 font-mono">{idx + 1}</td>
                         <td className="px-4 py-3 font-semibold text-slate-900">
                           <div>{st.student_name}</div>
-                          {st.nisn && <div className="text-xs font-normal text-slate-400">NISN: {st.nisn}</div>}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
@@ -495,7 +506,6 @@ export default function ClassAttendanceEntry() {
                   <div key={st.student_id} className="p-4 space-y-3 bg-white">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-400">#{idx + 1}</span>
-                      <span className="text-xs text-slate-400 font-mono">{st.nisn ? `NISN: ${st.nisn}` : ""}</span>
                     </div>
 
                     <div className="font-semibold text-slate-900 text-sm">{st.student_name}</div>

@@ -1,4 +1,7 @@
 import { apiRequest } from "../lib/api/client";
+import type { ClassAttendanceEntriesResponse, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
+
+export type { ClassAttendanceEntriesResponse, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 
 export interface TeacherClassAssignment {
   id: number;
@@ -50,27 +53,6 @@ export interface AssignedClassSummary {
   subject_name?: string | null;
   effective_from: string;
   effective_to?: string | null;
-}
-
-export interface StudentRosterItem {
-  student_id: number;
-  student_master_id?: string | null;
-  nisn?: string | null;
-  student_name: string;
-  attendance_id?: number | null;
-  status?: string | null;
-  check_in?: string | null;
-  check_out?: string | null;
-  note?: string | null;
-  lifecycle_state: string;
-}
-
-export interface ClassDateAttendanceResponse {
-  class_id: number;
-  class_name: string;
-  date: string;
-  is_finalized: boolean;
-  items: StudentRosterItem[];
 }
 
 export interface AttendanceEntryPayload {
@@ -153,8 +135,8 @@ export async function fetchAssignedClasses(): Promise<AssignedClassSummary[]> {
 export async function fetchClassAttendanceForDate(
   classId: number,
   dateVal: string
-): Promise<ClassDateAttendanceResponse> {
-  const response = await apiRequest<ClassDateAttendanceResponse>({
+): Promise<ClassAttendanceResponse> {
+  const response = await apiRequest<ClassAttendanceResponse>({
     path: `/api/attendance/classes/${classId}/dates/${dateVal}`,
     method: "GET",
   });
@@ -165,8 +147,8 @@ export async function submitClassAttendanceEntries(
   classId: number,
   dateVal: string,
   entries: AttendanceEntryPayload[]
-): Promise<{ success: boolean; total_submitted: number }> {
-  const response = await apiRequest<{ success: boolean; total_submitted: number }>({
+): Promise<ClassAttendanceEntriesResponse> {
+  const response = await apiRequest<ClassAttendanceEntriesResponse>({
     path: `/api/attendance/classes/${classId}/dates/${dateVal}/entries`,
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -25,4 +25,13 @@ describe("class attendance entry roster contract", () => {
     expect(source).toContain("st.student_name");
     expect(source).not.toContain("st.full_name");
   });
+
+  it("consumes the API's canonical attendance status and scan fields", () => {
+    expect(source).toContain("st.effective_status");
+    expect(source).toContain("st.scan_in");
+    expect(source).toContain("st.scan_out");
+    expect(source).not.toContain("st.status");
+    expect(source).not.toContain("st.check_in");
+    expect(source).not.toContain("st.check_out");
+  });
 });

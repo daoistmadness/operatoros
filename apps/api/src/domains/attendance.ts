@@ -5,6 +5,10 @@ import {
   AttendanceCorrectionRequestSchema,
   AttendanceCorrectionReviewQuerySchema,
   AttendanceCorrectionReviewResponseSchema,
+  ClassAttendanceEntriesResponseSchema,
+  ClassAttendanceResponseSchema,
+  type ClassAttendanceEntriesResponse,
+  type ClassAttendanceResponse,
   type AttendanceCorrectionReviewItem,
   type AttendanceCorrectionReviewResponse,
 } from "@operatoros/contracts/attendance";
@@ -25,6 +29,35 @@ function row(context: AuthContext, sql: string, params: any[] = []): Row | null 
 function fail(set: any, status: number, detail: string | Record<string, unknown>): { detail: string | Record<string, unknown> } { set.status = status; return { detail }; }
 function validation(set: any, details: Record<string, unknown>[]): { detail: Record<string, unknown>[] } { set.status = 422; return { detail: details }; }
 function time(value: string | null): string | null { return value ? value.slice(0, 5) : null; }
+
+function mapClassAttendanceResponse(
+  classId: number,
+  className: string,
+  date: string,
+  finalized: boolean,
+  values: Row[],
+): ClassAttendanceResponse {
+  return {
+    class_id: classId,
+    class_name: className,
+    date,
+    is_finalized: finalized,
+    total_enrolled: values.length,
+    items: values.map((value) => ({
+      student_id: Number(value.student_id),
+      student_name: String(value.student_name),
+      attendance_id: value.attendance_id === null || value.attendance_id === undefined ? null : Number(value.attendance_id),
+      raw_status: String(value.raw_status ?? "unrecorded"),
+      effective_status: String(value.override_status ?? value.raw_status ?? "unrecorded"),
+      is_overridden: value.override_status !== null && value.override_status !== undefined,
+      scan_in: time(value.check_in),
+      scan_out: time(value.check_out),
+      is_absent: Boolean(value.is_absent),
+      pending_correction: false,
+      correction_request_id: null,
+    })),
+  };
+}
 function validAttendanceDate(value: unknown): value is string { if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false; const date = new Date(`${value}T00:00:00Z`); return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value; }
 function parsePositiveInteger(value: unknown, fallback: number): number { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback; }
 function periodOpen(context: AuthContext, date: string): boolean { return !row(context, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [date]); }
@@ -261,10 +294,11 @@ function scopedRoutes(app: any, context: AuthContext): void {
   app.get("/api/attendance/classes/:class_id/dates/:date_val", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     const classRow = row(context, "SELECT id, class_name, academic_year_id, active FROM academic_classes WHERE id = ?", [ctx.params.class_id]); if (!classRow || !classRow.active) return fail(ctx.set, 400, "Class is inactive or archived.");
+    if (user.role !== "admin" && !row(context, "SELECT id FROM teacher_class_assignments WHERE user_id = ? AND academic_class_id = ? AND active = 1 AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [user.id, ctx.params.class_id, ctx.params.date_val, ctx.params.date_val])) return fail(ctx.set, 403, "Insufficient permissions");
     const values = rows(context, "SELECT e.student_id, s.name AS student_name, a.id AS attendance_id, a.status AS raw_status, a.check_in, a.check_out, a.is_absent, o.override_status FROM student_enrollments e JOIN students s ON s.id = e.student_id LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date = ? LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE e.academic_class_id = ? AND e.lifecycle_state = 'ACTIVE' AND (e.effective_from IS NULL OR e.effective_from <= ?) AND (e.effective_to IS NULL OR e.effective_to >= ?) ORDER BY s.name", [ctx.params.date_val, ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]);
     const finalized = Boolean(row(context, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [ctx.params.date_val]));
-    return { class_id: Number(ctx.params.class_id), class_name: classRow.class_name, date: ctx.params.date_val, is_finalized: finalized, total_enrolled: values.length, items: values.map((value) => ({ student_id: value.student_id, student_name: value.student_name, attendance_id: value.attendance_id, raw_status: value.raw_status ?? "unrecorded", effective_status: value.override_status ?? value.raw_status ?? "unrecorded", is_overridden: value.override_status !== null, scan_in: time(value.check_in), scan_out: time(value.check_out), is_absent: Boolean(value.is_absent), pending_correction: false, correction_request_id: null })) };
-  }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }) });
+    return mapClassAttendanceResponse(Number(ctx.params.class_id), String(classRow.class_name), ctx.params.date_val, finalized, values);
+  }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }), response: ClassAttendanceResponseSchema });
   app.post("/api/attendance/classes/:class_id/dates/:date_val/entries", (ctx: Context) => {
     const user = actor(context, ctx, {}); if (!user) return { detail: "Insufficient permissions" };
     if (user.role !== "admin" && !capabilitiesForRole(user.role).includes("enter_assigned_class_attendance")) return fail(ctx.set, 403, "Insufficient permissions");
@@ -273,8 +307,8 @@ function scopedRoutes(app: any, context: AuthContext): void {
     if (!periodOpen(context, ctx.params.date_val)) return fail(ctx.set, 400, "Attendance for target date is finalized and locked.");
     const client = context.database.client; const entries = ctx.body.entries; const seen = new Set<number>(); const enrolled = new Set(rows(context, "SELECT student_id FROM student_enrollments WHERE academic_class_id = ? AND lifecycle_state = 'ACTIVE' AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]).map((value) => Number(value.student_id)));
     for (const entry of entries) { if (seen.has(entry.student_id)) return fail(ctx.set, 400, `Duplicate entry for student ID ${entry.student_id}.`); seen.add(entry.student_id); if (!enrolled.has(entry.student_id)) return fail(ctx.set, 400, `Student ID ${entry.student_id} is not effectively enrolled in class on target date.`); if (!(manualStatuses as readonly string[]).includes(entry.status.trim().toLowerCase())) return fail(ctx.set, 400, `Status '${entry.status}' is invalid.`); }
-    try { let created = 0; let updated = 0; inTransaction(client, () => { for (const entry of entries) { const status = entry.status.trim().toLowerCase(); const existing = row(context, "SELECT id FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]); if (existing) { client.run("UPDATE attendance SET status = ?, check_in = ?, check_out = ?, is_absent = ?, late_source = ?, late_duration = ? WHERE id = ?", [status, entry.check_in ?? null, entry.check_out ?? null, ["absent", "sakit", "izin", "alfa"].includes(status) ? 1 : 0, status === "late" ? "manual" : "none", 0, existing.id]); updated++; } else { insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: 0, lateSource: status === "late" ? "manual" : "none", status }); created++; } } }); return { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username }; } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
-  }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }), body: t.Object({ entries: t.Array(t.Object({ student_id: t.Number({ minimum: 1 }), status: t.String(), check_in: t.Optional(t.String()), check_out: t.Optional(t.String()), notes: t.Optional(t.String()) }), { minItems: 1 }) }) });
+    try { let created = 0; let updated = 0; inTransaction(client, () => { for (const entry of entries) { const status = entry.status.trim().toLowerCase(); const existing = row(context, "SELECT id FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]); if (existing) { client.run("UPDATE attendance SET status = ?, check_in = ?, check_out = ?, is_absent = ?, late_source = ?, late_duration = ? WHERE id = ?", [status, entry.check_in ?? null, entry.check_out ?? null, ["absent", "sakit", "izin", "alfa"].includes(status) ? 1 : 0, status === "late" ? "manual" : "none", 0, existing.id]); updated++; } else { insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: 0, lateSource: status === "late" ? "manual" : "none", status }); created++; } } }); const response: ClassAttendanceEntriesResponse = { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username }; return response; } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
+  }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }), body: t.Object({ entries: t.Array(t.Object({ student_id: t.Number({ minimum: 1 }), status: t.String(), check_in: t.Optional(t.String()), check_out: t.Optional(t.String()), notes: t.Optional(t.String()) }), { minItems: 1 }) }), response: ClassAttendanceEntriesResponseSchema });
 }
 
 function correctionRoutes(app: any, context: AuthContext): void {
