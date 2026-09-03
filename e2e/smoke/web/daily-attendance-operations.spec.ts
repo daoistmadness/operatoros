@@ -43,6 +43,7 @@ test("@attendance @daily-attendance @release daily attendance moves from partial
   await expect(partialRow.getByRole("link", { name: "Continue attendance" })).toBeVisible();
   await partialRow.getByRole("link", { name: "Continue attendance" }).click();
   await expect(page).toHaveURL(new RegExp(`/attendance/class-entry\\?class_id=1&date=${partialDate}`));
+  await expect(page.getByRole("row").filter({ hasText: "E2E Ada" })).toBeVisible();
 
   await page.getByRole("button", { name: "Tandai Semua Hadir" }).click();
   const save = page.waitForResponse((item) => item.url().includes(`/api/attendance/classes/1/dates/${partialDate}/entries`) && item.request().method() === "POST" && item.status() === 200);
