@@ -21,39 +21,14 @@ export SHELL=/bin/bash
 hash -r
 started=$SECONDS
 scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
-IFS=$'\t' read -r protected_mode protected_database < <("$python" "$repo/scripts/protected_db_snapshot.py" select "$repo")
-protected_before=""
-if [[ "$protected_mode" == snapshot ]]; then
-  protected_before="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
-  echo "protected_database_mode=immutable_snapshot"
-elif [[ "$protected_mode" == absent ]]; then
-  "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
-  echo "protected_database_mode=PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE"
-else
-  echo "unknown protected database mode: $protected_mode" >&2
-  exit 2
-fi
 
 # The selected protected path is guard-only metadata.  Child test and runtime
 # processes must never inherit it as an application configuration value.
 unset PROTECTED_DB_PATH
 
-verify_protected() {
-  local protected_after
-  if [[ "$protected_mode" == snapshot ]]; then
-    protected_after="$($python "$repo/scripts/protected_db_snapshot.py" "$protected_database")"
-    [[ "$protected_after" == "$protected_before" ]]
-    echo "protected_database_snapshot=unchanged"
-    echo "protected_database_sidecars=none"
-  else
-    "$python" "$repo/scripts/protected_db_snapshot.py" assert-absent "$protected_database"
-    echo "protected_database_absent=verified"
-  fi
-}
 cleanup() {
   local status=$?
   rm -f -- "$scope_file"
-  verify_protected || status=1
   exit "$status"
 }
 trap cleanup EXIT
@@ -163,8 +138,9 @@ PY
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
-    echo "selected_suites=fresh-db-parity,api,bun-tests,bun-build,boundaries,api-drift,typecheck,ui-package,playwright-release,e2e-validation"
+    echo "selected_suites=fresh-db-parity,protected-data-safety,api,bun-tests,bun-build,boundaries,api-drift,typecheck,ui-package,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
+    "$python" -m pytest "$repo/scripts/tests/test_backend_protected_database_isolation.py" -q
     passes=1
     reliable_change_context=no
     [[ -n "${TEST_BASE_REVISION:-}" || -n "${TEST_CHANGED_FILES:-}" ]] && reliable_change_context=yes
