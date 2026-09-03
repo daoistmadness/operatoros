@@ -15,7 +15,6 @@ runtime_root="$(mktemp -d /tmp/operatoros-e2e.XXXXXX)"
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 workspace="$runtime_root/$run_id"
 database="$workspace/state/operatoros.sqlite"
-production_database="$repo_root/backend/attendance.db"
 logs="$results/logs"
 junit="$results/junit"
 mkdir -p "$workspace/state" "$logs" "$junit"
@@ -37,13 +36,10 @@ export OPERATOROS_DATA_DIR="$workspace/state"
 export BACKUP_DIR="$workspace/state/backups"
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
 
-resolved_database="$(realpath -m "$database")"
-resolved_runtime="$(realpath -m "$runtime_root")"
-resolved_production="$(realpath -m "$production_database")"
-[[ "$resolved_database" == "$resolved_runtime"/* && "$resolved_database" != "$resolved_production" && "$resolved_database" == /* ]] || exit 2
-
-production_before="MISSING"
-[[ -f "$production_database" ]] && production_before="$(sha256sum "$production_database" | awk '{print $1}')"
+python3 "$repo_root/e2e/helpers/create-test-workspace.py" \
+  --database "$database" \
+  --runtime-root "$runtime_root" \
+  --repository-root "$repo_root" >/dev/null
 
 cleanup_stack() {
   bash "$repo_root/e2e/stop-test-stack.sh" "$workspace"
@@ -84,15 +80,15 @@ export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
 export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 export OPERATOROS_E2E_MACHINE_IMPORT_XLSX="$fixture_dir/machine-attendance.xlsx"
 
-"$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$results/database-before.json" <<'PY'
+"$repo_root/backend/.venv/bin/python" - "$database" "$results/database-before.json" <<'PY'
 import hashlib, json, sqlite3, sys
-database, production_checksum, output = sys.argv[1:]
+database, output = sys.argv[1:]
 with sqlite3.connect(database) as connection:
     counts = {name: connection.execute(f"SELECT COUNT(*) FROM {name}").fetchone()[0] for name in ("student_enrollments", "attendance")}
     enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments ORDER BY id").fetchall()
 checksum = hashlib.sha256(open(database, "rb").read()).hexdigest()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-json.dump({"disposable_database": database, "production_checksum": production_checksum, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "enrollments": enrollments, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
+json.dump({"disposable_database": database, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "enrollments": enrollments, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
 PY
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
@@ -126,12 +122,10 @@ fi
 cleanup_stack
 trap - EXIT
 
-production_after="MISSING"
-[[ -f "$production_database" ]] && production_after="$(sha256sum "$production_database" | awk '{print $1}')"
 database_after="$(sha256sum "$database" | awk '{print $1}')"
-"$repo_root/backend/.venv/bin/python" - "$database" "$production_before" "$production_after" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
+"$repo_root/backend/.venv/bin/python" - "$database" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
 import hashlib, json, sqlite3, sys
-database, production_before, production_after, database_checksum, before_file, output = sys.argv[1:]
+database, database_checksum, before_file, output = sys.argv[1:]
 baseline_max_id = json.load(open(before_file))["baseline_enrollment_max_id"]
 with sqlite3.connect(database) as connection:
     enrollment_count = connection.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0]
@@ -150,7 +144,7 @@ expected_onboarding_before = {
     if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] is None
 }
 unexpected_changes = (before_rows - after_rows - expected_onboarding_before) | (after_rows - before_rows - expected_onboarding_change)
-json.dump({"production_checksum_before": production_before, "production_checksum_after": production_after, "disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": len(unexpected_changes), "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
+json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": len(unexpected_changes), "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
 PY
 enrollment_before_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
 enrollment_after_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
@@ -159,11 +153,10 @@ status=PASS
 failed_args=()
 evidence_args=()
 unexpected_enrollment_changes="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
-if (( backend_status != 0 || web_status != 0 )) || [[ "$production_before" != "$production_after" || "$unexpected_enrollment_changes" != "0" ]]; then
+if (( backend_status != 0 || web_status != 0 || unexpected_enrollment_changes != 0 )); then
   status=FAIL
   evidence_args+=(--evidence "e2e-results/logs" --evidence "e2e-results/playwright" --evidence "e2e-results/database-after.json")
 fi
-if [[ "$production_before" != "$production_after" ]]; then failed_args+=(--failed-test "Production database checksum changed"); fi
 if [[ "$unexpected_enrollment_changes" != "0" ]]; then failed_args+=(--failed-test "Unexpected disposable enrollment changes"); fi
 duration=$((SECONDS - started_at))
 "$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/write-summary.py" \

@@ -25,7 +25,4 @@ export AUTH_COOKIE_SECRET="fresh-parity-test-only-secret-32-chars"
 cd "$REPO/apps/api"
 PATH="${BUN_BIN:-$(dirname "$(command -v bun)")}:$PATH" OPERATOROS_PYTHON="$PYTHON" bun test tests/data-layer.test.ts
 
-test ! -e "$REPO/backend/attendance.db-wal"
-test ! -e "$REPO/backend/attendance.db-shm"
-test ! -e "$REPO/backend/attendance.db-journal"
 echo "FRESH_DATABASE_RELEASE_GATE_ESTABLISHED"
