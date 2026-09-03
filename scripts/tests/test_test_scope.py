@@ -164,14 +164,14 @@ def test_release_runner_retains_required_gates_and_double_run_policy():
     assert "RELEASE_DOUBLE_BACKEND" in release_section
 
 
-def test_test_tier_supports_database_absence_in_linked_worktrees():
+def test_test_tier_does_not_snapshot_the_protected_database():
     runner = (ROOT / "scripts/test-tier.sh").read_text()
-    assert "protected_db_snapshot.py\" select \"$repo\"" in runner
-    assert "PROTECTED_DATABASE_NOT_PRESENT_IN_WORKTREE" in runner
-    assert "protected_database_absent=verified" in runner
+    assert "protected_db_snapshot.py" not in runner
+    assert "unset PROTECTED_DB_PATH" in runner
+    assert "backend_full()" in runner
 
 
-def test_protected_database_path_is_rejected():
+def test_protected_database_path_is_rejected_before_file_access(tmp_path):
     import importlib.util
 
     helper_path = ROOT / "e2e/helpers/create-test-workspace.py"
@@ -179,5 +179,23 @@ def test_protected_database_path_is_rejected():
     assert spec and spec.loader
     helper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helper)
-    with pytest.raises(ValueError):
-        helper.validate_database_path(ROOT / "backend/attendance.db")
+    repository = tmp_path / "repository"
+    runtime = tmp_path / "runtime"
+    with pytest.raises(ValueError, match="protected operational database"):
+        helper.validate_database_path(
+            repository / "backend/attendance.db",
+            runtime_root=tmp_path,
+            repository_root=repository,
+        )
+
+
+def test_disposable_database_path_is_accepted_without_file_access(tmp_path):
+    import importlib.util
+
+    helper_path = ROOT / "e2e/helpers/create-test-workspace.py"
+    spec = importlib.util.spec_from_file_location("create_test_workspace", helper_path)
+    assert spec and spec.loader
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    database = tmp_path / "runtime" / "run" / "state" / "operatoros.sqlite"
+    assert helper.validate_database_path(database, runtime_root=tmp_path / "runtime", repository_root=tmp_path / "repository") == database
