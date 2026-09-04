@@ -92,7 +92,8 @@ All landed fixtures regenerate from source of truth:
 
 ```
 cd backend
-PYTHONHASHSEED=0 .venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
+python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+PYTHONHASHSEED=0 OPERATOROS_PYTHON="$python_tooling" "$python_tooling" docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
 ```
 
 The generator is deterministic for all JSON evidence when run with PYTHONHASHSEED=0 (parser set-ordering is hash-seed dependent). The `.xlsx` binaries

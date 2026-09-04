@@ -7,7 +7,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="${1:?workspace required}"
 logs="${2:?log directory required}"
 database="${OPERATOROS_E2E_DATABASE:?OPERATOROS_E2E_DATABASE is required}"
-python3 "$repo_root/e2e/helpers/create-test-workspace.py" \
+source "$repo_root/scripts/validate-wsl-bun.sh"
+operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
+python_bin="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
+export OPERATOROS_PYTHON="$python_bin"
+"$python_bin" "$repo_root/e2e/helpers/create-test-workspace.py" \
   --database "$database" \
   --runtime-root "$(dirname -- "$workspace")" \
   --repository-root "$repo_root" >/dev/null
@@ -15,10 +19,7 @@ mkdir -p "$workspace/runtime" "$logs" "$workspace/state/backups"
 case "$database" in "$workspace"/*) ;; *) exit 2 ;; esac
 [[ -f "$database" ]] || exit 2
 
-source "$repo_root/scripts/validate-wsl-bun.sh"
-operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
-python_bin="$repo_root/backend/.venv/bin/python"
 
 choose_port() {
   "$python_bin" - "$1" "$2" <<'PY'

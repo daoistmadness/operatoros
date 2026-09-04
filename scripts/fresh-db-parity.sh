@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PYTHON="${OPERATOROS_PYTHON:-$REPO/backend/.venv/bin/python}"
+PYTHON="$(bun "$REPO/scripts/python-tooling-env.ts" --repo "$REPO" print-executable)"
 
 test "$(uname -s)" = "Linux"
 test -n "${WSL_DISTRO_NAME:-}"

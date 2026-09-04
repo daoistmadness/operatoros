@@ -3,9 +3,17 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+source "$repo_root/scripts/validate-wsl-bun.sh"
+operatoros_wsl_prepare_bun "$repo_root" || {
+  printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
+  exit 2
+}
+python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
+export OPERATOROS_PYTHON="$python"
+
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
-  python3 -m py_compile "$repo_root/e2e/helpers/create-test-workspace.py" "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
+  "$python" -m py_compile "$repo_root/e2e/helpers/create-test-workspace.py" "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
   exit 0
 fi
 
@@ -36,7 +44,7 @@ export OPERATOROS_DATA_DIR="$workspace/state"
 export BACKUP_DIR="$workspace/state/backups"
 export ENABLE_DESTRUCTIVE_OPERATIONS=false
 
-python3 "$repo_root/e2e/helpers/create-test-workspace.py" \
+"$python" "$repo_root/e2e/helpers/create-test-workspace.py" \
   --database "$database" \
   --runtime-root "$runtime_root" \
   --repository-root "$repo_root" >/dev/null
@@ -54,7 +62,7 @@ export DATABASE_URL="sqlite:///$database"
 (
   cd "$repo_root/backend"
   export PYTHONPATH="$repo_root/backend/src"
-  "$repo_root/backend/.venv/bin/python" -m core.schema_migrations initialize-fresh --database "$database"
+  "$python" -m core.schema_migrations initialize-fresh --database "$database"
 ) >"$logs/fixture-initialize.log" 2>&1
 
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
@@ -62,25 +70,20 @@ export BACKUP_ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-b3BlcmF0b3Jvcy1lMmUtYmFja
 export BACKUP_ENCRYPTION_KEY_ID="${BACKUP_ENCRYPTION_KEY_ID:-e2e-test-key}"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
-source "$repo_root/scripts/validate-wsl-bun.sh"
-operatoros_wsl_prepare_bun "$repo_root" || {
-  printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
-  exit 2
-}
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
 playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
 [[ -n "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
 playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
 [[ -x "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
 export PATH="$bun_bin:/usr/bin:/bin"
-"$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
+"$python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
 fixture_dir="$workspace/state/frontend-fixtures"
 "$bun_bin/bun" "$repo_root/packages/excel/scripts/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
 export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
 export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 export OPERATOROS_E2E_MACHINE_IMPORT_XLSX="$fixture_dir/machine-attendance.xlsx"
 
-"$repo_root/backend/.venv/bin/python" - "$database" "$results/database-before.json" <<'PY'
+"$python" - "$database" "$results/database-before.json" <<'PY'
 import hashlib, json, sqlite3, sys
 database, output = sys.argv[1:]
 with sqlite3.connect(database) as connection:
@@ -93,16 +96,16 @@ PY
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
-export OPERATOROS_E2E_BACKEND_URL="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["backend_url"])' "$workspace/ports.json")"
-export OPERATOROS_E2E_FRONTEND_URL="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
+export OPERATOROS_E2E_BACKEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["backend_url"])' "$workspace/ports.json")"
+export OPERATOROS_E2E_FRONTEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
 
 backend_status=0
-(cd "$repo_root/backend" && "$repo_root/backend/.venv/bin/python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
+(cd "$repo_root/backend" && "$python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
 
 # These two identities exist solely to make the synthetic fixture valid at
 # process startup. Remove them after readiness so the conflict UI can exercise
 # its intended explicit-link workflow.
-"$repo_root/backend/.venv/bin/python" - "$database" <<'PY'
+"$python" - "$database" <<'PY'
 import sqlite3
 import sys
 
@@ -123,7 +126,7 @@ cleanup_stack
 trap - EXIT
 
 database_after="$(sha256sum "$database" | awk '{print $1}')"
-"$repo_root/backend/.venv/bin/python" - "$database" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
+"$python" - "$database" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
 import hashlib, json, sqlite3, sys
 database, database_checksum, before_file, output = sys.argv[1:]
 baseline_max_id = json.load(open(before_file))["baseline_enrollment_max_id"]
@@ -146,20 +149,20 @@ expected_onboarding_before = {
 unexpected_changes = (before_rows - after_rows - expected_onboarding_before) | (after_rows - before_rows - expected_onboarding_change)
 json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": len(unexpected_changes), "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
 PY
-enrollment_before_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
-enrollment_after_fingerprint="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
+enrollment_before_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
+enrollment_after_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
 
 status=PASS
 failed_args=()
 evidence_args=()
-unexpected_enrollment_changes="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
+unexpected_enrollment_changes="$($python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
 if (( backend_status != 0 || web_status != 0 || unexpected_enrollment_changes != 0 )); then
   status=FAIL
   evidence_args+=(--evidence "e2e-results/logs" --evidence "e2e-results/playwright" --evidence "e2e-results/database-after.json")
 fi
 if [[ "$unexpected_enrollment_changes" != "0" ]]; then failed_args+=(--failed-test "Unexpected disposable enrollment changes"); fi
 duration=$((SECONDS - started_at))
-"$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/write-summary.py" \
+"$python" "$repo_root/e2e/helpers/write-summary.py" \
   --output "$results/summary.txt" --status "$status" \
   --backend-junit "$junit/backend.xml" --web-junit "$junit/web.xml" \
   --duration "$((duration / 60))m $((duration % 60))s" \

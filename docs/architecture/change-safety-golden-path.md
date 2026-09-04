@@ -453,14 +453,16 @@ These are separate maintenance slices, not Slice A product work.
 ### Python environment
 
 `mise.toml`, `Makefile`, `scripts/test-tier.sh`, fresh-DB parity, and E2E
-helpers resolve `backend/.venv/bin/python`. A clean worktree can therefore be
-source-clean but validation-incomplete. Classify this as
+helpers previously resolved `backend/.venv/bin/python`. A clean worktree could
+therefore be source-clean but validation-incomplete. This was classified as
 `SHARED_PYTHON_TOOLING_ENVIRONMENT_DEFECT`.
 
-The later preferred model is an external canonical tooling environment such as
-`${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`, with an explicit
-bootstrap mutation command, dependency fingerprint, read/execute-only doctor
-and test consumers, and no worktree-to-primary symlink.
+The current authority is `OPERATOROS_PYTHON_VENV`, defaulting to
+`${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`. The single resolver
+is `scripts/python-tooling-env.ts`; `mise run python:bootstrap` is the only
+command that creates or refreshes it. Doctor and tests consume the environment
+read/execute-only, verify its fingerprint, and never fall back to a worktree or
+primary-checkout environment.
 
 ### Ports and runtime roots
 
@@ -484,12 +486,13 @@ Never kill an unknown listener.
 
 The generic inspector at
 `/home/mikhailryu/.codex/skills/operatoros-engineering/scripts/inspect_operatoros_stack.py`
-still searches for historical `frontend/` layout. Current source uses
-`apps/api` and `apps/web`; the inspector is not a repository-local runtime or
-validation authority, and no repository caller was found in the audit.
-Classify this as `DEVELOPER_TOOLING_REPOSITORY_LAYOUT_DRIFT`. A later repair
-should recognize root workspaces and `apps/*` while keeping historical backend
-facts clearly labelled. Do not build a generic repository detector.
+previously searched for historical `frontend/` layout. Current source uses
+`apps/api` and `apps/web`; the repaired inspector recognizes those current
+markers and retains legacy recognition only as a secondary compatibility case.
+It is not a repository-local runtime or validation authority, and no repository
+caller was found in the audit. This was classified as
+`DEVELOPER_TOOLING_REPOSITORY_LAYOUT_DRIFT`. Do not build a generic repository
+detector.
 
 ## 19. Feature Definition of Done
 

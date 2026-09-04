@@ -16,7 +16,9 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Environment and dependencies
 
-- Work in Ubuntu WSL. Use `backend/.venv/bin/python` for Python commands.
+- Work in Ubuntu WSL. Use the external Python tooling environment selected by
+  `OPERATOROS_PYTHON_VENV`; bootstrap it with `mise run python:bootstrap`.
+  Do not require or symlink a worktree-local `backend/.venv`.
 - Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.0, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
 - Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
 - Use `mise run dev`, `mise run check:affected`, `mise run test:fast`, and
@@ -89,9 +91,11 @@ historical evidence unless they explicitly identify a current procedure.
   managed session, starts the backend first, waits for backend and frontend
   readiness, and performs managed shutdown.
 - Python remains available for disposable schema, fixture, and operations tools.
-- The launcher expects `backend/.venv` to exist. Ordinary startup does not
-  create the virtual environment or install dependencies. GitHub CI may create
-  its own virtual environment as defined by CI.
+- Retained Python tooling uses the external environment selected by
+  `OPERATOROS_PYTHON_VENV` or the deterministic default
+  `${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`. Ordinary commands
+  never install dependencies automatically. Run `mise run python:bootstrap`
+  explicitly when the environment is missing or stale.
 - `backend/.env` or the current shell can define `DATABASE_URL`. Managed
   development warns about that value and uses the canonical persistent
   development database instead. Do not select a development database from
@@ -363,6 +367,6 @@ database, authorization, audit, or Git safeguards. See
   Required Changes, Safety Rules, Validation, Git Rules, Acceptance Criteria,
   and Final Report. Use only the sections that the task needs. Do not repeat
   the same rule in multiple sections.
-- Keep technical identifiers exact, including `mise.toml`, `mise.lock`, `backend/.venv`,
-  `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`,
+- Keep technical identifiers exact, including `mise.toml`, `mise.lock`,
+  `OPERATOROS_PYTHON_VENV`, `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`,
   `operatoros_wsl_prepare_bun`, and `./start-dev.sh`.

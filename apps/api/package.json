@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun test",
+    "test": "OPERATOROS_PYTHON=\"$(bun ../../scripts/python-tooling-env.ts --repo ../.. print-executable)\" bun test",
     "typecheck": "tsc --noEmit",
     "start": "bun run src/server.ts"
   },

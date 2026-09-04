@@ -4,9 +4,9 @@ import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calendarWeekday, resolveAttendanceExpectation } from "../src/domains/attendance-calendar";
 import { resolveAttendanceSubmissionTiming } from "../src/domains/attendance-submission-deadline";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-attendance-calendar-test-secret-32";
 
 function seed(path: string): void {

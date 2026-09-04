@@ -11,10 +11,12 @@ checks. These tools do not serve HTTP requests.
 
 ```bash
 mise install
-cd backend
-python -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+mise run python:bootstrap
 ```
+
+The tooling environment is external to every worktree. Set
+`OPERATOROS_PYTHON_VENV` to use a disposable or CI-owned location. Existing
+`backend/.venv` directories are not removed, but they are not authoritative.
 
 The requirements file contains only dependencies used by retained tooling.
 It does not install the retired Python HTTP application.

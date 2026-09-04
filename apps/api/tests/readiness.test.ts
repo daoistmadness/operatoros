@@ -6,9 +6,9 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { FEATURE_REQUIREMENTS, mapReadinessToResponse } from "../src/domains/readiness";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-readiness-test-secret-32-characters";
 
 function seed(path: string): void {

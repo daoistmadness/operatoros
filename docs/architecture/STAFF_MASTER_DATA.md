@@ -33,14 +33,16 @@ Raw import rows contain sensitive source values and are restricted to the databa
 Validation is read-only and does not use `DATABASE_URL`:
 
 ```bash
-PYTHONPATH=backend/src backend/.venv/bin/python -m core.staff_import validate \
+PYTHON_TOOLING="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+PYTHONPATH=backend/src "$PYTHON_TOOLING" -m core.staff_import validate \
   --file /absolute/path/to/staff.xlsx --sheet "Data Karyawan Edelweiss"
 ```
 
 Application requires an existing current S4.3 disposable/development database, an absolute path, and explicit confirmation:
 
 ```bash
-PYTHONPATH=backend/src backend/.venv/bin/python -m core.staff_import apply \
+PYTHON_TOOLING="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+PYTHONPATH=backend/src "$PYTHON_TOOLING" -m core.staff_import apply \
   --file /absolute/path/to/staff.xlsx --sheet "Data Karyawan Edelweiss" \
   --database /absolute/path/to/disposable.db --confirm-import
 ```

@@ -7,9 +7,13 @@ commands; the underlying tools retain their existing responsibilities.
 
 - `mise install` — install the pinned Bun, hk, and Python tools.
 - `bun install --frozen-lockfile` — install workspace dependencies from the repository root.
-- `mise exec -- python -m venv backend/.venv` — create the retained Python tooling environment.
-- `backend/.venv/bin/python -m pip install -r backend/requirements.txt` — install retained tooling.
+- `mise run python:bootstrap` — create or refresh the external retained Python tooling environment.
+- `OPERATOROS_PYTHON_VENV=/absolute/path mise run python:bootstrap` — use a disposable or CI-owned external environment.
 - `mise run doctor` — verify the active checkout and toolchain.
+
+The default Python tooling environment is `${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`.
+Doctor and validation commands read and execute it without installing packages.
+They fail with the bootstrap command when it is missing, stale, or uses the wrong Python version.
 
 Optional browser tooling is external to the workspace:
 

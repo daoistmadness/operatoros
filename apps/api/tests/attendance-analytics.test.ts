@@ -3,9 +3,9 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { loadXlsxWorkbook } from "@operatoros/excel";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const RANGE = "?academic_year_id=1&date_from=2026-08-01&date_to=2026-08-31";
 

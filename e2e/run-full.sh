@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/validate-wsl-bun.sh"
+operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
+python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
+export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
-  repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   bash -n "$repo_root/e2e/run-smoke.sh"
-  "$repo_root/backend/.venv/bin/python" -m py_compile "$repo_root/e2e/helpers/write-full-summary.py"
+  "$python" -m py_compile "$repo_root/e2e/helpers/write-full-summary.py"
   exit 0
 fi
 if [[ "${CI:-}" != "true" && "${OPERATOROS_ALLOW_LOCAL_E2E_FULL:-}" != "1" ]]; then
@@ -50,7 +54,7 @@ duration=$((SECONDS - started_at))
 smoke_label=PASS; (( smoke_status == 0 )) || smoke_label=FAIL
 build_label=PASS; (( build_status == 0 )) || build_label=FAIL
 summary_status=0
-"$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/write-full-summary.py" \
+"$python" "$repo_root/e2e/helpers/write-full-summary.py" \
   --output "$results/full-summary.txt" \
   --smoke-status "$smoke_label" \
   --backend-junit "$junit/backend-full.xml" \

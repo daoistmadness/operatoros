@@ -2,9 +2,9 @@ import { rmSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
+import { python } from "../tests/python";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${root}/backend/.venv/bin/python`;
 const secret = "operatoros-benchmark-cookie-secret-32-chars";
 const dates = Array.from({ length: 20 }, (_, index) => `2026-08-${String(index + 1).padStart(2, "0")}`);
 

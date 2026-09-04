@@ -1,7 +1,8 @@
 """Generate golden fixtures by recording current FastAPI-backend behavior.
 
 Usage:
-    cd backend && .venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
+    python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+    OPERATOROS_PYTHON="$python_tooling" "$python_tooling" docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py
 
 Safety rules:
 - Synthetic data only; disposable in-memory SQLite only.
@@ -355,7 +356,7 @@ def main() -> None:
     written += generate_import_goldens()
     written += generate_heb_goldens()
     manifest = {
-        "regenerate_command": "backend/.venv/bin/python docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py",
+        "regenerate_command": "python_tooling=\"$(bun scripts/python-tooling-env.ts --repo . print-executable)\" && OPERATOROS_PYTHON=\"$python_tooling\" \"$python_tooling\" docs/migration/ts-backend/golden/tools/generate_golden_fixtures.py",
         "note": "outputs are recorded behavior of the FastAPI reference; never hand-edit",
         "files": sorted(written),
     }

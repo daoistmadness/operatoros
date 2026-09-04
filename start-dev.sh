@@ -8,7 +8,8 @@ PROJECT_ROOT="$SCRIPT_DIR"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 API_DIR="$PROJECT_ROOT/apps/api"
 FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/apps/web}"
-VENV="$BACKEND_DIR/.venv"
+VENV=""
+PYTHON_TOOLING_HELPER="$PROJECT_ROOT/scripts/python-tooling-env.ts"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
@@ -145,7 +146,6 @@ run_preflight() {
   require_command curl "Readiness check" "Install curl."
   require_command setsid "Process management" "Install util-linux."
   require_command ps "Process management" "Install procps."
-  [[ -x "$VENV/bin/python" ]] || fail_preflight "Python environment is missing or incomplete" "Expected $VENV/bin/python for database and session management."
   [[ -f "$PROJECT_ROOT/package.json" && -f "$PROJECT_ROOT/bun.lock" ]] || fail_preflight "Workspace manifest is incomplete" "Expected root package.json and bun.lock."
   [[ -f "$API_DIR/package.json" && -d "$API_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
   [[ -f "$FRONTEND_DIR/package.json" && -d "$FRONTEND_DIR/node_modules" ]] || fail_preflight "Frontend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
@@ -155,6 +155,10 @@ run_preflight() {
   if ! operatoros_wsl_prepare_bun "$PROJECT_ROOT"; then
     fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
   fi
+  if ! PYTHON="$(bun "$PYTHON_TOOLING_HELPER" --repo "$PROJECT_ROOT" print-executable)"; then
+    fail_preflight "Python tooling environment is missing or stale" "Run: mise run python:bootstrap"
+  fi
+  VENV="$(dirname "$(dirname "$PYTHON")")"
   JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
   printf '  [ok] Linux Bun %s\n' "$OPERATOROS_BUN_VERSION"
   [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
