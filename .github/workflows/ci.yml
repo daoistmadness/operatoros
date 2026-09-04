@@ -18,10 +18,10 @@ jobs:
       run:
         shell: bash
         working-directory: apps/api
-    env:
-      OPERATOROS_PYTHON_VENV: ${{ runner.temp }}/operatoros/python/venv
     steps:
       - uses: actions/checkout@v5
+      - name: Select external Python tooling environment
+        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
       - uses: jdx/mise-action@v4
         with:
           cache: true
