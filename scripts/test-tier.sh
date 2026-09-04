@@ -161,6 +161,7 @@ PY
     (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
     make -C "$repo" e2e-validate
     make -C "$repo" e2e-smoke
+    make -C "$repo" e2e-readiness
     make -C "$repo" e2e-clean
     ;;
   *) echo "unknown tier: $tier" >&2; exit 2 ;;
