@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+      - name: Select external Python tooling environment
+        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
 
       - name: Set up mise toolchain
         uses: jdx/mise-action@v4
@@ -63,11 +65,8 @@ jobs:
           python --version
           mise ls --current
 
-      - name: Install backend dependencies
-        run: |
-          python -m venv backend/.venv
-          backend/.venv/bin/python -m pip install --upgrade pip
-          backend/.venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Bootstrap external fixture-tool virtualenv
+        run: mise run python:bootstrap
 
       - name: Install backend TypeScript dependencies
         run: bun install --frozen-lockfile

@@ -27,9 +27,8 @@ git rev-parse --show-toplevel >/dev/null 2>&1 || fail "not inside a Git checkout
 git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/main is unavailable" "git fetch origin main"
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
 [ "$(bun --version)" = "1.4.0" ] || fail "Bun 1.4.0 is not active" "mise install"
-command -v python >/dev/null 2>&1 || fail "Python is unavailable" "mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
-[ -x backend/.venv/bin/python ] || fail "backend/.venv is missing" "mise exec -- python -m venv backend/.venv && backend/.venv/bin/python -m pip install -r backend/requirements.txt"
+[ -x "$(bun scripts/python-tooling-env.ts --repo . print-executable 2>/dev/null || true)" ] || fail "Python tooling environment is missing or stale" "mise run python:bootstrap"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
 [ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"
 [ -d node_modules ] && [ -x node_modules/.bin/turbo ] || fail "workspace dependencies are missing" "bun install --frozen-lockfile"
@@ -43,11 +42,16 @@ printf 'PASS: origin/main=%s\n' "$(git rev-parse 'origin/main^{commit}')"
 printf 'PASS: checkout=%s branch=%s\n' "$(git rev-parse --show-toplevel)" "$(git branch --show-current)"
 development_data_dir="$(bun packages/db/src/data-dir-cli.ts --repo . --format data-dir)" || fail "development data directory cannot be resolved" "Set OPERATOROS_DATA_DIR to an approved absolute directory"
 development_schema_head="$(bun packages/db/src/schema-version-cli.ts --format current)" || fail "canonical schema head cannot be resolved" "Run bun install --frozen-lockfile"
-development_database_status="$(backend/.venv/bin/python scripts/development_database.py status --repo . --data-dir "$development_data_dir" --expected-schema "$development_schema_head")" || fail "development database status cannot be read" "Run make dev-db-status"
+python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)" || fail "Python tooling environment cannot be resolved" "mise run python:bootstrap"
+development_database_status="$("$python_tooling" scripts/development_database.py status --repo . --data-dir "$development_data_dir" --expected-schema "$development_schema_head")" || fail "development database status cannot be read" "Run make dev-db-status"
 printf 'PASS: development data directory=%s\n' "$development_data_dir"
 printf 'PASS: source schema head=%s\n' "$development_schema_head"
 printf 'PASS: development database=%s\n' "$development_database_status"
 """
+
+[tasks."python:bootstrap"]
+description = "Create or refresh the external retained Python tooling environment"
+run = "bun scripts/python-tooling-env.ts --repo . bootstrap"
 
 [tasks.test]
 description = "Run core verification gates"

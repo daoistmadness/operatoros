@@ -4,9 +4,9 @@ import { createApp } from "../src/app";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { openDatabase } from "@operatoros/db";
 import { authorize } from "../src/auth/service";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function pathFor(label: string): string {

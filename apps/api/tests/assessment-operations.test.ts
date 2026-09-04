@@ -1,13 +1,11 @@
 import { describe, expect, it, beforeAll, afterAll } from "bun:test";
-import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const migrationRoot = repoRoot;
-const localPython = `${repoRoot}/backend/.venv/bin/python`;
-const python = process.env.OPERATOROS_PYTHON ?? (existsSync(localPython) ? localPython : "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python");
 const secret = "assessment-operations-test-cookie-secret-32";
 
 function seed(path: string): void {

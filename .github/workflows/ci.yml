@@ -18,10 +18,10 @@ jobs:
       run:
         shell: bash
         working-directory: apps/api
-    env:
-      OPERATOROS_PYTHON: ${{ github.workspace }}/backend/.venv/bin/python
     steps:
       - uses: actions/checkout@v5
+      - name: Select external Python tooling environment
+        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
       - uses: jdx/mise-action@v4
         with:
           cache: true
@@ -52,10 +52,9 @@ jobs:
           bun --version | grep -Eq "^1\.4\."
           python --version
           mise ls --current
-      - name: Create disposable fixture-tool virtualenv
-        run: python -m venv ../../backend/.venv
-      - name: Install schema and fixture tooling
-        run: ../../backend/.venv/bin/python -m pip install -r ../../backend/requirements.txt
+      - name: Bootstrap external fixture-tool virtualenv
+        working-directory: ${{ github.workspace }}
+        run: mise run python:bootstrap
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile
@@ -90,7 +89,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           mkdir -p .runtime/operatoros-ci-elysia
-          DATABASE_URL="sqlite:///$PWD/.runtime/operatoros-ci-elysia/ci-test.db" PYTHONPATH=backend/src backend/.venv/bin/python -m core.schema_migrations initialize-fresh --database "$PWD/.runtime/operatoros-ci-elysia/ci-test.db"
+          python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+          DATABASE_URL="sqlite:///$PWD/.runtime/operatoros-ci-elysia/ci-test.db" PYTHONPATH=backend/src "$python_tooling" -m core.schema_migrations initialize-fresh --database "$PWD/.runtime/operatoros-ci-elysia/ci-test.db"
       - name: Verify Elysia primary runtime
         env:
           DATABASE_URL: sqlite:///${{ github.workspace }}/.runtime/operatoros-ci-elysia/ci-test.db

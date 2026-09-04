@@ -2,7 +2,8 @@
 grades constraints, HEB rounding edges, backup checksums.
 
 Usage:
-    cd backend && .venv/bin/python ../docs/migration/ts-backend/golden/tools/generate_phase0_corpora.py
+    python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+    OPERATOROS_PYTHON="$python_tooling" "$python_tooling" docs/migration/ts-backend/golden/tools/generate_phase0_corpora.py
 
 Safety: disposable temp-file SQLite only; protected DB never addressed.
 """

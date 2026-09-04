@@ -1,10 +1,10 @@
 import { rmSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { createApp } from "../src/app";
+import { python } from "../tests/python";
 import { openDatabase } from "@operatoros/db";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python";
 const secret = "astryx-academic-benchmark-cookie-secret-32";
 
 function seed(path: string, studentCount: number): void {

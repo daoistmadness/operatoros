@@ -126,12 +126,12 @@ Initial runtime and dependency setup:
 ```bash
 mise install
 bun install --frozen-lockfile
-mise exec -- python -m venv backend/.venv
-backend/.venv/bin/python -m pip install -r backend/requirements.txt
+mise run python:bootstrap
 mise run doctor
 ```
 
-`mise install` uses `mise.lock` for exact versions. `mise run doctor` checks
+`mise install` uses `mise.lock` for exact versions. `mise run python:bootstrap`
+creates the external retained Python tooling environment. `mise run doctor` checks
 the checkout, toolchain, workspace installation, native WSL Bun, and
 `origin/main`. Bun remains the package manager authority; mise owns the
 developer-facing command surface.
