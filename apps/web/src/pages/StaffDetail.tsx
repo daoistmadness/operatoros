@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
+import { queryKeys } from "../lib/query/queryKeys";
 
 const EDUCATION_LEVELS = ["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"];
 
@@ -33,7 +34,7 @@ export default function StaffDetail() {
   const { id = "" } = useParams();
   const queryClient = useQueryClient();
   const detail = useQuery({ queryKey: ["staff", "detail", id], queryFn: () => fetchStaffDetail(id), enabled: Boolean(id) });
-  const jenjangs = useQuery({ queryKey: ["academic-masters", "jenjangs"], queryFn: fetchJenjangOptions });
+  const jenjangs = useQuery({ queryKey: queryKeys.academicMasters.jenjangs, queryFn: fetchJenjangOptions });
   const [selectedJenjangs, setSelectedJenjangs] = useState<number[]>([]);
   const [endDate, setEndDate] = useState("");
   const [education, setEducation] = useState<Partial<EducationRecord>>({ education_level: "S1" });

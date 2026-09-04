@@ -11,6 +11,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
+import { queryKeys } from "../lib/query/queryKeys";
 
 const statusLabels = { ACTIVE: "Active", FORMER: "Former", ALL: "All" } as const;
 
@@ -30,7 +31,7 @@ export default function StaffManagement() {
     queryKey: ["staff", "list", { search, status, jobTitle, dapodik, jenjangId }],
     queryFn: () => fetchStaff({ search: search || undefined, status, job_title: jobTitle || undefined, dapodik_status: dapodik || undefined, jenjang_id: jenjangId ? Number(jenjangId) : undefined, page: 1, page_size: 100 }),
   });
-  const jenjangs = useQuery({ queryKey: ["academic-masters", "jenjangs"], queryFn: fetchJenjangOptions });
+  const jenjangs = useQuery({ queryKey: queryKeys.academicMasters.jenjangs, queryFn: fetchJenjangOptions });
   const counts = staff.data?.counts || { ACTIVE: 0, FORMER: 0, ALL: 0 };
   const setFilter = (key: string, value: string) => {
     const next = new URLSearchParams(url);
