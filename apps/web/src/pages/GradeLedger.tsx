@@ -7,6 +7,7 @@ import { createAssessmentSession, fetchAcademicYears, fetchAssessmentSessions, f
 import { apiRequest } from "../lib/api/client";
 import type { AcademicAssessmentSession, AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
 import { queryKeys } from "../lib/query/queryKeys";
+import { invalidateAcademicResultQueries } from "../lib/query/academicInvalidation";
 
 const JENJANG_OPTIONS = [
   { id: 1, label: "Primary" },
@@ -257,7 +258,7 @@ function GradeLedgerContent() {
       const results = await Promise.all(payloads.map((payload) => saveGradeLedger(payload)));
       const saved = results.reduce((total, result) => total + result.saved, 0);
       setStatusMessage(`${saved} grade line(s) saved across ${payloads.length} enrollment row(s).`);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+      await invalidateAcademicResultQueries(queryClient);
       await loadLedgerData();
     } catch (saveError) {
       console.error("Grade Ledger save failure", saveError);
@@ -284,6 +285,7 @@ function GradeLedgerContent() {
       setNewSessionLabel("");
       setNewSessionDate("");
       setStatusMessage(`${created.label} is ready for score entry.`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.grades.all });
     } catch (createError) {
       console.error("Grade Ledger assessment session creation failure", createError);
       setError(getErrorMessage(createError));

@@ -45,6 +45,7 @@ export const queryKeys = {
   },
   analytics: {
     all: ["analytics"] as const,
+    filtersAll: ["analytics", "filters"] as const,
     filters: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["analytics", "filters", canonicalizeQueryFilters(filters)] as const,
     managementSummary: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-summary", canonicalizeQueryFilters(filters)] as const,
     managementOverview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-overview", canonicalizeQueryFilters(filters)] as const,
@@ -62,12 +63,28 @@ export const queryKeys = {
     attendanceOptions: (academicYearId: number | null, jenjangId: number | null) => ["analytics", "attendance", "options", { academicYearId, jenjangId }] as const,
     attendance: (section: "overview" | "classes" | "jenjang" | "daily" | "students", filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "attendance", section, canonicalizeQueryFilters(filters)] as const,
     academicOptions: (academicYearId: number | null, jenjangId: number | null) => ["analytics", "academic", "options", { academicYearId, jenjangId }] as const,
+    academicAll: ["analytics", "academic"] as const,
     academicOverview: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "overview", canonicalizeQueryFilters(filters)] as const,
     academicStudents: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["analytics", "academic", "students", canonicalizeQueryFilters(filters)] as const,
     dailyAttendance: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "daily-status", canonicalizeQueryFilters(filters)] as const,
+  },
+  grades: {
+    all: ["grades"] as const,
     assessmentOperations: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["grades", "assessment-operations", canonicalizeQueryFilters(filters)] as const,
+    assessmentOperationsIdle: ["grades", "assessment-operations", "idle"] as const,
+  },
+  academicMasters: {
+    all: ["academic-masters"] as const,
+    jenjangs: ["academic-masters", "jenjangs"] as const,
+    programs: ["academic-masters", "programs"] as const,
+    grades: ["academic-masters", "grades"] as const,
+    years: ["academic-masters", "years"] as const,
+    classes: ["academic-masters", "classes"] as const,
   },
   attendance: {
+    all: ["attendance"] as const,
+    assignedClasses: ["assignedClasses"] as const,
+    classRosters: ["classAttendanceRoster"] as const,
     calendar: (academicYearId: number | null) => ["attendance", "calendar", { academicYearId }] as const,
     correctionReview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "correction-review", canonicalizeQueryFilters(filters)] as const,
   },
@@ -78,6 +95,7 @@ export const queryKeys = {
     details: ["students", "detail"] as const,
     detail: (id: string) => ["students", "detail", id] as const,
     overview: (id: string) => ["students", "overview", id] as const,
+    overviews: ["students", "overview"] as const,
     quality: ["students", "quality"] as const,
     history: (id: string) => ["students", "history", id] as const,
     deviceIdentities: (id: string) => ["students", "devices", id] as const,
@@ -88,6 +106,7 @@ export const queryKeys = {
   },
   classes: {
     all: ["classes"] as const,
+    overviews: ["classes", "overview"] as const,
     overview: (classId: string, filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["classes", "overview", classId, canonicalizeQueryFilters(filters)] as const,
   },
   uploads: {
