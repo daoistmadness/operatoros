@@ -122,7 +122,7 @@ test("@attendance @corrections @release attendance review filters disposable att
   await expect(page.getByText(/\d+ records/)).toBeVisible();
 });
 
-test("@attendance @correction-review @release creates and reviews a canonical correction", async ({ page }) => {
+test("@attendance @correction-review @critical @release creates and reviews a canonical correction", async ({ page }) => {
   await login(page);
   const date = localDate();
   await page.goto(`/attendance-review?academic_year_id=1&date=${date}`);

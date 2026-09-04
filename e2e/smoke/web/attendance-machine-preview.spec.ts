@@ -13,7 +13,7 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@attendance @machine-preview @release previews scan evidence against calendar rules without Alfa inference", async ({ page }) => {
+test("@attendance @machine-preview @critical @release previews scan evidence against calendar rules without Alfa inference", async ({ page }) => {
   await login(page);
   await page.evaluate(async () => {
     const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -39,11 +39,14 @@ test("@attendance @machine-preview @release previews scan evidence against calen
   await page.getByRole("button", { name: "Create 1 attendance records" }).click();
   await apply;
   await expect(page.getByRole("status")).toContainText("Import applied: 1 created");
+  await page.goto("/attendance/class-entry?class_id=1&date=2026-08-10");
+  await expect(page.getByRole("heading", { name: "Input Absensi Kelas" })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "E2E Ada" })).toBeVisible();
   const attendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-10")).json()) as { items: Array<{ student_name: string; effective_status: string }> });
   expect(attendance.items.find((item) => item.student_name === "E2E Ada")?.effective_status).toBe("on-time");
 });
 
-test("@attendance @machine-onboarding @release resolves existing and new machine identities explicitly", async ({ page }) => {
+test("@attendance @machine-onboarding @critical @release resolves existing and new machine identities explicitly", async ({ page }) => {
   await login(page);
   const beforeAttendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-08")).json()) as { items: unknown[] });
   await page.goto("/attendance/machine-import");

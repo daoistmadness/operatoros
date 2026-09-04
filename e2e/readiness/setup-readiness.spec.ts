@@ -60,6 +60,46 @@ async function configureCalendar(page: Page) {
   });
 }
 
+async function createStudentWithEnrollment(page: Page) {
+  const setup = await page.evaluate(async () => {
+    const [years, classes] = await Promise.all([
+      fetch("/api/academic-masters/academic-years").then((response) => response.json()),
+      fetch("/api/academic-masters/classes").then((response) => response.json()),
+    ]);
+    return {
+      year: years.find((value: { label: string }) => value.label === "UAT 2028/2029"),
+      academicClass: classes.find((value: { academic_year_id: number; class_name: string }) => value.academic_year_id === years.find((year: { label: string }) => year.label === "UAT 2028/2029")?.id && value.class_name === "UAT 7A"),
+    };
+  });
+  expect(setup.year).toBeTruthy();
+  expect(setup.academicClass).toBeTruthy();
+
+  await page.goto("/students");
+  await page.getByRole("button", { name: "Add student", exact: true }).click();
+  await page.getByLabel("Legal name", { exact: true }).fill("UAT Fresh Student");
+  await page.getByLabel("Academic year ID", { exact: true }).fill(String(setup.year.id));
+  await page.getByLabel("Academic class ID", { exact: true }).fill(String(setup.academicClass.id));
+  await page.locator("#enrollment-effective").fill("2028-07-01");
+  await page.getByRole("button", { name: "Review student", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Confirm student creation");
+  await page.getByRole("button", { name: "Confirm and create", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.getByPlaceholder("Search name, NIPD, NISN, or Device ID", { exact: true }).fill("UAT Fresh Student");
+  const studentLink = page.getByRole("link", { name: "UAT Fresh Student", exact: true });
+  await expect(studentLink).toBeVisible();
+  const studentHref = await studentLink.getAttribute("href");
+  expect(studentHref).toMatch(/^\/students\//);
+  await studentLink.click();
+  await expect(page.getByRole("heading", { name: "UAT Fresh Student", exact: true })).toBeVisible();
+  await expect(page.getByText("Current student context", { exact: true })).toBeVisible();
+  await expect(page.getByText("UAT 2028/2029", { exact: true })).toBeVisible();
+  await expect(page.getByText("UAT Junior High", { exact: true })).toBeVisible();
+  await expect(page.getByText("UAT 7A", { exact: true })).toBeVisible();
+
+  return setup.academicClass.id as number;
+}
+
 test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
@@ -72,7 +112,7 @@ test.afterEach(async ({ page }) => {
   expect((page as Page & { __consoleErrors?: string[] }).__consoleErrors).toEqual([]);
 });
 
-test("@setup-readiness @fresh-school configures canonical foundation and unblocks Machine Import", async ({ page }) => {
+test("@setup-readiness @fresh-school @critical configures canonical foundation and unblocks Machine Import", async ({ page }) => {
   await login(page);
   await page.goto("/setup");
   await expect(page.getByRole("heading", { name: "Setup & Readiness" })).toBeVisible();
@@ -89,8 +129,14 @@ test("@setup-readiness @fresh-school configures canonical foundation and unblock
   await configureCalendar(page);
   await page.goto("/setup");
   await expect(page.getByRole("heading", { name: "Programs / Jenjang" }).locator("..")).toContainText("Ready");
+  await expect(page.getByRole("heading", { name: "Academic periods" }).locator("..")).toContainText("Ready");
   await expect(page.getByRole("heading", { name: "Classes" }).locator("..")).toContainText("Ready");
   await expect(page.getByRole("heading", { name: "School calendar" }).locator("..")).toContainText("Ready");
+
+  const academicClassId = await createStudentWithEnrollment(page);
+  await page.goto(`/classes/${academicClassId}`);
+  await expect(page.getByRole("heading", { name: "UAT 7A", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "UAT Fresh Student", exact: true })).toBeVisible();
 
   await page.goto("/attendance/machine-import");
   await expect(page.getByRole("heading", { name: "Machine Import Preview" })).toBeVisible();
