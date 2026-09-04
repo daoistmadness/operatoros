@@ -8,7 +8,7 @@
     "scripts/check-architecture.ts",
     "scripts/check-typebox-resolution.ts"
   ],
-  "globalPassThroughEnv": ["OPERATOROS_PYTHON"],
+  "globalPassThroughEnv": ["OPERATOROS_PYTHON", "OPERATOROS_PYTHON_VENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
