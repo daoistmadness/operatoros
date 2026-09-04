@@ -29,7 +29,7 @@ import {
   DataTableRow,
 } from "../components/common/data-table";
 import type { AcademicYear, Subject } from "../types/grade";
-import { invalidateReadiness } from "../features/readiness";
+import { invalidateAcademicFoundationQueries, invalidateAcademicResultQueries } from "../lib/query/academicInvalidation";
 import { AcademicFoundationPanel } from "../components/academic/AcademicFoundationPanel";
 
 type ManagementTab = "calendar" | "foundation" | "allocation" | "progression" | "settings" | "report-builder";
@@ -181,7 +181,7 @@ export default function AcademicManagement() {
         status: "active",
         is_default: false,
       });
-      await invalidateReadiness(queryClient);
+      await invalidateAcademicFoundationQueries(queryClient);
       await loadMasters();
     } catch (saveError) {
       console.error("Academic year create failure", saveError);
@@ -219,6 +219,7 @@ export default function AcademicManagement() {
         supports_formatif: true,
       });
       await loadSubjects();
+      await invalidateAcademicResultQueries(queryClient);
     } catch (saveError) {
       console.error("Subject create failure", saveError);
       setError(getErrorMessage(saveError));

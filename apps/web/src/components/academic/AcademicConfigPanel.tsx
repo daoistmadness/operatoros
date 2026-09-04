@@ -21,7 +21,7 @@ import { fetchAcademicYears, fetchSubjects } from "../../api/grades";
 import { fetchJenjangs, type JenjangOption } from "../../api/enrollment";
 import type { AcademicYear, Subject } from "../../types/grade";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from "../ui/alert-dialog";
-import { invalidateReadiness } from "../../features/readiness";
+import { invalidateAcademicFoundationQueries, invalidateAcademicResultQueries } from "../../lib/query/academicInvalidation";
 
 interface KkmFormState {
   id: number | null;
@@ -201,6 +201,7 @@ export function AcademicConfigPanel() {
         setStatus("KKM threshold created.");
       }
       setKkmForm(emptyKkmForm(selectedYearId));
+      await invalidateAcademicResultQueries(queryClient);
       await loadConfig(payload.academic_year_id);
     } catch (saveError) {
       console.error("KKM save failure", saveError);
@@ -260,7 +261,7 @@ export function AcademicConfigPanel() {
         setStatus("Term range created.");
       }
       setTermForm(emptyTermForm(selectedYearId));
-      await invalidateReadiness(queryClient);
+      await invalidateAcademicFoundationQueries(queryClient);
       await loadConfig(payload.academic_year_id);
     } catch (saveError) {
       console.error("Term save failure", saveError);
@@ -287,11 +288,12 @@ export function AcademicConfigPanel() {
       if (confirmation.kind === "kkm") {
         await deleteKkmThreshold(confirmation.row.id);
         setStatus("KKM threshold deleted.");
+        await invalidateAcademicResultQueries(queryClient);
       } else {
         await deleteTermConfig(confirmation.row.id!);
         setStatus("Term default mapping restored.");
+        await invalidateAcademicFoundationQueries(queryClient);
       }
-      await invalidateReadiness(queryClient);
       await loadConfig(confirmation.row.academic_year_id);
       setConfirmation(null);
     } catch (actionError) {

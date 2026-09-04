@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRight, History, RefreshCw, ShieldCheck, Trash2, UserCheck, Users } from "lucide-react";
 import { fetchAcademicYears } from "../../api/grades";
 import {
@@ -36,6 +37,7 @@ import {
   DataTableHeader,
   DataTableRow,
 } from "../common/data-table";
+import { invalidateEnrollmentQueries } from "../../lib/query/enrollmentInvalidation";
 
 
 interface EnrollmentPanelProps {
@@ -60,6 +62,7 @@ function EnrollmentSkeleton() {
 }
 
 export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
+  const queryClient = useQueryClient();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [jenjangs, setJenjangs] = useState<JenjangOption[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(null);
@@ -252,6 +255,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
         student_master_ids: Array.from(selectedStudentIds),
       });
       setStatusMessage(`${result.created} enrollment(s) created.`);
+      await invalidateEnrollmentQueries(queryClient);
       await loadRows();
     } catch (mutationError) {
       console.error("Bulk enrollment failure", mutationError);
@@ -269,6 +273,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
     try {
       await deleteEnrollment(enrollmentId);
       setStatusMessage("Enrollment removed. Master student record preserved.");
+      await invalidateEnrollmentQueries(queryClient);
       await loadRows();
     } catch (mutationError) {
       console.error("Enrollment delete failure", mutationError);
@@ -298,6 +303,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
         lifecycleReason.trim(),
       );
       setStatusMessage(`Enrollment ${lifecycleDialog.action} action completed.`);
+      await invalidateEnrollmentQueries(queryClient);
       setLifecycleDialog(null);
       await loadRows();
     } catch (mutationError) {

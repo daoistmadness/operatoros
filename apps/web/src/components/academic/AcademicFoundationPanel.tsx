@@ -12,7 +12,7 @@ import {
   type AcademicMasterProgram,
 } from "../../api/academicMasters";
 import type { AcademicYear } from "../../types/grade";
-import { invalidateReadiness } from "../../features/readiness";
+import { invalidateAcademicFoundationQueries } from "../../lib/query/academicInvalidation";
 import { getPageApiError } from "../../lib/api/errors";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -69,7 +69,7 @@ export function AcademicFoundationPanel({ academicYears, onChanged }: Props) {
     setStatus("");
     try {
       await action();
-      await invalidateReadiness(queryClient);
+      await invalidateAcademicFoundationQueries(queryClient);
       await refresh();
       setStatus(message);
     } catch (cause) {

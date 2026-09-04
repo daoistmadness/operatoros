@@ -20,6 +20,7 @@ import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableH
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useAuth } from "../context/AuthContext";
+import { queryKeys } from "../lib/query/queryKeys";
 
 const column = createColumnHelper<ManagedStudent>();
 const today = () => new Date().toISOString().slice(0, 10);
@@ -126,11 +127,11 @@ export default function StudentManagement() {
   const quality = useStudentQuality();
   const exporter = useStudentTemplateExport();
   const csvExporter = useStudentsCsvExport();
-  const jenjangs = useQuery({ queryKey: ["academic-masters", "jenjangs"], queryFn: fetchJenjangs });
-  const programs = useQuery({ queryKey: ["academic-masters", "programs"], queryFn: fetchAcademicPrograms });
-  const grades = useQuery({ queryKey: ["academic-masters", "grades"], queryFn: fetchAcademicGrades });
-  const years = useQuery({ queryKey: ["academic-masters", "years"], queryFn: fetchAcademicYears });
-  const classes = useQuery({ queryKey: ["academic-masters", "classes"], queryFn: fetchAcademicClasses });
+  const jenjangs = useQuery({ queryKey: queryKeys.academicMasters.jenjangs, queryFn: fetchJenjangs });
+  const programs = useQuery({ queryKey: queryKeys.academicMasters.programs, queryFn: fetchAcademicPrograms });
+  const grades = useQuery({ queryKey: queryKeys.academicMasters.grades, queryFn: fetchAcademicGrades });
+  const years = useQuery({ queryKey: queryKeys.academicMasters.years, queryFn: fetchAcademicYears });
+  const classes = useQuery({ queryKey: queryKeys.academicMasters.classes, queryFn: fetchAcademicClasses });
   const visiblePrograms = (programs.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)));
   const visibleGrades = (grades.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)) && (!programId || item.program_id === Number(programId)));
   const visibleClasses = (classes.data || []).filter((item) => item.active && (!academicYearId || item.academic_year_id === Number(academicYearId)) && (!gradeId || item.grade_id === Number(gradeId)));

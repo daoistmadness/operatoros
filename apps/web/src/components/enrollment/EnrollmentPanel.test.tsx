@@ -1,5 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
@@ -20,6 +21,7 @@ vi.mock("../../api/enrollment", () => api);
 vi.mock("../../api/grades", () => ({ fetchAcademicYears: api.fetchAcademicYears }));
 
 import { EnrollmentPanel } from "./EnrollmentPanel";
+import { createTestQueryClient } from "../../lib/query/queryClient";
 
 let container: HTMLDivElement | null = null;
 let root: ReturnType<typeof createRoot> | null = null;
@@ -59,7 +61,7 @@ async function renderPanel() {
   document.body.appendChild(container);
   root = createRoot(container);
   await act(async () => {
-    root?.render(<EnrollmentPanel showHero={false} />);
+    root?.render(<QueryClientProvider client={createTestQueryClient()}><EnrollmentPanel showHero={false} /></QueryClientProvider>);
     await new Promise((resolve) => setTimeout(resolve, 20));
   });
   return container;
