@@ -11,7 +11,7 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@academic @assessment-operations @release assessment operations moves from no scores to partial to complete", async ({ page }) => {
+test("@academic @assessment-operations @critical @release assessment operations reaches the academic timeline", async ({ page }) => {
   await login(page);
 
   const yearsResponse = await page.request.get("/api/grades/academic-years");
@@ -39,7 +39,7 @@ test("@academic @assessment-operations @release assessment operations moves from
   const component = (await componentsResponse.json()).find((value: { subject_id: number }) => value.subject_id === subject.id);
   expect(component).toBeTruthy();
 
-  const label = `E2E Assessment Operations ${Date.now()}`;
+  const label = "E2E Critical Academic Assessment";
   const sessionResponse = await page.request.post("/api/grades/assessment-sessions", {
     data: { academic_year_id: year.id, term_number: 1, label, assessment_date: "2026-08-14" },
   });
@@ -67,6 +67,8 @@ test("@academic @assessment-operations @release assessment operations moves from
   const studentsResponse = await page.request.get(`/api/student-masters/management/list?academic_year_id=${year.id}&jenjang_id=${jenjang.id}&class_id=${academicClass.id}&status=active&page_size=100`);
   expect(studentsResponse.status()).toBe(200);
   const students = await studentsResponse.json();
+  const ada = students.items.find((student: { full_name: string }) => student.full_name === "E2E Ada");
+  expect(ada).toBeTruthy();
   const enrollmentResponses = await Promise.all(students.items.map((student: { id: string }) => page.request.get(`/api/student-enrollments/student/${student.id}`)));
   const enrollments = (await Promise.all(enrollmentResponses.map((response) => response.json()))).flat().filter((value: { academic_year_id: number; academic_class_id: number; active: boolean }) => value.academic_year_id === year.id && value.academic_class_id === academicClass.id && value.active);
   expect(enrollments.length).toBeGreaterThan(1);
@@ -78,6 +80,21 @@ test("@academic @assessment-operations @release assessment operations moves from
     const saved = await saveResponse.json();
     expect(saved.saved).toBe(1);
   }
+
+  const ledgerResponse = await page.request.get(`/api/grades/ledger?academic_year_id=${year.id}&jenjang_id=${jenjang.id}&assessment_session_id=${session.id}`);
+  expect(ledgerResponse.status()).toBe(200);
+  const ledger = await ledgerResponse.json() as Array<{ enrollment_id: number; student_name: string; grades: Array<{ score: number | null }> }>;
+  const adaLedger = ledger.find((row) => row.student_name === "E2E Ada");
+  expect(adaLedger?.grades.some((grade) => grade.score === 80)).toBe(true);
+  const adaEnrollmentsResponse = await page.request.get(`/api/student-enrollments/student/${ada.id}`);
+  expect(adaEnrollmentsResponse.status()).toBe(200);
+  const adaEnrollments = await adaEnrollmentsResponse.json() as Array<{ id: number; academic_year_id: number; academic_class_id: number; active: boolean }>;
+  expect(adaLedger?.enrollment_id).toBe(adaEnrollments.find((enrollment) => enrollment.academic_year_id === year.id && enrollment.academic_class_id === academicClass.id && enrollment.active)?.id);
+
+  const overviewResponse = await page.request.get(`/api/student-masters/${ada.id}/overview`);
+  expect(overviewResponse.status()).toBe(200);
+  const overview = await overviewResponse.json() as { academic: { history: Array<{ assessmentDate: string | null; assessmentLabel: string; subjectName: string; score: number | null }> } };
+  expect(overview.academic.history).toEqual(expect.arrayContaining([expect.objectContaining({ assessmentDate: "2026-08-14", assessmentLabel: "E2E Progression Score", subjectName: "E2E Progression Subject", score: 80 })]));
 
   const completeResponse = page.waitForResponse((response) => response.url().includes("/api/grades/assessment-operations") && response.status() === 200);
   await page.reload();
@@ -92,4 +109,14 @@ test("@academic @assessment-operations @release assessment operations moves from
   await expect(page.getByRole("heading", { name: "Assessment Operations" })).toBeVisible();
   await page.getByRole("link", { name: "Review scores" }).first().click();
   await expect(page).toHaveURL(new RegExp(`/grades\\?.*assessment_session_id=${session.id}.*subject_id=${subject.id}`));
+
+  await page.goto(`/students/${ada.id}`);
+  await expect(page.getByRole("heading", { name: "E2E Ada", exact: true })).toBeVisible();
+  await expect(page.getByText("Current student context", { exact: true })).toBeVisible();
+  await expect(page.getByText("2026/2027", { exact: true })).toBeVisible();
+  await expect(page.getByText("Primary 1A", { exact: true })).toBeVisible();
+  const academicCard = page.getByRole("heading", { name: "Academic", exact: true }).locator("..").locator("..");
+  await expect(academicCard).toContainText("2026-08-14");
+  await expect(academicCard).toContainText("E2E Progression Score");
+  await expect(academicCard).toContainText("80");
 });

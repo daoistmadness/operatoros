@@ -1,4 +1,4 @@
-.PHONY: e2e-smoke e2e-release e2e-full e2e-clean e2e-validate fresh-db-parity test-fast test-pr test-release test-scope dev-db-path dev-db-status dev-db-reset dev-db-candidates dev-db-adopt dev-sessions-status
+.PHONY: e2e-smoke e2e-critical e2e-readiness e2e-release e2e-full e2e-clean e2e-validate fresh-db-parity test-fast test-pr test-release test-scope dev-db-path dev-db-status dev-db-reset dev-db-candidates dev-db-adopt dev-sessions-status
 
 test-scope:
 	@backend/.venv/bin/python scripts/test_scope.py
@@ -18,6 +18,13 @@ fresh-db-parity:
 e2e-smoke:
 	@bash e2e/run-smoke.sh
 
+e2e-readiness:
+	@bash e2e/run-readiness.sh
+
+e2e-critical:
+	@bash e2e/run-readiness.sh
+	@OPERATOROS_E2E_GREP='@critical' bash e2e/run-smoke.sh
+
 e2e-release:
 	@OPERATOROS_E2E_GREP='@release' bash e2e/run-smoke.sh
 
@@ -29,6 +36,7 @@ e2e-clean:
 
 e2e-validate:
 	@bash e2e/run-smoke.sh --validate
+	@bash e2e/run-readiness.sh --validate
 	@bash e2e/run-full.sh --validate
 
 dev-db-path:

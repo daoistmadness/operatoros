@@ -20,7 +20,7 @@ async function openDaily(page: Page, date: string) {
   await expect(page.getByRole("heading", { name: "Daily Attendance" })).toBeVisible();
 }
 
-test("@attendance @daily-attendance @release daily attendance moves from partial to complete without treating no records as Alfa", async ({ page }) => {
+test("@attendance @daily-attendance @critical @release daily attendance moves from partial to complete without treating no records as Alfa", async ({ page }) => {
   await login(page);
 
   const rosterResponse = await page.request.get(`/api/attendance/classes/1/dates/${partialDate}`);

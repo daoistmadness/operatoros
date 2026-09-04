@@ -74,6 +74,8 @@ make e2e-clean
 
 `make e2e-validate` performs shell syntax and Python compilation checks without starting the application. `timeout 300 make e2e-smoke` is the local blocking critical-path command. `make e2e-clean` removes only E2E-owned generated state.
 
+`make e2e-critical` runs the Fresh School readiness journey and the `@critical` attendance and academic journeys. It uses the same disposable roots, synthetic fixtures, dynamic ports, and cleanup as the existing E2E runners. `make e2e-smoke` remains the broad route and feature smoke suite.
+
 ```bash
 make e2e-full
 ```
