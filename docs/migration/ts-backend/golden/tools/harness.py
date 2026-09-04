@@ -141,10 +141,12 @@ def capture_sqlite_state(db_path: Path) -> tuple[dict, list]:
 
 def seed_disposable_database(db_path: Path, seed_fn_name: str) -> None:
     """Create and seed an S4.3 database in a fresh Python process."""
-    python = os.environ.get(
-        "OPERATOROS_PYTHON",
-        "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python",
-    )
+    python = os.environ.get("OPERATOROS_PYTHON")
+    if not python:
+        raise RuntimeError(
+            "OPERATOROS_PYTHON is required; resolve it with "
+            "scripts/python-tooling-env.ts"
+        )
     script = """
 import importlib.util, os, sys
 from pathlib import Path

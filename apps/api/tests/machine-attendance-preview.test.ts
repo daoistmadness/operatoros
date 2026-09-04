@@ -3,9 +3,9 @@ import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
+import { python } from "./python";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${root}/backend/.venv/bin/python`;
 const secret = "astryx-machine-preview-test-cookie-secret-32";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Absent", "Lembur", "Pengecualian", "week"];
 

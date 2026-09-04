@@ -32,6 +32,7 @@ jobs:
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
       OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
       OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
+      OPERATOROS_PYTHON_VENV: ${{ runner.temp }}/operatoros/python/venv
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -63,11 +64,8 @@ jobs:
           python --version
           mise ls --current
 
-      - name: Install backend dependencies
-        run: |
-          python -m venv backend/.venv
-          backend/.venv/bin/python -m pip install --upgrade pip
-          backend/.venv/bin/python -m pip install -r backend/requirements.txt
+      - name: Bootstrap external fixture-tool virtualenv
+        run: mise run python:bootstrap
 
       - name: Install backend TypeScript dependencies
         run: bun install --frozen-lockfile

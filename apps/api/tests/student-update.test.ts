@@ -3,9 +3,9 @@ import { rmSync } from "node:fs";
 import { appendRow, loadXlsxWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["OperatorOS Student UUID", "Record Version", "Legal Name", "Preferred Name", "NIPD", "NISN", "NIK", "Birth Place", "Birth Date", "Gender", "Religion", "Student Status", "Address", "Kelurahan", "Kecamatan", "City", "Province", "Postal Code", "Phone", "Email", "Guardian Name", "Guardian Phone", "Attendance Device No. ID", "Device Source", "Academic Year ID", "Academic Year", "Academic Class ID", "Class"];
 
