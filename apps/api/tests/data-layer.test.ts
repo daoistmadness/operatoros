@@ -7,9 +7,9 @@ function sha256FileSync(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 import { inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = process.env.OPERATOROS_PYTHON ?? `${repoRoot}/backend/.venv/bin/python`;
 
 function disposableDatabasePath(label: string): string {
   return `/tmp/operatoros-${label}-${process.pid}-${Date.now()}.db`;

@@ -127,7 +127,7 @@ Do not use `node.exe` or `npm.cmd` from `/mnt/c` for OperatorOS development.
 - If `vite: not found` appears, do not install Vite globally. The locked installation is missing or incomplete; run `bun install --frozen-lockfile` from the repository root.
 - If Bun reports a registry/network failure, restore connectivity and rerun the same Bun command. The launcher intentionally does not install dependencies automatically.
 - If a port is occupied, `./start-dev.sh --check` reports the affected service and process information when `lsof` or `ss` can provide it. Stop that process or select a different `BACKEND_PORT`/`FRONTEND_PORT`.
-- If the Python environment is missing, create `backend/.venv` with Python 3.12 and install `backend/requirements.txt` as shown in the README.
+- If the Python tooling environment is missing or stale, run `mise run python:bootstrap`. It uses the external default or the path in `OPERATOROS_PYTHON_VENV`; it does not require `backend/.venv`.
 - If backend or frontend readiness times out, inspect `.dev-logs/backend.log` or `.dev-logs/frontend.log`; the launcher also prints the latest lines before shutting down both services.
 - If file watching is unreliable, confirm the repo is not mounted from the Windows filesystem.
 - If Docker port bindings conflict, stop the offending process before relaunching the stack.

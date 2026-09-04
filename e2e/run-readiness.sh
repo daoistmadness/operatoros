@@ -2,9 +2,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$repo_root/scripts/validate-wsl-bun.sh"
+operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
+python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
+export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-readiness.sh"
-  "$repo_root/backend/.venv/bin/python" -m py_compile "$repo_root/e2e/helpers/seed-readiness-database.py"
+  "$python" -m py_compile "$repo_root/e2e/helpers/seed-readiness-database.py"
   exit 0
 fi
 runtime_root="$(mktemp -d /tmp/operatoros-readiness-e2e.XXXXXX)"
@@ -30,11 +34,11 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-(cd "$repo_root/backend" && export PYTHONPATH="$PWD/src" && "$repo_root/backend/.venv/bin/python" -m core.schema_migrations initialize-fresh --database "$database") >"$workspace/logs/initialize.log" 2>&1
-"$repo_root/backend/.venv/bin/python" "$repo_root/e2e/helpers/seed-readiness-database.py" --database "$database" >"$workspace/logs/seed.log" 2>&1
+(cd "$repo_root/backend" && export PYTHONPATH="$PWD/src" && "$python" -m core.schema_migrations initialize-fresh --database "$database") >"$workspace/logs/initialize.log" 2>&1
+"$python" "$repo_root/e2e/helpers/seed-readiness-database.py" --database "$database" >"$workspace/logs/seed.log" 2>&1
 bash "$repo_root/e2e/start-elysia-test-stack.sh" "$workspace" "$workspace/logs"
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
-export OPERATOROS_E2E_FRONTEND_URL="$($repo_root/backend/.venv/bin/python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
+export OPERATOROS_E2E_FRONTEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
 
 cd "$repo_root/apps/web"
 playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"

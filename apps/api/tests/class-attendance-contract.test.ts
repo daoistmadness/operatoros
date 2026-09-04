@@ -1,13 +1,12 @@
 import { Value } from "@sinclair/typebox/value";
 import { describe, expect, it } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
+import { rmSync } from "node:fs";
 import { ClassAttendanceEntriesResponseSchema, ClassAttendanceResponseSchema } from "@operatoros/contracts/attendance";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
+import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const localPython = `${repoRoot}/backend/.venv/bin/python`;
-const python = process.env.OPERATOROS_PYTHON ?? (existsSync(localPython) ? localPython : "/home/mikhailryu/projects/absensi/school-attendance-analytics/backend/.venv/bin/python");
 const secret = "astryx-class-attendance-contract-secret";
 
 function seed(path: string): void {

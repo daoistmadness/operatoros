@@ -279,8 +279,6 @@ def test_protected_database_data_root_is_rejected(tmp_path, monkeypatch):
 
 
 def test_make_path_and_status_report_the_same_canonical_database(tmp_path):
-    if not (ROOT / "backend/.venv/bin/python").exists():
-        pytest.skip("project virtual environment is unavailable")
     environment = os.environ.copy()
     environment.pop("DATABASE_URL", None)
     environment["OPERATOROS_DEV_DATA_DIR"] = str(tmp_path / "make-data")

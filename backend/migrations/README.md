@@ -37,7 +37,8 @@ The identity migration depends only on an operational database. It creates `user
 Example SQLite execution using the standard library (avoids requiring the `sqlite3` CLI):
 
 ```bash
-DATABASE_PATH=/protected/path/attendance.db backend/.venv/bin/python - <<'PY'
+PYTHON_TOOLING="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+DATABASE_PATH=/protected/path/attendance.db "$PYTHON_TOOLING" - <<'PY'
 import os, sqlite3
 from pathlib import Path
 sql = Path("backend/migrations/20260713_identity_schema_sqlite.sql").read_text()
