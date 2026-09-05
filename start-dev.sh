@@ -35,6 +35,7 @@ SHUTDOWN_TIMEOUT_SECONDS="${ASTRYX_SHUTDOWN_TIMEOUT_SECONDS:-5}"
 CHECK_ONLY=0
 CLEAN_STALE=1
 AUTO_PORT=0
+VERBOSE=0
 MODE=browser
 JS_RUNTIME="bun"
 JS_RUNTIME_VERSION=""
@@ -60,6 +61,8 @@ Usage: ./start-dev.sh [options]
   --no-clean-stale    Never clean; fail if a selected port is occupied
   --auto-port         Select frontend 5173-5199 and backend 8000-8099
   --mode browser      Fixed-port browser mode (default)
+  --verbose           Show detailed ownership and checkout evidence
+  --debug             Alias for --verbose
   --help              Show this help
 EOF
 }
@@ -76,6 +79,52 @@ fail_preflight() {
   printf '%s\n' "$@"
   printf '\nNo OperatorOS services were started.\n'
   exit 2
+}
+
+print_checkout_identity() {
+  printf 'OperatorOS Development Stack\n\n'
+  printf 'Repository  %s\n' "$PROJECT_ROOT"
+  local _commit="" _branch="" _upstream="" _status=""
+  _commit="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null | cut -c1-12 || echo unknown)"
+  if [[ -z "$_commit" ]]; then _commit="unknown"; fi
+  _branch="$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || true)"
+  if [[ -z "$_branch" ]]; then
+    _branch="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"
+    if [[ "$_branch" == "HEAD" ]]; then _branch="detached"; fi
+  fi
+  printf 'Branch      %s\n' "$_branch"
+  printf 'Git commit  %s\n' "$_commit"
+  # Upstream status cheap, no fetch
+  if git -C "$PROJECT_ROOT" rev-parse --verify --quiet "@{u}" >/dev/null 2>&1; then
+    _upstream="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null || true)"
+    if [[ -n "$_upstream" ]]; then
+      local _counts="" _ahead="" _behind=""
+      _counts="$(git -C "$PROJECT_ROOT" rev-list --left-right --count HEAD...@{u} 2>/dev/null || true)"
+      if [[ -n "$_counts" ]]; then
+        _ahead="$(printf '%s' "$_counts" | awk '{print $1}')"
+        _behind="$(printf '%s' "$_counts" | awk '{print $2}')"
+        if [[ "$_ahead" -gt 0 && "$_behind" -gt 0 ]]; then
+          _status="ahead $_ahead, behind $_behind vs $_upstream"
+        elif [[ "$_behind" -gt 0 ]]; then
+          _status="behind $_upstream by $_behind"
+        elif [[ "$_ahead" -gt 0 ]]; then
+          _status="ahead of $_upstream by $_ahead"
+        else
+          _status="up to date with $_upstream"
+        fi
+        printf 'Upstream    %s\n' "$_upstream"
+        printf 'Status      %s\n' "$_status"
+      else
+        printf 'Upstream    %s\n' "$_upstream"
+      fi
+    fi
+  fi
+  # store for later use in port-conflict messages
+  GIT_COMMIT="$_commit"
+  GIT_BRANCH="$_branch"
+  GIT_UPSTREAM="${_upstream:-}"
+  GIT_STATUS="${_status:-}"
+  printf '\n'
 }
 
 report_configuration_drift() {
@@ -95,9 +144,12 @@ report_configuration_drift() {
   fi
 
   if [[ -f "$BACKEND_DIR/.env" ]] && [[ "$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" dotenv-database-url --env-file "$BACKEND_DIR/.env")" == true ]]; then
-    printf '[warning] backend/.env defines DATABASE_URL.\n'
-    printf '[warning] Managed OperatorOS development uses the canonical persistent database instead.\n'
-    printf '[warning] The backend/.env value may be stale or intended for another execution context.\n'
+    printf '[warn] backend/.env defines DATABASE_URL; managed development ignores it\n'
+    if (( VERBOSE == 1 )); then
+      printf '      Managed OperatorOS development uses the canonical persistent database instead.\n'
+      printf '      The backend/.env value may be stale or intended for another execution context.\n'
+      printf '      Resolved database: %s\n' "$EXPECTED_PERSISTENT_DB"
+    fi
   fi
 }
 
@@ -139,7 +191,7 @@ prepare_local_environment() {
 }
 
 run_preflight() {
-  printf 'OperatorOS Development Stack\n\nChecking environment...\n'
+  printf 'Checking environment...\n'
   [[ -z "${OPERATOROS_BACKEND:-}" ]] || fail_preflight "Obsolete backend selector" "Start the Elysia backend without OPERATOROS_BACKEND."
   require_command bash Launcher "Install Bash using the Linux/WSL distribution."
   require_command flock Launcher "Install util-linux for collision-safe allocation."
@@ -173,7 +225,70 @@ safe_cleanup_or_block() {
   if (( CLEAN_STALE == 0 )); then
     fail_preflight "Port $port is already in use" "$service cannot start; cleanup is disabled. No process was terminated."
   fi
-  "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "127.0.0.1" --port "$port" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || fail_preflight "Port $port is already in use" "$service listener is active, unrelated, or has unknown ownership. No unverified process was terminated."
+  local cleanup_output cleanup_status=0 verbose_flag=""
+  (( VERBOSE == 1 )) && verbose_flag="--verbose"
+  cleanup_output="$("$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "127.0.0.1" --port "$port" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" $verbose_flag 2>&1)" || cleanup_status=$?
+  cleanup_status=${cleanup_status:-0}
+  if (( cleanup_status == 0 )); then
+    return 0
+  fi
+  local json_line ownership_decision
+  json_line="$(printf '%s\n' "$cleanup_output" | grep -E '^\{.*\}$' | tail -n 1)"
+  if [[ -n "$json_line" ]]; then
+    ownership_decision="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("ownership_decision","UNKNOWN_OWNER"))' 2>/dev/null || echo UNKNOWN_OWNER)"
+  else
+    ownership_decision="UNKNOWN_OWNER"
+  fi
+  if [[ "$ownership_decision" == "OPERATOROS_OTHER_WORKTREE" || "$ownership_decision" == "OPERATOROS_OTHER_CHECKOUT" ]]; then
+    local candidate_repo candidate_branch candidate_commit candidate_service candidate_pid
+    candidate_repo="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("candidate_repository","unknown"))' 2>/dev/null || echo unknown)"
+    candidate_branch="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("candidate_branch","unknown"))' 2>/dev/null || echo unknown)"
+    candidate_commit="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("candidate_commit","unknown"))' 2>/dev/null || echo unknown)"
+    candidate_service="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("service",d.get("role","unknown")))' 2>/dev/null || echo unknown)"
+    candidate_pid="$(printf '%s\n' "$json_line" | "$VENV/bin/python" -c 'import json,sys; d=json.load(sys.stdin); print(d.get("pid","unknown"))' 2>/dev/null || echo unknown)"
+    error_box "Port $port is already used by OperatorOS"
+    printf 'Running checkout:\n'
+    printf '  Repository  %s\n' "$candidate_repo"
+    printf '  Branch      %s\n' "$candidate_branch"
+    printf '  Git commit  %s\n' "$candidate_commit"
+    printf '  Service     %s\n' "$candidate_service"
+    printf '  PID         %s\n' "$candidate_pid"
+    printf '  Port        %s\n' "$port"
+    printf '\nRequested checkout:\n'
+    printf '  Repository  %s\n' "$PROJECT_ROOT"
+    printf '  Branch      %s\n' "${GIT_BRANCH:-unknown}"
+    printf '  Git commit  %s\n' "${GIT_COMMIT:-unknown}"
+    printf '\nNo process was terminated.\n'
+    printf '\nTo use this checkout:\n'
+    printf '  ./start-dev.sh --auto-port\n'
+    printf '\nTo stop the existing managed stack:\n'
+    printf '  cd %s\n' "$candidate_repo"
+    printf '  ./stop-dev.sh\n'
+    if (( VERBOSE == 1 )); then
+      printf '\nVerbose ownership evidence:\n'
+      printf '%s\n' "$json_line" | "$VENV/bin/python" -m json.tool 2>/dev/null || printf '%s\n' "$json_line"
+    fi
+    printf '\nNo OperatorOS services were started.\n'
+    exit 2
+  else
+    if (( VERBOSE == 1 )); then
+      printf '%s\n' "$cleanup_output"
+      if [[ -n "$json_line" ]]; then
+        printf '\nOwnership evidence:\n'
+        printf '%s\n' "$json_line" | "$VENV/bin/python" -m json.tool 2>/dev/null || printf '%s\n' "$json_line"
+      fi
+    else
+      error_box "Port $port is already in use"
+      if [[ "$ownership_decision" == "UNKNOWN_OWNER" ]]; then
+        printf 'A non-OperatorOS process or an unverified listener owns port %s.\n' "$port"
+      else
+        printf 'Port %s is owned by a managed process that is not stale.\n' "$port"
+      fi
+      printf 'No process was terminated.\n'
+      printf '\nNo OperatorOS services were started.\n'
+    fi
+    exit 2
+  fi
 }
 
 allocate_ports() {
@@ -189,14 +304,30 @@ allocate_ports() {
   else
     # Clean only proven stale listeners on preferred ports. Unknown/unrelated
     # listeners are preserved and automatic allocation skips them.
+    local _frontend_orig="$FRONTEND_PORT" _backend_orig="$BACKEND_PORT"
     if ! port_is_free "$FRONTEND_HOST" "$FRONTEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
-      "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || true
+      if (( VERBOSE == 1 )); then
+        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --verbose || true
+      else
+        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
+      fi
     fi
     if ! port_is_free "$BACKEND_HOST" "$BACKEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
-      "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" || true
+      if (( VERBOSE == 1 )); then
+        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --verbose || true
+      else
+        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
+      fi
     fi
     FRONTEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$FRONTEND_HOST" --preferred "$FRONTEND_PORT" --maximum 5199 --auto)" || fail_preflight "No frontend port is available" "Allowed range: 5173-5199."
     BACKEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$BACKEND_HOST" --preferred "$BACKEND_PORT" --maximum 8099 --auto)" || fail_preflight "No backend port is available" "Allowed range: 8000-8099."
+    if [[ "$FRONTEND_PORT" != "$_frontend_orig" || "$BACKEND_PORT" != "$_backend_orig" ]]; then
+      printf '\nDefault ports are occupied by another OperatorOS worktree.\n'
+      printf 'Selected:\n'
+      printf '  Frontend  http://%s:%s\n' "$FRONTEND_HOST" "$FRONTEND_PORT"
+      printf '  Backend   http://%s:%s\n' "$BACKEND_HOST" "$BACKEND_PORT"
+      printf '\n'
+    fi
   fi
   export FRONTEND_PORT BACKEND_PORT
   export OPERATOROS_FRONTEND_URL="http://$FRONTEND_HOST:$FRONTEND_PORT"
@@ -319,12 +450,15 @@ while (( $# )); do
     --clean-stale) CLEAN_STALE=1; shift ;;
     --no-clean-stale) CLEAN_STALE=0; shift ;;
     --auto-port) AUTO_PORT=1; shift ;;
+    --verbose|--debug) VERBOSE=1; shift ;;
     --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser ]] || { usage >&2; exit 2; };;
     --help|-h) usage; exit 0 ;;
     *) usage >&2; printf '\nUnknown option: %s\n' "$1" >&2; exit 2 ;;
   esac
 done
 
+# Checkout identity at the very beginning, before env or port checks
+print_checkout_identity
 run_preflight
 export OPERATOROS_REPOSITORY_ROOT="$PROJECT_ROOT"
 if ! OPERATOROS_DATA_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format data-dir)"; then
@@ -338,6 +472,29 @@ report_configuration_drift
 if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
   session_status="$($VENV/bin/python "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" 2>/dev/null || true)"
   [[ -n "$session_status" ]] || session_status='{"state":"STALE_SESSION_UNVERIFIED"}'
+  # Same-checkout already running: provide concise human-readable instead of raw port collision
+  if [[ "$session_status" == *'"state": "ACTIVE_VERIFIED"'* ]]; then
+    existing_frontend=""
+    existing_backend=""
+    if [[ -f "$RUNTIME_DIR/ports.json" ]]; then
+      existing_frontend="$("$VENV/bin/python" -c 'import json; d=json.load(open("'"$RUNTIME_DIR/ports.json"'")); print(d.get("frontend_url",""))' 2>/dev/null || true)"
+      existing_backend="$("$VENV/bin/python" -c 'import json; d=json.load(open("'"$RUNTIME_DIR/ports.json"'")); print(d.get("backend_url",""))' 2>/dev/null || true)"
+    fi
+    if [[ -z "$existing_frontend" && -f "$RUNTIME_DIR/sessions/$active_session/session.json" ]]; then
+      existing_frontend="$("$VENV/bin/python" -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("frontend_url",""))' "$RUNTIME_DIR/sessions/$active_session/session.json" 2>/dev/null || true)"
+      existing_backend="$("$VENV/bin/python" -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("backend_url",""))' "$RUNTIME_DIR/sessions/$active_session/session.json" 2>/dev/null || true)"
+    fi
+    error_box "OperatorOS is already running from this checkout."
+    [[ -n "$existing_frontend" ]] && printf 'Frontend  %s\n' "$existing_frontend"
+    [[ -n "$existing_backend" ]] && printf 'Backend   %s\n' "$existing_backend"
+    printf 'Session   %s\n' "$active_session"
+    printf '\nUse ./stop-dev.sh to stop it.\n'
+    if (( VERBOSE == 1 )); then
+      printf '\nVerbose status: %s\n' "$session_status"
+    fi
+    printf '\nNo OperatorOS services were started.\n'
+    exit 2
+  fi
   fail_preflight "SINGLE_ACTIVE_DEVELOPMENT_SESSION" \
     "Session state: $session_status" \
     "If ACTIVE_VERIFIED, stop the owned session with: ./stop-dev.sh --session ${active_session:-<id>}" \
