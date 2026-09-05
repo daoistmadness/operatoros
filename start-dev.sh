@@ -415,7 +415,13 @@ fi
 "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
-printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
+GIT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+GIT_BRANCH="$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || true)"
+if [[ -z "$GIT_BRANCH" ]]; then
+  GIT_BRANCH="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"
+fi
+
+printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nRepository  %s\nGit commit  %s\nBranch      %s\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$PROJECT_ROOT" "$GIT_COMMIT" "$GIT_BRANCH" "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
 LAUNCHER_STATE=RUNNING
 while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
