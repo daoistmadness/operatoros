@@ -67,7 +67,7 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
   const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
   await page.goto(await studentLink.getAttribute("href") as string);
   await expect(page.getByRole("heading", { name: "Academic", exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "E2E Progression Score", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: /E2E (Progression Score|Authorable Component)/ }).first()).toBeVisible();
   await expect(page.getByText("Term 1 · 2026-08-15")).toBeVisible();
   await page.goto("/analytics/academic");
   await page.getByLabel("Term").selectOption("term_1");

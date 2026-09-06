@@ -31,6 +31,14 @@ export interface CreateAcademicAssessmentSessionPayload {
   assessment_date?: string | null;
 }
 
+export type CreateAssessmentComponentPayload = {
+  name: string;
+  assessment_type: AssessmentComponent["assessment_type"];
+  subject_id: number | null;
+};
+
+export type UpdateAssessmentComponentPayload = Partial<CreateAssessmentComponentPayload>;
+
 export function gradeApiPath(path: string): string {
   return `/api/grades${path}`;
 }
@@ -74,12 +82,39 @@ export async function createSubject(payload: CreateSubjectPayload): Promise<Subj
   return response.data;
 }
 
-export async function fetchComponents(): Promise<AssessmentComponent[]> {
+export async function fetchComponents(subjectId?: number): Promise<AssessmentComponent[]> {
   const response = await apiRequest<AssessmentComponent[]>({
     path: gradeApiPath("/components"),
     method: "GET",
+    params: { subject_id: subjectId },
   });
 
+  return response.data;
+}
+
+export async function createAssessmentComponent(payload: CreateAssessmentComponentPayload): Promise<AssessmentComponent> {
+  const response = await apiRequest<AssessmentComponent>({
+    path: gradeApiPath("/components"),
+    method: "POST",
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function updateAssessmentComponent(id: number, payload: UpdateAssessmentComponentPayload): Promise<AssessmentComponent> {
+  const response = await apiRequest<AssessmentComponent>({
+    path: gradeApiPath(`/components/${id}`),
+    method: "PUT",
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function deleteAssessmentComponent(id: number): Promise<{ status: "success"; deleted: 1; id: number }> {
+  const response = await apiRequest<{ status: "success"; deleted: 1; id: number }>({
+    path: gradeApiPath(`/components/${id}`),
+    method: "DELETE",
+  });
   return response.data;
 }
 

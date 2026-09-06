@@ -18674,6 +18674,367 @@
         "tags": [
           "grades"
         ]
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "assessment_type",
+                  "subject_id"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "assessment_type",
+                  "subject_id"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "assessment_type",
+                  "subject_id"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "assessment_type",
+                    "subject_id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "assessment_type": {
+                      "type": "string",
+                      "enum": [
+                        "sumatif",
+                        "formatif"
+                      ]
+                    },
+                    "subject_id": {
+                      "anyOf": [
+                        {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiGradesComponents"
+      }
+    },
+    "/api/grades/components/{component_id}": {
+      "put": {
+        "parameters": [
+          {
+            "name": "component_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "assessment_type": {
+                    "type": "string",
+                    "enum": [
+                      "sumatif",
+                      "formatif"
+                    ]
+                  },
+                  "subject_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "assessment_type",
+                    "subject_id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "minimum": 1,
+                      "type": "number"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "assessment_type": {
+                      "type": "string",
+                      "enum": [
+                        "sumatif",
+                        "formatif"
+                      ]
+                    },
+                    "subject_id": {
+                      "anyOf": [
+                        {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiGradesComponentsByComponent_id"
+      },
+      "delete": {
+        "parameters": [
+          {
+            "name": "component_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "deleted",
+                    "id"
+                  ],
+                  "properties": {
+                    "status": {
+                      "const": "success",
+                      "type": "string"
+                    },
+                    "deleted": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "id": {
+                      "minimum": 1,
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "deleteApiGradesComponentsByComponent_id"
       }
     },
     "/api/grades/enrollment": {
