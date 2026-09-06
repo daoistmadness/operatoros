@@ -8,6 +8,7 @@ import json
 import os
 import signal
 import shutil
+import shlex
 import socket
 import subprocess
 import sys
@@ -62,221 +63,94 @@ def process_info(pid: int) -> dict | None:
         start_ticks = fields[19]
         parent_pid = int(fields[1])
         process_group = int(fields[2])
-        cwd = str((Path("/proc") / str(pid) / "cwd").resolve())
-        command = (Path("/proc") / str(pid) / "cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace").strip()
+        cwd = str((Path("/proc") / str(pid) / "cwd").resolve(strict=True))
+        argv = (Path("/proc") / str(pid) / "cmdline").read_bytes().decode(errors="replace").rstrip("\0").split("\0")
+        command = " ".join(argv)
         user = (Path("/proc") / str(pid)).stat().st_uid
-        return {"pid": pid, "parent_pid": parent_pid, "pgid": process_group, "start_ticks": start_ticks, "cwd": cwd, "command": command, "uid": user, "state": state}
+        return {"pid": pid, "parent_pid": parent_pid, "pgid": process_group, "start_ticks": start_ticks, "cwd": cwd, "command": command, "argv": argv, "uid": user, "state": state}
     except (OSError, IndexError, ValueError):
         return None
 
 
-def git_toplevel(candidate: Path) -> Path | None:
+def git_output(candidate: Path, *arguments: str) -> str | None:
     try:
-        result = subprocess.run(["git", "-C", str(candidate), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False, timeout=2)
-        if result.returncode == 0:
-            out = result.stdout.strip()
-            if out:
-                return Path(out).resolve()
-    except Exception:
-        pass
-    return None
+        result = subprocess.run(["git", "-C", str(candidate), *arguments], capture_output=True, text=True, timeout=2)
+        return result.stdout.strip() if result.returncode == 0 else None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
+def git_toplevel(candidate: Path) -> Path | None:
+    value = git_output(candidate, "rev-parse", "--show-toplevel")
+    return Path(value).resolve() if value else None
 
 
 def git_common_dir(candidate: Path) -> Path | None:
-    try:
-        result = subprocess.run(["git", "-C", str(candidate), "rev-parse", "--git-common-dir"], capture_output=True, text=True, check=False, timeout=2)
-        if result.returncode == 0:
-            out = result.stdout.strip()
-            if out:
-                p = Path(out)
-                if p.is_absolute():
-                    return p.resolve()
-                toplevel = git_toplevel(candidate)
-                if toplevel:
-                    return (toplevel / out).resolve()
-                return (candidate / out).resolve()
-    except Exception:
-        pass
-    return None
+    value = git_output(candidate, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    return Path(value).resolve() if value else None
 
 
 def is_operatoros_checkout(candidate: Path) -> bool:
     try:
-        return (candidate / "apps/api/package.json").exists() and (candidate / "apps/web/package.json").exists() and (candidate / "mise.toml").exists()
-    except Exception:
+        return all(json.loads((candidate / f"apps/{app}/package.json").read_text()).get("name") == f"@operatoros/{app}" for app in ("api", "web"))
+    except (OSError, ValueError, AttributeError):
         return False
 
 
 def checkout_identity(candidate: Path) -> dict | None:
-    try:
-        toplevel = git_toplevel(candidate)
-        if not toplevel:
-            return None
-        common = git_common_dir(toplevel)
-        branch = None
-        try:
-            r = subprocess.run(["git", "-C", str(toplevel), "branch", "--show-current"], capture_output=True, text=True, check=False, timeout=2)
-            if r.returncode == 0:
-                branch = r.stdout.strip()
-                if not branch:
-                    r2 = subprocess.run(["git", "-C", str(toplevel), "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, check=False, timeout=2)
-                    if r2.returncode == 0:
-                        b = r2.stdout.strip()
-                        branch = b if b and b != "HEAD" else "detached"
-                    else:
-                        branch = "detached"
-        except Exception:
-            branch = "detached"
-        if not branch:
-            branch = "detached"
-        commit = "unknown"
-        commit_full = "unknown"
-        try:
-            r = subprocess.run(["git", "-C", str(toplevel), "rev-parse", "HEAD"], capture_output=True, text=True, check=False, timeout=2)
-            if r.returncode == 0 and r.stdout.strip():
-                commit_full = r.stdout.strip()
-                commit = commit_full[:12]
-        except Exception:
-            pass
-        upstream = None
-        status = None
-        try:
-            ru = subprocess.run(["git", "-C", str(toplevel), "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], capture_output=True, text=True, check=False, timeout=2)
-            if ru.returncode == 0 and ru.stdout.strip():
-                upstream = ru.stdout.strip()
-                rc = subprocess.run(["git", "-C", str(toplevel), "rev-list", "--left-right", "--count", f"HEAD...@{{u}}"], capture_output=True, text=True, check=False, timeout=2)
-                if rc.returncode == 0 and rc.stdout.strip():
-                    parts = rc.stdout.strip().split()
-                    if len(parts) == 2:
-                        ahead = int(parts[0]); behind = int(parts[1])
-                        if ahead > 0 and behind > 0:
-                            status = f"ahead {ahead}, behind {behind} vs {upstream}"
-                        elif behind > 0:
-                            status = f"behind {upstream} by {behind}"
-                        elif ahead > 0:
-                            status = f"ahead of {upstream} by {ahead}"
-                        else:
-                            status = f"up to date with {upstream}"
-        except Exception:
-            pass
-        return {"repository": str(toplevel), "common_dir": str(common) if common else None, "branch": branch, "commit": commit, "commit_full": commit_full, "upstream": upstream, "status": status}
-    except Exception:
+    repo = git_toplevel(candidate)
+    if repo is None:
         return None
-
-
-def guess_candidate_repo(info: dict) -> Path | None:
-    import re
-    candidates = []
-    cwd = info.get("cwd")
-    if cwd:
-        try:
-            p = Path(cwd)
-            tl = git_toplevel(p)
-            if tl:
-                candidates.append(tl)
-            candidates.append(p)
-            for parent in p.parents:
-                if len(candidates) > 10:
-                    break
-                tl2 = git_toplevel(parent)
-                if tl2 and tl2 not in candidates:
-                    candidates.append(tl2)
-        except Exception:
-            pass
-    cmd = info.get("command", "")
-    if cmd:
-        for m in re.finditer(r"(/[^\s\"']+)", cmd):
-            path_str = m.group(1).rstrip(",;:")
-            try:
-                if "/apps/" in path_str:
-                    repo_candidate = path_str.split("/apps/")[0]
-                    p = Path(repo_candidate)
-                    if p.is_dir():
-                        tl = git_toplevel(p)
-                        if tl:
-                            candidates.append(tl)
-                        elif is_operatoros_checkout(p):
-                            candidates.append(p)
-                p = Path(path_str)
-                for parent in [p] + list(p.parents)[:5]:
-                    tl = git_toplevel(parent)
-                    if tl and tl not in candidates:
-                        candidates.append(tl)
-                        break
-            except Exception:
-                continue
-    for cand in candidates:
-        try:
-            tl = git_toplevel(cand)
-            check_path = tl if tl else cand
-            if is_operatoros_checkout(check_path):
-                return check_path
-        except Exception:
-            continue
-    for cand in candidates:
-        try:
-            tl = git_toplevel(cand)
-            if tl:
-                return tl
-        except Exception:
-            continue
-    return None
+    common = git_common_dir(repo)
+    commit = git_output(repo, "rev-parse", "HEAD") or "unknown"
+    upstream = git_output(repo, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
+    counts = git_output(repo, "rev-list", "--left-right", "--count", "HEAD...@{u}") if upstream else None
+    changes = git_output(repo, "status", "--porcelain", "--untracked-files=normal")
+    return {
+        "repository": str(repo), "common_dir": str(common) if common else None,
+        "branch": git_output(repo, "branch", "--show-current") or "detached",
+        "commit": commit[:12], "commit_full": commit, "upstream": upstream,
+        "status": "unknown" if changes is None else "dirty" if changes else "clean",
+        "ahead": int(counts.split()[0]) if counts else None,
+        "behind": int(counts.split()[1]) if counts else None,
+    }
 
 
 def detect_cross_worktree(current_repo: Path, info: dict) -> dict:
-    candidate = guess_candidate_repo(info)
-    if not candidate:
-        return {"decision": "UNKNOWN_OWNER", "candidate": None}
-    # normalize candidate to toplevel if possible
-    tl = git_toplevel(candidate)
-    candidate_tl = tl if tl else candidate
-    if not is_operatoros_checkout(candidate_tl):
-        # check if candidate has .git but not operatoros marker -> still unknown
-        # only classify as operatoros if marker present
-        return {"decision": "UNKNOWN_OWNER", "candidate": str(candidate_tl), "reason": "not_operatoros_checkout"}
-    current_tl = git_toplevel(current_repo) or current_repo.resolve()
-    candidate_common = git_common_dir(candidate_tl)
-    current_common = git_common_dir(current_tl)
-    identity = checkout_identity(candidate_tl) or {"repository": str(candidate_tl), "branch": "unknown", "commit": "unknown", "commit_full": "unknown", "common_dir": str(candidate_common) if candidate_common else None, "status": None}
-    service = "unknown"
-    cwd = info.get("cwd", "")
-    cmd = info.get("command", "")
-    # Service must be inferred from command, not just cwd, to avoid false positives
-    if "vite" in cmd:
+    # Discovery is informational. Only durable PID records authorize cleanup.
+    cwd, command = info.get("cwd"), info.get("command")
+    if not cwd or not command or info.get("uid") != os.getuid():
+        return {"decision": "UNKNOWN_OWNER"}
+    candidate = git_toplevel(Path(cwd))
+    if candidate is None or not is_operatoros_checkout(candidate):
+        return {"decision": "NON_OPERATOROS"}
+    try:
+        words = info.get("argv") or shlex.split(command)
+    except ValueError:
+        return {"decision": "UNKNOWN_OWNER"}
+    service = None
+    if contained(Path(cwd).resolve(), candidate / "apps/web") and any(Path(word).name in ("vite", "vite.js") for word in words):
         service = "frontend"
-    elif "server.ts" in cmd:
+    elif contained(Path(cwd).resolve(), candidate / "apps/api") and any((Path(cwd) / word).resolve() == candidate / "apps/api/src/server.ts" for word in words):
         service = "backend"
-    elif "apps/web" in cmd and "bun" in cmd:
-        service = "frontend"
-    elif "apps/api" in cmd and "bun" in cmd:
-        service = "backend"
-    # Only classify as OperatorOS if service is recognizable; otherwise treat as unknown
-    if service == "unknown":
-        return {"decision": "UNKNOWN_OWNER", "candidate": str(candidate_tl), "reason": "service_not_recognized", "service": service}
-    base = {
-        "candidate_repository": str(candidate_tl),
-        "candidate_common": str(candidate_common) if candidate_common else None,
-        "current_common": str(current_common) if current_common else None,
-        "candidate_branch": identity.get("branch"),
-        "candidate_commit": identity.get("commit"),
-        "candidate_commit_full": identity.get("commit_full"),
-        "candidate_status": identity.get("status"),
-        "candidate_upstream": identity.get("upstream"),
+    if service is None:
+        return {"decision": "NON_OPERATOROS"}
+    identity = checkout_identity(candidate)
+    current_common = git_common_dir(current_repo)
+    candidate_common = git_common_dir(candidate)
+    if not identity or not current_common or not candidate_common:
+        return {"decision": "UNKNOWN_OWNER"}
+    decision = "OPERATOROS_OTHER_CHECKOUT"
+    if candidate == current_repo.resolve():
+        decision = "OPERATOROS_CURRENT_CHECKOUT"
+    elif current_common == candidate_common:
+        decision = "OPERATOROS_OTHER_WORKTREE"
+    return {
+        "decision": decision, "candidate_repository": str(candidate),
+        "candidate_common": str(candidate_common), "current_common": str(current_common),
+        "candidate_branch": identity["branch"], "candidate_commit": identity["commit"],
         "service": service,
     }
-    if current_common and candidate_common:
-        try:
-            if current_common.resolve() == candidate_common.resolve():
-                if candidate_tl.resolve() == current_tl.resolve():
-                    return {"decision": "OPERATOROS_CURRENT_CHECKOUT", **base}
-                else:
-                    return {"decision": "OPERATOROS_OTHER_WORKTREE", **base}
-            else:
-                return {"decision": "OPERATOROS_OTHER_CHECKOUT", **base}
-        except Exception:
-            pass
-    # fallback: if common not comparable, treat as other checkout
-    return {"decision": "OPERATOROS_OTHER_CHECKOUT", **base}
 
 
 def listener_pids(port: int) -> list[int]:
@@ -378,17 +252,8 @@ def classify(runtime: Path, repo: Path, port: int, verbose: bool = False) -> lis
         info.update({"port": port, "listening_address": f"127.0.0.1:{port}", "ownership_decision": decision, "session_id": matched_session, "role": matched_role})
         if extra:
             info.update(extra)
-        # Always include verbose details if requested or for cross-worktree
-        if verbose or decision in ("OPERATOROS_OTHER_WORKTREE", "OPERATOROS_OTHER_CHECKOUT", "OPERATOROS_CURRENT_CHECKOUT"):
-            # ensure candidate details present for verbose
-            if not extra and decision == "UNKNOWN_OWNER":
-                # try to still provide candidate guess for debugging
-                try:
-                    cand = guess_candidate_repo(info)
-                    if cand:
-                        info["candidate_repository_guess"] = str(cand)
-                except Exception:
-                    pass
+        info.pop("command", None)
+        info.pop("argv", None)
         classifications.append(info)
     if not pids and not is_free("127.0.0.1", port):
         classifications.append({"port": port, "ownership_decision": "UNKNOWN_OWNER", "reason": "listener PID unavailable"})
@@ -521,32 +386,60 @@ def stop_owned_session(args: argparse.Namespace) -> int:
         if survivors:
             time.sleep(0.05)
     final = {pid for _, pid in owned if group_alive(pid)}
-    print(json.dumps({"session": args.session, "owned_groups": len(owned), "remaining_groups": len(final), "deadline_seconds": float(args.timeout)}, sort_keys=True))
+    if getattr(args, "human", False):
+        print(f"[cleanup] Owned groups: {len(owned)}; remaining: {len(final)}")
+    else:
+        print(json.dumps({"session": args.session, "owned_groups": len(owned), "remaining_groups": len(final), "deadline_seconds": float(args.timeout)}, sort_keys=True))
     return 0 if not final else 3
+
+
+def print_port_conflict(item: dict, repo: Path, verbose: bool = False) -> None:
+    decision, port = item["ownership_decision"], item["port"]
+    if decision in ("OPERATOROS_OTHER_WORKTREE", "OPERATOROS_OTHER_CHECKOUT", "OPERATOROS_CURRENT_CHECKOUT"):
+        label = {"OPERATOROS_OTHER_WORKTREE": "Another OperatorOS worktree", "OPERATOROS_OTHER_CHECKOUT": "Another OperatorOS repository", "OPERATOROS_CURRENT_CHECKOUT": "An OperatorOS process from this checkout"}[decision]
+        print(f"{label} is already using port {port}.")
+        print("\nRunning checkout:")
+        for key, title in (("candidate_repository", "Repository"), ("candidate_branch", "Branch"), ("candidate_commit", "Git commit")):
+            print(f"  {title:12}{item[key]}")
+        requested = checkout_identity(repo) or {"repository": str(repo), "branch": "unknown", "commit": "unknown"}
+        print("\nRequested checkout:")
+        for key, title in (("repository", "Repository"), ("branch", "Branch"), ("commit", "Git commit")):
+            print(f"  {title:12}{requested[key]}")
+        print("\nTo use this checkout:\n  ./start-dev.sh --auto-port")
+        print(f"\nTo stop the running checkout's managed session:\n  cd {shlex.quote(item['candidate_repository'])}\n  ./stop-dev.sh")
+    elif decision == "NON_OPERATOROS":
+        print(f"Port {port} is in use by a non-OperatorOS process.")
+    elif decision == "OPERATOROS_ACTIVE":
+        print(f"OperatorOS is already running from this checkout on port {port}.")
+    else:
+        print(f"Port {port} has an unverifiable or protected listener ({decision}).")
+    if item.get("pid"):
+        print(f"PID: {item['pid']}")
+    print("No process was terminated.")
+    if verbose:
+        print(json.dumps(item, sort_keys=True))
 
 
 def cleanup_port(args: argparse.Namespace) -> int:
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
-    verbose = bool(getattr(args, "verbose", False))
-    decisions = classify(runtime, repo, args.port, verbose=verbose)
+    decisions = classify(runtime, repo, args.port)
     if not decisions and is_free(args.host, args.port):
         return 0
-    for item in decisions:
-        decision = item["ownership_decision"]
-        if decision == "OPERATOROS_STALE":
-            print(f"[cleanup] Found stale OperatorOS PID {item['pid']} on port {args.port}")
-            stop_pid(int(item["pid"]), args.timeout, "OperatorOS")
+    blocked = [item for item in decisions if item["ownership_decision"] != "OPERATOROS_STALE" or getattr(args, "no_clean", False)]
+    for item in blocked:
+        if getattr(args, "human", False):
+            print_port_conflict(item, repo, getattr(args, "verbose", False))
         else:
-            # Do not automatically terminate other worktree or other checkout
-            if verbose:
-                print(f"[blocked] Port {args.port} ownership: {decision}")
-                print("[blocked] No process was terminated")
-                print(json.dumps(item, sort_keys=True))
-            else:
-                # concise, helper returns structured; shell will format human-readable
-                # but we still need to signal blocked; print minimal structured for shell
-                print(json.dumps(item, sort_keys=True))
+            print(json.dumps(item, sort_keys=True))
+    if blocked:
+        return 3
+    for item in decisions:
+        # Revalidate immediately before signaling, including PID reuse and PGID.
+        fresh = classify(runtime, repo, args.port)
+        if not any(other.get("pid") == item["pid"] and other.get("start_ticks") == item.get("start_ticks") and other.get("pgid") == item["pid"] and other["ownership_decision"] == "OPERATOROS_STALE" for other in fresh):
+            print("[blocked] Process ownership changed; no signal sent")
             return 3
+        stop_pid(int(item["pid"]), args.timeout, "OperatorOS")
     if not is_free(args.host, args.port):
         print(f"[blocked] Port {args.port} did not release")
         return 3
@@ -675,7 +568,7 @@ def status_command(args: argparse.Namespace) -> int:
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
     active = runtime / "active-session"
     if not active.exists():
-        print(json.dumps({"state": "NO_ACTIVE_SESSION"}, sort_keys=True))
+        print("NO_ACTIVE_SESSION" if getattr(args, "human", False) else json.dumps({"state": "NO_ACTIVE_SESSION"}, sort_keys=True))
         return 0
     try:
         session_id = active.read_text(encoding="utf-8").strip()
@@ -684,7 +577,7 @@ def status_command(args: argparse.Namespace) -> int:
         if not session_id or not directory.is_dir() or ownership.get("application") != "OperatorOS" or ownership.get("session_id") != session_id:
             raise RuntimeError("unverified")
     except (OSError, json.JSONDecodeError, RuntimeError):
-        print(json.dumps({"state": "STALE_SESSION_UNVERIFIED"}, sort_keys=True))
+        print("STALE_SESSION_UNVERIFIED" if getattr(args, "human", False) else json.dumps({"state": "STALE_SESSION_UNVERIFIED"}, sort_keys=True))
         return 0
     for role in ("backend", "frontend"):
         try:
@@ -692,9 +585,18 @@ def status_command(args: argparse.Namespace) -> int:
         except (OSError, json.JSONDecodeError):
             valid = False
         if valid:
-            print(json.dumps({"state": "ACTIVE_VERIFIED"}, sort_keys=True))
+            if getattr(args, "human", False):
+                session = json.loads((directory / "session.json").read_text())
+                print("OperatorOS is already running from this checkout.\n")
+                for key, title in (("frontend_url", "Frontend"), ("backend_url", "Backend"), ("session_id", "Session"), ("database_path", "Database")):
+                    print(f"{title:10}{session.get(key, 'unknown')}")
+                print("\nRun ./stop-dev.sh from this checkout to stop it.")
+                if getattr(args, "verbose", False):
+                    print(json.dumps({"state": "ACTIVE_VERIFIED", "role": role}, sort_keys=True))
+            else:
+                print(json.dumps({"state": "ACTIVE_VERIFIED"}, sort_keys=True))
             return 0
-    print(json.dumps({"state": "STALE_VERIFIED"}, sort_keys=True))
+    print("STALE_VERIFIED" if getattr(args, "human", False) else json.dumps({"state": "STALE_VERIFIED"}, sort_keys=True))
     return 0
 
 
@@ -798,6 +700,8 @@ def parser() -> argparse.ArgumentParser:
     cleanup.add_argument("--runtime", required=True); cleanup.add_argument("--repo", required=True)
     cleanup.add_argument("--host", default="127.0.0.1"); cleanup.add_argument("--port", type=int, required=True); cleanup.add_argument("--timeout", type=float, default=2)
     cleanup.add_argument("--verbose", action="store_true", help="Include detailed ownership evidence")
+    cleanup.add_argument("--human", action="store_true")
+    cleanup.add_argument("--no-clean", action="store_true")
     cleanup.set_defaults(func=cleanup_port)
     allocation = sub.add_parser("allocate")
     allocation.add_argument("--host", default="127.0.0.1"); allocation.add_argument("--preferred", type=int, required=True); allocation.add_argument("--maximum", type=int, required=True); allocation.add_argument("--auto", action="store_true")
@@ -824,6 +728,8 @@ def parser() -> argparse.ArgumentParser:
     active.set_defaults(func=require_no_active_session)
     status = sub.add_parser("status")
     status.add_argument("--runtime", required=True); status.add_argument("--repo", required=True)
+    status.add_argument("--human", action="store_true")
+    status.add_argument("--verbose", action="store_true")
     status.set_defaults(func=status_command)
     stop = sub.add_parser("stop")
     stop.add_argument("--runtime", required=True); stop.add_argument("--repo", required=True); stop.add_argument("--session"); stop.add_argument("--all", action="store_true"); stop.add_argument("--timeout", type=float, default=2)
@@ -832,6 +738,7 @@ def parser() -> argparse.ArgumentParser:
     owned_stop.add_argument("--runtime", required=True); owned_stop.add_argument("--repo", required=True); owned_stop.add_argument("--session", required=True); owned_stop.add_argument("--timeout", type=float, default=10)
     owned_stop.add_argument("--frontend-pid", type=int)
     owned_stop.add_argument("--backend-pid", type=int)
+    owned_stop.add_argument("--human", action="store_true")
     owned_stop.set_defaults(func=stop_owned_session)
     checkout = sub.add_parser("checkout-identity")
     checkout.add_argument("--repo", required=True)

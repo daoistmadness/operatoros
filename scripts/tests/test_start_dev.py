@@ -79,7 +79,7 @@ def test_controlled_preflight_failure_does_not_finalize_missing_session(tmp_path
     )
 
     result = subprocess.run(
-        [str(ROOT / "start-dev.sh"), "--check"],
+        [str(ROOT / "start-dev.sh"), "--check", "--auto-port"],
         cwd=ROOT,
         env=environment,
         capture_output=True,
