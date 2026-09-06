@@ -70,6 +70,7 @@ export const queryKeys = {
   },
   grades: {
     all: ["grades"] as const,
+    components: (subjectId?: number | null) => ["grades", "components", { subjectId: subjectId ?? null }] as const,
     assessmentOperations: (filters: Readonly<Record<string, QueryPrimitive | readonly QueryPrimitive[] | undefined>>) => ["grades", "assessment-operations", canonicalizeQueryFilters(filters)] as const,
     assessmentOperationsIdle: ["grades", "assessment-operations", "idle"] as const,
   },

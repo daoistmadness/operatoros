@@ -1,5 +1,14 @@
 import { t } from "elysia";
-import { AcademicAssessmentSessionSchema, CreateAcademicAssessmentSessionSchema, GradeGridSaveRequestSchema } from "@operatoros/contracts/grades";
+import {
+  AcademicAssessmentSessionSchema,
+  AssessmentComponentListSchema,
+  AssessmentComponentSchema,
+  CreateAcademicAssessmentSessionSchema,
+  CreateAssessmentComponentSchema,
+  DeleteAssessmentComponentResponseSchema,
+  GradeGridSaveRequestSchema,
+  UpdateAssessmentComponentSchema,
+} from "@operatoros/contracts/grades";
 import { inTransaction } from "@operatoros/db";
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
@@ -23,6 +32,33 @@ function fail(set: any, status: number, detail: string | Record<string, unknown>
 
 function bool(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
+}
+
+function serializeAssessmentComponent(value: Row): Row {
+  return {
+    id: Number(value.id),
+    name: String(value.name),
+    assessment_type: value.assessment_type,
+    subject_id: value.subject_id === null || value.subject_id === undefined ? null : Number(value.subject_id),
+  };
+}
+
+function validateComponentSubject(context: AuthContext, ctx: Context, subjectId: number | null, assessmentType: string): boolean {
+  if (subjectId === null) return true;
+  const subject = row(context, "SELECT id, supports_sumatif, supports_formatif FROM subjects WHERE id = ?", [subjectId]);
+  if (!subject) { fail(ctx.set, 404, "Subject not found"); return false; }
+  const supportsType = assessmentType === "sumatif" ? bool(subject.supports_sumatif) : bool(subject.supports_formatif);
+  if (!supportsType) { fail(ctx.set, 400, `Subject does not support ${assessmentType} assessment components`); return false; }
+  return true;
+}
+
+function duplicateAssessmentComponent(context: AuthContext, name: string, assessmentType: string, subjectId: number | null, excludeId?: number): boolean {
+  const params: any[] = [name, assessmentType];
+  let sql = "SELECT id FROM assessment_components WHERE name = ? AND assessment_type = ? AND ";
+  if (subjectId === null) sql += "subject_id IS NULL";
+  else { sql += "subject_id = ?"; params.push(subjectId); }
+  if (excludeId !== undefined) { sql += " AND id != ?"; params.push(excludeId); }
+  return row(context, sql, params) !== null;
 }
 
 const enrollmentBody = t.Object({
@@ -282,5 +318,61 @@ export function gradeRoutes(app: any, context: AuthContext): any {
   app.get("/api/grades/subjects", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; return rows(context, "SELECT id, name, jenjang_id, supports_sumatif, supports_formatif FROM subjects WHERE jenjang_id = ? ORDER BY name, id", [Number(ctx.query.jenjang_id)]).map((value) => ({ ...value, supports_sumatif: bool(value.supports_sumatif), supports_formatif: bool(value.supports_formatif) })); }, { query: t.Object({ jenjang_id: t.String() }) });
   app.post("/api/grades/subjects", (ctx: Context) => { const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const name = ctx.body.name.trim(); if (!name) return fail(ctx.set, 400, "Subject name is required"); if (!row(context, "SELECT id FROM jenjangs WHERE id = ?", [ctx.body.jenjang_id])) return fail(ctx.set, 404, "Jenjang not found"); if (row(context, "SELECT id FROM subjects WHERE name = ? AND jenjang_id = ?", [name, ctx.body.jenjang_id])) return fail(ctx.set, 409, "Subject already exists for this jenjang"); try { const result = context.database.client.run("INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES (?, ?, ?, ?)", [name, ctx.body.jenjang_id, ctx.body.supports_sumatif === false ? 0 : 1, ctx.body.supports_formatif === false ? 0 : 1]); return { id: Number(result.lastInsertRowid), name, jenjang_id: ctx.body.jenjang_id, supports_sumatif: ctx.body.supports_sumatif !== false, supports_formatif: ctx.body.supports_formatif !== false }; } catch { return fail(ctx.set, 409, "Subject conflict detected"); } }, { body: subjectBody });
   app.get("/api/grades/jenjangs", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; return rows(context, "SELECT id, name FROM jenjangs ORDER BY name, id"); });
-  app.get("/api/grades/components", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; return rows(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components ORDER BY name, id"); });
+  app.get("/api/grades/components", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const subjectId = ctx.query.subject_id === undefined ? null : Number(ctx.query.subject_id);
+    if (subjectId !== null && !row(context, "SELECT id FROM subjects WHERE id = ?", [subjectId])) return fail(ctx.set, 404, "Subject not found");
+    const values = subjectId === null
+      ? rows(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components ORDER BY subject_id IS NULL DESC, name, id")
+      : rows(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components WHERE subject_id IS NULL OR subject_id = ? ORDER BY subject_id IS NULL DESC, name, id", [subjectId]);
+    return values.map(serializeAssessmentComponent);
+  }, { query: t.Object({ subject_id: t.Optional(t.String()) }), response: AssessmentComponentListSchema });
+
+  app.post("/api/grades/components", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const name = ctx.body.name.trim();
+    const subjectId = ctx.body.subject_id ?? null;
+    if (!name) return fail(ctx.set, 400, "Component name is required");
+    if (!validateComponentSubject(context, ctx, subjectId, ctx.body.assessment_type)) return { detail: "Invalid component subject" };
+    if (duplicateAssessmentComponent(context, name, ctx.body.assessment_type, subjectId)) return fail(ctx.set, 409, "Assessment component already exists for this subject and type");
+    try {
+      const result = context.database.client.run("INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES (?, ?, ?)", [name, ctx.body.assessment_type, subjectId]);
+      const created = row(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components WHERE id = ?", [Number(result.lastInsertRowid)]);
+      if (!created) return fail(ctx.set, 500, "Assessment component could not be created");
+      return serializeAssessmentComponent(created);
+    } catch { return fail(ctx.set, 409, "Assessment component conflict detected"); }
+  }, { body: CreateAssessmentComponentSchema, response: AssessmentComponentSchema });
+
+  app.put("/api/grades/components/:component_id", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const componentId = Number(ctx.params.component_id);
+    const existing = row(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components WHERE id = ?", [componentId]);
+    if (!existing) return fail(ctx.set, 404, "Assessment component not found");
+    if (ctx.body.name === undefined && ctx.body.assessment_type === undefined && ctx.body.subject_id === undefined) return fail(ctx.set, 400, "At least one component field is required");
+    const name = (ctx.body.name ?? String(existing.name)).trim();
+    const assessmentType = ctx.body.assessment_type ?? String(existing.assessment_type);
+    const subjectId = ctx.body.subject_id === undefined ? (existing.subject_id === null ? null : Number(existing.subject_id)) : ctx.body.subject_id;
+    if (!name) return fail(ctx.set, 400, "Component name is required");
+    if (!validateComponentSubject(context, ctx, subjectId, assessmentType)) return { detail: "Invalid component subject" };
+    if (duplicateAssessmentComponent(context, name, assessmentType, subjectId, componentId)) return fail(ctx.set, 409, "Assessment component already exists for this subject and type");
+    const structuralChange = assessmentType !== existing.assessment_type || subjectId !== (existing.subject_id === null ? null : Number(existing.subject_id));
+    if (structuralChange && row(context, "SELECT id FROM student_subject_grades WHERE component_id = ? LIMIT 1", [componentId])) {
+      return fail(ctx.set, 409, { code: "ASSESSMENT_COMPONENT_HAS_SCORES", message: "Assessment component type or subject cannot change after scores exist. Edit the name or create a new component." });
+    }
+    try {
+      context.database.client.run("UPDATE assessment_components SET name = ?, assessment_type = ?, subject_id = ? WHERE id = ?", [name, assessmentType, subjectId, componentId]);
+      return serializeAssessmentComponent(row(context, "SELECT id, name, assessment_type, subject_id FROM assessment_components WHERE id = ?", [componentId]) as Row);
+    } catch { return fail(ctx.set, 409, "Assessment component conflict detected"); }
+  }, { params: t.Object({ component_id: t.Number({ minimum: 1 }) }), body: UpdateAssessmentComponentSchema, response: AssessmentComponentSchema });
+
+  app.delete("/api/grades/components/:component_id", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const componentId = Number(ctx.params.component_id);
+    if (!row(context, "SELECT id FROM assessment_components WHERE id = ?", [componentId])) return fail(ctx.set, 404, "Assessment component not found");
+    if (row(context, "SELECT id FROM student_subject_grades WHERE component_id = ? LIMIT 1", [componentId])) return fail(ctx.set, 409, { code: "ASSESSMENT_COMPONENT_HAS_SCORES", message: "Assessment component cannot be deleted after scores exist. Keep it to preserve academic history." });
+    try {
+      context.database.client.run("DELETE FROM assessment_components WHERE id = ?", [componentId]);
+      return { status: "success", deleted: 1, id: componentId };
+    } catch { return fail(ctx.set, 409, "Assessment component could not be deleted"); }
+  }, { params: t.Object({ component_id: t.Number({ minimum: 1 }) }), response: DeleteAssessmentComponentResponseSchema });
 }

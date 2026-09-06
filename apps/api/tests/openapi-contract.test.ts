@@ -70,8 +70,8 @@ describe("full OpenAPI contract", () => {
       const referencePaths = publicPaths(reference, deprecated);
       const candidatePaths = publicPaths(candidate, candidateOnly);
       expect(candidatePaths.size).toBe(referencePaths.size);
-      expect(Object.keys(candidateOperations)).toHaveLength(374);
-      expect(Object.keys(operations(reference))).toHaveLength(375);
+      expect(Object.keys(candidateOperations)).toHaveLength(377);
+      expect(Object.keys(operations(reference))).toHaveLength(378);
     } finally {
       database.close();
       await rm(directory, { recursive: true, force: true });
