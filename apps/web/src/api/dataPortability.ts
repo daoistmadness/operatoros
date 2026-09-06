@@ -75,7 +75,7 @@ export async function previewExport(data: {
   const response = await apiRequest<ExportPreviewResult>({
     path: '/api/data-portability/exports/preview',
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data,
   });
   return response.data;
 }
