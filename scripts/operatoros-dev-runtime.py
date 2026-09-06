@@ -17,6 +17,12 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+try:
+    from operatoros_dev_config import worktree_role
+except ModuleNotFoundError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from operatoros_dev_config import worktree_role
+
 
 def atomic_json(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -90,6 +96,45 @@ def git_common_dir(candidate: Path) -> Path | None:
     return Path(value).resolve() if value else None
 
 
+def shared_registry_dir(repository: Path) -> Path | None:
+    common = git_common_dir(repository.resolve())
+    return common / "operatoros-dev-sessions" if common else None
+
+
+def registry_entry_path(repository: Path, session_id: str) -> Path | None:
+    registry = shared_registry_dir(repository)
+    if registry is None:
+        return None
+    raw = registry / session_id
+    entry = raw.resolve(strict=False)
+    if raw.is_symlink() or entry.parent != registry.resolve() or entry.is_symlink():
+        raise RuntimeError("SESSION_REGISTRY_PATH_ESCAPE_REJECTED")
+    return entry
+
+
+def prune_stale_registry(repository: Path) -> int:
+    registry = shared_registry_dir(repository)
+    if registry is None or not registry.is_dir():
+        return 0
+    removed = 0
+    for entry in registry.iterdir():
+        if not entry.is_dir() or entry.is_symlink():
+            continue
+        try:
+            session = json.loads((entry / "session.json").read_text(encoding="utf-8"))
+            worktree = Path(str(session["worktreePath"])).resolve(strict=False)
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if worktree.exists():
+            continue
+        try:
+            shutil.rmtree(entry)
+        except OSError:
+            continue
+        removed += 1
+    return removed
+
+
 def is_operatoros_checkout(candidate: Path) -> bool:
     try:
         return all(json.loads((candidate / f"apps/{app}/package.json").read_text()).get("name") == f"@operatoros/{app}" for app in ("api", "web"))
@@ -123,7 +168,7 @@ def detect_cross_worktree(current_repo: Path, info: dict) -> dict:
         return {"decision": "UNKNOWN_OWNER"}
     candidate = git_toplevel(Path(cwd))
     if candidate is None or not is_operatoros_checkout(candidate):
-        return {"decision": "NON_OPERATOROS"}
+        return {"decision": "FOREIGN_PROCESS"}
     try:
         words = info.get("argv") or shlex.split(command)
     except ValueError:
@@ -134,7 +179,7 @@ def detect_cross_worktree(current_repo: Path, info: dict) -> dict:
     elif contained(Path(cwd).resolve(), candidate / "apps/api") and any((Path(cwd) / word).resolve() == candidate / "apps/api/src/server.ts" for word in words):
         service = "backend"
     if service is None:
-        return {"decision": "NON_OPERATOROS"}
+        return {"decision": "FOREIGN_PROCESS"}
     identity = checkout_identity(candidate)
     current_common = git_common_dir(current_repo)
     candidate_common = git_common_dir(candidate)
@@ -178,14 +223,70 @@ def is_free(host: str, port: int) -> bool:
         return False
 
 
-def records(runtime: Path) -> list[tuple[Path, dict]]:
-    found = []
-    for path in (runtime / "sessions").glob("*/session.json"):
+def records(runtime: Path, repository: Path) -> list[tuple[Path, dict]]:
+    """Read shared records first, then the local compatibility mirror."""
+    prune_stale_registry(repository)
+    found: list[tuple[Path, dict]] = []
+    seen: set[str] = set()
+    registry = shared_registry_dir(repository)
+    paths: list[Path] = []
+    if registry and registry.is_dir():
+        paths.extend(registry.glob("*/session.json"))
+    paths.extend((runtime / "sessions").glob("*/session.json"))
+    for path in paths:
         try:
-            found.append((path.parent, json.loads(path.read_text(encoding="utf-8"))))
+            session = json.loads(path.read_text(encoding="utf-8"))
+            session_id = str(session.get("session_id") or path.parent.name)
+            if session_id in seen:
+                continue
+            seen.add(session_id)
+            found.append((path.parent, session))
         except (OSError, json.JSONDecodeError):
             continue
     return found
+
+
+def session_worktree(session: dict, repository: Path) -> Path:
+    return Path(str(session.get("worktreePath") or session.get("worktree_path") or repository)).resolve()
+
+
+def session_common_dir(session: dict, repository: Path) -> Path | None:
+    value = session.get("repoCommonDir") or session.get("repo_common_dir")
+    return Path(str(value)).resolve() if value else git_common_dir(repository)
+
+
+def session_process_matches(info: dict | None, record: dict, session: dict, role: str, repository: Path) -> bool:
+    if not info or info.get("state", "").startswith("Z"):
+        return False
+    if str(record.get("start_ticks")) != str(info.get("start_ticks")):
+        return False
+    worktree = session_worktree(session, repository)
+    cwd = info.get("cwd")
+    if not cwd or not contained(Path(cwd), worktree):
+        return False
+    app_root = worktree / ("apps/web" if role == "frontend" else "apps/api")
+    if not contained(Path(cwd), app_root):
+        return False
+    command = str(info.get("command") or "")
+    if role == "frontend":
+        return any(Path(word).name in ("vite", "vite.js") for word in (info.get("argv") or command.split()))
+    return str(worktree / "apps/api/src/server.ts") in command or any(Path(word).name == "server.ts" for word in (info.get("argv") or command.split()))
+
+
+def forget_stale_session_record(runtime: Path, repository: Path, session: dict, role: str) -> None:
+    """Remove only a dead PID record. Never signal a process here."""
+    session_id = str(session.get("session_id", ""))
+    if not session_id:
+        return
+    paths = [runtime / "sessions" / session_id / f"{role}.pid"]
+    entry = registry_entry_path(repository, session_id)
+    if entry:
+        paths.append(entry / f"{role}.pid")
+    for path in paths:
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def valid_record(record: dict, repo: Path, role: str | None = None) -> tuple[bool, dict | None]:
@@ -216,35 +317,74 @@ def classify(runtime: Path, repo: Path, port: int, verbose: bool = False) -> lis
         decision = "UNKNOWN_OWNER"
         matched_session = None
         matched_role = None
-        for session_dir, session in records(runtime):
+        extra = {}
+        for session_dir, session in records(runtime, repo):
             for role in ("frontend", "backend"):
                 record_path = session_dir / f"{role}.pid"
                 try:
                     record = json.loads(record_path.read_text(encoding="utf-8"))
                 except (OSError, json.JSONDecodeError):
                     continue
-                valid, _ = valid_record(record, repo, role)
-                if valid and int(record["pid"]) == pid and int(record.get("port", -1)) == port:
+                try:
+                    record_pid = int(record["pid"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if record_pid != pid or int(record.get("port", -1)) != port:
+                    continue
+                info_for_record = process_info(pid)
+                worktree = session_worktree(session, repo)
+                current_worktree = worktree == repo.resolve()
+                if info_for_record is None:
+                    decision = "SAME_WORKTREE_STALE_SESSION" if current_worktree else "UNKNOWN_OWNER"
+                elif str(record.get("start_ticks")) != str(info_for_record.get("start_ticks")):
+                    # A live PID with a different start time is PID reuse.
+                    # Keep the stale record protected and let discovery classify
+                    # the live process independently.
+                    decision = "UNKNOWN_OWNER"
+                elif not session.get("worktreePath") and valid_record(record, repo, role)[0]:
+                    decision = "OPERATOROS_ACTIVE" if current_worktree else "OTHER_WORKTREE_ACTIVE_SESSION"
+                elif not session_process_matches(info_for_record, record, session, role, repo):
+                    decision = "UNKNOWN_OWNER"
+                else:
                     launcher = session_dir / "launcher.pid"
                     try:
                         launcher_record = json.loads(launcher.read_text(encoding="utf-8"))
-                        launcher_valid, _ = valid_record(launcher_record, repo, "launcher")
+                        launcher_valid, _ = valid_record(launcher_record, worktree, "launcher")
                     except (OSError, json.JSONDecodeError):
                         launcher_valid = False
-                    decision = "OPERATOROS_ACTIVE" if launcher_valid else "OPERATOROS_STALE"
-                    matched_session = session.get("session_id")
-                    matched_role = role
-                    break
+                    if current_worktree:
+                        decision = "OPERATOROS_ACTIVE" if launcher_valid else "OPERATOROS_STALE"
+                    elif session_common_dir(session, repo) == git_common_dir(repo):
+                        decision = "OTHER_WORKTREE_ACTIVE_SESSION"
+                    else:
+                        decision = "OPERATOROS_OTHER_CHECKOUT"
+                if decision in ("OTHER_WORKTREE_ACTIVE_SESSION", "OPERATOROS_OTHER_CHECKOUT"):
+                    candidate = session_worktree(session, repo)
+                    candidate_identity = checkout_identity(candidate)
+                    extra = {
+                        "candidate_repository": str(candidate),
+                        "candidate_common": str(session_common_dir(session, repo) or ""),
+                        "service": role,
+                        "candidate_branch": str(session.get("branch") or "detached"),
+                        "candidate_commit": str(session.get("commit") or "unknown"),
+                    }
+                    if candidate_identity:
+                        extra.update({
+                            "candidate_branch": candidate_identity["branch"],
+                            "candidate_commit": candidate_identity["commit"],
+                        })
+                matched_session = session.get("session_id")
+                matched_role = role
+                break
             if decision != "UNKNOWN_OWNER":
                 break
         # If still unknown, attempt cross-worktree detection
-        extra = {}
         if decision == "UNKNOWN_OWNER":
             # Only attempt cross-worktree if we have process info
             if info.get("cwd") or info.get("command"):
                 cross = detect_cross_worktree(repo, info)
                 if cross.get("decision") != "UNKNOWN_OWNER":
-                    decision = cross["decision"]
+                    decision = "OPERATOROS_OTHER_WORKTREE" if cross["decision"] == "OPERATOROS_OTHER_WORKTREE" else cross["decision"]
                     extra = {k: v for k, v in cross.items() if k != "decision"}
                     # infer role from cross if not already
                     if not matched_role and extra.get("service") in ("frontend", "backend"):
@@ -287,6 +427,9 @@ def group_alive(pgid: int) -> bool:
 
 
 def stop_pid(pid: int, timeout: float, label: str) -> None:
+    current = process_info(pid)
+    if not current or current.get("pgid") != pid:
+        raise RuntimeError(f"PROCESS_GROUP_OWNERSHIP_UNVERIFIED:{label}:{pid}")
     for sig, name in ((signal.SIGINT, "SIGINT"), (signal.SIGTERM, "SIGTERM")):
         try:
             os.killpg(pid, sig)
@@ -318,8 +461,8 @@ def stop_owned_session(args: argparse.Namespace) -> int:
             record = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        valid, _ = valid_record(record, repo, role)
-        if valid:
+        valid, info = valid_record(record, repo, role)
+        if valid and info and info.get("pgid") == int(record["pid"]):
             owned.append((role, int(record["pid"])))
 
     # A signal can arrive after a child is spawned but before its durable PID
@@ -334,7 +477,7 @@ def stop_owned_session(args: argparse.Namespace) -> int:
         if any(existing_pid == pid for _, existing_pid in owned):
             continue
         info = process_info(pid)
-        role_root = repo / role
+        role_root = repo / "apps/web"
         role_command = "vite"
         if role == "backend":
             role_root = repo / "apps/api"
@@ -342,6 +485,7 @@ def stop_owned_session(args: argparse.Namespace) -> int:
         if (
             info
             and info["uid"] == os.getuid()
+            and info.get("pgid") == pid
             and (info["cwd"] == str(role_root) or info["cwd"].startswith(str(role_root) + os.sep))
             and role_command in info["command"]
             and str(repo) in info["command"]
@@ -395,8 +539,8 @@ def stop_owned_session(args: argparse.Namespace) -> int:
 
 def print_port_conflict(item: dict, repo: Path, verbose: bool = False) -> None:
     decision, port = item["ownership_decision"], item["port"]
-    if decision in ("OPERATOROS_OTHER_WORKTREE", "OPERATOROS_OTHER_CHECKOUT", "OPERATOROS_CURRENT_CHECKOUT"):
-        label = {"OPERATOROS_OTHER_WORKTREE": "Another OperatorOS worktree", "OPERATOROS_OTHER_CHECKOUT": "Another OperatorOS repository", "OPERATOROS_CURRENT_CHECKOUT": "An OperatorOS process from this checkout"}[decision]
+    if decision in ("OPERATOROS_OTHER_WORKTREE", "OTHER_WORKTREE_ACTIVE_SESSION", "OPERATOROS_OTHER_CHECKOUT", "OPERATOROS_CURRENT_CHECKOUT"):
+        label = {"OPERATOROS_OTHER_WORKTREE": "Another OperatorOS worktree", "OTHER_WORKTREE_ACTIVE_SESSION": "Another OperatorOS worktree", "OPERATOROS_OTHER_CHECKOUT": "Another OperatorOS repository", "OPERATOROS_CURRENT_CHECKOUT": "An OperatorOS process from this checkout"}[decision]
         print(f"{label} is already using port {port}.")
         print("\nRunning checkout:")
         for key, title in (("candidate_repository", "Repository"), ("candidate_branch", "Branch"), ("candidate_commit", "Git commit")):
@@ -407,7 +551,7 @@ def print_port_conflict(item: dict, repo: Path, verbose: bool = False) -> None:
             print(f"  {title:12}{requested[key]}")
         print("\nTo use this checkout:\n  ./start-dev.sh --auto-port")
         print(f"\nTo stop the running checkout's managed session:\n  cd {shlex.quote(item['candidate_repository'])}\n  ./stop-dev.sh")
-    elif decision == "NON_OPERATOROS":
+    elif decision in ("NON_OPERATOROS", "FOREIGN_PROCESS"):
         print(f"Port {port} is in use by a non-OperatorOS process.")
     elif decision == "OPERATOROS_ACTIVE":
         print(f"OperatorOS is already running from this checkout on port {port}.")
@@ -425,6 +569,13 @@ def cleanup_port(args: argparse.Namespace) -> int:
     decisions = classify(runtime, repo, args.port)
     if not decisions and is_free(args.host, args.port):
         return 0
+    for item in decisions:
+        if item["ownership_decision"] == "SAME_WORKTREE_STALE_SESSION" and item.get("session_id"):
+            for session_dir, session in records(runtime, repo):
+                if str(session.get("session_id")) == str(item["session_id"]):
+                    forget_stale_session_record(runtime, repo, session, str(item.get("role") or "frontend"))
+                    break
+    decisions = [item for item in decisions if item["ownership_decision"] != "SAME_WORKTREE_STALE_SESSION"]
     blocked = [item for item in decisions if item["ownership_decision"] != "OPERATOROS_STALE" or getattr(args, "no_clean", False)]
     for item in blocked:
         if getattr(args, "human", False):
@@ -467,7 +618,19 @@ def write_record(path: Path, pid: int, role: str, repo: Path, token: str, **extr
 def init_session(args: argparse.Namespace) -> int:
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
     session_dir = runtime / "sessions" / args.session
+    registry = shared_registry_dir(repo)
+    if registry is None:
+        raise RuntimeError("SESSION_REGISTRY_UNAVAILABLE")
+    registry.mkdir(parents=True, exist_ok=True)
+    registry.chmod(0o700)
+    registry_dir = registry / args.session
     session_dir.mkdir(parents=True, exist_ok=False)
+    registry_dir.mkdir(parents=True, exist_ok=False)
+    common_dir = git_common_dir(repo)
+    commit = git_output(repo, "rev-parse", "HEAD") or "unknown"
+    branch = git_output(repo, "branch", "--show-current") or "detached"
+    role = worktree_role(repo)
+    started = now()
     common = {
         "session_id": args.session,
         "backend_runtime": args.backend_runtime,
@@ -475,7 +638,19 @@ def init_session(args: argparse.Namespace) -> int:
         "backend_port": args.backend_port,
         "frontend_url": f"http://{args.frontend_host}:{args.frontend_port}",
         "backend_url": f"http://{args.backend_host}:{args.backend_port}",
-        "started_at": now(),
+        "started_at": started,
+        "startedAt": started,
+        "pid": args.launcher_pid,
+        "pids": {"launcher": args.launcher_pid},
+        "repoCommonDir": str(common_dir) if common_dir else "",
+        "repo_common_dir": str(common_dir) if common_dir else "",
+        "worktreePath": str(repo),
+        "worktree_path": str(repo),
+        "worktreeRole": role,
+        "worktree_role": role,
+        "branch": branch,
+        "commit": commit,
+        "ports": {"frontend": args.frontend_port, "backend": args.backend_port},
         "launcher": "wsl",
         "mode": args.mode,
         "javascript_runtime": args.javascript_runtime,
@@ -488,6 +663,10 @@ def init_session(args: argparse.Namespace) -> int:
     atomic_json(session_dir / "ports.json", common)
     atomic_json(runtime / "ports.json", common)
     write_record(session_dir / "launcher.pid", args.launcher_pid, "launcher", repo, args.token, session_id=args.session)
+    atomic_json(registry_dir / "session.json", common)
+    atomic_json(registry_dir / "ownership.json", {"application": "OperatorOS", "session_id": args.session, "format_version": 1})
+    atomic_json(registry_dir / "ports.json", common)
+    write_record(registry_dir / "launcher.pid", args.launcher_pid, "launcher", repo, args.token, session_id=args.session)
     (runtime / "active-session").write_text(args.session + "\n", encoding="utf-8")
     print(session_dir)
     return 0
@@ -501,6 +680,23 @@ def finalize_session(args: argparse.Namespace) -> int:
     if directory.parent != runtime / "sessions" or directory.name != args.session or directory.is_symlink():
         raise RuntimeError("SESSION_PATH_ESCAPE_REJECTED")
     if not directory.exists():
+        shared = registry_entry_path(repo, args.session)
+        if shared and shared.exists():
+            try:
+                shared_session = json.loads((shared / "session.json").read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                return 0
+            if session_worktree(shared_session, repo) != repo:
+                return 0
+            for role in ("backend", "frontend"):
+                try:
+                    record = json.loads((shared / f"{role}.pid").read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                valid, info = valid_record(record, repo, role)
+                if valid and info:
+                    raise RuntimeError(f"ACTIVE_OWNED_SESSION:{role}")
+            shutil.rmtree(shared)
         return 0
     ownership_path = directory / "ownership.json"
     try:
@@ -524,6 +720,9 @@ def finalize_session(args: argparse.Namespace) -> int:
     if contained(database, directory):
         raise RuntimeError("SESSION_DATABASE_OWNERSHIP_FORBIDDEN")
     shutil.rmtree(directory)
+    shared = registry_entry_path(repo, args.session)
+    if shared and shared.exists():
+        shutil.rmtree(shared)
     active = runtime / "active-session"
     if active.exists() and active.read_text(encoding="utf-8").strip() == args.session:
         active.unlink()
@@ -540,26 +739,36 @@ def finalize_session(args: argparse.Namespace) -> int:
 def require_no_active_session(args: argparse.Namespace) -> int:
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
     active = runtime / "active-session"
-    if not active.exists():
-        return 0
-    session_id = active.read_text(encoding="utf-8").strip()
-    directory = runtime / "sessions" / session_id
-    if not session_id or not directory.is_dir():
+    active_id = active.read_text(encoding="utf-8").strip() if active.exists() else ""
+    current_records = records(runtime, repo)
+    if active_id and not any(str(session.get("session_id") or directory.name) == active_id for directory, session in current_records):
         raise RuntimeError("STALE_SESSION_UNVERIFIED")
-    for role in ("backend", "frontend"):
-        path = directory / f"{role}.pid"
-        try:
-            valid, _ = valid_record(json.loads(path.read_text(encoding="utf-8")), repo, role)
-        except (OSError, json.JSONDecodeError):
-            valid = False
-        if valid:
+    for directory, session in current_records:
+        if session_worktree(session, repo) != repo:
+            continue
+        session_id = str(session.get("session_id") or directory.name)
+        active = False
+        unverified = False
+        for role in ("backend", "frontend"):
+            try:
+                record = json.loads((directory / f"{role}.pid").read_text(encoding="utf-8"))
+                info = process_info(int(record["pid"]))
+            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+            if (not session.get("worktreePath") and valid_record(record, repo, role)[0]) or session_process_matches(info, record, session, role, repo):
+                active = True
+                break
+            if info is not None:
+                unverified = True
+        if active:
             print(session_id)
             return 3
-    # Only a current-format owned stale session is eligible for automatic cleanup.
-    try:
-        finalize_session(argparse.Namespace(runtime=str(runtime), repo=str(repo), session=session_id))
-    except (OSError, ValueError, json.JSONDecodeError, RuntimeError):
-        raise RuntimeError("STALE_SESSION_UNVERIFIED")
+        if unverified:
+            raise RuntimeError("STALE_SESSION_UNVERIFIED")
+        try:
+            finalize_session(argparse.Namespace(runtime=str(runtime), repo=str(repo), session=session_id))
+        except (OSError, ValueError, json.JSONDecodeError, RuntimeError):
+            raise RuntimeError("STALE_SESSION_UNVERIFIED")
     return 0
 
 
@@ -567,26 +776,26 @@ def status_command(args: argparse.Namespace) -> int:
     """Print a sanitized, read-only active-session classification."""
     runtime, repo = Path(args.runtime).resolve(), Path(args.repo).resolve()
     active = runtime / "active-session"
-    if not active.exists():
-        print("NO_ACTIVE_SESSION" if getattr(args, "human", False) else json.dumps({"state": "NO_ACTIVE_SESSION"}, sort_keys=True))
-        return 0
-    try:
-        session_id = active.read_text(encoding="utf-8").strip()
-        directory = runtime / "sessions" / session_id
-        ownership = json.loads((directory / "ownership.json").read_text(encoding="utf-8"))
-        if not session_id or not directory.is_dir() or ownership.get("application") != "OperatorOS" or ownership.get("session_id") != session_id:
-            raise RuntimeError("unverified")
-    except (OSError, json.JSONDecodeError, RuntimeError):
+    active_id = active.read_text(encoding="utf-8").strip() if active.exists() else ""
+    all_records = records(runtime, repo)
+    if active_id and not any(str(session.get("session_id") or directory.name) == active_id for directory, session in all_records):
         print("STALE_SESSION_UNVERIFIED" if getattr(args, "human", False) else json.dumps({"state": "STALE_SESSION_UNVERIFIED"}, sort_keys=True))
         return 0
+    current = [(directory, session) for directory, session in all_records if session_worktree(session, repo) == repo]
+    if not current:
+        print("NO_ACTIVE_SESSION" if getattr(args, "human", False) else json.dumps({"state": "NO_ACTIVE_SESSION"}, sort_keys=True))
+        return 0
+    directory, session = current[0]
+    session_id = str(session.get("session_id") or directory.name)
     for role in ("backend", "frontend"):
         try:
-            valid, _ = valid_record(json.loads((directory / f"{role}.pid").read_text(encoding="utf-8")), repo, role)
-        except (OSError, json.JSONDecodeError):
-            valid = False
-        if valid:
+            record = json.loads((directory / f"{role}.pid").read_text(encoding="utf-8"))
+            info = process_info(int(record["pid"]))
+            active = (not session.get("worktreePath") and valid_record(record, repo, role)[0]) or session_process_matches(info, record, session, role, repo)
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+            active = False
+        if active:
             if getattr(args, "human", False):
-                session = json.loads((directory / "session.json").read_text())
                 print("OperatorOS is already running from this checkout.\n")
                 for key, title in (("frontend_url", "Frontend"), ("backend_url", "Backend"), ("session_id", "Session"), ("database_path", "Database")):
                     print(f"{title:10}{session.get(key, 'unknown')}")
@@ -604,6 +813,17 @@ def register(args: argparse.Namespace) -> int:
     session_dir = Path(args.runtime).resolve() / "sessions" / args.session
     try:
         write_record(session_dir / f"{args.role}.pid", args.pid, args.role, Path(args.repo).resolve(), args.token, session_id=args.session, port=args.port)
+        registry = registry_entry_path(Path(args.repo).resolve(), args.session)
+        if registry:
+            write_record(registry / f"{args.role}.pid", args.pid, args.role, Path(args.repo).resolve(), args.token, session_id=args.session, port=args.port)
+        for directory in (session_dir, registry):
+            if directory is None:
+                continue
+            session_path = directory / "session.json"
+            value = json.loads(session_path.read_text(encoding="utf-8"))
+            value.setdefault("pids", {})[args.role] = args.pid
+            value[f"{args.role}_pid"] = args.pid
+            atomic_json(session_path, value)
     except RuntimeError:
         # The launcher readiness check owns failure attribution when a child
         # exits in the narrow interval between fork and state registration.
@@ -630,6 +850,22 @@ def mark(args: argparse.Namespace) -> int:
             atomic_json(current_ports, ports)
     except (OSError, json.JSONDecodeError):
         pass
+    registry = registry_entry_path(Path(args.repo).resolve(), args.session) if getattr(args, "repo", None) else None
+    if registry:
+        shared_path = registry / "session.json"
+        try:
+            shared = json.loads(shared_path.read_text(encoding="utf-8"))
+            shared["status"] = args.status
+            shared[f"{args.status}_at"] = value[f"{args.status}_at"]
+            atomic_json(shared_path, shared)
+            shared_ports = registry / "ports.json"
+            if shared_ports.exists():
+                shared_port_data = json.loads(shared_ports.read_text(encoding="utf-8"))
+                shared_port_data["status"] = args.status
+                shared_port_data[f"{args.status}_at"] = value[f"{args.status}_at"]
+                atomic_json(shared_ports, shared_port_data)
+        except (OSError, json.JSONDecodeError):
+            pass
     return 0
 
 
@@ -642,17 +878,32 @@ def stop_session(runtime: Path, repo: Path, session_id: str, timeout: float) -> 
             record = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        valid, _ = valid_record(record, repo, role)
-        if not valid:
+        valid, info = valid_record(record, repo, role)
+        if not valid or not info or info.get("pgid") != int(record["pid"]):
             print(f"[blocked] Refusing to stop unverified {role} PID record")
             continue
-        stop_pid(int(record["pid"]), timeout, role)
+        pid = int(record["pid"])
+        stop_pid(pid, timeout, role)
+        if not group_alive(pid):
+            path.unlink(missing_ok=True)
+            shared = registry_entry_path(repo, session_id)
+            if shared:
+                (shared / f"{role}.pid").unlink(missing_ok=True)
         stopped = True
     session_path = directory / "session.json"
     if session_path.exists():
         value = json.loads(session_path.read_text(encoding="utf-8"))
         value.update(status="stopped", stopped_at=now())
         atomic_json(session_path, value)
+        shared = registry_entry_path(repo, session_id)
+        if shared:
+            shared_path = shared / "session.json"
+            try:
+                shared_value = json.loads(shared_path.read_text(encoding="utf-8"))
+                shared_value.update(status="stopped", stopped_at=value["stopped_at"])
+                atomic_json(shared_path, shared_value)
+            except (OSError, json.JSONDecodeError):
+                pass
     return stopped
 
 
@@ -689,7 +940,18 @@ def classify_command(args: argparse.Namespace) -> int:
     verbose = bool(getattr(args, "verbose", False))
     # single port classify
     result = classify(runtime, repo, args.port, verbose=verbose)
-    print(json.dumps(result, indent=2, sort_keys=True))
+    if getattr(args, "decision", False):
+        print(result[0].get("ownership_decision", "UNKNOWN_OWNER") if result else "NO_LISTENER")
+    else:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def registry_path_command(args: argparse.Namespace) -> int:
+    registry = shared_registry_dir(Path(args.repo).resolve())
+    if registry is None:
+        return 2
+    print(registry)
     return 0
 
 
@@ -718,7 +980,7 @@ def parser() -> argparse.ArgumentParser:
     registration.add_argument("--pid", type=int, required=True); registration.add_argument("--port", type=int, required=True)
     registration.set_defaults(func=register)
     marker = sub.add_parser("mark")
-    marker.add_argument("--runtime", required=True); marker.add_argument("--session", required=True); marker.add_argument("--status", required=True)
+    marker.add_argument("--runtime", required=True); marker.add_argument("--repo"); marker.add_argument("--session", required=True); marker.add_argument("--status", required=True)
     marker.set_defaults(func=mark)
     finalize = sub.add_parser("finalize-session")
     finalize.add_argument("--runtime", required=True); finalize.add_argument("--repo", required=True); finalize.add_argument("--session", required=True)
@@ -746,7 +1008,11 @@ def parser() -> argparse.ArgumentParser:
     classify_cmd = sub.add_parser("classify-port")
     classify_cmd.add_argument("--runtime", required=True); classify_cmd.add_argument("--repo", required=True); classify_cmd.add_argument("--port", type=int, required=True)
     classify_cmd.add_argument("--verbose", action="store_true")
+    classify_cmd.add_argument("--decision", action="store_true")
     classify_cmd.set_defaults(func=classify_command)
+    registry_path = sub.add_parser("registry-path")
+    registry_path.add_argument("--repo", required=True)
+    registry_path.set_defaults(func=registry_path_command)
     return root
 
 

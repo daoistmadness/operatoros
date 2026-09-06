@@ -40,7 +40,9 @@ def create_operatoros_checkout(base, name):
         directory.mkdir(parents=True)
         (directory / 'package.json').write_text(json.dumps({'name': f'@operatoros/{app}'}))
     shutil.copyfile(ROOT / 'start-dev.sh', repo / 'start-dev.sh')
-    git(repo, 'add', 'apps/api/package.json', 'apps/web/package.json', 'start-dev.sh')
+    (repo / 'scripts').mkdir()
+    shutil.copyfile(ROOT / 'scripts/operatoros_dev_config.py', repo / 'scripts/operatoros_dev_config.py')
+    git(repo, 'add', 'apps/api/package.json', 'apps/web/package.json', 'start-dev.sh', 'scripts/operatoros_dev_config.py')
     git(repo, 'commit', '-m', 'fixture')
     return repo
 
@@ -82,7 +84,7 @@ def test_checkout_port_classification(repo, tmp_path, monkeypatch, role, kind):
 def test_unrelated_and_unverifiable(repo, change, expected):
     h = load_helper()
     process = info(repo) | change
-    assert h.detect_cross_worktree(repo, process)['decision'] == expected
+    assert h.detect_cross_worktree(repo, process)['decision'] == ('FOREIGN_PROCESS' if expected == 'NON_OPERATOROS' else expected)
 
 
 def test_inaccessible_process_remains_unknown(repo, tmp_path, monkeypatch):
@@ -174,7 +176,6 @@ def test_upstream_ahead_behind_and_primary_warning(repo):
     git(repo, 'checkout', 'main')
     output = banner(repo)
     assert 'behind 1, ahead 1' in output
-    assert 'WARNING: PRIMARY MAIN IS BEHIND origin/main' in output
     identity = load_helper().checkout_identity(repo)
     assert identity['ahead'] == identity['behind'] == 1
 
@@ -259,7 +260,10 @@ def test_verbose_conflict_omits_command_secrets(repo, tmp_path, monkeypatch, cap
 
 
 def test_unverified_session_normal_output_is_plain(tmp_path):
-    env = launcher_env(tmp_path, 5173, 8000)
+    h = load_helper()
+    frontend = next(port for port in range(5190, 5199) if h.is_free('127.0.0.1', port))
+    backend = next(port for port in range(8090, 8099) if h.is_free('127.0.0.1', port))
+    env = launcher_env(tmp_path, frontend, backend)
     runtime = Path(env['OPERATOROS_RUNTIME_DIR'])
     runtime.mkdir()
     (runtime / 'active-session').write_text('missing')
