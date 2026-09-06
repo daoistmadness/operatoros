@@ -4,15 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
 import { createAssessmentSession, fetchAcademicYears, fetchAssessmentSessions, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
+import { fetchJenjangs, type JenjangOption } from "../api/enrollment";
 import { apiRequest } from "../lib/api/client";
 import type { AcademicAssessmentSession, AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
 import { queryKeys } from "../lib/query/queryKeys";
 import { invalidateAcademicResultQueries } from "../lib/query/academicInvalidation";
-
-const JENJANG_OPTIONS = [
-  { id: 1, label: "Primary" },
-  { id: 2, label: "Secondary" },
-] as const;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -94,6 +90,7 @@ function GradeLedgerContent() {
   const requestedAcademicYearId = queryNumber(searchParams.get("academic_year_id"));
   const requestedAssessmentSessionId = queryNumber(searchParams.get("assessment_session_id"));
   const requestedSubjectId = queryNumber(searchParams.get("subject_id"));
+  const requestedJenjangId = queryNumber(searchParams.get("jenjang_id"));
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<number | null>(requestedAcademicYearId);
   const [assessmentSessions, setAssessmentSessions] = useState<AcademicAssessmentSession[]>([]);
@@ -101,7 +98,8 @@ function GradeLedgerContent() {
   const [newSessionTerm, setNewSessionTerm] = useState(1);
   const [newSessionLabel, setNewSessionLabel] = useState("");
   const [newSessionDate, setNewSessionDate] = useState("");
-  const [jenjangId, setJenjangId] = useState<number>(queryNumber(searchParams.get("jenjang_id")) ?? JENJANG_OPTIONS[0].id);
+  const [jenjangs, setJenjangs] = useState<JenjangOption[]>([]);
+  const [jenjangId, setJenjangId] = useState<number>(requestedJenjangId ?? 0);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [components, setComponents] = useState<AssessmentComponent[]>([]);
@@ -144,11 +142,14 @@ function GradeLedgerContent() {
     setStatusMessage("");
 
     try {
-      const [yearsPayload, componentsPayload] = await Promise.all([fetchAcademicYears(), fetchComponents()]);
+      const [yearsPayload, componentsPayload, jenjangPayload] = await Promise.all([fetchAcademicYears(), fetchComponents(), fetchJenjangs()]);
       const defaultYear = yearsPayload.find((year) => year.is_default) ?? yearsPayload[0] ?? null;
+      const defaultJenjang = jenjangPayload.find((jenjang) => jenjang.id === requestedJenjangId) ?? jenjangPayload[0] ?? null;
 
       setAcademicYears(yearsPayload);
       setComponents(componentsPayload);
+      setJenjangs(jenjangPayload);
+      setJenjangId(defaultJenjang?.id ?? 0);
       setSelectedAcademicYearId(yearsPayload.some((year) => year.id === requestedAcademicYearId) ? requestedAcademicYearId : defaultYear?.id ?? null);
       setAssessmentSessions([]);
       setSelectedAssessmentSessionId(null);
@@ -157,11 +158,13 @@ function GradeLedgerContent() {
       setError(getErrorMessage(loadError));
       setAcademicYears([]);
       setComponents([]);
+      setJenjangs([]);
+      setJenjangId(0);
       setSelectedAcademicYearId(null);
     } finally {
       setIsLoading(false);
     }
-  }, [requestedAcademicYearId]);
+  }, [requestedAcademicYearId, requestedJenjangId]);
 
   const loadAssessmentSessionData = useCallback(async (academicYearId: number) => {
     setSelectedAssessmentSessionId(null);
@@ -178,6 +181,11 @@ function GradeLedgerContent() {
   }, [requestedAssessmentSessionId]);
 
   const loadSubjects = useCallback(async (nextJenjangId: number) => {
+    if (!nextJenjangId) {
+      setSubjects([]);
+      setSelectedSubjectId(null);
+      return;
+    }
     setError("");
 
     try {
@@ -203,7 +211,7 @@ function GradeLedgerContent() {
   }, [requestedSubjectId]);
 
   const loadLedgerData = useCallback(async () => {
-    if (!selectedAcademicYearId || selectedAssessmentSessionId === null) {
+    if (!selectedAcademicYearId || selectedAssessmentSessionId === null || !jenjangId) {
       setLedgerRows([]);
       setIsLoading(false);
       return;
@@ -229,7 +237,7 @@ function GradeLedgerContent() {
   }, [loadMasters]);
 
   useEffect(() => {
-    loadSubjects(jenjangId);
+    if (jenjangId) void loadSubjects(jenjangId);
   }, [jenjangId, loadSubjects]);
 
   useEffect(() => {
@@ -336,9 +344,9 @@ function GradeLedgerContent() {
                   onChange={(event) => setJenjangId(Number(event.target.value))}
                   className="rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-black normal-case tracking-normal text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
                 >
-                  {JENJANG_OPTIONS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
+                  {jenjangs.map((jenjang) => (
+                    <option key={jenjang.id} value={jenjang.id}>
+                      {jenjang.name}
                     </option>
                   ))}
                 </select>
