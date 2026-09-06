@@ -161,7 +161,13 @@ Select:
 - jenjang
 - subject
 
-When the setup is complete, the Grade Matrix will show enrolled students and assessment columns.
+In **Assessment components**, add the score columns that students will receive.
+Choose `Sumatif` or `Formatif` for each component. Rename a component when its
+labels change; components with saved scores cannot be structurally moved or
+deleted because their history must remain attached.
+
+Create or select an assessment session after the component structure is ready.
+The Grade Matrix then shows enrolled students and the authored assessment columns.
 
 ### Step 8: Enter and save scores
 
@@ -178,6 +184,9 @@ After editing:
 1. Click `Save Ledger Matrix`
 2. Refresh the page or reload the ledger data
 3. Confirm the saved values come back correctly
+
+Component authoring is supported from the Grade Ledger. No database preparation
+is required.
 
 ### Step 9: Create academic interventions from Below-KKM alerts
 

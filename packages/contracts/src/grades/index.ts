@@ -41,6 +41,30 @@ export const AssessmentComponentSchema = Type.Object({
 
 export type AssessmentComponent = Static<typeof AssessmentComponentSchema>;
 
+export const AssessmentComponentListSchema = Type.Array(AssessmentComponentSchema);
+
+export const CreateAssessmentComponentSchema = Type.Object({
+  name: Type.String({ minLength: 1, maxLength: 120 }),
+  assessment_type: AssessmentTypeSchema,
+  subject_id: Type.Union([Type.Number({ minimum: 1 }), Type.Null()]),
+});
+
+export type CreateAssessmentComponent = Static<typeof CreateAssessmentComponentSchema>;
+
+export const UpdateAssessmentComponentSchema = Type.Object({
+  name: Type.Optional(Type.String({ minLength: 1, maxLength: 120 })),
+  assessment_type: Type.Optional(AssessmentTypeSchema),
+  subject_id: Type.Optional(Type.Union([Type.Number({ minimum: 1 }), Type.Null()])),
+});
+
+export type UpdateAssessmentComponent = Static<typeof UpdateAssessmentComponentSchema>;
+
+export const DeleteAssessmentComponentResponseSchema = Type.Object({
+  status: Type.Literal("success"),
+  deleted: Type.Literal(1),
+  id: Type.Number({ minimum: 1 }),
+});
+
 export const AcademicAssessmentSessionSchema = Type.Object({
   id: Type.Number({ minimum: 1 }),
   academic_year_id: Type.Number({ minimum: 1 }),

@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
-import { createAssessmentSession, fetchAcademicYears, fetchAssessmentSessions, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger } from "../api/grades";
+import AssessmentComponentsPanel from "../components/grades/AssessmentComponentsPanel";
+import { createAssessmentComponent, createAssessmentSession, deleteAssessmentComponent, fetchAcademicYears, fetchAssessmentSessions, fetchComponents, fetchSubjects, gradeApiPath, saveGradeLedger, updateAssessmentComponent } from "../api/grades";
 import { fetchJenjangs, type JenjangOption } from "../api/enrollment";
 import { apiRequest } from "../lib/api/client";
 import type { AcademicAssessmentSession, AcademicYear, AssessmentComponent, GradeGridSaveRequest, Subject } from "../types/grade";
@@ -106,6 +107,7 @@ function GradeLedgerContent() {
   const [ledgerRows, setLedgerRows] = useState<GradeMatrixEnrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [componentError, setComponentError] = useState("");
   const [error, setError] = useState<string>("");
   const [statusMessage, setStatusMessage] = useState<string>("");
 
@@ -300,6 +302,53 @@ function GradeLedgerContent() {
     }
   };
 
+  const refreshComponents = async () => {
+    const refreshed = await fetchComponents();
+    setComponents(refreshed);
+  };
+
+  const handleCreateComponent = async (payload: { name: string; assessment_type: AssessmentComponent["assessment_type"]; subject_id: number | null }) => {
+    setComponentError("");
+    try {
+      await createAssessmentComponent(payload);
+      await refreshComponents();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.grades.all });
+      setStatusMessage(`${payload.name} is ready for score entry.`);
+    } catch (createError) {
+      const message = getErrorMessage(createError);
+      setComponentError(message);
+      throw createError;
+    }
+  };
+
+  const handleUpdateComponent = async (id: number, payload: { name?: string; assessment_type?: AssessmentComponent["assessment_type"]; subject_id?: number | null }) => {
+    setComponentError("");
+    try {
+      const updated = await updateAssessmentComponent(id, payload);
+      await refreshComponents();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.grades.all });
+      setStatusMessage(`${updated.name} was updated.`);
+    } catch (updateError) {
+      const message = getErrorMessage(updateError);
+      setComponentError(message);
+      throw updateError;
+    }
+  };
+
+  const handleDeleteComponent = async (id: number) => {
+    setComponentError("");
+    try {
+      await deleteAssessmentComponent(id);
+      await refreshComponents();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.grades.all });
+      setStatusMessage("Assessment component deleted.");
+    } catch (deleteError) {
+      const message = getErrorMessage(deleteError);
+      setComponentError(message);
+      throw deleteError;
+    }
+  };
+
   return (
     <div className="space-y-6 pb-16">
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-950 text-white shadow-sm">
@@ -453,6 +502,15 @@ function GradeLedgerContent() {
               <p className="mt-1 text-sm font-semibold text-slate-500">Persisted cells for selected subject</p>
             </div>
           </section>
+
+          <AssessmentComponentsPanel
+            components={components}
+            subject={selectedSubject}
+            error={componentError}
+            onCreate={handleCreateComponent}
+            onUpdate={handleUpdateComponent}
+            onDelete={handleDeleteComponent}
+          />
 
           {selectedAssessmentSessionId === null ? (
             <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-900">

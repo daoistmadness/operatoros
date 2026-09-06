@@ -34,9 +34,16 @@ test("@academic @assessment-operations @critical @release assessment operations 
   const subject = (await subjectsResponse.json())[0];
   expect(subject).toBeTruthy();
 
+  const componentLabel = "E2E Authorable Component";
+  await page.goto(`/grades?academic_year_id=${year.id}&jenjang_id=${jenjang.id}&subject_id=${subject.id}`);
+  await expect(page.getByRole("heading", { name: "Assessment components" })).toBeVisible();
+  await page.getByLabel("New component name").fill(componentLabel);
+  await page.getByRole("button", { name: "Add component" }).click();
+  await expect(page.getByText(componentLabel, { exact: true })).toBeVisible();
+
   const componentsResponse = await page.request.get("/api/grades/components");
   expect(componentsResponse.status()).toBe(200);
-  const component = (await componentsResponse.json()).find((value: { subject_id: number }) => value.subject_id === subject.id);
+  const component = (await componentsResponse.json()).find((value: { name: string; subject_id: number }) => value.name === componentLabel && value.subject_id === subject.id);
   expect(component).toBeTruthy();
 
   const label = "E2E Critical Academic Assessment";
@@ -94,7 +101,7 @@ test("@academic @assessment-operations @critical @release assessment operations 
   const overviewResponse = await page.request.get(`/api/student-masters/${ada.id}/overview`);
   expect(overviewResponse.status()).toBe(200);
   const overview = await overviewResponse.json() as { academic: { history: Array<{ assessmentDate: string | null; assessmentLabel: string; subjectName: string; score: number | null }> } };
-  expect(overview.academic.history).toEqual(expect.arrayContaining([expect.objectContaining({ assessmentDate: "2026-08-14", assessmentLabel: "E2E Progression Score", subjectName: "E2E Progression Subject", score: 80 })]));
+  expect(overview.academic.history).toEqual(expect.arrayContaining([expect.objectContaining({ assessmentDate: "2026-08-14", assessmentLabel: componentLabel, subjectName: "E2E Progression Subject", score: 80 })]));
 
   const completeResponse = page.waitForResponse((response) => response.url().includes("/api/grades/assessment-operations") && response.status() === 200);
   await page.reload();
@@ -117,6 +124,6 @@ test("@academic @assessment-operations @critical @release assessment operations 
   await expect(page.getByText("Primary 1A", { exact: true })).toBeVisible();
   const academicCard = page.getByRole("heading", { name: "Academic", exact: true }).locator("..").locator("..");
   await expect(academicCard).toContainText("2026-08-14");
-  await expect(academicCard).toContainText("E2E Progression Score");
+  await expect(academicCard).toContainText(componentLabel);
   await expect(academicCard).toContainText("80");
 });
