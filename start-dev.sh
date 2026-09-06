@@ -12,6 +12,7 @@ VENV=""
 PYTHON_TOOLING_HELPER="$PROJECT_ROOT/scripts/python-tooling-env.ts"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
+PRIMARY_CONFIG_HELPER="$PROJECT_ROOT/scripts/operatoros_dev_config.py"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
 WSL_BUN_HELPER="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 DEV_STATE_DIR=""
@@ -51,6 +52,18 @@ LAUNCHER_STATE=INITIALIZING
 SHUTDOWN_REQUESTED=0
 REQUESTED_SIGNAL=""
 REQUESTED_EXIT_CODE=0
+PRIMARY_CHECKOUT_PATH=""
+WORKTREE_ROLE="SECONDARY"
+FRESHNESS="N/A (secondary)"
+GIT_COMMIT=""
+GIT_BRANCH=""
+GIT_UPSTREAM=""
+GIT_STATUS=""
+REGISTRY_DIR=""
+FIXED_PORT_REQUESTED=0
+if (( BACKEND_PORT_CONFIGURED == 1 || FRONTEND_PORT_CONFIGURED == 1 )); then
+  FIXED_PORT_REQUESTED=1
+fi
 
 usage() {
   cat <<'EOF'
@@ -60,6 +73,7 @@ Usage: ./start-dev.sh [options]
   --clean-stale       Enable safe cleanup (default)
   --no-clean-stale    Never clean; fail if a selected port is occupied
   --auto-port         Select frontend 5173-5199 and backend 8000-8099
+  --fixed-port        Require the requested fixed ports on a secondary worktree
   --mode browser      Fixed-port browser mode (default)
   --verbose           Show detailed ownership and checkout evidence
   --debug             Alias for --verbose
@@ -81,9 +95,72 @@ fail_preflight() {
   exit 2
 }
 
+resolve_worktree_identity() {
+  if ! PRIMARY_CHECKOUT_PATH="$(python3 "$PRIMARY_CONFIG_HELPER" primary-path 2>/dev/null)"; then
+    fail_preflight "PRIMARY_CHECKOUT_CONFIGURATION_INVALID" "The canonical primary checkout path could not be resolved."
+  fi
+  if ! WORKTREE_ROLE="$(python3 "$PRIMARY_CONFIG_HELPER" worktree-role --repo "$PROJECT_ROOT")" || [[ "$WORKTREE_ROLE" != PRIMARY && "$WORKTREE_ROLE" != SECONDARY ]]; then
+    fail_preflight "PRIMARY_CHECKOUT_CONFIGURATION_INVALID" "The current worktree role could not be resolved."
+  fi
+}
+
+ensure_primary_freshness() {
+  [[ "$WORKTREE_ROLE" == PRIMARY ]] || return 0
+
+  if [[ "$GIT_BRANCH" != main ]]; then
+    fail_preflight "PRIMARY_CHECKOUT_UNEXPECTED_BRANCH" \
+      "The primary checkout must be on main; current branch: ${GIT_BRANCH:-detached}." \
+      "No branch switch was attempted."
+  fi
+  if ! git -C "$PROJECT_ROOT" fetch --prune origin >/dev/null 2>&1; then
+    fail_preflight "PRIMARY_CHECKOUT_REFRESH_FAILED" "git fetch --prune origin failed. No services were started."
+  fi
+
+  local origin_sha head_sha local_only remote_only changes
+  origin_sha="$(git -C "$PROJECT_ROOT" rev-parse --verify refs/remotes/origin/main 2>/dev/null || true)"
+  head_sha="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || true)"
+  [[ -n "$origin_sha" && -n "$head_sha" ]] || fail_preflight "PRIMARY_CHECKOUT_ORIGIN_MAIN_UNAVAILABLE" "origin/main could not be resolved after fetch."
+  if [[ "$head_sha" == "$origin_sha" ]]; then
+    FRESHNESS="UP_TO_DATE"
+    return 0
+  fi
+
+  local_only="$(git -C "$PROJECT_ROOT" rev-list --count refs/remotes/origin/main..HEAD 2>/dev/null || printf 0)"
+  remote_only="$(git -C "$PROJECT_ROOT" rev-list --count HEAD..refs/remotes/origin/main 2>/dev/null || printf 0)"
+  if [[ "$local_only" =~ ^[0-9]+$ ]] && (( local_only > 0 )); then
+    local local_commits
+    local_commits="$(git -C "$PROJECT_ROOT" log --oneline --decorate refs/remotes/origin/main..HEAD 2>/dev/null || true)"
+    fail_preflight "PRIMARY_CHECKOUT_DIVERGED" \
+      "Local commits not present in origin/main:" \
+      "${local_commits:-  (unable to list local-only commits)}" \
+      "Resolve the branch deliberately, then run the launcher again. No automatic branch mutation was attempted."
+  fi
+
+  if [[ "$remote_only" =~ ^[0-9]+$ ]] && (( remote_only > 0 )); then
+    changes="$(git -C "$PROJECT_ROOT" status --porcelain=v1 --untracked-files=normal 2>/dev/null || true)"
+    if [[ -n "$changes" ]]; then
+      fail_preflight "PRIMARY_CHECKOUT_BEHIND_AND_DIRTY" \
+        "The primary checkout is behind origin/main and has uncommitted paths:" \
+        "$changes" \
+        "Commit or stash these paths, then run the launcher again. No fast-forward was attempted."
+    fi
+    if ! git -C "$PROJECT_ROOT" merge --ff-only refs/remotes/origin/main >/dev/null 2>&1; then
+      fail_preflight "PRIMARY_CHECKOUT_FAST_FORWARD_FAILED" "The clean primary checkout could not fast-forward safely. No services were started."
+    fi
+    FRESHNESS="FAST_FORWARDED ($head_sha -> $origin_sha)"
+    return 0
+  fi
+
+  fail_preflight "PRIMARY_CHECKOUT_DIVERGED" \
+    "The primary checkout and origin/main have no safe fast-forward relationship." \
+    "Resolve the branch deliberately, then run the launcher again. No automatic branch mutation was attempted."
+}
+
 print_checkout_identity() {
   printf 'OperatorOS Development Stack\n\n'
   printf 'Repository  %s\n' "$PROJECT_ROOT"
+  printf 'Worktree role %s\n' "$WORKTREE_ROLE"
+  printf 'Primary path %s\n' "$PRIMARY_CHECKOUT_PATH"
   local changes counts ahead behind common origin_behind
   GIT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse --short=12 HEAD 2>/dev/null || printf unknown)"
   GIT_BRANCH="$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || true)"
@@ -104,8 +181,7 @@ print_checkout_identity() {
     fi
   fi
   printf 'Status      %s\n' "$GIT_STATUS"
-  common="$(git -C "$PROJECT_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
-  if [[ "$GIT_BRANCH" == main && "$common" == "$PROJECT_ROOT/.git" ]]; then
+  if [[ "$WORKTREE_ROLE" == PRIMARY && "$GIT_BRANCH" == main ]]; then
     origin_behind="$(git -C "$PROJECT_ROOT" rev-list --count HEAD..origin/main 2>/dev/null || true)"
     if [[ "$origin_behind" =~ ^[0-9]+$ ]] && (( origin_behind > 0 )); then
       printf '\n*** WARNING: PRIMARY MAIN IS BEHIND origin/main BY %s COMMITS ***\n' "$origin_behind"
@@ -231,13 +307,43 @@ check_existing_session() {
   fi
 }
 
+secondary_active_port_conflict() {
+  [[ "$WORKTREE_ROLE" == SECONDARY && "$FIXED_PORT_REQUESTED" == 0 ]] || return 1
+  local port decision host
+  for port in "$FRONTEND_PORT" "$BACKEND_PORT"; do
+    host="$BACKEND_HOST"
+    [[ "$port" == "$FRONTEND_PORT" ]] && host="$FRONTEND_HOST"
+    port_is_free "$host" "$port" 2>/dev/null && continue
+    decision="$($VENV/bin/python "$RUNTIME_HELPER" classify-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --port "$port" --decision 2>/dev/null || printf UNKNOWN_OWNER)"
+    case "$decision" in
+      OTHER_WORKTREE_ACTIVE_SESSION|OPERATOROS_OTHER_WORKTREE) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+resolve_shared_registry() {
+  if ! REGISTRY_DIR="$($VENV/bin/python "$RUNTIME_HELPER" registry-path --repo "$PROJECT_ROOT")" || [[ -z "$REGISTRY_DIR" ]]; then
+    fail_preflight "SESSION_REGISTRY_UNAVAILABLE" "The shared Git common-directory session registry could not be resolved."
+  fi
+  mkdir -p "$REGISTRY_DIR"
+  chmod 700 "$REGISTRY_DIR"
+}
+
 allocate_ports() {
   mkdir -p "$RUNTIME_DIR/sessions"
   chmod 700 "$RUNTIME_DIR"
-  exec 9>"$RUNTIME_DIR/launcher.lock"
+  resolve_shared_registry
+  exec 9>"$REGISTRY_DIR/launcher.lock"
   flock -w 30 9 || fail_preflight "Another OperatorOS launcher holds the allocation lock" "Wait for its startup to finish, then retry."
   LOCK_HELD=1
   check_existing_session
+
+  if (( AUTO_PORT == 0 )) && secondary_active_port_conflict; then
+    AUTO_PORT=1
+    printf '\nAnother OperatorOS worktree owns the requested default ports.\n'
+    printf 'Secondary worktree selected alternate ports automatically.\n'
+  fi
 
   if (( AUTO_PORT == 0 )); then
     safe_cleanup_or_block "$FRONTEND_PORT" frontend
@@ -328,7 +434,7 @@ cleanup() {
   fi
   if [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 && "$FINALIZATION_STARTED" == 0 && -f "$SESSION_DIR/session.json" ]]; then
     FINALIZATION_STARTED=1
-    setsid "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status stopped || true
+    setsid "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status stopped || true
     setsid "$VENV/bin/python" "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
   fi
   if (( LOCK_HELD == 1 )); then flock -u 9 || true; LOCK_HELD=0; fi
@@ -392,6 +498,7 @@ while (( $# )); do
     --clean-stale) CLEAN_STALE=1; shift ;;
     --no-clean-stale) CLEAN_STALE=0; shift ;;
     --auto-port) AUTO_PORT=1; shift ;;
+    --fixed-port) FIXED_PORT_REQUESTED=1; shift ;;
     --verbose|--debug) VERBOSE=1; shift ;;
     --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser ]] || { usage >&2; exit 2; };;
     --help|-h) usage; exit 0 ;;
@@ -399,8 +506,11 @@ while (( $# )); do
   esac
 done
 
-# Checkout identity at the very beginning, before env or port checks
+# Checkout identity at the very beginning, before environment or port checks
+resolve_worktree_identity
 print_checkout_identity
+ensure_primary_freshness
+printf 'Freshness   %s\n\n' "$FRESHNESS"
 run_preflight
 export OPERATOROS_REPOSITORY_ROOT="$PROJECT_ROOT"
 if ! OPERATOROS_DATA_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format data-dir)"; then
@@ -480,7 +590,7 @@ else
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
   exit "$readiness_rc"
 fi
-"$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --session "$SESSION_ID" --status ready
+"$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
 GIT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
@@ -489,7 +599,7 @@ if [[ -z "$GIT_BRANCH" ]]; then
   GIT_BRANCH="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"
 fi
 
-printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nRepository  %s\nGit commit  %s\nBranch      %s\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$PROJECT_ROOT" "$GIT_COMMIT" "$GIT_BRANCH" "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
+printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nWorktree role  %s\nWorktree path  %s\nRepository  %s\nGit commit  %s\nBranch      %s\nFreshness   %s\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$WORKTREE_ROLE" "$PROJECT_ROOT" "$PROJECT_ROOT" "$GIT_COMMIT" "$GIT_BRANCH" "$FRESHNESS" "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
 LAUNCHER_STATE=RUNNING
 while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
