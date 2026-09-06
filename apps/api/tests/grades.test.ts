@@ -86,4 +86,49 @@ describe("grades and academic parity slices", () => {
       rmSync(path, { force: true });
     }
   }, 30000);
+
+  it("authors components while preserving scored component identity", async () => {
+    const path = `/tmp/operatoros-components-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-components-audit-${process.pid}` } });
+    try {
+      const auth = await adminAuth(app);
+      const enrollment = database.client.query("SELECT id, academic_year_id, jenjang_id FROM student_enrollments WHERE lifecycle_state = 'ACTIVE' ORDER BY id LIMIT 1").get() as { id: number; academic_year_id: number; jenjang_id: number };
+      database.client.run("INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Component Mathematics', ?, 1, 1)", [enrollment.jenjang_id]);
+      const subjectId = Number((database.client.query("SELECT last_insert_rowid() AS id").get() as { id: number }).id);
+      const create = await app.handle(new Request("http://local/api/grades/components", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ name: "Unit Exam", assessment_type: "sumatif", subject_id: subjectId }) }));
+      expect(create.status).toBe(200);
+      const component = await create.json() as { id: number; name: string; subject_id: number };
+      expect(component).toMatchObject({ name: "Unit Exam", subject_id: subjectId });
+      const duplicate = await app.handle(new Request("http://local/api/grades/components", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ name: "Unit Exam", assessment_type: "sumatif", subject_id: subjectId }) }));
+      expect(duplicate.status).toBe(409);
+      const invalidScope = await app.handle(new Request("http://local/api/grades/components", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ name: "Missing Subject", assessment_type: "sumatif", subject_id: 999999 }) }));
+      expect(invalidScope.status).toBe(404);
+      const renamed = await app.handle(new Request(`http://local/api/grades/components/${component.id}`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ name: "Unit Exam Revised" }) }));
+      expect(renamed.status).toBe(200);
+      expect(await renamed.json()).toMatchObject({ id: component.id, name: "Unit Exam Revised" });
+
+      const session = await app.handle(new Request("http://local/api/grades/assessment-sessions", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: enrollment.academic_year_id, term_number: 1, label: "Component Session" }) }));
+      expect(session.status).toBe(200);
+      const sessionId = (await session.json() as { id: number }).id;
+      const saved = await app.handle(new Request("http://local/api/grades/save", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ enrollment_id: enrollment.id, assessment_session_id: sessionId, grades: [{ subject_id: subjectId, component_id: component.id, score: 91 }] }) }));
+      expect(saved.status).toBe(200);
+      const blockedEdit = await app.handle(new Request(`http://local/api/grades/components/${component.id}`, { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ assessment_type: "formatif" }) }));
+      expect(blockedEdit.status).toBe(409);
+      const blockedDelete = await app.handle(new Request(`http://local/api/grades/components/${component.id}`, { method: "DELETE", headers: auth }));
+      expect(blockedDelete.status).toBe(409);
+      expect((database.client.query("SELECT component_id, score FROM student_subject_grades WHERE component_id = ?").get(component.id) as { component_id: number; score: number })).toEqual({ component_id: component.id, score: 91 });
+
+      const unused = await app.handle(new Request("http://local/api/grades/components", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ name: "Unused Component", assessment_type: "formatif", subject_id: subjectId }) }));
+      const unusedId = (await unused.json() as { id: number }).id;
+      const deleted = await app.handle(new Request(`http://local/api/grades/components/${unusedId}`, { method: "DELETE", headers: auth }));
+      expect(deleted.status).toBe(200);
+      const unauthorized = await app.handle(new Request("http://local/api/grades/components", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Unauthorized", assessment_type: "sumatif", subject_id: subjectId }) }));
+      expect(unauthorized.status).toBe(401);
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
 });

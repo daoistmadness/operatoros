@@ -2573,8 +2573,24 @@ export interface paths {
         /** Get Components */
         get: operations["get_components_api_grades_components_get"];
         put?: never;
-        post?: never;
+        post: operations["postApiGradesComponents"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/components/{component_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiGradesComponentsByComponent_id"];
+        post?: never;
+        delete: operations["deleteApiGradesComponentsByComponent_id"];
         options?: never;
         head?: never;
         patch?: never;
@@ -13767,6 +13783,130 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    postApiGradesComponents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+                "multipart/form-data": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        assessment_type: "sumatif" | "formatif";
+                        subject_id: number | null;
+                    };
+                };
+            };
+        };
+    };
+    putApiGradesComponentsByComponent_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+                "multipart/form-data": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        assessment_type: "sumatif" | "formatif";
+                        subject_id: number | null;
+                    };
+                };
+            };
+        };
+    };
+    deleteApiGradesComponentsByComponent_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        status: "success";
+                        /** @constant */
+                        deleted: 1;
+                        id: number;
+                    };
                 };
             };
         };
