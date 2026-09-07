@@ -61,7 +61,15 @@ export function AcademicFoundationPanel({ academicYears, onChanged }: Props) {
   useEffect(() => { void load(); }, [load]);
 
   const selectedJenjang = useMemo(() => jenjangs.find((value) => value.id === selectedJenjangId) ?? null, [jenjangs, selectedJenjangId]);
+  const programsForSelectedJenjang = useMemo(() => programs.filter((value) => value.jenjang_id === selectedJenjangId), [programs, selectedJenjangId]);
   const selectedProgram = useMemo(() => programs.find((value) => value.id === selectedProgramId) ?? null, [programs, selectedProgramId]);
+  const gradesForSelectedProgram = useMemo(() => grades.filter((value) => value.program_id === selectedProgramId), [grades, selectedProgramId]);
+  useEffect(() => {
+    setSelectedProgramId((current) => programsForSelectedJenjang.some((value) => value.id === current) ? current : programsForSelectedJenjang[0]?.id ?? null);
+  }, [programsForSelectedJenjang]);
+  useEffect(() => {
+    setSelectedGradeId((current) => gradesForSelectedProgram.some((value) => value.id === current) ? current : gradesForSelectedProgram[0]?.id ?? null);
+  }, [gradesForSelectedProgram]);
   const refresh = async () => { await load(); await onChanged(); };
   const save = async (kind: string, action: () => Promise<unknown>, message: string) => {
     setSaving(kind);
@@ -113,7 +121,7 @@ export function AcademicFoundationPanel({ academicYears, onChanged }: Props) {
       <form className="rounded-2xl border border-slate-200 p-4" onSubmit={(event) => { event.preventDefault(); if (!selectedJenjangId || !selectedProgramId || !gradeForm.name.trim() || !Number(gradeForm.sequence)) return setError("Select a program and provide a valid grade."); void save("grade", () => createAcademicGrade({ jenjang_id: selectedJenjangId, program_id: selectedProgramId, name: gradeForm.name.trim(), sequence_number: Number(gradeForm.sequence) }), `${gradeForm.name.trim()} was added to ${selectedProgram?.name ?? "the program"}.`).then(() => setGradeForm({ name: "", sequence: "1" })); }}>
         <h3 className="font-black text-slate-900">Add grade</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <FormField id="canonical-grade-program" required><FieldLabel>Academic program</FieldLabel><NativeSelect value={selectedProgramId ?? ""} onChange={(event) => setSelectedProgramId(Number(event.target.value) || null)} disabled={loading || !programs.length}>{programs.length ? programs.filter((value) => value.jenjang_id === selectedJenjangId).map((value) => <option key={value.id} value={value.id}>{value.name}</option>) : <option value="">Add an academic program first</option>}</NativeSelect></FormField>
+          <FormField id="canonical-grade-program" required><FieldLabel>Academic program</FieldLabel><NativeSelect value={selectedProgramId ?? ""} onChange={(event) => setSelectedProgramId(Number(event.target.value) || null)} disabled={loading || !programsForSelectedJenjang.length}>{programsForSelectedJenjang.length ? programsForSelectedJenjang.map((value) => <option key={value.id} value={value.id}>{value.name}</option>) : <option value="">Add an academic program first</option>}</NativeSelect></FormField>
           <FormField id="canonical-grade-name" required><FieldLabel>Grade name</FieldLabel><Input value={gradeForm.name} onChange={(event) => setGradeForm((current) => ({ ...current, name: event.target.value }))} placeholder="Grade 7" required /></FormField>
           <FormField id="canonical-grade-sequence" required><FieldLabel>Sequence</FieldLabel><Input type="number" min="1" value={gradeForm.sequence} onChange={(event) => setGradeForm((current) => ({ ...current, sequence: event.target.value }))} required /></FormField>
         </div>
@@ -124,7 +132,7 @@ export function AcademicFoundationPanel({ academicYears, onChanged }: Props) {
         <h3 className="font-black text-slate-900">Add class</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <FormField id="canonical-class-year" required><FieldLabel>Academic year</FieldLabel><NativeSelect value={selectedYearId ?? ""} onChange={(event) => setSelectedYearId(Number(event.target.value) || null)} disabled={loading || !academicYears.length}>{academicYears.length ? academicYears.map((value) => <option key={value.id} value={value.id}>{value.label}</option>) : <option value="">Add an academic year first</option>}</NativeSelect></FormField>
-          <FormField id="canonical-class-grade" required><FieldLabel>Grade</FieldLabel><NativeSelect value={selectedGradeId ?? ""} onChange={(event) => setSelectedGradeId(Number(event.target.value) || null)} disabled={loading || !grades.length}>{grades.length ? grades.filter((value) => value.program_id === selectedProgramId).map((value) => <option key={value.id} value={value.id}>{value.name}</option>) : <option value="">Add a grade first</option>}</NativeSelect></FormField>
+          <FormField id="canonical-class-grade" required><FieldLabel>Grade</FieldLabel><NativeSelect value={selectedGradeId ?? ""} onChange={(event) => setSelectedGradeId(Number(event.target.value) || null)} disabled={loading || !gradesForSelectedProgram.length}>{gradesForSelectedProgram.length ? gradesForSelectedProgram.map((value) => <option key={value.id} value={value.id}>{value.name}</option>) : <option value="">Add a grade first</option>}</NativeSelect></FormField>
           <FormField id="canonical-class-name" required><FieldLabel>Class name</FieldLabel><Input value={classForm.name} onChange={(event) => setClassForm((current) => ({ ...current, name: event.target.value }))} placeholder="7A" required /></FormField>
           <FormField id="canonical-class-section"><FieldLabel>Section code</FieldLabel><Input value={classForm.section} onChange={(event) => setClassForm((current) => ({ ...current, section: event.target.value }))} placeholder="A" /></FormField>
         </div>

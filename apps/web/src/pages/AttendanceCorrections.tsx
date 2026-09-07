@@ -101,7 +101,8 @@ export default function AttendanceCorrections() {
     await run("create", async () => {
       const response = await api.post<{ id: number }>("/api/attendance-corrections", {
         ...form, attendance_id: Number(form.attendance_id),
-        proposed_check_in: form.proposed_check_in || null, proposed_check_out: form.proposed_check_out || null,
+        ...(form.proposed_check_in ? { proposed_check_in: form.proposed_check_in } : {}),
+        ...(form.proposed_check_out ? { proposed_check_out: form.proposed_check_out } : {}),
       });
       await api.post(`/api/attendance-corrections/${response.data.id}/submit`);
       setForm((current) => ({ ...current, attendance_id: "", explanation: "" }));

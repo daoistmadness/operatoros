@@ -46,9 +46,9 @@ function normalizedLower(value: string | null | undefined): string {
 
 function scopeForLevel(level: string | null | undefined): Scope | null {
   const value = normalizedLower(level);
-  if (["early year program", "kb", "tk", "kiddy", "kindergarten"].includes(value)) return "early_year";
-  if (["primary", "sd"].includes(value)) return "primary";
-  if (["secondary", "smp"].includes(value)) return "secondary";
+  if (["early year program", "preschool", "early_year", "kb", "tk", "kiddy", "kindergarten"].includes(value)) return "early_year";
+  if (["primary", "elementary", "sd"].includes(value)) return "primary";
+  if (["secondary", "junior", "middle", "senior", "smp"].includes(value)) return "secondary";
   return null;
 }
 
@@ -142,7 +142,7 @@ function finalizeAttendance(value: Row): Row {
 function scopedEnrollments(context: AuthContext, academicYearId: number, scope: Scope, className?: string | null): { rows: Row[]; unmapped: string[] } {
   const source = rows(context, `
     SELECT e.*, s.id AS legacy_student_id, s.name AS student_name, s.jenjang AS student_jenjang,
-           s.class_name AS student_class_name, j.name AS jenjang_name, c.class_name AS academic_class_name
+           s.class_name AS student_class_name, j.name AS jenjang_name, j.level AS jenjang_level, c.class_name AS academic_class_name
     FROM student_enrollments e
     JOIN students s ON s.id = e.student_id
     JOIN jenjangs j ON j.id = e.jenjang_id
@@ -152,11 +152,12 @@ function scopedEnrollments(context: AuthContext, academicYearId: number, scope: 
   const selected: Row[] = [];
   const unmapped = new Set<string>();
   for (const value of source) {
-    if (!scopeForLevel(value.jenjang_name)) {
+    const scopeLevel = value.jenjang_level ?? value.jenjang_name;
+    if (!scopeForLevel(scopeLevel)) {
       unmapped.add(normalized(value.jenjang_name) || "Unknown");
       continue;
     }
-    if (!matchesScope(value.jenjang_name, scope)) continue;
+    if (!matchesScope(scopeLevel, scope)) continue;
     const resolvedClass = normalized(value.academic_class_name || value.class_name);
     if (wantedClass !== null && resolvedClass !== wantedClass) continue;
     selected.push({ ...value, report_class: resolvedClass || "Unknown / Not Provided" });
@@ -208,7 +209,7 @@ function reportFilters(context: AuthContext, academicYearId: number | null, scop
   const selected = academicYearId === null ? years.find((value) => Number(value.is_default) === 1) ?? years.at(-1) : years.find((value) => Number(value.id) === academicYearId);
   if (academicYearId !== null && !selected) throw Object.assign(new Error("Academic year not found"), { status: 404 });
   const enrollment = selected ? scopedEnrollments(context, Number(selected.id), scope, null).rows : [];
-  const subjects = rows(context, "SELECT s.id, s.name, s.jenjang_id, j.name AS jenjang_name FROM subjects s JOIN jenjangs j ON j.id = s.jenjang_id ORDER BY s.name, j.name, s.id").filter((value) => matchesScope(value.jenjang_name, scope)).map((value) => ({ id: Number(value.id), name: value.name, jenjang_id: Number(value.jenjang_id), jenjang_name: value.jenjang_name }));
+  const subjects = rows(context, "SELECT s.id, s.name, s.jenjang_id, j.name AS jenjang_name, j.level AS jenjang_level FROM subjects s JOIN jenjangs j ON j.id = s.jenjang_id ORDER BY s.name, j.name, s.id").filter((value) => matchesScope(value.jenjang_level ?? value.jenjang_name, scope)).map((value) => ({ id: Number(value.id), name: value.name, jenjang_id: Number(value.jenjang_id), jenjang_name: value.jenjang_name }));
   return {
     academic_years: years.map((value) => ({ id: Number(value.id), name: value.label, start_date: value.start_date, end_date: value.end_date, is_default: Boolean(value.is_default) })),
     default_academic_year_id: years.find((value) => Number(value.is_default) === 1)?.id ?? null,

@@ -82,6 +82,35 @@ describe("core CRUD parity slices", () => {
     }
   }, 30000);
 
+  it("rejects grades whose program belongs to another jenjang", async () => {
+    const path = `/tmp/operatoros-core-grade-scope-${process.pid}-${Date.now()}.db`;
+    seedAcademic(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-scope-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const first = database.client.query("SELECT id FROM academic_programs ORDER BY id LIMIT 1").get() as { id: number };
+      const secondJenjang = await app.handle(new Request("http://local/api/academic-masters/jenjangs", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ code: "LOWER", name: "Lower", level: "primary", active: true }) }));
+      expect(secondJenjang.status).toBe(201);
+      const secondJenjangId = (await secondJenjang.json() as { id: number }).id;
+      const secondProgram = await app.handle(new Request("http://local/api/academic-masters/programs", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang_id: secondJenjangId, name: "Lower Main", active: true }) }));
+      expect(secondProgram.status).toBe(201);
+      const secondProgramId = (await secondProgram.json() as { id: number }).id;
+
+      const mismatch = await app.handle(new Request("http://local/api/academic-masters/grades", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang_id: secondJenjangId, program_id: first.id, name: "Rejected Grade", sequence_number: 1, active: true }) }));
+      expect(mismatch.status).toBe(422);
+      expect(database.client.query("SELECT COUNT(*) AS count FROM academic_grades WHERE name = 'Rejected Grade'").get()).toEqual({ count: 0 });
+
+      const valid = await app.handle(new Request("http://local/api/academic-masters/grades", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang_id: secondJenjangId, program_id: secondProgramId, name: "Lower Grade 1", sequence_number: 1, active: true }) }));
+      expect(valid.status).toBe(201);
+      expect(await valid.json()).toMatchObject({ jenjang_id: secondJenjangId, program_id: secondProgramId, name: "Lower Grade 1" });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
   it("enforces admin-only academic writes and server-side staff permissions", async () => {
     const path = `/tmp/operatoros-core-permissions-${process.pid}-${Date.now()}.db`;
     seedAcademic(path);
