@@ -20,6 +20,11 @@
 - [SQLite-only desktop ADR](architecture/decisions/SQLITE_ONLY_DESKTOP_RUNTIME.md) — accepted database and deployment decision.
 - [Ingestion dependency strategy](architecture/INGESTION_DEPENDENCY_STRATEGY.md) — current pandas/openpyxl decision and benchmark criteria.
 
+## Analytics validation
+
+- [Risk Threshold Validation](analytics/RISK_THRESHOLD_VALIDATION.md) — current indicator provenance, missing-data rules, and the gate for operator-led real-case validation.
+- [Real-Case Review Protocol](analytics/REAL_CASE_REVIEW_PROTOCOL.md) — privacy-safe label-first review and anonymized evidence handoff.
+
 ## Operations
 
 - [Database operations](operations/DATABASE_OPERATIONS.md) — current protected-database, backup, migration, and rollback safeguards.
