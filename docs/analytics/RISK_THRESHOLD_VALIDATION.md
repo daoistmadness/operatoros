@@ -1,8 +1,8 @@
 # Risk Threshold Validation
 
-Status: `OPERATOROS_RISK_THRESHOLD_VALIDATION_NEEDS_REAL_CASES`
+Status: `OPERATOROS_AT_RISK_THRESHOLD_VALIDATION_READY`
 
-This is the Stage 3 validation authority. It does not create `AT_RISK`, a
+This is the Stage 3 validation-preparation authority. It does not create `AT_RISK`, a
 risk score, a risk level, alerts, interventions, recommendations, or persisted
 student risk state. Candidate cutoffs are never production rules.
 
@@ -27,21 +27,25 @@ artifacts. Synthetic fixtures in the harness are `SOFTWARE_TEST_ONLY`; they
 prove extraction and evaluation math, not usefulness, cutoffs, precision,
 recall, or classification quality.
 
-## Stage 2 registry used
+## Current indicator registry
 
-The existing Stage 2 registry remains authoritative. The validation harness
-does not define another indicator contract.
+The existing Student Indicator and Student Trend responses remain authoritative.
+The validation harness does not define another indicator contract. Deltas are
+fields of the corresponding attendance indicator, not a second calculation.
+The existing intervention-impact `risk_level` is scoped to already-created
+academic intervention records; it is not an At-Risk student classification and
+is outside this registry.
 
-| Indicator | Unit | Denominator or source | Window | Missing value |
-| --- | --- | --- | --- | --- |
-| `attendance_rate` | percent | Present + Late over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero |
-| `attendance_delta` | percentage points | current attendance rate minus previous attendance rate | current vs previous | null when either denominator is zero |
-| `tardiness_rate` | percent | Late over Present + Late | current | null when attended count is zero |
-| `tardiness_delta` | percentage points | current tardiness rate minus previous tardiness rate | current vs previous | null when either attended count is zero |
-| `alfa_rate` | percent | Alfa over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero |
-| `alfa_delta` | percentage points | current Alfa rate minus previous Alfa rate | current vs previous | null when either denominator is zero |
-| `academic_average` | score | non-null score sum over non-null score count | academic year | null when no scored result exists |
-| `academic_participation` | percent | scored result slots over expected result slots | academic year | null when expected slots are zero |
+| Indicator | Unit | Canonical source | Window | Missing value | Threshold provenance | SMP/SD applicability |
+| --- | --- | --- | --- | --- | --- | --- |
+| `attendance_rate` | percent | Present + Late over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `attendance_delta` | percentage points | current attendance rate minus previous attendance rate | current vs previous | null when either denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `tardiness_rate` | percent | Late over Present + Late | current | null when attended count is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `tardiness_delta` | percentage points | current tardiness rate minus previous tardiness rate | current vs previous | null when either attended count is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `alfa_rate` | percent | Alfa over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `alfa_delta` | percentage points | current Alfa rate minus previous Alfa rate | current vs previous | null when either denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `academic_average` | score | non-null score sum over non-null score count | academic year | null when no scored result exists | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+| `academic_participation` | percent | scored result slots over expected result slots | academic year | null when expected slots are zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
 
 Attendance rates use effective status, so an attendance override replaces the
 stored status. Attendance windows are the existing `rolling_4w` or configured
@@ -52,6 +56,12 @@ The Stage 2 registry also records Attendance override prevalence as rejected
 diagnostic context, Data-quality issue count as rejected confidence context,
 Mastery proportion as deferred without an existing student-level contract,
 and Academic trend as `DEFER_NO_TIME_AXIS`.
+
+For program applicability, SMP and SD are reviewable populations when the
+canonical source data exists. TK/KB values may be displayed descriptively, but
+threshold review is `NOT_APPLICABLE` until a separate developmentally
+appropriate review model is approved. No threshold is shared across programs
+by assumption.
 
 ## Human review protocol
 
@@ -130,6 +140,45 @@ Do not include names, identifying student IDs, raw attendance histories,
 grades, or identifying staff comments. For an external source, record only its
 source type, extraction date, case count, and de-identification method.
 
+## Anonymized validation artifact
+
+Use a private, de-identified CSV or worksheet outside the repository. The
+label-first sheet may contain only these columns:
+
+```text
+case_id,program,jenjang,review_date,review_window,source_type,selection_stratum,reviewer_a_outcome,reviewer_a_reason,reviewer_b_outcome,reviewer_b_reason,consensus_outcome,temporal_integrity,indicator_data_availability
+```
+
+After labels are locked, attach the canonical indicator values and, for each
+separate evaluation, the candidate threshold and direction. Do not add student
+name, student ID, NIS, NISN, Device ID, address, parent/contact, raw history,
+or unrestricted identifying notes. `CASE-###` is an opaque local identifier;
+the private mapping never enters Git, exports shared with the repository, or
+automated tests.
+
+Bring back only an aggregate summary, for example:
+
+```text
+indicator: attendance_rate
+program: SMP
+threshold: <candidate value>
+direction: lower_is_concerning
+reviewed: <N>
+operator-positive: <N>
+operator-negative: <N>
+uncertain: <N>
+TP: <N>
+FP: <N>
+TN: <N>
+FN: <N>
+data-quality-inconclusive: <N>
+notes: non-identifying summary only
+```
+
+The repository harness accepts only the eight canonical indicator values,
+opaque case IDs, safe scope metadata, dates, and the three human outcomes. It
+does not read identifiable records or decide which threshold should be used.
+
 ## Canonical extraction and evaluation
 
 Use the Stage 2 TypeScript `studentIndicatorInsights` response as the only
@@ -164,19 +213,22 @@ Do not create a weighted score. Simple AND/OR rules may be considered only if
 single indicators are insufficient and the sample supports them. Do not search
 hundreds of combinations; that is `RISK_VALIDATION_THRESHOLD_OVERFIT`.
 
-## Current indicator decisions
+## Current indicator decisions and gate
 
 No real-case evidence exists, so the accepted Stage 2 indicators remain
 `DEFER_INSUFFICIENT_EVIDENCE`. Data quality remains context/confidence only,
 not risk evidence. Academic trend remains `DEFER_NO_TIME_AXIS`; grade rows
 still have no canonical date or term axis.
 
-No threshold is validated. Stage 4 readiness is `NOT_READY_FOR_STAGE_4`.
-The gate to issue now is:
+No threshold is validated. The preparation gate is ready because the operator
+can review current indicators using the existing views, a label-first
+de-identified worksheet, and the canonical extraction harness. The next gate
+requires authorized real-case evidence:
 
 ```text
-OPERATOROS_RISK_THRESHOLD_VALIDATION_NEEDS_REAL_CASES
+OPERATOROS_AT_RISK_THRESHOLD_VALIDATION_COMPLETE
 ```
 
 Collect and independently review an authorized, de-identified case set before
-any threshold exploration.
+any threshold exploration. Do not proceed to `AT_RISK` classification until
+that evidence has been reviewed and approved.
