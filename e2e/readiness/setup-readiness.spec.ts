@@ -45,18 +45,41 @@ async function createCanonicalHierarchy(page: Page) {
   await expect(page.getByRole("status")).toContainText("UAT 7A was added");
 }
 
+async function createSecondCanonicalHierarchy(page: Page) {
+  await page.getByRole("textbox", { name: "Code required", exact: true }).fill("UAT-SD");
+  await page.getByRole("textbox", { name: "Name required", exact: true }).fill("UAT Lower School");
+  await page.getByRole("textbox", { name: "Level required", exact: true }).fill("primary");
+  await page.getByRole("button", { name: "Add program", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("UAT Lower School is now a canonical program");
+
+  await page.getByRole("combobox", { name: "Program / Jenjang required", exact: true }).selectOption({ label: "UAT Lower School" });
+  await page.getByRole("textbox", { name: "Program name required", exact: true }).fill("UAT Lower Main");
+  await page.getByRole("button", { name: "Add academic program", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("UAT Lower Main was added");
+
+  await page.getByRole("textbox", { name: "Grade name required", exact: true }).fill("UAT Lower 1");
+  await page.getByRole("button", { name: "Add grade", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("UAT Lower 1 was added");
+
+  await page.getByRole("textbox", { name: "Class name required", exact: true }).fill("UAT Lower 1A");
+  await page.getByRole("textbox", { name: "Section code", exact: true }).fill("A");
+  await page.getByRole("button", { name: "Add class", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("UAT Lower 1A was added");
+}
+
 async function configureCalendar(page: Page) {
   await page.evaluate(async () => {
     const years = await (await fetch("/api/academic-masters/academic-years")).json();
     const jenjangs = await (await fetch("/api/academic-masters/jenjangs")).json();
     const year = years.find((value: { label: string }) => value.label === "UAT 2028/2029");
-    const jenjang = jenjangs.find((value: { name: string }) => value.name === "UAT Junior High");
-    const response = await fetch("/api/attendance/calendar/weekday", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ academic_year_id: year.id, jenjang_id: jenjang.id, weekday: 1, expectation: "EXPECTED" }),
-    });
-    if (!response.ok) throw new Error(`calendar setup failed: ${response.status}`);
+    for (const jenjang of jenjangs) {
+      const response = await fetch("/api/attendance/calendar/weekday", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ academic_year_id: year.id, jenjang_id: jenjang.id, weekday: 1, expectation: "EXPECTED" }),
+      });
+      if (!response.ok) throw new Error(`calendar setup failed: ${response.status}`);
+    }
   });
 }
 
@@ -126,6 +149,7 @@ test("@setup-readiness @fresh-school @critical configures canonical foundation a
   await expect(page.getByRole("heading", { name: "Programs / Jenjang" }).locator("..")).toContainText("Action required");
 
   await createCanonicalHierarchy(page);
+  await createSecondCanonicalHierarchy(page);
   await configureCalendar(page);
   await page.goto("/setup");
   await expect(page.getByRole("heading", { name: "Programs / Jenjang" }).locator("..")).toContainText("Ready");
