@@ -187,6 +187,25 @@ describe("analytics and report parity", () => {
     expect(roundHalfUp(2.5, 0)).toBe(3);
   });
 
+  it("uses canonical jenjang levels for dynamically named report scopes", async () => {
+    const path = `/tmp/operatoros-round2-report-scope-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-round2-report-scope-audit-${process.pid}` } });
+    try {
+      database.client.run("UPDATE jenjangs SET name = 'Round2 SD' WHERE name = 'SD'");
+      const cookie = await adminCookie(app);
+      const response = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=primary", { headers: { cookie } }));
+      expect(response.status).toBe(200);
+      const body = await response.json() as any;
+      expect(body.executive_summary.total_students).toBeGreaterThan(0);
+      expect(body.data_quality.unmapped_levels).not.toContain("Round2 SD");
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
   it("serves historical trends and management export aliases", async () => {
     const path = `/tmp/operatoros-phase10-analytics-${process.pid}-${Date.now()}.db`;
     seed(path);

@@ -56,6 +56,13 @@ function toFormStatus(status: string): AttendanceStatus {
   }
 }
 
+export function toApiAttendanceStatus(status: AttendanceStatus): string {
+  if (status === "sick") return "sakit";
+  if (status === "leave") return "izin";
+  if (status === "absent") return "alfa";
+  return status;
+}
+
 const STATUS_CONFIG: Record<
   AttendanceStatus,
   { label: string; bg: string; text: string; border: string; activeBg: string }
@@ -217,7 +224,7 @@ export default function ClassAttendanceEntry() {
     if (!classIdNum || !selectedDate || !rosterData) return;
     const entries: AttendanceEntryPayload[] = Object.entries(formState).map(([sId, state]) => ({
       student_id: Number(sId),
-      status: state.status,
+      status: toApiAttendanceStatus(state.status),
       check_in: state.checkIn || undefined,
       check_out: state.checkOut || undefined,
       note: state.note || undefined,
