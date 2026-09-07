@@ -190,10 +190,18 @@ function registerAcademicMasters(app: any, context: AuthContext): void {
     app.get(`/api/academic-masters/${definition.name}`, ({ set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; return rows(context.database.client, `SELECT * FROM ${definition.table} ORDER BY id`).map((value) => ({ ...value, active: asBool(value.active) })); });
     app.post(`/api/academic-masters/${definition.name}`, ({ body, set, ...ctx }: Context) => {
       const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client;
+      if (definition.name === "grades") {
+        const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [body.program_id]);
+        if (!program || Number(program.jenjang_id) !== Number(body.jenjang_id)) return error(set, 422, "Grade program does not belong to the selected jenjang");
+      }
       try { let created: Row | null = null; inTransaction(client, () => { const values = definition.fields.map((field) => field === "section_code" ? (body[field] ?? "") : field === "active" ? (body[field] === false ? 0 : 1) : body[field]); const result = client.run(`INSERT INTO ${definition.table} (${definition.fields.join(", ")}) VALUES (${definition.fields.map(() => "?").join(", ")})`, values); created = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [Number(result.lastInsertRowid)]); if (created) audit(client, definition.name.slice(0, -1), created.id, "CREATE", user.username, null, created); }); const result = created as unknown as Row; set.status = 201; return { ...result, active: asBool(result.active) }; } catch { return error(set, 409, "Duplicate or referenced academic master"); }
     }, { body: definition.body });
     app.put(`/api/academic-masters/${definition.name}/:row_id`, ({ params, body, set, ...ctx }: Context) => {
       const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; const before = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]); if (!before) return error(set, 404, `${definition.name.slice(0, -1)} not found`);
+      if (definition.name === "grades") {
+        const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [body.program_id]);
+        if (!program || Number(program.jenjang_id) !== Number(body.jenjang_id)) return error(set, 422, "Grade program does not belong to the selected jenjang");
+      }
       try { inTransaction(client, () => { const assignments = definition.fields.map((field) => `${field} = ?`).join(", "); const values = definition.fields.map((field) => field === "section_code" ? (body[field] ?? "") : field === "active" ? (body[field] === false ? 0 : 1) : body[field]); client.run(`UPDATE ${definition.table} SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...values, params.row_id]); const after = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]); if (after) audit(client, definition.name.slice(0, -1), params.row_id, "UPDATE", user.username, before, after); }); const result = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]) as Row; return { ...result, active: asBool(result.active) }; } catch { return error(set, 409, "Duplicate or referenced academic master"); }
     }, { params: t.Object({ row_id: t.Number({ minimum: 1 }) }), body: definition.body });
     app.delete(`/api/academic-masters/${definition.name}/:row_id`, ({ params, set, ...ctx }: Context) => {
