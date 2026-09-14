@@ -1,4 +1,10 @@
-# WSL2 DevOps Guide
+# WSL2 DevOps Guide (Historical)
+
+> This is a historical compatibility and migration reference. WSL is retired
+> from the active `oprserver` workflow. Current development is performed on
+> `oprserver` through Windows -> SSH/Tailscale -> the Linux checkout, using the
+> project-local mise toolchain and tasks. Do not use this document for current
+> onboarding.
 
 This guide covers the WSL2 development workflow for this repository.
 

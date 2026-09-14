@@ -8,7 +8,10 @@ The prior **`v0.9.0-platform-foundation`** inventory, security review, and relea
 
 The current runtime schema is S4.3 (`20260725_s43`); S4.2 is the fresh-bootstrap
 baseline. Local development uses a disposable configured database—never
-`backend/attendance.db`, which is protected operational data.
+the persistent developer database at
+`~/.local/share/operatoros/development/<project-id>/operatoros.sqlite`.
+The old `backend/attendance.db` path is not the current developer data
+authority.
 
 ## What It Does
 - Imports `.xlsx` attendance exports into a backend database.
@@ -65,7 +68,7 @@ Only the backend grants access. Frontend identity and role state are navigation 
 ## Repository Layout
 - [`backend/`](backend/): schema, migration, fixture, and operations tooling plus raw SQL migrations
 - [`apps/web/`](apps/web/): React pages, shared components, API client, and frontend configuration
-- [`docs/`](docs/): WSL2 guidance, utility script notes, and operational references
+- [`docs/`](docs/): utility script notes, operational references, and historical WSL2 migration guidance
 - [`scratch/`](scratch/): one-off diagnostics and experiments
 - Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
 - [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and Elysia backend
@@ -75,6 +78,11 @@ Only the backend grants access. Frontend identity and role state are navigation 
 ## Core validation
 
 ```bash
+mise run check
+mise run test
+mise run build
+
+# Specialized checks and data-safe validation
 mise run check:affected
 mise run test:fast
 mise run check:full
@@ -90,8 +98,8 @@ are generated and drift-checked through the frontend package scripts. See
 [database operations](docs/operations/DATABASE_OPERATIONS.md).
 
 ## Prerequisites
-- mise-en-place (mise) >= 2024.1.0 — controls runtime versions (Bun, Python)
-- Bun 1.4.0 (installed via `mise install`; the root `bun.lock` is authoritative)
+- mise 2026.9.3 — validated runtime/tool authority (no stricter minimum is required)
+- Bun 1.4.2 (installed via `mise install`; the root `bun.lock` is authoritative)
 - Python 3.12.3 (installed via `mise install`)
 - Agent Browser on the PATH if you want browser verification
 
@@ -132,7 +140,7 @@ mise run doctor
 
 `mise install` uses `mise.lock` for exact versions. `mise run python:bootstrap`
 creates the external retained Python tooling environment. `mise run doctor` checks
-the checkout, toolchain, workspace installation, native WSL Bun, and
+the checkout, toolchain, workspace installation, native Linux Bun, and
 `origin/main`. Bun remains the package manager authority; mise owns the
 developer-facing command surface.
 
@@ -244,7 +252,7 @@ The standardized E2E workflow uses isolated synthetic data and runtime-selected 
 ## Troubleshooting
 - If the Vite dev server fails, verify workspace dependencies exist. Run `bun install --frozen-lockfile` from the repository root if needed.
 - If uploads fail, confirm the workbook is `.xlsx` and that the required columns exist on the first sheet.
-- If WSL2 file watching is unreliable, keep the repo on the Linux filesystem rather than `/mnt/c`.
+- The canonical checkout is on oprserver's Linux filesystem. Connect from Windows through SSH/Tailscale; do not use `/mnt/c` or a WSL checkout for current development.
 
 ## Security and Data Handling
 - OperatorOS uses database-backed users, revocable server-side sessions, an HttpOnly cookie, and Argon2id password hashes.
@@ -267,7 +275,7 @@ Implemented security does not include MFA, SSO, OAuth, LDAP, password-reset emai
 ## Further Reading
 - [Backend guide](backend/README.md)
 - [Frontend guide](apps/web/README.md)
-- [WSL2 / DevOps guide](docs/WSL2_DEVOPS.md)
+- [Historical WSL2 / DevOps guide](docs/WSL2_DEVOPS.md)
 - [Utility scripts](docs/UTILITY_SCRIPTS.md)
 - [Identity and authentication](docs/security/identity-authentication.md)
 - [Backup and restore security](docs/security/backup-restore.md)

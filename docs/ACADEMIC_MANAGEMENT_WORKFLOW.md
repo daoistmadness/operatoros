@@ -22,7 +22,7 @@ If the setup is incomplete, the Grade Matrix may show missing dropdowns or empty
 
 Related operator docs:
 
-- [WSL2 DevOps Guide](WSL2_DEVOPS.md)
+- [Historical WSL2 DevOps Guide](WSL2_DEVOPS.md)
 - [Backup and Restore Scheme](BACKUP_SCHEME.md)
 
 ## 3. Recommended Operating Sequence

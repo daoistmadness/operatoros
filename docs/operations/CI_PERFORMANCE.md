@@ -49,7 +49,7 @@ GitHub Actions uses `actions/cache@v4` for:
 - pip's `~/.cache/pip`;
 - the API job's `.turbo` directory.
 
-Bun cache keys include Ubuntu and Bun `1.4.0` plus `bun.lock`. Python keys
+Bun cache keys include Ubuntu and Bun `1.4.2` plus `bun.lock`. Python keys
 include Ubuntu, Python `3.12.3`, and `backend/requirements.txt`. Turbo keys
 include Ubuntu, Turbo `2.10.12`, `bun.lock`, toolchain files, and global
 architecture inputs. Restore keys permit safe reuse. The cache is an

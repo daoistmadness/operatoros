@@ -18,7 +18,8 @@ They fail with the bootstrap command when it is missing, stale, or uses the wron
 Optional browser tooling is external to the workspace:
 
 - `npm install -g agent-browser && agent-browser install`
-- `agent-browser install --with-deps` — Linux / WSL2 browser dependencies.
+- `agent-browser install --with-deps` — Linux browser dependencies on
+  `oprserver`.
 
 ## Development
 

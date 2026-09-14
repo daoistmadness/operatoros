@@ -34,7 +34,17 @@ operatoros_wsl_resolve_bun_paths() {
   OPERATOROS_BUN_COMMAND="$(command -v bun 2>/dev/null || true)"
   OPERATOROS_BUN_PATH="$(type -P bun 2>/dev/null || true)"
   OPERATOROS_BUN_REALPATH=""
-  [[ -n "$OPERATOROS_BUN_PATH" ]] && OPERATOROS_BUN_REALPATH="$(readlink -f -- "$OPERATOROS_BUN_PATH" 2>/dev/null || true)"
+  if [[ -n "$OPERATOROS_BUN_PATH" ]]; then
+    local mise_bun_path=""
+    if command -v mise >/dev/null 2>&1; then
+      mise_bun_path="$(mise which bun 2>/dev/null || true)"
+    fi
+    if [[ -n "$mise_bun_path" && -x "$mise_bun_path" ]]; then
+      OPERATOROS_BUN_REALPATH="$(readlink -f -- "$mise_bun_path" 2>/dev/null || true)"
+    else
+      OPERATOROS_BUN_REALPATH="$(readlink -f -- "$OPERATOROS_BUN_PATH" 2>/dev/null || true)"
+    fi
+  fi
 }
 
 operatoros_wsl_bun_is_safe() {
