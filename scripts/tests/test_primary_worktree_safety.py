@@ -58,7 +58,7 @@ def create_repo(tmp_path: Path, name: str = "primary") -> Path:
 def push_remote_commit(repo: Path, tmp_path: Path, message: str) -> None:
     peer = tmp_path / f"peer-{message.replace(' ', '-') }"
     origin = Path(git(repo, "remote", "get-url", "origin"))
-    git(tmp_path, "clone", str(origin), str(peer))
+    git(tmp_path, "clone", "--branch", "main", str(origin), str(peer))
     git(peer, "config", "user.name", "Peer")
     git(peer, "config", "user.email", "peer@example.invalid")
     (peer / message.replace(" ", "-")).write_text(message)
