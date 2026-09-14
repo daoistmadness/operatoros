@@ -39,7 +39,7 @@ Use an explicit disposable `OPERATOROS_DATA_DIR` for tests. The data-root
 hashing scheme is unchanged. Never point development tooling at protected
 operational databases.
 
-The canonical primary checkout is `$HOME/projects/absensi/school-attendance-analytics`.
+The canonical primary checkout is `$HOME/code/repos/operatoros`.
 Set `OPERATOROS_PRIMARY_CHECKOUT_PATH` only when an installation uses another
 absolute path. The launcher compares resolved Git top-level paths with this
 value. It never infers the primary role from a folder name.
