@@ -185,7 +185,6 @@ export function RosterImportPanel() {
         setSelected(newEligibleIds);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preview.data?.preview_id]);
 
   // Focus review after parsing
