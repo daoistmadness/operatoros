@@ -41,7 +41,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 
 ## 4. Runtime responsibilities
 
-The Elysia application stack uses native Linux Bun. Python remains only for disposable fixture setup and smoke assertions. Playwright 1.55.1 collection uses the installed native Linux Node runtime after WSL runtime preparation.
+The Elysia application stack uses native Linux Bun. Python remains only for disposable fixture setup and smoke assertions. Playwright 1.55.1 collection uses the installed native Linux Node runtime resolved by mise.
 
 The smoke runner records the native Node path before narrowing `PATH`. It then invokes the installed Playwright CLI directly. Bun remains the package manager and Elysia runtime for the candidate stack.
 

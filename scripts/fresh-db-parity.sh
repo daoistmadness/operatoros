@@ -5,7 +5,6 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="$(bun "$REPO/scripts/python-tooling-env.ts" --repo "$REPO" print-executable)"
 
 test "$(uname -s)" = "Linux"
-test -n "${WSL_DISTRO_NAME:-}"
 test -x "$PYTHON"
 test -x "$PYTHON"
 

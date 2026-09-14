@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   e2e-full:
-    name: Ubuntu / Bun 1.4.0 / Python 3.12
+    name: Ubuntu / Bun 1.4.2 / Python 3.12
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -46,9 +46,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.4.0-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-1.4.0-
+            ${{ runner.os }}-bun-1.4.2-
       - name: Cache Python package downloads
         uses: actions/cache@v5
         with:

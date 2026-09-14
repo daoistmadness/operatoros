@@ -49,7 +49,7 @@ apps/web/
 
 ## Requirements
 - mise-en-place controls runtime versions (see root `mise.toml`)
-- Bun 1.4.0 (installed via `mise install` at repo root)
+- Bun 1.4.2 (installed via `mise install` at repo root)
 
 ## Setup
 ```bash
@@ -125,7 +125,7 @@ If the build fails, check:
 - If the frontend cannot reach the API, confirm the Vite development proxy target and backend port.
 - If the browser shows React HTML instead of JSON, confirm that the request path starts with `/api` exactly once.
 - If uploads fail, verify that the workbook is `.xlsx` and that the backend sample template matches the source file.
-- If browser verification fails, install Agent Browser with `bun add -g agent-browser` and `agent-browser install` (or `agent-browser install --with-deps` on Linux/WSL2).
+- If browser verification fails, install Agent Browser with `bun add -g agent-browser` and `agent-browser install` (or `agent-browser install --with-deps` on Linux).
 
 ## Known Limitations
 - Frontend tests run with Vitest.

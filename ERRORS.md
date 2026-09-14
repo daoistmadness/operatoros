@@ -7,7 +7,7 @@ This file records recurring failures, fragile areas, and debugging notes.
 - The `POST /system/clear-data` route is now guarded by `ENABLE_DESTRUCTIVE_OPERATIONS` and an explicit confirmation token. Keep treating it as high risk, but do not assume it is freely callable anymore.
 - Portless development depends on first-time certificate trust. If `./start-dev.sh` cannot reach an HTTPS Portless URL, the next check is `portless trust`, not a TLS bypass.
 - If `portless get` returns no URL or a stale route, inspect `portless list` and prune manually with `portless prune`.
-- If the browser smoke test fails to start, run `agent-browser doctor --offline --quick` and then install binaries with `agent-browser install` or `agent-browser install --with-deps` on Linux/WSL2.
+- If the browser smoke test fails to start, run `agent-browser doctor --offline --quick` and then install binaries with `agent-browser install` or `agent-browser install --with-deps` on Linux.
 - **Premature silent exit during startup**: The `start-dev.sh` script previously exited without warning if port assignment detection (`extract_assigned_port`) timed out. This was caused by an unhandled exit code from command substitution inside a global variable assignment under `set -e`. Fixed by adding `|| echo 'unknown'` and using explicit child failure loops.
 - **Portless startup failure (proxy TCP refused & route 404)**: 
   - `portless doctor` does not exist in Portless v0.14.0 — use `portless service status` for diagnosis.
@@ -28,7 +28,7 @@ This file records recurring failures, fragile areas, and debugging notes.
 - If uploads fail, inspect the sample template and compare its column names to the source workbook.
 - If reports look incomplete, check class mapping and HEB configuration before changing analytics code.
 - If the frontend cannot reach the backend, verify CORS origins and `REACT_APP_API_URL`.
-- If WSL2 file watching is unreliable, move the repo off `/mnt/c` and onto the Linux filesystem.
+- The canonical checkout already lives on the Linux filesystem on `oprserver`; connect from Windows through SSH/Tailscale rather than using `/mnt/c` or a WSL checkout.
 
 ## TODO
 - Add repo-specific lint, test, or typecheck failure patterns if those workflows are introduced later.

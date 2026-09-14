@@ -34,7 +34,7 @@ architecture and operations documents for detailed procedures.
 
 Bun is the runtime, package manager, and workspace resolver. The root
 `bun.lock` is the lockfile authority. Mise manages tool versions. HK manages
-Git lifecycle checks. Turbo manages tasks and cache. Mise pins Bun `1.4.0`,
+Git lifecycle checks. Turbo manages tasks and cache. Mise pins Bun `1.4.2`,
 hk `1.56.1`, and Python `3.12.3`.
 
 ## Main user groups and domains

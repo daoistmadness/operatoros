@@ -7,8 +7,9 @@ lockfile = true
 github_attestations = false
 
 [tools]
-bun = "1.4.0"
+bun = "1.4.2"
 hk = "1.56.1"
+node = "24.19.0"
 python = "3.12.3"
 
 [env]
@@ -26,7 +27,7 @@ fail() {
 git rev-parse --show-toplevel >/dev/null 2>&1 || fail "not inside a Git checkout" "cd to the repository root"
 git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/main is unavailable" "git fetch origin main"
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
-[ "$(bun --version)" = "1.4.0" ] || fail "Bun 1.4.0 is not active" "mise install"
+[ "$(bun --version)" = "1.4.2" ] || fail "Bun 1.4.2 is not active" "mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
 [ -x "$(bun scripts/python-tooling-env.ts --repo . print-executable 2>/dev/null || true)" ] || fail "Python tooling environment is missing or stale" "mise run python:bootstrap"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
@@ -54,11 +55,20 @@ description = "Create or refresh the external retained Python tooling environmen
 run = "bun scripts/python-tooling-env.ts --repo . bootstrap"
 
 [tasks.test]
-description = "Run core verification gates"
+description = "Run the Bun and Python automated test suites"
 run = """
-bun --version
-python --version
+bun run test
+python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+"$python_tooling" -m pytest backend/tests scripts/tests -q
 """
+
+[tasks.check]
+description = "Run the repository quality and validation checks"
+run = "bun run check"
+
+[tasks.build]
+description = "Build the production web artifact"
+run = "bun run build"
 
 [tasks.dev]
 description = "Start the managed local Elysia and Vite development stack"
