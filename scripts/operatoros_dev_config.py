@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 PRIMARY_CHECKOUT_ENV = "OPERATOROS_PRIMARY_CHECKOUT_PATH"
-PRIMARY_CHECKOUT_RELATIVE = Path("projects/absensi/school-attendance-analytics")
+PRIMARY_CHECKOUT_RELATIVE = Path("code/repos/operatoros")
 
 
 def primary_checkout_path(env: dict[str, str] | None = None) -> Path:

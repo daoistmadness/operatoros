@@ -16,10 +16,12 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Environment and dependencies
 
-- Work in Ubuntu WSL. Use the external Python tooling environment selected by
-  `OPERATOROS_PYTHON_VENV`; bootstrap it with `mise run python:bootstrap`.
-  Do not require or symlink a worktree-local `backend/.venv`.
-- Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.0, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
+- Work on the Linux checkout on `oprserver`, reached from Windows through
+  SSH/Tailscale. WSL is retired from the active workflow. Use the external
+  Python tooling environment selected by `OPERATOROS_PYTHON_VENV`; bootstrap it
+  with `mise run python:bootstrap`. Do not require or symlink a worktree-local
+  `backend/.venv`.
+- Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.2, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
 - Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
 - Use `mise run dev`, `mise run check:affected`, `mise run test:fast`, and
   `mise run check:full` as the developer-facing command surface. These tasks
@@ -28,15 +30,18 @@ historical evidence unless they explicitly identify a current procedure.
 - Read relevant code and documentation before editing. Prefer the smallest safe
   change; do not refactor unrelated code or generated artifacts.
 
-### WSL Bun runtime
+### Linux Bun runtime
 
 - Use only the native Linux Bun installation via mise.
 - Before executing Bun commands, inspect `command -v`, `type -P`, and `readlink -f`. Reject candidates that
   resolve to `/mnt/c`, another `/mnt/<drive>`, `WindowsApps`, `Program Files`,
   `.exe`, `.cmd`, `.bat`, or UNC-like Windows paths. Never execute a
   rejected Windows binary.
-- `./scripts/validate-wsl-bun.sh --probe .` is validation-only.
-- Normal launchers use `operatoros_wsl_prepare_bun` to validate the environment and prepend the Bun bin directory to `PATH`.
+- The `validate-wsl-bun.sh` filename and `operatoros_wsl_prepare_bun` symbol are
+  legacy compatibility identifiers retained in the repository; they are not
+  current onboarding requirements.
+- Use the project-local Bun resolved by mise and reject Windows paths such as
+  `/mnt/c`, `WindowsApps`, `.exe`, `.cmd`, `.bat`, or UNC-like paths.
 
 ## Git and worktree safety
 
@@ -55,10 +60,10 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Worktree lifecycle
 
-- Protect `~/projects/absensi`, the primary checkout at
-  `~/projects/absensi/school-attendance-analytics`, and the root files
-  `absen anak sd bro.xls.xlsx`, `absen smp term 4.xls.xlsx`, and
-  `Data Anak 2026-2027 - Example.xlsx`.
+- Protect the canonical checkout at `~/code/repos/operatoros`, any intentionally
+  linked worktree under `~/code/worktrees/operatoros/`, and the persistent
+  developer data under
+  `~/.local/share/operatoros/development/`.
 - Before a feature loop, fetch `origin`, verify the previous feature on
   `origin/main`, audit worktrees, and prune only clean worktrees whose content
   is integrated into the current default branch. Preserve dirty, unmerged,
@@ -70,8 +75,9 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Protected operational data
 
-- `backend/attendance.db` is the protected operational database. Its expected
-  current schema is S4.3 (`20260725_s43`), not a test fixture.
+- The authoritative development SQLite database is under
+  `~/.local/share/operatoros/development/<project-id>/operatoros.sqlite`.
+  `backend/attendance.db` is not the current developer database authority.
 - Tests, E2E, development startup, and committed fixtures must never use it.
   Use explicit disposable databases instead.
 - Ordinary startup validates existing databases; it never migrates them.
@@ -84,12 +90,10 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Development startup and database
 
-- `./start-dev.sh` is the canonical normal development entrypoint. It defaults
-  to Elysia and reports
-  `DATABASE_URL` configuration drift, validates and recovers the WSL Bun
-  runtime, uses the canonical persistent development database, enforces one
-  managed session, starts the backend first, waits for backend and frontend
-  readiness, and performs managed shutdown.
+- `mise run dev` is the canonical normal development entrypoint. It delegates
+  to `./start-dev.sh`, starts the Elysia backend and React frontend, uses the
+  canonical persistent development database, enforces one managed session,
+  waits for readiness, and performs managed shutdown.
 - Python remains available for disposable schema, fixture, and operations tools.
 - Retained Python tooling uses the external environment selected by
   `OPERATOROS_PYTHON_VENV` or the deterministic default
@@ -114,9 +118,10 @@ historical evidence unless they explicitly identify a current procedure.
   stale-session checks, bounded shutdown, and backend readiness before frontend
   startup. Do not kill arbitrary port occupants, use `kill -9` on unknown
   listeners, or remove an unverified stale process automatically.
-- A real primary-checkout launcher smoke recovered through Linux NVM, reached
-  backend and frontend readiness, completed managed shutdown, and left zero
-  launcher-owned processes. This smoke did not run the full test suites.
+- A historical primary-checkout launcher smoke recovered through Linux NVM,
+  reached backend and frontend readiness, completed managed shutdown, and left
+  zero launcher-owned processes. This smoke did not run the full test suites;
+  current runtime authority is mise.
 - The same smoke accessed or modified the protected operational database: no.
 
 ## Schema and rollback
