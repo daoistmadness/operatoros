@@ -121,3 +121,11 @@ the full E2E workflow was dispatched manually. PR run `33227247699` passed in
   caches.
 - The protected operational database remains out of scope.
 - Provider-managed history cleanup remains pending and unverified.
+
+## Runner baseline
+
+Required Linux CI uses `ubuntu-24.04` explicitly. This keeps production
+validation deterministic during GitHub's staged `ubuntu-latest` migration to
+Ubuntu 26.04. The separate `Ubuntu 26.04 compatibility canary` runs on
+relevant CI and toolchain changes, plus scheduled and manual runs. Its failures
+remain visible; required CI is migrated only after the canary is proven stable.
