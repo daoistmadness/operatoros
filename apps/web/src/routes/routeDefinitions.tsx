@@ -35,6 +35,7 @@ const AcademicAssessmentOperations = lazy(() => import('../pages/AcademicAssessm
 const Enrollment = lazy(() => import('../pages/Enrollment'));
 const AcademicManagement = lazy(() => import('../pages/AcademicManagement'));
 const ManagementAnalytics = lazy(() => import('../pages/ManagementAnalytics'));
+const ManagementReviewStudentProfile = lazy(() => import('../pages/ManagementReviewStudentProfile'));
 const ExecutiveReports = lazy(() => import('../pages/ExecutiveReports'));
 const MonthlyManagementReport = lazy(() => import('../pages/MonthlyManagementReport'));
 const BackupManagement = lazy(() => import('../pages/BackupManagement'));
@@ -95,6 +96,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/upload-history', element: <UploadHistory />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
   defineRoute({ path: '/mapping', element: <Navigate to="/enrollment" replace />, group: ROUTE_GROUPS.ACADEMIC, redirectTo: '/enrollment', authorization: authenticated() }),
   defineRoute({ path: '/analytics', element: <ManagementAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/analytics/management-review/student-profile', element: <ManagementReviewStudentProfile />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
   defineRoute({ path: '/reports', element: <Navigate to="/reports/monthly" replace />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/reports/monthly', authorization: authenticated() }),
   defineRoute({ path: '/reports/monthly', element: <ExecutiveReports reportType="monthly" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/reports/annual', element: <ExecutiveReports reportType="annual" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),

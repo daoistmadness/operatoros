@@ -71,6 +71,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
     id: 'insights', title: 'Analytics & Reports',
     items: [
       { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
+      { name: 'Term Management Review', path: '/analytics/management-review/student-profile', icon: UsersIcon },
       { name: 'Data Recapitulation', path: '/analytics/recapitulation', icon: ClipboardList },
       { name: 'Data Quality', path: '/analytics/data-quality', icon: ShieldCheck },
       { name: 'Attendance Analytics', path: '/analytics/attendance', icon: Server },
