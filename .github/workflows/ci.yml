@@ -13,7 +13,8 @@ permissions:
 
 jobs:
   api:
-    runs-on: ubuntu-latest
+    # Keep required CI deterministic while ubuntu-latest migrates to Ubuntu 26.04.
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -134,7 +135,7 @@ jobs:
         run: bun run check:ui
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -171,7 +172,7 @@ jobs:
         run: bun --filter @operatoros/web api:check
 
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v4

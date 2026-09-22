@@ -1,0 +1,62 @@
+name: Ubuntu 26.04 compatibility canary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 3"
+  pull_request:
+    paths:
+      - ".github/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "package.json"
+      - "bun.lock"
+      - "backend/requirements.txt"
+      - "scripts/**"
+      - "Makefile"
+      - "start-dev.sh"
+      - "stop-dev.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    name: Ubuntu 26.04 compatibility
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Select external Python tooling environment
+        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
+      - name: Set up mise toolchain
+        uses: jdx/mise-action@v4
+        with:
+          cache: true
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+      - name: Bootstrap external fixture-tool virtualenv
+        run: mise run python:bootstrap
+      - name: Prepare disposable development database
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/data
+        run: |
+          mkdir -p "$OPERATOROS_DATA_DIR"
+          python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
+          expected_schema="$(bun packages/db/src/schema-version-cli.ts --format current)"
+          "$python_tooling" scripts/development_database.py ensure \
+            --repo . \
+            --data-dir "$OPERATOROS_DATA_DIR" \
+            --expected-schema "$expected_schema"
+      - name: Fetch main for affected-task comparison
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Verify canonical toolchain and disposable runtime
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/data
+        run: mise run doctor
+      - name: Run affected validation
+        run: mise run check:affected
+      - name: Run full compatibility validation
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: mise run check:full
