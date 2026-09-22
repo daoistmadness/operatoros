@@ -32448,6 +32448,640 @@
         "tags": ["analytics"]
       }
     },
+    "/api/analytics/management-review/student-profile": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "term_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "residence_group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "kelurahan",
+                "kecamatan",
+                "city_regency",
+                "province"
+              ]
+            }
+          },
+          {
+            "name": "residence_top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "5",
+                "10",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "context",
+                    "summary",
+                    "programs",
+                    "gender",
+                    "residence",
+                    "fatherOccupation",
+                    "motherOccupation",
+                    "dataQuality",
+                    "insights"
+                  ],
+                  "properties": {
+                    "context": {
+                      "type": "object",
+                      "required": [
+                        "academicYearId",
+                        "academicYearLabel",
+                        "termId",
+                        "termLabel",
+                        "termStart",
+                        "termEnd",
+                        "jenjangId",
+                        "classId",
+                        "jenjangLabel",
+                        "classLabel",
+                        "generatedAt",
+                        "demographicSemantics"
+                      ],
+                      "properties": {
+                        "academicYearId": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academicYearLabel": {
+                          "type": "string"
+                        },
+                        "termId": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "termLabel": {
+                          "type": "string"
+                        },
+                        "termStart": {
+                          "type": "string"
+                        },
+                        "termEnd": {
+                          "type": "string"
+                        },
+                        "jenjangId": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "classId": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "jenjangLabel": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "classLabel": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "generatedAt": {
+                          "type": "string"
+                        },
+                        "demographicSemantics": {
+                          "const": "Current profile data for students enrolled in the selected term.",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "required": [
+                        "totalStudents",
+                        "programs",
+                        "classes",
+                        "male",
+                        "female",
+                        "genderNotSpecified",
+                        "needsCompletion"
+                      ],
+                      "properties": {
+                        "totalStudents": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "programs": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "classes": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "male": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "female": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "genderNotSpecified": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "needsCompletion": {
+                          "minimum": 0,
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "programs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "allOf": [
+                          {
+                            "type": "object",
+                            "required": [
+                              "key",
+                              "label",
+                              "count",
+                              "percentage"
+                            ],
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "percentage": {
+                                "minimum": 0,
+                                "maximum": 100,
+                                "type": "number"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "classes"
+                            ],
+                            "properties": {
+                              "id": {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              "classes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "required": [
+                                    "id",
+                                    "label",
+                                    "count"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "minimum": 1,
+                                      "type": "number"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "count": {
+                                      "minimum": 0,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "gender": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label",
+                          "count",
+                          "percentage"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "percentage": {
+                            "minimum": 0,
+                            "maximum": 100,
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "residence": {
+                      "type": "object",
+                      "required": [
+                        "groupBy",
+                        "topN",
+                        "rows"
+                      ],
+                      "properties": {
+                        "groupBy": {
+                          "type": "string"
+                        },
+                        "topN": {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "key",
+                              "label",
+                              "count",
+                              "percentage"
+                            ],
+                            "properties": {
+                              "key": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "percentage": {
+                                "minimum": 0,
+                                "maximum": 100,
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "fatherOccupation": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label",
+                          "count",
+                          "percentage"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "percentage": {
+                            "minimum": 0,
+                            "maximum": 100,
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "motherOccupation": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label",
+                          "count",
+                          "percentage"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "minimum": 0,
+                            "type": "number"
+                          },
+                          "percentage": {
+                            "minimum": 0,
+                            "maximum": 100,
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "dataQuality": {
+                      "type": "object",
+                      "required": [
+                        "complete",
+                        "needsCompletion",
+                        "missing"
+                      ],
+                      "properties": {
+                        "complete": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "needsCompletion": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "missing": {
+                          "type": "object",
+                          "required": [
+                            "program",
+                            "class",
+                            "gender",
+                            "residence",
+                            "fatherOccupation",
+                            "motherOccupation"
+                          ],
+                          "properties": {
+                            "program": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "class": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "gender": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "residence": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "fatherOccupation": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
+                            "motherOccupation": {
+                              "minimum": 0,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "insights": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAnalyticsManagement-reviewStudent-profile"
+      }
+    },
+    "/api/analytics/management-review/student-profile/export.xlsx": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "term_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "residence_group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "kelurahan",
+                "kecamatan",
+                "city_regency",
+                "province"
+              ]
+            }
+          },
+          {
+            "name": "residence_top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "5",
+                "10",
+                "all"
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiAnalyticsManagement-reviewStudent-profileExport.xlsx"
+      }
+    },
+    "/api/analytics/management-review/student-profile/export.pdf": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "term_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "residence_group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "kelurahan",
+                "kecamatan",
+                "city_regency",
+                "province"
+              ]
+            }
+          },
+          {
+            "name": "residence_top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "5",
+                "10",
+                "all"
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiAnalyticsManagement-reviewStudent-profileExport.pdf"
+      }
+    },
     "/api/analytics/academic/options": {
       "get": {
         "operationId": "getAcademicAnalyticsOptions",

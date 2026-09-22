@@ -15,6 +15,7 @@ import {
 import { getDashboardSnapshot } from "../lib/api/endpoints";
 import { queryKeys } from "../lib/query/queryKeys";
 import { fetchManagementOverview, type ManagementOverviewFilters } from "../api/managementOverview";
+import { fetchConfiguredTerms, fetchManagementReviewProfile, type ManagementReviewProfileFilters } from "../api/managementReviewProfile";
 import { fetchStudentTrendInsights, type StudentTrendFilters } from "../api/studentTrends";
 import { fetchStudentIndicatorInsights, type StudentIndicatorFilters } from "../api/studentIndicators";
 
@@ -53,6 +54,14 @@ export function useManagementOverviewQuery(params: ManagementOverviewFilters | n
     queryFn: () => fetchManagementOverview(params as ManagementOverviewFilters),
     enabled: enabled && params !== null,
   });
+}
+
+export function useManagementReviewTermsQuery(academicYearId: number | null, enabled = true) {
+  return useQuery({ queryKey: queryKeys.analytics.managementReviewTerms(academicYearId), queryFn: () => fetchConfiguredTerms(academicYearId as number), enabled: enabled && academicYearId !== null });
+}
+
+export function useManagementReviewProfileQuery(params: ManagementReviewProfileFilters | null, enabled = true) {
+  return useQuery({ queryKey: params ? queryKeys.analytics.managementReviewProfile(params) : [...queryKeys.analytics.all, "management-review-profile", "idle"], queryFn: () => fetchManagementReviewProfile(params as ManagementReviewProfileFilters), enabled: enabled && params !== null });
 }
 
 export function useStudentTrendInsightsQuery(params: StudentTrendFilters | null, enabled = true) {
