@@ -5393,6 +5393,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/management-review/student-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/student-profile/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.xlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/student-profile/export.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/academic/options": {
         parameters: {
             query?: never;
@@ -20178,6 +20226,146 @@ export interface operations {
                 };
             };
         };
+    };
+    "getApiAnalyticsManagement-reviewStudent-profile": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                residence_group_by?: "kelurahan" | "kecamatan" | "city_regency" | "province";
+                residence_top_n?: "5" | "10" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        context: {
+                            academicYearId: number;
+                            academicYearLabel: string;
+                            termId: number;
+                            termLabel: string;
+                            termStart: string;
+                            termEnd: string;
+                            jenjangId: number | null;
+                            classId: number | null;
+                            jenjangLabel: string | null;
+                            classLabel: string | null;
+                            generatedAt: string;
+                            /** @constant */
+                            demographicSemantics: "Current profile data for students enrolled in the selected term.";
+                        };
+                        summary: {
+                            totalStudents: number;
+                            programs: number;
+                            classes: number;
+                            male: number;
+                            female: number;
+                            genderNotSpecified: number;
+                            needsCompletion: number;
+                        };
+                        programs: ({
+                            key: string;
+                            label: string;
+                            count: number;
+                            percentage: number;
+                        } & {
+                            id: number;
+                            classes: {
+                                id: number;
+                                label: string;
+                                count: number;
+                            }[];
+                        })[];
+                        gender: {
+                            key: string;
+                            label: string;
+                            count: number;
+                            percentage: number;
+                        }[];
+                        residence: {
+                            groupBy: string;
+                            topN: number | null;
+                            rows: {
+                                key: string;
+                                label: string;
+                                count: number;
+                                percentage: number;
+                            }[];
+                        };
+                        fatherOccupation: {
+                            key: string;
+                            label: string;
+                            count: number;
+                            percentage: number;
+                        }[];
+                        motherOccupation: {
+                            key: string;
+                            label: string;
+                            count: number;
+                            percentage: number;
+                        }[];
+                        dataQuality: {
+                            complete: number;
+                            needsCompletion: number;
+                            missing: {
+                                program: number;
+                                class: number;
+                                gender: number;
+                                residence: number;
+                                fatherOccupation: number;
+                                motherOccupation: number;
+                            };
+                        };
+                        insights: string[];
+                    };
+                };
+            };
+        };
+    };
+    "getApiAnalyticsManagement-reviewStudent-profileExport.xlsx": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                residence_group_by?: "kelurahan" | "kecamatan" | "city_regency" | "province";
+                residence_top_n?: "5" | "10" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "getApiAnalyticsManagement-reviewStudent-profileExport.pdf": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                residence_group_by?: "kelurahan" | "kecamatan" | "city_regency" | "province";
+                residence_top_n?: "5" | "10" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
     };
     getAcademicAnalyticsOptions: {
         parameters: {

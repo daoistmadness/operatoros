@@ -130,5 +130,6 @@ export * from "./data-quality";
 export * from "./attendance-expansion";
 export * from "./academic-expansion";
 export * from "./management-overview";
+export * from "./management-review-profile";
 export * from "./student-trends";
 export * from "./student-indicators";

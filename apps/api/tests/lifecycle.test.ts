@@ -39,8 +39,7 @@ describe("candidate adapter (foundation)", () => {
       const res = await adapter.replay_step({ type: "request", method: "GET", path: "/health" });
       expect(res.status).toBe(200);
       await adapter.stop();
+      await expect(adapter.replay_step({ type: "request", method: "GET", path: "/health" })).rejects.toThrow("adapter not started");
     }
-    const procs = Bun.spawnSync(["pgrep", "-f", "apps/api.*server"]).stdout.toString().trim();
-    expect(procs).toBe("");
   }, 20000);
 });

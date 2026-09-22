@@ -12,6 +12,7 @@ const expectedPaths = [
   '/upload-history',
   '/mapping',
   '/analytics',
+  '/analytics/management-review/student-profile',
   '/reports',
   '/reports/monthly',
   '/reports/annual',
