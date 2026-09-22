@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    # Keep required security validation deterministic during the runner migration.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v4

@@ -23,7 +23,7 @@ concurrency:
 jobs:
   e2e-full:
     name: Ubuntu / Bun 1.4.2 / Python 3.12
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       CI: "true"
