@@ -802,6 +802,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/academic-masters/grades/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Academic Grades in Bulk */
+        post: operations["create_academic_grades_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/academic-masters/grades/{row_id}": {
         parameters: {
             query?: never;
@@ -6972,6 +6989,39 @@ export interface components {
             /** Sequence Number */
             sequence_number: number;
         };
+        /** AcademicGradeBatchItem */
+        AcademicGradeBatchItem: {
+            /** Name */
+            name: string;
+            /** Sequence Number */
+            sequence_number: number;
+        };
+        /** AcademicGradesBulkBody */
+        AcademicGradesBulkBody: {
+            /** Grades */
+            grades: components["schemas"]["AcademicGradeBatchItem"][];
+            /** Program Id */
+            program_id: number;
+        };
+        /** AcademicMasterGrade */
+        AcademicMasterGrade: {
+            /** Active */
+            active: boolean;
+            /** Created At */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Jenjang Id */
+            jenjang_id: number;
+            /** Name */
+            name: string;
+            /** Program Id */
+            program_id: number;
+            /** Sequence Number */
+            sequence_number: number;
+            /** Updated At */
+            updated_at: string;
+        };
         /** GradeGridSaveRequest */
         GradeGridSaveRequest: {
             /** Enrollment Id */
@@ -10023,6 +10073,81 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    create_academic_grades_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicGradesBulkBody"];
+            };
+        };
+        responses: {
+            /** @description Academic grades created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademicMasterGrade"][];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Academic program not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Grade conflicts with an existing grade */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid grade batch */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -12,6 +12,15 @@ export function invalidateAcademicFoundationQueries(queryClient: InvalidatingCli
   ]);
 }
 
+export function invalidateAcademicGradeQueries(queryClient: InvalidatingClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.readiness.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.academicMasters.grades }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.analytics.filtersAll }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.analytics.academicAll }),
+  ]);
+}
+
 export function invalidateAcademicResultQueries(queryClient: InvalidatingClient) {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.grades.all }),
