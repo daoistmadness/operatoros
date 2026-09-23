@@ -67,6 +67,47 @@ async function createSecondCanonicalHierarchy(page: Page) {
   await expect(page.getByRole("status")).toContainText("UAT Lower 1A was added");
 }
 
+async function createQuickSetupPrograms(page: Page) {
+  return page.evaluate(async () => {
+    const definitions = [
+      { code: "UAT-QG-PRI", name: "UAT Quick Primary", level: "primary", program: "UAT Quick Primary Program" },
+      { code: "UAT-QG-SEC", name: "UAT Quick Secondary", level: "secondary", program: "UAT Quick Secondary Program" },
+      { code: "UAT-QG-HOM", name: "UAT Quick Homeschooling", level: "primary", program: "UAT Quick Homeschooling Program" },
+      { code: "UAT-QG-EDIT", name: "UAT Quick Editable Preset", level: "primary", program: "UAT Quick Editable Program" },
+    ];
+    const created = [];
+    for (const definition of definitions) {
+      const jenjangResponse = await fetch("/api/academic-masters/jenjangs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: definition.code, name: definition.name, level: definition.level }),
+      });
+      if (!jenjangResponse.ok) throw new Error(`jenjang setup failed: ${jenjangResponse.status}`);
+      const jenjang = await jenjangResponse.json();
+      const programResponse = await fetch("/api/academic-masters/programs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jenjang_id: jenjang.id, name: definition.program }),
+      });
+      if (!programResponse.ok) throw new Error(`program setup failed: ${programResponse.status}`);
+      const program = await programResponse.json();
+      created.push({ jenjang, program });
+    }
+    return created;
+  });
+}
+
+async function assertQuickGrades(page: Page, programId: number, jenjangId: number, names: string[]) {
+  const grades = await page.evaluate(async (id) => {
+    const response = await fetch("/api/academic-masters/grades");
+    if (!response.ok) throw new Error(`grade verification failed: ${response.status}`);
+    return (await response.json()).filter((grade: { program_id: number }) => grade.program_id === id);
+  }, programId);
+  expect(grades.map((grade: { name: string }) => grade.name)).toEqual(names);
+  expect(grades.map((grade: { sequence_number: number }) => grade.sequence_number)).toEqual(names.map((_, index) => index + 1));
+  expect(grades.every((grade: { jenjang_id: number }) => grade.jenjang_id === jenjangId)).toBe(true);
+}
+
 async function configureCalendar(page: Page) {
   await page.evaluate(async () => {
     const years = await (await fetch("/api/academic-masters/academic-years")).json();
@@ -171,6 +212,69 @@ test("@setup-readiness @fresh-school @critical configures canonical foundation a
   await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   await page.goForward();
   await expect(page.getByRole("heading", { name: "Setup & Readiness" })).toBeVisible();
+});
+
+test("@setup-readiness @foundation-quick-setup @critical creates editable grade presets in one bulk request", async ({ page }) => {
+  await login(page);
+  const programs = await createQuickSetupPrograms(page);
+  await page.goto("/academic-management?tab=foundation");
+  await expect(page.getByRole("heading", { name: "Quick Grade Setup" })).toBeVisible();
+
+  const programSelect = page.locator("#quick-grade-program");
+  const presetSelect = page.locator("#quick-grade-preset");
+  const gradeLines = page.locator("#quick-grade-lines");
+  const bulkPosts: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().endsWith("/api/academic-masters/grades/bulk")) bulkPosts.push(request.postData() ?? "");
+  });
+
+  const createPreset = async (index: number, preset: string, expected: string[]) => {
+    const { jenjang, program } = programs[index];
+    await programSelect.selectOption(String(program.id));
+    await presetSelect.selectOption(preset);
+    await expect(gradeLines).toHaveValue(expected.join("\n"));
+    await expect(page.getByRole("list", { name: "Grade sequence preview" }).locator("li")).toHaveText(expected.map((name, sequence) => `${sequence + 1}${name}`));
+    const before = bulkPosts.length;
+    await page.getByRole("button", { name: `Create ${expected.length} grades` }).click();
+    await expect(page.getByRole("status")).toContainText(`${expected.length} grades were added`);
+    await expect.poll(() => bulkPosts.length).toBe(before + 1);
+    const payload = JSON.parse(bulkPosts[before]);
+    expect(payload).toEqual({ program_id: program.id, grades: expected.map((name, sequence) => ({ name, sequence_number: sequence + 1 })) });
+    await assertQuickGrades(page, program.id, jenjang.id, expected);
+    for (const name of expected) await expect(page.locator("#canonical-class-grade")).toContainText(name);
+  };
+
+  const primary = ["P1", "P2", "P3", "P4", "P5", "P6"];
+  const secondary = ["S1", "S2", "S3"];
+  const homeschooling = ["HSP1", "HSP2", "HSP3", "HSP4", "HSP5", "HSP6"];
+  await createPreset(0, "PRIMARY", primary);
+  await createPreset(1, "SECONDARY", secondary);
+  await createPreset(2, "HOMESCHOOLING_PRIMARY", homeschooling);
+
+  const { jenjang: editableJenjang, program: editableProgram } = programs[3];
+  await programSelect.selectOption(String(editableProgram.id));
+  await presetSelect.selectOption("PRIMARY");
+  await gradeLines.fill("P1 revised\nP2\nP3\nP4\nP5\nP6");
+  await expect(page.getByRole("list", { name: "Grade sequence preview" }).locator("li").first()).toHaveText("1P1 revised");
+  const beforeEditedPreset = bulkPosts.length;
+  await page.getByRole("button", { name: "Create 6 grades" }).click();
+  await expect(page.getByRole("status")).toContainText("6 grades were added");
+  expect(bulkPosts).toHaveLength(beforeEditedPreset + 1);
+  await assertQuickGrades(page, editableProgram.id, editableJenjang.id, ["P1 revised", ...primary.slice(1)]);
+
+  const { jenjang: primaryJenjang, program: primaryProgram } = programs[0];
+  const { jenjang: secondaryJenjang } = programs[1];
+  const reassignment = await page.evaluate(async ({ programId, targetJenjangId }) => {
+    const response = await fetch(`/api/academic-masters/programs/${programId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jenjang_id: targetJenjangId, name: "UAT Quick Primary Program" }),
+    });
+    return { status: response.status, body: await response.json() };
+  }, { programId: primaryProgram.id, targetJenjangId: secondaryJenjang.id });
+  expect(reassignment.status).toBe(409);
+  expect(reassignment.body.detail).toContain("cannot change jenjang while grades exist");
+  await assertQuickGrades(page, primaryProgram.id, primaryJenjang.id, primary);
 });
 
 test("@setup-readiness @error never maps readiness endpoint failure to missing setup", async ({ page }) => {

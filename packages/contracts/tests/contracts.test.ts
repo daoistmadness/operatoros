@@ -17,6 +17,10 @@ import { AnalyticsOverviewResponseSchema, ManagementOverviewResponseSchema } fro
 import { ExcelWorksheetDtoSchema } from "@operatoros/contracts/excel";
 import { ReadinessResponseSchema } from "@operatoros/contracts/readiness";
 import {
+  CreateAcademicGradesBulkRequestSchema,
+  CreateAcademicGradesBulkResponseSchema,
+} from "@operatoros/contracts/academic-masters";
+import {
   CreateEnrollmentRequestSchema,
   ManagedStudentSchema,
   StudentListResponseSchema,
@@ -102,6 +106,21 @@ describe("@operatoros/contracts", () => {
       overall_status: "READY_WITH_RECOMMENDATIONS",
       steps: [],
     })).toBe(true);
+  });
+
+  it("validates canonical bulk grade creation without a client-supplied jenjang", () => {
+    const request = {
+      program_id: 4,
+      grades: [{ name: "P1", sequence_number: 1 }, { name: "P2", sequence_number: 2 }],
+    };
+    expect(Value.Check(CreateAcademicGradesBulkRequestSchema, request)).toBe(true);
+    expect(Value.Check(CreateAcademicGradesBulkRequestSchema, { ...request, jenjang_id: 1 })).toBe(false);
+    expect(Value.Check(CreateAcademicGradesBulkRequestSchema, { ...request, grades: [{ name: "P1", sequence_number: 1.5 }] })).toBe(false);
+    expect(Value.Check(CreateAcademicGradesBulkRequestSchema, { ...request, grades: [{ name: "P1", sequence_number: 1 }], program_id: 0 })).toBe(false);
+    expect(Value.Check(CreateAcademicGradesBulkResponseSchema, [{
+      id: 1, jenjang_id: 2, program_id: 4, name: "P1", sequence_number: 1,
+      active: true, created_at: "2026-09-23 00:00:00", updated_at: "2026-09-23 00:00:00",
+    }])).toBe(true);
   });
 
   it("rejects invalid values without changing optional and null semantics", () => {
