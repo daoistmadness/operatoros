@@ -1,12 +1,16 @@
 # Dependency audit exceptions
 
-These are temporary, scoped exceptions for advisories that Bun cannot fix
-within the current dependency ranges. The CI command names both advisory IDs.
+`bun run security:audit` runs `bun audit` with no advisory ignores. The CI
+command fails for any advisory. Add a row below only for an advisory that Bun
+cannot fix within the current dependency ranges.
 
 | Advisory | Package and range | Reason | Compensating control | Owner | Review date |
 | --- | --- | --- | --- | --- | --- |
-| 1102341 / GHSA-67mh-4wv8-2f99 | `esbuild` `0.18.20` through `0.28.2` | `drizzle-kit` and Vite tooling retain incompatible transitive ranges. | The affected tools run during local build or CI. The application does not expose an esbuild server. | OperatorOS maintainers | 2026-09-29 |
-| 1119441 / GHSA-w5hq-g745-h8pq | `uuid` `8.3.2` through `exceljs` `4.4.0` | ExcelJS requires the vulnerable major range. A forced major override could break workbook imports. | ExcelJS does not use the vulnerable buffer form. Workbook inputs remain validated and disposable. | OperatorOS maintainers | 2026-09-29 |
+| _none_ | _none_ | No active exceptions. `bun audit` reports zero vulnerabilities. | _n/a_ | OperatorOS maintainers | _n/a_ |
 
-The exceptions do not cover new advisories. `bun run security:audit` fails for
-any other advisory. Remove each exception after a compatible fix is available.
+## Removed exceptions
+
+| Advisory | Resolution |
+| --- | --- |
+| 1102341 / GHSA-67mh-4wv8-2f99 (`esbuild` `<=0.24.2` via `drizzle-kit`) | Scoped override `@esbuild-kit/core-utils` → `esbuild ^0.25.0` in root `package.json`. The vulnerable `0.18.20` instance no longer installs. |
+| 1119441 / GHSA-w5hq-g745-h8pq (`uuid` `<11.1.1` via `exceljs`) | Scoped override `exceljs` → `uuid ^11.1.1` in root `package.json`. ExcelJS uses only `uuid.v4()` without a buffer, and the workbook parity suites prove the override is compatible. |
