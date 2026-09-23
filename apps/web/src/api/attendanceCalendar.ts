@@ -1,4 +1,4 @@
-import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarPeriodApplyRequest, AttendanceCalendarPeriodApplyResponse, AttendanceCalendarPeriodPreviewResponse, AttendanceCalendarPeriodRequest, AttendanceCalendarWeekdayRequest, AttendanceSubmissionDeadlineRequest } from "@operatoros/contracts/attendance";
+import type { AttendanceCalendarExceptionRequest, AttendanceCalendarOverview, AttendanceCalendarPeriodApplyRequest, AttendanceCalendarPeriodApplyResponse, AttendanceCalendarPeriodPreviewResponse, AttendanceCalendarPeriodRequest, AttendanceCalendarWeekdaysRequest, AttendanceCalendarWeekdaysResponse, AttendanceSubmissionDeadlineRequest } from "@operatoros/contracts/attendance";
 import { apiRequest } from "../lib/api/client";
 
 export type AttendanceCalendarRuleValue = "EXPECTED" | "NOT_EXPECTED";
@@ -8,8 +8,9 @@ export async function fetchAttendanceCalendar(academicYearId: number): Promise<A
   return response.data;
 }
 
-export async function saveAttendanceCalendarWeekday(payload: AttendanceCalendarWeekdayRequest): Promise<void> {
-  await apiRequest({ path: "/api/attendance/calendar/weekday", method: "PUT", body: payload });
+export async function saveAttendanceCalendarWeekdays(payload: AttendanceCalendarWeekdaysRequest): Promise<AttendanceCalendarWeekdaysResponse> {
+  const response = await apiRequest<AttendanceCalendarWeekdaysResponse>({ path: "/api/attendance/calendar/weekdays", method: "PUT", body: payload });
+  return response.data;
 }
 
 export async function saveAttendanceCalendarException(payload: AttendanceCalendarExceptionRequest): Promise<void> {

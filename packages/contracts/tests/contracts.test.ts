@@ -3,6 +3,8 @@ import { Value } from "@sinclair/typebox/value";
 import {
   AttendanceCorrectionRequestSchema,
   AttendanceImportCommitRequestSchema,
+  AttendanceCalendarWeekdaysRequestSchema,
+  AttendanceCalendarWeekdaysResponseSchema,
 } from "@operatoros/contracts/attendance";
 import {
   AuthUserSchema,
@@ -106,6 +108,17 @@ describe("@operatoros/contracts", () => {
       overall_status: "READY_WITH_RECOMMENDATIONS",
       steps: [],
     })).toBe(true);
+  });
+
+  it("contracts an atomic seven-day attendance calendar save and canonical response", () => {
+    const weekdays = Array.from({ length: 7 }, (_, weekday) => ({
+      weekday,
+      expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED",
+    }));
+    expect(Value.Check(AttendanceCalendarWeekdaysRequestSchema, { academic_year_id: 1, jenjang_id: 2, weekdays })).toBe(true);
+    expect(Value.Check(AttendanceCalendarWeekdaysResponseSchema, { academicYearId: 1, jenjangId: 2, weekdays })).toBe(true);
+    expect(Value.Check(AttendanceCalendarWeekdaysRequestSchema, { academic_year_id: 1, jenjang_id: 2, weekdays: weekdays.slice(1) })).toBe(false);
+    expect(Value.Check(AttendanceCalendarWeekdaysRequestSchema, { academic_year_id: 1, jenjang_id: 2, weekdays: weekdays.map((value) => ({ ...value, weekday: 1.5 })) })).toBe(false);
   });
 
   it("validates canonical bulk grade creation without a client-supplied jenjang", () => {
