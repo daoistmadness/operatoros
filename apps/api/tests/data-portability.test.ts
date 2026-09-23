@@ -39,7 +39,9 @@ describe("CSV data portability candidates", () => {
       const auth = { cookie: `astyx_session=${cookie(login)}` };
       const datasets = await app.handle(new Request("http://local/api/data-portability/datasets", { headers: auth }));
       expect(datasets.status).toBe(200);
-      expect(await datasets.json()).toHaveLength(4);
+      const datasetInfo = await datasets.json() as Array<{ identifier: string; has_sensitive_access: boolean }>;
+      expect(datasetInfo).toHaveLength(4);
+      expect(datasetInfo.find((dataset) => dataset.identifier === "student_roster")?.has_sensitive_access).toBe(true);
       const preview = await app.handle(new Request("http://local/api/data-portability/exports/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ dataset: "student_roster" }) }));
       expect(preview.status).toBe(200);
       expect(await preview.json()).toMatchObject({ estimated_row_count: 2, allowed: true, sensitive_fields_included: false });
@@ -49,6 +51,13 @@ describe("CSV data portability candidates", () => {
       const templateResponse = await app.handle(new Request("http://local/api/data-portability/templates/student_roster", { headers: auth }));
       expect(templateResponse.status).toBe(200);
       expect(new Uint8Array(await templateResponse.arrayBuffer()).slice(0, 2)).toEqual(new Uint8Array([80, 75]));
+
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
+      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}` };
+      const staffDatasets = await app.handle(new Request("http://local/api/data-portability/datasets", { headers: staffAuth }));
+      const staffRoster = (await staffDatasets.json() as Array<{ identifier: string; has_sensitive_access: boolean }>).find((dataset) => dataset.identifier === "student_roster");
+      expect(staffDatasets.status).toBe(200);
+      expect(staffRoster?.has_sensitive_access).toBe(false);
     } finally {
       database.close();
       rmSync(path, { force: true });

@@ -4,7 +4,7 @@ import type { AuthUser } from '../api/auth';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
-  Database, Edit3, FileClock, FileText, Gauge, GraduationCap, History, LayoutDashboard,
+  Database, Edit3, FileClock, FileText, Gauge, GraduationCap, LayoutDashboard,
   ClipboardList, Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
   UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
 } from 'lucide-react';
@@ -87,9 +87,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
   {
     id: 'data-management', title: 'Data Management',
     items: [
-      { name: 'Data Import Center', path: '/upload', icon: UploadCloud },
-      { name: 'Data Import & Export', path: '/data-portability', icon: Database },
-      { name: 'Import History', path: '/upload-history', icon: History },
+      { name: 'Data Import & Export', path: '/upload', icon: UploadCloud },
     ],
   },
   {

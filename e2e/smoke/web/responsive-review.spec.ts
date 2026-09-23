@@ -114,7 +114,7 @@ for (const vp of VIEWPORTS) {
 
     // 5. Unified import center
     await page.goto("/upload");
-    await expect(page.getByRole("heading", { name: "Data Import Center" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Student Roster/ })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Student Data Update/ })).toBeVisible();
     await verifyNoHorizontalOverflow(page, `UploadCenter ${vp.width}x${vp.height}`);

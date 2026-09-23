@@ -90,8 +90,10 @@ The production bundle is served from `apps/web/build/`.
 ## Routes and Pages
 Routes are defined in [`src/App.tsx`](src/App.tsx):
 - `/` Dashboard
-- `/upload` Upload file import screen
-- `/upload-history` Latest upload attempts
+- `/upload` Data Import & Export workspace
+- `/upload-center` Legacy redirect to Attendance Upload
+- `/data-portability` Legacy redirect to Export
+- `/upload-history` Legacy redirect to History
 - `/mapping` Class mapping
 - `/attendance-review` Manual attendance override review
 - `/config/jenjang` Jenjang cutoff configuration

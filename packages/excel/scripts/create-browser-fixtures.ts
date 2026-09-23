@@ -32,3 +32,9 @@ for (const machineRow of [
 await Bun.write(join(directory, "machine-attendance.xlsx"), await writeXlsxWorkbook(machine));
 
 await Bun.write(join(directory, "attendance.xls"), writeLegacyXlsRows([row], headers, "Attendance Export"));
+
+const roster = createWorkbook({ exportType: "e2e-roster-preview-fixture" });
+const rosterSheet = addWorksheet(roster, "Roster");
+appendRow(rosterSheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"]);
+appendRow(rosterSheet, ["999990120", "E2E Roster Preview Student", "2026/2027", "Primary", "Primary 1A", "MAIN", "active"]);
+await Bun.write(join(directory, "student-roster.xlsx"), await writeXlsxWorkbook(roster));

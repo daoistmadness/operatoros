@@ -82,6 +82,7 @@ fixture_dir="$workspace/state/frontend-fixtures"
 export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
 export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 export OPERATOROS_E2E_MACHINE_IMPORT_XLSX="$fixture_dir/machine-attendance.xlsx"
+export OPERATOROS_E2E_ROSTER_XLSX="$fixture_dir/student-roster.xlsx"
 
 "$python" - "$database" "$results/database-before.json" <<'PY'
 import hashlib, json, sqlite3, sys
