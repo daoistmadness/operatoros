@@ -79,6 +79,75 @@ describe("attendance calendar authority", () => {
     } finally { value.cleanup(); }
   }, 30000);
 
+  it("saves all seven recurring weekdays atomically and returns the persisted rules", async () => {
+    const value = await setup("weekdays-bulk");
+    const url = "http://local/api/attendance/calendar/weekdays";
+    const headers = { cookie: value.admin, "content-type": "application/json" };
+    const weekdays = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED" }));
+    try {
+      expect((await value.app.handle(new Request(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays }) }))).status).toBe(401);
+      const denied = await value.app.handle(new Request(url, { method: "PUT", headers: { cookie: value.staff, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays }) }));
+      expect(denied.status).toBe(403);
+
+      const saved = await value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays }) }));
+      expect(saved.status).toBe(200);
+      expect(await saved.json()).toEqual({ academicYearId: 1, jenjangId: 1, weekdays });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_calendar_weekday_rules WHERE academic_year_id = 1 AND jenjang_id = 1").get() as any).count).toBe(7);
+
+      const reloaded = await value.app.handle(new Request("http://local/api/attendance/calendar?academic_year_id=1", { headers: { cookie: value.admin } }));
+      expect((await reloaded.json() as any).jenjangs[0].weekdays).toEqual(weekdays);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("rejects duplicate weekdays and missing parents before writing", async () => {
+    const value = await setup("weekdays-invalid");
+    const url = "http://local/api/attendance/calendar/weekdays";
+    const headers = { cookie: value.admin, "content-type": "application/json" };
+    const weekdays = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: "EXPECTED" }));
+    try {
+      const duplicate = await value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays: weekdays.map((item, index) => index === 6 ? { ...item, weekday: 5 } : item) }) }));
+      expect(duplicate.status).toBe(400);
+      const missing = await value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays: weekdays.slice(0, 6) }) }));
+      expect(missing.status).toBe(400);
+      const invalidParent = await value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 999, weekdays }) }));
+      expect(invalidParent.status).toBe(404);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_calendar_weekday_rules").get() as any).count).toBe(0);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("rolls back every weekday update when a batch write fails", async () => {
+    const value = await setup("weekdays-rollback");
+    const url = "http://local/api/attendance/calendar/weekdays";
+    const headers = { cookie: value.admin, "content-type": "application/json" };
+    const send = (weekdays: Array<{ weekday: number; expectation: string | null }>) => value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays }) }));
+    try {
+      const initial = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 1 ? "EXPECTED" : null }));
+      expect((await send(initial)).status).toBe(200);
+      value.database.client.run("CREATE TRIGGER weekday_batch_test_failure AFTER INSERT ON attendance_calendar_weekday_rules WHEN NEW.weekday = 4 BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const changed = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday >= 1 && weekday <= 5 ? "EXPECTED" : weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : null }));
+      const failed = await send(changed);
+      expect(failed.status).toBe(500);
+      expect(await failed.json()).toEqual({ detail: "Recurring attendance days could not be saved" });
+      expect(value.database.client.query("SELECT weekday, expectation FROM attendance_calendar_weekday_rules WHERE academic_year_id = 1 AND jenjang_id = 1 ORDER BY weekday").all()).toEqual([{ weekday: 1, expectation: "EXPECTED" }]);
+    } finally { value.cleanup(); }
+  }, 30000);
+
+  it("serializes conflicting batch saves without leaving a mixed weekday set", async () => {
+    const value = await setup("weekdays-concurrent");
+    const url = "http://local/api/attendance/calendar/weekdays";
+    const headers = { cookie: value.admin, "content-type": "application/json" };
+    const expected = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: "EXPECTED" }));
+    const notExpected = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: "NOT_EXPECTED" }));
+    const save = (weekdays: typeof expected) => value.app.handle(new Request(url, { method: "PUT", headers, body: JSON.stringify({ academic_year_id: 1, jenjang_id: 1, weekdays }) }));
+    try {
+      const results = await Promise.all([save(expected), save(notExpected)]);
+      expect(results.map((response) => response.status)).toEqual([200, 200]);
+      const overview = await value.app.handle(new Request("http://local/api/attendance/calendar?academic_year_id=1", { headers: { cookie: value.admin } }));
+      const persisted = (await overview.json() as any).jenjangs[0].weekdays;
+      expect([expected, notExpected]).toContainEqual(persisted);
+    } finally { value.cleanup(); }
+  }, 30000);
+
   it("integrates expectation without changing recording coverage semantics", async () => {
     const value = await setup("daily");
     try {
@@ -91,6 +160,10 @@ describe("attendance calendar authority", () => {
       expect(body.classes[0]).toMatchObject({ coverageState: "COMPLETE", recordedStudentCount: 1, counts: { alfa: 0 } });
       expect(body.totals).toMatchObject({ expectedClasses: 0, notExpectedClasses: 1, unknownClasses: 0 });
       expect(JSON.stringify(body)).not.toMatch(/overdue|risk|alert|intervention/i);
+
+      const noScan = await value.app.handle(new Request("http://local/api/attendance/daily-status?date=2026-08-10", { headers: { cookie: value.admin } }));
+      const noScanBody = await noScan.json() as any;
+      expect(noScanBody.classes[0]).toMatchObject({ attendanceExpectation: { status: "EXPECTED" }, recordedStudentCount: 0, unrecordedStudentCount: 1, counts: { alfa: 0 } });
     } finally { value.cleanup(); }
   }, 30000);
 
