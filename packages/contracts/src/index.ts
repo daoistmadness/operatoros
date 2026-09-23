@@ -7,3 +7,4 @@ export * from "./analytics";
 export * from "./excel";
 export * from "./classes";
 export * from "./readiness";
+export * from "./academic-masters";

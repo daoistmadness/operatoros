@@ -1,9 +1,15 @@
 import { apiRequest } from "../lib/api/client";
+import type {
+  AcademicMasterGrade as AcademicMasterGradeDto,
+  CreateAcademicGradesBulkRequest,
+  CreateAcademicGradesBulkResponse,
+} from "@operatoros/contracts/academic-masters";
 
 export type AcademicMasterJenjang = { id: number; code: string; name: string; level: string; active: boolean };
 export type AcademicMasterProgram = { id: number; jenjang_id: number; name: string; active: boolean };
-export type AcademicMasterGrade = { id: number; jenjang_id: number; program_id: number; name: string; sequence_number: number; active: boolean };
+export type AcademicMasterGrade = AcademicMasterGradeDto;
 export type AcademicMasterClass = { id: number; academic_year_id: number; grade_id: number; class_name: string; section_code: string; active: boolean };
+type CreateAcademicGradeInput = { jenjang_id: number; program_id: number; name: string; sequence_number: number };
 
 async function request<T>(path: string, body: unknown): Promise<T> {
   const response = await apiRequest<T>({ path: `/api/academic-masters/${path}`, method: "POST", body });
@@ -18,8 +24,12 @@ export function createAcademicProgram(payload: Omit<AcademicMasterProgram, "id" 
   return request("programs", { ...payload, active: true });
 }
 
-export function createAcademicGrade(payload: Omit<AcademicMasterGrade, "id" | "active">): Promise<AcademicMasterGrade> {
+export function createAcademicGrade(payload: CreateAcademicGradeInput): Promise<AcademicMasterGrade> {
   return request("grades", { ...payload, active: true });
+}
+
+export function createAcademicGrades(payload: CreateAcademicGradesBulkRequest): Promise<CreateAcademicGradesBulkResponse> {
+  return request("grades/bulk", payload);
 }
 
 export function createAcademicClass(payload: Omit<AcademicMasterClass, "id" | "active">): Promise<AcademicMasterClass> {

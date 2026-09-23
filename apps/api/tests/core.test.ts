@@ -111,6 +111,90 @@ describe("core CRUD parity slices", () => {
     }
   }, 30000);
 
+  it("creates grade batches atomically with canonical parents and per-grade audit rows", async () => {
+    const path = `/tmp/operatoros-core-grade-batch-${process.pid}-${Date.now()}.db`;
+    seedAcademic(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-batch-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const jenjangId = Number((database.client.query("SELECT id FROM jenjangs ORDER BY id LIMIT 1").get() as any).id);
+      const createProgram = (name: string) => Number(database.client.run("INSERT INTO academic_programs (jenjang_id, name, active) VALUES (?, ?, 1)", [jenjangId, name]).lastInsertRowid);
+      const post = (program_id: number, grades: unknown[]) => app.handle(new Request("http://local/api/academic-masters/grades/bulk", {
+        method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ program_id, grades }),
+      }));
+      const assertBatch = async (programName: string, names: string[]) => {
+        const programId = createProgram(programName);
+        const before = Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count);
+        const response = await post(programId, names.map((name, index) => ({ name, sequence_number: index + 1 })));
+        expect(response.status).toBe(201);
+        const created = await response.json() as any[];
+        expect(created.map((grade) => [grade.name, grade.sequence_number, grade.jenjang_id, grade.program_id])).toEqual(names.map((name, index) => [name, index + 1, jenjangId, programId]));
+        const ids = created.map((grade) => String(grade.id));
+        const auditRows = database.client.query(`SELECT entity_id, action, after_data FROM academic_master_audit WHERE entity_type = 'grade' AND entity_id IN (${ids.map(() => "?").join(",")}) ORDER BY id`).all(...ids) as any[];
+        expect(auditRows).toHaveLength(names.length);
+        expect(auditRows.map((audit) => [audit.action, JSON.parse(audit.after_data).name])).toEqual(names.map((name) => ["CREATE", name]));
+        expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count) - before).toBe(names.length);
+        return { programId, created };
+      };
+
+      await assertBatch("Quick Primary", ["P1", "P2", "P3", "P4", "P5", "P6"]);
+      await assertBatch("Quick Secondary", ["S1", "S2", "S3"]);
+      const homeschooling = await assertBatch("Quick Homeschooling", ["HSP1", "HSP2", "HSP3", "HSP4", "HSP5", "HSP6"]);
+
+      const singleProgramId = createProgram("Quick Single");
+      const single = await app.handle(new Request("http://local/api/academic-masters/grades", {
+        method: "POST", headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ jenjang_id: jenjangId, program_id: singleProgramId, name: "One Grade", sequence_number: 1, active: true }),
+      }));
+      expect(single.status).toBe(201);
+      expect(await single.json()).toMatchObject({ jenjang_id: jenjangId, program_id: singleProgramId, name: "One Grade", sequence_number: 1, active: true });
+
+      const invalidProgramId = createProgram("Quick Invalid");
+      const countBeforeInvalid = Number((database.client.query("SELECT COUNT(*) AS count FROM academic_grades WHERE program_id = ?").get(invalidProgramId) as any).count);
+      const auditBeforeInvalid = Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count);
+      for (const grades of [
+        [{ name: "Same", sequence_number: 1 }, { name: "Same", sequence_number: 2 }],
+        [{ name: "First", sequence_number: 1 }, { name: "Second", sequence_number: 1 }],
+        [{ name: "   ", sequence_number: 1 }],
+      ]) {
+        expect((await post(invalidProgramId, grades)).status).toBe(422);
+      }
+      expect((await post(invalidProgramId, [{ name: "Fraction", sequence_number: 1.5 }])).status).toBe(400);
+      expect((await post(99999999, [{ name: "Missing", sequence_number: 1 }])).status).toBe(404);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_grades WHERE program_id = ?").get(invalidProgramId) as any).count)).toBe(countBeforeInvalid);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count)).toBe(auditBeforeInvalid);
+
+      const rollbackProgramId = createProgram("Quick Rollback");
+      database.client.run(`CREATE TRIGGER quick_grade_unique_conflict BEFORE INSERT ON academic_grades WHEN NEW.name = 'Trigger conflict' BEGIN INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number, active) VALUES (NEW.jenjang_id, NEW.program_id, 'Trigger owner', NEW.sequence_number, 1); END`);
+      const beforeRollbackAudit = Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count);
+      expect((await post(rollbackProgramId, [{ name: "Will rollback", sequence_number: 1 }, { name: "Trigger conflict", sequence_number: 2 }])).status).toBe(409);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_grades WHERE program_id = ?").get(rollbackProgramId) as any).count)).toBe(0);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_master_audit WHERE entity_type = 'grade'").get() as any).count)).toBe(beforeRollbackAudit);
+
+      const destinationJenjangId = Number(database.client.run("INSERT INTO jenjangs (code, name, level, active) VALUES (?, ?, ?, 1)", ["QG-DST", "Quick Grade Destination", "primary"]).lastInsertRowid);
+      const moveProgram = await app.handle(new Request(`http://local/api/academic-masters/programs/${homeschooling.programId}`, {
+        method: "PUT", headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ jenjang_id: destinationJenjangId, name: "Quick Homeschooling", active: true }),
+      }));
+      expect(moveProgram.status).toBe(409);
+      expect((await moveProgram.json() as any).detail).toContain("cannot change jenjang while grades exist");
+      expect((database.client.query("SELECT DISTINCT jenjang_id FROM academic_grades WHERE program_id = ?").get(homeschooling.programId) as any).jenjang_id).toBe(jenjangId);
+
+      const concurrentProgramId = createProgram("Quick Concurrent");
+      const concurrent = await Promise.all([
+        post(concurrentProgramId, [{ name: "Concurrent A", sequence_number: 1 }]),
+        post(concurrentProgramId, [{ name: "Concurrent B", sequence_number: 1 }]),
+      ]);
+      expect(concurrent.map((response) => response.status).sort()).toEqual([201, 409]);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM academic_grades WHERE program_id = ?").get(concurrentProgramId) as any).count)).toBe(1);
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
   it("enforces admin-only academic writes and server-side staff permissions", async () => {
     const path = `/tmp/operatoros-core-permissions-${process.pid}-${Date.now()}.db`;
     seedAcademic(path);
@@ -121,6 +205,10 @@ describe("core CRUD parity slices", () => {
       const auth = { cookie: `astyx_session=${cookie(login)}` };
       const denied = await app.handle(new Request("http://local/api/academic-masters/academic-years", { headers: auth }));
       expect(denied.status).toBe(403);
+      const deniedGradeBatch = await app.handle(new Request("http://local/api/academic-masters/grades/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ program_id: 1, grades: [{ name: "No Access", sequence_number: 1 }] }) }));
+      expect(deniedGradeBatch.status).toBe(403);
+      const anonymousGradeBatch = await app.handle(new Request("http://local/api/academic-masters/grades/bulk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ program_id: 1, grades: [{ name: "No Access", sequence_number: 1 }] }) }));
+      expect(anonymousGradeBatch.status).toBe(401);
       const staff = await app.handle(new Request("http://local/api/staff", { headers: auth }));
       expect(staff.status).toBe(403);
     } finally {
