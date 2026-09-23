@@ -5,9 +5,12 @@ export {
   createWorkbook,
   getCellValue,
   loadXlsxWorkbook,
+  readXlsxWorkbook,
   writeXlsxWorkbook,
+  EXCEL_WORKBOOK_PARSE_FAILED,
 } from "./workbook";
-export type { ExcelCell, ExcelWorkbook, ExcelWorksheet, WorkbookMetadata } from "./workbook";
+export type { ExcelCell, ExcelWorkbook, ExcelWorksheet, ExcelWorksheetData, ParsedExcelWorkbook, WorkbookMetadata } from "./workbook";
+export { ExcelWorkbookParseError } from "./workbook";
 export { readLegacyXlsRows, writeLegacyXlsRows } from "./legacy";
 export type { LegacyWorksheetRows } from "./legacy";
 export * from "./normalization";
