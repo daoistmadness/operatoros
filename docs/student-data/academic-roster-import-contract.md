@@ -4,7 +4,9 @@
 
 An academic roster is authoritative only when its owner/custodian, receipt date, academic year, and unchanged file checksum are recorded. A filename, workbook tab, attendance pattern, scanner ID range, or student age is not sufficient evidence of academic placement.
 
-The preview request is administrator-only multipart form data:
+The workbook must contain an explicit `Roster` worksheet. An optional
+`Instructions` worksheet is documentation only and is never parsed as roster
+data. The preview request is administrator-only multipart form data:
 
 - `file`: `.xlsx` workbook;
 - `source_owner`: named registrar or authorized academic custodian;
@@ -53,4 +55,3 @@ Preview persists only an immutable review batch; it does not change students, ma
 Only `MATCHED` rows are eligible. Commit rechecks that no master/year enrollment has appeared since preview, creates `student_enrollments` and effective-dated `student_enrollment_class_history` rows in one transaction, and stores an idempotent batch result. Any stale or invalid row rolls back the entire selection.
 
 Commit never updates attendance, student masters, legacy students, device identities, academic years, jenjang masters, or mapping rules.
-
