@@ -13,3 +13,10 @@ export function invalidateAttendanceQueries(queryClient: Pick<QueryClient, "inva
     queryClient.invalidateQueries({ queryKey: queryKeys.attendance.classRosters }),
   ]);
 }
+
+export function invalidateAttendanceCalendarQueries(queryClient: Pick<QueryClient, "invalidateQueries">, academicYearId: number) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.attendance.calendar(academicYearId) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.analytics.dailyAttendance({}) }),
+  ]);
+}

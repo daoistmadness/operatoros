@@ -5628,6 +5628,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/calendar/weekdays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiAttendanceCalendarWeekdays"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/calendar/exception": {
         parameters: {
             query?: never;
@@ -20751,6 +20767,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    putApiAttendanceCalendarWeekdays: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    weekdays: {
+                        weekday: number;
+                        expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+                    }[];
+                };
+                "application/x-www-form-urlencoded": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    weekdays: {
+                        weekday: number;
+                        expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+                    }[];
+                };
+                "multipart/form-data": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    weekdays: {
+                        weekday: number;
+                        expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        academicYearId: number;
+                        jenjangId: number;
+                        weekdays: {
+                            weekday: number;
+                            expectation: ("EXPECTED" | "NOT_EXPECTED") | null;
+                        }[];
+                    };
                 };
             };
         };
