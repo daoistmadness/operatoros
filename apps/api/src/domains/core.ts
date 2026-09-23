@@ -1,11 +1,17 @@
 import { t } from "elysia";
 import { createHash, randomUUID } from "node:crypto";
+import { CreateAcademicGradesBulkRequestSchema, type AcademicMasterGrade } from "@operatoros/contracts/academic-masters";
 import { CreateEnrollmentRequestSchema } from "@operatoros/contracts/students";
 import { inTransaction } from "@operatoros/db";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 
 type Row = Record<string, any>;
 type Context = any;
+type AcademicGradeInput = { name: string; sequence_number: number; active?: boolean };
+type AcademicGradeCreationResult =
+  | { grades: AcademicMasterGrade[] }
+  | { error: "invalid_batch" | "program_not_found" | "jenjang_mismatch" | "grade_conflict" };
+const MAX_ACADEMIC_GRADE_BATCH_SIZE = 50;
 
 function rows(client: AuthContext["database"]["client"], sql: string, params: any[] = []): Row[] {
   return client.query(sql).all(...params) as Row[];
@@ -32,6 +38,10 @@ export function actor(context: AuthContext, ctx: Context, requirement: { role?: 
 
 function asBool(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
+}
+
+function isUniqueConstraintViolation(cause: unknown): boolean {
+  return (cause as { code?: string } | null)?.code === "SQLITE_CONSTRAINT_UNIQUE";
 }
 
 function mask(value: string | null): string | null {
@@ -65,6 +75,65 @@ function serviceDuration(value: Row): { service_years: number | null; service_mo
 
 function audit(client: AuthContext["database"]["client"], entity: string, id: string | number, action: string, username: string, before: Row | null, after: Row | null): void {
   client.run("INSERT INTO academic_master_audit (entity_type, entity_id, action, actor, before_data, after_data) VALUES (?, ?, ?, ?, ?, ?)", [entity, String(id), action, username, before ? JSON.stringify(before) : null, after ? JSON.stringify(after) : null]);
+}
+
+function academicMasterGrade(value: Row): AcademicMasterGrade {
+  return {
+    id: Number(value.id), jenjang_id: Number(value.jenjang_id), program_id: Number(value.program_id),
+    name: String(value.name), sequence_number: Number(value.sequence_number), active: asBool(value.active),
+    created_at: String(value.created_at), updated_at: String(value.updated_at),
+  };
+}
+
+function createAcademicGrades(
+  client: AuthContext["database"]["client"],
+  programId: number,
+  input: readonly AcademicGradeInput[],
+  username: string,
+  expectedJenjangId?: number,
+): AcademicGradeCreationResult {
+  try {
+    return inTransaction(client, () => {
+      const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [programId]);
+      if (!program) return { error: "program_not_found" };
+      const jenjangId = Number(program.jenjang_id);
+      if (expectedJenjangId !== undefined && expectedJenjangId !== jenjangId) return { error: "jenjang_mismatch" };
+      if (input.length < 1 || input.length > MAX_ACADEMIC_GRADE_BATCH_SIZE) return { error: "invalid_batch" };
+
+      const grades = input.map((grade) => ({ ...grade, name: grade.name.trim() }));
+      const names = new Set<string>();
+      const sequences = new Set<number>();
+      for (const grade of grades) {
+        const normalizedName = grade.name.toLowerCase();
+        if (!grade.name || !Number.isInteger(grade.sequence_number) || grade.sequence_number < 1 || names.has(normalizedName) || sequences.has(grade.sequence_number)) {
+          return { error: "invalid_batch" };
+        }
+        names.add(normalizedName);
+        sequences.add(grade.sequence_number);
+      }
+
+      const nameSlots = grades.map(() => "?").join(", ");
+      const sequenceSlots = grades.map(() => "?").join(", ");
+      const existing = row(client, `SELECT id FROM academic_grades WHERE program_id = ? AND (lower(name) IN (${nameSlots}) OR sequence_number IN (${sequenceSlots})) LIMIT 1`, [programId, ...grades.map((grade) => grade.name.toLowerCase()), ...grades.map((grade) => grade.sequence_number)]);
+      if (existing) return { error: "grade_conflict" };
+
+      const placeholders = grades.map(() => "(?, ?, ?, ?, ?)").join(", ");
+      const inserted = rows(client, `INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number, active) VALUES ${placeholders} RETURNING *`, grades.flatMap((grade) => [jenjangId, programId, grade.name, grade.sequence_number, grade.active === false ? 0 : 1]));
+      if (inserted.length !== grades.length) throw new Error("Created academic grades could not be read");
+      const insertedByName = new Map(inserted.map((value) => [String(value.name).toLowerCase(), value]));
+      const created: AcademicMasterGrade[] = [];
+      for (const grade of grades) {
+        const value = insertedByName.get(grade.name.toLowerCase());
+        if (!value) throw new Error("Created academic grade could not be read");
+        audit(client, "grade", value.id, "CREATE", username, null, value);
+        created.push(academicMasterGrade(value));
+      }
+      return { grades: created };
+    });
+  } catch (cause) {
+    if (isUniqueConstraintViolation(cause)) return { error: "grade_conflict" };
+    throw cause;
+  }
 }
 
 function commitError(set: any, operation: () => void): boolean {
@@ -145,7 +214,7 @@ function registerAcademicMasters(app: any, context: AuthContext): void {
   });
   const jenjangBody = t.Object({ code: t.String({ minLength: 1, maxLength: 32 }), name: t.String({ minLength: 1, maxLength: 255 }), level: t.String({ minLength: 1, maxLength: 64 }), active: t.Optional(t.Boolean()) });
   const programBody = t.Object({ jenjang_id: t.Number({ minimum: 1 }), name: t.String({ minLength: 1, maxLength: 255 }), active: t.Optional(t.Boolean()) });
-  const gradeBody = t.Object({ jenjang_id: t.Number({ minimum: 1 }), program_id: t.Number({ minimum: 1 }), name: t.String({ minLength: 1, maxLength: 255 }), sequence_number: t.Number({ minimum: 1 }), active: t.Optional(t.Boolean()) });
+  const gradeBody = t.Object({ jenjang_id: t.Integer({ minimum: 1 }), program_id: t.Integer({ minimum: 1 }), name: t.String({ minLength: 1, maxLength: 255 }), sequence_number: t.Integer({ minimum: 1 }), active: t.Optional(t.Boolean()) });
   const classBody = t.Object({ academic_year_id: t.Number({ minimum: 1 }), grade_id: t.Number({ minimum: 1 }), class_name: t.String({ minLength: 1, maxLength: 255 }), section_code: t.Optional(t.String({ maxLength: 32 })), active: t.Optional(t.Boolean()) });
 
   app.get("/api/academic-masters/academic-years", ({ set, ...ctx }: Context) => {
@@ -180,6 +249,20 @@ function registerAcademicMasters(app: any, context: AuthContext): void {
     try { inTransaction(client, () => { client.run("DELETE FROM academic_years WHERE id = ?", [params.row_id]); audit(client, "academic_year", params.row_id, "DELETE", user.username, before, null); }); set.status = 204; return undefined; } catch { return error(set, 409, "Academic year is referenced; deactivate it instead"); }
   }, { params: t.Object({ row_id: t.Number({ minimum: 1 }) }) });
 
+  app.post("/api/academic-masters/grades/bulk", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const result = createAcademicGrades(context.database.client, body.program_id, body.grades, user.username);
+    if ("error" in result) {
+      if (result.error === "invalid_batch") return error(set, 422, "Grade names and sequence numbers must be non-empty and unique.");
+      if (result.error === "program_not_found") return error(set, 404, "Academic program not found.");
+      if (result.error === "grade_conflict") return error(set, 409, "One or more grades already exist for this academic program.");
+      return error(set, 422, "Grade program does not belong to the selected jenjang.");
+    }
+    set.status = 201;
+    return result.grades;
+  }, { body: CreateAcademicGradesBulkRequestSchema });
+
   const simple = [
     { name: "jenjangs", table: "jenjangs", fields: ["code", "name", "level", "active"], body: jenjangBody, parent: null },
     { name: "programs", table: "academic_programs", fields: ["jenjang_id", "name", "active"], body: programBody, parent: "jenjang_id" },
@@ -191,18 +274,58 @@ function registerAcademicMasters(app: any, context: AuthContext): void {
     app.post(`/api/academic-masters/${definition.name}`, ({ body, set, ...ctx }: Context) => {
       const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client;
       if (definition.name === "grades") {
-        const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [body.program_id]);
-        if (!program || Number(program.jenjang_id) !== Number(body.jenjang_id)) return error(set, 422, "Grade program does not belong to the selected jenjang");
+        const result = createAcademicGrades(client, body.program_id, [{ name: body.name, sequence_number: body.sequence_number, active: body.active }], user.username, body.jenjang_id);
+        if ("error" in result) {
+          if (result.error === "invalid_batch") return error(set, 422, "Grade name and sequence number must be valid.");
+          if (result.error === "grade_conflict") return error(set, 409, "Grade name or sequence number already exists for this academic program.");
+          return error(set, 422, "Grade program does not belong to the selected jenjang");
+        }
+        set.status = 201;
+        return result.grades[0];
       }
       try { let created: Row | null = null; inTransaction(client, () => { const values = definition.fields.map((field) => field === "section_code" ? (body[field] ?? "") : field === "active" ? (body[field] === false ? 0 : 1) : body[field]); const result = client.run(`INSERT INTO ${definition.table} (${definition.fields.join(", ")}) VALUES (${definition.fields.map(() => "?").join(", ")})`, values); created = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [Number(result.lastInsertRowid)]); if (created) audit(client, definition.name.slice(0, -1), created.id, "CREATE", user.username, null, created); }); const result = created as unknown as Row; set.status = 201; return { ...result, active: asBool(result.active) }; } catch { return error(set, 409, "Duplicate or referenced academic master"); }
     }, { body: definition.body });
     app.put(`/api/academic-masters/${definition.name}/:row_id`, ({ params, body, set, ...ctx }: Context) => {
-      const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; const before = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]); if (!before) return error(set, 404, `${definition.name.slice(0, -1)} not found`);
-      if (definition.name === "grades") {
-        const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [body.program_id]);
-        if (!program || Number(program.jenjang_id) !== Number(body.jenjang_id)) return error(set, 422, "Grade program does not belong to the selected jenjang");
+      const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" };
+      const client = context.database.client;
+      type Failure = "not_found" | "invalid_grade_parent" | "jenjang_not_found" | "program_has_grades" | "program_conflict" | "grade_conflict";
+      let outcome: { failure: Failure } | { updated: Row };
+      try {
+        outcome = inTransaction(client, (): { failure: Failure } | { updated: Row } => {
+          const before = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]);
+          if (!before) return { failure: "not_found" };
+          if (definition.name === "grades") {
+            const program = row(client, "SELECT jenjang_id FROM academic_programs WHERE id = ?", [body.program_id]);
+            if (!program || Number(program.jenjang_id) !== Number(body.jenjang_id)) return { failure: "invalid_grade_parent" };
+            const conflict = row(client, "SELECT id FROM academic_grades WHERE program_id = ? AND id <> ? AND (lower(name) = lower(?) OR sequence_number = ?) LIMIT 1", [body.program_id, params.row_id, body.name, body.sequence_number]);
+            if (conflict) return { failure: "grade_conflict" };
+          }
+          if (definition.name === "programs") {
+            if (!row(client, "SELECT id FROM jenjangs WHERE id = ?", [body.jenjang_id])) return { failure: "jenjang_not_found" };
+            if (Number(body.jenjang_id) !== Number(before.jenjang_id) && row(client, "SELECT id FROM academic_grades WHERE program_id = ? LIMIT 1", [params.row_id])) return { failure: "program_has_grades" };
+            if (row(client, "SELECT id FROM academic_programs WHERE jenjang_id = ? AND name = ? AND id <> ? LIMIT 1", [body.jenjang_id, body.name, params.row_id])) return { failure: "program_conflict" };
+          }
+          const assignments = definition.fields.map((field) => `${field} = ?`).join(", ");
+          const values = definition.fields.map((field) => field === "section_code" ? (body[field] ?? "") : field === "active" ? (body[field] === false ? 0 : 1) : body[field]);
+          client.run(`UPDATE ${definition.table} SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...values, params.row_id]);
+          const updated = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]);
+          if (!updated) throw new Error("Updated academic master could not be read");
+          audit(client, definition.name.slice(0, -1), params.row_id, "UPDATE", user.username, before, updated);
+          return { updated };
+        });
+      } catch (cause) {
+        if ((definition.name === "programs" || definition.name === "grades") && isUniqueConstraintViolation(cause)) return error(set, 409, "Duplicate academic master value.");
+        if (definition.name === "programs" || definition.name === "grades") throw cause;
+        return error(set, 409, "Duplicate or referenced academic master");
       }
-      try { inTransaction(client, () => { const assignments = definition.fields.map((field) => `${field} = ?`).join(", "); const values = definition.fields.map((field) => field === "section_code" ? (body[field] ?? "") : field === "active" ? (body[field] === false ? 0 : 1) : body[field]); client.run(`UPDATE ${definition.table} SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...values, params.row_id]); const after = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]); if (after) audit(client, definition.name.slice(0, -1), params.row_id, "UPDATE", user.username, before, after); }); const result = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]) as Row; return { ...result, active: asBool(result.active) }; } catch { return error(set, 409, "Duplicate or referenced academic master"); }
+      if ("failure" in outcome) {
+        if (outcome.failure === "not_found") return error(set, 404, `${definition.name.slice(0, -1)} not found`);
+        if (outcome.failure === "invalid_grade_parent") return error(set, 422, "Grade program does not belong to the selected jenjang");
+        if (outcome.failure === "jenjang_not_found") return error(set, 422, "Jenjang not found.");
+        if (outcome.failure === "program_has_grades") return error(set, 409, "Academic program cannot change jenjang while grades exist.");
+        return error(set, 409, "Duplicate academic master value.");
+      }
+      return { ...outcome.updated, active: asBool(outcome.updated.active) };
     }, { params: t.Object({ row_id: t.Number({ minimum: 1 }) }), body: definition.body });
     app.delete(`/api/academic-masters/${definition.name}/:row_id`, ({ params, set, ...ctx }: Context) => {
       const user = actor(context, { set, ...ctx }, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; const before = row(client, `SELECT * FROM ${definition.table} WHERE id = ?`, [params.row_id]); if (!before) return error(set, 404, `${definition.name.slice(0, -1)} not found`);

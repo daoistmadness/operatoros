@@ -3403,6 +3403,108 @@
         "title": "GradeBody",
         "type": "object"
       },
+      "AcademicGradeBatchItem": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sequence_number": {
+            "minimum": 1,
+            "title": "Sequence Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "sequence_number"
+        ],
+        "title": "AcademicGradeBatchItem",
+        "type": "object"
+      },
+      "AcademicGradesBulkBody": {
+        "additionalProperties": false,
+        "properties": {
+          "grades": {
+            "items": {
+              "$ref": "#/components/schemas/AcademicGradeBatchItem"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Grades",
+            "type": "array"
+          },
+          "program_id": {
+            "minimum": 1,
+            "title": "Program Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "program_id",
+          "grades"
+        ],
+        "title": "AcademicGradesBulkBody",
+        "type": "object"
+      },
+      "AcademicMasterGrade": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "minimum": 1,
+            "title": "Id",
+            "type": "integer"
+          },
+          "jenjang_id": {
+            "minimum": 1,
+            "title": "Jenjang Id",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "program_id": {
+            "minimum": 1,
+            "title": "Program Id",
+            "type": "integer"
+          },
+          "sequence_number": {
+            "minimum": 1,
+            "title": "Sequence Number",
+            "type": "integer"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "jenjang_id",
+          "program_id",
+          "name",
+          "sequence_number",
+          "active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AcademicMasterGrade",
+        "type": "object"
+      },
       "GradeGridSaveRequest": {
         "properties": {
           "enrollment_id": {
@@ -11215,6 +11317,79 @@
           }
         },
         "summary": "Create Grade",
+        "tags": [
+          "academic-masters"
+        ]
+      }
+    },
+    "/api/academic-masters/grades/bulk": {
+      "post": {
+        "operationId": "create_academic_grades_bulk",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicGradesBulkBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AcademicMasterGrade"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Academic grades created"
+          },
+          "400": {
+            "description": "Malformed request"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Academic program not found"
+          },
+          "409": {
+            "description": "Grade conflicts with an existing grade"
+          },
+          "422": {
+            "description": "Invalid grade batch"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create Academic Grades in Bulk",
         "tags": [
           "academic-masters"
         ]

@@ -24,6 +24,7 @@
     "./analytics": "./src/analytics/index.ts",
     "./classes": "./src/classes/index.ts",
     "./readiness": "./src/readiness/index.ts",
+    "./academic-masters": "./src/academic-masters/index.ts",
     "./excel": "./src/excel.ts"
   }
 }
