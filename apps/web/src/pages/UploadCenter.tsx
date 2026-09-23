@@ -13,7 +13,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { MachineImportWorkflow } from "../features/machine-import";
 import {
   useRosterCommit,
@@ -44,6 +44,7 @@ import { buildApiUrl } from "../lib/api/client";
 import { eligibleIds, rosterRowView, safeSelectedIds, selectionState } from "../lib/uploadWorkflow";
 import { NeedsAttentionPanel } from "../components/upload/NeedsAttentionPanel";
 import { UploadHistoryPanel } from "../components/upload/UploadHistoryPanel";
+import DataPortability from "./DataPortability";
 
 const today = new Date().toISOString().slice(0, 10);
 const ROSTER_COLUMNS = ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"];
@@ -1098,12 +1099,28 @@ function StudentUpdatePanel() {
 }
 
 export default function UploadCenter() {
-  const [mode, setMode] = useState("attendance");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSection = searchParams.get("section");
+  const sections = ["attendance", "roster", "student-update", "attention", "history", "export"] as const;
+  const mode = sections.find((section) => section === requestedSection) ?? "attendance";
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const setMode = (section: string) => {
+    const nextMode = sections.find((value) => value === section);
+    if (!nextMode || modeRef.current === nextMode) return;
+    modeRef.current = nextMode;
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (nextMode === "attendance") next.delete("section");
+      else next.set("section", nextMode);
+      return next;
+    });
+  };
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Guarded imports" title="Data Import Center" description="Upload data, resolve blocked rows, and review history without bypassing backend validation." />
+      <PageHeader eyebrow="Data Management" title="Data Import & Export" description="Import operational school data, resolve issues, review history, and export supported datasets from one workspace." />
       <Tabs value={mode} onValueChange={setMode}>
-        <TabsList className="grid h-auto w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           <TabsTrigger value="attendance">
             <FileSpreadsheet className="mr-2 inline size-4" />
             Attendance Upload
@@ -1112,17 +1129,21 @@ export default function UploadCenter() {
             <Users className="mr-2 inline size-4" />
             Student Roster Upload
           </TabsTrigger>
+          <TabsTrigger value="student-update">
+            <CheckCircle2 className="mr-2 inline size-4" />
+            Student Data Update
+          </TabsTrigger>
           <TabsTrigger value="attention">
             <BellRing className="mr-2 inline size-4" />
             Needs Attention
           </TabsTrigger>
           <TabsTrigger value="history">
             <History className="mr-2 inline size-4" />
-            Upload History
+            History
           </TabsTrigger>
-          <TabsTrigger value="student-update">
-            <CheckCircle2 className="mr-2 inline size-4" />
-            Student Data Update
+          <TabsTrigger value="export">
+            <Download className="mr-2 inline size-4" />
+            Export
           </TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
@@ -1139,6 +1160,9 @@ export default function UploadCenter() {
         </TabsContent>
         <TabsContent value="student-update">
           <StudentUpdatePanel key={`student-update-${mode}`} />
+        </TabsContent>
+        <TabsContent value="export">
+          <DataPortability embedded />
         </TabsContent>
       </Tabs>
     </div>

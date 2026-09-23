@@ -46,11 +46,11 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
   expect(attendance.items.find((item) => item.student_name === "E2E Ada")?.effective_status).toBe("on-time");
 });
 
-test("@attendance @machine-import-redirect @critical @release redirects the legacy machine-import route to the Data Import Center", async ({ page }) => {
+test("@attendance @machine-import-redirect @critical @release redirects the legacy machine-import route to Data Import & Export", async ({ page }) => {
   await login(page);
   await page.goto("/attendance/machine-import");
   await expect(page).toHaveURL(/\/upload$/);
-  await expect(page.getByRole("heading", { name: "Data Import Center" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
 });
 
