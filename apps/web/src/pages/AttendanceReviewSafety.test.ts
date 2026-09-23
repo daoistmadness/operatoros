@@ -19,19 +19,21 @@ describe("attendance review actor and permission contract", () => {
 });
 
 describe("attendance import UI safety contract", () => {
-  const source = fs.readFileSync(path.join(process.cwd(), "src/pages/Upload.tsx"), "utf8");
+  const source = fs.readFileSync(path.join(process.cwd(), "src/features/machine-import/components/MachineImportWorkflow.tsx"), "utf8");
 
-  it("uses only preview and preview commit routes", () => {
-    expect(source).toContain('"/api/uploads/preview"');
-    expect(source).toContain("`/api/uploads/preview/${batchId}/commit`");
-    expect(source).not.toContain('"/api/uploads/upload"');
+  it("uses only the canonical machine-import preview and apply routes", () => {
+    expect(source).toContain("previewMachineAttendance");
+    expect(source).toContain("applyMachineAttendance");
+    expect(source).toContain("data.previewDigest");
+    expect(source).toContain("../api/machineImport");
+    expect(source).not.toContain("/api/uploads/preview");
+    expect(source).not.toContain("/api/uploads/upload");
   });
 
-  it("exposes unresolved rows and commits only safe selected IDs", () => {
-    expect(source).toContain("blocked row(s) cannot be selected");
-    expect(source).toContain("safeSelectedIds");
-    expect(source).toContain("if (!preview || safeSelected.length === 0 || busy) return");
-    expect(source).toContain("disabled={busy || !safeSelected.length}");
-    expect(source).toContain("preview_checksum: previewChecksum");
+  it("keeps preview read-only and commits only through explicit confirmation", () => {
+    expect(source).toContain("Preview only");
+    expect(source).toContain("not automatically marked Alfa");
+    expect(source).toContain("previewDigest");
+    expect(source).toContain("!data.summary.eligibleCreates");
   });
 });

@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import AttendanceUpload, { WorkflowIndicator } from "./Upload";
+import { MachineImportWorkflow } from "../features/machine-import";
 import {
   useRosterCommit,
   useRosterPreview,
@@ -1129,7 +1129,7 @@ export default function UploadCenter() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
-          <AttendanceUpload key={`attendance-${mode}`} embedded />
+          <MachineImportWorkflow key={`attendance-${mode}`} embedded />
         </TabsContent>
         <TabsContent value="roster">
           <RosterImportPanel key={`roster-${mode}`} />

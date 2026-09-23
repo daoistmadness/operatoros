@@ -65,6 +65,7 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.filter(({ redirectTo }) => redirectTo).map(({ path, redirectTo }) => ({ path, redirectTo }))).toEqual([
       { path: '/mapping', redirectTo: '/enrollment' },
       { path: '/reports', redirectTo: '/reports/monthly' },
+      { path: '/attendance/machine-import', redirectTo: '/upload' },
     ]);
   });
 
@@ -76,6 +77,7 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/calendar')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/override-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance_corrections' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/attendance/machine-import')?.authorization).toEqual({ type: 'capability', capability: 'import_attendance' });
   });
 
   it('keeps the current not-found behavior', () => {

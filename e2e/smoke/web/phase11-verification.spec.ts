@@ -3,8 +3,8 @@ import { readFileSync, statSync } from "node:fs";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
-const xlsxFixture = process.env.OPERATOROS_E2E_IMPORT_XLSX!;
 const xlsFixture = process.env.OPERATOROS_E2E_IMPORT_XLS!;
+const machineFixture = process.env.OPERATOROS_E2E_MACHINE_IMPORT_XLSX!;
 
 async function login(page: Page) {
   await page.goto("/login");
@@ -74,22 +74,37 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
   await expect(page.getByText("Expected results", { exact: true })).toBeVisible();
 });
 
-test("@phase11 @imports .xlsx and .xls attendance workflows validate and apply", async ({ page }) => {
+test("@phase11 @imports machine attendance workbook validates and applies through the Data Import Center", async ({ page }) => {
   await login(page);
+  await page.evaluate(async () => {
+    const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
+    for (const date of ["2026-12-14", "2026-12-15"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
+  });
   await page.goto("/upload");
-  const fileInput = page.locator('input[type="file"]').first();
-
-  for (const [fixture, name] of [[xlsxFixture, "attendance.xlsx"], [xlsFixture, "attendance.xls"]] as const) {
-    await fileInput.setInputFiles({ name, mimeType: name.endsWith(".xls") ? "application/vnd.ms-excel" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(fixture) });
-    await page.getByRole("button", { name: "Preview attendance" }).click();
-    await expect(page.getByRole("heading", { name: "Attendance preview" })).toBeVisible();
-    await page.getByRole("button", { name: "Select eligible" }).click();
-    await page.getByRole("button", { name: "Continue to summary" }).click();
-    await page.getByRole("button", { name: /Import 1 attendance rows/ }).click();
-    await expect(page.getByRole("heading", { name: "Attendance import completed" })).toBeVisible();
-    if (name.endsWith(".xlsx")) {
-      await page.getByRole("button", { name: "Upload another file" }).click();
-    }
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
+  // The canonical machine workflow accepts .xlsx only; .xls is refused by server-side validation.
+  await page.locator("#machine-preview-file").setInputFiles({ name: "machine-attendance.xls", mimeType: "application/vnd.ms-excel", buffer: readFileSync(xlsFixture) });
+  await page.getByRole("button", { name: "Preview workbook" }).click();
+  await expect(page.getByRole("alert")).toContainText(".xlsx");
+  // The expected 400 above is the canonical rejection itself; keep the spec's API-error guard strict otherwise.
+  const failures = (page as any).__phase11Failures as string[];
+  const rejected = failures.findIndex((message) => message === "api 400: /api/attendance/machine-import/preview");
+  expect(rejected).toBeGreaterThanOrEqual(0);
+  failures.splice(rejected, 1);
+  // The canonical .xlsx machine workbook validates through the same preview authority.
+  await page.locator("#machine-preview-file").setInputFiles({ name: "machine-attendance.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });
+  await page.getByRole("button", { name: "Preview workbook" }).click();
+  await expect(page.getByRole("heading", { name: "Workbook recognized" })).toBeVisible();
+  const createButton = page.getByRole("button", { name: /Create \d+ attendance records/ });
+  await expect(createButton).toBeVisible();
+  const eligible = Number((await createButton.textContent())?.match(/Create (\d+)/)?.[1] ?? "0");
+  if (eligible > 0) {
+    await createButton.click();
+    await expect(page.getByRole("status")).toContainText(`Import applied: ${eligible} created`);
+  } else {
+    await expect(createButton).toBeDisabled();
+    await expect(page.getByText("Already canonical")).toBeVisible();
   }
 });
 
