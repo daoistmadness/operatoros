@@ -162,13 +162,13 @@ test("@setup-readiness @fresh-school @critical configures canonical foundation a
   await expect(page.getByRole("heading", { name: "UAT 7A", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "UAT Fresh Student", exact: true })).toBeVisible();
 
-  await page.goto("/attendance/machine-import");
-  await expect(page.getByRole("heading", { name: "Machine Import Preview" })).toBeVisible();
+  await page.goto("/upload");
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Machine Import Preview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   await page.goto("/setup");
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Machine Import Preview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   await page.goForward();
   await expect(page.getByRole("heading", { name: "Setup & Readiness" })).toBeVisible();
 });

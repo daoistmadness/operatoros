@@ -20,8 +20,8 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
     for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
     for (const date of ["2026-12-14", "2026-12-15"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
   });
-  await page.goto("/attendance/machine-import");
-  await expect(page.getByRole("heading", { name: "Machine Import Preview" })).toBeVisible();
+  await page.goto("/upload");
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   await page.locator("#machine-preview-file").setInputFiles({ name: "machine-attendance.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });
   const preview = page.waitForResponse((response) => response.url().includes("/api/attendance/machine-import/preview") && response.status() === 200);
   await page.getByRole("button", { name: "Preview workbook" }).click();
@@ -46,10 +46,18 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
   expect(attendance.items.find((item) => item.student_name === "E2E Ada")?.effective_status).toBe("on-time");
 });
 
+test("@attendance @machine-import-redirect @critical @release redirects the legacy machine-import route to the Data Import Center", async ({ page }) => {
+  await login(page);
+  await page.goto("/attendance/machine-import");
+  await expect(page).toHaveURL(/\/upload$/);
+  await expect(page.getByRole("heading", { name: "Data Import Center" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
+});
+
 test("@attendance @machine-onboarding @critical @release resolves existing and new machine identities explicitly", async ({ page }) => {
   await login(page);
   const beforeAttendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-08")).json()) as { items: unknown[] });
-  await page.goto("/attendance/machine-import");
+  await page.goto("/upload");
   await page.locator("#machine-preview-file").setInputFiles({ name: "machine-onboarding.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });
   const firstPreview = page.waitForResponse((response) => response.url().includes("/api/attendance/machine-import/preview") && response.status() === 200);
   await page.getByRole("button", { name: "Preview workbook" }).click();
