@@ -71,7 +71,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete administrator inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(40);
+    expect(container.querySelectorAll('nav a')).toHaveLength(38);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
@@ -80,7 +80,7 @@ describe('role-aware sidebar navigation', () => {
     const staff = visibleNavigationGroups(users.staff, authFor(users.staff).can);
     const staffNames = staff.flatMap((group) => group.items.map((item) => item.name));
     expect(staffNames).toContain('Student Directory');
-    expect(staffNames).not.toContain('Data Import Center');
+    expect(staffNames).not.toContain('Data Import & Export');
     expect(staffNames).not.toContain('Operations Audit');
     expect(staff.every((group) => group.items.length > 0)).toBe(true);
     expect(visibleNavigationGroups(null, () => false)).toEqual([]);
@@ -134,7 +134,7 @@ describe('role-aware sidebar navigation', () => {
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
       ['Management Analytics', 'Term Management Review', 'Data Recapitulation', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
-      ['Data Import Center', 'Data Import & Export', 'Import History'],
+      ['Data Import & Export'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Absence Reasons', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);
     for (const group of NAV_GROUPS) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);

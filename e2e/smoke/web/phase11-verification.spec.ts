@@ -74,7 +74,7 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
   await expect(page.getByText("Expected results", { exact: true })).toBeVisible();
 });
 
-test("@phase11 @imports machine attendance workbook validates and applies through the Data Import Center", async ({ page }) => {
+test("@phase11 @imports machine attendance workbook validates and applies through Data Import & Export", async ({ page }) => {
   await login(page);
   await page.evaluate(async () => {
     const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });

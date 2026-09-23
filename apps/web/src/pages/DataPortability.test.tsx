@@ -4,19 +4,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import DataPortability from "./DataPortability";
 
-describe("DataPortability Page", () => {
+describe("DataPortability panel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it("renders tab controls and warning banner separating CSV from Backup", () => {
+  it("renders the existing portability capabilities without a duplicate page heading", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
-        <DataPortability initialLoading={false} />
+        <DataPortability initialLoading={false} embedded />
       </MemoryRouter>
     );
 
-    expect(html).toContain("Data Import &amp; Export Center");
+    expect(html).not.toContain("<h1");
     expect(html).toContain("Export Data");
     expect(html).toContain("Import Data");
     expect(html).toContain("Templates");
@@ -24,5 +24,6 @@ describe("DataPortability Page", () => {
     expect(html).toContain("CSV data exchange files are for spreadsheet review");
     expect(html).toContain("NOT");
     expect(html).toContain("complete system backup");
+    expect(html).toContain('href="/settings/backups"');
   });
 });
