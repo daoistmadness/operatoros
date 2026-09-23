@@ -25,8 +25,9 @@ import {
   previewExport,
   previewImport,
 } from '../api/dataPortability';
+import { Link } from 'react-router-dom';
 
-export default function DataPortability({ initialLoading = true }: { initialLoading?: boolean }) {
+export default function DataPortability({ initialLoading = true, embedded = false }: { initialLoading?: boolean; embedded?: boolean }) {
   const [activeTab, setActiveTab] = useState<'export' | 'import' | 'templates' | 'history'>('export');
   const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(initialLoading);
@@ -206,29 +207,31 @@ export default function DataPortability({ initialLoading = true }: { initialLoad
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div role="status" aria-live="polite" className="flex h-64 items-center justify-center">
         <RefreshCw className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className={embedded ? 'space-y-4' : 'mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}>
       {/* Title & Warning Banner */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Data Import & Export Center</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Controlled CSV data exchange, template downloads, and operational data portability.
-          </p>
+      {!embedded && (
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Data Import &amp; Export</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Controlled CSV data exchange, template downloads, and operational data portability.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Warning banner separating CSV from Backup */}
       <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
         <Info className="h-5 w-5 shrink-0 text-amber-600" />
         <div className="text-sm">
-          <span className="font-semibold">Important Product Distinction:</span> CSV data exchange files are for spreadsheet review and selected dataset portability. They are <strong className="font-semibold">NOT</strong> a complete system backup. For full disaster recovery and database restoration, visit <a href="/backups" className="underline font-medium text-amber-900 hover:text-amber-700">Backup & Recovery</a>.
+          <span className="font-semibold">Important Product Distinction:</span> CSV data exchange files are for spreadsheet review and selected dataset portability. They are <strong className="font-semibold">NOT</strong> a complete system backup. For full disaster recovery and database restoration, visit <Link to="/settings/backups" className="underline font-medium text-amber-900 hover:text-amber-700">Backup &amp; Recovery</Link>.
         </div>
       </div>
 

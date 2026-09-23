@@ -6,8 +6,6 @@ import { ROUTE_GROUPS, type RouteGroup } from './routeGroups';
 
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const UploadCenter = lazy(() => import('../pages/UploadCenter'));
-const DataPortability = lazy(() => import('../pages/DataPortability'));
-const UploadHistory = lazy(() => import('../pages/UploadHistory'));
 const AttendanceReport = lazy(() => import('../pages/AttendanceReport'));
 const AttendanceReview = lazy(() => import('../pages/AttendanceReview'));
 const AttendanceCorrections = lazy(() => import('../pages/AttendanceCorrections'));
@@ -91,8 +89,9 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/setup', element: <SetupReadiness />, group: ROUTE_GROUPS.CORE, authorization: authenticated() }),
   defineRoute({ path: '/operator/work-queue', element: <OperatorWorkQueue />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_followups') }),
   defineRoute({ path: '/upload', element: <UploadCenter />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
-  defineRoute({ path: '/data-portability', element: <DataPortability />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
-  defineRoute({ path: '/upload-history', element: <UploadHistory />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
+  defineRoute({ path: '/upload-center', element: <Navigate to="/upload?section=attendance" replace />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, redirectTo: '/upload?section=attendance', authorization: adminOnly() }),
+  defineRoute({ path: '/data-portability', element: <Navigate to="/upload?section=export" replace />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, redirectTo: '/upload?section=export', authorization: adminOnly() }),
+  defineRoute({ path: '/upload-history', element: <Navigate to="/upload?section=history" replace />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, redirectTo: '/upload?section=history', authorization: adminOnly() }),
   defineRoute({ path: '/mapping', element: <Navigate to="/enrollment" replace />, group: ROUTE_GROUPS.ACADEMIC, redirectTo: '/enrollment', authorization: authenticated() }),
   defineRoute({ path: '/analytics', element: <ManagementAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/management-review/student-profile', element: <ManagementReviewStudentProfile />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),

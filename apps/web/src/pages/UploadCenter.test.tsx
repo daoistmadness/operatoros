@@ -46,20 +46,21 @@ function renderCenter() {
   );
 }
 
-describe("Data Import Center", () => {
-  it("presents the five canonical import tabs with Attendance Upload active", () => {
+describe("Data Import & Export workspace", () => {
+  it("presents the canonical workflow tabs with Attendance Upload active", () => {
     vi.mocked(readinessQueries.useReadinessQuery).mockReturnValue({
       data: { overall: {}, foundation: [], operational: [], features: [readyFeature], overall_status: "READY", steps: [] },
       isPending: false, isError: false, error: null, refetch: vi.fn(),
     } as never);
     vi.mocked(analyticsHooks.useAnalyticsFiltersQuery).mockReturnValue({ data: filters, isPending: false, error: null, refetch: vi.fn() } as never);
     const html = renderCenter();
-    expect(html).toContain("Data Import Center");
+    expect(html).toContain("Data Import &amp; Export");
     expect(html).toContain("Attendance Upload");
     expect(html).toContain("Student Roster Upload");
     expect(html).toContain("Needs Attention");
-    expect(html).toContain("Upload History");
+    expect(html).toContain("History");
     expect(html).toContain("Student Data Update");
+    expect(html).toContain("Export");
     expect(html).toContain("Preview only");
     expect(html).toContain("not automatically marked Alfa");
   });
