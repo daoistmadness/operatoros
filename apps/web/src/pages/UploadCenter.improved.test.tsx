@@ -48,8 +48,8 @@ describe("Roster import improved UX - static contract", () => {
     expect(source).toContain("onDragOver");
     expect(source).toContain("onDrop");
     expect(source).toContain("aria-label=\"Choose XLSX file\"");
-    expect(source).toContain(".xlsx and supported .xls files");
-    expect(source).not.toContain('className="sr-only" accept=".xlsx,.xls" onChange={(event) => { setFile'); // ensure not hidden without control - we have visible button
+    expect(source).toContain(".xlsx files only");
+    expect(source).not.toContain('className="sr-only" accept=".xlsx" onChange={(event) => { setFile'); // ensure not hidden without control - we have visible button
   });
 
   it("shows selected filename, size, sheet, Change/Remove and loading", () => {
@@ -60,6 +60,13 @@ describe("Roster import improved UX - static contract", () => {
     expect(source).toContain("Remove file");
     expect(source).toContain("Parsing workbook");
     expect(source).toContain("aria-live=\"polite\"");
+  });
+
+  it("separates workbook, network, and runtime preview failures", () => {
+    expect(source).toContain("rosterPreviewErrorPresentation");
+    expect(source).toContain("ROSTER_WORKBOOK_PARSE_FAILED");
+    expect(source).toContain("Roster preview unavailable");
+    expect(source).toContain("Unable to read this workbook. Verify that it is a valid supported Excel file.");
   });
 
   it("has three visible stages Upload Review Import and does not render rows before parse", () => {
@@ -214,7 +221,7 @@ describe("Roster import - interactive behavior", () => {
     const html = await renderRoster();
     expect(html).toContain("Choose XLSX file");
     expect(html).toContain("Drop an Excel file here");
-    expect(html).toContain('accept=".xlsx,.xls"');
+    expect(html).toContain('accept=".xlsx"');
     expect(html).toContain("Upload student data");
   });
 
