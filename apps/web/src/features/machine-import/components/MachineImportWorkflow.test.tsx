@@ -3,25 +3,28 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import AttendanceMachineImportPreview from "./AttendanceMachineImportPreview";
-import { AuthContext, type AuthContextValue } from "../context/AuthContext";
-import * as analyticsHooks from "../hooks/useAnalyticsQueries";
-import * as machineApi from "../api/machineAttendancePreview";
-import * as studentApi from "../api/students";
-import * as readinessQueries from "../features/readiness/queries/useReadinessQuery";
+import MachineImportWorkflow from "./MachineImportWorkflow";
+import { AuthContext, type AuthContextValue } from "../../../context/AuthContext";
+import * as analyticsHooks from "../../../hooks/useAnalyticsQueries";
+import * as machineApi from "../../../api/machineAttendancePreview";
+import * as studentApi from "../../../api/students";
+import * as readinessQueries from "../../readiness";
 import { vi } from "vitest";
 
-vi.mock("../hooks/useAnalyticsQueries", () => ({ useAnalyticsFiltersQuery: vi.fn() }));
-vi.mock("../api/machineAttendancePreview", () => ({ previewMachineAttendance: vi.fn(), applyMachineAttendance: vi.fn() }));
-vi.mock("../api/students", () => ({ createStudent: vi.fn(), linkDeviceIdentity: vi.fn(), searchMachineImportStudents: vi.fn() }));
-vi.mock("../features/readiness/queries/useReadinessQuery", () => ({ useReadinessQuery: vi.fn(), invalidateReadiness: vi.fn() }));
+vi.mock("../../../hooks/useAnalyticsQueries", () => ({ useAnalyticsFiltersQuery: vi.fn() }));
+vi.mock("../../../api/machineAttendancePreview", () => ({ previewMachineAttendance: vi.fn(), applyMachineAttendance: vi.fn() }));
+vi.mock("../../../api/students", () => ({ createStudent: vi.fn(), linkDeviceIdentity: vi.fn(), searchMachineImportStudents: vi.fn() }));
+vi.mock("../../readiness", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../readiness")>();
+  return { ...actual, useReadinessQuery: vi.fn(), invalidateReadiness: vi.fn() };
+});
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: ["import_attendance"] }, loading: false, authenticated: true, can: (value) => value === "import_attendance", login: vi.fn(), logout: vi.fn() };
 const resolutionAuth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: ["import_attendance", "manage_device_identity", "create_student", "view_student"] }, loading: false, authenticated: true, can: (value) => ["import_attendance", "manage_device_identity", "create_student", "view_student"].includes(value), login: vi.fn(), logout: vi.fn() };
 const filters = { academic_years: [{ id: 1, label: "2026/2027", is_default: true }], jenjangs: [{ id: 1, name: "SMP" }], class_names: [], subjects: [] };
 const readyImportReadiness = { overall: { state: "READY", summary: "Foundation is configured." }, foundation: [], operational: [], features: [{ key: "MACHINE_IMPORT", label: "Machine Import", route: "/attendance/machine-import", state: "READY", blockers: [], actions: [] }], overall_status: "OPERATIONALLY_READY", steps: [] };
 
-describe("AttendanceMachineImportPreview", () => {
+describe("MachineImportWorkflow", () => {
   let container: HTMLDivElement;
   let root: Root;
   let client: QueryClient;
@@ -34,7 +37,7 @@ describe("AttendanceMachineImportPreview", () => {
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.clearAllMocks(); });
 
   it("exposes a labelled preview-only workflow without attendance mutation controls", async () => {
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><AttendanceMachineImportPreview /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><MachineImportWorkflow /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
     expect(container.textContent).toContain("Machine Import Preview");
     expect(container.textContent).toContain("Preview only");
     expect(container.textContent).toContain("No attendance, student, enrollment, calendar, deadline, or mapping records will be changed.");
@@ -54,7 +57,7 @@ describe("AttendanceMachineImportPreview", () => {
       pagination: { page: 1, pageSize: 50, total: 1 },
     });
     vi.mocked(machineApi.applyMachineAttendance).mockResolvedValue({ status: "APPLIED", batchId: "batch-1", fileFingerprint: "a".repeat(64), appliedAt: "2026-09-01T00:00:00.000Z", summary: { rowsInspected: 1, created: 1, alreadyCanonical: 0, conflicts: 0, blocked: 0, blockedByClassification: {} } });
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><AttendanceMachineImportPreview /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><MachineImportWorkflow /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
     const input = container.querySelector("input[type=file]") as HTMLInputElement;
     const file = new File(["synthetic"], "machine.xlsx");
     Object.defineProperty(input, "files", { value: [file] });
@@ -79,7 +82,7 @@ describe("AttendanceMachineImportPreview", () => {
       rows: [{ date: "2026-04-06", sourceStudentName: "Synthetic One", machineStudentIdentifier: "00123", matchingState: "MATCHED", student: { id: 1, masterId: "master-1", name: "Synthetic One", className: "7A", jenjang: "SMP" }, machineEvidence: "SCAN_PRESENT", scanTimes: ["07:00", "15:00"], expectation: { status: "UNKNOWN", reason: null, source: "NONE" }, reconciliationState: "EXPECTATION_UNKNOWN", applyClassification: "BLOCKED_CALENDAR_UNKNOWN", canonicalStatus: null, existingAttendance: null, resolution: { class: "CALENDAR_RESOLUTION", note: "Calendar expectation is unknown, so the row is not safe to import.", target: { type: "CALENDAR_RESOLUTION", path: "/attendance/calendar?academic_year_id=1&jenjang_id=1&date=2026-04-06", label: "Review calendar" } } }],
       pagination: { page: 1, pageSize: 50, total: 1 },
     });
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><AttendanceMachineImportPreview /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={auth}><MachineImportWorkflow /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
     const input = container.querySelector("input[type=file]") as HTMLInputElement;
     Object.defineProperty(input, "files", { value: [new File(["synthetic"], "machine.xlsx")] });
     await act(async () => { input.dispatchEvent(new Event("change", { bubbles: true })); });
@@ -101,7 +104,7 @@ describe("AttendanceMachineImportPreview", () => {
     });
     vi.mocked(studentApi.searchMachineImportStudents).mockResolvedValue({ items: [{ id: "student-1", full_name: "Canonical Student", current_jenjang: "SMP", current_class: "7A" }] });
     vi.mocked(studentApi.linkDeviceIdentity).mockResolvedValue({ status: "LINKED" });
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={resolutionAuth}><AttendanceMachineImportPreview /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={resolutionAuth}><MachineImportWorkflow /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
     const input = container.querySelector("input[type=file]") as HTMLInputElement;
     Object.defineProperty(input, "files", { value: [new File(["synthetic"], "machine.xlsx")] });
     await act(async () => { input.dispatchEvent(new Event("change", { bubbles: true })); });
@@ -125,7 +128,7 @@ describe("AttendanceMachineImportPreview", () => {
       pagination: { page: 1, pageSize: 50, total: 1 },
     });
     vi.mocked(studentApi.createStudent).mockResolvedValue({ id: "student-2" } as never);
-    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={resolutionAuth}><AttendanceMachineImportPreview /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
+    await act(async () => { root.render(<QueryClientProvider client={client}><MemoryRouter><AuthContext.Provider value={resolutionAuth}><MachineImportWorkflow /></AuthContext.Provider></MemoryRouter></QueryClientProvider>); });
     const input = container.querySelector("input[type=file]") as HTMLInputElement;
     Object.defineProperty(input, "files", { value: [new File(["synthetic"], "machine.xlsx")] });
     await act(async () => { input.dispatchEvent(new Event("change", { bubbles: true })); });

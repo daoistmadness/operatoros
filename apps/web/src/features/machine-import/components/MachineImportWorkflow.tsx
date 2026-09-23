@@ -1,22 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import type { MachineImportPreviewResponse } from "@operatoros/contracts/attendance";
-import { PageHeader } from "../components/common/page-header";
-import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { FieldLabel } from "../components/ui/field";
-import { Input } from "../components/ui/input";
-import { NativeSelect } from "../components/ui/native-select";
-import { useAuth } from "../context/AuthContext";
-import { useAnalyticsFiltersQuery } from "../hooks/useAnalyticsQueries";
-import { applyMachineAttendance, previewMachineAttendance } from "../api/machineAttendancePreview";
-import { createStudent, linkDeviceIdentity, searchMachineImportStudents } from "../api/students";
-import { isApiError, getPageApiError } from "../lib/api/errors";
-import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
+import { PageHeader } from "../../../components/common/page-header";
+import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../../../components/common/state-message";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
+import { FieldLabel } from "../../../components/ui/field";
+import { Input } from "../../../components/ui/input";
+import { NativeSelect } from "../../../components/ui/native-select";
+import { useAuth } from "../../../context/AuthContext";
+import { useAnalyticsFiltersQuery } from "../../../hooks/useAnalyticsQueries";
+import { applyMachineAttendance, createStudent, linkDeviceIdentity, previewMachineAttendance, searchMachineImportStudents } from "../api/machineImport";
+import { isApiError, getPageApiError } from "../../../lib/api/errors";
+import { invalidateAttendanceQueries } from "../../../lib/query/attendanceInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FeatureReadinessCard, useReadinessQuery } from "../features/readiness";
+import { FeatureReadinessCard, useReadinessQuery } from "../../readiness";
 
 const stateLabel: Record<string, string> = {
   SCAN_PRESENT: "Scan present", NO_SCAN: "No scan", MULTIPLE_SCANS: "Multiple scans", INVALID_SCAN_VALUE: "Invalid scan value", UNSUPPORTED_SOURCE_STATUS: "Unsupported source status",
@@ -38,7 +37,7 @@ type IdentityAction = { item: IdentityReview; mode: "link" | "create" };
 
 function label(value: string): string { return stateLabel[value] ?? value.replaceAll("_", " "); }
 
-export default function AttendanceMachineImportPreview() {
+export default function MachineImportWorkflow({ embedded = false }: { embedded?: boolean }) {
   const { user, can } = useAuth();
   const queryClient = useQueryClient();
   const allowed = can("import_attendance");
@@ -90,7 +89,7 @@ export default function AttendanceMachineImportPreview() {
   if (readiness.isError || !readiness.data) return <ErrorState title="Import scope unavailable" description="The server could not determine machine-import readiness. Setup has not been classified as incomplete." action={<Button onClick={() => void readiness.refetch()}>Try again</Button>} />;
   const machineReadiness = readiness.data.features.find((feature) => feature.key === "MACHINE_IMPORT");
   if (!machineReadiness) return <ErrorState title="Import scope unavailable" description="The server returned no machine-import readiness result." action={<Button onClick={() => void readiness.refetch()}>Try again</Button>} />;
-  if (machineReadiness.state !== "READY") return <div className="space-y-7 pb-16"><PageHeader eyebrow="Attendance Operations" title="Machine Import" description="Resolve the required canonical setup before previewing a workbook." /><FeatureReadinessCard feature={machineReadiness} /></div>;
+  if (machineReadiness.state !== "READY") return <div className="space-y-7 pb-16">{embedded ? <header><h2 className="text-3xl font-black text-foreground">Attendance Upload</h2><p className="mt-2 max-w-3xl text-muted-foreground">Resolve the required canonical setup before previewing a workbook.</p></header> : <PageHeader eyebrow="Attendance Operations" title="Machine Import" description="Resolve the required canonical setup before previewing a workbook." /> }<FeatureReadinessCard feature={machineReadiness} /></div>;
   if (filters.isPending) return <LoadingState title="Loading import scope" description="Preparing academic-year and jenjang choices." />;
   if (filters.error) return <ErrorState title="Import scope unavailable" description="The server could not load the academic scope." action={<Button onClick={() => void filters.refetch()}>Try again</Button>} />;
   if (!years.length || !jenjangs.length) return <EmptyState title="No import scope available" description="No academic year or canonical jenjang is available for this import scope." />;
@@ -114,7 +113,7 @@ export default function AttendanceMachineImportPreview() {
   const pageCount = data ? Math.max(1, Math.ceil(data.pagination.total / data.pagination.pageSize)) : 1;
   const selectedStudent = studentResults.data?.items.find((item) => item.id === selectedStudentId);
   return <div className="space-y-7 pb-16">
-    <PageHeader eyebrow="Attendance Operations" title="Machine Import Preview" description="Inspect scan evidence and calendar reconciliation before an explicit, controlled import. The browser never decides what may be written." />
+    {embedded ? <header><h2 className="text-3xl font-black text-foreground">Attendance Upload</h2><p className="mt-2 max-w-3xl text-muted-foreground">Inspect machine attendance records and calendar reconciliation before an explicit, controlled import. The browser never decides what may be written.</p></header> : <PageHeader eyebrow="Attendance Operations" title="Machine Import Preview" description="Inspect scan evidence and calendar reconciliation before an explicit, controlled import. The browser never decides what may be written." /> }
     <Card><CardHeader><CardTitle>Preview only</CardTitle><p className="text-sm text-muted-foreground">No attendance, student, enrollment, calendar, deadline, or mapping records will be changed.</p><p className="text-sm text-muted-foreground">Students without machine scans are not automatically marked Alfa.</p></CardHeader><CardContent><form className="grid gap-4 md:grid-cols-4 md:items-end" onSubmit={submit}>
       <div><FieldLabel htmlFor="machine-preview-file">Attendance-machine XLSX</FieldLabel><input id="machine-preview-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { setFile(event.target.files?.[0] ?? null); preview.reset(); link.reset(); create.reset(); setPage(1); }} className="block w-full text-sm" required /></div>
       <div><FieldLabel htmlFor="machine-preview-year">Academic year</FieldLabel><NativeSelect id="machine-preview-year" value={yearId ?? ""} onChange={(event) => { setYearId(Number(event.target.value) || null); preview.reset(); link.reset(); create.reset(); setPage(1); }}>{years.map((value) => <option key={value.id} value={value.id}>{value.label}</option>)}</NativeSelect></div>
