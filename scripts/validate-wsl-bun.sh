@@ -74,17 +74,11 @@ operatoros_wsl_read_package_engine() {
 
 operatoros_wsl_validate_bun() {
   local project_root="${1:?repository root is required}"
-  local resolved_root
   OPERATOROS_BUN_VERSION=""
   OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="not-run"
   OPERATOROS_WSL_TOOLCHAIN_STATE="UNKNOWN"
-  resolved_root="$(readlink -f -- "$project_root" 2>/dev/null || true)"
   if [[ "$(uname -s 2>/dev/null || true)" != Linux ]]; then
     OPERATOROS_WSL_TOOLCHAIN_REASON="the launcher is not running under a Linux WSL kernel"
-    return 1
-  fi
-  if [[ "$resolved_root" != /home/* && "$resolved_root" != /home ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="the repository must be located under /home/ inside WSL"
     return 1
   fi
 
