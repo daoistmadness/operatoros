@@ -10,11 +10,14 @@ import {
   AttendanceCalendarPeriodPreviewResponseSchema,
   AttendanceCalendarPeriodRequestSchema,
   AttendanceCalendarWeekdayRequestSchema,
+  AttendanceCalendarWeekdaysRequestSchema,
+  AttendanceCalendarWeekdaysResponseSchema,
   AttendanceSubmissionDeadlineRequestSchema,
   type AttendanceCalendarExpectation,
   type AttendanceCalendarReason,
   type AttendanceCalendarPeriodRequest,
   type AttendanceCalendarPeriodPreviewResponse,
+  type AttendanceCalendarWeekdaysRequest,
 } from "@operatoros/contracts/attendance";
 import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
@@ -297,6 +300,41 @@ export function attendanceCalendarRoutes(app: any, context: AuthContext): any {
       return fail(ctx.set, 409, "Calendar weekday rule conflict");
     }
   }, { body: AttendanceCalendarWeekdayRequestSchema });
+
+  app.put("/api/attendance/calendar/weekdays", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const body = ctx.body as AttendanceCalendarWeekdaysRequest;
+    if (body.weekdays.length !== 7 || new Set(body.weekdays.map((value) => value.weekday)).size !== 7) {
+      return fail(ctx.set, 400, "weekdays must contain each weekday exactly once");
+    }
+
+    const client = context.database.client;
+    try {
+      const saved = inTransaction(client, () => {
+        if (!selectedYear(context, body.academic_year_id)) return { kind: "missing-year" as const };
+        if (!selectedJenjang(context, body.jenjang_id)) return { kind: "missing-jenjang" as const };
+        const existing = new Map(rows(context, "SELECT weekday, expectation FROM attendance_calendar_weekday_rules WHERE academic_year_id = ? AND jenjang_id = ?", [body.academic_year_id, body.jenjang_id]).map((value) => [Number(value.weekday), String(value.expectation)]));
+        for (const value of body.weekdays) {
+          const current = existing.get(value.weekday) ?? null;
+          if (value.expectation === current) continue;
+          if (value.expectation === null) {
+            client.run("DELETE FROM attendance_calendar_weekday_rules WHERE academic_year_id = ? AND jenjang_id = ? AND weekday = ?", [body.academic_year_id, body.jenjang_id, value.weekday]);
+          } else {
+            client.run(`INSERT INTO attendance_calendar_weekday_rules (academic_year_id, jenjang_id, weekday, expectation)
+              VALUES (?, ?, ?, ?)
+              ON CONFLICT(academic_year_id, jenjang_id, weekday) DO UPDATE SET expectation = excluded.expectation, updated_at = CURRENT_TIMESTAMP`, [body.academic_year_id, body.jenjang_id, value.weekday, value.expectation]);
+          }
+        }
+        const persisted = new Map(rows(context, "SELECT weekday, expectation FROM attendance_calendar_weekday_rules WHERE academic_year_id = ? AND jenjang_id = ?", [body.academic_year_id, body.jenjang_id]).map((value) => [Number(value.weekday), String(value.expectation) as RuleValue]));
+        return { kind: "saved" as const, weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: persisted.get(weekday) ?? null })) };
+      });
+      if (saved.kind === "missing-year") return fail(ctx.set, 404, "Academic year not found");
+      if (saved.kind === "missing-jenjang") return fail(ctx.set, 404, "Jenjang not found");
+      return { academicYearId: body.academic_year_id, jenjangId: body.jenjang_id, weekdays: saved.weekdays };
+    } catch {
+      return fail(ctx.set, 500, "Recurring attendance days could not be saved");
+    }
+  }, { body: AttendanceCalendarWeekdaysRequestSchema, response: AttendanceCalendarWeekdaysResponseSchema });
 
   app.put("/api/attendance/calendar/exception", (ctx: Context) => {
     const user = actor(context, ctx, { role: "admin" });

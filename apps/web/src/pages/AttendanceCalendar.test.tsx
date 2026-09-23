@@ -10,7 +10,7 @@ import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 vi.mock("../api/grades", () => ({ fetchAcademicYears: vi.fn() }));
-vi.mock("../api/attendanceCalendar", () => ({ fetchAttendanceCalendar: vi.fn(), saveAttendanceCalendarWeekday: vi.fn(), saveAttendanceCalendarException: vi.fn(), deleteAttendanceCalendarException: vi.fn(), saveAttendanceSubmissionDeadline: vi.fn(), previewAttendanceCalendarPeriod: vi.fn(), applyAttendanceCalendarPeriod: vi.fn() }));
+vi.mock("../api/attendanceCalendar", () => ({ fetchAttendanceCalendar: vi.fn(), saveAttendanceCalendarWeekdays: vi.fn(), saveAttendanceCalendarException: vi.fn(), deleteAttendanceCalendarException: vi.fn(), saveAttendanceSubmissionDeadline: vi.fn(), previewAttendanceCalendarPeriod: vi.fn(), applyAttendanceCalendarPeriod: vi.fn() }));
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const overview = {
@@ -26,13 +26,13 @@ describe("AttendanceCalendar", () => {
     vi.clearAllMocks();
     vi.mocked(gradesApi.fetchAcademicYears).mockResolvedValue([{ id: 1, label: "2026/2027", is_default: true }] as never);
     vi.mocked(calendarApi.fetchAttendanceCalendar).mockResolvedValue(overview as never);
-    vi.mocked(calendarApi.saveAttendanceCalendarWeekday).mockResolvedValue(undefined);
+    vi.mocked(calendarApi.saveAttendanceCalendarWeekdays).mockResolvedValue({ academicYearId: 1, jenjangId: 1, weekdays: overview.jenjangs[0].weekdays } as never);
     vi.mocked(calendarApi.saveAttendanceCalendarException).mockResolvedValue(undefined);
     vi.mocked(calendarApi.deleteAttendanceCalendarException).mockResolvedValue(undefined);
     vi.mocked(calendarApi.previewAttendanceCalendarPeriod).mockResolvedValue({} as never);
     vi.mocked(calendarApi.applyAttendanceCalendarPeriod).mockResolvedValue({} as never);
   });
-  afterEach(async () => { if (root) await act(async () => root.unmount()); container?.remove(); });
+  afterEach(async () => { if (root) await act(async () => root.unmount()); container?.remove(); Reflect.deleteProperty(window, "confirm"); });
 
   it("renders neutral server-provided calendar rules and exceptions", async () => {
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
@@ -42,6 +42,48 @@ describe("AttendanceCalendar", () => {
     expect(container.textContent).toContain("Holiday");
     expect(container.textContent).toContain("Submission deadline");
     expect(container.querySelector("table")).not.toBeNull();
+  });
+
+  it("keeps weekday edits dirty until one atomic save succeeds", async () => {
+    const savedWeekdays = Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday >= 1 && weekday <= 5 ? "EXPECTED" : "NOT_EXPECTED" }));
+    vi.mocked(calendarApi.fetchAttendanceCalendar).mockResolvedValueOnce(overview as never).mockResolvedValue({ ...overview, jenjangs: [{ ...overview.jenjangs[0], weekdays: savedWeekdays }] } as never);
+    vi.mocked(calendarApi.saveAttendanceCalendarWeekdays).mockResolvedValue({ academicYearId: 1, jenjangId: 1, weekdays: savedWeekdays } as never);
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+
+    for (const weekday of [1, 2, 3, 4, 5, 6, 0]) {
+      const select = container.querySelector(`#weekday-${weekday}`) as HTMLSelectElement;
+      const value = weekday >= 1 && weekday <= 5 ? "EXPECTED" : "NOT_EXPECTED";
+      await act(async () => { select.value = value; select.dispatchEvent(new Event("change", { bubbles: true })); });
+    }
+    expect(container.textContent).toContain("Unsaved changes");
+    expect(calendarApi.saveAttendanceCalendarWeekdays).not.toHaveBeenCalled();
+
+    await act(async () => { Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Save recurring days")?.click(); });
+    await vi.waitFor(() => expect(calendarApi.saveAttendanceCalendarWeekdays).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(calendarApi.saveAttendanceCalendarWeekdays).mock.calls[0]?.[0]).toEqual({ academic_year_id: 1, jenjang_id: 1, weekdays: savedWeekdays });
+    await vi.waitFor(() => expect(container.textContent).toContain("Saved"));
+  });
+
+  it("keeps edits visible after a failed save and warns before leaving", async () => {
+    vi.mocked(calendarApi.saveAttendanceCalendarWeekdays).mockRejectedValue(new Error("network unavailable"));
+    const confirm = vi.fn().mockReturnValue(false);
+    Object.defineProperty(window, "confirm", { configurable: true, value: confirm });
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+    const monday = container.querySelector("#weekday-1") as HTMLSelectElement;
+    await act(async () => { monday.value = "NOT_EXPECTED"; monday.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(container.textContent).toContain("Unsaved changes");
+
+    await act(async () => { Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Save recurring days")?.click(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Changes were not saved"));
+    expect((container.querySelector("#weekday-1") as HTMLSelectElement).value).toBe("NOT_EXPECTED");
+    expect(container.textContent).toContain("Unsaved changes");
+    await act(async () => { (container.querySelector('a[href="/attendance/daily"]') as HTMLAnchorElement).click(); });
+    expect(confirm).toHaveBeenCalled();
+    expect((container.querySelector("#weekday-1") as HTMLSelectElement).value).toBe("NOT_EXPECTED");
   });
 
   it("keeps calendar configuration read-only for attendance viewers", async () => {

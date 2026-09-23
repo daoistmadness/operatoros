@@ -14,7 +14,18 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@attendance @calendar @release configures expectation and surfaces it in Daily Attendance", async ({ page }) => {
+test("@attendance @calendar @critical @release configures expectation and surfaces it in Daily Attendance", async ({ page }) => {
+  const browserErrors: string[] = [];
+  let weekdayWriteCount = 0;
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) browserErrors.push(message.text()); });
+  page.on("requestfailed", (request) => { if (request.failure()?.errorText !== "net::ERR_ABORTED") browserErrors.push(`${request.url()}: ${request.failure()?.errorText ?? "request failed"}`); });
+  page.on("response", (response) => {
+    if (response.status() < 400) return;
+    const path = new URL(response.url()).pathname;
+    if (response.status() !== 401 || path !== "/api/auth/me") browserErrors.push(`${response.status()} ${path}`);
+  });
+  page.on("request", (request) => { if (request.url().includes("/api/attendance/calendar/weekdays") && request.method() === "PUT") weekdayWriteCount += 1; });
   await login(page);
 
   const calendarResponse = page.waitForResponse((response) => response.url().includes("/api/attendance/calendar") && response.status() === 200);
@@ -27,9 +38,30 @@ test("@attendance @calendar @release configures expectation and surfaces it in D
   await page.getByRole("button", { name: "Save deadline" }).click();
   await deadlineSave;
 
-  const weekdaySave = page.waitForResponse((response) => response.url().includes("/api/attendance/calendar/weekday") && response.request().method() === "PUT" && response.status() === 200);
-  await page.locator("#weekday-1").selectOption("EXPECTED");
-  await weekdaySave;
+  for (const weekday of [1, 2, 3, 4, 5]) await page.locator(`#weekday-${weekday}`).selectOption("EXPECTED");
+  for (const weekday of [6, 0]) await page.locator(`#weekday-${weekday}`).selectOption("NOT_EXPECTED");
+  await expect(page.getByRole("status")).toHaveText("Unsaved changes");
+  const weekdaySave = page.waitForResponse((response) => response.url().includes("/api/attendance/calendar/weekdays") && response.request().method() === "PUT" && response.status() === 200);
+  await page.getByRole("button", { name: "Save recurring days" }).click();
+  const savedWeekdays = await (await weekdaySave).json();
+  expect(savedWeekdays.weekdays).toHaveLength(7);
+  expect(weekdayWriteCount).toBe(1);
+  await expect(page.getByRole("status")).toHaveText("Saved");
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
+  for (const weekday of [1, 2, 3, 4, 5]) await expect(page.locator(`#weekday-${weekday}`)).toHaveValue("EXPECTED");
+  for (const weekday of [6, 0]) await expect(page.locator(`#weekday-${weekday}`)).toHaveValue("NOT_EXPECTED");
+  await expect(page.locator("body")).toContainText("Expected: Monday, Tuesday, Wednesday, Thursday, Friday");
+
+  await page.locator("#weekday-2").selectOption("NOT_EXPECTED");
+  await expect(page.getByRole("status")).toHaveText("Unsaved changes");
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page.getByRole("link", { name: "Open Daily Attendance" }).click();
+  await expect(page).toHaveURL(/\/attendance\/calendar$/);
+  await expect(page.locator("#weekday-2")).toHaveValue("NOT_EXPECTED");
+  await page.locator("#weekday-2").selectOption("EXPECTED");
+  await expect(page.getByRole("status")).toHaveText("Saved");
 
   await page.locator("#exception-date").fill(holiday);
   await page.locator("#exception-expectation").selectOption("NOT_EXPECTED");
@@ -45,6 +77,7 @@ test("@attendance @calendar @release configures expectation and surfaces it in D
   await expect(beforeDeadlineRow).toContainText("Attendance expected");
   await expect(beforeDeadlineRow).toContainText("Before deadline");
   await expect(beforeDeadlineRow).toContainText("08:00 Asia/Jakarta");
+  await expect(beforeDeadlineRow.locator("td").nth(10)).toHaveText("0");
 
   const passedDeadlineResponse = page.waitForResponse((response) => response.url().includes("/api/attendance/daily-status") && response.status() === 200);
   await page.goto(`/attendance/daily?date=${pastExpectedDate}`);
@@ -52,6 +85,7 @@ test("@attendance @calendar @release configures expectation and surfaces it in D
   const passedDeadlineRow = page.getByRole("row").filter({ hasText: "Primary 1A" }).first();
   await expect(passedDeadlineRow).toContainText("Attendance expected");
   await expect(passedDeadlineRow).toContainText("Submission deadline passed");
+  await expect(passedDeadlineRow.locator("td").nth(10)).toHaveText("0");
 
   const dailyResponse = page.waitForResponse((response) => response.url().includes("/api/attendance/daily-status") && response.status() === 200);
   await page.goto(`/attendance/daily?date=${holiday}`);
@@ -61,4 +95,6 @@ test("@attendance @calendar @release configures expectation and surfaces it in D
   await expect(classRow).toContainText("Not applicable");
   await expect(page.locator("body")).toContainText("submission timing");
   await expect(page.locator("body")).not.toContainText(/overdue|high risk|at[_ -]?risk/i);
+  await expect(classRow.locator("td").nth(10)).toHaveText("0");
+  expect(browserErrors).toEqual([]);
 });

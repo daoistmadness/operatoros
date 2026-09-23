@@ -73,6 +73,18 @@ export const AttendanceCalendarWeekdayRequestSchema = Type.Object({
   expectation: Type.Union([AttendanceCalendarRuleValueSchema, Type.Null()]),
 });
 
+export const AttendanceCalendarWeekdaysRequestSchema = Type.Object({
+  academic_year_id: Id,
+  jenjang_id: Id,
+  weekdays: Type.Array(AttendanceCalendarWeekdaySchema, { minItems: 7, maxItems: 7 }),
+});
+
+export const AttendanceCalendarWeekdaysResponseSchema = Type.Object({
+  academicYearId: Id,
+  jenjangId: Id,
+  weekdays: Type.Array(AttendanceCalendarWeekdaySchema, { minItems: 7, maxItems: 7 }),
+});
+
 export const AttendanceCalendarExceptionRequestSchema = Type.Object({
   id: Type.Optional(Id),
   academic_year_id: Id,
@@ -143,6 +155,8 @@ export type AttendanceCalendarReason = Static<typeof AttendanceCalendarReasonSch
 export type AttendanceCalendarExpectation = Static<typeof AttendanceCalendarExpectationSchema>;
 export type AttendanceCalendarOverview = Static<typeof AttendanceCalendarOverviewResponseSchema>;
 export type AttendanceCalendarWeekdayRequest = Static<typeof AttendanceCalendarWeekdayRequestSchema>;
+export type AttendanceCalendarWeekdaysRequest = Static<typeof AttendanceCalendarWeekdaysRequestSchema>;
+export type AttendanceCalendarWeekdaysResponse = Static<typeof AttendanceCalendarWeekdaysResponseSchema>;
 export type AttendanceCalendarExceptionRequest = Static<typeof AttendanceCalendarExceptionRequestSchema>;
 export type AttendanceCalendarPeriodRequest = Static<typeof AttendanceCalendarPeriodRequestSchema>;
 export type AttendanceCalendarPeriodPreviewResponse = Static<typeof AttendanceCalendarPeriodPreviewResponseSchema>;
