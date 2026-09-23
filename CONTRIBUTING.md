@@ -11,6 +11,16 @@ documentation-only work. Use `mise run check:full` for the complete
 release-sensitive gate. These mise tasks delegate to the existing Make and
 Bun authorities.
 
+The repository-native `hk` hooks keep local feedback bounded. Pre-commit lints
+staged workspace source files only. Pre-push lints committed workspace changes,
+checks architecture boundaries, and runs `mise run test:fast` against the
+`origin/main...HEAD` change set. Ordinary hooks do not run `mise run doctor`,
+`mise run check:full`, E2E, or the dependency security audit. Run those commands
+explicitly when the change or release process requires them.
+
+`git commit --no-verify` and `git push --no-verify` bypass local feedback only.
+They do not bypass required GitHub CI and are exceptional recovery options.
+
 Use `mise run db:fresh` for schema/bootstrap work.
 
 For API changes, update the source contract and run the documented OpenAPI
