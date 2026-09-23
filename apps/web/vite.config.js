@@ -59,6 +59,7 @@ export default defineConfig({
     host: '127.0.0.1',
     port: frontendPort,
     strictPort: true,
+    headers: { 'Cache-Control': 'no-store' },
     proxy: apiProxy,
   },
   optimizeDeps: {

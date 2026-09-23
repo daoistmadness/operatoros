@@ -20,7 +20,79 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
+async function rosterWorkbook(rowCount = 30, headers = [
+  "student_identifier", "student_name", "academic_year", "admission_type", "birth_date", "class_name", "homeroom_teacher", "jenjang", "nik", "nipd", "nisn", "program", "start_date", "status", "student_master_id",
+]): Promise<Uint8Array> {
+  const workbook = createWorkbook({ exportType: "roster-regression" });
+  const roster = workbook.addWorksheet("Roster");
+  appendRow(roster, headers);
+  for (let index = 1; index <= rowCount; index++) {
+    appendRow(roster, [
+      String(1000 + index), `Synthetic Student ${index}`, "2099/2100", "new", new Date("2010-01-01T00:00:00.000Z"), `Class ${index}`, "Synthetic Teacher", "SMP", null, String(2000 + index), String(3000 + index), "Science", new Date("2099-07-01T00:00:00.000Z"), "active", null,
+    ]);
+  }
+  const instructions = workbook.addWorksheet("Instructions");
+  appendRow(instructions, ["OperatorOS Student Roster"]);
+  appendRow(instructions, ["Required columns", "academic_year, class_name, jenjang, program, status, student_identifier, student_name"]);
+  appendRow(instructions, ["Workflow", "Preview only"]);
+  return writeXlsxWorkbook(workbook);
+}
+
+async function previewResponse(app: ReturnType<typeof createApp>, auth: Record<string, string>, bytes: Uint8Array, filename = "roster.xlsx"): Promise<{ response: Response; body: any }> {
+  const form = new FormData();
+  form.append("file", new File([bytes], filename));
+  form.append("source_owner", "Synthetic Registrar");
+  form.append("date_received", "2026-08-26");
+  const response = await app.handle(new Request("http://local/api/student-enrollments/roster-preview", { method: "POST", headers: auth, body: form }));
+  return { response, body: await response.json() };
+}
+
 describe("academic roster candidates", () => {
+  it("previews a 30-row Roster sheet and ignores Instructions without mutating domain data", async () => {
+    const path = `/tmp/operatoros-roster-30-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-30-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: cookie(login) };
+      const before = Object.fromEntries(["student_masters", "student_enrollments", "attendance"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
+      const result = await previewResponse(app, auth, await rosterWorkbook());
+
+      expect(result.response.status, JSON.stringify(result.body)).toBe(200);
+      expect(result.body.summary).toMatchObject({ total: 30, invalid: 30 });
+      expect(result.body.rows).toHaveLength(30);
+      expect(result.body.rows.every((row: any) => row.source_sheet === "Roster")).toBe(true);
+      expect(result.body.rows[0]).toMatchObject({ source_row: 2, payload: { student_identifier: "1001", student_name: "Synthetic Student 1" }, errors: ["Unknown academic year"] });
+      const after = Object.fromEntries(["student_masters", "student_enrollments", "attendance"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
+      expect(after).toEqual(before);
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
+  it("returns controlled workbook errors for missing headers, corrupt XLSX, and unsupported types", async () => {
+    const path = `/tmp/operatoros-roster-errors-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-errors-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: cookie(login) };
+      const missing = await previewResponse(app, auth, await rosterWorkbook(1, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program"]));
+      expect(missing.response.status).toBe(400);
+      expect(missing.body.detail).toMatchObject({ code: "ROSTER_REQUIRED_COLUMNS_MISSING" });
+      expect(JSON.stringify(missing.body)).not.toContain("TypeError");
+
+      const corrupt = await previewResponse(app, auth, Uint8Array.from([0, 1, 2, 3]));
+      expect(corrupt.response.status).toBe(400);
+      expect(corrupt.body.detail).toMatchObject({ code: "ROSTER_WORKBOOK_PARSE_FAILED", message: "Unable to read this workbook. Verify that it is a valid supported Excel file." });
+      expect(JSON.stringify(corrupt.body)).not.toContain("undefined is not an object");
+
+      const unsupported = await previewResponse(app, auth, await rosterWorkbook(0), "roster.xls");
+      expect(unsupported.response.status).toBe(400);
+      expect(unsupported.body.detail).toMatchObject({ code: "ROSTER_FILE_TYPE_UNSUPPORTED" });
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
   it("previews and commits a disposable roster with provenance", async () => {
     const path = `/tmp/operatoros-roster-${process.pid}-${Date.now()}.db`;
     seed(path);

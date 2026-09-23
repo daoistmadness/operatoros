@@ -5,8 +5,10 @@ import {
   addWorksheet,
   appendRow,
   createWorkbook,
+  ExcelWorkbookParseError,
   loadXlsxWorkbook,
   parseExcelDate,
+  readXlsxWorkbook,
   readLegacyXlsRows,
   safeExportFilename,
   safeCellValue,
@@ -28,6 +30,7 @@ describe("@operatoros/excel", () => {
     expect(loaded.creator).toBe("OperatorOS");
     expect(loaded.keywords).toContain(EXCEL_EXPORT_FORMAT_VERSION);
     expect(loaded.worksheets[0]?.name).toBe("Unsafe--Sheet-");
+    expect((loaded as unknown as { sheets?: unknown }).sheets).toBeUndefined();
     expect(loaded.worksheets[0]?.getCell("A2").value).toBe("'=SUM(A1:A2)");
     expect(loaded.worksheets[0]?.getCell("B2").value).toBe(83.35);
   });
@@ -46,5 +49,26 @@ describe("@operatoros/excel", () => {
     XLSX.utils.book_append_sheet(workbook, sheet, "Attendance");
     const bytes = new Uint8Array(XLSX.write(workbook, { bookType: "biff8", type: "buffer" }) as Uint8Array);
     expect(readLegacyXlsRows(bytes)).toMatchObject({ sheetName: "Attendance", headers: ["Date", "Name"], rows: [["15/06/2026", "Andi"]] });
+  });
+
+  it("normalizes XLSX worksheet data without exposing ExcelJS shapes", async () => {
+    const workbook = createWorkbook();
+    const roster = workbook.addWorksheet("Roster");
+    roster.addRow(["student_identifier", "student_name"]);
+    roster.addRow(["1001", "Synthetic Student"]);
+    workbook.addWorksheet("Instructions").addRow(["Help", "Use the Roster sheet"]);
+
+    const parsed = await readXlsxWorkbook(await writeXlsxWorkbook(workbook));
+
+    expect(parsed.sheets.map((sheet) => sheet.name)).toEqual(["Roster", "Instructions"]);
+    expect(parsed.sheets[0]).toMatchObject({
+      headers: ["student_identifier", "student_name"],
+      rows: [{ rowNumber: 2, values: ["1001", "Synthetic Student"] }],
+    });
+  });
+
+  it("converts corrupt XLSX input into a controlled workbook error", async () => {
+    await expect(readXlsxWorkbook(Uint8Array.from([0, 1, 2, 3]))).rejects.toBeInstanceOf(ExcelWorkbookParseError);
+    await expect(readXlsxWorkbook(Uint8Array.from([0, 1, 2, 3]))).rejects.toMatchObject({ code: "EXCEL_WORKBOOK_PARSE_FAILED" });
   });
 });

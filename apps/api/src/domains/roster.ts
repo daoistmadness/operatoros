@@ -2,10 +2,11 @@ import {
   addWorksheet,
   appendRow,
   createWorkbook,
-  loadXlsxWorkbook,
+  ExcelWorkbookParseError,
+  readXlsxWorkbook,
   styleHeader,
   writeXlsxWorkbook,
-  type ExcelWorkbook,
+  type ParsedExcelWorkbook,
 } from "@operatoros/excel";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
@@ -23,12 +24,20 @@ const classifications = ["CREATE", "UPDATE", "MATCH_EXISTING", "CONFLICT", "INVA
 function rows(context: AuthContext, sql: string, params: any[] = []): Row[] { return context.database.client.query(sql).all(...params) as Row[]; }
 function row(context: AuthContext, sql: string, params: any[] = []): Row | null { return (context.database.client.query(sql).get(...params) as Row | null) ?? null; }
 function error(set: any, status: number, detail: string): { detail: string } { set.status = status; return { detail }; }
+function codedError(set: any, status: number, code: string, message: string): { detail: { code: string; message: string } } { set.status = status; return { detail: { code, message } }; }
 function canonical(value: unknown): string { if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`; if (value && typeof value === "object") return `{${Object.entries(value as Row).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`; return JSON.stringify(value); }
 function digest(value: unknown): string { return createHash("sha256").update(canonical(value)).digest("hex"); }
 function classify(errors: string[], existing: Row | null, matches: boolean): string { return errors.length ? "INVALID" : existing === null ? "CREATE" : matches ? "MATCH_EXISTING" : "UPDATE"; }
 
 const rosterRequired = new Set(required);
 const rosterOptional = new Set(optional);
+
+class RosterWorkbookError extends Error {
+  constructor(readonly code: string, message: string) {
+    super(message);
+    this.name = "RosterWorkbookError";
+  }
+}
 
 function rosterDate(value: unknown): string | null {
   if (typeof value === "string") {
@@ -48,26 +57,28 @@ function rosterCell(value: unknown): unknown {
 
 function rosterName(value: unknown): string { return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase(); }
 
-function rosterRows(workbook: ExcelWorkbook): Row[] {
+function rosterRows(workbook: ParsedExcelWorkbook): Row[] {
+  const sheet = workbook.sheets.find((value) => value.name === "Roster");
+  if (!sheet) throw new RosterWorkbookError("ROSTER_SHEET_MISSING", "The workbook must contain a worksheet named 'Roster'.");
   const result: Row[] = [];
-  for (const sheet of workbook.worksheets) {
-    const headerValues = (sheet.getRow(1).values as unknown[]).slice(1).map((value) => normalizeHeader(value).toLowerCase().replace(/ /g, "_"));
-    const missing = [...rosterRequired].filter((name) => !headerValues.includes(name));
-    if (missing.length) throw new Error(`Sheet '${sheet.name}' missing required columns: ${missing.sort().join(", ")}`);
-    if (sheet.rowCount - 1 > 10000) throw new Error("Academic roster exceeds the 10,000-row limit");
-    const columns = [...rosterRequired, ...rosterOptional];
-    for (let number = 2; number <= sheet.rowCount; number++) {
-      const values = sheet.getRow(number).values as unknown[];
-      if (values.slice(1).every((value) => value == null || String(rosterCell(value)).trim() === "")) continue;
-      const payload: Row = {};
-      for (const name of columns) {
-        const index = headerValues.indexOf(name);
-        payload[name] = index < 0 ? null : parseOptionalString(rosterCell(values[index + 1]));
-      }
-      payload.birth_date = rosterDate(rosterCell(values[headerValues.indexOf("birth_date") + 1]));
-      payload.start_date = rosterDate(rosterCell(values[headerValues.indexOf("start_date") + 1]));
-      result.push({ source_sheet: sheet.name, source_row: number, payload });
+  const headerValues = sheet.headers.map((value) => normalizeHeader(value).toLowerCase().replace(/ /g, "_"));
+  const missing = [...rosterRequired].filter((name) => !headerValues.includes(name));
+  if (missing.length) throw new RosterWorkbookError("ROSTER_REQUIRED_COLUMNS_MISSING", `The Roster worksheet is missing required columns: ${missing.sort().join(", ")}`);
+  if (sheet.rows.length > 10000) throw new RosterWorkbookError("ROSTER_ROW_LIMIT_EXCEEDED", "Academic roster exceeds the 10,000-row limit.");
+  const columns = [...rosterRequired, ...rosterOptional];
+  for (const sourceRow of sheet.rows) {
+    const values = sourceRow.values;
+    if (values.every((value) => value == null || String(rosterCell(value)).trim() === "")) continue;
+    const payload: Row = {};
+    for (const name of columns) {
+      const index = headerValues.indexOf(name);
+      payload[name] = index < 0 ? null : parseOptionalString(rosterCell(values[index]));
     }
+    const birthDateIndex = headerValues.indexOf("birth_date");
+    const startDateIndex = headerValues.indexOf("start_date");
+    payload.birth_date = birthDateIndex < 0 ? null : rosterDate(rosterCell(values[birthDateIndex]));
+    payload.start_date = startDateIndex < 0 ? null : rosterDate(rosterCell(values[startDateIndex]));
+    result.push({ source_sheet: sheet.name, source_row: sourceRow.rowNumber, payload });
   }
   return result;
 }
@@ -95,7 +106,7 @@ function rosterMaster(context: AuthContext, payload: Row): { master: Row | null;
 
 function rosterPreview(context: AuthContext, file: File, owner: string, dateReceived: string, username: string): Promise<Row> {
   return file.arrayBuffer().then(async (buffer) => {
-    const workbook = await loadXlsxWorkbook(buffer);
+    const workbook = await readXlsxWorkbook(buffer);
     const source = rosterRows(workbook); const result: Row[] = []; const seen = new Set<string>();
     const activeJenjangs = new Map(rows(context, "SELECT * FROM jenjangs WHERE active = 1").map((value) => [value.name, value]));
     for (const sourceRow of source) {
@@ -193,7 +204,7 @@ export function rosterRoutes(app: any, context: AuthContext): any {
   const grade = t.Object({ jenjang_code: t.String({ minLength: 1, maxLength: 32 }), program: t.String({ minLength: 1, maxLength: 255 }), name: t.String({ minLength: 1, maxLength: 255 }), sequence_number: t.Number({ minimum: 1 }), active: t.Optional(t.Boolean()) });
   const academicClass = t.Object({ academic_year: t.String({ minLength: 1, maxLength: 32 }), jenjang_code: t.String({ minLength: 1, maxLength: 32 }), program: t.String({ minLength: 1, maxLength: 255 }), grade: t.String({ minLength: 1, maxLength: 255 }), class_name: t.String({ minLength: 1, maxLength: 255 }), section_code: t.Optional(t.String()), active: t.Optional(t.Boolean()) });
   app.post("/api/student-enrollments/academic-master-preview", (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; return academicMasterPreview(context, ctx.body, user.username); }, { body: t.Object({ source_owner: t.String({ minLength: 2, maxLength: 255 }), academic_years: t.Optional(t.Array(year)), jenjangs: t.Optional(t.Array(jenjang)), programs: t.Optional(t.Array(program)), grades: t.Optional(t.Array(grade)), classes: t.Optional(t.Array(academicClass)) }) });
-  app.post("/api/student-enrollments/roster-preview", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const file = ctx.body?.file as File | undefined; const dateReceived = String(ctx.body?.date_received ?? ""); if (!file || !file.name.toLowerCase().endsWith(".xlsx")) return error(ctx.set, 400, "Academic roster must be an .xlsx workbook"); if (!rosterDate(dateReceived)) return error(ctx.set, 422, "Input should be a valid date"); try { return await rosterPreview(context, file, String(ctx.body.source_owner).trim(), dateReceived, user.username); } catch (cause) { ctx.set.status = 400; return { detail: cause instanceof Error ? cause.message : "The roster workbook could not be previewed." }; } }, { body: t.Object({ file: t.File(), source_owner: t.String({ minLength: 2, maxLength: 255 }), date_received: t.String() }) });
+  app.post("/api/student-enrollments/roster-preview", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const file = ctx.body?.file as File | undefined; const dateReceived = String(ctx.body?.date_received ?? ""); if (!file || !file.name.toLowerCase().endsWith(".xlsx")) return codedError(ctx.set, 400, "ROSTER_FILE_TYPE_UNSUPPORTED", "Student roster uploads support .xlsx files only."); if (!rosterDate(dateReceived)) return error(ctx.set, 422, "Input should be a valid date"); try { return await rosterPreview(context, file, String(ctx.body.source_owner).trim(), dateReceived, user.username); } catch (cause) { if (cause instanceof ExcelWorkbookParseError) return codedError(ctx.set, 400, "ROSTER_WORKBOOK_PARSE_FAILED", cause.message); if (cause instanceof RosterWorkbookError) return codedError(ctx.set, 400, cause.code, cause.message); return codedError(ctx.set, 400, "ROSTER_PREVIEW_FAILED", "The roster workbook could not be previewed. Review the file and try again."); } }, { body: t.Object({ file: t.File(), source_owner: t.String({ minLength: 2, maxLength: 255 }), date_received: t.String() }) });
   app.post("/api/student-enrollments/roster-commit", (ctx: Context) => { const user = actor(context, ctx, { capability: "commit_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; try { return rosterCommit(context, ctx.body, user.username); } catch (cause) { ctx.set.status = Number((cause as any)?.status ?? 409); return { detail: cause instanceof Error ? cause.message : "The roster could not be committed." }; } }, { body: t.Object({ preview_id: t.String({ minLength: 1 }), selected_row_ids: t.Array(t.Number({ minimum: 1 }), { minItems: 1 }), confirmation: t.String(), preview_checksum: t.Optional(t.String()) }) });
   app.get("/api/student-enrollments/roster-template", async (ctx: Context) => { const user = actor(context, ctx, { capability: "import_student_roster" }); if (!user) return { detail: "Insufficient permissions" }; const workbook = createWorkbook({ exportType: "student-roster-template" }); const sheet = addWorksheet(workbook, "Roster"); const headers = [...required, ...optional].sort((a, b) => (a === "student_identifier" ? -1 : b === "student_identifier" ? 1 : a === "student_name" ? -1 : b === "student_name" ? 1 : a.localeCompare(b))); appendRow(sheet, headers); styleHeader(sheet); sheet.autoFilter = { from: "A1", to: `${String.fromCharCode(64 + headers.length)}1` }; const instructions = addWorksheet(workbook, "Instructions"); appendRow(instructions, ["OperatorOS Student Roster"]); appendRow(instructions, ["Required columns", [...required].sort().join(", ")]); appendRow(instructions, ["Workflow", "Upload creates a non-mutating preview. Select valid rows and confirm before commit."]); const bytes = await writeXlsxWorkbook(workbook); return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": 'attachment; filename="operatoros-student-roster.xlsx"' } }); });
   return app;

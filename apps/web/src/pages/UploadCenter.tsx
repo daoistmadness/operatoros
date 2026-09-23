@@ -44,7 +44,6 @@ import { buildApiUrl } from "../lib/api/client";
 import { eligibleIds, rosterRowView, safeSelectedIds, selectionState } from "../lib/uploadWorkflow";
 import { NeedsAttentionPanel } from "../components/upload/NeedsAttentionPanel";
 import { UploadHistoryPanel } from "../components/upload/UploadHistoryPanel";
-import { NativeSelect } from "../components/ui/native-select";
 
 const today = new Date().toISOString().slice(0, 10);
 const ROSTER_COLUMNS = ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"];
@@ -62,6 +61,19 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function rosterPreviewErrorPresentation(error: unknown): { title: string; message: string } {
+  const value = error && typeof error === "object" ? error as Record<string, unknown> : {};
+  const code = typeof value.code === "string" ? value.code : "";
+  const kind = typeof value.kind === "string" ? value.kind : "";
+  const message = typeof value.message === "string" ? value.message : "";
+  if (code === "ROSTER_WORKBOOK_PARSE_FAILED") return { title: "Workbook file error", message: "Unable to read this workbook. Verify that it is a valid supported Excel file." };
+  if (code === "ROSTER_FILE_TYPE_UNSUPPORTED") return { title: "Unsupported file type", message: "Student roster uploads support .xlsx files only." };
+  if (code === "ROSTER_REQUIRED_COLUMNS_MISSING" || code === "ROSTER_SHEET_MISSING" || code === "ROSTER_ROW_LIMIT_EXCEEDED") return { title: "Workbook validation failed", message: message || "The workbook does not match the student roster format." };
+  if (kind === "network" || kind === "timeout" || kind === "server") return { title: "Roster preview unavailable", message: "The server could not complete the preview. Check the connection and try again." };
+  if (/undefined is not an object|cannot read propert|typeerror|workbook\./i.test(message)) return { title: "Roster preview unavailable", message: "The workbook preview could not be completed. Verify the file and try again." };
+  return { title: "Roster preview failed", message: message || "The workbook preview could not be completed. Verify the file and try again." };
 }
 
 function RosterStages({ stage }: { stage: "upload" | "review" | "import" }) {
@@ -128,12 +140,12 @@ export function RosterImportPanel() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(25);
-  const [selectedSheet, setSelectedSheet] = useState("Roster");
   const headerCheckbox = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const reviewRef = useRef<HTMLDivElement>(null);
 
   const rows = preview.data?.rows || [];
+  const previewFailure = preview.error ? rosterPreviewErrorPresentation(preview.error) : null;
   const viewRows = useMemo(() => rows.map((row: any) => ({ source: row, view: rosterRowView(row) })), [rows]);
   const eligible = useMemo(() => eligibleIds(rows, rosterRowView), [rows]);
   const safeSelected = useMemo(() => safeSelectedIds(rows, selected, rosterRowView), [rows, selected]);
@@ -268,7 +280,6 @@ export function RosterImportPanel() {
     setSearch("");
     setActiveTab("all");
     setCurrentPage(1);
-    setSelectedSheet("Roster");
     preview.reset();
     commit.reset();
   };
@@ -279,10 +290,6 @@ export function RosterImportPanel() {
     setShowSummary(false);
     preview.reset();
     commit.reset();
-    if (nextFile) {
-      // Reset sheet to default; in real workbook we could parse sheet names, but keep simple
-      setSelectedSheet("Roster");
-    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -297,7 +304,7 @@ export function RosterImportPanel() {
     e.preventDefault();
     setDragOver(false);
     const dropped = e.dataTransfer.files?.[0];
-    if (dropped && (dropped.name.endsWith(".xlsx") || dropped.name.endsWith(".xls"))) {
+    if (dropped && dropped.name.toLowerCase().endsWith(".xlsx")) {
       handleFile(dropped);
     }
   };
@@ -375,7 +382,7 @@ export function RosterImportPanel() {
               id="roster-file-hidden"
               type="file"
               className="sr-only"
-              accept=".xlsx,.xls"
+              accept=".xlsx"
               aria-label="Choose XLSX file"
               onChange={(event) => {
                 const f = event.target.files?.[0] || null;
@@ -397,7 +404,7 @@ export function RosterImportPanel() {
                 if (f) handleFile(f);
               }}
             />
-            <p className="mt-3 text-xs font-semibold text-muted-foreground">.xlsx and supported .xls files · Max 10,000 rows</p>
+            <p className="mt-3 text-xs font-semibold text-muted-foreground">.xlsx files only · Max 10,000 rows</p>
 
             {file && (
               <div className="mx-auto mt-6 max-w-md rounded-lg border border-border bg-surface p-4 text-left shadow-sm">
@@ -428,17 +435,7 @@ export function RosterImportPanel() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold text-muted-foreground">Sheet</span>
-                  <NativeSelect
-                    aria-label="Select sheet"
-                    value={selectedSheet}
-                    onChange={(e) => setSelectedSheet(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-8 w-auto min-w-[140px]"
-                  >
-                    <option value="Roster">Roster</option>
-                    <option value="Students">Students</option>
-                    <option value="All">All sheets</option>
-                  </NativeSelect>
+                  <span aria-label="Selected sheet" className="rounded-md border border-border bg-surface-muted px-2 py-1 text-xs font-bold text-foreground">Roster</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -529,10 +526,10 @@ export function RosterImportPanel() {
               )}
             </div>
           </form>
-          {preview.error && (
+          {previewFailure && (
             <Alert variant="danger">
-              <AlertTitle>Roster preview failed</AlertTitle>
-              <AlertDescription>{preview.error.message}</AlertDescription>
+              <AlertTitle>{previewFailure.title}</AlertTitle>
+              <AlertDescription>{previewFailure.message}</AlertDescription>
             </Alert>
           )}
         </CardContent>
@@ -545,7 +542,7 @@ export function RosterImportPanel() {
             <CardHeader>
               <CardTitle>Roster preview</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {file?.name} · Preview ID {preview.data.preview_id} · Sheet {selectedSheet}
+                {file?.name} · Preview ID {preview.data.preview_id} · Sheet Roster
               </p>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -876,7 +873,7 @@ export function RosterImportPanel() {
                     </div>
                     <div>
                       <dt className="text-muted-foreground">Sheet</dt>
-                      <dd className="font-bold">{selectedSheet}</dd>
+                      <dd className="font-bold">Roster</dd>
                     </div>
                   </dl>
                   <div className="mt-4 space-y-1 text-sm text-slate-700">
