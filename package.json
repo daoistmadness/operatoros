@@ -33,7 +33,7 @@
     "turbo:version": "turbo --version",
     "test:turbo": "bun scripts/test-turbo-invalidation.ts",
     "benchmark:excel": "bun --filter @operatoros/excel benchmark",
-    "security:audit": "bun audit --ignore=1102341 --ignore=1119441",
+    "security:audit": "bun audit",
     "test:security": "bun --filter @operatoros/api test tests/security.test.ts tests/auth.test.ts tests/safety.test.ts",
     "test:analytics": "bun test apps/api/tests/analytics-phase16.test.ts packages/contracts/tests/contracts.test.ts && bun --filter @operatoros/web test src/lib/query/queryKeys.test.ts",
     "lint": "eslint --max-warnings=0 apps/api apps/web packages/db packages/contracts packages/excel packages/ui packages/config",
@@ -44,5 +44,13 @@
     "eslint": "10.9.1",
     "turbo": "2.10.12",
     "typescript": "5.9.3"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.0"
+    },
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }
