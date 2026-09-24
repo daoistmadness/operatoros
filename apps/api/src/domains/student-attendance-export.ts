@@ -48,12 +48,7 @@ function lateDurationMinutes(value: Row): number {
 }
 
 function effectiveStatus(value: Row): string {
-  if (value.override_status) return String(value.override_status);
-  const checkIn = value.check_in !== null && value.check_in !== undefined;
-  const checkOut = value.check_out !== null && value.check_out !== undefined;
-  if (checkIn && checkOut) return lateDurationMinutes(value) > 0 ? "late" : "on-time";
-  if (checkIn !== checkOut) return "incomplete";
-  return "absent";
+  return String(value.override_status ?? value.raw_status);
 }
 
 function clockText(value: unknown): string | null {
@@ -125,16 +120,17 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
       const late = status((value) => effectiveStatus(value) === "late");
       const incomplete = status((value) => effectiveStatus(value) === "incomplete");
       const absent = status((value) => effectiveStatus(value) === "absent");
-      const attended = monthValues.filter((value) => effectiveStatus(value) !== "absent").length;
+      const attended = present + late;
       const heb = hebValue(context, jenjang, key, attended);
-      const reason = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id IN (" + studentIds.map(() => "?").join(",") + ") AND month = ? AND year = ?", [...studentIds, Number(key.slice(5, 7)), Number(key.slice(0, 4))])[0];
+      const legacy = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id IN (" + studentIds.map(() => "?").join(",") + ") AND month = ? AND year = ?", [...studentIds, Number(key.slice(5, 7)), Number(key.slice(0, 4))])[0];
+      const category = (name: "sakit" | "izin" | "alfa") => status((value) => effectiveStatus(value) === name) || Number(legacy?.[name] ?? 0);
       return {
         month_key: key,
         month_label: monthLabel(key),
         present, late, incomplete, absent,
-        sakit: Number(reason?.sakit ?? 0),
-        izin: Number(reason?.izin ?? 0),
-        alfa: Number(reason?.alfa ?? 0),
+        sakit: category("sakit"),
+        izin: category("izin"),
+        alfa: category("alfa"),
         heb,
         attendance_rate: heb > 0 ? Number(((present + late) / heb).toFixed(3)) : null,
       };

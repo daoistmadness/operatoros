@@ -12663,6 +12663,903 @@
         ]
       }
     },
+    "/api/analytics/attendance/term": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "term_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-4]$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "grade_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "period",
+                    "scope",
+                    "totals",
+                    "jenjangs",
+                    "programs",
+                    "grades",
+                    "classes",
+                    "students",
+                    "quality"
+                  ],
+                  "properties": {
+                    "period": {
+                      "type": "object",
+                      "required": [
+                        "academic_year_id",
+                        "academic_year_label",
+                        "term_id",
+                        "term_number",
+                        "term_label",
+                        "start_date",
+                        "end_date",
+                        "source"
+                      ],
+                      "properties": {
+                        "academic_year_id": {
+                          "minimum": 1,
+                          "type": "number"
+                        },
+                        "academic_year_label": {
+                          "type": "string"
+                        },
+                        "term_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "term_number": {
+                          "minimum": 1,
+                          "maximum": 4,
+                          "type": "number"
+                        },
+                        "term_label": {
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "custom",
+                            "default"
+                          ]
+                        }
+                      }
+                    },
+                    "scope": {
+                      "type": "object",
+                      "required": [
+                        "jenjang_id",
+                        "program_id",
+                        "grade_id",
+                        "class_id"
+                      ],
+                      "properties": {
+                        "jenjang_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "program_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "grade_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "class_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "totals": {
+                      "type": "object",
+                      "required": [
+                        "expected_student_days",
+                        "recorded_student_days",
+                        "unrecorded_student_days",
+                        "hadir_count",
+                        "sakit_count",
+                        "izin_count",
+                        "alfa_count",
+                        "late_count",
+                        "other_status_count",
+                        "coverage_rate",
+                        "attendance_rate",
+                        "recorded_attendance_rate"
+                      ],
+                      "properties": {
+                        "expected_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "recorded_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "unrecorded_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "hadir_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "sakit_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "izin_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "alfa_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "late_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "other_status_count": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "coverage_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "attendance_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "recorded_attendance_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "jenjangs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "jenjang_id",
+                          "jenjang",
+                          "totals"
+                        ],
+                        "properties": {
+                          "jenjang_id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "jenjang": {
+                            "type": "string"
+                          },
+                          "totals": {
+                            "type": "object",
+                            "required": [
+                              "expected_student_days",
+                              "recorded_student_days",
+                              "unrecorded_student_days",
+                              "hadir_count",
+                              "sakit_count",
+                              "izin_count",
+                              "alfa_count",
+                              "late_count",
+                              "other_status_count",
+                              "coverage_rate",
+                              "attendance_rate",
+                              "recorded_attendance_rate"
+                            ],
+                            "properties": {
+                              "expected_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "recorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unrecorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "hadir_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "sakit_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "izin_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "alfa_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "late_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "other_status_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "coverage_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "recorded_attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "programs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "program_id",
+                          "program",
+                          "totals"
+                        ],
+                        "properties": {
+                          "program_id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "program": {
+                            "type": "string"
+                          },
+                          "totals": {
+                            "type": "object",
+                            "required": [
+                              "expected_student_days",
+                              "recorded_student_days",
+                              "unrecorded_student_days",
+                              "hadir_count",
+                              "sakit_count",
+                              "izin_count",
+                              "alfa_count",
+                              "late_count",
+                              "other_status_count",
+                              "coverage_rate",
+                              "attendance_rate",
+                              "recorded_attendance_rate"
+                            ],
+                            "properties": {
+                              "expected_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "recorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unrecorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "hadir_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "sakit_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "izin_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "alfa_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "late_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "other_status_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "coverage_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "recorded_attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "grades": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "grade_id",
+                          "grade",
+                          "totals"
+                        ],
+                        "properties": {
+                          "grade_id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "grade": {
+                            "type": "string"
+                          },
+                          "totals": {
+                            "type": "object",
+                            "required": [
+                              "expected_student_days",
+                              "recorded_student_days",
+                              "unrecorded_student_days",
+                              "hadir_count",
+                              "sakit_count",
+                              "izin_count",
+                              "alfa_count",
+                              "late_count",
+                              "other_status_count",
+                              "coverage_rate",
+                              "attendance_rate",
+                              "recorded_attendance_rate"
+                            ],
+                            "properties": {
+                              "expected_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "recorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unrecorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "hadir_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "sakit_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "izin_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "alfa_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "late_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "other_status_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "coverage_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "recorded_attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "classes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "class_id",
+                          "class_name",
+                          "totals"
+                        ],
+                        "properties": {
+                          "class_id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "class_name": {
+                            "type": "string"
+                          },
+                          "totals": {
+                            "type": "object",
+                            "required": [
+                              "expected_student_days",
+                              "recorded_student_days",
+                              "unrecorded_student_days",
+                              "hadir_count",
+                              "sakit_count",
+                              "izin_count",
+                              "alfa_count",
+                              "late_count",
+                              "other_status_count",
+                              "coverage_rate",
+                              "attendance_rate",
+                              "recorded_attendance_rate"
+                            ],
+                            "properties": {
+                              "expected_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "recorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unrecorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "hadir_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "sakit_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "izin_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "alfa_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "late_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "other_status_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "coverage_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "recorded_attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "students": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "student_key",
+                          "totals"
+                        ],
+                        "properties": {
+                          "student_key": {
+                            "type": "string"
+                          },
+                          "totals": {
+                            "type": "object",
+                            "required": [
+                              "expected_student_days",
+                              "recorded_student_days",
+                              "unrecorded_student_days",
+                              "hadir_count",
+                              "sakit_count",
+                              "izin_count",
+                              "alfa_count",
+                              "late_count",
+                              "other_status_count",
+                              "coverage_rate",
+                              "attendance_rate",
+                              "recorded_attendance_rate"
+                            ],
+                            "properties": {
+                              "expected_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "recorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "unrecorded_student_days": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "hadir_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "sakit_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "izin_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "alfa_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "late_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "other_status_count": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "coverage_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "recorded_attendance_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "quality": {
+                      "type": "object",
+                      "required": [
+                        "unknown_calendar_dates",
+                        "unknown_calendar_student_days",
+                        "unresolved_class_student_days",
+                        "other_status_student_days",
+                        "report_data_ready"
+                      ],
+                      "properties": {
+                        "unknown_calendar_dates": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "unknown_calendar_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "unresolved_class_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "other_status_student_days": {
+                          "minimum": 0,
+                          "type": "number"
+                        },
+                        "report_data_ready": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiAnalyticsAttendanceTerm"
+      }
+    },
     "/api/analytics/class-leaderboard": {
       "get": {
         "operationId": "get_class_leaderboard_api_analytics_class_leaderboard_get",
