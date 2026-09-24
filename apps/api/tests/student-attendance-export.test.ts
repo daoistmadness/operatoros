@@ -93,12 +93,32 @@ describe("student attendance history export", () => {
       const recap = workbook.getWorksheet("Rekap Bulanan")!;
       expect(recap.getRow(2).getCell(2).value).toBe(2); // both rows effectively on-time (late corrected)
       expect(recap.getRow(2).getCell(3).value).toBe(0); // no late rows after override
-      expect(recap.getRow(2).getCell(6).value).toBe(1); // sakit from absence_reasons
+      expect(recap.getRow(2).getCell(6).value).toBe(1); // legacy reason remains available without an explicit effective status
       const detail = workbook.getWorksheet("Rincian Harian")!;
       const lateRow = [2, 3, 4].map((r) => detail.getRow(r).getCell(7).value).filter(Boolean).length;
       expect(lateRow).toBe(1); // exactly one override note
       const after = value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number };
       expect(after.count).toBe(before.count);
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
+  it("keeps explicit Sakit, Izin, and Alfa without scans in detail and recap", async () => {
+    const value = await setup("explicit-statuses");
+    try {
+      value.database.client.run("UPDATE attendance SET status = 'sakit' WHERE student_id = 9101 AND date = '2026-08-05'");
+      for (const [date, status] of [["2026-08-06", "izin"], ["2026-08-07", "alfa"]] as const) {
+        value.database.client.run("INSERT INTO attendance (student_id, date, late_duration, late_source, is_absent, status) VALUES (9101, ?, 0, 'test', 1, ?)", [date, status]);
+      }
+      const id = await masterId(value);
+      const response = await value.app.handle(new Request(exportUrl(id, "?month=8&year=2026"), { headers: { cookie: value.admin.cookie } }));
+      expect(response.status).toBe(200);
+      const workbook = await loadXlsxWorkbook(new Uint8Array(await response.arrayBuffer()));
+      const recap = workbook.getWorksheet("Rekap Bulanan")!.getRow(2);
+      expect([6, 7, 8].map((column) => recap.getCell(column).value)).toEqual([1, 1, 1]);
+      const detail = workbook.getWorksheet("Rincian Harian")!;
+      expect([4, 5, 6].map((row) => detail.getRow(row).getCell(2).value)).toEqual(["sakit", "izin", "alfa"]);
     } finally {
       value.cleanup();
     }
