@@ -102,9 +102,9 @@ describe("AcademicFoundationPanel quick grade setup", () => {
       program_id: 22,
       grades: [{ name: "Custom A", sequence_number: 1 }, { name: "Custom B", sequence_number: 2 }],
     });
-    expect(invalidation).toHaveBeenCalledTimes(4);
+    expect(invalidation).toHaveBeenCalledTimes(5);
     expect(invalidation.mock.calls.map(([filters]) => filters?.queryKey)).toEqual([
-      ["readiness"], ["academic-masters", "grades"], ["analytics", "filters"], ["analytics", "academic"],
+      ["readiness"], ["academic-masters", "grades"], ["academic-masters", "class-reference"], ["analytics", "filters"], ["analytics", "academic"],
     ]);
     expect(onChanged).not.toHaveBeenCalled();
     expect(view!.textContent).toContain("2 grades were added to Secondary Program.");
