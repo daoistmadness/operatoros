@@ -56,7 +56,7 @@ describe("academic roster candidates", () => {
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login) };
-      const before = Object.fromEntries(["student_masters", "student_enrollments", "attendance"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
+      const before = Object.fromEntries(["student_masters", "student_enrollments", "attendance", "student_import_sessions", "academic_roster_import_batches"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
       const result = await previewResponse(app, auth, await rosterWorkbook());
 
       expect(result.response.status, JSON.stringify(result.body)).toBe(200);
@@ -64,7 +64,7 @@ describe("academic roster candidates", () => {
       expect(result.body.rows).toHaveLength(30);
       expect(result.body.rows.every((row: any) => row.source_sheet === "Roster")).toBe(true);
       expect(result.body.rows[0]).toMatchObject({ source_row: 2, payload: { student_identifier: "1001", student_name: "Synthetic Student 1" }, errors: ["Unknown academic year"] });
-      const after = Object.fromEntries(["student_masters", "student_enrollments", "attendance"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
+      const after = Object.fromEntries(["student_masters", "student_enrollments", "attendance", "student_import_sessions", "academic_roster_import_batches"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
       expect(after).toEqual(before);
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
@@ -108,9 +108,59 @@ describe("academic roster candidates", () => {
       const form = new FormData(); form.append("file", new File([bytes], "roster.xlsx")); form.append("source_owner", "School Office"); form.append("date_received", "2026-08-26");
       const preview = await app.handle(new Request("http://local/api/student-enrollments/roster-preview", { method: "POST", headers: auth, body: form })); const previewBody = await preview.json() as any;
       expect(preview.status, JSON.stringify(previewBody)).toBe(200); expect(previewBody.summary).toMatchObject({ total: 1, create_enrollment: 1 }); expect(previewBody.rows[0]).toMatchObject({ classification: "CREATE_ENROLLMENT", matched_student_master_id: expect.any(String) });
-      const commit = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: previewBody.preview_id, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER", preview_checksum: previewBody.preview_checksum }) })); const commitBody = await commit.json() as any;
+      const commit = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: previewBody.preview_id, plan_token: previewBody.plan_token, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER", preview_checksum: previewBody.preview_checksum }) })); const commitBody = await commit.json() as any;
       expect(commit.status, JSON.stringify(commitBody)).toBe(200); expect(commitBody).toMatchObject({ status: "committed", created: 1, students_created: 0 }); expect((database.client.query("SELECT COUNT(*) AS count FROM student_enrollments").get() as any).count).toBe(1); expect((database.client.query("SELECT COUNT(*) AS count FROM student_import_applied_actions").get() as any).count).toBe(1);
-      const replay = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: previewBody.preview_id, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER", preview_checksum: previewBody.preview_checksum }) })); expect(await replay.json()).toEqual(commitBody);
+      const replay = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: previewBody.preview_id, plan_token: previewBody.plan_token, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER", preview_checksum: previewBody.preview_checksum }) })); expect(await replay.json()).toEqual(commitBody);
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
+  it("uses the canonical year/class hierarchy and explains each class failure", async () => {
+    const path = `/tmp/operatoros-roster-class-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-class-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: cookie(login) };
+      database.client.run("INSERT INTO academic_years (label,start_date,end_date,is_default,status) VALUES ('2026/2027','2026-07-01','2027-06-30',0,'active'),('2027/2028','2027-07-01','2028-06-30',0,'active')");
+      database.client.run("INSERT INTO jenjangs (name,code,level,active) VALUES ('Primary','PRI','primary',1)");
+      database.client.run("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (2,'Primary',1)");
+      database.client.run("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (2,2,'P1',1,1)");
+      database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (2,2,'P1A','A',1),(2,2,'P1B','B',1),(3,2,'P1A','A',1)");
+      const classId = Number((database.client.query("SELECT id FROM academic_classes WHERE academic_year_id = 2 AND class_name = 'P1A'").get() as any).id);
+      const preview = async (className: string, program = "Primary", year = "2026/2027", grade = "P1", identifier = "456") => {
+        const workbook = createWorkbook({ exportType: "synthetic-class-roster" }); const sheet = workbook.addWorksheet("Roster");
+        appendRow(sheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status", "grade"]);
+        appendRow(sheet, [identifier, "Synthetic Student", year, "Primary", className, program, "active", grade]);
+        const form = new FormData(); form.append("file", new File([await writeXlsxWorkbook(workbook)], "synthetic.xlsx")); form.append("source_owner", "Synthetic Registrar"); form.append("date_received", "2026-08-26");
+        const response = await app.handle(new Request("http://local/api/student-enrollments/roster-preview", { method: "POST", headers: auth, body: form }));
+        expect(response.status).toBe(200); return response.json() as Promise<any>;
+      };
+      const p1a = await preview("P1A", "primary");
+      expect(p1a.rows[0]).toMatchObject({ classification: "CREATE_NEW_MASTER", payload: { academic_class_id: classId, target_class: "P1A", target_grade: "P1", target_program: "Primary", target_jenjang: "Primary" } });
+      expect((database.client.query("SELECT COUNT(*) AS count FROM academic_roster_import_batches").get() as any).count).toBe(0);
+      expect((database.client.query("SELECT COUNT(*) AS count FROM student_import_sessions").get() as any).count).toBe(0);
+      expect((await preview("P1B")).rows[0].classification).toBe("CREATE_NEW_MASTER");
+      expect((await preview("P1C")).rows[0].classification).toBe("CLASS_NOT_FOUND");
+      expect((await preview("P1A", "Secondary")).rows[0].classification).toBe("CLASS_CONTEXT_CONFLICT");
+      expect((await preview("P1A", "Primary", "2026/2027", "P2")).rows[0].classification).toBe("CLASS_CONTEXT_CONFLICT");
+      expect((await preview(" p1a ")).rows[0].payload.academic_class_id).toBe(classId);
+      const otherYear = await preview("P1A", "Primary", "2027/2028");
+      expect(otherYear.rows[0].payload.academic_class_id).not.toBe(classId);
+      database.client.run("UPDATE academic_classes SET active = 0 WHERE academic_year_id = 2 AND class_name = 'P1B'");
+      expect((await preview("P1B")).rows[0].classification).toBe("CLASS_INACTIVE");
+      const committed = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: p1a.preview_id, plan_token: p1a.plan_token, preview_checksum: p1a.preview_checksum, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER" }) }));
+      expect(committed.status).toBe(200);
+      expect((database.client.query("SELECT academic_class_id FROM student_enrollments WHERE academic_year_id = 2").get() as any).academic_class_id).toBe(classId);
+      const stale = await preview("P1A", "Primary", "2026/2027", "P1", "457");
+      database.client.run("UPDATE academic_classes SET active = 0 WHERE id = ?", [classId]);
+      const rejected = await app.handle(new Request("http://local/api/student-enrollments/roster-commit", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ preview_id: stale.preview_id, plan_token: stale.plan_token, preview_checksum: stale.preview_checksum, selected_row_ids: [1], confirmation: "COMMIT_ACADEMIC_ROSTER" }) }));
+      expect(rejected.status).toBe(409);
+      expect((database.client.query("SELECT COUNT(*) AS count FROM student_device_identities WHERE device_identifier = '457'").get() as any).count).toBe(0);
+      database.client.run("UPDATE academic_classes SET active = 1 WHERE id = ?", [classId]);
+      database.client.run("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (2,2,'P2',2,1)");
+      database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (2,3,'p1a','A',1)");
+      expect((await preview("P1a")).rows[0].classification).toBe("AMBIGUOUS_CLASS");
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 });

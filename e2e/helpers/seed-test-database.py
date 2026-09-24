@@ -248,6 +248,15 @@ def main() -> int:
             (destination_year_id, secondary_grade_id),
         )
         destination_secondary_class_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?,'Primary',1)", (jenjang_id,))
+        roster_program_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?,'P1',1,1)", (jenjang_id, roster_program_id))
+        roster_grade_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        for name, section, active in (("P1A", "A", 1), ("P1B", "B", 1), ("P1D", "D", 0)):
+            connection.execute("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,?,?,?)", (year_id, roster_grade_id, name, section, active))
+        connection.execute("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?,'P2',2,1)", (jenjang_id, roster_program_id))
+        ambiguous_grade_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'p1a','A',1)", (year_id, ambiguous_grade_id))
         connection.execute("INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('E2E Progression Subject',?,1,1)", (jenjang_id,))
         progression_subject_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute("INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES ('E2E Progression Score','sumatif',?)", (progression_subject_id,))

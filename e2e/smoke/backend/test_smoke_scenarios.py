@@ -62,8 +62,8 @@ def test_authentication_authorization_and_hierarchy(client, authenticated):
     programs = authenticated.get("/api/academic-masters/programs").json()
     grades = authenticated.get("/api/academic-masters/grades").json()
     classes = authenticated.get("/api/academic-masters/classes").json()
-    assert {item["name"] for item in programs if item["active"]} == {"MAIN", "SECONDARY MAIN"}
-    assert {item["name"] for item in grades if item["active"]} == {"Primary 1", "Primary 2", "Secondary 7"}
+    assert {item["name"] for item in programs if item["active"]} == {"MAIN", "Primary", "SECONDARY MAIN"}
+    assert {item["name"] for item in grades if item["active"]} == {"Primary 1", "Primary 2", "P1", "P2", "Secondary 7"}
     assert {"Primary 1A", "Primary 1B", "Primary 2A", "Next Primary 1A", "Next Primary 2A", "Secondary 7A"}.issubset({item["class_name"] for item in classes if item["active"]})
     assert "Primary 1 / MAIN" not in [item["class_name"] for item in classes if item["active"]]
 
@@ -360,7 +360,7 @@ def test_student_management_identity_enrollment_roster_and_xlsx_round_trip(authe
     assert roster_preview.status_code == 200, roster_preview.text
     roster_json = roster_preview.json(); assert roster_json["rows"][0]["classification"] == "CREATE_NEW_MASTER"
     roster_commit = authenticated.post("/api/student-enrollments/roster-commit", json={
-        "preview_id": roster_json["preview_id"], "selected_row_ids": [1], "confirmation": "COMMIT_ACADEMIC_ROSTER", "preview_checksum": roster_json["preview_checksum"],
+        "preview_id": roster_json["preview_id"], "plan_token": roster_json["plan_token"], "selected_row_ids": [1], "confirmation": "COMMIT_ACADEMIC_ROSTER", "preview_checksum": roster_json["preview_checksum"],
     })
     assert roster_commit.status_code == 200, roster_commit.text
     assert roster_commit.json()["students_created"] == 1
