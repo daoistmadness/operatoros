@@ -14,6 +14,7 @@ export type AttendancePercentages = {
   sakit_pct?: number | null;
   izin_pct?: number | null;
   alfa_pct?: number | null;
+  lain2_pct?: number | null;
   total_pct?: number | null;
 };
 
@@ -21,7 +22,7 @@ export type RekapClassRow = {
   class_name: string;
   percentages: AttendancePercentages;
   warning_flags: {
-    excluded_unclassified?: boolean;
+    estimated_unrecorded?: boolean;
     data_quality_issue?: boolean;
     lain2_count?: number;
   };

@@ -174,7 +174,10 @@ describe("analytics and report parity", () => {
 
       const rekap = await app.handle(new Request("http://local/api/analytics/v2/rekap-absensi?month=8&year=2026", { headers: { cookie } }));
       expect(rekap.status).toBe(200);
-      expect((await rekap.json() as any).global_summary).toMatchObject({ hadir: 131, sakit: 3, izin: 2, alfa: 2, lain2: 0, total: 138, percentages: { hadir_pct: 94.93, sakit_pct: 2.17, izin_pct: 1.45, alfa_pct: 1.45, total_pct: 100 } });
+      expect((await rekap.json() as any).global_summary).toMatchObject({ hadir: 18, sakit: 3, izin: 2, alfa: 2, lain2: 113, total: 138, percentages: { hadir_pct: 13.04, sakit_pct: 2.17, izin_pct: 1.45, alfa_pct: 1.45, lain2_pct: 81.89, total_pct: 100 } });
+      const term = await app.handle(new Request("http://local/api/analytics/attendance/term?academic_year_id=2&term_number=1", { headers: { cookie } }));
+      expect(term.status).toBe(200);
+      expect((await term.json() as any).period).toMatchObject({ academic_year_id: 2, term_number: 1 });
     } finally {
       database.close();
       rmSync(path, { force: true });
