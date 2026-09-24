@@ -75,7 +75,14 @@ test("@data-management @export @critical @release downloads a supported dataset 
 });
 
 test("@data-management @roster @critical @release previews a synthetic roster workbook in the canonical workspace", async ({ page }) => {
+  const criticalErrors: string[] = [];
+  page.on("pageerror", (error) => criticalErrors.push(error.message));
   await login(page);
+  await page.goto("/academic-management?tab=allocation");
+  await page.locator("#enrollment-jenjang").selectOption({ label: "Primary" });
+  await page.locator("#enrollment-program").selectOption({ label: "Primary" });
+  await page.locator("#enrollment-grade").selectOption({ label: "P1" });
+  await expect(page.locator("#enrollment-class option")).toContainText(["Select a class...", "P1A", "P1B"]);
   await page.goto("/upload?section=roster");
   await expect(page.getByRole("tab", { name: "Student Roster Upload" })).toHaveAttribute("data-state", "active");
 
@@ -89,10 +96,19 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   await page.getByRole("button", { name: "Preview roster" }).click();
   const previewResult = await (await preview).json();
   expect(previewResult.rows[0].classification).toBe("CREATE_NEW_MASTER");
+  expect(previewResult.rows[0].payload).toMatchObject({ target_class: "P1A", target_grade: "P1", target_program: "Primary", target_jenjang: "Primary" });
+  expect(previewResult.rows.map((row: { classification: string }) => row.classification)).toEqual(["CREATE_NEW_MASTER", "CREATE_NEW_MASTER", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS"]);
 
   await expect(page.getByRole("heading", { name: "Roster preview" })).toBeVisible();
+  await page.getByRole("tab", { name: /^All \(/ }).click();
   await expect(page.getByText("E2E Roster Preview Student", { exact: true })).toBeVisible();
+  await expect(page.getByText("E2E Roster P1B Student", { exact: true })).toBeVisible();
+  await expect(page.getByText("Class not found", { exact: true })).toBeVisible();
+  await expect(page.getByText("Class inactive", { exact: true })).toBeVisible();
+  await expect(page.getByText("Class context mismatch", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ambiguous class", { exact: true })).toBeVisible();
   await expect(page.getByRole("note")).toContainText("Preview does not update the database.");
+  expect(criticalErrors).toEqual([]);
 });
 
 test("@data-management @permissions @critical @release keeps the import and export workspace admin guarded", async ({ page }) => {
