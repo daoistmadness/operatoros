@@ -116,28 +116,36 @@ function calendarIsUsable(context: AuthContext, year: AcademicYear, jenjangIds: 
   if (!jenjangIds.length) return false;
   const placeholders = jenjangIds.map(() => "?").join(", ");
   const configured = rows(context, `
-    SELECT jenjang_id, weekday
+    SELECT jenjang_id, weekday, NULL AS date
       FROM attendance_calendar_weekday_rules
      WHERE academic_year_id = ? AND jenjang_id IN (${placeholders})
     UNION ALL
-    SELECT jenjang_id, CAST(strftime('%w', date) AS INTEGER) AS weekday
+    SELECT jenjang_id, CAST(strftime('%w', date) AS INTEGER) AS weekday, date
       FROM attendance_calendar_exceptions
      WHERE academic_year_id = ? AND date BETWEEN ? AND ? AND jenjang_id IN (${placeholders})
   `, [year.id, ...jenjangIds, year.id, year.startDate, year.endDate, ...jenjangIds]);
-  const dates = new Map<number, string>();
+  const datesByJenjang = new Map<number, Set<string>>();
   for (const value of configured) {
-    const date = dateForWeekday(year.startDate, year.endDate, Number(value.weekday));
-    if (date && !dates.has(Number(value.jenjang_id))) dates.set(Number(value.jenjang_id), date);
+    const date = value.date == null
+      ? dateForWeekday(year.startDate, year.endDate, Number(value.weekday))
+      : String(value.date);
+    if (date) {
+      const id = Number(value.jenjang_id);
+      const dates = datesByJenjang.get(id) ?? new Set<string>();
+      dates.add(date);
+      datesByJenjang.set(id, dates);
+    }
   }
-  if (dates.size !== jenjangIds.length) return false;
+  if (jenjangIds.some((id) => !datesByJenjang.has(id))) return false;
+  const dates = [...new Set([...datesByJenjang.values()].flatMap((values) => [...values]))];
   const resolved = resolveAttendanceExpectationsForDates(context, {
     academicYearId: year.id,
-    dates: [...dates.values()],
+    dates,
     startDate: year.startDate,
     endDate: year.endDate,
     jenjangIds,
   });
-  return jenjangIds.every((id) => [...dates.entries()].some(([jenjangId, date]) => jenjangId === id && resolved.get(date)?.get(id)?.status !== "UNKNOWN"));
+  return jenjangIds.every((id) => [...datesByJenjang.get(id)!].some((date) => resolved.get(date)?.get(id)?.status !== "UNKNOWN"));
 }
 
 function effectiveYear(context: AuthContext): AcademicYear | null {
