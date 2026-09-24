@@ -77,10 +77,12 @@ function rosterRows(workbook: ParsedExcelWorkbook): Row[] {
   if (!sheet) throw new RosterWorkbookError("ROSTER_SHEET_MISSING", "The workbook must contain a worksheet named 'Roster'.");
   const result: Row[] = [];
   const headerValues = sheet.headers.map((value) => normalizeHeader(value).toLowerCase().replace(/ /g, "_"));
+  const columns = [...rosterRequired, ...rosterOptional];
+  const duplicate = columns.find((name) => headerValues.indexOf(name) !== headerValues.lastIndexOf(name));
+  if (duplicate) throw new RosterWorkbookError("ROSTER_DUPLICATE_COLUMN", `The Roster worksheet has more than one '${duplicate}' column. Keep one column per field.`);
   const missing = [...rosterRequired].filter((name) => !headerValues.includes(name));
   if (missing.length) throw new RosterWorkbookError("ROSTER_REQUIRED_COLUMNS_MISSING", `The Roster worksheet is missing required columns: ${missing.sort().join(", ")}`);
   if (sheet.rows.length > 10000) throw new RosterWorkbookError("ROSTER_ROW_LIMIT_EXCEEDED", "Academic roster exceeds the 10,000-row limit.");
-  const columns = [...rosterRequired, ...rosterOptional];
   for (const sourceRow of sheet.rows) {
     const values = sourceRow.values;
     if (values.every((value) => value == null || String(rosterCell(value)).trim() === "")) continue;
@@ -129,6 +131,7 @@ function planRoster(context: AuthContext, source: Row[]): Row[] {
         const year = row(context, "SELECT * FROM academic_years WHERE label = ?", [payload.academic_year]);
         const classResolution = year ? resolveRosterClass(context, Number(year.id), payload) : null;
         const academicClass = classResolution?.academicClass;
+        if (academicClass) Object.assign(payload, { target_class: academicClass.class_name, target_grade: academicClass.grade_name, target_program: academicClass.program_name, target_jenjang: academicClass.jenjang_name });
         if (matchRule?.startsWith("ambiguous")) { classification = "POSSIBLE_DUPLICATE"; errors.push("Identity match is ambiguous"); }
         else if (!year) { classification = "INVALID"; errors.push("Unknown academic year"); }
         else if (classResolution?.classification) { classification = classResolution.classification; errors.push(classResolution.error!); }
