@@ -91,6 +91,23 @@ describe("derived readiness reference implementation", () => {
     } finally { value.cleanup(); }
   }, 30000);
 
+  it("uses the actual date of an exception-only calendar for Machine Import readiness", async () => {
+    const value = await setup("exception-only-calendar");
+    try {
+      configureFoundation(value.database);
+      value.database.client.run("DELETE FROM attendance_calendar_weekday_rules WHERE academic_year_id = 1");
+      value.database.client.run("INSERT INTO attendance_calendar_exceptions (academic_year_id, jenjang_id, date, expectation, reason, created_by) VALUES (1, 1, '2026-08-12', 'NOT_EXPECTED', 'SCHOOL_BREAK', 'synthetic-admin')");
+
+      const dailyResponse = await value.app.handle(new Request("http://local/api/attendance/daily-status?date=2026-08-12&academic_year_id=1&jenjang_id=1", { headers: { cookie: value.admin } }));
+      expect(dailyResponse.status).toBe(200);
+      expect((await dailyResponse.json() as any).classes[0].attendanceExpectation).toEqual({ status: "NOT_EXPECTED", reason: "SCHOOL_BREAK", source: "DATE_EXCEPTION" });
+
+      const result = await readiness(value.app, value.admin);
+      expect(result.body.foundation.find((item: any) => item.key === "calendar").state).toBe("READY");
+      expect(result.body.features.find((item: any) => item.key === "MACHINE_IMPORT")).toMatchObject({ state: "READY", blockers: [] });
+    } finally { value.cleanup(); }
+  }, 30000);
+
   it("does not treat supporting jenjang_config as canonical program setup", async () => {
     const value = await setup("supporting-config");
     try {
