@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AttendanceCalendar from "./AttendanceCalendar";
@@ -17,6 +17,15 @@ const overview = {
   scope: { academicYearId: 1, academicYearLabel: "2026/2027", startDate: "2026-07-01", endDate: "2027-06-30" },
   jenjangs: [{ id: 1, name: "SMP", weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 1 ? "EXPECTED" : null })), exceptions: [{ id: 5, date: "2026-08-17", expectation: "NOT_EXPECTED", reason: "HOLIDAY" }], submissionDeadlineLocalTime: "08:00" }],
 };
+const secondaryOverview = {
+  scope: { academicYearId: 2, academicYearLabel: "2027/2028", startDate: "2027-07-01", endDate: "2028-06-30" },
+  jenjangs: [{ id: 2, name: "Secondary", weekdays: Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: null })), exceptions: [], submissionDeadlineLocalTime: null }],
+};
+
+function LocationText() {
+  const location = useLocation();
+  return <output id="location-text">{location.pathname}{location.search}</output>;
+}
 
 let container: HTMLDivElement;
 let root: Root;
@@ -38,7 +47,7 @@ describe("AttendanceCalendar", () => {
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
     await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
     await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
-    expect(container.textContent).toContain("Not configured resolves to UNKNOWN");
+    expect(container.textContent).toContain("Unconfigured weekdays resolve to Unknown until a recurring rule or date exception applies.");
     expect(container.textContent).toContain("Holiday");
     expect(container.textContent).toContain("Submission deadline");
     expect(container.querySelector("table")).not.toBeNull();
@@ -71,7 +80,7 @@ describe("AttendanceCalendar", () => {
     const confirm = vi.fn().mockReturnValue(false);
     Object.defineProperty(window, "confirm", { configurable: true, value: confirm });
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
-    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await act(async () => { root.render(<MemoryRouter initialEntries={["/attendance/calendar?academic_year_id=1&jenjang_id=1&date=2026-08-17"]}><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
     await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
     const monday = container.querySelector("#weekday-1") as HTMLSelectElement;
     await act(async () => { monday.value = "NOT_EXPECTED"; monday.dispatchEvent(new Event("change", { bubbles: true })); });
@@ -95,6 +104,65 @@ describe("AttendanceCalendar", () => {
     expect((container.querySelector("#submission-deadline") as HTMLInputElement).disabled).toBe(true);
     expect(container.querySelector("button[type=submit]:not([disabled])")).toBeNull();
     expect(container.textContent).toContain("read-only");
+  });
+
+  it("honors valid URL scope and date context", async () => {
+    vi.mocked(gradesApi.fetchAcademicYears).mockResolvedValue([
+      { id: 1, label: "2026/2027", is_default: true },
+      { id: 2, label: "2027/2028", is_default: false },
+    ] as never);
+    vi.mocked(calendarApi.fetchAttendanceCalendar).mockImplementation(async (id) => (id === 2 ? secondaryOverview : overview) as never);
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter initialEntries={["/attendance/calendar?academic_year_id=2&jenjang_id=2&date=2027-08-04"]}><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /><LocationText /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+    expect((container.querySelector("#calendar-year") as HTMLSelectElement).value).toBe("2");
+    expect((container.querySelector("#calendar-jenjang") as HTMLSelectElement).value).toBe("2");
+    expect((container.querySelector("#exception-date") as HTMLInputElement).value).toBe("2027-08-04");
+    expect(calendarApi.fetchAttendanceCalendar).toHaveBeenCalledWith(2);
+    expect(container.querySelector("#location-text")?.textContent).toContain("academic_year_id=2");
+  });
+
+  it("normalizes invalid URL scope to the valid fallback", async () => {
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter initialEntries={["/attendance/calendar?academic_year_id=999&jenjang_id=999&date=2026-02-30"]}><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /><LocationText /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+    await vi.waitFor(() => expect(container.querySelector("#location-text")?.textContent).toBe("/attendance/calendar?academic_year_id=1&jenjang_id=1"));
+    expect((container.querySelector("#calendar-year") as HTMLSelectElement).value).toBe("1");
+    expect((container.querySelector("#calendar-jenjang") as HTMLSelectElement).value).toBe("1");
+    expect((container.querySelector("#exception-date") as HTMLInputElement).value).toBe("");
+  });
+
+  it("shows exception save states and retains form input after failure", async () => {
+    vi.mocked(calendarApi.saveAttendanceCalendarException).mockRejectedValueOnce(new Error("network unavailable")).mockResolvedValueOnce(undefined);
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter initialEntries={["/attendance/calendar?academic_year_id=1&jenjang_id=1&date=2026-08-17"]}><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+    const date = container.querySelector("#exception-date") as HTMLInputElement;
+    expect(date.value).toBe("2026-08-17");
+    await act(async () => { Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Add exception")?.click(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Date exception was not saved"));
+    expect((container.querySelector("#exception-date") as HTMLInputElement).value).toBe("2026-08-17");
+    expect(container.textContent).not.toContain("Date exception saved.");
+
+    await act(async () => { Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Add exception")?.click(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Date exception saved."));
+  });
+
+  it("shows deadline save states and retains the attempted value after failure", async () => {
+    vi.mocked(calendarApi.saveAttendanceSubmissionDeadline).mockRejectedValueOnce(new Error("network unavailable")).mockResolvedValueOnce(undefined);
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Calendar"), { timeout: 3000 });
+    const input = container.querySelector("#submission-deadline") as HTMLInputElement;
+    await act(async () => { input.value = "09:00"; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); });
+    const save = () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Save deadline")?.click();
+    await act(async () => { save(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Deadline was not saved"));
+    expect((container.querySelector("#submission-deadline") as HTMLInputElement).value).toBe("09:00");
+    expect(container.textContent).not.toContain("Deadline saved.");
+
+    await act(async () => { save(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Deadline saved."));
   });
 
   it("previews a range and requires explicit confirmation before applying it", async () => {
