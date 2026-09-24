@@ -82,6 +82,14 @@ describe("academic roster candidates", () => {
       expect(missing.body.detail).toMatchObject({ code: "ROSTER_REQUIRED_COLUMNS_MISSING" });
       expect(JSON.stringify(missing.body)).not.toContain("TypeError");
 
+      const duplicateWorkbook = createWorkbook({ exportType: "roster-duplicate-header" });
+      const duplicateSheet = duplicateWorkbook.addWorksheet("Roster");
+      appendRow(duplicateSheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "Program", " program ", "status"]);
+      appendRow(duplicateSheet, ["123", "Synthetic Student", "2026/2027", "Primary", "P1A", "3177210228", "Primary", "active"]);
+      const duplicate = await previewResponse(app, auth, await writeXlsxWorkbook(duplicateWorkbook));
+      expect(duplicate.response.status).toBe(400);
+      expect(duplicate.body.detail).toMatchObject({ code: "ROSTER_DUPLICATE_COLUMN" });
+
       const corrupt = await previewResponse(app, auth, Uint8Array.from([0, 1, 2, 3]));
       expect(corrupt.response.status).toBe(400);
       expect(corrupt.body.detail).toMatchObject({ code: "ROSTER_WORKBOOK_PARSE_FAILED", message: "Unable to read this workbook. Verify that it is a valid supported Excel file." });
@@ -140,9 +148,16 @@ describe("academic roster candidates", () => {
       expect(p1a.rows[0]).toMatchObject({ classification: "CREATE_NEW_MASTER", payload: { academic_class_id: classId, target_class: "P1A", target_grade: "P1", target_program: "Primary", target_jenjang: "Primary" } });
       expect((database.client.query("SELECT COUNT(*) AS count FROM academic_roster_import_batches").get() as any).count).toBe(0);
       expect((database.client.query("SELECT COUNT(*) AS count FROM student_import_sessions").get() as any).count).toBe(0);
+      const reorderedWorkbook = createWorkbook({ exportType: "roster-column-mapping" });
+      const reorderedSheet = reorderedWorkbook.addWorksheet("Roster");
+      appendRow(reorderedSheet, ["NISN", "Program", "unused", "Class Name", "student_name", "student_identifier", "academic_year", "jenjang", "status"]);
+      appendRow(reorderedSheet, ["3177210228", "Primary", "unused", "P1A", "Synthetic Mapping Student", "00000251", "2026/2027", "Primary", "active"]);
+      const mapped = await previewResponse(app, auth, await writeXlsxWorkbook(reorderedWorkbook));
+      expect(mapped.response.status).toBe(200);
+      expect(mapped.body.rows[0]).toMatchObject({ classification: "CREATE_NEW_MASTER", payload: { nisn: "3177210228", program: "Primary", class_name: "P1A", student_identifier: "00000251", target_program: "Primary" } });
       expect((await preview("P1B")).rows[0].classification).toBe("CREATE_NEW_MASTER");
       expect((await preview("P1C")).rows[0].classification).toBe("CLASS_NOT_FOUND");
-      expect((await preview("P1A", "Secondary")).rows[0].classification).toBe("CLASS_CONTEXT_CONFLICT");
+      expect((await preview("P1A", "Secondary")).rows[0]).toMatchObject({ classification: "CLASS_CONTEXT_CONFLICT", payload: { program: "Secondary", target_program: "Primary", target_grade: "P1", target_jenjang: "Primary", target_class: "P1A" } });
       expect((await preview("P1A", "Primary", "2026/2027", "P2")).rows[0].classification).toBe("CLASS_CONTEXT_CONFLICT");
       expect((await preview(" p1a ")).rows[0].payload.academic_class_id).toBe(classId);
       const otherYear = await preview("P1A", "Primary", "2027/2028");

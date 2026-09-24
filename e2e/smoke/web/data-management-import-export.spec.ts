@@ -77,6 +77,7 @@ test("@data-management @export @critical @release downloads a supported dataset 
 test("@data-management @roster @critical @release previews a synthetic roster workbook in the canonical workspace", async ({ page }) => {
   const criticalErrors: string[] = [];
   page.on("pageerror", (error) => criticalErrors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) criticalErrors.push(message.text()); });
   await login(page);
   await page.goto("/academic-management?tab=allocation");
   await page.locator("#enrollment-jenjang").selectOption({ label: "Primary" });
@@ -85,6 +86,14 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   await expect(page.locator("#enrollment-class option")).toContainText(["Select a class...", "P1A", "P1B"]);
   await page.goto("/upload?section=roster");
   await expect(page.getByRole("tab", { name: "Student Roster Upload" })).toHaveAttribute("data-state", "active");
+  await expect(page.getByRole("heading", { name: "Accepted Classes" })).toBeVisible();
+  await expect(page.locator("#class-reference-year option:checked")).toHaveText("2026/2027");
+  await expect(page.getByRole("row", { name: /Primary Primary P1 P1A/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /Primary Primary P1 P1B/ })).toBeVisible();
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "Copy class reference" }).click();
+  await expect(page.getByRole("status", { name: "" }).filter({ hasText: "Copied class reference" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("Primary\tPrimary\tP1\tP1A");
 
   await page.locator("#roster-file-hidden").setInputFiles({
     name: "e2e-student-roster.xlsx",
@@ -96,7 +105,7 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   await page.getByRole("button", { name: "Preview roster" }).click();
   const previewResult = await (await preview).json();
   expect(previewResult.rows[0].classification).toBe("CREATE_NEW_MASTER");
-  expect(previewResult.rows[0].payload).toMatchObject({ target_class: "P1A", target_grade: "P1", target_program: "Primary", target_jenjang: "Primary" });
+  expect(previewResult.rows[0].payload).toMatchObject({ nisn: "3177210228", program: "Primary", target_class: "P1A", target_grade: "P1", target_program: "Primary", target_jenjang: "Primary" });
   expect(previewResult.rows.map((row: { classification: string }) => row.classification)).toEqual(["CREATE_NEW_MASTER", "CREATE_NEW_MASTER", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS"]);
 
   await expect(page.getByRole("heading", { name: "Roster preview" })).toBeVisible();
@@ -106,6 +115,7 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   await expect(page.getByText("Class not found", { exact: true })).toBeVisible();
   await expect(page.getByText("Class inactive", { exact: true })).toBeVisible();
   await expect(page.getByText("Class context mismatch", { exact: true })).toBeVisible();
+  await expect(page.getByText("Program mismatch: Uploaded Secondary → Expected Primary")).toBeVisible();
   await expect(page.getByText("Ambiguous class", { exact: true })).toBeVisible();
   await expect(page.getByRole("note")).toContainText("Preview does not update the database.");
   expect(criticalErrors).toEqual([]);

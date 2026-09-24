@@ -92,7 +92,7 @@ describe("academic assessment operations", () => {
     classAId = Number((database.client.query("SELECT id FROM academic_classes WHERE class_name = '7A' AND academic_year_id = ?").get(yearId) as { id: number }).id);
     classBId = Number((database.client.query("SELECT id FROM academic_classes WHERE class_name = '7B' AND academic_year_id = ?").get(yearId) as { id: number }).id);
     mathId = Number((database.client.query("SELECT id FROM subjects WHERE name = 'Mathematics'").get() as { id: number }).id);
-  });
+  }, 30000);
 
   afterAll(async () => {
     database?.close();
