@@ -26,6 +26,7 @@ test.afterEach(async ({ page }) => expect((page as any).__failures).toEqual([]))
 test("@error-recovery @release representative form dialog and destructive alert dialog preserve keyboard focus", async ({ page }) => {
   await login(page);
   await page.goto("/attendance-review");
+  await page.getByRole("combobox", { name: "Class" }).selectOption({ label: "Primary 1A" });
   await page.locator('input[type="date"]').fill(new Date().toISOString().slice(0, 10));
   await page.getByRole("button", { name: "Load" }).click();
 

@@ -36,5 +36,10 @@ await Bun.write(join(directory, "attendance.xls"), writeLegacyXlsRows([row], hea
 const roster = createWorkbook({ exportType: "e2e-roster-preview-fixture" });
 const rosterSheet = addWorksheet(roster, "Roster");
 appendRow(rosterSheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"]);
-appendRow(rosterSheet, ["999990120", "E2E Roster Preview Student", "2026/2027", "Primary", "Primary 1A", "MAIN", "active"]);
+appendRow(rosterSheet, ["999990120", "E2E Roster Preview Student", "2026/2027", "Primary", "P1A", "Primary", "active"]);
+appendRow(rosterSheet, ["999990121", "E2E Roster P1B Student", "2026/2027", "Primary", "P1B", "Primary", "active"]);
+appendRow(rosterSheet, ["999990122", "E2E Roster Unknown Student", "2026/2027", "Primary", "P1C", "Primary", "active"]);
+appendRow(rosterSheet, ["999990123", "E2E Roster Inactive Student", "2026/2027", "Primary", "P1D", "Primary", "active"]);
+appendRow(rosterSheet, ["999990124", "E2E Roster Conflict Student", "2026/2027", "Primary", "P1A", "MAIN", "active"]);
+appendRow(rosterSheet, ["999990125", "E2E Roster Ambiguous Student", "2026/2027", "Primary", "P1a", "Primary", "active"]);
 await Bun.write(join(directory, "student-roster.xlsx"), await writeXlsxWorkbook(roster));
