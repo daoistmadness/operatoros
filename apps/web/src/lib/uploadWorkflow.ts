@@ -105,6 +105,10 @@ const rosterRules: Record<string, Rule> = {
     recommendedAction: "Correct the program or class reference and upload the workbook again.",
     disabledReason: "Rows with a missing class reference cannot be imported.",
   },
+  CLASS_NOT_FOUND: { label: "Class not found", explanation: "No class with this name exists in the uploaded academic year.", action: "BLOCKED", selectable: false, recommendedAction: "Correct the class name or academic year, then preview again.", disabledReason: "Unknown classes cannot be imported." },
+  CLASS_INACTIVE: { label: "Class inactive", explanation: "The class or its academic hierarchy is inactive.", action: "BLOCKED", selectable: false, recommendedAction: "Select an active canonical class, then preview again.", disabledReason: "Inactive classes cannot be imported." },
+  CLASS_CONTEXT_CONFLICT: { label: "Class context mismatch", explanation: "A supplied level, program, or grade differs from the canonical class.", action: "BLOCKED", selectable: false, recommendedAction: "Correct the conflicting workbook value, then preview again.", disabledReason: "Conflicting class context cannot be imported." },
+  AMBIGUOUS_CLASS: { label: "Ambiguous class", explanation: "More than one canonical class matches this name in the academic year.", action: "BLOCKED", selectable: false, recommendedAction: "Use a unique exact canonical class name, then preview again.", disabledReason: "Ambiguous classes cannot be imported." },
   INVALID: {
     label: "Invalid row",
     explanation: "The row is incomplete, duplicated, inactive, or otherwise invalid.",

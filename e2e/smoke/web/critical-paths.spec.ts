@@ -116,6 +116,7 @@ test("@attendance @corrections @release attendance review filters disposable att
   await login(page);
   await page.goto("/attendance-review");
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
+  await page.getByRole("combobox", { name: "Class" }).selectOption({ label: "Primary 1A" });
   await page.locator('input[type="date"]').fill(localDate());
   await page.getByRole("button", { name: "Load" }).click();
   await expect(page.getByText("E2E Ada")).toBeVisible();
@@ -127,6 +128,7 @@ test("@attendance @correction-review @critical @release creates and reviews a ca
   const date = localDate();
   await page.goto(`/attendance-review?academic_year_id=1&date=${date}`);
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
+  await page.getByRole("combobox", { name: "Class" }).selectOption({ label: "Primary 1A" });
   await page.getByRole("button", { name: "Load" }).click();
   await expect(page.getByText("E2E Ada")).toBeVisible();
 

@@ -162,8 +162,8 @@ export function RosterImportPanel() {
       conflicts:
         (s.possible_duplicate || 0) +
         (s.missing_jenjang || 0) +
-        (s.missing_class || 0) ||
-        viewRows.filter((r: any) => ["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS"].includes(r.source.classification)).length,
+        (s.missing_class || 0) + (s.class_not_found || 0) + (s.class_inactive || 0) + (s.class_context_conflict || 0) + (s.ambiguous_class || 0) ||
+        viewRows.filter((r: any) => ["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS"].includes(r.source.classification)).length,
       invalid: s.invalid || viewRows.filter((r: any) => r.source.classification === "INVALID").length,
     };
   }, [preview.data, rows.length, viewRows]);
@@ -221,7 +221,7 @@ export function RosterImportPanel() {
     if (activeTab === "new") filtered = filtered.filter((r: any) => r.source.classification === "CREATE_NEW_MASTER");
     else if (activeTab === "matched") filtered = filtered.filter((r: any) => r.source.classification === "CREATE_ENROLLMENT");
     else if (activeTab === "needs-review")
-      filtered = filtered.filter((r: any) => ["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS"].includes(r.source.classification));
+      filtered = filtered.filter((r: any) => ["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS"].includes(r.source.classification));
     else if (activeTab === "invalid") filtered = filtered.filter((r: any) => r.source.classification === "INVALID");
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -269,6 +269,7 @@ export function RosterImportPanel() {
   const runCommit = () =>
     commit.mutate({
       preview_id: preview.data.preview_id,
+      plan_token: preview.data.plan_token,
       selected_row_ids: safeSelected,
       confirmation: "COMMIT_ACADEMIC_ROSTER",
       preview_checksum: preview.data.preview_checksum,
@@ -757,9 +758,7 @@ export function RosterImportPanel() {
                           <DataTableCell>
                             <p className="font-bold">{row.payload.student_name}</p>
                             <p className="break-all text-xs text-muted-foreground">{row.payload.student_identifier}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {row.payload.jenjang} · {row.payload.class_name}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{row.payload.target_jenjang || row.payload.jenjang} · {row.payload.target_program || row.payload.program} · {row.payload.target_grade || row.payload.grade} · {row.payload.target_class || row.payload.class_name}</p>
                           </DataTableCell>
                           <DataTableCell>
                             <Badge
@@ -777,6 +776,7 @@ export function RosterImportPanel() {
                           <DataTableCell className="max-w-xl">
                             <p className="font-semibold text-foreground">{view.explanation}</p>
                             <p className="mt-1 text-muted-foreground">{view.recommendedAction}</p>
+                            {row.classification?.startsWith("CLASS_") || row.classification === "AMBIGUOUS_CLASS" ? <p className="mt-2 text-sm font-semibold text-amber-900">{row.errors?.[0]}</p> : null}
                             {view.action === "CONFLICT" || view.action === "BLOCKED" ? (
                               <p className="mt-2 text-xs font-bold text-amber-900">
                                 Possible existing student · {row.match_rule || view.technicalCode || "Check identifier"}

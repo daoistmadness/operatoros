@@ -36,8 +36,13 @@ describe("roster upload classification adapter", () => {
     expect(rosterRowView({ preview_row_id: 1, classification }).selectable).toBe(true);
   });
 
-  it.each(["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS", "INVALID", "NO_CHANGE", "FUTURE_STATUS"])("blocks %s", (classification) => {
+  it.each(["POSSIBLE_DUPLICATE", "MISSING_JENJANG", "MISSING_CLASS", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS", "INVALID", "NO_CHANGE", "FUTURE_STATUS"])("blocks %s", (classification) => {
     expect(rosterRowView({ preview_row_id: 1, classification }).selectable).toBe(false);
+  });
+
+  it("gives distinct class guidance", () => {
+    expect(rosterRowView({ preview_row_id: 1, classification: "CLASS_CONTEXT_CONFLICT" }).label).toBe("Class context mismatch");
+    expect(rosterRowView({ preview_row_id: 2, classification: "CLASS_INACTIVE" }).label).toBe("Class inactive");
   });
 });
 

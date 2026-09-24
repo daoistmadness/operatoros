@@ -184,15 +184,15 @@ test("@attendance @calendar @critical @release configures expectation and surfac
   await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
   await page.getByRole("link", { name: "Open Daily Attendance" }).click();
   await expect(page.getByRole("heading", { name: "Daily Attendance" })).toBeVisible();
-  await page.goBack({ waitUntil: "commit" });
+  await page.getByLabel("Page actions").getByRole("link", { name: "Attendance Calendar" }).click();
   await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
   await page.locator("#weekday-2").selectOption("NOT_EXPECTED");
   page.once("dialog", (dialog) => dialog.dismiss());
-  await page.goForward({ waitUntil: "commit" });
+  await page.getByRole("link", { name: "Open Daily Attendance" }).click();
   await expect(page).toHaveURL(/\/attendance\/calendar/);
   await expect(page.locator("#weekday-2")).toHaveValue("NOT_EXPECTED");
   page.once("dialog", (dialog) => dialog.accept());
-  await page.goForward({ waitUntil: "commit" });
+  await page.getByRole("link", { name: "Open Daily Attendance" }).click();
   await expect(page.getByRole("heading", { name: "Daily Attendance" })).toBeVisible();
 
   await page.goto("/attendance/calendar?academic_year_id=1&jenjang_id=1&date=2026-08-12");
