@@ -129,14 +129,14 @@ function LoadingSkeleton() {
     <Card className="rounded-2xl p-6 animate-pulse">
       <div className="h-8 w-72 bg-slate-200 rounded mx-auto" />
       <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
-        <div className="grid grid-cols-7 bg-emerald-700">
-          {Array.from({ length: 7 }).map((_, index) => (
+        <div className="grid grid-cols-8 bg-emerald-700">
+          {Array.from({ length: 8 }).map((_, index) => (
             <div key={index} className="h-12 border-r border-emerald-600 last:border-r-0" />
           ))}
         </div>
         {Array.from({ length: 5 }).map((_, rowIndex) => (
-          <div key={rowIndex} className="grid grid-cols-7 border-t border-slate-200 bg-white even:bg-emerald-50/60">
-            {Array.from({ length: 7 }).map((__, cellIndex) => (
+          <div key={rowIndex} className="grid grid-cols-8 border-t border-slate-200 bg-white even:bg-emerald-50/60">
+            {Array.from({ length: 8 }).map((__, cellIndex) => (
               <div key={cellIndex} className="px-4 py-4">
                 <div className="h-4 rounded bg-slate-200" />
               </div>
@@ -168,6 +168,7 @@ function RekapAbsensiChart({ data, title }: { data: RekapChartRow[]; title: stri
     Sakit: '#81C784',
     Izin: '#A5D6A7',
     Alfa: '#B0BEC5',
+    'Estimated unrecorded': '#F59E0B',
   };
 
   return (
@@ -571,6 +572,7 @@ function RekapAbsensi() {
                       <th className="px-4 py-3 text-right font-bold">Sakit</th>
                       <th className="px-4 py-3 text-right font-bold">Izin</th>
                       <th className="px-4 py-3 text-right font-bold">Alfa</th>
+                      <th className="px-4 py-3 text-right font-bold">Belum tercatat*</th>
                       <th className="px-4 py-3 text-right font-bold rounded-tr-xl">Total</th>
                     </tr>
                   </thead>
@@ -594,6 +596,7 @@ function RekapAbsensi() {
                             <td className="px-4 py-3 text-right font-bold text-emerald-800 border-b border-emerald-200">{formatPercent(jPcts.sakit_pct)}</td>
                             <td className="px-4 py-3 text-right font-bold text-emerald-800 border-b border-emerald-200">{formatPercent(jPcts.izin_pct)}</td>
                             <td className="px-4 py-3 text-right font-bold text-emerald-800 border-b border-emerald-200">{formatPercent(jPcts.alfa_pct)}</td>
+                            <td className="px-4 py-3 text-right font-bold text-amber-800 border-b border-emerald-200">{formatPercent(jPcts.lain2_pct)}</td>
                             <td className="px-4 py-3 text-right font-black text-emerald-900 border-b border-emerald-200">{formatPercent(jPcts.total_pct)}</td>
                           </tr>
 
@@ -605,11 +608,11 @@ function RekapAbsensi() {
                               <tr key={cls.class_name} className={cn(!isExpanded && 'hidden print:table-row', idx % 2 === 0 ? 'bg-white' : 'bg-slate-50')}>
                                 <td className="px-4 py-3 pl-10 text-left font-semibold text-slate-800 border-b border-slate-200 flex items-center gap-2">
                                   <span>{cls.class_name}</span>
-                                  {flags.excluded_unclassified && (
+                                  {flags.estimated_unrecorded && (
                                     <div className="group relative outline-none flex items-center">
                                       <Info size={16} className={flags.data_quality_issue ? "text-rose-500" : "text-amber-500"} />
                                       <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all z-10 bg-slate-900 text-white text-xs rounded-xl py-2 px-3 shadow-xl">
-                                        Terdapat <b>{flags.lain2_count}</b> entri data tidak terklasifikasi (LAIN2) yang dikecualikan dari perhitungan persentase.
+                                        Selisih perkiraan HEB dan status tercatat. Gunakan laporan Term Attendance untuk cakupan harian yang pasti.
                                       </div>
                                     </div>
                                   )}
@@ -619,6 +622,7 @@ function RekapAbsensi() {
                                 <td className="px-4 py-3 text-right text-slate-600 border-b border-slate-200">{formatPercent(pcts.sakit_pct)}</td>
                                 <td className="px-4 py-3 text-right text-slate-600 border-b border-slate-200">{formatPercent(pcts.izin_pct)}</td>
                                 <td className="px-4 py-3 text-right text-slate-600 border-b border-slate-200">{formatPercent(pcts.alfa_pct)}</td>
+                                <td className="px-4 py-3 text-right text-amber-700 border-b border-slate-200">{formatPercent(pcts.lain2_pct)}</td>
                                 <td className="px-4 py-3 text-right font-semibold text-slate-800 border-b border-slate-200">{formatPercent(pcts.total_pct)}</td>
                               </tr>
                             );
@@ -634,13 +638,14 @@ function RekapAbsensi() {
                       <td className="px-4 py-3 text-right">{formatPercent(report.global_summary?.percentages?.sakit_pct)}</td>
                       <td className="px-4 py-3 text-right">{formatPercent(report.global_summary?.percentages?.izin_pct)}</td>
                       <td className="px-4 py-3 text-right">{formatPercent(report.global_summary?.percentages?.alfa_pct)}</td>
+                      <td className="px-4 py-3 text-right">{formatPercent(report.global_summary?.percentages?.lain2_pct)}</td>
                       <td className="px-4 py-3 text-right">{formatPercent(report.global_summary?.percentages?.total_pct)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <div className="mt-4 text-xs font-medium text-slate-400 italic">
-                *Data tidak terklasifikasi (LAIN2) dikecualikan secara penuh dari perhitungan pembagi (100%).
+                *Belum tercatat adalah perkiraan selisih HEB dan status tercatat, bukan Hadir atau Alfa. Gunakan laporan Term Attendance untuk cakupan kanonis.
               </div>
             </Card>
 
