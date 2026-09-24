@@ -14,6 +14,11 @@ import {
   X,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAcademicYears } from "../api/grades";
+import { fetchAcademicMasters } from "../api/academicMasters";
+import { queryKeys } from "../lib/query/queryKeys";
+import { classReferenceRows, classReferenceTsv } from "../lib/rosterClassReference";
 import { MachineImportWorkflow } from "../features/machine-import";
 import {
   useRosterCommit,
@@ -71,7 +76,7 @@ function rosterPreviewErrorPresentation(error: unknown): { title: string; messag
   const message = typeof value.message === "string" ? value.message : "";
   if (code === "ROSTER_WORKBOOK_PARSE_FAILED") return { title: "Workbook file error", message: "Unable to read this workbook. Verify that it is a valid supported Excel file." };
   if (code === "ROSTER_FILE_TYPE_UNSUPPORTED") return { title: "Unsupported file type", message: "Student roster uploads support .xlsx files only." };
-  if (code === "ROSTER_REQUIRED_COLUMNS_MISSING" || code === "ROSTER_SHEET_MISSING" || code === "ROSTER_ROW_LIMIT_EXCEEDED") return { title: "Workbook validation failed", message: message || "The workbook does not match the student roster format." };
+  if (code === "ROSTER_REQUIRED_COLUMNS_MISSING" || code === "ROSTER_DUPLICATE_COLUMN" || code === "ROSTER_SHEET_MISSING" || code === "ROSTER_ROW_LIMIT_EXCEEDED") return { title: "Workbook validation failed", message: message || "The workbook does not match the student roster format." };
   if (kind === "network" || kind === "timeout" || kind === "server") return { title: "Roster preview unavailable", message: "The server could not complete the preview. Check the connection and try again." };
   if (/undefined is not an object|cannot read propert|typeerror|workbook\./i.test(message)) return { title: "Roster preview unavailable", message: "The workbook preview could not be completed. Verify the file and try again." };
   return { title: "Roster preview failed", message: message || "The workbook preview could not be completed. Verify the file and try again." };
@@ -131,6 +136,10 @@ function StatusBadge({ status, count }: { status: string; count?: number }) {
 export function RosterImportPanel() {
   const preview = useRosterPreview();
   const commit = useRosterCommit();
+  const years = useQuery({ queryKey: queryKeys.academicMasters.years, queryFn: fetchAcademicYears });
+  const masters = useQuery({ queryKey: queryKeys.academicMasters.classReference, queryFn: fetchAcademicMasters });
+  const [referenceYearId, setReferenceYearId] = useState<number | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [owner, setOwner] = useState("");
@@ -146,6 +155,18 @@ export function RosterImportPanel() {
   const reviewRef = useRef<HTMLDivElement>(null);
 
   const rows = preview.data?.rows || [];
+  const previewYears = Array.from(new Set<string>(rows.map((row: any) => String(row.payload.academic_year || "")).filter(Boolean)));
+  const previewYearId = previewYears.length === 1 ? years.data?.find((year) => year.label === previewYears[0])?.id ?? null : null;
+  const selectedReferenceYearId = previewYears.length === 1 ? previewYearId : referenceYearId ?? years.data?.find((year) => year.is_default)?.id ?? years.data?.[0]?.id ?? null;
+  const acceptedClasses = useMemo(() => masters.data && selectedReferenceYearId ? classReferenceRows(masters.data, selectedReferenceYearId) : [], [masters.data, selectedReferenceYearId]);
+  const copyReference = async () => {
+    try {
+      await navigator.clipboard.writeText(classReferenceTsv(acceptedClasses));
+      setCopyFeedback("Copied class reference");
+    } catch {
+      setCopyFeedback("Copy failed. Select and copy the table instead.");
+    }
+  };
   const previewFailure = preview.error ? rosterPreviewErrorPresentation(preview.error) : null;
   const viewRows = useMemo(() => rows.map((row: any) => ({ source: row, view: rosterRowView(row) })), [rows]);
   const eligible = useMemo(() => eligibleIds(rows, rosterRowView), [rows]);
@@ -494,6 +515,32 @@ export function RosterImportPanel() {
             </a>
           </div>
 
+          <section aria-labelledby="class-reference-heading" className="rounded-xl border border-border p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 id="class-reference-heading" className="font-black text-foreground">Accepted Classes</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Copy canonical class values from Academic Management for the roster's academic year.</p>
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="text-sm font-bold" htmlFor="class-reference-year">Academic Year</label>
+                <select id="class-reference-year" className="min-h-10 rounded-md border border-border bg-surface px-3" value={selectedReferenceYearId ?? ""} onChange={(event) => { setReferenceYearId(Number(event.target.value)); setCopyFeedback(""); }} disabled={previewYears.length === 1}>
+                  {!selectedReferenceYearId && <option value="">{previewYears.length === 1 ? previewYears[0] : "Select year"}</option>}
+                  {years.data?.map((year) => <option key={year.id} value={year.id}>{year.label}</option>)}
+                </select>
+                <Button type="button" variant="outline" size="sm" onClick={copyReference} disabled={!acceptedClasses.length}>Copy class reference</Button>
+              </div>
+            </div>
+            {copyFeedback && <p role="status" className="mt-2 text-sm font-semibold">{copyFeedback}</p>}
+            {years.isPending || masters.isPending ? <p className="mt-3 text-sm">Loading accepted classes…</p> : years.isError || masters.isError ? <p role="alert" className="mt-3 text-sm">Accepted classes could not be loaded. Try again.</p> : acceptedClasses.length ? (
+              <DataTableContainer className="mt-3 max-h-64">
+                <DataTable>
+                  <DataTableHeader><DataTableRow><DataTableHead>Jenjang</DataTableHead><DataTableHead>Program</DataTableHead><DataTableHead>Grade</DataTableHead><DataTableHead>Class</DataTableHead></DataTableRow></DataTableHeader>
+                  <DataTableBody>{acceptedClasses.map((item, index) => <DataTableRow key={`${item.className}-${index}`}><DataTableCell>{item.jenjang}</DataTableCell><DataTableCell>{item.program}</DataTableCell><DataTableCell>{item.grade}</DataTableCell><DataTableCell>{item.className}</DataTableCell></DataTableRow>)}</DataTableBody>
+                </DataTable>
+              </DataTableContainer>
+            ) : <p className="mt-3 text-sm">{previewYears.length === 1 && !previewYearId ? `Academic Year ${previewYears[0]} from the workbook is not configured.` : "No active classes are configured for this academic year."} <Link className="font-bold text-primary underline" to="/academic-management?tab=allocation">Open Class Allocation</Link>.</p>}
+          </section>
+
           {/* Owner / date + action */}
           <form className="grid gap-4 sm:grid-cols-3" onSubmit={runPreview}>
             <div>
@@ -776,7 +823,16 @@ export function RosterImportPanel() {
                           <DataTableCell className="max-w-xl">
                             <p className="font-semibold text-foreground">{view.explanation}</p>
                             <p className="mt-1 text-muted-foreground">{view.recommendedAction}</p>
-                            {row.classification?.startsWith("CLASS_") || row.classification === "AMBIGUOUS_CLASS" ? <p className="mt-2 text-sm font-semibold text-amber-900">{row.errors?.[0]}</p> : null}
+                            {row.classification === "CLASS_CONTEXT_CONFLICT" ? (
+                              <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                                <p className="font-bold">Uploaded values → Accepted canonical class</p>
+                                {([ ["Jenjang", "jenjang", "target_jenjang"], ["Program", "program", "target_program"], ["Grade", "grade", "target_grade"], ["Class", "class_name", "target_class"] ] as const).map(([label, uploaded, expected]) => (
+                                  <p key={label} className={row.payload[uploaded] && String(row.payload[uploaded]).trim().toLowerCase() !== String(row.payload[expected]).trim().toLowerCase() ? "font-bold text-amber-900" : ""}>
+                                    {label}{row.payload[uploaded] && String(row.payload[uploaded]).trim().toLowerCase() !== String(row.payload[expected]).trim().toLowerCase() ? " mismatch" : ""}: Uploaded {row.payload[uploaded] || "—"} → Expected {row.payload[expected] || "—"}
+                                  </p>
+                                ))}
+                              </div>
+                            ) : row.classification?.startsWith("CLASS_") || row.classification === "AMBIGUOUS_CLASS" ? <p className="mt-2 text-sm font-semibold text-amber-900">{row.errors?.[0]}</p> : null}
                             {view.action === "CONFLICT" || view.action === "BLOCKED" ? (
                               <p className="mt-2 text-xs font-bold text-amber-900">
                                 Possible existing student · {row.match_rule || view.technicalCode || "Check identifier"}

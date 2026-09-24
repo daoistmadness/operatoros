@@ -19,6 +19,7 @@ describe("academic invalidation", () => {
     expect(invalidateQueries.mock.calls.map(([filters]) => filters.queryKey)).toEqual([
       ["readiness"],
       ["academic-masters", "grades"],
+      ["academic-masters", "class-reference"],
       ["analytics", "filters"],
       ["analytics", "academic"],
     ]);

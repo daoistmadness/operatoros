@@ -83,6 +83,7 @@ export const queryKeys = {
     grades: ["academic-masters", "grades"] as const,
     years: ["academic-masters", "years"] as const,
     classes: ["academic-masters", "classes"] as const,
+    classReference: ["academic-masters", "class-reference"] as const,
   },
   attendance: {
     all: ["attendance"] as const,
