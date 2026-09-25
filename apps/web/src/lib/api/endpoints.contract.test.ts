@@ -18,15 +18,15 @@ describe('shared endpoint contracts', () => {
   it('uses canonical health and report routes', async () => {
     vi.mocked(apiRequest)
       .mockResolvedValueOnce({ data: {}, status: 200, headers: {} })
-      .mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
+      .mockResolvedValueOnce({ data: { scope: {}, manual_absence: {} }, status: 200, headers: {} });
     await getServerStatus();
-    const report = await getRekapAbsensiReport({ month: 7, year: 2026 });
+    const report = await getRekapAbsensiReport({ academic_year_id: 2, period_type: "month", period: "2026-07" });
     expect(apiRequest).toHaveBeenNthCalledWith(1, { path: '/api/system/health' });
     expect(apiRequest).toHaveBeenNthCalledWith(2, {
       path: '/api/analytics/v2/rekap-absensi',
-      params: { month: 7, year: 2026 },
+      params: { academic_year_id: 2, period_type: "month", period: "2026-07" },
     });
-    expect(report).toMatchObject({ jenjang: [], chart_data: [], period: {} });
+    expect(report).toMatchObject({ scope: {}, manual_absence: {} });
   });
 
   it('preserves encoded HEB routes and request bodies', async () => {

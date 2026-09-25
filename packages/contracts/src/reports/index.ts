@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+export * from "./manual-absence";
 
 export const ReportScopeSchema = Type.Union([
   Type.Literal("combined"),
