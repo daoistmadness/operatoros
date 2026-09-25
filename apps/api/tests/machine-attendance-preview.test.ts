@@ -163,6 +163,26 @@ describe("attendance machine preview", () => {
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 
+  it("derives machine lateness from the configured cutoff instead of the workbook value", async () => {
+    const value = await setup("cutoff");
+    try {
+      value.database.client.run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES ('SMP', '06:50', CURRENT_TIMESTAMP)");
+      const source = await fixture();
+      const form = new FormData();
+      form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      expect(preview.status).toBe(200);
+      const previewBody = await preview.json() as any;
+      // 07:00 arrival against a 06:50 cutoff is 10 minutes late by the canonical rule.
+      expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "ELIGIBLE_CREATE", canonicalStatus: "late" });
+      const applyForm = new FormData();
+      applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      expect(applied.status).toBe(200);
+      expect(value.database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "late", late_duration: 10, late_source: "calculated" });
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
   it("rejects a stale preview without changing attendance", async () => {
     const value = await setup("stale");
     try {

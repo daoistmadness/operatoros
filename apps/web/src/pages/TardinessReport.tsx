@@ -135,9 +135,16 @@ function LoadingSkeleton() {
   );
 }
 
-function TardinessBarChart({ data }: { data: TardinessJenjangSummaryRow[] }) {
-  const chartData = data.slice(0, 12);
-  const maxValue = Math.max(...chartData.map((item) => item.total_kejadian), 0);
+function formatLateRate(value: number | null | undefined) {
+  return value === null || value === undefined ? '—' : `${Number(value).toFixed(1)}%`;
+}
+
+function ClassLateRateChart({ data }: { data: TardinessClassRow[] }) {
+  const chartData = [...data]
+    .filter((item) => (item.late_event_rate ?? 0) > 0)
+    .sort((a, b) => (b.late_event_rate ?? 0) - (a.late_event_rate ?? 0))
+    .slice(0, 12);
+  const maxValue = Math.max(...chartData.map((item) => item.late_event_rate ?? 0), 0);
 
   if (chartData.length === 0) {
     return null;
@@ -155,8 +162,8 @@ function TardinessBarChart({ data }: { data: TardinessJenjangSummaryRow[] }) {
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 print:border-slate-300">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h4 className="font-bold text-slate-800">Late Incident Distribution by Level</h4>
-          <p className="text-sm text-slate-500">Green bars show total late incidents for the selected reporting period.</p>
+          <h4 className="font-bold text-slate-800">Late Rate by Class</h4>
+          <p className="text-sm text-slate-500">Late events per expected student-day — a fair comparison across different class sizes.</p>
         </div>
       </div>
 
@@ -179,16 +186,17 @@ function TardinessBarChart({ data }: { data: TardinessJenjangSummaryRow[] }) {
         />
 
         {chartData.map((item, index) => {
-          const barHeight = maxValue === 0 ? 0 : (item.total_kejadian / maxValue) * innerHeight;
+          const rate = item.late_event_rate ?? 0;
+          const barHeight = maxValue === 0 ? 0 : (rate / maxValue) * innerHeight;
           const x = padding.left + index * (barWidth + gap);
           const y = padding.top + innerHeight - barHeight;
           const labelX = x + barWidth / 2;
 
           return (
-            <g key={item.jenjang}>
+            <g key={`${item.jenjang}-${item.class_name}`}>
               <rect x={x} y={y} width={barWidth} height={barHeight} rx="10" fill="#22C55E" />
               <text x={labelX} y={y - 8} textAnchor="middle" fontSize="13" fill="#166534" fontWeight="700">
-                {item.total_kejadian}
+                {rate.toFixed(1)}%
               </text>
               <text
                 x={labelX}
@@ -198,7 +206,7 @@ function TardinessBarChart({ data }: { data: TardinessJenjangSummaryRow[] }) {
                 fill="#475569"
                 fontWeight="600"
               >
-                {item.jenjang}
+                {item.class_name}
               </text>
             </g>
           );
@@ -251,30 +259,39 @@ function TardinessReport() {
   }, [report]);
 
   const totals = report?.totals || {
-    total_late_duration_str: '00:00',
-    total_days_late: 0,
-    total_late_incidents: 0,
+    expected_student_days: 0,
+    late_events: 0,
+    affected_students: 0,
+    total_late_minutes: 0,
+    total_late_minutes_str: '00:00',
+    average_late_minutes: null,
+    average_late_minutes_str: '—',
+    late_event_rate: null,
     unique_late_days: 0,
     tracked_school_days: 0,
     school_impact_rate_pct: 0,
-    average_lateness_density: 0,
-    total_students_ever_late: 0,
   };
 
   const managementSummary = report?.management_summary || {
-    total_late_incidents: 0,
+    late_events: 0,
+    affected_students: 0,
+    total_late_minutes: 0,
+    total_late_minutes_str: '00:00',
+    average_late_minutes: null,
+    average_late_minutes_str: '—',
+    late_event_rate: null,
+    expected_student_days: 0,
     unique_late_days: 0,
-    tracked_school_days: 0,
-    school_impact_rate_pct: 0,
-    average_lateness_density: 0,
   };
+
+  const cutoffRows = report?.cutoffs || [];
 
   const currentParams = useMemo(
     () => buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang: selectedJenjang }),
     [filterMode, month, year, term, dateFrom, dateTo, selectedJenjang]
   );
 
-  const totalIncidentCount = totals.total_late_incidents || totals.total_days_late;
+  const totalIncidentCount = totals.late_events;
   const hasData = Boolean(report) && totalIncidentCount > 0;
 
   const handleGenerateReport = async () => {
@@ -567,57 +584,75 @@ function TardinessReport() {
 
           <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
+              <h3 className="text-xl font-bold text-slate-900">Attendance Cutoff</h3>
+              <p className="text-sm text-slate-500">Students checking in after the cutoff are marked Late. A check-in at exactly the cutoff is On Time.</p>
+            </div>
+            {cutoffRows.length === 0 ? (
+              <p className="text-sm text-slate-500">No attendance cutoff is configured for the levels in this report.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {cutoffRows.map((row) => (
+                  <span key={row.jenjang} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">
+                    {row.jenjang}: {row.cutoff_time ?? 'not configured'}
+                  </span>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
+            <div className="mb-4">
               <h3 className="text-xl font-bold text-slate-900">Management Summary</h3>
-              <p className="text-sm text-slate-500">Separates total late incidents from the actual number of school days affected.</p>
+              <p className="text-sm text-slate-500">Late events, affected students, and late minutes for the active report filter.</p>
             </div>
 
             <div className="rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-5 text-white shadow-lg shadow-emerald-900/10">
               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-100">Executive Summary</p>
-                  <h4 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">{managementSummary.total_late_incidents}</h4>
-                  <p className="mt-2 text-lg font-semibold text-white">Total Incidents</p>
-                  <p className="mt-1 text-sm text-emerald-50">Accumulated late entries for the active report filter.</p>
+                  <h4 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">{managementSummary.late_events}</h4>
+                  <p className="mt-2 text-lg font-semibold text-white">Late Events</p>
+                  <p className="mt-1 text-sm text-emerald-50">Accumulated late arrivals for the active report filter.</p>
                 </div>
                 <div className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-emerald-50 backdrop-blur-sm md:max-w-sm">
                   <p className="font-semibold text-white">Filter-aware summary</p>
-                  <p className="mt-1">This number always follows the active reporting period and filters, including cases where SD totals 446 incidents.</p>
+                  <p className="mt-1">This number always follows the active reporting period and filters.</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <SummaryCard
-                title="Total Incidents"
-                value={managementSummary.total_late_incidents}
+                title="Late Events"
+                value={managementSummary.late_events}
                 icon={<TimerReset size={22} />}
                 tone="bg-emerald-500 shadow-emerald-500/25"
               />
               <SummaryCard
-                title="Unique Late Days"
-                value={managementSummary.unique_late_days}
-                icon={<CalendarDays size={22} />}
+                title="Students Affected"
+                value={managementSummary.affected_students}
+                icon={<Users size={22} />}
                 tone="bg-brand shadow-brand/25"
               />
               <SummaryCard
-                title="School Impact Rate"
-                value={`${Number(managementSummary.school_impact_rate_pct || 0).toFixed(1)}%`}
+                title="Total Late Time"
+                value={managementSummary.total_late_minutes_str}
                 icon={<Activity size={22} />}
                 tone="bg-amber-500 shadow-amber-500/25"
               />
               <SummaryCard
-                title="Avg Lateness Density"
-                value={Number(managementSummary.average_lateness_density || 0).toFixed(2)}
-                icon={<Users size={22} />}
+                title="Avg Minutes Late"
+                value={managementSummary.average_late_minutes_str}
+                icon={<CalendarDays size={22} />}
                 tone="bg-slate-900 shadow-slate-900/25"
               />
             </div>
 
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
               <span className="font-semibold text-slate-800">Interpretation:</span>{' '}
-              {managementSummary.total_late_incidents} late incidents occurred across {managementSummary.unique_late_days} unique days,
-              affecting {Number(managementSummary.school_impact_rate_pct || 0).toFixed(1)}% of the {managementSummary.tracked_school_days} recorded school days
-              in this period, with an average of {Number(managementSummary.average_lateness_density || 0).toFixed(2)} late students per affected day.
+              {managementSummary.late_events} late events affected {managementSummary.affected_students} students with{' '}
+              {managementSummary.total_late_minutes_str} total late time (avg {managementSummary.average_late_minutes_str} per event),{' '}
+              a late rate of {formatLateRate(managementSummary.late_event_rate)} across {managementSummary.expected_student_days} expected student-days.
             </div>
           </Card>
 
@@ -664,14 +699,14 @@ function TardinessReport() {
               </ul>
             </div>
 
-            <TardinessBarChart data={jenjangSummaryRows} />
+            <ClassLateRateChart data={report?.breakdown_by_class || []} />
           </Card>
 
           <Card className="rounded-2xl report-section p-6 print:border print:shadow-none print:rounded-none">
             <div className="mb-4">
-                 <h3 className="text-xl font-bold text-slate-900">Class Breakdown</h3>
-                 <p className="text-sm text-slate-500">Classes are sorted alphabetically within each level.</p>
-               </div>
+                  <h3 className="text-xl font-bold text-slate-900">Class Breakdown</h3>
+                  <p className="text-sm text-slate-500">Late rate divides late events by expected student-days, so classes of different sizes compare fairly.</p>
+                </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
@@ -679,11 +714,12 @@ function TardinessReport() {
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="py-3 pr-4 font-semibold">Class</th>
                     <th className="py-3 pr-4 font-semibold">Level</th>
-                    <th className="py-3 pr-4 font-semibold">Total Late Duration</th>
-                    <th className="py-3 pr-4 font-semibold">% Duration</th>
-                    <th className="py-3 pr-4 font-semibold">Unique Late Days</th>
-                    <th className="py-3 pr-4 font-semibold">% Late Days</th>
-                    <th className="py-3 pr-4 font-semibold">Late Students</th>
+                    <th className="py-3 pr-4 font-semibold">Expected Student-Days</th>
+                    <th className="py-3 pr-4 font-semibold">Late Events</th>
+                    <th className="py-3 pr-4 font-semibold">Students Affected</th>
+                    <th className="py-3 pr-4 font-semibold">Total Late Time</th>
+                    <th className="py-3 pr-4 font-semibold">Avg Minutes Late</th>
+                    <th className="py-3 pr-4 font-semibold">Late Rate</th>
                     <th className="py-3 pr-4 font-semibold">Sick</th>
                     <th className="py-3 pr-4 font-semibold">Excused</th>
                     <th className="py-3 pr-4 font-semibold">Unexcused</th>
@@ -694,7 +730,7 @@ function TardinessReport() {
                   {Object.entries(groupedClasses).map(([jenjang, rows]) => (
                     <Fragment key={jenjang}>
                       <tr className="bg-emerald-50 border-b border-emerald-100">
-                        <td colSpan={11} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
+                        <td colSpan={12} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
                           {jenjang}
                         </td>
                       </tr>
@@ -702,11 +738,12 @@ function TardinessReport() {
                         <tr key={`${row.jenjang}-${row.class_name}`} className="border-b border-slate-100 last:border-b-0">
                           <td className="py-3 pr-4 font-semibold text-slate-900">{row.class_name}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.jenjang}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.total_late_duration_str}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.late_duration_pct.toFixed(1)}%</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.total_days_late}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.days_late_pct.toFixed(1)}%</td>
-                          <td className="py-3 pr-4 font-semibold text-slate-900">{row.late_student_count}</td>
+                          <td className="py-3 pr-4 text-slate-700">{row.expected_student_days}</td>
+                          <td className="py-3 pr-4 font-semibold text-slate-900">{row.late_events}</td>
+                          <td className="py-3 pr-4 text-slate-700">{row.affected_students}</td>
+                          <td className="py-3 pr-4 text-slate-700">{row.total_late_minutes_str}</td>
+                          <td className="py-3 pr-4 text-slate-700">{row.average_late_minutes_str}</td>
+                          <td className="py-3 pr-4 font-semibold text-slate-900">{formatLateRate(row.late_event_rate)}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.sakit ?? 0}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.izin ?? 0}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.alfa ?? 0}</td>
@@ -718,11 +755,12 @@ function TardinessReport() {
                   <tr className="bg-slate-100 font-bold text-slate-900">
                     <td className="py-3 pr-4">TOTAL</td>
                     <td className="py-3 pr-4">-</td>
-                    <td className="py-3 pr-4">{totals.total_late_duration_str}</td>
-                    <td className="py-3 pr-4">100.0%</td>
-                     <td className="py-3 pr-4">{totals.unique_late_days}</td>
-                     <td className="py-3 pr-4">-</td>
-                     <td className="py-3 pr-4">{totals.total_students_ever_late}</td>
+                    <td className="py-3 pr-4">{totals.expected_student_days}</td>
+                    <td className="py-3 pr-4">{totals.late_events}</td>
+                    <td className="py-3 pr-4">{totals.affected_students}</td>
+                    <td className="py-3 pr-4">{totals.total_late_minutes_str}</td>
+                    <td className="py-3 pr-4">{totals.average_late_minutes_str}</td>
+                    <td className="py-3 pr-4">{formatLateRate(totals.late_event_rate)}</td>
                     <td className="py-3 pr-4">-</td>
                     <td className="py-3 pr-4">-</td>
                     <td className="py-3 pr-4">-</td>
@@ -739,20 +777,20 @@ function TardinessReport() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SummaryCard
-                title="Total Late Duration"
-                value={totals.total_late_duration_str}
+                title="Total Late Time"
+                value={totals.total_late_minutes_str}
                 icon={<TimerReset size={22} />}
                 tone="bg-emerald-500 shadow-emerald-500/25"
               />
               <SummaryCard
-                title="Total Incidents"
+                title="Late Events"
                 value={totalIncidentCount}
                 icon={<CalendarDays size={22} />}
                 tone="bg-brand shadow-brand/25"
               />
               <SummaryCard
-                title="Total Students Ever Late"
-                value={totals.total_students_ever_late}
+                title="Students Affected"
+                value={totals.affected_students}
                 icon={<Users size={22} />}
                 tone="bg-slate-900 shadow-slate-900/25"
               />

@@ -84,7 +84,7 @@ describe("Excel attendance import", () => {
     expect(parseDuration("00:25")).toBe(1500);
     expect(parseDuration("0:30:00")).toBe(1800);
     expect(parseDuration(25)).toBeNull();
-    expect(calculateLateMinutes("07:40", "00:25", "SMP", { SMP: "07:15" })).toEqual([25, "excel"]);
+    expect(calculateLateMinutes("07:40", "00:25", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
     expect(calculateLateMinutes("07:40", 25, "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
     expect(calculateLateMinutes("07:40", "00:00", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
   });
@@ -99,7 +99,9 @@ describe("Excel attendance import", () => {
       const body = await response.json() as any;
       expect(body.summary).toEqual({ total_rows: 15, logical_rows: 11, new_rows: 6, update_rows: 2, unchanged_rows: 0, conflicts: 3, invalid_rows: 1, new_students: 0 });
       expect(body.rows.map((item: any) => item.classification)).toEqual(["DIFFERENCE", "DIFFERENCE", "NEW", "NEW", "NEW", "NEW", "CONFLICT", "CONFLICT", "CONFLICT", "NEW", "NEW", "INVALID"]);
-      expect(body.rows[3].proposed_record).toMatchObject({ late_duration: 25, late_source: "excel" });
+      // The configured SMP cutoff (07:15) is the authority: a 07:05 arrival is
+      // on-time even though the workbook asserts a Terlambat duration.
+      expect(body.rows[3].proposed_record).toMatchObject({ status: "on-time", late_duration: 0, late_source: "calculated" });
       expect(body.rows[9].proposed_record).toMatchObject({ check_in: "00:00:00", late_duration: 0, late_source: "calculated" });
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any)?.count)).toBe(before);
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_rows").get() as any)?.count)).toBe(12);

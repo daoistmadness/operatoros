@@ -8,8 +8,14 @@ describe("attendance rules", () => {
     expect(deriveAttendanceStatus("07:40", null, 20)).toBe("incomplete");
     expect(deriveAttendanceStatus(null, null, 0)).toBe("absent");
     expect(calculateLateMinutes("08:00", 30, "SMP", { SMP: "07:15" })).toEqual([45, "calculated"]);
-    expect(calculateLateMinutes("07:40", "00:25", "SMP", { SMP: "07:15" })).toEqual([25, "excel"]);
+    // The configured cutoff is the single authority: a usable check-in is
+    // always measured against it, even when the workbook asserts a duration.
+    expect(calculateLateMinutes("07:40", "00:25", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
     expect(calculateLateMinutes("07:40", "00:00", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
+    // Without a usable check-in nothing is late, regardless of workbook content.
+    expect(calculateLateMinutes(null, "00:25", "SMP", { SMP: "07:15" })).toEqual([0, "none"]);
+    // Without a configured cutoff the workbook value remains the fallback.
+    expect(calculateLateMinutes("07:40", "00:25", "XYZ", { SMP: "07:15" })).toEqual([25, "excel"]);
     expect(calculateLateMinutes("07:40", 0, "XYZ", { SMP: "07:15" })).toEqual([0, "none"]);
   });
 

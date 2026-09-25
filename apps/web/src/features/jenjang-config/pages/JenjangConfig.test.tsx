@@ -6,8 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../../../api";
 import { AuthContext, type AuthContextValue } from "../../../context/AuthContext";
 import JenjangConfig, {
+  cutoffPreview,
   getJenjangConfigError,
   normalizeJenjangPayload,
+  shiftCutoffMinutes,
   type AvailableJenjangPayload,
   type JenjangConfigPayload,
 } from "./JenjangConfig";
@@ -166,5 +168,19 @@ describe("Jenjang Config contracts", () => {
     expect(getJenjangConfigError({ response: { status: 409 } }, "fallback")).toContain("berubah di server");
     expect(getJenjangConfigError({ response: { status: 403 } }, "fallback")).toContain("tidak memiliki izin");
     expect(getJenjangConfigError({ response: { status: 500, data: { detail: "SQL" } } }, "fallback")).not.toContain("SQL");
+  });
+
+  it("previews the exact cutoff boundary without a grace period", () => {
+    expect(shiftCutoffMinutes("07:30", -1)).toBe("07:29");
+    expect(shiftCutoffMinutes("07:30", 0)).toBe("07:30");
+    expect(shiftCutoffMinutes("07:30", 1)).toBe("07:31");
+    expect(shiftCutoffMinutes("00:00", -1)).toBe("23:59");
+    expect(shiftCutoffMinutes("bad", 1)).toBeNull();
+    expect(cutoffPreview("07:30")).toEqual([
+      { time: "07:29", label: "On Time" },
+      { time: "07:30", label: "On Time" },
+      { time: "07:31", label: "Late (1 min)" },
+    ]);
+    expect(cutoffPreview("bad")).toEqual([]);
   });
 });

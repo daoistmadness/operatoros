@@ -15,6 +15,7 @@ import {
 import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
+import { classifyLateness, loadCutoffMap, resolveCutoff } from "./term-lateness";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { earlyDepartureRoutes } from "./early-departure";
@@ -307,7 +308,22 @@ function scopedRoutes(app: any, context: AuthContext): void {
     if (!periodOpen(context, ctx.params.date_val)) return fail(ctx.set, 400, "Attendance for target date is finalized and locked.");
     const client = context.database.client; const entries = ctx.body.entries; const seen = new Set<number>(); const enrolled = new Set(rows(context, "SELECT student_id FROM student_enrollments WHERE academic_class_id = ? AND lifecycle_state = 'ACTIVE' AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]).map((value) => Number(value.student_id)));
     for (const entry of entries) { if (seen.has(entry.student_id)) return fail(ctx.set, 400, `Duplicate entry for student ID ${entry.student_id}.`); seen.add(entry.student_id); if (!enrolled.has(entry.student_id)) return fail(ctx.set, 400, `Student ID ${entry.student_id} is not effectively enrolled in class on target date.`); if (!(manualStatuses as readonly string[]).includes(entry.status.trim().toLowerCase())) return fail(ctx.set, 400, `Status '${entry.status}' is invalid.`); }
-    try { let created = 0; let updated = 0; inTransaction(client, () => { for (const entry of entries) { const status = entry.status.trim().toLowerCase(); const existing = row(context, "SELECT id FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]); if (existing) { client.run("UPDATE attendance SET status = ?, check_in = ?, check_out = ?, is_absent = ?, late_source = ?, late_duration = ? WHERE id = ?", [status, entry.check_in ?? null, entry.check_out ?? null, ["absent", "sakit", "izin", "alfa"].includes(status) ? 1 : 0, status === "late" ? "manual" : "none", 0, existing.id]); updated++; } else { insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: 0, lateSource: status === "late" ? "manual" : "none", status }); created++; } } }); const response: ClassAttendanceEntriesResponse = { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username }; return response; } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
+    const classJenjang = row(context, "SELECT j.name AS jenjang FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id JOIN jenjangs j ON j.id = g.jenjang_id WHERE c.id = ?", [ctx.params.class_id])?.jenjang ?? null;
+    const cutoffMap = loadCutoffMap(context);
+    const cutoff = resolveCutoff(cutoffMap, classJenjang == null ? null : String(classJenjang));
+    // Manual entries with a usable arrival time derive on-time/late from the
+    // canonical cutoff; explicit Sakit/Izin/Alfa/Absent/Incomplete and entries
+    // without a usable time keep the operator status (late without a time is
+    // stored with unavailable duration).
+    const canonicalEntry = (entry: Row): { status: string; lateDuration: number; lateSource: string } => {
+      const operatorStatus = entry.status.trim().toLowerCase();
+      const fallback = { status: operatorStatus, lateDuration: 0, lateSource: operatorStatus === "late" ? "manual" : "none" };
+      if ((operatorStatus !== "on-time" && operatorStatus !== "late") || entry.check_in == null) return fallback;
+      const result = classifyLateness({ checkIn: String(entry.check_in), useTimeAuthority: true, status: operatorStatus, cutoff });
+      if (result.late_minutes === null) return fallback;
+      return { status: result.is_late ? "late" : "on-time", lateDuration: result.late_minutes, lateSource: "calculated" };
+    };
+    try { let created = 0; let updated = 0; inTransaction(client, () => { for (const entry of entries) { const canonical = canonicalEntry(entry); const status = canonical.status; const existing = row(context, "SELECT id FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]); if (existing) { client.run("UPDATE attendance SET status = ?, check_in = ?, check_out = ?, is_absent = ?, late_source = ?, late_duration = ? WHERE id = ?", [status, entry.check_in ?? null, entry.check_out ?? null, ["absent", "sakit", "izin", "alfa"].includes(status) ? 1 : 0, canonical.lateSource, canonical.lateDuration, existing.id]); updated++; } else { insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: canonical.lateDuration, lateSource: canonical.lateSource as "calculated" | "manual" | "none", status }); created++; } } }); const response: ClassAttendanceEntriesResponse = { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username }; return response; } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
   }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }), body: t.Object({ entries: t.Array(t.Object({ student_id: t.Number({ minimum: 1 }), status: t.String(), check_in: t.Optional(t.String()), check_out: t.Optional(t.String()), notes: t.Optional(t.String()) }), { minItems: 1 }) }), response: ClassAttendanceEntriesResponseSchema });
 }
 

@@ -17,7 +17,7 @@ const sectionKeys = [
 const sectionLabels: Record<string, [string, string]> = {
   executive_summary: ["Executive Summary", "High-level KPI cards and report context."],
   attendance: ["Attendance", "Attendance breakdown and summary tables."],
-  lateness: ["Lateness", "Late day and late minute analysis."],
+  lateness: ["Lateness", "Late event and late minute analysis."],
   grade_class: ["Grade by Class", "Class-level academic averages and threshold context."],
   grade_subject: ["Grade by Subject", "Subject-level academic averages and threshold context."],
   grade_student: ["Grade by Student", "Student-level grade drilldown."],
@@ -132,7 +132,7 @@ async function excel(payload: Row): Promise<Uint8Array> {
   const book = createWorkbook({ exportType: "report-builder" }); const summary = payload.summary_payload;
   const readme = addWorksheet(book, "README"); appendRow(readme, [payload.branding?.report_header_title ?? "Management Analytics Report"]); appendRow(readme, [payload.branding?.report_subtitle ?? "Operational report builder output"]); appendRow(readme, ["Template", payload.selected_template?.name ?? "Default"]); appendRow(readme, ["Sections", payload.resolved_sections.join(", ")]);
   const attendance = addWorksheet(book, "Attendance_Data"); appendRow(attendance, ["Metric", "Value"]); styleHeader(attendance); for (const [key, value] of Object.entries(summary.attendance_summary?.status_counts ?? {})) appendRow(attendance, [key, value]);
-  const late = addWorksheet(book, "Lateness_Data"); appendRow(late, ["Class", "Late Days", "Late Minutes"]); styleHeader(late); for (const value of summary.lateness_by_class ?? []) appendRow(late, [value.class_name, value.late_days, value.late_minutes]);
+  const late = addWorksheet(book, "Lateness_Data"); appendRow(late, ["Class", "Expected Student-Days", "Late Events", "Affected Students", "Total Late Minutes", "Avg Minutes Late", "Late Rate %"]); styleHeader(late); for (const value of summary.lateness_by_class ?? []) appendRow(late, [value.class_name, value.expected_student_days, value.late_events, value.affected_students, value.total_late_minutes, value.average_late_minutes ?? "", value.late_event_rate ?? ""]);
   const grades = addWorksheet(book, "Grade_Class_Data"); appendRow(grades, ["Class", "Sumatif Average", "Formatif Average"]); styleHeader(grades); for (const value of summary.grade_by_class ?? []) appendRow(grades, [value.class_name, value.sumatif_average, value.formatif_average]);
   return writeXlsxWorkbook(book);
 }

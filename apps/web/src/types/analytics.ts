@@ -16,11 +16,13 @@ export interface AttendanceSummary {
 
 export interface LatenessByClass {
   class_name: string;
-  late_days: number;
-  late_minutes: number;
-  late_duration_label: string;
-  late_day_percentage: number;
-  late_duration_percentage: number;
+  expected_student_days: number;
+  late_events: number;
+  affected_students: number;
+  total_late_minutes: number;
+  total_late_minutes_str: string;
+  average_late_minutes: number | null;
+  late_event_rate: number | null;
 }
 
 export interface GradeByClass {
@@ -109,7 +111,7 @@ export interface ManagementSummaryResponse {
   };
   term_context?: TermContext | null;
   attendance_summary: AttendanceSummary;
-  lateness_summary?: { total_late_days: number; total_late_minutes: number };
+  lateness_summary?: { late_events: number; affected_students: number; total_late_minutes: number; average_late_minutes: number | null; late_event_rate: number | null; expected_student_days: number };
   grade_summary?: { average: number | null; below_kkm_count?: number };
   lateness_by_class: LatenessByClass[];
   grade_by_class: GradeByClass[];
@@ -177,8 +179,8 @@ export interface LatenessTrendPoint {
   academic_year_id: number;
   academic_year_label?: string;
   term?: string;
-  late_days: number;
-  late_minutes: number;
+  late_events: number;
+  total_late_minutes: number;
 }
 
 export interface GradeTrendPoint {
