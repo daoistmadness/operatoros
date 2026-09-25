@@ -100,7 +100,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
   try {
     root = ensureRoot(config);
     const filename = nextFilename(root);
-    temporaryDirectory = mkdtempSync(join(tmpdir(), "operatoros-backup-"));
+    temporaryDirectory = mkdtempSync(join(root, ".operatoros-backup-"));
     chmodSync(temporaryDirectory, 0o700);
     const temporary = join(temporaryDirectory, "snapshot.sqlite");
     const encryptedTemporary = join(temporaryDirectory, "backup.encrypted");
