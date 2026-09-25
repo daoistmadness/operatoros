@@ -127,7 +127,6 @@ export type DashboardSnapshot = {
   existingClasses: string[];
   incompleteSummary: DashboardIncompleteSummary | null;
   absenceSummary: AbsenceTotalRow[];
-  rekapAbsensiSummary: RekapReport | null;
   mappingWarning: string;
 };
 
@@ -263,10 +262,9 @@ export async function getDashboardSnapshot(currentDate: Date): Promise<Dashboard
     apiRequest<string[]>({ path: '/api/students/classes' }),
     apiRequest<DashboardIncompleteSummary>({ path: '/api/analytics/incomplete-summary' }),
     apiRequest<AbsenceTotalRow[]>({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
-    apiRequest({ path: '/api/analytics/v2/rekap-absensi', params: { month, year } }),
   ]);
 
-  const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm, rekapSumm] = requests;
+  const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm] = requests;
   const pendingRows = pend.status === 'fulfilled' && Array.isArray(pend.value.data) ? pend.value.data : [];
 
   return {
@@ -278,7 +276,6 @@ export async function getDashboardSnapshot(currentDate: Date): Promise<Dashboard
     existingClasses: cls.status === 'fulfilled' && Array.isArray(cls.value.data) ? cls.value.data : [],
     incompleteSummary: incSumm.status === 'fulfilled' ? incSumm.value.data : null,
     absenceSummary: absenceSumm.status === 'fulfilled' && Array.isArray(absenceSumm.value.data) ? absenceSumm.value.data : [],
-    rekapAbsensiSummary: rekapSumm.status === 'fulfilled' ? ensureRekapReportShape(rekapSumm.value.data) : null,
     mappingWarning:
       pendingRows.length > 0
         ? `${pendingRows.length} students have no class assigned. Some charts may be incomplete.`

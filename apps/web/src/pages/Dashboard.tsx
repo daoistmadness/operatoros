@@ -88,7 +88,6 @@ export default function Dashboard() {
   const summary = snapshot?.summary ?? { total_late: 0, total_incomplete: 0, total_offenders: 0 };
   const incompleteSummary = snapshot?.incompleteSummary ?? null;
   const absenceSummary = snapshot?.absenceSummary ?? [];
-  const rekapAbsensiSummary = snapshot?.rekapAbsensiSummary ?? null;
   const existingClasses = snapshot?.existingClasses ?? [];
   const mappingWarning = snapshot?.mappingWarning ?? "";
 
@@ -245,20 +244,20 @@ export default function Dashboard() {
               <span className="text-xs font-bold text-slate-400 uppercase">{formatMonthYearLabel(selectedMonth, selectedYear)}</span>
             </div>
             
-            {rekapAbsensiSummary?.manual_absence.classes.length ? (
+            {totalClasses > 0 ? (
               <div className="space-y-4">
-                <p className="text-xs text-slate-500">Sumber: Input total bulanan per kelas. {rekapAbsensiSummary.manual_absence.completeness.complete ? "Data lengkap." : `Belum diinput: ${rekapAbsensiSummary.manual_absence.completeness.missing_class_month_entries} entri kelas-bulan.`}</p>
+                <p className="text-xs text-slate-500">Sumber: Input total bulanan per kelas. {missingClasses ? `Belum diinput: ${missingClasses} kelas.` : "Data lengkap."}</p>
                 <div className="grid grid-cols-3 gap-4">
                   {(["sakit", "izin", "alfa"] as const).map((key) => (
                     <div key={key}>
                       <div className="text-xs font-bold text-slate-400 uppercase mb-1">{key}</div>
-                      <div className="text-2xl lg:text-3xl font-black text-slate-800">{rekapAbsensiSummary.manual_absence.totals[key]?.toLocaleString("id-ID") ?? "Belum diinput"}</div>
+                      <div className="text-2xl lg:text-3xl font-black text-slate-800">{absenceTotals[key].toLocaleString("id-ID")}</div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-               <p className="text-sm font-medium text-slate-500 py-4">Sistem sedang menghimpun data rekapitulasi absensi untuk bulan ini...</p>
+               <p className="text-sm font-medium text-slate-500 py-4">Tidak ada kelas pada periode ini.</p>
             )}
           </div>
           

@@ -166,7 +166,7 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
   }, { body: ManualAbsenceSaveRequestSchema, response: ManualAbsenceSaveResponseSchema });
 
   app.get("/api/config/absence-reasons/summary", (ctx: Context) => {
-    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
     const month = Number(ctx.query.month); const year = Number(ctx.query.year);
     if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(year) || year < 1900) return fail(ctx.set, 400, "month and year are invalid");
     const monthKey = `${year}-${String(month).padStart(2, "0")}`;
