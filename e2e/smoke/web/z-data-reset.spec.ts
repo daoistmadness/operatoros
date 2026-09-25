@@ -73,7 +73,7 @@ test("@admin @data-reset @critical previews and safely executes attendance and s
   const studentCard = page.locator("section").filter({ hasText: "Reset Students & Enrollments" });
   await studentCard.getByRole("button", { name: "Preview reset" }).click();
   await expect(page.getByRole("heading", { name: "Reset Students & Enrollments" })).toBeVisible();
-  await expect(page.getByText(/Academic years.*Programs, Jenjang, Grades, Classes/)).toBeVisible();
+  await expect(page.getByRole("dialog").getByText(/Academic years.*Programs, Jenjang, Grades, Classes/)).toBeVisible();
   const studentConfirmation = page.getByLabel("Type exactly: RESET STUDENTS");
   await studentConfirmation.fill("RESET STUDENTS ");
   await expect(page.getByRole("button", { name: "Create backup and reset" })).toBeDisabled();
