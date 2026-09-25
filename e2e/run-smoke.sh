@@ -42,7 +42,8 @@ export LOGIN_RATE_LIMIT_GLOBAL="${LOGIN_RATE_LIMIT_GLOBAL:-1000}"
 export OPERATOROS_E2E_DATABASE="$database"
 export OPERATOROS_DATA_DIR="$workspace/state"
 export BACKUP_DIR="$workspace/state/backups"
-export ENABLE_DESTRUCTIVE_OPERATIONS=false
+# This runner owns a disposable SQLite data root and synthetic admin account.
+export ENABLE_DESTRUCTIVE_OPERATIONS=true
 
 "$python" "$repo_root/e2e/helpers/create-test-workspace.py" \
   --database "$database" \
@@ -66,8 +67,8 @@ export DATABASE_URL="sqlite:///$database"
 ) >"$logs/fixture-initialize.log" 2>&1
 
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
-export BACKUP_ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-b3BlcmF0b3Jvcy1lMmUtYmFja3VwLWtleS0yMDI2LTA=}"
-export BACKUP_ENCRYPTION_KEY_ID="${BACKUP_ENCRYPTION_KEY_ID:-e2e-test-key}"
+export BACKUP_ENCRYPTION_KEY="b3BlcmF0b3Jvcy1lMmUtYmFja3VwLWtleS0yMDI2LTA="
+export BACKUP_ENCRYPTION_KEY_ID="e2e-test-key"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
@@ -134,6 +135,11 @@ baseline_max_id = json.load(open(before_file))["baseline_enrollment_max_id"]
 with sqlite3.connect(database) as connection:
     enrollment_count = connection.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0]
     attendance_count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
+    student_count = connection.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    student_master_count = connection.execute("SELECT COUNT(*) FROM student_masters").fetchone()[0]
+    reset_count = connection.execute("SELECT COUNT(*) FROM operations_audit_events WHERE entity_type='SCHOOL_DATA' AND entity_reference='STUDENTS' AND operation='RESET' AND success=1").fetchone()[0]
+    admin_count = connection.execute("SELECT COUNT(*) FROM users WHERE username='operatoros_e2e_admin' AND is_active=1").fetchone()[0]
+    foreign_key_issues = connection.execute("PRAGMA foreign_key_check").fetchall()
     enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments WHERE id <= ? ORDER BY id", (baseline_max_id,)).fetchall()
 fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
 before = json.load(open(before_file))
@@ -148,7 +154,9 @@ expected_onboarding_before = {
     if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] is None
 }
 unexpected_changes = (before_rows - after_rows - expected_onboarding_before) | (after_rows - before_rows - expected_onboarding_change)
-json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": len(unexpected_changes), "student_enrollments": enrollment_count, "attendance": attendance_count}, open(output, "w"), indent=2)
+reset_failures = int(reset_count < 1 or admin_count < 1 or bool(foreign_key_issues) or any((student_count, student_master_count, enrollment_count, attendance_count)))
+unexpected_enrollment_changes = 0 if reset_count and reset_failures == 0 else len(unexpected_changes)
+json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": unexpected_enrollment_changes, "reset_verification_failures": reset_failures, "student_enrollments": enrollment_count, "students": student_count, "student_masters": student_master_count, "attendance": attendance_count, "admin_accounts": admin_count, "foreign_key_issues": len(foreign_key_issues)}, open(output, "w"), indent=2)
 PY
 enrollment_before_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
 enrollment_after_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
@@ -157,11 +165,13 @@ status=PASS
 failed_args=()
 evidence_args=()
 unexpected_enrollment_changes="$($python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
-if (( backend_status != 0 || web_status != 0 || unexpected_enrollment_changes != 0 )); then
+reset_verification_failures="$($python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("reset_verification_failures", 0))' "$results/database-after.json")"
+if (( backend_status != 0 || web_status != 0 || unexpected_enrollment_changes != 0 || reset_verification_failures != 0 )); then
   status=FAIL
   evidence_args+=(--evidence "e2e-results/logs" --evidence "e2e-results/playwright" --evidence "e2e-results/database-after.json")
 fi
 if [[ "$unexpected_enrollment_changes" != "0" ]]; then failed_args+=(--failed-test "Unexpected disposable enrollment changes"); fi
+if [[ "$reset_verification_failures" != "0" ]]; then failed_args+=(--failed-test "Disposable data reset verification failed"); fi
 duration=$((SECONDS - started_at))
 "$python" "$repo_root/e2e/helpers/write-summary.py" \
   --output "$results/summary.txt" --status "$status" \

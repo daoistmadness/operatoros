@@ -95,14 +95,16 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
   const active = dbPath(context);
   if (basename(active) === PROTECTED_DATABASE_BASENAME) throw new Error("Protected database access is forbidden.");
   backupBusy = true;
-  const root = ensureRoot(config);
-  const filename = nextFilename(root);
-  const temporaryDirectory = mkdtempSync(join(tmpdir(), "operatoros-backup-"));
-  chmodSync(temporaryDirectory, 0o700);
-  const temporary = join(temporaryDirectory, "snapshot.sqlite");
-  const encryptedTemporary = join(temporaryDirectory, "backup.encrypted");
-  const metadataTemporary = join(temporaryDirectory, "backup.meta.json");
+  let root = "";
+  let temporaryDirectory = "";
   try {
+    root = ensureRoot(config);
+    const filename = nextFilename(root);
+    temporaryDirectory = mkdtempSync(join(tmpdir(), "operatoros-backup-"));
+    chmodSync(temporaryDirectory, 0o700);
+    const temporary = join(temporaryDirectory, "snapshot.sqlite");
+    const encryptedTemporary = join(temporaryDirectory, "backup.encrypted");
+    const metadataTemporary = join(temporaryDirectory, "backup.meta.json");
     context.database.client.run("PRAGMA wal_checkpoint(TRUNCATE)");
     const bytes = context.database.client.serialize();
     writeFileSync(temporary, bytes);
@@ -120,11 +122,19 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     audit(root, "backup_succeeded", { filename, trigger });
     return metadata;
   } catch (error) {
-    audit(root, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error" });
+    if (root) audit(root, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error" });
     throw error;
   } finally {
-    rmSync(temporaryDirectory, { recursive: true, force: true }); backupBusy = false;
+    try {
+      if (temporaryDirectory) rmSync(temporaryDirectory, { recursive: true, force: true });
+    } finally {
+      backupBusy = false;
+    }
   }
+}
+
+export function createPreResetBackup(context: AuthContext, config: SafetyConfig): string {
+  return String(createBackup(context, config, "manual").filename);
 }
 
 function metadata(root: string): Row[] {
