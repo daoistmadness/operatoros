@@ -49,7 +49,9 @@ export const queryKeys = {
     filters: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["analytics", "filters", canonicalizeQueryFilters(filters)] as const,
     managementSummary: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-summary", canonicalizeQueryFilters(filters)] as const,
     managementOverview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-overview", canonicalizeQueryFilters(filters)] as const,
+    managementOverviewAll: ["analytics", "management-overview"] as const,
     managementReviewProfile: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-review-profile", canonicalizeQueryFilters(filters)] as const,
+    managementReviewProfileAll: ["analytics", "management-review-profile"] as const,
     managementReviewTerms: (academicYearId: number | null) => ["analytics", "management-review-profile", "terms", { academicYearId }] as const,
     managementReviewPrograms: () => ["analytics", "management-review-profile", "programs"] as const,
     historicalTrends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "historical-trends", canonicalizeQueryFilters(filters)] as const,
@@ -114,6 +116,8 @@ export const queryKeys = {
     overviews: ["classes", "overview"] as const,
     overview: (classId: string, filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["classes", "overview", classId, canonicalizeQueryFilters(filters)] as const,
   },
+  staff: { all: ["staff"] as const },
+  teacherClassAssignments: { all: ["teacherClassAssignments"] as const },
   uploads: {
     all: ["uploads"] as const,
     history: {
@@ -139,4 +143,5 @@ export const queryKeys = {
     all: ["operator"] as const,
     workQueue: ["operator", "work-queue"] as const,
   },
+  operationsAudit: { all: ["operations-audit"] as const },
 };

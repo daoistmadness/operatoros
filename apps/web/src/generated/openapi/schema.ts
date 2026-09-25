@@ -4417,7 +4417,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/system/clear-data": {
+    "/api/system/data-reset/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -4427,13 +4427,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Clear All Data
-         * @description Clears attendance data.
-         *
-         *     `attendance` mode removes attendance, attendance override history, attendance override
-         *     records, and upload logs. `full` mode also removes student master data.
+         * Preview Data Reset
+         * @description Returns current deletion counts and preserved data for the selected reset scope. This operation is read-only.
          */
-        post: operations["clear_all_data_api_system_clear_data_post"];
+        post: operations["preview_data_reset_api_system_data_reset_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/data-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit Data Reset
+         * @description Creates an encrypted pre-reset backup, then deletes the exact selected scope in one SQLite transaction. The confirmation phrase is scope-specific.
+         */
+        post: operations["commit_data_reset_api_system_data_reset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6490,16 +6507,59 @@ export interface components {
              */
             section_code: string;
         };
-        /** ClearDataRequest */
-        ClearDataRequest: {
+        /**
+         * DataResetScope
+         * @enum {string}
+         */
+        DataResetScope: "ATTENDANCE" | "ACADEMIC_RESULTS" | "STUDENTS" | "ALL_SCHOOL_DATA";
+        /** DataResetPreviewRequest */
+        DataResetPreviewRequest: {
+            scope: components["schemas"]["DataResetScope"];
+        };
+        /** DataResetCommitRequest */
+        DataResetCommitRequest: {
+            scope: components["schemas"]["DataResetScope"];
             /** Confirmation */
-            confirmation?: string | null;
+            confirmation: string;
+        };
+        /** DataResetPreviewResponse */
+        DataResetPreviewResponse: {
+            scope: components["schemas"]["DataResetScope"];
+            /** Will Delete */
+            will_delete: {
+                /** Domain */
+                domain: string;
+                /** Count */
+                count: number;
+            }[];
+            /** Will Preserve */
+            will_preserve: string[];
+            /** @constant */
+            encrypted_backup_required: true;
+        };
+        /** DataResetResult */
+        DataResetResult: {
+            scope: components["schemas"]["DataResetScope"];
+            /** Deleted Counts */
+            deleted_counts: {
+                [key: string]: number;
+            };
             /**
-             * Mode
-             * @default attendance
-             * @enum {string}
+             * Completed At
+             * Format: date-time
              */
-            mode: "attendance" | "attendance_keep_exceptions" | "full";
+            completed_at: string;
+            /** Backup Filename */
+            backup_filename: string;
+        };
+        /** DataResetError */
+        DataResetError: {
+            detail: {
+                /** Code */
+                code: string;
+                /** Message */
+                message: string;
+            };
         };
         /** Confirmation */
         Confirmation: {
@@ -18555,7 +18615,7 @@ export interface operations {
             };
         };
     };
-    clear_all_data_api_system_clear_data_post: {
+    preview_data_reset_api_system_data_reset_preview_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -18566,17 +18626,35 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ClearDataRequest"];
+                "application/json": components["schemas"]["DataResetPreviewRequest"];
             };
         };
         responses: {
-            /** @description Successful Response */
+            /** @description Reset preview */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Administrator access or destructive-operation enablement required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
                 };
             };
             /** @description Validation Error */
@@ -18586,6 +18664,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_data_reset_api_system_data_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataResetCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Reset committed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetResult"];
+                };
+            };
+            /** @description Confirmation phrase does not match the selected scope */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Administrator access or destructive-operation enablement required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Another reset operation is active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Reset failed and all transactional database changes were rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Encrypted pre-reset backup could not be created */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
                 };
             };
         };
