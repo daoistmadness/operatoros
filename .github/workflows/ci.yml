@@ -44,9 +44,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-2.10.12-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock', 'eslint.config.mjs', 'scripts/check-architecture.ts', 'scripts/check-typebox-resolution.ts') }}
+          key: ${{ runner.os }}-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock', 'eslint.config.mjs', 'scripts/check-architecture.ts', 'scripts/check-typebox-resolution.ts') }}
           restore-keys: |
-            ${{ runner.os }}-turbo-2.10.12-
+            ${{ runner.os }}-turbo-2.11.4-
       - name: Verify mise toolchain
         run: |
           mise --version
@@ -71,7 +71,7 @@ jobs:
           HK_MISE: "1"
         run: |
           hk --version | grep -Eq "^hk 1\.56\.1$"
-          bun run turbo:version | grep -Eq "^2\.10\.12$"
+          bun run turbo:version | grep -Eq "^2\.11\.4$"
       - name: Validate hk checks
         working-directory: ${{ github.workspace }}
         env:

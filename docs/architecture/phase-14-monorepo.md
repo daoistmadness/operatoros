@@ -257,17 +257,21 @@ collection is unverified.
 
 ## Phase 14.8 tooling
 
-Phase 14.8 keeps four tooling authorities separate:
+Phase 14.8 keeps four tooling authorities separate. The versions in this
+section describe the Phase 14.8 acceptance snapshot. Current versions are in
+the [developer prerequisites](../../README.md#prerequisites).
 
-- `mise 2026.8.14` is the validated Mise CLI. The committed `mise.toml` and
-  `mise.lock` manage Bun `1.4.2`, hk `1.56.1`, and Python `3.12.3`.
+- `mise 2026.8.14` was the validated Mise CLI at Phase 14.8 acceptance. The
+  committed `mise.toml` and `mise.lock` manage Bun `1.4.2`, hk `1.56.1`, and
+  Python `3.12.3`.
 - hk `1.56.1` owns the committed `hk.pkl` Git lifecycle hooks. `HK_MISE=1`
   runs hook steps through the Mise environment. Hooks are optional early
   feedback. CI does not depend on installed hooks.
 - Bun remains the JavaScript runtime, package manager, workspace authority,
   and root `bun.lock` authority.
-- Turbo `2.10.12` is a root-only Bun development dependency. `turbo.json`
-  orchestrates workspace `typecheck`, `test`, and `build` tasks.
+- Turbo `2.10.12` was the root-only Bun development dependency at Phase 14.8
+  acceptance. `turbo.json` orchestrates workspace `typecheck`, `test`, and
+  `build` tasks.
 
 Turbo uses `^typecheck`, `^test`, and `^build` dependency edges. The web build
   caches `apps/web/build/**`. Typecheck and unit-test tasks cache logs only.

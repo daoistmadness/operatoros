@@ -1,7 +1,12 @@
 {
   "name": "operatoros",
   "private": true,
-  "packageManager": "bun@1.4.2",
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.2"
+    }
+  },
   "workspaces": {
     "packages": [
       "apps/api",
@@ -42,7 +47,7 @@
   "devDependencies": {
     "@typescript-eslint/parser": "8.68.0",
     "eslint": "10.9.1",
-    "turbo": "2.10.12",
+    "turbo": "2.11.4",
     "typescript": "5.9.3"
   },
   "overrides": {
