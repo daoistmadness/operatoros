@@ -45,7 +45,9 @@ describe("canonical term attendance", () => {
       expect((value.client.query("SELECT total_changes() AS count").get() as { count: number }).count).toBe(writesBefore);
       expect(result.period).toMatchObject({ term_id: 11, start_date: "2026-08-03", end_date: "2026-08-09", source: "custom" });
       expect(result.totals).toMatchObject({ expected_student_days: 5, recorded_student_days: 4, unrecorded_student_days: 1,
-        hadir_count: 2, sakit_count: 1, izin_count: 1, alfa_count: 0, late_count: 1, coverage_rate: 80, attendance_rate: 40 });
+        hadir_count: 2, sakit_count: 1, izin_count: 1, alfa_count: 0, late_count: 1, coverage_rate: 80,
+        hadir_rate: 40, sakit_rate: 20, izin_rate: 20, alfa_rate: 0, attendance_rate: 40 });
+      expect(result.students[0]?.class_representations).toEqual([{ class_id: 10, class_name: "P1A" }]);
       expect(result.classes[0]?.totals).toEqual(result.totals);
       expect(result.students[0]?.totals).toEqual(result.totals);
       expect(result.quality.report_data_ready).toBe(true);
@@ -92,6 +94,9 @@ describe("canonical term attendance", () => {
       expect(result.totals).toMatchObject({ expected_student_days: 7, recorded_student_days: 3, unrecorded_student_days: 4, hadir_count: 2, alfa_count: 1, late_count: 1 });
       expect(result.classes.find((row) => row.class_id === 10)?.totals).toMatchObject({ expected_student_days: 5, recorded_student_days: 2, hadir_count: 1, alfa_count: 1 });
       expect(result.classes.find((row) => row.class_id === 11)?.totals).toMatchObject({ expected_student_days: 2, recorded_student_days: 1, hadir_count: 1, late_count: 1 });
+      expect(result.students.find((row) => row.student_key === "synthetic-1")?.class_representations).toEqual([
+        { class_id: 10, class_name: "P1A" }, { class_id: 11, class_name: "P1B" },
+      ]);
       for (const field of ["expected_student_days", "recorded_student_days", "unrecorded_student_days", "hadir_count", "alfa_count"] as const) {
         expect(result.classes.reduce((sum, row) => sum + row.totals[field], 0)).toBe(result.totals[field]);
         expect(result.students.reduce((sum, row) => sum + row.totals[field], 0)).toBe(result.totals[field]);

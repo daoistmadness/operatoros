@@ -5442,6 +5442,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/management-review/attendance/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewAttendanceExport.xlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/management-review/student-profile": {
         parameters: {
             query?: never;
@@ -11036,6 +11052,10 @@ export interface operations {
                             sakit_count: number;
                             izin_count: number;
                             alfa_count: number;
+                            hadir_rate: number | null;
+                            sakit_rate: number | null;
+                            izin_rate: number | null;
+                            alfa_rate: number | null;
                             late_count: number;
                             other_status_count: number;
                             coverage_rate: number | null;
@@ -11053,6 +11073,10 @@ export interface operations {
                                 sakit_count: number;
                                 izin_count: number;
                                 alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
                                 late_count: number;
                                 other_status_count: number;
                                 coverage_rate: number | null;
@@ -11071,6 +11095,10 @@ export interface operations {
                                 sakit_count: number;
                                 izin_count: number;
                                 alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
                                 late_count: number;
                                 other_status_count: number;
                                 coverage_rate: number | null;
@@ -11089,6 +11117,10 @@ export interface operations {
                                 sakit_count: number;
                                 izin_count: number;
                                 alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
                                 late_count: number;
                                 other_status_count: number;
                                 coverage_rate: number | null;
@@ -11107,6 +11139,10 @@ export interface operations {
                                 sakit_count: number;
                                 izin_count: number;
                                 alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
                                 late_count: number;
                                 other_status_count: number;
                                 coverage_rate: number | null;
@@ -11124,12 +11160,20 @@ export interface operations {
                                 sakit_count: number;
                                 izin_count: number;
                                 alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
                                 late_count: number;
                                 other_status_count: number;
                                 coverage_rate: number | null;
                                 attendance_rate: number | null;
                                 recorded_attendance_rate: number | null;
                             };
+                            class_representations: {
+                                class_id: number | null;
+                                class_name: string;
+                            }[];
                         }[];
                         quality: {
                             unknown_calendar_dates: string[];
@@ -11212,6 +11256,11 @@ export interface operations {
                             student_key: string;
                             late_events: number;
                             total_late_minutes: number;
+                            average_late_minutes: number | null;
+                            class_representations: {
+                                class_id: number | null;
+                                class_name: string;
+                            }[];
                         }[];
                         quality: {
                             unknown_calendar_dates: string[];
@@ -11219,6 +11268,7 @@ export interface operations {
                             unresolved_class_student_days: number;
                             other_status_student_days: number;
                             report_data_ready: boolean;
+                            late_events_without_duration: number;
                         };
                     };
                 };
@@ -20637,12 +20687,28 @@ export interface operations {
             };
         };
     };
+    "getApiAnalyticsManagement-reviewAttendanceExport.xlsx": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_id: string;
+                jenjang_id: string;
+                program_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
     "getApiAnalyticsManagement-reviewStudent-profile": {
         parameters: {
             query: {
                 academic_year_id: string;
                 term_id: string;
                 jenjang_id?: string;
+                program_id?: string;
                 class_id?: string;
                 residence_group_by?: "kelurahan" | "kecamatan" | "city_regency" | "province";
                 residence_top_n?: "5" | "10" | "all";
@@ -20674,6 +20740,8 @@ export interface operations {
                             generatedAt: string;
                             /** @constant */
                             demographicSemantics: "Current profile data for students enrolled in the selected term.";
+                            programId: number | null;
+                            programLabel: string | null;
                         };
                         summary: {
                             totalStudents: number;

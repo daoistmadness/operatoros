@@ -188,6 +188,10 @@ def main() -> int:
         )
         year_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(
+            "INSERT INTO academic_term_configs (academic_year_id,term_number,label,start_date,end_date) VALUES (?,1,'Term 1','2026-07-01','2026-09-30')",
+            (year_id,),
+        )
+        connection.execute(
             "INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES (?,?,?,?,0)",
             ("2027/2028", "2027-07-01", "2028-06-30", "upcoming"),
         )
