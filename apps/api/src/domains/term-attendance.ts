@@ -61,14 +61,17 @@ function bucket<K>(map: Map<K, Counts>, key: K, status: string | null): void {
   add(value, status);
 }
 
-export function termAttendance(context: AuthContext, query: TermAttendanceQuery): TermAttendanceResponse {
+function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }): TermAttendanceResponse {
   const academicYearId = Number(query.academic_year_id);
   const year = one(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) problem(404, "ACADEMIC_YEAR_NOT_FOUND", "Academic year not found.");
   const termNumber = Number(query.term_number);
-  const term = effectiveAcademicTerms(context, year).find((value) => value.term_number === termNumber);
+  const configuredTerm = effectiveAcademicTerms(context, year).find((value) => value.term_number === termNumber);
+  const term = requestedRange ? { id: null, term_number: termNumber, label: "Report period", start_date: requestedRange.start_date, end_date: requestedRange.end_date, source: "custom" as const } : configuredTerm;
   if (!term || term.start_date > term.end_date || term.start_date < year.start_date || term.end_date > year.end_date)
     problem(409, "TERM_CONFIGURATION_INVALID", "The term dates must be within the selected academic year.");
+  const startDate = term.start_date;
+  const endDate = term.end_date;
 
   const scope = { jenjang_id: query.jenjang_id ? Number(query.jenjang_id) : null,
     program_id: query.program_id ? Number(query.program_id) : null,
@@ -98,7 +101,7 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
 
   // One row per date-effective enrollment and student. No current-class join can rewrite history.
   const days = rows(context, `WITH RECURSIVE dates(day) AS (
-      SELECT ? UNION ALL SELECT date(day, '+1 day') FROM dates WHERE day < ?
+    SELECT ? UNION ALL SELECT date(day, '+1 day') FROM dates WHERE day < ?
     )
     SELECT dates.day, e.id AS enrollment_id, e.student_id, e.student_master_id,
       e.academic_class_id, e.class_name, e.jenjang_id,
@@ -109,9 +112,9 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
       AND (e.student_master_id IS NOT NULL OR e.student_id IS NOT NULL)
     LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date = dates.day
     LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
-    ORDER BY dates.day, e.id`, [term.start_date, term.end_date, academicYearId, year.start_date, year.end_date]);
+    ORDER BY dates.day, e.id`, [startDate, endDate, academicYearId, year.start_date, year.end_date]);
   const dates: string[] = [];
-  for (let date = new Date(`${term.start_date}T00:00:00Z`), end = new Date(`${term.end_date}T00:00:00Z`); date <= end; date.setUTCDate(date.getUTCDate() + 1)) dates.push(date.toISOString().slice(0, 10));
+  for (let date = new Date(`${startDate}T00:00:00Z`), end = new Date(`${endDate}T00:00:00Z`); date <= end; date.setUTCDate(date.getUTCDate() + 1)) dates.push(date.toISOString().slice(0, 10));
   const jenjangIds = [...new Set(classes.map((value) => Number(value.jenjang_id)))];
   const calendar = resolveAttendanceExpectationsForDates(context, { academicYearId, dates,
     startDate: String(year.start_date), endDate: String(year.end_date), jenjangIds });
@@ -166,7 +169,7 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
     [...values.entries()].map(([key, counts]) => make(key, finish(counts)));
   const result: TermAttendanceResponse = {
     period: { academic_year_id: academicYearId, academic_year_label: String(year.label), term_id: term.id,
-      term_number: termNumber, term_label: term.label, start_date: term.start_date, end_date: term.end_date, source: term.source },
+      term_number: termNumber, term_label: term.label, start_date: startDate, end_date: endDate, source: term.source },
     scope, totals: finish(totals),
     jenjangs: grouped(byJenjang, (key, counts) => ({ jenjang_id: key, jenjang: classes.find((value) => Number(value.jenjang_id) === key)?.jenjang ?? "Unknown", totals: counts })),
     programs: grouped(byProgram, (key, counts) => ({ program_id: key, program: classes.find((value) => Number(value.program_id) === key)?.program ?? "Unresolved class", totals: counts })),
@@ -178,6 +181,23 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
       report_data_ready: unknownDays === 0 && unresolvedClassDays === 0 && totals.other_status_count === 0 && totals.expected_student_days > 0 },
   };
   return result;
+}
+
+export function termAttendance(context: AuthContext, query: TermAttendanceQuery): TermAttendanceResponse {
+  return termAttendanceInRange(context, query);
+}
+
+export function attendancePeriodTotals(context: AuthContext, query: {
+  academic_year_id: number; start_date: string; end_date: string;
+  jenjang_id?: number; program_id?: number; grade_id?: number; class_id?: number;
+}): TermAttendanceResponse["totals"] {
+  return termAttendanceInRange(context, {
+    academic_year_id: String(query.academic_year_id), term_number: "1",
+    jenjang_id: query.jenjang_id === undefined ? undefined : String(query.jenjang_id),
+    program_id: query.program_id === undefined ? undefined : String(query.program_id),
+    grade_id: query.grade_id === undefined ? undefined : String(query.grade_id),
+    class_id: query.class_id === undefined ? undefined : String(query.class_id),
+  }, { start_date: query.start_date, end_date: query.end_date }).totals;
 }
 
 export function termAttendanceRoutes(app: any, context: AuthContext): void {

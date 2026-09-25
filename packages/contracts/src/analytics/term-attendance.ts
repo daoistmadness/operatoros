@@ -2,7 +2,7 @@ import { Type, type Static } from "@sinclair/typebox";
 
 const Id = Type.String({ pattern: "^[1-9]\\d*$" });
 const NullableId = Type.Union([Type.Number({ minimum: 1 }), Type.Null()]);
-const Counts = Type.Object({
+export const TermAttendanceCountsSchema = Type.Object({
   expected_student_days: Type.Number({ minimum: 0 }),
   recorded_student_days: Type.Number({ minimum: 0 }),
   unrecorded_student_days: Type.Number({ minimum: 0 }),
@@ -33,12 +33,12 @@ export const TermAttendanceQuerySchema = Type.Object({
 export const TermAttendanceResponseSchema = Type.Object({
   period: Type.Object({ academic_year_id: Type.Number({ minimum: 1 }), academic_year_label: Type.String(), term_id: NullableId, term_number: Type.Number({ minimum: 1, maximum: 4 }), term_label: Type.String(), start_date: Type.String(), end_date: Type.String(), source: Type.Union([Type.Literal("custom"), Type.Literal("default")]) }),
   scope: Type.Object({ jenjang_id: NullableId, program_id: NullableId, grade_id: NullableId, class_id: NullableId }),
-  totals: Counts,
-  jenjangs: Type.Array(Type.Object({ jenjang_id: NullableId, jenjang: Type.String(), totals: Counts })),
-  programs: Type.Array(Type.Object({ program_id: NullableId, program: Type.String(), totals: Counts })),
-  grades: Type.Array(Type.Object({ grade_id: NullableId, grade: Type.String(), totals: Counts })),
-  classes: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String(), totals: Counts })),
-  students: Type.Array(Type.Object({ student_key: Type.String(), class_representations: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String() })), totals: Counts })),
+  totals: TermAttendanceCountsSchema,
+  jenjangs: Type.Array(Type.Object({ jenjang_id: NullableId, jenjang: Type.String(), totals: TermAttendanceCountsSchema })),
+  programs: Type.Array(Type.Object({ program_id: NullableId, program: Type.String(), totals: TermAttendanceCountsSchema })),
+  grades: Type.Array(Type.Object({ grade_id: NullableId, grade: Type.String(), totals: TermAttendanceCountsSchema })),
+  classes: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String(), totals: TermAttendanceCountsSchema })),
+  students: Type.Array(Type.Object({ student_key: Type.String(), class_representations: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String() })), totals: TermAttendanceCountsSchema })),
   quality: Type.Object({ unknown_calendar_dates: Type.Array(Type.String()), unknown_calendar_student_days: Type.Number({ minimum: 0 }), unresolved_class_student_days: Type.Number({ minimum: 0 }), other_status_student_days: Type.Number({ minimum: 0 }), report_data_ready: Type.Boolean() }),
 });
 

@@ -720,17 +720,13 @@ function TardinessReport() {
                     <th className="py-3 pr-4 font-semibold">Total Late Time</th>
                     <th className="py-3 pr-4 font-semibold">Avg Minutes Late</th>
                     <th className="py-3 pr-4 font-semibold">Late Rate</th>
-                    <th className="py-3 pr-4 font-semibold">Sick</th>
-                    <th className="py-3 pr-4 font-semibold">Excused</th>
-                    <th className="py-3 pr-4 font-semibold">Unexcused</th>
-                    <th className="py-3 font-semibold">Total Absences</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(groupedClasses).map(([jenjang, rows]) => (
                     <Fragment key={jenjang}>
                       <tr className="bg-emerald-50 border-b border-emerald-100">
-                        <td colSpan={12} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
+                        <td colSpan={8} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
                           {jenjang}
                         </td>
                       </tr>
@@ -744,10 +740,6 @@ function TardinessReport() {
                           <td className="py-3 pr-4 text-slate-700">{row.total_late_minutes_str}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.average_late_minutes_str}</td>
                           <td className="py-3 pr-4 font-semibold text-slate-900">{formatLateRate(row.late_event_rate)}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.sakit ?? 0}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.izin ?? 0}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.alfa ?? 0}</td>
-                          <td className="py-3 font-semibold text-slate-900">{row.total_absence_reasons ?? 0}</td>
                         </tr>
                       ))}
                     </Fragment>
@@ -761,10 +753,6 @@ function TardinessReport() {
                     <td className="py-3 pr-4">{totals.total_late_minutes_str}</td>
                     <td className="py-3 pr-4">{totals.average_late_minutes_str}</td>
                     <td className="py-3 pr-4">{formatLateRate(totals.late_event_rate)}</td>
-                    <td className="py-3 pr-4">-</td>
-                    <td className="py-3 pr-4">-</td>
-                    <td className="py-3 pr-4">-</td>
-                    <td className="py-3">-</td>
                   </tr>
                 </tbody>
               </table>

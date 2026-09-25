@@ -88,7 +88,6 @@ export default function Dashboard() {
   const summary = snapshot?.summary ?? { total_late: 0, total_incomplete: 0, total_offenders: 0 };
   const incompleteSummary = snapshot?.incompleteSummary ?? null;
   const absenceSummary = snapshot?.absenceSummary ?? [];
-  const rekapAbsensiSummary = snapshot?.rekapAbsensiSummary ?? null;
   const existingClasses = snapshot?.existingClasses ?? [];
   const mappingWarning = snapshot?.mappingWarning ?? "";
 
@@ -245,24 +244,20 @@ export default function Dashboard() {
               <span className="text-xs font-bold text-slate-400 uppercase">{formatMonthYearLabel(selectedMonth, selectedYear)}</span>
             </div>
             
-            {Array.isArray(rekapAbsensiSummary?.jenjang) && rekapAbsensiSummary.jenjang.length > 0 ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-4">
-                  <MetricBlock label="Hadir" value={rekapAbsensiSummary.global_summary?.percentages?.hadir_pct} color="text-emerald-600" />
-                  <MetricBlock label="Sakit" value={rekapAbsensiSummary.global_summary?.percentages?.sakit_pct} color="text-blue-500" />
-                  <MetricBlock label="Izin" value={rekapAbsensiSummary.global_summary?.percentages?.izin_pct} color="text-amber-500" />
-                  <MetricBlock label="Alfa" value={rekapAbsensiSummary.global_summary?.percentages?.alfa_pct} color="text-rose-500" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3" aria-label="Attendance percentage distribution">
-                  <progress aria-label="Hadir percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.hadir_pct || 0} className="h-2 w-full accent-emerald-500" />
-                  <progress aria-label="Sakit percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.sakit_pct || 0} className="h-2 w-full accent-blue-500" />
-                  <progress aria-label="Izin percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.izin_pct || 0} className="h-2 w-full accent-amber-500" />
-                  <progress aria-label="Alfa percentage" max="100" value={rekapAbsensiSummary.global_summary?.percentages?.alfa_pct || 0} className="h-2 w-full accent-rose-500" />
+            {totalClasses > 0 ? (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500">Sumber: Input total bulanan per kelas. {missingClasses ? `Belum diinput: ${missingClasses} kelas.` : "Data lengkap."}</p>
+                <div className="grid grid-cols-3 gap-4">
+                  {(["sakit", "izin", "alfa"] as const).map((key) => (
+                    <div key={key}>
+                      <div className="text-xs font-bold text-slate-400 uppercase mb-1">{key}</div>
+                      <div className="text-2xl lg:text-3xl font-black text-slate-800">{absenceTotals[key].toLocaleString("id-ID")}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
-               <p className="text-sm font-medium text-slate-500 py-4">Sistem sedang menghimpun data rekapitulasi absensi untuk bulan ini...</p>
+               <p className="text-sm font-medium text-slate-500 py-4">Tidak ada kelas pada periode ini.</p>
             )}
           </div>
           

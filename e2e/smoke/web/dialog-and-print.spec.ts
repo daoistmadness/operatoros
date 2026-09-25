@@ -61,7 +61,7 @@ test("@error-recovery @release representative form dialog and destructive alert 
 
 for (const report of [
   { name: "Tardiness", path: "/reports/tardiness", button: "Generate Report", bodyClass: "printing-tardiness-report", minRows: 2, minPages: 1 },
-  { name: "Rekap", path: "/reports/rekap-absensi", button: "Buat Laporan", bodyClass: "printing-rekap-absensi", minRows: 72, minPages: 2 },
+  { name: "Rekap", path: "/reports/rekap-absensi", button: "Buat Laporan", bodyClass: "printing-rekap-absensi", minRows: 9, minPages: 1 },
 ]) {
   test(`@reports @release ${report.name} populated report paginates safely`, async ({ page, browserName }) => {
     test.skip(browserName !== "chromium", "PDF pagination is Chromium-only");

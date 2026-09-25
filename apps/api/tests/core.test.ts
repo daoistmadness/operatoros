@@ -232,7 +232,7 @@ describe("core CRUD parity slices", () => {
       const auth = { cookie: `astyx_session=${cookie(login)}` };
       const yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as any).id);
       const term = await app.handle(new Request("http://local/api/academic-config/terms", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, term_number: 1, label: "Semester One", start_date: "2026-07-01", end_date: "2026-09-30" }) }));
-      expect(term.status).toBe(200);
+      expect(term.status, await term.clone().text()).toBe(200);
       expect((await (await app.handle(new Request(`http://local/api/academic-config/terms/effective?academic_year_id=${yearId}`, { headers: auth }))).json() as any)[0]).toMatchObject({ label: "Semester One", source: "custom" });
       const threshold = await app.handle(new Request("http://local/api/academic-config/kkm-thresholds", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, assessment_type: "sumatif", threshold: 82 }) }));
       expect(threshold.status).toBe(200); const thresholdId = (await threshold.json() as any).id;
@@ -286,8 +286,9 @@ describe("core CRUD parity slices", () => {
       expect(mappings.status).toBe(200); expect(await mappings.json()).toMatchObject({ summary: { total: 5 } });
       const legacyPreview = await app.handle(new Request("http://local/api/student-masters/legacy-link/preview", { method: "POST", headers: auth }));
       expect(legacyPreview.status).toBe(200); expect(await legacyPreview.json()).toMatchObject({ summary: { total: 5 } });
-      const absence = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ entries: [{ class_name: "7A", month: 7, year: 2026, sakit: 1, izin: 0, alfa: 0, note: "Recorded", entered_by: "golden-admin" }] }) }));
-      expect(absence.status).toBe(200); expect(await absence.json()).toMatchObject({ inserted: 1, propagated_students: 4 });
+      const absence = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-07", classes: [{ class_id: Number(secondClass.lastInsertRowid), sakit: 1, izin: 0, alfa: 0 }] }) }));
+      expect(absence.status).toBe(200); expect(await absence.json()).toMatchObject({ inserted: 1, updated: 0, total: 1 });
+      expect(database.client.query("SELECT COUNT(*) AS count FROM absence_reasons WHERE class_name = '7B' AND year = 2026 AND month = 7").get()).toMatchObject({ count: 0 });
       const preview = await app.handle(new Request("http://local/api/student-enrollments/populate/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, legacy_student_ids: [701, 702], effective_start_date: "2026-07-01" }) }));
       expect(preview.status).toBe(200); expect(await preview.json()).toMatchObject({ summary: { total: 2 } });
       const enrollmentId = Number((database.client.query("SELECT id FROM student_enrollments WHERE student_master_id = ? AND lifecycle_state = 'ACTIVE'").get("11111111-1111-1111-1111-111111111111") as any).id);

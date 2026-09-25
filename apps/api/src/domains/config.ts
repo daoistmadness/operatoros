@@ -1,7 +1,13 @@
 import { t } from "elysia";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
-import { inTransaction } from "@operatoros/db";
+import {
+  ManualAbsenceMonthlyResponseSchema,
+  ManualAbsenceQuerySchema,
+  ManualAbsenceSaveRequestSchema,
+  ManualAbsenceSaveResponseSchema,
+} from "@operatoros/contracts/reports";
+import { getMonthlyClassAbsenceTotals, saveMonthlyClassAbsenceTotals } from "./manual-absence";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -135,9 +141,58 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
     return { deleted: true, jenjang: ctx.params.jenjang.trim(), year: Number(ctx.params.year), month: Number(ctx.params.month), message: "HEB override removed. Will revert to auto-calculation." };
   }, { params: t.Object({ jenjang: t.String({ minLength: 1 }), year: t.String(), month: t.String() }) });
 
-  app.get("/api/config/absence-reasons", (ctx: Context) => { const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const month = Number(ctx.query.month); const year = Number(ctx.query.year); if (month < 1 || month > 12) return fail(ctx.set, 400, "month must be between 1 and 12"); if (year < 2020) return fail(ctx.set, 400, "year must be greater than or equal to 2020"); const className = ctx.query.class_name?.trim(); const client = context.database.client; const availableClasses = rows(context, "SELECT class_name, max(jenjang) AS jenjang FROM students WHERE class_name IS NOT NULL GROUP BY class_name ORDER BY class_name"); if (className) { const classRow = row(context, "SELECT * FROM absence_reason_class_entries WHERE class_name = ? AND month = ? AND year = ?", [className, month, year]); if (classRow) return [{ student_id: 0, student_name: "Rekap Kelas", class_name: className, jenjang: availableClasses.find((v) => v.class_name === className)?.jenjang ?? (className.split(/\d/)[0] || "Unassigned"), month, year, sakit: Number(classRow.sakit), izin: Number(classRow.izin), alfa: Number(classRow.alfa), total: Number(classRow.sakit) + Number(classRow.izin) + Number(classRow.alfa), note: classRow.note ?? "", entered_by: classRow.entered_by, has_data: true, entry_mode: "class", id: classRow.id, entered_at: classRow.entered_at, updated_at: classRow.updated_at }]; return rows(context, "SELECT s.id AS student_id, s.name AS student_name, s.class_name, coalesce(s.jenjang, 'Unassigned') AS jenjang, a.id, coalesce(a.sakit, 0) AS sakit, coalesce(a.izin, 0) AS izin, coalesce(a.alfa, 0) AS alfa, coalesce(a.note, '') AS note, a.entered_by, a.entered_at, a.updated_at FROM students s LEFT JOIN absence_reasons a ON a.student_id = s.id AND a.month = ? AND a.year = ? WHERE (? = 'Unassigned' AND s.class_name IS NULL) OR s.class_name = ? ORDER BY s.name", [month, year, className, className]).map((v) => ({ ...v, month, year, total: Number(v.sakit) + Number(v.izin) + Number(v.alfa), has_data: v.id !== null, entry_mode: "student" })); } return availableClasses.map((classRow) => { const classEntry = row(context, "SELECT * FROM absence_reason_class_entries WHERE class_name = ? AND month = ? AND year = ?", [classRow.class_name, month, year]); const totals = row(context, "SELECT coalesce(sum(sakit),0) AS sakit, coalesce(sum(izin),0) AS izin, coalesce(sum(alfa),0) AS alfa FROM absence_reasons WHERE class_name = ? AND month = ? AND year = ?", [classRow.class_name, month, year]); const sakit = Number(classEntry?.sakit ?? totals?.sakit ?? 0); const izin = Number(classEntry?.izin ?? totals?.izin ?? 0); const alfa = Number(classEntry?.alfa ?? totals?.alfa ?? 0); return { student_id: 0, student_name: classRow.class_name, class_name: classRow.class_name, jenjang: classRow.jenjang ?? "Unassigned", month, year, sakit, izin, alfa, total: sakit + izin + alfa, note: classEntry?.note ?? "", entered_by: classEntry?.entered_by ?? null, has_data: Boolean(classEntry || Number(totals?.sakit) || Number(totals?.izin) || Number(totals?.alfa)), entry_mode: "class", id: classEntry?.id ?? null, entered_at: classEntry?.entered_at ?? null, updated_at: classEntry?.updated_at ?? null }; }); }, { query: t.Object({ month: t.String(), year: t.String(), class_name: t.Optional(t.String()) }) });
-    app.post("/api/config/absence-reasons/bulk", (ctx: Context) => { const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const body = ctx.body as Row; const client = context.database.client; const month = Number(body.month); const year = Number(body.year); if (month < 1 || month > 12) return fail(ctx.set, 400, "month must be between 1 and 12"); if (year < 2020) return fail(ctx.set, 400, "year must be greater than or equal to 2020"); try { if (Array.isArray(body.updates)) { const enteredBy = String(body.entered_by ?? "").trim(); if (!enteredBy) return fail(ctx.set, 400, "entered_by must not be empty"); for (const update of body.updates) { if ([update.sakit, update.izin, update.alfa].some((value) => Number(value ?? 0) < 0)) return fail(ctx.set, 400, "Counts must be >= 0"); const student = row(context, "SELECT id, name, class_name FROM students WHERE id = ?", [update.student_id]); if (!student) return fail(ctx.set, 404, `Student ${update.student_id} not found`); const existing = row(context, "SELECT id FROM absence_reasons WHERE student_id = ? AND month = ? AND year = ?", [student.id, month, year]); const values = [student.id, student.class_name ?? "Unassigned", month, year, Number(update.sakit ?? 0), Number(update.izin ?? 0), Number(update.alfa ?? 0), update.note?.trim() || null, enteredBy]; if (existing) client.run("UPDATE absence_reasons SET class_name = ?, sakit = ?, izin = ?, alfa = ?, note = ?, entered_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [values[1], values[4], values[5], values[6], values[7], values[8], existing.id]); else client.run("INSERT INTO absence_reasons (student_id, class_name, month, year, sakit, izin, alfa, note, entered_by, entered_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", values); } return { message: `Successfully updated ${body.updates.length} records`, total: body.updates.length }; } if (Array.isArray(body.entries)) { let inserted = 0; let updated = 0; let propagated = 0; for (const entry of body.entries) { const className = String(entry.class_name ?? "").trim(); const entryMonth = Number(entry.month ?? month); const entryYear = Number(entry.year ?? year); const enteredBy = String(entry.entered_by ?? body.entered_by ?? "").trim(); if (!className || entryMonth < 1 || entryMonth > 12 || entryYear < 2020 || !enteredBy || [entry.sakit, entry.izin, entry.alfa].some((value) => Number(value ?? 0) < 0)) return fail(ctx.set, 422, "Invalid absence reason class entry"); const existing = row(context, "SELECT id FROM absence_reason_class_entries WHERE class_name = ? AND month = ? AND year = ?", [className, entryMonth, entryYear]); if (existing) { client.run("UPDATE absence_reason_class_entries SET sakit = ?, izin = ?, alfa = ?, note = ?, entered_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [Number(entry.sakit ?? 0), Number(entry.izin ?? 0), Number(entry.alfa ?? 0), entry.note?.trim() || null, enteredBy, existing.id]); updated++; } else { client.run("INSERT INTO absence_reason_class_entries (class_name, month, year, sakit, izin, alfa, note, entered_by, entered_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", [className, entryMonth, entryYear, Number(entry.sakit ?? 0), Number(entry.izin ?? 0), Number(entry.alfa ?? 0), entry.note?.trim() || null, enteredBy]); inserted++; } for (const student of rows(context, "SELECT id FROM students WHERE class_name = ?", [className])) { const studentEntry = row(context, "SELECT id FROM absence_reasons WHERE student_id = ? AND month = ? AND year = ?", [student.id, entryMonth, entryYear]); const values = [student.id, className, entryMonth, entryYear, Number(entry.sakit ?? 0), Number(entry.izin ?? 0), Number(entry.alfa ?? 0), entry.note?.trim() || null, enteredBy]; if (studentEntry) client.run("UPDATE absence_reasons SET class_name = ?, sakit = ?, izin = ?, alfa = ?, note = ?, entered_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [values[1], values[4], values[5], values[6], values[7], values[8], studentEntry.id]); else client.run("INSERT INTO absence_reasons (student_id, class_name, month, year, sakit, izin, alfa, note, entered_by, entered_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", values); propagated++; } } return { inserted, updated, total: body.entries.length, propagated_students: propagated }; } return fail(ctx.set, 422, "updates or entries are required"); } catch { return fail(ctx.set, 409, "The records could not be saved. Retry or contact the system administrator."); } }, { body: t.Any() });
-  app.get("/api/config/absence-reasons/summary", (ctx: Context) => { const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" }; const month = Number(ctx.query.month); const year = Number(ctx.query.year); const classes = rows(context, "SELECT class_name, max(jenjang) AS jenjang FROM students WHERE class_name IS NOT NULL GROUP BY class_name ORDER BY class_name"); return classes.reduce((result: Row[], classRow) => { const classEntry = row(context, "SELECT * FROM absence_reason_class_entries WHERE class_name = ? AND month = ? AND year = ?", [classRow.class_name, month, year]); const totals = row(context, "SELECT coalesce(sum(sakit),0) AS sakit, coalesce(sum(izin),0) AS izin, coalesce(sum(alfa),0) AS alfa FROM absence_reasons WHERE class_name = ? AND month = ? AND year = ?", [classRow.class_name, month, year]); result.push({ jenjang: classRow.jenjang ?? "Unassigned", month, year, total_sakit: Number(classEntry?.sakit ?? totals?.sakit ?? 0), total_izin: Number(classEntry?.izin ?? totals?.izin ?? 0), total_alfa: Number(classEntry?.alfa ?? totals?.alfa ?? 0), classes_entered: classEntry ? 1 : 0, classes_total: 1 }); return result; }, []); }, { query: t.Object({ month: t.String(), year: t.String() }) });
+  app.get("/api/config/absence-reasons", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    try {
+      return getMonthlyClassAbsenceTotals(context, Number(ctx.query.academic_year_id), ctx.query.month, {
+        jenjang_id: ctx.query.jenjang_id === undefined ? undefined : Number(ctx.query.jenjang_id),
+        program_id: ctx.query.program_id === undefined ? undefined : Number(ctx.query.program_id),
+      });
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 500;
+      return fail(ctx.set, status, status >= 500 ? "Monthly absence totals could not be loaded." : error instanceof Error ? error.message : "Invalid absence scope.");
+    }
+  }, { query: ManualAbsenceQuerySchema, response: ManualAbsenceMonthlyResponseSchema });
+
+  app.post("/api/config/absence-reasons/bulk", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    try {
+      return saveMonthlyClassAbsenceTotals(context, user, ctx.body);
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 409;
+      return fail(ctx.set, status, status >= 500 ? "Monthly absence totals could not be saved." : error instanceof Error ? error.message : "Invalid absence entries.");
+    }
+  }, { body: ManualAbsenceSaveRequestSchema, response: ManualAbsenceSaveResponseSchema });
+
+  app.get("/api/config/absence-reasons/summary", (ctx: Context) => {
+    if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
+    const month = Number(ctx.query.month); const year = Number(ctx.query.year);
+    if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(year) || year < 1900) return fail(ctx.set, 400, "month and year are invalid");
+    const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+    const [monthStart, monthEnd] = [`${monthKey}-01`, `${monthKey}-${String(new Date(Date.UTC(year, month, 0)).getUTCDate()).padStart(2, "0")}`];
+    const academicYearId = ctx.query.academic_year_id === undefined
+      ? row(context, "SELECT id FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY is_default DESC, start_date DESC LIMIT 1", [monthEnd, monthStart])?.id
+      : Number(ctx.query.academic_year_id);
+    if (!academicYearId) return [];
+    try {
+      const totals = getMonthlyClassAbsenceTotals(context, Number(academicYearId), monthKey);
+      const byJenjang = new Map<string, Row>();
+      for (const value of totals.classes) {
+        const current = byJenjang.get(value.jenjang) ?? { jenjang: value.jenjang, month, year, total_sakit: 0, total_izin: 0, total_alfa: 0, classes_entered: 0, classes_total: 0 };
+        current.total_sakit += value.has_data ? value.sakit : 0;
+        current.total_izin += value.has_data ? value.izin : 0;
+        current.total_alfa += value.has_data ? value.alfa : 0;
+        current.classes_entered += Number(value.has_data);
+        current.classes_total++;
+        byJenjang.set(value.jenjang, current);
+      }
+      return [...byJenjang.values()];
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 500;
+      return fail(ctx.set, status, status >= 500 ? "Absence completeness could not be loaded." : error instanceof Error ? error.message : "Invalid absence scope.");
+    }
+  }, { query: t.Object({ month: t.String(), year: t.String(), academic_year_id: t.Optional(t.String()) }) });
 
   const termBody = t.Object({ academic_year_id: t.Number({ minimum: 1 }), term_number: t.Number({ minimum: 1, maximum: 4 }), label: t.String({ minLength: 1, maxLength: 80 }), start_date: t.String(), end_date: t.String() });
   const termUpdateBody = t.Object({ academic_year_id: t.Optional(t.Number({ minimum: 1 })), term_number: t.Optional(t.Number({ minimum: 1, maximum: 4 })), label: t.Optional(t.String({ minLength: 1, maxLength: 80 })), start_date: t.Optional(t.String()), end_date: t.Optional(t.String()) });
