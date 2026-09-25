@@ -18,6 +18,7 @@ import { fetchManagementOverview, type ManagementOverviewFilters } from "../api/
 import { fetchConfiguredTerms, fetchManagementReviewProfile, type ManagementReviewProfileFilters } from "../api/managementReviewProfile";
 import { fetchStudentTrendInsights, type StudentTrendFilters } from "../api/studentTrends";
 import { fetchStudentIndicatorInsights, type StudentIndicatorFilters } from "../api/studentIndicators";
+import { fetchAcademicPrograms } from "../api/academicMasters";
 
 const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: number | null }) => ({
   academic_year_id: filters.academic_year_id ?? null,
@@ -58,6 +59,10 @@ export function useManagementOverviewQuery(params: ManagementOverviewFilters | n
 
 export function useManagementReviewTermsQuery(academicYearId: number | null, enabled = true) {
   return useQuery({ queryKey: queryKeys.analytics.managementReviewTerms(academicYearId), queryFn: () => fetchConfiguredTerms(academicYearId as number), enabled: enabled && academicYearId !== null });
+}
+
+export function useManagementReviewProgramsQuery(enabled = true) {
+  return useQuery({ queryKey: queryKeys.analytics.managementReviewPrograms(), queryFn: fetchAcademicPrograms, enabled });
 }
 
 export function useManagementReviewProfileQuery(params: ManagementReviewProfileFilters | null, enabled = true) {

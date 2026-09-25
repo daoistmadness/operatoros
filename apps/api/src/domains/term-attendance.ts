@@ -24,7 +24,8 @@ function problem(status: number, code: string, message: string): never {
 function empty(): Counts {
   return { expected_student_days: 0, recorded_student_days: 0, unrecorded_student_days: 0,
     hadir_count: 0, sakit_count: 0, izin_count: 0, alfa_count: 0, late_count: 0,
-    other_status_count: 0, coverage_rate: null, attendance_rate: null, recorded_attendance_rate: null };
+    other_status_count: 0, coverage_rate: null, hadir_rate: null, sakit_rate: null, izin_rate: null,
+    alfa_rate: null, attendance_rate: null, recorded_attendance_rate: null };
 }
 
 function rate(numerator: number, denominator: number): number | null {
@@ -33,6 +34,10 @@ function rate(numerator: number, denominator: number): number | null {
 
 function finish(value: Counts): Counts {
   value.coverage_rate = rate(value.recorded_student_days, value.expected_student_days);
+  value.hadir_rate = rate(value.hadir_count, value.expected_student_days);
+  value.sakit_rate = rate(value.sakit_count, value.expected_student_days);
+  value.izin_rate = rate(value.izin_count, value.expected_student_days);
+  value.alfa_rate = rate(value.alfa_count, value.expected_student_days);
   value.attendance_rate = rate(value.hadir_count, value.expected_student_days);
   value.recorded_attendance_rate = rate(value.hadir_count, value.recorded_student_days);
   return value;
@@ -116,6 +121,7 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
   const byGrade = new Map<number | null, Counts>();
   const byClass = new Map<number | null, Counts>();
   const byStudent = new Map<string, Counts>();
+  const studentClasses = new Map<string, Array<{ class_id: number | null; class_name: string }>>();
   const unknownDates = new Set<string>();
   let unknownDays = 0;
   for (const date of dates) for (const jenjangId of jenjangIds) {
@@ -141,6 +147,10 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
     if (scope.program_id !== null && canonicalClass?.program_id !== scope.program_id) continue;
     if (scope.grade_id !== null && canonicalClass?.grade_id !== scope.grade_id) continue;
     if (scope.class_id !== null && canonicalClass?.id !== scope.class_id) continue;
+    const represented = studentClasses.get(studentKey) ?? [];
+    const classRepresentation = { class_id: canonicalClass?.id ?? null, class_name: canonicalClass?.class_name ?? String(named ?? "Unresolved class") };
+    if (!represented.some((value) => value.class_id === classRepresentation.class_id && value.class_name === classRepresentation.class_name)) represented.push(classRepresentation);
+    studentClasses.set(studentKey, represented);
     if (expectation === "UNKNOWN") { unknownDays++; continue; }
     if (expectation !== "EXPECTED") continue;
     if (!canonicalClass) unresolvedClassDays++;
@@ -162,7 +172,7 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
     programs: grouped(byProgram, (key, counts) => ({ program_id: key, program: classes.find((value) => Number(value.program_id) === key)?.program ?? "Unresolved class", totals: counts })),
     grades: grouped(byGrade, (key, counts) => ({ grade_id: key, grade: classes.find((value) => Number(value.grade_id) === key)?.grade ?? "Unresolved class", totals: counts })),
     classes: grouped(byClass, (key, counts) => ({ class_id: key, class_name: classById.get(Number(key))?.class_name ?? "Unresolved class", totals: counts })),
-    students: grouped(byStudent, (key, counts) => ({ student_key: key, totals: counts })),
+    students: [...byStudent.entries()].map(([key, counts]) => ({ student_key: key, class_representations: studentClasses.get(key) ?? [], totals: finish(counts) })),
     quality: { unknown_calendar_dates: [...unknownDates].sort(), unknown_calendar_student_days: unknownDays,
       unresolved_class_student_days: unresolvedClassDays, other_status_student_days: totals.other_status_count,
       report_data_ready: unknownDays === 0 && unresolvedClassDays === 0 && totals.other_status_count === 0 && totals.expected_student_days > 0 },

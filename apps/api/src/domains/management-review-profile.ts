@@ -61,16 +61,19 @@ export function managementReviewProfile(context: AuthContext, query: Row): Manag
     WHERE tc.id = ? AND tc.academic_year_id = ? AND tc.start_date <= tc.end_date`, [termId, academicYearId]);
   if (!term) return null;
   const jenjangId = query.jenjang_id === undefined ? null : id(query.jenjang_id);
+  const programId = query.program_id === undefined ? null : id(query.program_id);
   const classId = query.class_id === undefined ? null : id(query.class_id);
-  if ((query.jenjang_id !== undefined && !jenjangId) || (query.class_id !== undefined && !classId)) return null;
+  if ((query.jenjang_id !== undefined && !jenjangId) || (query.program_id !== undefined && !programId) || (query.class_id !== undefined && !classId)) return null;
   const jenjang = jenjangId ? row(context, "SELECT name FROM jenjangs WHERE id = ?", [jenjangId]) : null;
-  const classValue = classId ? row(context, "SELECT c.class_name, g.jenjang_id FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id WHERE c.id = ? AND c.academic_year_id = ?", [classId, academicYearId]) : null;
-  if (jenjangId && !jenjang || classId && (!classValue || jenjangId && Number(classValue.jenjang_id) !== jenjangId)) return null;
+  const program = programId ? row(context, "SELECT id, name, jenjang_id FROM academic_programs WHERE id = ?", [programId]) : null;
+  const classValue = classId ? row(context, "SELECT c.class_name, g.jenjang_id, g.program_id FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id WHERE c.id = ? AND c.academic_year_id = ?", [classId, academicYearId]) : null;
+  if (jenjangId && !jenjang || programId && (!program || jenjangId && Number(program.jenjang_id) !== jenjangId) || classId && (!classValue || jenjangId && Number(classValue.jenjang_id) !== jenjangId || programId && Number(classValue.program_id) !== programId)) return null;
   const residenceGroupBy: GroupBy = ["kelurahan", "kecamatan", "city_regency", "province"].includes(query.residence_group_by) ? query.residence_group_by : "kelurahan";
   const topN = query.residence_top_n === "all" ? null : query.residence_top_n === "5" ? 5 : 10;
   const filters = ["e.academic_year_id = ?", "COALESCE(e.effective_from, ay.start_date) <= ?", "COALESCE(e.effective_to, ay.end_date) >= ?"];
   const params: unknown[] = [academicYearId, term.end_date, term.start_date];
   if (jenjangId) { filters.push("e.jenjang_id = ?"); params.push(jenjangId); }
+  if (programId) { filters.push("e.academic_class_id IN (SELECT c.id FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id WHERE c.academic_year_id = ? AND g.program_id = ?)"); params.push(academicYearId, programId); }
   if (classId) { filters.push("e.academic_class_id = ?"); params.push(classId); }
   const population = rows(context, `WITH ranked AS (
     SELECT e.*, ROW_NUMBER() OVER (PARTITION BY e.student_master_id ORDER BY COALESCE(e.effective_from, ay.start_date) DESC, e.id DESC) AS enrollment_rank
@@ -100,7 +103,7 @@ export function managementReviewProfile(context: AuthContext, query: Row): Manag
   const motherOccupation = countRows(population.map((value) => category(value.mother_occupation)), total);
   const insights = [leaders("Jenjang terbesar", programs), total ? `Kelengkapan data jenis kelamin: ${percentage(total - missing.gender, total)}%.` : null, leaders("Kelompok tempat tinggal terbesar", residence), leaders("Pekerjaan ayah terbanyak", fatherOccupation), leaders("Pekerjaan ibu terbanyak", motherOccupation)].filter((value): value is string => Boolean(value));
   return {
-    context: { academicYearId, academicYearLabel: String(term.academic_year_label), termId, termLabel: String(term.label), termStart: String(term.start_date), termEnd: String(term.end_date), jenjangId, classId, jenjangLabel: jenjang ? String(jenjang.name) : null, classLabel: classValue ? String(classValue.class_name) : null, generatedAt: new Date().toISOString(), demographicSemantics: DEMOGRAPHIC_SEMANTICS },
+    context: { academicYearId, academicYearLabel: String(term.academic_year_label), termId, termLabel: String(term.label), termStart: String(term.start_date), termEnd: String(term.end_date), jenjangId, programId, classId, jenjangLabel: jenjang ? String(jenjang.name) : null, programLabel: program ? String(program.name) : null, classLabel: classValue ? String(classValue.class_name) : null, generatedAt: new Date().toISOString(), demographicSemantics: DEMOGRAPHIC_SEMANTICS },
     summary: { totalStudents: total, programs: programs.length, classes: new Set(population.map((value) => value.academic_class_id).filter(Boolean)).size, male: genders.find((value) => value.label === "Laki-laki")?.count ?? 0, female: genders.find((value) => value.label === "Perempuan")?.count ?? 0, genderNotSpecified: missing.gender, needsCompletion },
     programs, gender: genders, residence: { groupBy: residenceGroupBy, topN, rows: residence }, fatherOccupation, motherOccupation,
     dataQuality: { complete: total - needsCompletion, needsCompletion, missing }, insights: insights.length ? insights : ["Data belum cukup untuk menghasilkan ringkasan."],
@@ -109,11 +112,12 @@ export function managementReviewProfile(context: AuthContext, query: Row): Manag
 
 function addContext(sheet: any, report: ManagementReviewProfileResponse) {
   appendRow(sheet, ["Academic Year", report.context.academicYearLabel]); appendRow(sheet, ["Term", report.context.termLabel]);
-  appendRow(sheet, ["Jenjang", report.context.jenjangLabel ?? "Semua"]); appendRow(sheet, ["Class", report.context.classLabel ?? "Semua"]); appendRow(sheet, ["Generated At", report.context.generatedAt]); appendRow(sheet, []);
+  appendRow(sheet, ["Jenjang", report.context.jenjangLabel ?? "Semua"]); appendRow(sheet, ["Program", report.context.programLabel ?? "Semua"]);
+  appendRow(sheet, ["Class", report.context.classLabel ?? "Semua"]); appendRow(sheet, ["Generated At", report.context.generatedAt]); appendRow(sheet, []);
 }
 export async function managementReviewProfileWorkbook(report: ManagementReviewProfileResponse): Promise<Uint8Array> {
   const book = createWorkbook({ exportType: "term-management-review-student-profile" });
-  const add = (name: string, headers: string[], values: unknown[][]) => { const sheet = addWorksheet(book, name); addContext(sheet, report); appendRow(sheet, headers); for (const value of values) appendRow(sheet, value); styleHeader(sheet, 7); autoSizeColumns(sheet, 12, 36); };
+  const add = (name: string, headers: string[], values: unknown[][]) => { const sheet = addWorksheet(book, name); addContext(sheet, report); appendRow(sheet, headers); for (const value of values) appendRow(sheet, value); styleHeader(sheet, 8); autoSizeColumns(sheet, 12, 36); };
   add("Summary", ["Metric", "Value"], Object.entries(report.summary).map(([key, value]) => [key, value]));
   add("Jenjang", ["Jenjang", "Count", "Percentage"], report.programs.map((value) => [value.label, value.count, value.percentage]));
   add("Jenis Kelamin", ["Category", "Count", "Percentage"], report.gender.map((value) => [value.label, value.count, value.percentage]));
@@ -127,7 +131,7 @@ export async function managementReviewProfilePdf(report: ManagementReviewProfile
   const document = await PDFDocument.create(); const font = await document.embedFont(StandardFonts.Helvetica); const bold = await document.embedFont(StandardFonts.HelveticaBold);
   let page = document.addPage([595, 842]); let y = 790;
   const line = (text: string, heading = false) => { if (y < 55) { page = document.addPage([595, 842]); y = 790; } page.drawText(text.slice(0, 95), { x: 45, y, size: heading ? 14 : 9, font: heading ? bold : font, color: heading ? rgb(0.05, 0.35, 0.3) : rgb(0.1, 0.1, 0.1) }); y -= heading ? 24 : 15; };
-  line("Management Review - Student Profile", true); line(`${report.context.academicYearLabel} | ${report.context.termLabel}`); line(`Generated: ${report.context.generatedAt}`); line(report.context.demographicSemantics); y -= 10;
+  line("Management Review - Student Profile", true); line(`${report.context.academicYearLabel} | ${report.context.termLabel}`); line(`Program: ${report.context.programLabel ?? "All"}`); line(`Generated: ${report.context.generatedAt}`); line(report.context.demographicSemantics); y -= 10;
   line("Student Summary", true); Object.entries(report.summary).forEach(([key, value]) => line(`${key}: ${value}`));
   const section = (name: string, values: Array<{ label: string; count: number; percentage: number }>) => { y -= 8; line(name, true); values.forEach((value) => line(`${value.label}: ${value.count} (${value.percentage}%)`)); };
   section("Profil Siswa - Jenjang", report.programs); section("Profil Siswa - Jenis Kelamin", report.gender); section(`Profil Siswa - Tempat Tinggal (${report.residence.groupBy})`, report.residence.rows); section("Pekerjaan Ayah", report.fatherOccupation); section("Pekerjaan Ibu", report.motherOccupation);
