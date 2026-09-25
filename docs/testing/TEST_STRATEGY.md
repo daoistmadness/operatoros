@@ -61,3 +61,38 @@ selects runtime ports, polls readiness, records process ownership, and cleans
 successful output; failure logs, JUnit, screenshots, and traces are retained
 only for diagnosis. Browser assertions should wait on semantic UI or network
 state rather than fixed sleeps.
+
+## Three-tier feedback model
+
+Tier 1 is fast local iteration. `mise run test:fast` selects the smallest
+relevant work from changed files: focused Bun or Vitest files, the matching
+package typecheck (API typecheck included), and the matching lint and boundary
+checks. It never launches Playwright and never runs the full API suite for an
+isolated edit. A documentation-only change exits immediately. Measure an
+ordinary API-domain loop in the low tens of seconds.
+
+Tier 2 is pre-PR readiness. `mise run check:affected` runs the cached Turbo
+typecheck, unit-test, and web-build tasks affected since `origin/main`. Add
+`make e2e-critical` only when the change affects cross-layer user behavior.
+Do not run the full regression before every commit.
+
+Tier 3 is full regression. `mise run check:full` delegates to
+`make test-release` and remains the only authoritative broad gate, alongside
+the E2E full workflow in CI. Run it for release-sensitive, schema-sensitive,
+or difficult changes, and before merge when Tier 2 cannot cover the risk.
+
+## Local resource policy
+
+Tiers already execute serially: one heavyweight lane at a time. Do not run a
+Turbo check, a full API suite, a production build, and Playwright
+simultaneously on the modest development host. Full API stays serial;
+lightweight independent package tests (contracts, DB, Excel, UI, architecture
+and boundary checks) keep their proven file-level parallelism.
+
+`turbo run typecheck test build` accepts an `OPERATOROS_TURBO_CONCURRENCY`
+override and defaults to `4`, which CI keeps. Forced full-graph measurement on
+the reference host showed no wall-time difference between concurrency `4` and
+`2` (4m43s versus 4m44s); the graph is dependency-bound and saturation comes
+from inner runners (Vitest workers, Bun, Vite). Export
+`OPERATOROS_TURBO_CONCURRENCY=2` locally only if process pressure, not elapsed
+time, is the observed problem.
