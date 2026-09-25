@@ -16,6 +16,7 @@ const ADMIN_CAPABILITIES = [
   "rollback_import_session", "transfer_enrollment", "update_attendance_followup", "view_all_attendance",
   "view_assigned_attendance", "view_attendance", "view_attendance_corrections", "view_attendance_followup_audit",
   "view_attendance_followups", "view_early_departure", "view_early_departure_audit", "view_progression_preview",
+  "destructive_data_reset",
   "view_sensitive_student_fields", "view_staff", "view_staff_audit", "view_staff_sensitive", "view_student",
   "view_student_audit",
 ] as const;

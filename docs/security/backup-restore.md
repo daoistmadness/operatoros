@@ -60,7 +60,7 @@ The append-only restore audit records `restore_requested`, `restore_denied`, `re
 
 ## Concurrency and deployment restriction
 
-Backup and restore use a process-local operation lock. Restore and clear-data additionally share a nonblocking destructive-operation lock. Because there is no distributed or cross-process restore lock, restore fails closed when `RESTORE_SINGLE_WORKER_REQUIRED=true` and `BACKEND_WORKERS` is not `1`.
+Backup and restore use process-local operation locks. Data reset uses its own process-local guard and an immediate SQLite transaction. These guards do not coordinate multiple API processes. Restore fails closed when `RESTORE_SINGLE_WORKER_REQUIRED=true` and `BACKEND_WORKERS` is not `1`.
 
 The current two-worker Docker image therefore serves normal application traffic but rejects restore. Run an explicitly controlled single-worker maintenance profile for authenticated SQLite restore. Do not claim multi-worker restore safety.
 

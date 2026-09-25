@@ -25,6 +25,7 @@
     "./classes": "./src/classes/index.ts",
     "./readiness": "./src/readiness/index.ts",
     "./academic-masters": "./src/academic-masters/index.ts",
+    "./system": "./src/system/index.ts",
     "./excel": "./src/excel.ts"
   }
 }

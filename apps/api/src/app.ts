@@ -29,6 +29,7 @@ import { managementReviewAttendanceRoutes } from "./domains/management-review-at
 import { studentTrendRoutes } from "./domains/student-trends";
 import { studentIndicatorRoutes } from "./domains/student-indicators";
 import { safetyRoutes } from "./domains/safety";
+import { dataResetRoutes } from "./domains/data-reset";
 import { operatorRoutes } from "./domains/operator";
 import { teacherAssignmentRoutes } from "./domains/teacher-assignments";
 import { studentExportRoutes } from "./domains/student-exports";
@@ -118,13 +119,18 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     dailyAttendanceRoutes(app, context);
     attendanceCalendarRoutes(app, context);
     machineAttendancePreviewRoutes(app, context);
-    safetyRoutes(app, context, {
+    const safetyConfig = {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
       backupEncryption: _config.backupEncryption ?? null,
+    };
+    safetyRoutes(app, context, safetyConfig);
+    dataResetRoutes(app, context, {
+      destructiveOperationsEnabled: safetyConfig.destructiveOperationsEnabled,
+      backup: safetyConfig,
     });
   }
-  systemRoutes(app, context, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
+  systemRoutes(app, { destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false });
 
   if (_config.environment !== "test") {
     app.use(openapi({
