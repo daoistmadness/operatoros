@@ -1148,6 +1148,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/attendance/term-lateness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsAttendanceTerm-lateness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/class-leaderboard": {
         parameters: {
             query?: never;
@@ -11114,6 +11130,88 @@ export interface operations {
                                 attendance_rate: number | null;
                                 recorded_attendance_rate: number | null;
                             };
+                        }[];
+                        quality: {
+                            unknown_calendar_dates: string[];
+                            unknown_calendar_student_days: number;
+                            unresolved_class_student_days: number;
+                            other_status_student_days: number;
+                            report_data_ready: boolean;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiAnalyticsAttendanceTerm-lateness": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_number: string;
+                jenjang_id?: string;
+                program_id?: string;
+                grade_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            term_id: number | null;
+                            term_number: number;
+                            term_label: string;
+                            start_date: string;
+                            end_date: string;
+                            /** @enum {string} */
+                            source: "custom" | "default";
+                        };
+                        scope: {
+                            jenjang_id: number | null;
+                            program_id: number | null;
+                            grade_id: number | null;
+                            class_id: number | null;
+                        };
+                        cutoffs: {
+                            jenjang_id: number | null;
+                            jenjang: string;
+                            cutoff_time: string | null;
+                        }[];
+                        totals: {
+                            expected_student_days: number;
+                            late_events: number;
+                            affected_students: number;
+                            total_late_minutes: number;
+                            average_late_minutes: number | null;
+                            late_event_rate: number | null;
+                        };
+                        classes: {
+                            class_id: number | null;
+                            class_name: string;
+                            totals: {
+                                expected_student_days: number;
+                                late_events: number;
+                                affected_students: number;
+                                total_late_minutes: number;
+                                average_late_minutes: number | null;
+                                late_event_rate: number | null;
+                            };
+                        }[];
+                        students: {
+                            student_key: string;
+                            late_events: number;
+                            total_late_minutes: number;
                         }[];
                         quality: {
                             unknown_calendar_dates: string[];

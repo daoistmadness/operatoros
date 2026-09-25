@@ -17,6 +17,7 @@ import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { actor, legacyName } from "./core";
 import { deriveAttendanceStatus, insertCanonicalAttendanceRecord } from "./attendance-rules";
+import { canonicalMachineLateness, loadCutoffMap, resolveCutoff, type MachineLateness } from "./term-lateness";
 import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 
@@ -29,6 +30,7 @@ type ProjectedRow = {
   studentId: number | null;
   enrollmentId: number | null;
   existing: Row | null;
+  derivedLate: MachineLateness;
 };
 type Projection = {
   items: ProjectedRow[];
@@ -172,11 +174,11 @@ function sameTime(value: unknown): string | null {
   return value == null || value === "" ? null : String(value).slice(0, 5);
 }
 
-function sameCanonical(existing: Row, source: MachineAttendanceRow, status: string): boolean {
+function sameCanonical(existing: Row, source: MachineAttendanceRow, status: string, derivedMinutes: number): boolean {
   return String(existing.status) === status
     && sameTime(existing.check_in) === source.checkIn
     && sameTime(existing.check_out) === source.checkOut
-    && Number(existing.late_duration ?? 0) === (source.lateMinutes ?? 0);
+    && Number(existing.late_duration ?? 0) === derivedMinutes;
 }
 
 function appLink(path: string, values: Record<string, string | number | null | undefined>): string {
@@ -232,7 +234,7 @@ function resolution(
   };
 }
 
-function classify(source: MachineAttendanceRow, state: PreviewItem["matchingState"], expectation: string, enrollment: { value: Row | null; classification: MachineImportApplyClassification | null }, existing: Row | null, finalized: boolean, today: string, canonicalStatus: string | null): MachineImportApplyClassification {
+function classify(source: MachineAttendanceRow, state: PreviewItem["matchingState"], expectation: string, enrollment: { value: Row | null; classification: MachineImportApplyClassification | null }, existing: Row | null, finalized: boolean, today: string, canonicalStatus: string | null, derivedMinutes: number): MachineImportApplyClassification {
   if (state === "INVALID_SOURCE_ROW" || state === "INVALID_IDENTIFIER") return "BLOCKED_INVALID_SOURCE_ROW";
   if (state === "UNMAPPED") return "BLOCKED_UNMAPPED";
   if (state === "AMBIGUOUS") return "BLOCKED_AMBIGUOUS";
@@ -246,7 +248,7 @@ function classify(source: MachineAttendanceRow, state: PreviewItem["matchingStat
   if (source.machineEvidence === "UNSUPPORTED_SOURCE_STATUS") return "BLOCKED_UNSUPPORTED_SOURCE_STATUS";
   if (!source.checkIn || !source.checkOut || !canonicalStatus || !["on-time", "late"].includes(canonicalStatus)) return "BLOCKED_INCOMPLETE_SCAN";
   if (existing?.override_id != null) return "CONFLICT_EXISTING_OVERRIDE";
-  if (existing && sameCanonical(existing, source, canonicalStatus)) return "NOOP_ALREADY_CANONICAL";
+  if (existing && sameCanonical(existing, source, canonicalStatus, derivedMinutes)) return "NOOP_ALREADY_CANONICAL";
   if (existing) return "CONFLICT_EXISTING_ATTENDANCE";
   if (finalized) return "BLOCKED_FINALIZED_PERIOD";
   return "ELIGIBLE_CREATE";
@@ -255,11 +257,12 @@ function classify(source: MachineAttendanceRow, state: PreviewItem["matchingStat
 function digestFor(fileFingerprint: string, academicYearId: number, jenjangId: number, evaluatedOn: string, items: ProjectedRow[]): string {
   const payload = {
     fileFingerprint, academicYearId, jenjangId, evaluatedOn,
-    rows: items.map(({ source, response, studentId, enrollmentId, existing }) => ({
+    rows: items.map(({ source, response, studentId, enrollmentId, existing, derivedLate }) => ({
       sourceRows: source.sourceRows, machineStudentIdentifier: source.machineStudentIdentifier, date: source.date,
       checkIn: source.checkIn, checkOut: source.checkOut, lateMinutes: source.lateMinutes, scanTimes: response.scanTimes,
       machineEvidence: response.machineEvidence, matchingState: response.matchingState, studentId, enrollmentId,
       expectation: response.expectation, canonicalStatus: response.canonicalStatus,
+      canonicalLateMinutes: derivedLate.minutes, canonicalLateSource: derivedLate.source,
       applyClassification: response.applyClassification,
       existing: existing ? { id: Number(existing.id), status: String(existing.status), checkIn: sameTime(existing.check_in), checkOut: sameTime(existing.check_out), lateDuration: Number(existing.late_duration ?? 0), overrideId: existing.override_id == null ? null : Number(existing.override_id), overrideStatus: existing.override_status == null ? null : String(existing.override_status) } : null,
     })),
@@ -276,6 +279,8 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
   const enrollmentsByStudent = enrollmentMap(context, matchedCandidates, academicYearId);
   const attendancesByKey = attendanceMap(context, matchedCandidates, dates);
   const finalized = finalizedDates(context, dates);
+  const jenjangName = row(context, "SELECT name FROM jenjangs WHERE id = ?", [jenjangId])?.name ?? null;
+  const cutoff = resolveCutoff(loadCutoffMap(context), jenjangName == null ? null : String(jenjangName));
   const matched = new Set<string>();
   const unmapped = new Set<string>();
   const ambiguous = new Set<string>();
@@ -294,8 +299,9 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
     const expectation = source.date ? expectationByDate.get(source.date)?.get(jenjangId) ?? unknownExpectation() : unknownExpectation();
     const enrollment = studentId == null || !source.date ? { value: null, classification: null } : dateEnrollment(enrollmentsByStudent.get(studentId) ?? [], source.date, jenjangId);
     const existing = studentId == null || !source.date ? null : attendancesByKey.get(`${studentId}\u0000${source.date}`) ?? null;
-    const canonicalStatus = source.checkIn && source.checkOut && source.machineEvidence === "SCAN_PRESENT" ? deriveAttendanceStatus(source.checkIn, source.checkOut, source.lateMinutes) : null;
-    const applyClassification = classify(source, state, expectation.status, enrollment, existing, finalized.has(source.date ?? ""), evaluatedOn, canonicalStatus);
+    const derivedLate = canonicalMachineLateness(source.checkIn, source.lateMinutes, cutoff);
+    const canonicalStatus = source.checkIn && source.checkOut && source.machineEvidence === "SCAN_PRESENT" ? deriveAttendanceStatus(source.checkIn, source.checkOut, derivedLate.minutes) : null;
+    const applyClassification = classify(source, state, expectation.status, enrollment, existing, finalized.has(source.date ?? ""), evaluatedOn, canonicalStatus, derivedLate.minutes);
     if (state === "MATCHED" && source.machineStudentIdentifier) matched.add(source.machineStudentIdentifier);
     if (state === "UNMAPPED" && source.machineStudentIdentifier) unmapped.add(source.machineStudentIdentifier);
     if (state === "AMBIGUOUS" && source.machineStudentIdentifier) ambiguous.add(source.machineStudentIdentifier);
@@ -315,7 +321,7 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
       existingAttendance: existing ? { baseStatus: String(existing.status), effectiveStatus: String(existing.override_status ?? existing.status), hasOverride: existing.override_id != null } : null,
       resolution: resolution(applyClassification, canonical ?? null, enrollment.value ?? null, source.date, academicYearId, jenjangId, capabilities),
     };
-    return { source, response, studentId, enrollmentId: enrollment.value?.id == null ? null : Number(enrollment.value.id), existing };
+    return { source, response, studentId, enrollmentId: enrollment.value?.id == null ? null : Number(enrollment.value.id), existing, derivedLate };
   });
   const eligibleCreates = items.filter((value) => value.response.applyClassification === "ELIGIBLE_CREATE").length;
   const alreadyCanonical = items.filter((value) => value.response.applyClassification === "NOOP_ALREADY_CANONICAL").length;
@@ -509,7 +515,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
         let created = 0;
         for (const value of projection.items) {
           if (value.response.applyClassification !== "ELIGIBLE_CREATE" || value.studentId == null || value.source.date == null || value.response.canonicalStatus == null) continue;
-          const attendanceId = insertCanonicalAttendanceRecord(context.database.client, { studentId: value.studentId, date: value.source.date, checkIn: value.source.checkIn, checkOut: value.source.checkOut, lateDuration: value.source.lateMinutes ?? 0, lateSource: value.response.canonicalStatus === "late" ? "excel" : "none", status: value.response.canonicalStatus });
+          const attendanceId = insertCanonicalAttendanceRecord(context.database.client, { studentId: value.studentId, date: value.source.date, checkIn: value.source.checkIn, checkOut: value.source.checkOut, lateDuration: value.derivedLate.minutes, lateSource: value.response.canonicalStatus === "late" ? value.derivedLate.source : "none", status: value.response.canonicalStatus });
           auditEvent(context.database.client, user, { entityType: "ATTENDANCE", entityReference: `ATTENDANCE/${attendanceId}`, operation: "MACHINE_IMPORT_CREATE", importSessionId: batchId, changedFields: ["student_id", "date", "check_in", "check_out", "late_duration", "late_source", "status"], metadata: { attendance_id: attendanceId, date: value.source.date, status: value.response.canonicalStatus } });
           created++;
         }
