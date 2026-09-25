@@ -10,7 +10,8 @@ function context() {
   client.run("CREATE TABLE academic_years (id INTEGER PRIMARY KEY, label TEXT, start_date TEXT, end_date TEXT)");
   client.run("CREATE TABLE academic_term_configs (id INTEGER PRIMARY KEY, academic_year_id INTEGER, term_number INTEGER, label TEXT, start_date TEXT, end_date TEXT)");
   client.run("CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT)");
-  client.run("CREATE TABLE academic_grades (id INTEGER PRIMARY KEY, jenjang_id INTEGER)");
+  client.run("CREATE TABLE academic_programs (id INTEGER PRIMARY KEY, jenjang_id INTEGER, name TEXT)");
+  client.run("CREATE TABLE academic_grades (id INTEGER PRIMARY KEY, jenjang_id INTEGER, program_id INTEGER)");
   client.run("CREATE TABLE academic_classes (id INTEGER PRIMARY KEY, academic_year_id INTEGER, grade_id INTEGER, class_name TEXT)");
   client.run("CREATE TABLE student_masters (id TEXT PRIMARY KEY, gender TEXT)");
   client.run("CREATE TABLE student_enrollments (id INTEGER PRIMARY KEY, student_master_id TEXT, academic_year_id INTEGER, jenjang_id INTEGER, academic_class_id INTEGER, effective_from TEXT, effective_to TEXT)");
@@ -19,7 +20,8 @@ function context() {
   client.run("INSERT INTO academic_years VALUES (1, '2026/2027', '2026-07-01', '2027-06-30')");
   client.run("INSERT INTO academic_term_configs VALUES (11, 1, 1, 'Term 1', '2026-07-01', '2026-12-31')");
   client.run("INSERT INTO jenjangs VALUES (1, 'SMP'), (2, 'SD'), (3, 'TK/KB')");
-  client.run("INSERT INTO academic_grades VALUES (1, 1), (2, 2), (3, 3)");
+  client.run("INSERT INTO academic_programs VALUES (1,1,'Primary Program'), (2,2,'Middle Program'), (3,3,'Early Program')");
+  client.run("INSERT INTO academic_grades VALUES (1, 1, 1), (2, 2, 2), (3, 3, 3)");
   client.run("INSERT INTO academic_classes VALUES (10, 1, 1, 'SMP 7A'), (20, 1, 2, 'SD 1A'), (30, 1, 3, 'TK A')");
   client.run("INSERT INTO student_masters VALUES ('s1', 'L'), ('s2', ' perempuan '), ('s3', NULL), ('s4', 'male')");
   client.run("INSERT INTO student_enrollments VALUES (1, 's1', 1, 1, 10, '2026-07-01', '2026-09-30'), (2, 's1', 1, 1, 10, '2026-10-01', NULL), (3, 's2', 1, 2, 20, '2026-07-01', NULL), (4, 's3', 1, 3, 30, '2026-07-01', NULL), (5, 's4', 1, 1, 10, '2027-01-01', NULL)");
@@ -55,6 +57,15 @@ describe("term management review student profile", () => {
     value.database.client.close();
   });
 
+  it("supports an academic program filter", () => {
+    const value = context();
+    const report = managementReviewProfile(value, { academic_year_id: "1", term_id: "11", jenjang_id: "2", program_id: "2" })!;
+    expect(report.summary.totalStudents).toBe(1);
+    expect(report.context).toMatchObject({ programId: 2, programLabel: "Middle Program" });
+    expect(managementReviewProfile(value, { academic_year_id: "1", term_id: "11", jenjang_id: "1", program_id: "2" })).toBeNull();
+    value.database.client.close();
+  });
+
   it("blocks missing or mismatched canonical term configuration", () => {
     const value = context();
     expect(managementReviewProfile(value, { academic_year_id: "1", term_id: "99" })).toBeNull();
@@ -67,7 +78,7 @@ describe("term management review student profile", () => {
     const report = managementReviewProfile(value, { academic_year_id: "1", term_id: "11" })!;
     const workbook = await loadXlsxWorkbook(await managementReviewProfileWorkbook(report));
     expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(["Summary", "Jenjang", "Jenis Kelamin", "Tempat Tinggal", "Pekerjaan Ayah", "Pekerjaan Ibu", "Data Quality"]);
-    expect(workbook.getWorksheet("Summary")?.getCell("B8").value).toBe(report.summary.totalStudents);
+    expect(workbook.getWorksheet("Summary")?.getCell("B9").value).toBe(report.summary.totalStudents);
     const serialized = JSON.stringify(workbook.worksheets.map((sheet) => sheet.getSheetValues()));
     expect(serialized).not.toContain("s1");
     const pdf = await managementReviewProfilePdf(report);

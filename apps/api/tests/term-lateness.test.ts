@@ -87,6 +87,7 @@ describe("canonical term lateness aggregate", () => {
       expect(result.cutoffs).toEqual([{ jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:30" }]);
       expect(result.totals).toMatchObject({ expected_student_days: 5, late_events: 3, affected_students: 1,
         total_late_minutes: 76, average_late_minutes: 76 / 3, late_event_rate: 60 });
+      expect(result.students[0]?.average_late_minutes).toBe(76 / 3);
       expect(result.quality.report_data_ready).toBe(true);
       expect(Value.Check(TermLatenessResponseSchema, result)).toBe(true);
     } finally { value.close(); }
@@ -101,6 +102,17 @@ describe("canonical term lateness aggregate", () => {
       const result = value.get();
       expect(result.totals).toMatchObject({ expected_student_days: 5, late_events: 0, affected_students: 0,
         total_late_minutes: 0, average_late_minutes: null, late_event_rate: 0 });
+    } finally { value.close(); }
+  });
+
+  it("reports late events whose duration is unavailable without inventing minutes", () => {
+    const value = fixture();
+    try {
+      value.attendance("2026-08-04", "late");
+      const result = value.get();
+      expect(result.totals).toMatchObject({ late_events: 1, total_late_minutes: 0, average_late_minutes: null });
+      expect(result.students[0]).toMatchObject({ late_events: 1, total_late_minutes: 0, average_late_minutes: null });
+      expect(result.quality.late_events_without_duration).toBe(1);
     } finally { value.close(); }
   });
 

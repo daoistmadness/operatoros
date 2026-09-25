@@ -51,6 +51,7 @@ export const queryKeys = {
     managementOverview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-overview", canonicalizeQueryFilters(filters)] as const,
     managementReviewProfile: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "management-review-profile", canonicalizeQueryFilters(filters)] as const,
     managementReviewTerms: (academicYearId: number | null) => ["analytics", "management-review-profile", "terms", { academicYearId }] as const,
+    managementReviewPrograms: () => ["analytics", "management-review-profile", "programs"] as const,
     historicalTrends: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "historical-trends", canonicalizeQueryFilters(filters)] as const,
     interventionImpact: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "intervention-impact", canonicalizeQueryFilters(filters)] as const,
     overview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["analytics", "overview", canonicalizeQueryFilters(filters)] as const,
