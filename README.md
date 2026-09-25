@@ -98,10 +98,17 @@ are generated and drift-checked through the frontend package scripts. See
 [database operations](docs/operations/DATABASE_OPERATIONS.md).
 
 ## Prerequisites
-- mise 2026.9.3 — validated runtime/tool authority (no stricter minimum is required)
+- mise 2026.9.13 — validated developer CLI; `mise.toml` keeps a compatible minimum
+- Turborepo 2.11.4 — root-only task runner for affected checks and workspace graph validation
 - Bun 1.4.2 (installed via `mise install`; the root `bun.lock` is authoritative)
+- hk 1.56.1 and Node 24.19.0 (installed via `mise install`)
 - Python 3.12.3 (installed via `mise install`)
 - Agent Browser on the PATH if you want browser verification
+
+The root `devEngines.packageManager` declares Bun for Turbo. Mise pins Bun, and
+the root `bun.lock` remains the sole workspace lockfile.
+CI uses `jdx/mise-action@v4`, which defaults to the latest Mise release. The
+repository does not require a Mise 2026.9.13-only configuration feature.
 
 ## Quick Start
 Direct Bun/Vite and Bun/Elysia processes are the local-development workflow.

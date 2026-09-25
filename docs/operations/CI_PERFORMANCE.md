@@ -43,7 +43,7 @@ stateful, and uncached. No required validation category became orphaned.
 
 ## Cache strategy
 
-GitHub Actions uses `actions/cache@v4` for:
+GitHub Actions uses `actions/cache@v5` for:
 
 - Bun's `~/.bun/install/cache`;
 - pip's `~/.cache/pip`;
@@ -51,7 +51,7 @@ GitHub Actions uses `actions/cache@v4` for:
 
 Bun cache keys include Ubuntu and Bun `1.4.2` plus `bun.lock`. Python keys
 include Ubuntu, Python `3.12.3`, and `backend/requirements.txt`. Turbo keys
-include Ubuntu, Turbo `2.10.12`, `bun.lock`, toolchain files, and global
+include Ubuntu, Turbo `2.11.4`, `bun.lock`, toolchain files, and global
 architecture inputs. Restore keys permit safe reuse. The cache is an
 optimization only. Frozen installation still runs.
 

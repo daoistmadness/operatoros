@@ -5,9 +5,10 @@ supervision to `./start-dev.sh`. Verified commands are maintained in
 [`COMMANDS.md`](../../COMMANDS.md); stable decisions are maintained in
 [`MEMORY.md`](../../MEMORY.md).
 
-Use `mise run doctor` for read-only environment diagnostics,
-`mise run check:affected` for Turbo checks against `origin/main`, and
-`mise run check:full` for the complete release-sensitive gate.
+Use `mise run test:fast` for Tier 1, `mise run check:affected` for Tier 2 Turbo
+checks against `origin/main`, and `mise run check:full` for the Tier 3
+release-sensitive gate. Use `mise run doctor` for read-only environment
+diagnostics.
 
 ## Identify the running checkout
 
