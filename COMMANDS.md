@@ -5,7 +5,7 @@ commands; the underlying tools retain their existing responsibilities.
 
 ## Install
 
-- `mise install` — install the pinned Bun, hk, and Python tools.
+- `mise install` — install the pinned Bun, hk, Node, and Python tools.
 - `bun install --frozen-lockfile` — install workspace dependencies from the repository root.
 - `mise run python:bootstrap` — create or refresh the external retained Python tooling environment.
 - `OPERATOROS_PYTHON_VENV=/absolute/path mise run python:bootstrap` — use a disposable or CI-owned external environment.
