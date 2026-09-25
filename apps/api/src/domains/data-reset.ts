@@ -160,7 +160,7 @@ function appendResetAudit(client: Client, user: CurrentUser, scope: DataResetSco
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
     randomUUID(), String(user.id), user.role, "destructive_data_reset", "SCHOOL_DATA", scope, "RESET",
     scope === "ALL_SCHOOL_DATA" ? "CRITICAL" : "HIGH", "SYSTEM_SETTINGS", success ? 1 : 0, failureCode,
-    JSON.stringify(Object.keys(counts)), JSON.stringify({ deleted_counts: counts, backup_filename }), "1",
+    JSON.stringify(Object.keys(counts)), JSON.stringify({ deleted_counts: counts, backup_filename: backupFilename }), "1",
   ]);
 }
 
