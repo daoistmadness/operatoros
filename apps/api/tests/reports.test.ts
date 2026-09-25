@@ -19,6 +19,8 @@ function seed(path: string): void {
     "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); core_database.run_grade_ledger_patches(core_database.engine); core_database._seed_grade_ledger_minimum(core_database.engine)",
     "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_reports(path)",
     "db = sqlite3.connect(path); year_id = db.execute(\"SELECT id FROM academic_years WHERE label = '2026/2027-reports'\").fetchone()[0]; smp_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SMP'\").fetchone()[0]; sd_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SD'\").fetchone()[0]",
+    "db.executemany(\"INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)\", [('SMP', '07:30'), ('SD', '07:25')])",
+    "db.executemany(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id, jenjang_id, weekday, expectation) VALUES (?, ?, ?, ?)\", [(year_id, j, w, 'EXPECTED' if 1 <= w <= 5 else 'NOT_EXPECTED') for j in (smp_id, sd_id) for w in range(7)])",
     "master = str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'active')\", (master, 'Hana SMP7C', 'hana smp7c')); db.execute(\"INSERT INTO students (name, jenjang, class_name) VALUES ('Hana SMP7C', 'SMP', '7C')\"); hana_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, class_name, class_assigned, lifecycle_state) VALUES (?, ?, ?, ?, '7C', 1, 'ACTIVE')\", (hana_id, master, year_id, smp_id))",
     "db.execute(\"INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Matematika', ?, 1, 1)\", (smp_id,)); subject_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('UH1', 'sumatif', ?), ('UH2', 'sumatif', ?)\", (subject_id, subject_id)); components = [row[0] for row in db.execute(\"SELECT id FROM assessment_components WHERE subject_id = ? ORDER BY id\", (subject_id,)).fetchall()]; enrollments = [row for row in db.execute(\"SELECT e.id, s.name FROM student_enrollments e JOIN students s ON s.id = e.student_id WHERE e.academic_year_id = ? AND e.jenjang_id = ? ORDER BY e.id\", (year_id, smp_id)).fetchall()]; db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, score) VALUES (?, ?, ?, 80), (?, ?, ?, 90), (?, ?, ?, 70)\", (enrollments[0][0], subject_id, components[0], enrollments[0][0], subject_id, components[1], enrollments[1][0], subject_id, components[0])); db.commit(); db.close()",
   ].join("; ");
@@ -170,7 +172,19 @@ describe("analytics and report parity", () => {
 
       const tardiness = await app.handle(new Request("http://local/api/analytics/tardiness-report?month=8&year=2026", { headers: { cookie } }));
       expect(tardiness.status).toBe(200);
-      expect((await tardiness.json() as any).totals).toMatchObject({ total_late_duration_minutes: 85, total_days_late: 5, unique_late_days: 2, tracked_school_days: 4, school_impact_rate_pct: 50, average_lateness_density: 2.5 });
+      const tardinessJson = await tardiness.json() as any;
+      // Canonical lateness: 07:45 arrivals against SMP 07:30 / SD 07:25 cutoffs.
+      // The two SD 07:30 arrivals on Saturday 08-01 are stored on-time but are
+      // canonically late (07:30 > 07:25); incidents are facts, so they count as
+      // late events while Saturday stays out of the expected-day denominator.
+      expect(tardinessJson.totals).toMatchObject({ expected_student_days: 168, late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7, unique_late_days: 3, tracked_school_days: 4, school_impact_rate_pct: 75 });
+      expect(tardinessJson.management_summary).toMatchObject({ late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7 });
+      expect(tardinessJson.breakdown_by_class).toEqual(expect.arrayContaining([
+        expect.objectContaining({ class_name: "7A", jenjang: "SMP", late_events: 3, affected_students: 3, total_late_minutes: 45 }),
+        expect.objectContaining({ class_name: "1A", jenjang: "SD", late_events: 4, affected_students: 2, total_late_minutes: 50 }),
+      ]));
+      expect(tardinessJson.breakdown_by_class.reduce((sum: number, row: any) => sum + row.late_events, 0)).toBe(tardinessJson.totals.late_events);
+      expect(tardinessJson.breakdown_by_class.reduce((sum: number, row: any) => sum + row.total_late_minutes, 0)).toBe(tardinessJson.totals.total_late_minutes);
 
       const rekap = await app.handle(new Request("http://local/api/analytics/v2/rekap-absensi?month=8&year=2026", { headers: { cookie } }));
       expect(rekap.status).toBe(200);
@@ -178,6 +192,20 @@ describe("analytics and report parity", () => {
       const term = await app.handle(new Request("http://local/api/analytics/attendance/term?academic_year_id=2&term_number=1", { headers: { cookie } }));
       expect(term.status).toBe(200);
       expect((await term.json() as any).period).toMatchObject({ academic_year_id: 2, term_number: 1 });
+
+      const termLateness = await app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=2&term_number=1", { headers: { cookie } }));
+      expect(termLateness.status).toBe(200);
+      const latenessJson = await termLateness.json() as any;
+      expect(latenessJson.period).toMatchObject({ academic_year_id: 2, term_number: 1, start_date: "2026-07-01", end_date: "2026-09-30" });
+      expect(latenessJson.cutoffs).toEqual(expect.arrayContaining([
+        expect.objectContaining({ jenjang: "SMP", cutoff_time: "07:30" }),
+        expect.objectContaining({ jenjang: "SD", cutoff_time: "07:25" }),
+      ]));
+      expect(latenessJson.totals).toMatchObject({ late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7 });
+      expect(latenessJson.classes.reduce((sum: number, row: any) => sum + row.totals.late_events, 0)).toBe(latenessJson.totals.late_events);
+      expect(latenessJson.classes.reduce((sum: number, row: any) => sum + row.totals.total_late_minutes, 0)).toBe(latenessJson.totals.total_late_minutes);
+      expect(latenessJson.classes.reduce((sum: number, row: any) => sum + row.totals.expected_student_days, 0)).toBe(latenessJson.totals.expected_student_days);
+      expect(latenessJson.students.reduce((sum: number, row: any) => sum + row.late_events, 0)).toBe(latenessJson.totals.late_events);
     } finally {
       database.close();
       rmSync(path, { force: true });
@@ -262,6 +290,49 @@ describe("analytics and report parity", () => {
         }
       }
       expect((database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number }).count).toBe(before.count);
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
+  it("keeps tardiness table, chart source, and export values on the same canonical DTO", async () => {
+    const path = `/tmp/operatoros-phase8-lateness-parity-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase8-lateness-parity-audit-${process.pid}` } });
+    try {
+      const cookie = await adminCookie(app);
+      const report = await app.handle(new Request("http://local/api/analytics/tardiness-report?month=8&year=2026", { headers: { cookie } }));
+      expect(report.status).toBe(200);
+      const json = await report.json() as any;
+      // Chart source (summary endpoint) reconciles with the report table totals.
+      const summary = await app.handle(new Request("http://local/api/analytics/tardiness-report/summary-by-jenjang?month=8&year=2026", { headers: { cookie } }));
+      expect(summary.status).toBe(200);
+      const summaryJson = await summary.json() as any;
+      expect(summaryJson.rows.reduce((sum: number, row: any) => sum + row.total_kejadian, 0)).toBe(json.totals.late_events);
+      expect(summaryJson.rows.reduce((sum: number, row: any) => sum + row.hari_efektif_terlambat, 0)).toBeGreaterThanOrEqual(json.totals.unique_late_days);
+      // Export workbook carries the same canonical values as the JSON report.
+      const exported = await app.handle(new Request("http://local/api/analytics/tardiness-report/export-excel?month=8&year=2026", { headers: { cookie } }));
+      expect(exported.status).toBe(200);
+      const workbook = await loadXlsxWorkbook(new Uint8Array(await exported.arrayBuffer()));
+      const names = workbook.worksheets.map((sheet) => sheet.name);
+      expect(names).toEqual(expect.arrayContaining(["Management Summary", "Summary by Jenjang", "Class Breakdown", "Student Details"]));
+      const classes = workbook.getWorksheet("Class Breakdown")!;
+      const exportedRows = [2, 3, 4, 5, 6].map((rowNumber) => ({
+        class_name: String(classes.getRow(rowNumber).getCell(1).value ?? ""),
+        late_events: Number(classes.getRow(rowNumber).getCell(4).value ?? 0),
+        total_late_minutes_str: String(classes.getRow(rowNumber).getCell(6).value ?? ""),
+      })).filter((row) => row.class_name);
+      for (const row of json.breakdown_by_class as any[]) {
+        expect(exportedRows).toContainEqual({ class_name: row.class_name, late_events: row.late_events, total_late_minutes_str: row.total_late_minutes_str });
+      }
+      const management = workbook.getWorksheet("Management Summary")!;
+      const metrics = new Map<string, unknown>();
+      management.eachRow((row, rowNumber) => { if (rowNumber > 1) metrics.set(String(row.getCell(1).value ?? ""), row.getCell(2).value); });
+      expect(metrics.get("late_events")).toBe(json.management_summary.late_events);
+      expect(metrics.get("total_late_minutes")).toBe(json.management_summary.total_late_minutes);
+      expect(metrics.get("affected_students")).toBe(json.management_summary.affected_students);
     } finally {
       database.close();
       rmSync(path, { force: true });

@@ -55,14 +55,23 @@ export type RekapReport = JsonObject & {
   period: JsonObject & { label?: string };
   heb_by_jenjang?: Record<string, number | null>;
 };
+export type TardinessCutoffRow = {
+  jenjang_id: number | null;
+  jenjang: string;
+  cutoff_time: string | null;
+};
 export type TardinessClassRow = {
   jenjang: string;
   class_name: string;
-  total_late_duration_str: string;
-  late_duration_pct: number;
-  total_days_late: number;
-  days_late_pct: number;
-  late_student_count: number;
+  expected_student_days: number;
+  late_events: number;
+  affected_students: number;
+  total_late_minutes: number;
+  total_late_minutes_str: string;
+  average_late_minutes: number | null;
+  average_late_minutes_str: string;
+  late_event_rate: number | null;
+  days_with_late_arrivals: number;
   sakit?: number | null;
   izin?: number | null;
   alfa?: number | null;
@@ -76,22 +85,26 @@ export type TardinessJenjangSummaryRow = {
   rata_rata_siswa_terlambat_per_hari: number;
 };
 export type TardinessTotals = {
-  total_late_duration_str: string;
-  total_days_late: number;
-  total_late_incidents: number;
+  expected_student_days: number;
+  late_events: number;
+  affected_students: number;
+  total_late_minutes: number;
+  total_late_minutes_str: string;
+  average_late_minutes: number | null;
+  average_late_minutes_str: string;
+  late_event_rate: number | null;
   unique_late_days: number;
   tracked_school_days: number;
   school_impact_rate_pct: number;
-  average_lateness_density: number;
-  total_students_ever_late: number;
 };
 export type TardinessManagementSummary = Pick<
   TardinessTotals,
-  'total_late_incidents' | 'unique_late_days' | 'tracked_school_days' | 'school_impact_rate_pct' | 'average_lateness_density'
+  'late_events' | 'affected_students' | 'total_late_minutes' | 'total_late_minutes_str' | 'average_late_minutes' | 'average_late_minutes_str' | 'late_event_rate' | 'expected_student_days' | 'unique_late_days'
 >;
 export type TardinessReport = JsonObject & {
   report_title: string;
   school_name: string;
+  cutoffs: TardinessCutoffRow[];
   breakdown_by_jenjang: TardinessJenjangSummaryRow[];
   summary_by_jenjang: TardinessJenjangSummaryRow[];
   breakdown_by_class: TardinessClassRow[];

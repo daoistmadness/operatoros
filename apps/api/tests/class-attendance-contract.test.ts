@@ -95,4 +95,34 @@ describe("class attendance response contract", () => {
     expect(Value.Check(ClassAttendanceResponseSchema, renamed)).toBe(false);
     expect(Value.Check(ClassAttendanceResponseSchema, mistyped)).toBe(false);
   });
+
+  it("derives manual on-time/late from the canonical cutoff when an arrival time is entered", async () => {
+    const path = `/tmp/operatoros-class-attendance-canonical-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-canonical-audit-${process.pid}` } });
+    try {
+      database.client.run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES ('Synthetic SMP', '07:30', CURRENT_TIMESTAMP)");
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
+      const cookie = sessionCookie(login);
+      const submit = async (date: string, entries: unknown) => app.handle(new Request(`http://local/api/attendance/classes/1/dates/${date}/entries`, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify({ entries }) }));
+      // An operator-marked on-time arrival after the cutoff is stored late with canonical minutes.
+      expect((await submit("2026-08-05", [{ student_id: 9001, status: "on-time", check_in: "07:40", check_out: "16:00" }])).status).toBe(200);
+      expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-05'").get()).toMatchObject({ status: "late", late_duration: 10, late_source: "calculated" });
+      // An on-time arrival keeps its derived status.
+      expect((await submit("2026-08-06", [{ student_id: 9001, status: "late", check_in: "07:20", check_out: "16:00" }])).status).toBe(200);
+      expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-06'").get()).toMatchObject({ status: "on-time", late_duration: 0, late_source: "calculated" });
+      // Explicit Sakit keeps the operator status and never becomes late.
+      expect((await submit("2026-08-07", [{ student_id: 9001, status: "sakit", check_in: "07:40" }])).status).toBe(200);
+      expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-07'").get()).toMatchObject({ status: "sakit", late_duration: 0, late_source: "none" });
+      // Explicit late without an arrival time keeps the operator status with unavailable duration.
+      expect((await submit("2026-08-08", [{ student_id: 9001, status: "late" }])).status).toBe(200);
+      expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-08'").get()).toMatchObject({ status: "late", late_duration: 0, late_source: "manual" });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(`${path}-wal`, { force: true });
+      rmSync(`${path}-shm`, { force: true });
+    }
+  }, 30000);
 });
