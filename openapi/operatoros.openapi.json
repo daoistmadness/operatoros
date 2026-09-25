@@ -1917,31 +1917,74 @@
         "title": "ClassMasterProposal",
         "type": "object"
       },
-      "ClearDataRequest": {
+      "DataResetScope": {
+        "enum": ["ATTENDANCE", "ACADEMIC_RESULTS", "STUDENTS", "ALL_SCHOOL_DATA"],
+        "title": "DataResetScope",
+        "type": "string"
+      },
+      "DataResetPreviewRequest": {
+        "additionalProperties": false,
+        "properties": { "scope": { "$ref": "#/components/schemas/DataResetScope" } },
+        "required": ["scope"],
+        "title": "DataResetPreviewRequest",
+        "type": "object"
+      },
+      "DataResetCommitRequest": {
+        "additionalProperties": false,
         "properties": {
-          "confirmation": {
-            "anyOf": [
-              {
-                "type": "string"
+          "scope": { "$ref": "#/components/schemas/DataResetScope" },
+          "confirmation": { "minLength": 1, "title": "Confirmation", "type": "string" }
+        },
+        "required": ["scope", "confirmation"],
+        "title": "DataResetCommitRequest",
+        "type": "object"
+      },
+      "DataResetPreviewResponse": {
+        "properties": {
+          "scope": { "$ref": "#/components/schemas/DataResetScope" },
+          "will_delete": {
+            "items": {
+              "properties": {
+                "domain": { "title": "Domain", "type": "string" },
+                "count": { "minimum": 0, "title": "Count", "type": "integer" }
               },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmation"
+              "required": ["domain", "count"],
+              "type": "object"
+            },
+            "title": "Will Delete",
+            "type": "array"
           },
-          "mode": {
-            "default": "attendance",
-            "enum": [
-              "attendance",
-              "attendance_keep_exceptions",
-              "full"
-            ],
-            "title": "Mode",
-            "type": "string"
+          "will_preserve": { "items": { "type": "string" }, "title": "Will Preserve", "type": "array" },
+          "encrypted_backup_required": { "const": true, "type": "boolean" }
+        },
+        "required": ["scope", "will_delete", "will_preserve", "encrypted_backup_required"],
+        "title": "DataResetPreviewResponse",
+        "type": "object"
+      },
+      "DataResetResult": {
+        "properties": {
+          "scope": { "$ref": "#/components/schemas/DataResetScope" },
+          "deleted_counts": { "additionalProperties": { "minimum": 0, "type": "integer" }, "title": "Deleted Counts", "type": "object" },
+          "completed_at": { "format": "date-time", "title": "Completed At", "type": "string" },
+          "backup_filename": { "minLength": 1, "title": "Backup Filename", "type": "string" }
+        },
+        "required": ["scope", "deleted_counts", "completed_at", "backup_filename"],
+        "title": "DataResetResult",
+        "type": "object"
+      },
+      "DataResetError": {
+        "properties": {
+          "detail": {
+            "properties": {
+              "code": { "title": "Code", "type": "string" },
+              "message": { "title": "Message", "type": "string" }
+            },
+            "required": ["code", "message"],
+            "type": "object"
           }
         },
-        "title": "ClearDataRequest",
+        "required": ["detail"],
+        "title": "DataResetError",
         "type": "object"
       },
       "Confirmation": {
@@ -29218,10 +29261,10 @@
         ]
       }
     },
-    "/api/system/clear-data": {
+    "/api/system/data-reset/preview": {
       "post": {
-        "description": "Clears attendance data.\n\n`attendance` mode removes attendance, attendance override history, attendance override\nrecords, and upload logs. `full` mode also removes student master data.",
-        "operationId": "clear_all_data_api_system_clear_data_post",
+        "description": "Returns current deletion counts and preserved data for the selected reset scope. This operation is read-only.",
+        "operationId": "preview_data_reset_api_system_data_reset_preview_post",
         "parameters": [
           {
             "in": "cookie",
@@ -29244,7 +29287,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ClearDataRequest"
+                "$ref": "#/components/schemas/DataResetPreviewRequest"
               }
             }
           },
@@ -29254,10 +29297,18 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                  "$ref": "#/components/schemas/DataResetPreviewResponse"
               }
             },
-            "description": "Successful Response"
+            "description": "Reset preview"
+          },
+          "401": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Administrator access or destructive-operation enablement required"
           },
           "422": {
             "content": {
@@ -29270,10 +29321,65 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Clear All Data",
-        "tags": [
-          "system"
-        ]
+        "summary": "Preview Data Reset",
+        "tags": ["system"]
+      }
+    },
+    "/api/system/data-reset": {
+      "post": {
+        "description": "Creates an encrypted pre-reset backup, then deletes the exact selected scope in one SQLite transaction. The confirmation phrase is scope-specific.",
+        "operationId": "commit_data_reset_api_system_data_reset_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Astyx Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetCommitRequest" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetResult" } } },
+            "description": "Reset committed"
+          },
+          "400": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Confirmation phrase does not match the selected scope"
+          },
+          "401": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Administrator access or destructive-operation enablement required"
+          },
+          "409": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Another reset operation is active"
+          },
+          "422": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Reset failed and all transactional database changes were rolled back"
+          },
+          "503": {
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "description": "Encrypted pre-reset backup could not be created"
+          }
+        },
+        "summary": "Commit Data Reset",
+        "tags": ["system"]
       }
     },
     "/api/system/health": {

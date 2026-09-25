@@ -16,7 +16,7 @@ describe("terminology harmonization copy", () => {
 
   it("keeps the Settings reset error user-directed", () => {
     const source = readSibling("Settings.tsx");
-    expect(source).toContain("Data reset could not be completed. Retry or contact the system administrator.");
+    expect(source).toContain('getPageApiError(err, "The reset could not be completed.")');
     expect(source).not.toContain("Check console for details");
   });
 
