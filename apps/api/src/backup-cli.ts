@@ -32,7 +32,7 @@ function backup(): void {
   if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
   if (!exists(databasePath)) throw new Error("SQLite database file not found.");
   mkdirSync(backupDir, { recursive: true, mode: 0o700 }); chmodSync(backupDir, 0o700);
-  const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-")); chmodSync(directory, 0o700);
+  const directory = mkdtempSync(join(backupDir, ".operatoros-backup-cli-")); chmodSync(directory, 0o700);
   const name = nextFilename(backupDir);
   try {
     const database = new Database(databasePath, { readonly: true }); const plaintext = database.serialize(); database.close();

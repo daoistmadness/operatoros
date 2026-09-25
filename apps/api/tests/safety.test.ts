@@ -31,7 +31,7 @@ async function login(app: ReturnType<typeof createApp>, username: string, passwo
 describe("backup, restore, and scheduler safety", () => {
   it("backs up, preflights, restores, revokes sessions, and rejects corruption", async () => {
     const path = `/tmp/operatoros-phase9-safety-${process.pid}-${Date.now()}.db`;
-    const backupDir = `/tmp/operatoros-phase9-backups-${process.pid}-${Date.now()}`;
+    const backupDir = `/dev/shm/operatoros-phase9-backups-${process.pid}-${Date.now()}`;
     seed(path); mkdirSync(backupDir, { recursive: true });
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
