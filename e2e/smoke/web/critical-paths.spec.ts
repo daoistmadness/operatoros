@@ -65,7 +65,7 @@ test("@auth @readiness @fresh-install @release admin login exposes a healthy das
 test("@analytics @release dashboard filters use the selected period", async ({ page }) => {
   await login(page);
   const refresh = page.waitForResponse(response => {
-    if (!response.url().includes("/api/analytics/v2/rekap-absensi")) return false;
+    if (!response.url().includes("/api/config/absence-reasons/summary")) return false;
     const url = new URL(response.url());
     return url.searchParams.get("month") === "1" && url.searchParams.get("year") === "2025";
   });

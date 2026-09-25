@@ -402,6 +402,11 @@ describe("analytics and report parity", () => {
       expect((await save("2026-07", classes([["P1A", 2, 1, 0], ["P1B", 1, 0, 1], ["P2", 0, 1, 0]]))).status).toBe(200);
       expect((await save("2026-08", classes([["P1A", 1, 1, 0], ["P1B", 0, 1, 0], ["P2", 3, 0, 1]]))).status).toBe(200);
       expect((await save("2026-09", classes([["P1A", 5, 2, 1], ["P1B", 3, 1, 0]]))).status).toBe(200);
+      const dashboardSummary = await app.handle(new Request("http://local/api/config/absence-reasons/summary?month=9&year=2026", { headers: { cookie: staff } }));
+      expect(dashboardSummary.status).toBe(200);
+      expect(await dashboardSummary.json()).toEqual(expect.arrayContaining([
+        expect.objectContaining({ jenjang: "SD", total_sakit: 8, total_izin: 3, total_alfa: 1, classes_entered: 2 }),
+      ]));
       expect((await save("2026-10", classes([["P1A", 9, 8, 7]]))).status).toBe(200);
       const duplicateMonthSave = await save("2026-10", classes([["P1A", 9, 8, 7]]));
       expect(duplicateMonthSave.status).toBe(200);
