@@ -1,517 +1,242 @@
-import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
-import {
-  Calendar,
-  Download,
-  Filter,
-  Users,
-  GraduationCap,
-  Clock,
-  TrendingUp,
-  Fingerprint,
-  BookOpen,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download, FileText, Filter, Loader2 } from "lucide-react";
 
-import api from "../api";
-import { cn } from "../lib/cn";
+import { fetchAttendanceReport } from "../api/attendanceReport";
+import { fetchAttendanceAnalyticsOptions } from "../api/attendanceAnalytics";
+import { fetchEffectiveTerms, type AcademicTermConfig } from "../api/academicConfig";
+import { getReportFilters, downloadReportBlob, type ReportFiltersResponse } from "../api/reports";
+import type { AttendanceReportQuery, AttendanceReportResponse } from "@operatoros/contracts/reports";
+import { getPageApiError } from "../lib/api/errors";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { FormField, FieldLabel } from "../components/ui/field";
-import { NativeSelect } from "../components/ui/native-select";
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
-import { EmptyState, ErrorState } from "../components/common/state-message";
-
-const JENJANG_OPTIONS = ["Primary", "Secondary", "Kiddy", "Kindergarten"];
+import { EmptyState } from "../components/common/state-message";
+import { FormField, FieldLabel } from "../components/ui/field";
+import { NativeSelect } from "../components/ui/native-select";
 
 const PERIOD_TYPES = [
-  { id: "monthly", label: "Monthly (1 Month)" },
-  { id: "bimonthly", label: "Bi-Monthly (2 Months)" },
-  { id: "term", label: "Term (3 Months)" },
-  { id: "semester", label: "Semester (6 Months)" },
-  { id: "yearly", label: "Yearly (12 Months)" },
-];
+  { value: "month", label: "Bulanan" },
+  { value: "bimonthly", label: "Dua Bulan" },
+  { value: "term", label: "Term" },
+  { value: "semester", label: "Semester" },
+  { value: "yearly", label: "Tahun Ajaran" },
+] as const;
+type PeriodType = typeof PERIOD_TYPES[number]["value"];
+type MonthOption = ReportFiltersResponse["months"][number];
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+function groups(months: MonthOption[], size: number) {
+  const count = Math.ceil(months.length / size);
+  return Array.from({ length: count }, (_, index) => {
+    const selected = months.slice(index * size, (index + 1) * size);
+    return { value: String(index + 1), label: `${selected[0]?.label ?? ""} – ${selected.at(-1)?.label ?? ""}` };
+  });
+}
 
-const currentYear = new Date().getFullYear();
-const YEARS = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
+function periodOptions(type: PeriodType, months: MonthOption[], terms: AcademicTermConfig[]) {
+  if (type === "month") return months;
+  if (type === "term") return terms.map((term) => ({ value: String(term.term_number), label: `${term.label} (${term.start_date} – ${term.end_date})` }));
+  if (type === "bimonthly") return groups(months, 2);
+  if (type === "semester") return groups(months, Math.ceil(months.length / 2) || 1);
+  return [{ value: "all", label: "Seluruh Tahun Ajaran" }];
+}
 
-type PeriodType = "monthly" | "bimonthly" | "term" | "semester" | "yearly";
+function csvCell(value: unknown) {
+  const raw = value == null ? "" : String(value);
+  const safe = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
 
-type AttendanceReportRow = {
-  student_id: string;
-  name: string;
-  jenjang?: string | null;
-  class_name?: string | null;
-  present_count: number;
-  late_count: number;
-  total_late_time_str?: string | null;
-  absent_count: number;
-  incomplete_count: number;
-  sakit?: number | null;
-  izin?: number | null;
-  alfa?: number | null;
-  total_days: number;
-  attendance_percentage: number;
-};
+function downloadAttendanceReport(report: AttendanceReportResponse) {
+  const canonical = report.canonical_attendance.totals;
+  const manual = report.manual_absence;
+  const lines: unknown[][] = [
+    ["Data Kehadiran Aktual", "Sumber: Catatan kehadiran siswa"],
+    ["Expected Student-Days", canonical.expected_student_days],
+    ["Recorded", canonical.recorded_student_days],
+    ["Unrecorded", canonical.unrecorded_student_days],
+    ["Coverage (%)", canonical.coverage_rate],
+    ["Hadir", canonical.hadir_count],
+    ["Sakit aktual", canonical.sakit_count],
+    ["Izin aktual", canonical.izin_count],
+    ["Alfa aktual", canonical.alfa_count],
+    ["Attendance Rate (%)", canonical.attendance_rate],
+    [],
+    ["Siswa", "Jenjang", "Kelas", "Hadir", "Terlambat", "Sakit aktual", "Izin aktual", "Alfa aktual", "Absen", "Tidak lengkap", "Recorded"],
+    ...report.students.map((value) => [value.name, value.jenjang, value.class_name, value.hadir, value.late, value.sakit, value.izin, value.alfa, value.absent, value.incomplete, value.recorded]),
+    [],
+    ["Rekap Manual Sakit / Izin / Alfa", "Sumber: Input total bulanan per kelas"],
+    ["Kelengkapan", manual.completeness.complete ? "Lengkap" : "Belum lengkap"],
+    ["Entri kelas-bulan diharapkan", manual.completeness.expected_class_month_entries],
+    ["Entri lengkap", manual.completeness.completed_class_month_entries],
+    ["Entri belum diisi", manual.completeness.missing_class_month_entries],
+    [],
+    ["Kelas", "Sakit", "Izin", "Alfa", "Bulan tersimpan", "Bulan diharapkan"],
+    ...manual.classes.map((value) => [value.class_name, value.sakit ?? "Belum diinput", value.izin ?? "Belum diinput", value.alfa ?? "Belum diinput", value.completed_months, value.expected_months]),
+    ["TOTAL", manual.totals.sakit ?? "Belum diinput", manual.totals.izin ?? "Belum diinput", manual.totals.alfa ?? "Belum diinput"],
+    ...manual.completeness.missing.map((value) => ["Belum diinput", value.class_name, value.month]),
+  ];
+  const csv = lines.map((line) => line.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  downloadReportBlob(blob, `laporan-absensi-${report.scope.academic_year_id}-${report.scope.period}.csv`);
+}
 
-type AttendanceReportSummary = {
-  heb_days?: number | null;
-  avg_late_time_str?: string | null;
-};
-
-type AttendanceReportResponse = {
-  results?: AttendanceReportRow[];
-  summary?: AttendanceReportSummary;
-};
-
-type StatCardProps = {
-  title: string;
-  value: ReactNode;
-  subtext?: string;
-  icon: ReactNode;
-  color: string;
-};
-
-// Generate period options based on type
-const getPeriodOptions = (type: PeriodType) => {
-  switch (type) {
-    case "monthly":
-      return MONTHS.map((m, i) => ({ value: i, label: m }));
-    case "bimonthly":
-      return [
-        { value: 0, label: "Jan - Feb" },
-        { value: 2, label: "Mar - Apr" },
-        { value: 4, label: "May - Jun" },
-        { value: 6, label: "Jul - Aug" },
-        { value: 8, label: "Sep - Oct" },
-        { value: 10, label: "Nov - Dec" },
-      ];
-    case "term":
-      return [
-        { value: 0, label: "Term 1 (Jul - Sep)" },
-        { value: 3, label: "Term 2 (Oct - Dec)" },
-        { value: 6, label: "Term 3 (Jan - Mar)" },
-        { value: 9, label: "Term 4 (Apr - Jun)" },
-      ];
-    case "semester":
-      return [
-        { value: 0, label: "Semester 1 (Jul - Dec)" },
-        { value: 6, label: "Semester 2 (Jan - Jun)" },
-      ];
-    case "yearly":
-      return [{ value: 0, label: "Full Year" }];
-    default:
-      return [];
-  }
-};
-
-const getDateRange = (type: PeriodType, periodValue: number, year: number) => {
-  let startMonth = periodValue;
-  let endMonth = startMonth;
-  let startYear = year;
-  let endYear = year;
-
-  if (type === "monthly") {
-    endMonth = startMonth;
-  } else if (type === "bimonthly") {
-    endMonth = startMonth + 1;
-  } else if (type === "term") {
-    // School terms logic: Jul-Sep -> Term 1 (Start in past year maybe, let's just stick to explicit offsets relative to selected year)
-    // Actually, simple standard logic: 0 = Jul, 3 = Oct, 6 = Jan, 9 = Apr
-    // Wait, let's keep it simple relative to the selected 'Academic Year'
-    if (startMonth === 0) { startMonth = 6; endMonth = 8; } // Jul-Sep
-    else if (startMonth === 3) { startMonth = 9; endMonth = 11; } // Oct-Dec
-    else if (startMonth === 6) { startMonth = 0; endMonth = 2; startYear++; endYear++; } // Jan-Mar (next year)
-    else if (startMonth === 9) { startMonth = 3; endMonth = 5; startYear++; endYear++; } // Apr-Jun (next year)
-  } else if (type === "semester") {
-    if (startMonth === 0) { startMonth = 6; endMonth = 11; } // Jul-Dec
-    else if (startMonth === 6) { startMonth = 0; endMonth = 5; startYear++; endYear++; } // Jan-Jun
-  } else if (type === "yearly") {
-    startMonth = 6; // Jul
-    endMonth = 5; // Jun
-    endYear++;
-  }
-
-  // First day of startMonth
-  const startDate = new Date(startYear, startMonth, 1);
-  // Last day of endMonth
-  const endDate = new Date(endYear, endMonth + 1, 0);
-
-  const format = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  return { start_date: format(startDate), end_date: format(endDate) };
-};
-
-const StatCard = ({ title, value, subtext, icon, color }: StatCardProps) => (
-  <Card className="rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
-        <p className="text-3xl font-bold text-slate-900">{value}</p>
-      </div>
-      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg", color)}>
-        {icon}
-      </div>
-    </div>
-    {subtext && <p className="text-sm font-medium text-slate-400 mt-4">{subtext}</p>}
-  </Card>
-);
-
-function getAttendanceReportError(error: unknown): string {
-  if (!error || typeof error !== "object") return "Failed to generate report.";
-  const candidate = error as { response?: { data?: { detail?: unknown } } };
-  const detail = candidate.response?.data?.detail;
-  return typeof detail === "string" && detail ? detail : "Failed to generate report.";
+function displayCount(value: number | null) {
+  return value === null ? "Belum diinput" : value.toLocaleString("id-ID");
 }
 
 function AttendanceReport() {
+  const [filters, setFilters] = useState<ReportFiltersResponse | null>(null);
+  const [academicYearId, setAcademicYearId] = useState(0);
+  const [months, setMonths] = useState<MonthOption[]>([]);
+  const [terms, setTerms] = useState<AcademicTermConfig[]>([]);
+  const [classes, setClasses] = useState<Array<{ id: number; name: string; jenjangId: number }>>([]);
+  const [jenjangs, setJenjangs] = useState<Array<{ id: number; name: string }>>([]);
+  const [periodType, setPeriodType] = useState<PeriodType>("month");
+  const [period, setPeriod] = useState("");
+  const [jenjangId, setJenjangId] = useState("all");
+  const [classId, setClassId] = useState("all");
+  const [report, setReport] = useState<AttendanceReportResponse | null>(null);
+  const [loadingOptions, setLoadingOptions] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [classes, setClasses] = useState<string[]>([]);
-  const [reportData, setReportData] = useState<AttendanceReportRow[]>([]);
-  const [summaryMetadata, setSummaryMetadata] = useState<AttendanceReportSummary>({});
 
-
-  // Filters state
-  const [periodType, setPeriodType] = useState<PeriodType>("monthly");
-  const [selectedPeriod, setSelectedPeriod] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [jenjangFilter, setJenjangFilter] = useState("all");
-  const [classFilter, setClassFilter] = useState("all");
-
-  const fetchClasses = useCallback(async () => {
-    try {
-      const response = await api.get<string[]>("/api/students/classes");
-      setClasses(Array.isArray(response.data) ? response.data : []);
-    } catch (err) {
-      console.error(err);
-    }
+  useEffect(() => {
+    getReportFilters().then((value) => {
+      setFilters(value);
+      setAcademicYearId(value.default_academic_year_id ?? value.academic_years.at(-1)?.id ?? 0);
+      setMonths(value.months);
+      setLoadingOptions(false);
+    }).catch((cause) => {
+      setError(getPageApiError(cause, "Gagal memuat pilihan laporan."));
+      setLoadingOptions(false);
+    });
   }, []);
 
-  const generateReport = useCallback(async () => {
+  useEffect(() => {
+    if (!academicYearId) return;
+    setLoadingOptions(true);
+    Promise.all([
+      getReportFilters({ academic_year_id: academicYearId }),
+      fetchAttendanceAnalyticsOptions(academicYearId),
+      fetchEffectiveTerms(academicYearId),
+    ]).then(([reportFilters, attendanceOptions, effectiveTerms]) => {
+      setMonths(reportFilters.months);
+      setClasses(attendanceOptions.classes);
+      setJenjangs(attendanceOptions.jenjangs);
+      setTerms(effectiveTerms);
+      setLoadingOptions(false);
+    }).catch((cause) => {
+      setError(getPageApiError(cause, "Gagal memuat pilihan tahun ajaran."));
+      setLoadingOptions(false);
+    });
+  }, [academicYearId]);
+
+  const options = useMemo(() => periodOptions(periodType, months, terms), [periodType, months, terms]);
+  useEffect(() => {
+    if (!options.some((value) => value.value === period)) setPeriod(options[0]?.value ?? "");
+  }, [options, period]);
+  const visibleClasses = useMemo(() => classes.filter((value) => jenjangId === "all" || value.jenjangId === Number(jenjangId)), [classes, jenjangId]);
+  const selectedYear = filters?.academic_years.find((value) => value.id === academicYearId);
+
+  const generate = async () => {
+    if (!academicYearId || !period) return;
     setLoading(true);
     setError("");
     try {
-      const { start_date, end_date } = getDateRange(periodType, selectedPeriod, selectedYear);
-      const params: { start_date: string; end_date: string; jenjang?: string; class_name?: string } = { start_date, end_date };
-      
-      if (jenjangFilter !== "all") params.jenjang = jenjangFilter;
-      if (classFilter !== "all") params.class_name = classFilter;
-
-      const response = await api.get<AttendanceReportResponse>("/api/analytics/attendance-report", { params });
-      setReportData(response.data.results || []);
-      setSummaryMetadata(response.data.summary || {});
-
-    } catch (err: unknown) {
-      setError(getAttendanceReportError(err));
+      const query: AttendanceReportQuery = {
+        academic_year_id: String(academicYearId), period_type: periodType, period,
+        jenjang_id: jenjangId === "all" ? undefined : jenjangId,
+        class_id: classId === "all" ? undefined : classId,
+      };
+      setReport(await fetchAttendanceReport(query));
+    } catch (cause) {
+      setReport(null);
+      setError(getPageApiError(cause, "Gagal membuat laporan absensi."));
     } finally {
       setLoading(false);
     }
-  }, [periodType, selectedPeriod, selectedYear, jenjangFilter, classFilter]);
-
-  useEffect(() => {
-    fetchClasses();
-  }, [fetchClasses]);
-
-  // Handle changing period type
-  useEffect(() => {
-    const opts = getPeriodOptions(periodType);
-    if (opts.length > 0) {
-      // Re-initialize valid selection when type changes
-      const valid = opts.some(o => o.value == selectedPeriod) ? selectedPeriod : opts[0].value;
-      setSelectedPeriod(valid);
-    }
-  }, [periodType]);
-
-  const summary = useMemo(() => {
-    let sum = 0;
-    let perfect = 0;
-    let highAbsence = 0;
-    let totalIncomplete = 0;
-    reportData.forEach(r => {
-      sum += r.attendance_percentage;
-      if (r.attendance_percentage === 100) perfect++;
-      if (r.absent_count >= 3) highAbsence++;
-      totalIncomplete += r.incomplete_count;
-    });
-    return {
-      avg: (sum / reportData.length).toFixed(1),
-      perfect,
-      highAbsence,
-      totalIncomplete
-    };
-
-  }, [reportData]);
-
-  const exportCSV = () => {
-    if (!reportData.length) return;
-    const headers = [
-      "No. ID", "Name", "Jenjang", "Class", "HEB", "Present", "Late", "Absent", "Incomplete", "Sakit", "Izin", "Alfa", "Total Days", "Attendance %"
-    ];
-    const rows = reportData.map(r => [
-      r.student_id,
-      r.name,
-      r.jenjang || "N/A",
-      r.class_name || "N/A",
-      summaryMetadata.heb_days || "—",
-      r.present_count,
-      r.late_count,
-      r.absent_count,
-      r.incomplete_count,
-      r.sakit ?? 0,
-      r.izin ?? 0,
-      r.alfa ?? 0,
-      r.total_days,
-      r.attendance_percentage
-    ]);
-
-    let csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n"
-      + rows.map(e => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `attendance_report_${periodType}_${selectedYear}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
-  const periodOptions = getPeriodOptions(periodType);
+  const canonical = report?.canonical_attendance.totals;
+  const manual = report?.manual_absence;
+  const rate = (value: number | null | undefined) => value === null || value === undefined ? "—" : `${value.toFixed(1)}%`;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <PageHeader
-        title="Attendance Reports"
-        description="Generate flexible reports by timeframe, level, and class."
-        actions={<Button variant="outline" onClick={exportCSV} disabled={reportData.length === 0}>
-          <Download size={18} />
-          Export CSV
-        </Button>}
-      />
+    <div className="space-y-6 pb-12">
+      <PageHeader title="Laporan Kehadiran" description="Lihat kehadiran aktual dan rekap manual bulanan dalam bagian terpisah." actions={report && <Button variant="outline" onClick={() => downloadAttendanceReport(report)}><Download size={16} /> Ekspor CSV</Button>} />
 
-      {/* Filter Panel */}
-      <FilterBar className="p-6">
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-          <Filter size={18} className="text-brand" />
-          <h2 className="font-bold text-slate-800">Report Parameters</h2>
+      <FilterBar className="p-5">
+        <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3"><Filter size={17} className="text-brand" /><h2 className="font-semibold text-slate-800">Filter Laporan</h2></div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <FormField id="attendance-report-year"><FieldLabel>Tahun Ajaran</FieldLabel><NativeSelect value={academicYearId || ""} onChange={(event) => { setAcademicYearId(Number(event.target.value)); setJenjangId("all"); setClassId("all"); setReport(null); }}>
+            {filters?.academic_years.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
+          </NativeSelect></FormField>
+          <FormField id="attendance-report-period-type"><FieldLabel>Periode</FieldLabel><NativeSelect value={periodType} onChange={(event) => { setPeriodType(event.target.value as PeriodType); setPeriod(""); }}>
+            {PERIOD_TYPES.map((value) => <option key={value.value} value={value.value}>{value.label}</option>)}
+          </NativeSelect></FormField>
+          <FormField id="attendance-report-period"><FieldLabel>Pilih periode</FieldLabel><NativeSelect value={period} onChange={(event) => setPeriod(event.target.value)}>
+            {options.map((value) => <option key={value.value} value={value.value}>{value.label}</option>)}
+          </NativeSelect></FormField>
+          <FormField id="attendance-report-jenjang"><FieldLabel>Jenjang</FieldLabel><NativeSelect value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setClassId("all"); }}>
+            <option value="all">Semua jenjang</option>{jenjangs.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
+          </NativeSelect></FormField>
+          <FormField id="attendance-report-class"><FieldLabel>Kelas</FieldLabel><NativeSelect value={classId} onChange={(event) => setClassId(event.target.value)}>
+            <option value="all">Semua kelas</option>{visibleClasses.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
+          </NativeSelect></FormField>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          <FormField id="attendance-period-type">
-            <FieldLabel>Period Type</FieldLabel>
-            <NativeSelect
-              value={periodType}
-              onChange={(e) => setPeriodType(e.target.value as PeriodType)}
-            >
-              {PERIOD_TYPES.map(pt => <option key={pt.id} value={pt.id}>{pt.label}</option>)}
-            </NativeSelect>
-          </FormField>
-
-          <FormField id="attendance-period">
-            <FieldLabel>Select Period</FieldLabel>
-            <NativeSelect
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(Number(e.target.value))}
-            >
-              {periodOptions.map(po => <option key={po.value} value={po.value}>{po.label}</option>)}
-            </NativeSelect>
-          </FormField>
-
-          <FormField id="attendance-year">
-            <FieldLabel>Year</FieldLabel>
-            <NativeSelect
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-            >
-              {YEARS.map(y => <option key={y} value={y}>{y}/{y+1}</option>)}
-            </NativeSelect>
-          </FormField>
-
-          <FormField id="attendance-jenjang">
-            <FieldLabel>Jenjang</FieldLabel>
-            <NativeSelect
-              value={jenjangFilter}
-              onChange={(e) => setJenjangFilter(e.target.value)}
-            >
-              <option value="all">All Jenjang</option>
-              {JENJANG_OPTIONS.map((level) => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </NativeSelect>
-          </FormField>
-
-          <FormField id="attendance-class">
-            <FieldLabel>Class</FieldLabel>
-            <NativeSelect
-              value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
-            >
-              <option value="all">All Classes</option>
-              <option value="unassigned">Unassigned</option>
-              {classes.map((className) => (
-                <option key={className} value={className}>{className}</option>
-              ))}
-            </NativeSelect>
-          </FormField>
-        </div>
-
-        <div className="mt-6 pt-6 border-t border-slate-100 flex justify-end">
-          <Button
-            onClick={generateReport}
-            disabled={loading}
-            size="lg"
-          >
-            {loading ? "Generating..." : "Generate Report"}
-            <Calendar size={18} />
-          </Button>
-        </div>
+        {selectedYear && <p className="mt-3 text-xs text-slate-500">Tahun ajaran: {selectedYear.start_date} – {selectedYear.end_date}.</p>}
+        <div className="mt-4"><Button onClick={generate} disabled={loadingOptions || loading || !period}><FileText size={16} /> Buat Laporan</Button></div>
       </FilterBar>
 
-      {error && (
-        <ErrorState title="Attendance report could not be generated" description={error} />
-      )}
+      {error && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+      {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={16} className="animate-spin" />Memuat laporan…</div>}
 
-      {reportData.length > 0 && (
-        <>
-          {/* Summary Stat Cards */}
-           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-
-            <StatCard 
-              title="Total HEB" 
-              value={`${summaryMetadata.heb_days || "—"}`}
-              icon={<BookOpen size={24} className="text-white" />}
-              color="bg-slate-800 shadow-slate-800/30"
-              subtext="Hari Efektif Belajar"
-            />
-            <StatCard 
-              title="Average Attendance" 
-              value={`${summary.avg}%`}
-              icon={<TrendingUp size={24} className="text-white" />}
-              color="bg-emerald-500 shadow-emerald-500/30"
-              subtext="For selected group"
-            />
-            <StatCard 
-              title="Incomplete Records" 
-              value={`${summary.totalIncomplete}`}
-              icon={<Fingerprint size={24} className="text-white" />}
-              color="bg-amber-500 shadow-amber-500/30"
-              subtext="Needs scan correction"
-            />
-            <StatCard 
-              title="Perfect Attendance" 
-              value={`${summary.perfect}`}
-              icon={<GraduationCap size={24} className="text-white" />}
-              color="bg-brand shadow-brand/30"
-              subtext="Students with 100% rate"
-            />
-             <StatCard 
-              title="High Absence Risk" 
-              value={`${summary.highAbsence}`}
-              icon={<Clock size={24} className="text-white" />}
-              color="bg-rose-500 shadow-rose-500/30"
-              subtext="Students with 3+ absences"
-            />
-            <StatCard 
-              title="Avg Late Time" 
-              value={summaryMetadata.avg_late_time_str || "—"}
-              icon={<Clock size={24} className="text-white" />}
-              color="bg-brand-hover shadow-brand/30"
-              subtext="Per late instance"
-            />
+      {report && canonical && manual && !loading && <>
+        <section aria-labelledby="canonical-attendance-title" className="space-y-3">
+          <div><h2 id="canonical-attendance-title" className="text-lg font-bold text-slate-900">Data Kehadiran Aktual</h2><p className="text-sm text-slate-500">Sumber: Catatan kehadiran siswa dan koreksi yang berlaku.</p></div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Expected Student-Days", canonical.expected_student_days], ["Recorded", canonical.recorded_student_days],
+              ["Unrecorded", canonical.unrecorded_student_days], ["Coverage", rate(canonical.coverage_rate)],
+              ["Hadir", canonical.hadir_count], ["Sakit aktual", canonical.sakit_count], ["Izin aktual", canonical.izin_count],
+              ["Alfa aktual", canonical.alfa_count], ["Attendance Rate", rate(canonical.attendance_rate)], ["Terlambat", canonical.late_count],
+            ].map(([label, value]) => <Card key={String(label)} className="p-4"><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-1 text-2xl font-bold text-slate-900">{typeof value === "number" ? value.toLocaleString("id-ID") : value}</p></Card>)}
           </div>
+        </section>
 
-
-
-          {/* Data Table */}
-          <Card className="rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800">Report Results</h3>
-              <span className="text-xs font-semibold text-slate-500 px-3 py-1 bg-slate-200 rounded-[9999px]">
-                {reportData.length} records
-              </span>
+        <section aria-labelledby="manual-absence-title" className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 id="manual-absence-title" className="text-lg font-bold text-slate-900">Rekap Manual Sakit / Izin / Alfa</h2><p className="text-sm text-slate-500">Sumber: Input total bulanan per kelas. Bulan yang beririsan dengan periode dihitung penuh.</p></div><span className={`rounded-full px-3 py-1 text-sm font-semibold ${manual.completeness.complete ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{manual.completeness.complete ? "Data lengkap" : "Data belum lengkap"}</span></div>
+          <Card className="overflow-hidden p-0">
+            <div className="grid gap-3 border-b border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-3">
+              <p>Entri yang diharapkan: <strong>{manual.completeness.expected_class_month_entries}</strong></p>
+              <p>Entri lengkap: <strong>{manual.completeness.completed_class_month_entries}</strong></p>
+              <p>Belum diisi: <strong>{manual.completeness.missing_class_month_entries}</strong></p>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-white border-b border-slate-200 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <th className="px-6 py-4">Student Name</th>
-                    <th className="px-6 py-4">Jenjang</th>
-                    <th className="px-6 py-4">Class</th>
-                    <th className="px-6 py-4 text-center">Present</th>
-                    <th className="px-6 py-4 text-center">Late (Count)</th>
-                    <th className="px-6 py-4 text-center">Late (Time)</th>
-                    <th className="px-6 py-4 text-center">Absent</th>
-
-                    <th className="px-6 py-4 text-center">Incomplete</th>
-                    <th className="px-6 py-4 text-center">Sakit</th>
-                    <th className="px-6 py-4 text-center">Izin</th>
-                    <th className="px-6 py-4 text-center">Alfa</th>
-                    <th className="px-6 py-4 text-center text-brand">Att. Rate</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {reportData.map((row) => (
-                    <tr key={row.student_id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-slate-900">{row.name}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{row.jenjang || "—"}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{row.class_name || "—"}</td>
-                      <td className="px-6 py-4 text-center font-medium text-emerald-600 bg-emerald-50/50">{row.present_count}</td>
-                      <td className="px-6 py-4 text-center font-medium text-amber-600 bg-amber-50/50">{row.late_count}</td>
-                      <td className="px-6 py-4 text-center font-medium text-amber-700 bg-amber-100/30">{row.total_late_time_str}</td>
-                      <td className="px-6 py-4 text-center font-bold text-rose-600 bg-rose-50/50">{row.absent_count}</td>
-
-                      <td className={cn(
-                        "px-6 py-4 text-center font-medium transition-colors",
-                        row.incomplete_count > 0 ? "text-amber-600 bg-amber-50 font-bold" : "text-slate-500 bg-slate-50/50"
-                      )}>
-                        {row.incomplete_count > 0 ? (
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span>{row.incomplete_count}</span>
-                            <span className="text-[10px] uppercase tracking-tighter opacity-70">Needs Scan</span>
-                          </div>
-                        ) : (
-                          row.incomplete_count
-                        )}
-                      </td>
-
-                      <td className="px-6 py-4 text-center font-medium text-slate-700 bg-slate-50/50">{row.sakit ?? 0}</td>
-                      <td className="px-6 py-4 text-center font-medium text-slate-700 bg-slate-50/50">{row.izin ?? 0}</td>
-                      <td className="px-6 py-4 text-center font-medium text-slate-700 bg-slate-50/50">{row.alfa ?? 0}</td>
-
-                      <td className="px-6 py-4 text-center font-bold">
-                        <span className={cn(
-                          "inline-flex items-center justify-center px-3 py-1 rounded-[9999px] text-sm",
-                          row.attendance_percentage >= 95 ? "bg-emerald-100 text-emerald-700" :
-                          row.attendance_percentage >= 80 ? "bg-amber-100 text-amber-700" :
-                          "bg-rose-100 text-rose-700"
-                        )}>
-                          {row.attendance_percentage}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {manual.completeness.missing.length > 0 && <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Belum diinput:</strong> {manual.completeness.missing.map((value) => `${value.class_name} / ${value.month}`).join(", ")}</div>}
+            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
+              <thead className="bg-white text-left text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Kelas</th><th className="px-4 py-3 text-right">Sakit</th><th className="px-4 py-3 text-right">Izin</th><th className="px-4 py-3 text-right">Alfa</th><th className="px-4 py-3">Status</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">{manual.classes.map((value) => <tr key={value.class_id}>
+                <td className="px-4 py-3"><span className="font-semibold">{value.class_name}</span><span className="ml-2 text-xs text-slate-500">{value.jenjang} · {value.program}</span></td>
+                <td className="px-4 py-3 text-right">{displayCount(value.sakit)}</td><td className="px-4 py-3 text-right">{displayCount(value.izin)}</td><td className="px-4 py-3 text-right">{displayCount(value.alfa)}</td>
+                <td className="px-4 py-3 text-xs">{value.completed_months === 0 ? "Belum diinput" : value.completed_months === value.expected_months ? "Lengkap" : `Sebagian (${value.completed_months}/${value.expected_months})`}</td>
+              </tr>)}
+              {manual.classes.length > 0 && <tr className="bg-slate-50 font-bold"><td className="px-4 py-3">TOTAL</td><td className="px-4 py-3 text-right">{displayCount(manual.totals.sakit)}</td><td className="px-4 py-3 text-right">{displayCount(manual.totals.izin)}</td><td className="px-4 py-3 text-right">{displayCount(manual.totals.alfa)}</td><td className="px-4 py-3">{manual.completeness.complete ? "Lengkap" : "Sebagian"}</td></tr>}
+              </tbody>
+            </table></div>
           </Card>
-        </>
-      )}
+        </section>
 
-      {!loading && reportData.length === 0 && !error && (
-        <EmptyState title="No report data" description="Select your parameters and generate the report to see attendance data." />
-      )}
+        <section aria-labelledby="student-attendance-title" className="space-y-3">
+          <div><h2 id="student-attendance-title" className="text-lg font-bold text-slate-900">Rincian Kehadiran Siswa</h2><p className="text-sm text-slate-500">Sumber: Catatan kehadiran siswa. Angka di bawah tidak mengambil total manual kelas.</p></div>
+          {report.students.length === 0 ? <EmptyState title="Belum ada catatan kehadiran" description="Tidak ada catatan kanonis pada periode dan filter ini." /> : <Card className="overflow-x-auto p-0"><table className="w-full min-w-[980px] text-sm">
+            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-4 py-3">Siswa</th><th className="px-4 py-3">Jenjang</th><th className="px-4 py-3">Kelas</th><th className="px-4 py-3 text-right">Hadir</th><th className="px-4 py-3 text-right">Terlambat</th><th className="px-4 py-3 text-right">Sakit</th><th className="px-4 py-3 text-right">Izin</th><th className="px-4 py-3 text-right">Alfa</th><th className="px-4 py-3 text-right">Absen</th><th className="px-4 py-3 text-right">Tidak lengkap</th><th className="px-4 py-3 text-right">Recorded</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">{report.students.map((value) => <tr key={value.student_id}><td className="px-4 py-3 font-medium">{value.name}</td><td className="px-4 py-3">{value.jenjang ?? "—"}</td><td className="px-4 py-3">{value.class_name ?? "—"}</td><td className="px-4 py-3 text-right">{value.hadir}</td><td className="px-4 py-3 text-right">{value.late}</td><td className="px-4 py-3 text-right">{value.sakit}</td><td className="px-4 py-3 text-right">{value.izin}</td><td className="px-4 py-3 text-right">{value.alfa}</td><td className="px-4 py-3 text-right">{value.absent}</td><td className="px-4 py-3 text-right">{value.incomplete}</td><td className="px-4 py-3 text-right">{value.recorded}</td></tr>)}</tbody>
+          </table></Card>}
+        </section>
+      </>}
+
+      {!report && !loading && !loadingOptions && !error && <EmptyState title="Laporan belum dibuat" description="Pilih Tahun Ajaran dan periode, lalu buat laporan." />}
     </div>
   );
 }
