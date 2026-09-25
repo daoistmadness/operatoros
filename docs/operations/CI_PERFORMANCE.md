@@ -129,3 +129,55 @@ validation deterministic during GitHub's staged `ubuntu-latest` migration to
 Ubuntu 26.04. The separate `Ubuntu 26.04 compatibility canary` runs on
 relevant CI and toolchain changes, plus scheduled and manual runs. Its failures
 remain visible; required CI is migrated only after the canary is proven stable.
+
+## Test feedback optimization
+
+The required PR path ran three checks twice with equivalent inputs. The
+`api` job ran `hk check --all` (lint plus semantic architecture) and then ran
+`bun run lint` and `bun run check:architecture` again; it also ran
+`bun run check:ui` while the `frontend` job ran the identical command. Each
+duplicate is removed: the `api` job keeps the single `hk check --all`
+invocation for lint and architecture, keeps its distinct TypeBox, fixture,
+contract, runtime, and Turbo steps, and leaves UI boundaries to the
+`frontend` job. The `frontend` and `docs` jobs no longer assert an `hk`
+version they never execute.
+
+The full E2E workflow no longer triggers on pushes to the main branches. The
+pre-merge PR run plus `workflow_dispatch` remain. Post-merge push runs
+protected no distinct invariant, and branch protection is not configured, so
+the push trigger only duplicated the release regression. Direct pushes still
+run the `api`, `frontend`, and `docs` jobs. The workflow keeps ignoring
+documentation-only changes and now also ignores `.github/**` and `hk.pkl`,
+neither of which can alter application behavior.
+
+`turbo run typecheck test build` keeps `--concurrency=4` by default and
+accepts `OPERATOROS_TURBO_CONCURRENCY` for a local-only override. Forced
+full-graph measurement on the reference host measured `4m43s` at concurrency
+`4` and `4m44s` at concurrency `2` with all tasks recomputed; the graph is
+dependency-bound, so the default is unchanged and CI concurrency is untouched.
+
+Turbo cache behavior was audited: repeat runs inside one daemon lifetime hit
+cache, but no `.turbo` directory is ever written in the repository, so the
+usefulness of the CI `.turbo` cache step is UNKNOWN rather than proven. It is
+preserved unchanged pending deeper proof; cache misses must not change pass
+or fail results either way.
+
+The fast tier gained API typecheck for backend changes (about `10 s`
+measured), closing the asymmetry with the frontend fast path, which already
+typechecks. A synthetic API-domain change selects one focused test file plus
+typecheck and completes in about `22 s` end to end.
+
+Check classification after this change:
+
+- fast local: `test:fast`, staged lint, docs-only instant exit;
+- pre-PR: `check:affected`, plus `e2e-critical` for cross-layer changes;
+- required CI: `api`, `frontend`, `docs` jobs plus full E2E on
+  non-documentation PRs;
+- full regression: `check:full` locally and the E2E full workflow in CI;
+- release-only: `@release` E2E scope, the weekly security audit, and the
+  canary schedule.
+
+Intentional repeats are kept and named: per-runner installs and Python
+bootstraps (runner isolation), unit re-runs inside the full E2E regression
+(release evidence), layered boundary enforcement (Phase 14.7 design), and the
+checker plus its fixture tests. No test retries were found or added.

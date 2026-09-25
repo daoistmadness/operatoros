@@ -7,11 +7,8 @@ on:
     paths-ignore:
       - "docs/**"
       - "**/*.md"
-  push:
-    branches: [main, master, develop]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+      - ".github/**"
+      - "hk.pkl"
 
 permissions:
   contents: read
