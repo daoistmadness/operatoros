@@ -28,8 +28,8 @@ export const TermLatenessResponseSchema = Type.Object({
   cutoffs: Type.Array(Type.Object({ jenjang_id: NullableId, jenjang: Type.String(), cutoff_time: Type.Union([Type.String(), Type.Null()]) })),
   totals: Totals,
   classes: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String(), totals: Totals })),
-  students: Type.Array(Type.Object({ student_key: Type.String(), late_events: Type.Number({ minimum: 0 }), total_late_minutes: Type.Number({ minimum: 0 }) })),
-  quality: Type.Object({ unknown_calendar_dates: Type.Array(Type.String()), unknown_calendar_student_days: Type.Number({ minimum: 0 }), unresolved_class_student_days: Type.Number({ minimum: 0 }), other_status_student_days: Type.Number({ minimum: 0 }), report_data_ready: Type.Boolean() }),
+  students: Type.Array(Type.Object({ student_key: Type.String(), class_representations: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String() })), late_events: Type.Number({ minimum: 0 }), total_late_minutes: Type.Number({ minimum: 0 }), average_late_minutes: NullableRate })),
+  quality: Type.Object({ unknown_calendar_dates: Type.Array(Type.String()), unknown_calendar_student_days: Type.Number({ minimum: 0 }), unresolved_class_student_days: Type.Number({ minimum: 0 }), other_status_student_days: Type.Number({ minimum: 0 }), late_events_without_duration: Type.Number({ minimum: 0 }), report_data_ready: Type.Boolean() }),
 });
 
 export type TermLatenessQuery = Static<typeof TermLatenessQuerySchema>;

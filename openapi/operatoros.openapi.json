@@ -12859,6 +12859,10 @@
                         "sakit_count",
                         "izin_count",
                         "alfa_count",
+                        "hadir_rate",
+                        "sakit_rate",
+                        "izin_rate",
+                        "alfa_rate",
                         "late_count",
                         "other_status_count",
                         "coverage_rate",
@@ -12893,6 +12897,54 @@
                         "alfa_count": {
                           "minimum": 0,
                           "type": "number"
+                        },
+                        "hadir_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sakit_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "izin_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "alfa_rate": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "late_count": {
                           "minimum": 0,
@@ -12974,6 +13026,10 @@
                               "sakit_count",
                               "izin_count",
                               "alfa_count",
+                              "hadir_rate",
+                              "sakit_rate",
+                              "izin_rate",
+                              "alfa_rate",
                               "late_count",
                               "other_status_count",
                               "coverage_rate",
@@ -13008,6 +13064,54 @@
                               "alfa_count": {
                                 "minimum": 0,
                                 "type": "number"
+                              },
+                              "hadir_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sakit_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "izin_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "alfa_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "late_count": {
                                 "minimum": 0,
@@ -13092,6 +13196,10 @@
                               "sakit_count",
                               "izin_count",
                               "alfa_count",
+                              "hadir_rate",
+                              "sakit_rate",
+                              "izin_rate",
+                              "alfa_rate",
                               "late_count",
                               "other_status_count",
                               "coverage_rate",
@@ -13126,6 +13234,54 @@
                               "alfa_count": {
                                 "minimum": 0,
                                 "type": "number"
+                              },
+                              "hadir_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sakit_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "izin_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "alfa_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "late_count": {
                                 "minimum": 0,
@@ -13210,6 +13366,10 @@
                               "sakit_count",
                               "izin_count",
                               "alfa_count",
+                              "hadir_rate",
+                              "sakit_rate",
+                              "izin_rate",
+                              "alfa_rate",
                               "late_count",
                               "other_status_count",
                               "coverage_rate",
@@ -13244,6 +13404,54 @@
                               "alfa_count": {
                                 "minimum": 0,
                                 "type": "number"
+                              },
+                              "hadir_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sakit_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "izin_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "alfa_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "late_count": {
                                 "minimum": 0,
@@ -13328,6 +13536,10 @@
                               "sakit_count",
                               "izin_count",
                               "alfa_count",
+                              "hadir_rate",
+                              "sakit_rate",
+                              "izin_rate",
+                              "alfa_rate",
                               "late_count",
                               "other_status_count",
                               "coverage_rate",
@@ -13362,6 +13574,54 @@
                               "alfa_count": {
                                 "minimum": 0,
                                 "type": "number"
+                              },
+                              "hadir_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sakit_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "izin_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "alfa_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "late_count": {
                                 "minimum": 0,
@@ -13418,6 +13678,7 @@
                         "type": "object",
                         "required": [
                           "student_key",
+                          "class_representations",
                           "totals"
                         ],
                         "properties": {
@@ -13434,6 +13695,10 @@
                               "sakit_count",
                               "izin_count",
                               "alfa_count",
+                              "hadir_rate",
+                              "sakit_rate",
+                              "izin_rate",
+                              "alfa_rate",
                               "late_count",
                               "other_status_count",
                               "coverage_rate",
@@ -13468,6 +13733,54 @@
                               "alfa_count": {
                                 "minimum": 0,
                                 "type": "number"
+                              },
+                              "hadir_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sakit_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "izin_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "alfa_rate": {
+                                "anyOf": [
+                                  {
+                                    "minimum": 0,
+                                    "maximum": 100,
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
                               "late_count": {
                                 "minimum": 0,
@@ -13512,6 +13825,32 @@
                                     "type": "null"
                                   }
                                 ]
+                              }
+                            }
+                          },
+                          "class_representations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "class_id",
+                                "class_name"
+                              ],
+                              "properties": {
+                                "class_id": {
+                                  "anyOf": [
+                                    {
+                                      "minimum": 1,
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "class_name": {
+                                  "type": "string"
+                                }
                               }
                             }
                           }
@@ -13916,8 +14255,10 @@
                         "type": "object",
                         "required": [
                           "student_key",
+                          "class_representations",
                           "late_events",
-                          "total_late_minutes"
+                          "total_late_minutes",
+                          "average_late_minutes"
                         ],
                         "properties": {
                           "student_key": {
@@ -13930,6 +14271,43 @@
                           "total_late_minutes": {
                             "minimum": 0,
                             "type": "number"
+                          },
+                          "average_late_minutes": {
+                            "anyOf": [
+                              {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "class_representations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "class_id",
+                                "class_name"
+                              ],
+                              "properties": {
+                                "class_id": {
+                                  "anyOf": [
+                                    {
+                                      "minimum": 1,
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "class_name": {
+                                  "type": "string"
+                                }
+                              }
+                            }
                           }
                         }
                       }
@@ -13941,6 +14319,7 @@
                         "unknown_calendar_student_days",
                         "unresolved_class_student_days",
                         "other_status_student_days",
+                        "late_events_without_duration",
                         "report_data_ready"
                       ],
                       "properties": {
@@ -13964,6 +14343,10 @@
                         },
                         "report_data_ready": {
                           "type": "boolean"
+                        },
+                        "late_events_without_duration": {
+                          "minimum": 0,
+                          "type": "number"
                         }
                       }
                     }
@@ -33936,6 +34319,49 @@
         "tags": ["analytics"]
       }
     },
+    "/api/analytics/management-review/attendance/export.xlsx": {
+      "get": {
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "term_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiAnalyticsManagement-reviewAttendanceExport.xlsx"
+      }
+    },
     "/api/analytics/management-review/student-profile": {
       "get": {
         "parameters": [
@@ -33959,6 +34385,15 @@
           },
           {
             "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "program_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -34032,8 +34467,10 @@
                         "termStart",
                         "termEnd",
                         "jenjangId",
+                        "programId",
                         "classId",
                         "jenjangLabel",
+                        "programLabel",
                         "classLabel",
                         "generatedAt",
                         "demographicSemantics"
@@ -34105,6 +34542,27 @@
                         "demographicSemantics": {
                           "const": "Current profile data for students enrolled in the selected term.",
                           "type": "string"
+                        },
+                        "programId": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "programLabel": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       }
                     },

@@ -108,6 +108,7 @@ export interface LatenessClassTally {
 }
 
 export interface LatenessStudentClassDetail {
+  class_id: number | null;
   class_name: string;
   jenjang: string;
   late_events: number;
@@ -118,6 +119,7 @@ export interface LatenessStudentClassDetail {
 export interface LatenessStudentTally {
   late_events: number;
   total_late_minutes: number;
+  known_minute_events: number;
   student_id: number | null;
   classes: Map<string, LatenessStudentClassDetail>;
 }
@@ -217,6 +219,11 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     total_late_minutes: 0, known_minute_events: 0, late_dates: new Set(), unknown_calendar_dates: [],
     unknown_calendar_student_days: 0, unresolved_class_student_days: 0, other_status_student_days: 0,
     cutoffs: new Map(), byClass: new Map(), byStudent: new Map() };
+  for (const jenjangId of jenjangIds) {
+    if (scope.jenjang_id !== null && scope.jenjang_id !== jenjangId) continue;
+    const jenjang = jenjangNameById.get(jenjangId) ?? "Unassigned";
+    tally.cutoffs.set(jenjang, { jenjang_id: jenjangId, jenjang, cutoff_time: resolveCutoff(cutoffMap, jenjang) });
+  }
   const unknownDates = new Set<string>();
   for (const date of dates) for (const jenjangId of jenjangIds) {
     if ((scope.jenjang_id === null || scope.jenjang_id === jenjangId)
@@ -271,10 +278,10 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     bucket.late_events++;
     bucket.affected_students.add(studentKey);
     bucket.late_dates.add(String(day.day));
-    const student = tally.byStudent.get(studentKey) ?? { late_events: 0, total_late_minutes: 0, student_id: day.student_id == null ? null : Number(day.student_id), classes: new Map<string, LatenessStudentClassDetail>() };
+    const student = tally.byStudent.get(studentKey) ?? { late_events: 0, total_late_minutes: 0, known_minute_events: 0, student_id: day.student_id == null ? null : Number(day.student_id), classes: new Map<string, LatenessStudentClassDetail>() };
     student.late_events++;
     let detail = student.classes.get(classKey);
-    if (!detail) { detail = { class_name: className, jenjang: canonicalJenjang, late_events: 0, total_late_minutes: 0, known_minute_events: 0 }; student.classes.set(classKey, detail); }
+    if (!detail) { detail = { class_id: canonicalClass?.id ?? null, class_name: className, jenjang: canonicalJenjang, late_events: 0, total_late_minutes: 0, known_minute_events: 0 }; student.classes.set(classKey, detail); }
     detail.late_events++;
     tally.byStudent.set(studentKey, student);
     if (result.late_minutes !== null) {
@@ -283,6 +290,7 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
       bucket.total_late_minutes += result.late_minutes;
       bucket.known_minute_events++;
       student.total_late_minutes += result.late_minutes;
+      student.known_minute_events++;
       detail.total_late_minutes += result.late_minutes;
       detail.known_minute_events++;
     }
@@ -324,9 +332,13 @@ export function termLateness(context: AuthContext, query: TermLatenessQuery): Te
     cutoffs: [...tally.cutoffs.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang)),
     totals: totals(tally.expected_student_days, tally.late_events, tally.affected_students.size, tally.total_late_minutes, tally.known_minute_events),
     classes,
-    students: [...tally.byStudent.entries()].map(([student_key, value]) => ({ student_key, late_events: value.late_events, total_late_minutes: value.total_late_minutes })),
+    students: [...tally.byStudent.entries()].map(([student_key, value]) => ({ student_key,
+      class_representations: [...value.classes.values()].map(({ class_id, class_name }) => ({ class_id, class_name })),
+      late_events: value.late_events, total_late_minutes: value.total_late_minutes,
+      average_late_minutes: average(value.total_late_minutes, value.known_minute_events) })),
     quality: { unknown_calendar_dates: tally.unknown_calendar_dates, unknown_calendar_student_days: tally.unknown_calendar_student_days,
       unresolved_class_student_days: tally.unresolved_class_student_days, other_status_student_days: tally.other_status_student_days,
+      late_events_without_duration: tally.late_events - tally.known_minute_events,
       report_data_ready: tally.unknown_calendar_student_days === 0 && tally.unresolved_class_student_days === 0 && tally.other_status_student_days === 0 && tally.expected_student_days > 0 },
   };
   return result;

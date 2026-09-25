@@ -13,6 +13,10 @@ const Counts = Type.Object({
   late_count: Type.Number({ minimum: 0 }),
   other_status_count: Type.Number({ minimum: 0 }),
   coverage_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  hadir_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  sakit_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  izin_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  alfa_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   attendance_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   recorded_attendance_rate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
 });
@@ -34,7 +38,7 @@ export const TermAttendanceResponseSchema = Type.Object({
   programs: Type.Array(Type.Object({ program_id: NullableId, program: Type.String(), totals: Counts })),
   grades: Type.Array(Type.Object({ grade_id: NullableId, grade: Type.String(), totals: Counts })),
   classes: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String(), totals: Counts })),
-  students: Type.Array(Type.Object({ student_key: Type.String(), totals: Counts })),
+  students: Type.Array(Type.Object({ student_key: Type.String(), class_representations: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String() })), totals: Counts })),
   quality: Type.Object({ unknown_calendar_dates: Type.Array(Type.String()), unknown_calendar_student_days: Type.Number({ minimum: 0 }), unresolved_class_student_days: Type.Number({ minimum: 0 }), other_status_student_days: Type.Number({ minimum: 0 }), report_data_ready: Type.Boolean() }),
 });
 
