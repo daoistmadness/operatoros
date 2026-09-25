@@ -100,7 +100,7 @@ describe("granular data reset API", () => {
       const auditsBefore = count(value.database.client, "operations_audit_events");
       const sessionsBefore = count(value.database.client, "sessions");
       const invalid = await post(value.enabled, "/api/system/data-reset", { scope: "FACTORY_RESET", confirmation: "DELETE EVERYTHING" }, value.admin);
-      expect(invalid.status).toBe(422);
+      expect(invalid.status).toBe(400);
       expect(Object.fromEntries(targets.map((table) => [table, count(value.database.client, table)]))).toEqual(before);
       expect(count(value.database.client, "sessions")).toBe(sessionsBefore);
       expect(count(value.database.client, "operations_audit_events")).toBe(auditsBefore);
