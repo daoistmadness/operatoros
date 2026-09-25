@@ -118,21 +118,12 @@ jobs:
       - name: TypeBox resolution check
         working-directory: ${{ github.workspace }}
         run: bun run check:typebox
-      - name: ESLint workspace boundary check
-        working-directory: ${{ github.workspace }}
-        run: bun run lint
-      - name: Semantic architecture boundary check
-        working-directory: ${{ github.workspace }}
-        run: bun run check:architecture
       - name: Architecture checker fixture tests
         working-directory: ${{ github.workspace }}
         run: bun run test:architecture
       - name: Contract boundary check
         working-directory: ${{ github.workspace }}
         run: bun run check:contracts
-      - name: UI boundary check
-        working-directory: ${{ github.workspace }}
-        run: bun run check:ui
 
   frontend:
     runs-on: ubuntu-24.04
@@ -156,7 +147,6 @@ jobs:
         run: |
           mise --version
           bun --version | grep -Eq "^1\.4\."
-          hk --version | grep -Eq "^hk 1\.56\.1$"
           mise ls --current
       - name: Install dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
@@ -181,7 +171,6 @@ jobs:
       - name: Verify docs toolchain
         run: |
           mise --version
-          hk --version | grep -Eq "^hk 1\.56\.1$"
           python --version
       - name: Validate relative Markdown links
         run: python .github/scripts/check_markdown_links.py

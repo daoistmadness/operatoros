@@ -119,7 +119,7 @@ for path in json.load(open(sys.argv[1]))["focused_tests"]:
 PY
 )
         ((${#backend_tests[@]})) || backend_tests=("apps/api/tests/app.test.ts")
-        (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun test "${backend_tests[@]#apps/api/}")
+        (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test "${backend_tests[@]#apps/api/}")
       fi
     fi
     ;;
