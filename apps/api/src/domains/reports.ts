@@ -1,9 +1,20 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { t } from "elysia";
-import { ReportScopeSchema, type ReportScope } from "@operatoros/contracts/reports";
+import {
+  AttendanceReportQuerySchema,
+  AttendanceReportResponseSchema,
+  ManualAbsenceReportResponseSchema,
+  ReportScopeSchema,
+  type AttendanceReportQuery,
+  type ReportScope,
+  type ManualAbsenceReportResponse,
+} from "@operatoros/contracts/reports";
 import { actor } from "./core";
 import { tallyLatenessRange, type LatenessRangeTally } from "./term-lateness";
+import { effectiveAcademicTerms } from "./academic-timeline";
+import { attendancePeriodTotals } from "./term-attendance";
+import { aggregateManualAbsenceForPeriod } from "./manual-absence";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -17,7 +28,6 @@ const scopes: Record<Scope, string> = {
   secondary: "Secondary",
 };
 const reportTitle = "Student Tardiness Report";
-const rekapTitle = "Rekap Absensi Siswa SD";
 const schoolName = "EDELWEISS SCHOOL";
 const indonesianMonths = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -390,18 +400,6 @@ function reportPeriod(month?: number, year?: number, dateFrom?: string, dateTo?:
 
 function timeLabel(minutes: number): string { return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`; }
 
-function absenceMap(context: AuthContext, start: string, end: string): Map<string, Row> {
-  const pairs = monthPairs(start, end); const values = new Map<string, Row>();
-  for (const [year, month] of pairs) {
-    const classRows = rows(context, "SELECT class_name, sakit, izin, alfa FROM absence_reason_class_entries WHERE year = ? AND month = ?", [year, month]);
-    const classKeys = new Set(classRows.map((value) => value.class_name));
-    for (const value of classRows) { const current = values.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; current.sakit += Number(value.sakit ?? 0); current.izin += Number(value.izin ?? 0); current.alfa += Number(value.alfa ?? 0); current.total_absence_reasons = current.sakit + current.izin + current.alfa; values.set(value.class_name, current); }
-    const studentRows = rows(context, "SELECT class_name, sakit, izin, alfa FROM absence_reasons WHERE year = ? AND month = ?", [year, month]);
-    for (const value of studentRows) { if (classKeys.has(value.class_name)) continue; const current = values.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; current.sakit += Number(value.sakit ?? 0); current.izin += Number(value.izin ?? 0); current.alfa += Number(value.alfa ?? 0); current.total_absence_reasons = current.sakit + current.izin + current.alfa; values.set(value.class_name, current); }
-  }
-  return values;
-}
-
 function latenessYear(context: AuthContext, start: string): Row {
   const year = row(context, "SELECT * FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY start_date DESC LIMIT 1", [start, start])
     ?? row(context, "SELECT * FROM academic_years WHERE is_default = 1 LIMIT 1")
@@ -436,7 +434,6 @@ function lateEventRate(events: number, expected: number): number | null {
 
 function buildTardiness(context: AuthContext, period: Row, jenjang?: string | null, includeDetail = false): Row {
   const tally = tardinessTally(context, period, jenjang);
-  const absences = absenceMap(context, period.date_from, period.date_to);
   const tracked = Number((row(context, "SELECT COUNT(DISTINCT date) AS count FROM attendance WHERE date >= ? AND date <= ? AND status <> 'skipped'", [period.date_from, period.date_to]) as Row)?.count ?? 0);
   const eventShare = (events: number): number => tally.late_events ? roundHalfEven(events / tally.late_events * 100, 1) : 0;
   const minuteShare = (minutes: number): number => tally.total_late_minutes ? roundHalfEven(minutes / tally.total_late_minutes * 100, 1) : 0;
@@ -450,7 +447,7 @@ function buildTardiness(context: AuthContext, period: Row, jenjang?: string | nu
     rolled.set(value.jenjang, current);
   }
   const summaryByJenjang = [...rolled.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({ jenjang: name, late_events: value.late_events, late_events_share_pct: eventShare(value.late_events), total_late_minutes: value.total_late_minutes, total_late_minutes_str: timeLabel(value.total_late_minutes), late_minutes_share_pct: minuteShare(value.total_late_minutes), affected_students: value.affected.size, days_with_late_arrivals: value.dates.size }));
-  const breakdown = [...tally.byClass.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.class_name.localeCompare(b.class_name)).map((value) => { const absence = absences.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0, total_absence_reasons: 0 }; return { class_name: value.class_name, jenjang: value.jenjang, expected_student_days: value.expected_student_days, late_events: value.late_events, affected_students: value.affected_students.size, total_late_minutes: value.total_late_minutes, total_late_minutes_str: timeLabel(value.total_late_minutes), average_late_minutes: averageLateMinutes(value.total_late_minutes, value.known_minute_events), average_late_minutes_str: averageLateLabel(value.total_late_minutes, value.known_minute_events), late_event_rate: lateEventRate(value.late_events, value.expected_student_days), days_with_late_arrivals: value.late_dates.size, ...absence }; });
+  const breakdown = [...tally.byClass.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.class_name.localeCompare(b.class_name)).map((value) => ({ class_name: value.class_name, jenjang: value.jenjang, expected_student_days: value.expected_student_days, late_events: value.late_events, affected_students: value.affected_students.size, total_late_minutes: value.total_late_minutes, total_late_minutes_str: timeLabel(value.total_late_minutes), average_late_minutes: averageLateMinutes(value.total_late_minutes, value.known_minute_events), average_late_minutes_str: averageLateLabel(value.total_late_minutes, value.known_minute_events), late_event_rate: lateEventRate(value.late_events, value.expected_student_days), days_with_late_arrivals: value.late_dates.size }));
   const hebByJenjang: Row = {}; for (const name of rolled.keys()) { const raw = rows(context, "SELECT jenjang FROM students WHERE UPPER(TRIM(COALESCE(jenjang, 'Unassigned'))) = ? LIMIT 1", [name.toUpperCase()])[0]?.jenjang ?? name; hebByJenjang[name] = monthPairs(period.date_from, period.date_to).reduce((sum, [py, pm]) => sum + Number(calculateHeb(context, raw, pm, py).heb), 0); }
   const uniqueDays = tally.late_dates.size;
   const totals = { expected_student_days: tally.expected_student_days, late_events: tally.late_events, affected_students: tally.affected_students.size, total_late_minutes: tally.total_late_minutes, total_late_minutes_str: timeLabel(tally.total_late_minutes), average_late_minutes: averageLateMinutes(tally.total_late_minutes, tally.known_minute_events), average_late_minutes_str: averageLateLabel(tally.total_late_minutes, tally.known_minute_events), late_event_rate: lateEventRate(tally.late_events, tally.expected_student_days), unique_late_days: uniqueDays, tracked_school_days: tracked, school_impact_rate_pct: tracked ? roundHalfEven(uniqueDays / tracked * 100, 1) : 0 };
@@ -459,10 +456,7 @@ function buildTardiness(context: AuthContext, period: Row, jenjang?: string | nu
     const names = new Map<number, string>();
     for (const entry of tally.byStudent.values()) if (entry.student_id !== null && !names.has(entry.student_id)) names.set(entry.student_id, String(row(context, "SELECT name FROM students WHERE id = ?", [entry.student_id])?.name ?? ""));
     const details: Row[] = [];
-    for (const [key, entry] of tally.byStudent) {
-      const absence = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id = ? AND date(year || '-' || printf('%02d', month) || '-01') <= date(?) AND date(year || '-' || printf('%02d', month) || '-01') <= date(?)", [entry.student_id ?? -1, period.date_to, period.date_to])[0] ?? {};
-      for (const detail of entry.classes.values()) details.push({ no_id: entry.student_id ?? key, nama: entry.student_id == null ? key : names.get(entry.student_id) || key, kelas: detail.class_name, jenjang: detail.jenjang, late_events: detail.late_events, total_late_minutes: detail.total_late_minutes, total_durasi: timeLabel(detail.total_late_minutes), rata_rata_durasi: detail.known_minute_events ? timeLabel(Math.round(detail.total_late_minutes / detail.known_minute_events)) : "—", sakit: Number(absence.sakit ?? 0), izin: Number(absence.izin ?? 0), alfa: Number(absence.alfa ?? 0) });
-    }
+    for (const [key, entry] of tally.byStudent) for (const detail of entry.classes.values()) details.push({ no_id: entry.student_id ?? key, nama: entry.student_id == null ? key : names.get(entry.student_id) || key, kelas: detail.class_name, jenjang: detail.jenjang, late_events: detail.late_events, total_late_minutes: detail.total_late_minutes, total_durasi: timeLabel(detail.total_late_minutes), rata_rata_durasi: detail.known_minute_events ? timeLabel(Math.round(detail.total_late_minutes / detail.known_minute_events)) : "—" });
     result.student_details = details.sort((a, b) => String(a.jenjang).localeCompare(String(b.jenjang)) || String(a.kelas).localeCompare(String(b.kelas)) || String(a.nama).localeCompare(String(b.nama)));
     result.detail_summary = { average_late_minutes_str: totals.average_late_minutes_str };
   }
@@ -483,42 +477,65 @@ function buildTardinessSummary(context: AuthContext, period: Row, jenjang?: stri
   return grouped.map((value) => ({ ...value, rata_rata_siswa_terlambat_per_hari: value.hari_efektif_terlambat ? roundHalfEven(value.total_kejadian / value.hari_efektif_terlambat, 1) : 0, percentage_of_total: total ? roundHalfEven(value.total_kejadian / total * 100, 1) : 0 }));
 }
 
-function normalizeV2Percentages(values: { hadir_pct: number | null; sakit_pct: number | null; izin_pct: number | null; alfa_pct: number | null; lain2_pct: number | null }): Row {
-  if (Object.values(values).some((value) => value === null)) return { ...values, total_pct: null };
-  const numeric = values as { hadir_pct: number; sakit_pct: number; izin_pct: number; alfa_pct: number; lain2_pct: number };
-  const total = Object.values(numeric).reduce((sum, value) => sum + value, 0);
-  const adjusted = numeric.lain2_pct > 0 ? "lain2_pct" : "hadir_pct";
-  return { ...numeric, [adjusted]: Math.abs(total - 100) > 0.001 ? Math.max(0, numeric[adjusted] + 100 - total) : numeric[adjusted], total_pct: 100 };
+function buildRekap(context: AuthContext, query: AttendanceReportQuery): ManualAbsenceReportResponse {
+  const report = buildAttendanceReport(context, query);
+  return { scope: report.scope, manual_absence: report.manual_absence };
 }
 
-function buildRekap(context: AuthContext, period: Row): Row {
-  const students = rows(context, "SELECT UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, TRIM(s.jenjang) AS raw_jenjang, TRIM(s.class_name) AS class_name, COUNT(*) AS student_count FROM students s WHERE TRIM(COALESCE(s.jenjang, '')) <> '' AND TRIM(COALESCE(s.class_name, '')) <> '' GROUP BY UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))), TRIM(s.jenjang), TRIM(s.class_name)");
-  const classes = new Map<string, Map<string, Row>>(); const rawLevels = new Map<string, string>();
-  for (const value of students) { if (!classes.has(value.jenjang)) classes.set(value.jenjang, new Map()); classes.get(value.jenjang)!.set(value.class_name, { student_count: Number(value.student_count), hadir_days: 0 }); rawLevels.set(value.jenjang, value.raw_jenjang); }
-  const attendance = rows(context, "SELECT UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))) AS jenjang, TRIM(s.class_name) AS class_name, COUNT(a.id) AS hadir_days FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE a.date >= ? AND a.date <= ? AND TRIM(COALESCE(s.jenjang, '')) <> '' AND TRIM(COALESCE(s.class_name, '')) <> '' AND COALESCE(o.override_status, a.status) IN ('on-time', 'late') GROUP BY UPPER(TRIM(COALESCE(s.jenjang, 'Unassigned'))), TRIM(s.class_name)", [period.date_from, period.date_to]);
-  for (const value of attendance) classes.get(value.jenjang)?.get(value.class_name) && (classes.get(value.jenjang)!.get(value.class_name)!.hadir_days = Number(value.hadir_days));
-  const absence = new Map<string, Row>();
-  for (const [year, month] of monthPairs(period.date_from, period.date_to)) for (const value of rows(context, "SELECT TRIM(class_name) AS class_name, COALESCE(SUM(sakit), 0) AS sakit, COALESCE(SUM(izin), 0) AS izin, COALESCE(SUM(alfa), 0) AS alfa FROM absence_reason_class_entries WHERE year = ? AND month = ? GROUP BY TRIM(class_name)", [year, month])) { const previous = absence.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0 }; absence.set(value.class_name, { sakit: previous.sakit + Number(value.sakit), izin: previous.izin + Number(value.izin), alfa: previous.alfa + Number(value.alfa) }); }
-  const missingLevels: string[] = []; const jenjang: Row[] = []; let hasIssue = false; let affectedClasses = 0;
-  for (const level of [...classes.keys()].sort()) {
-    const heb = monthPairs(period.date_from, period.date_to).reduce((sum, [py, pm]) => sum + Number(calculateHeb(context, rawLevels.get(level)!, pm, py).heb), 0);
-    if (!heb) missingLevels.push(level);
-    const classRows: Row[] = []; let sumH = 0; let sumS = 0; let sumI = 0; let sumA = 0; let sumL = 0; let sumTotal = 0;
-    for (const className of [...classes.get(level)!.keys()].sort()) {
-      const base = classes.get(level)!.get(className)!; const sia = absence.get(className) ?? { sakit: 0, izin: 0, alfa: 0 }; const studentCount = base.student_count; let hadir = base.hadir_days; const sakit = sia.sakit; const izin = sia.izin; const alfa = sia.alfa; const expected = studentCount * heb; let total = hadir + sakit + izin + alfa; let lain2 = 0; const flags: Row = {};
-      if (heb > 0) { lain2 = Math.max(0, expected - total); total += lain2; if (lain2) flags.estimated_unrecorded = true; } else flags.expected_total_missing = true;
-      if (total === 0) { flags.no_valid_data = true; flags.data_quality_issue = true; hasIssue = true; affectedClasses++; }
-      const percentages = total ? normalizeV2Percentages({ hadir_pct: roundHalfUp(hadir / total * 100), sakit_pct: roundHalfUp(sakit / total * 100), izin_pct: roundHalfUp(izin / total * 100), alfa_pct: roundHalfUp(alfa / total * 100), lain2_pct: roundHalfUp(lain2 / total * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, lain2_pct: null, total_pct: null };
-      sumH += hadir; sumS += sakit; sumI += izin; sumA += alfa; sumL += lain2; sumTotal += total;
-      classRows.push({ class_name: className, student_count: studentCount, hadir, sakit, izin, alfa, lain2, total, percentages, warning_flags: flags });
-    }
-    const percentages = sumTotal ? normalizeV2Percentages({ hadir_pct: roundHalfUp(sumH / sumTotal * 100), sakit_pct: roundHalfUp(sumS / sumTotal * 100), izin_pct: roundHalfUp(sumI / sumTotal * 100), alfa_pct: roundHalfUp(sumA / sumTotal * 100), lain2_pct: roundHalfUp(sumL / sumTotal * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, lain2_pct: null, total_pct: null };
-    jenjang.push({ name: level, classes: classRows, summary: { hadir: sumH, sakit: sumS, izin: sumI, alfa: sumA, lain2: sumL, total: sumTotal, heb, percentages } });
+function rekapQuery(context: AuthContext, params: Record<string, unknown>): AttendanceReportQuery {
+  if (params.academic_year_id && params.period_type && params.period) {
+    return {
+      academic_year_id: String(params.academic_year_id), period_type: params.period_type as AttendanceReportQuery["period_type"],
+      period: String(params.period), start_date: params.start_date as string | undefined, end_date: params.end_date as string | undefined,
+      jenjang_id: params.jenjang_id as string | undefined, program_id: params.program_id as string | undefined,
+      class_id: params.class_id as string | undefined,
+    };
   }
-  const global = { hadir: jenjang.reduce((sum, value) => sum + value.summary.hadir, 0), sakit: jenjang.reduce((sum, value) => sum + value.summary.sakit, 0), izin: jenjang.reduce((sum, value) => sum + value.summary.izin, 0), alfa: jenjang.reduce((sum, value) => sum + value.summary.alfa, 0), lain2: jenjang.reduce((sum, value) => sum + value.summary.lain2, 0), total: jenjang.reduce((sum, value) => sum + value.summary.total, 0) };
-  const percentages = global.total ? normalizeV2Percentages({ hadir_pct: roundHalfUp(global.hadir / global.total * 100), sakit_pct: roundHalfUp(global.sakit / global.total * 100), izin_pct: roundHalfUp(global.izin / global.total * 100), alfa_pct: roundHalfUp(global.alfa / global.total * 100), lain2_pct: roundHalfUp(global.lain2 / global.total * 100) }) : { hadir_pct: null, sakit_pct: null, izin_pct: null, alfa_pct: null, lain2_pct: null, total_pct: null };
-  const warnings: string[] = []; if (global.lain2) warnings.push("Unrecorded is estimated from HEB and current class size; use Term Attendance for canonical expected-day coverage."); if (missingLevels.length) warnings.push(`HEB belum tersedia untuk beberapa jenjang: ${[...missingLevels].sort((a, b) => b.localeCompare(a)).join(", ")}.`); const periodSia = rows(context, "SELECT id FROM absence_reason_class_entries WHERE year = ? AND month >= ? AND month <= ? LIMIT 1", [parseDate(period.date_from).year, parseDate(period.date_from).month, parseDate(period.date_to).month]).length; if (!periodSia) warnings.push("Data Sakit/Izin/Alfa belum diisi untuk periode ini.");
-  return { report_title: rekapTitle, school_name: schoolName, period: { date_from: period.date_from, date_to: period.date_to, label: period.label, term: period.term ?? null, year: period.year ?? parseDate(period.date_to).year }, jenjang, heb_by_jenjang: Object.fromEntries(jenjang.map((value) => [value.name, value.summary.heb])), global_summary: { ...global, percentages }, chart_data: [{ label: "Hadir", value: percentages.hadir_pct ?? 0 }, { label: "Sakit", value: percentages.sakit_pct ?? 0 }, { label: "Izin", value: percentages.izin_pct ?? 0 }, { label: "Alfa", value: percentages.alfa_pct ?? 0 }, { label: "Estimated unrecorded", value: percentages.lain2_pct ?? 0 }], warnings, global_flags: { has_data_quality_issue: hasIssue || global.lain2 > 0, affected_classes: affectedClasses, heb_missing: missingLevels.length > 0, sia_missing: !periodSia } };
+
+  const month = queryNumber(params.month);
+  const year = queryNumber(params.year);
+  const dateFrom = typeof params.date_from === "string" ? params.date_from : undefined;
+  const dateTo = typeof params.date_to === "string" ? params.date_to : undefined;
+  const term = queryNumber(params.term);
+  if ((month !== null || term !== null) && year === null || year !== null && month === null && term === null)
+    throw Object.assign(new Error("year must be paired with month or term."), { status: 422 });
+  if (month !== null && (!Number.isInteger(month) || month < 1 || month > 12))
+    throw Object.assign(new Error("month must be between 1 and 12."), { status: 422 });
+  let period_type: AttendanceReportQuery["period_type"] = "month";
+  let period: string;
+  let start: string;
+  let end: string;
+  let academicYear: Row | null;
+
+  if (dateFrom || dateTo) {
+    if (!dateFrom || !dateTo || dateFrom > dateTo) throw Object.assign(new Error("date_from and date_to must be valid and provided together."), { status: 422 });
+    period_type = "date_range";
+    period = `${dateFrom}..${dateTo}`;
+    start = dateFrom; end = dateTo;
+    academicYear = row(context, "SELECT id FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY is_default DESC, start_date DESC LIMIT 1", [start, end]);
+  } else if (term !== null && year !== null) {
+    if (!Number.isInteger(term) || term < 1 || term > 4) throw Object.assign(new Error("term must be between 1 and 4."), { status: 422 });
+    period_type = "term"; period = String(term);
+    const ayStartYear = term <= 2 ? year : year;
+    academicYear = row(context, "SELECT id, start_date, end_date FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY is_default DESC, start_date DESC LIMIT 1", [`${ayStartYear}-12-31`, `${ayStartYear}-01-01`]);
+    if (!academicYear) throw Object.assign(new Error("Academic year not found for the selected term."), { status: 404 });
+    return { academic_year_id: String(academicYear.id), period_type, period };
+  } else if (month !== null && year !== null && Number.isInteger(month) && month >= 1 && month <= 12) {
+    period = `${year}-${String(month).padStart(2, "0")}`;
+    [start, end] = monthPeriod(period);
+    academicYear = row(context, "SELECT id FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY is_default DESC, start_date DESC LIMIT 1", [end, start]);
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    academicYear = row(context, "SELECT id, start_date FROM academic_years WHERE start_date <= ? AND end_date >= ? ORDER BY is_default DESC, start_date DESC LIMIT 1", [today, today])
+      ?? row(context, "SELECT id, start_date FROM academic_years WHERE is_default = 1 LIMIT 1");
+    if (!academicYear) throw Object.assign(new Error("Academic year not found."), { status: 404 });
+    const date = today >= String(academicYear.start_date) ? today : String(academicYear.start_date);
+    period = date.slice(0, 7);
+    [start, end] = monthPeriod(period);
+  }
+  if (!academicYear) throw Object.assign(new Error("No academic year overlaps the selected period."), { status: 404 });
+  return { academic_year_id: String(academicYear.id), period_type, period,
+    ...(period_type === "date_range" ? { start_date: start, end_date: end } : {}) };
 }
 
 async function reportPdf(title: string, report: Row): Promise<Uint8Array> {
@@ -542,19 +559,26 @@ async function reportWorkbook(report: Row): Promise<Uint8Array> {
   return writeXlsxWorkbook(workbook);
 }
 
-async function rekapWorkbook(report: Row): Promise<Uint8Array> {
+async function rekapWorkbook(report: ManualAbsenceReportResponse): Promise<Uint8Array> {
   const workbook = createWorkbook({ exportType: "attendance-rekap" });
-  const summary = addWorksheet(workbook, "Rekap Absensi");
-  appendRow(summary, [report.report_title]);
-  appendRow(summary, [report.period.label]);
-  appendRow(summary, ["JENJANG", "KELAS", "HEB", "HADIR", "SAKIT", "IZIN", "ALFA", "TOTAL"]);
-  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) appendRow(summary, [level.name, value.class_name, value.summary?.heb ?? level.classes?.[0]?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.total]);
-  summary.getRow(3).font = { bold: true };
-  summary.views = [{ state: "frozen", ySplit: 3 }];
-  const detail = addWorksheet(workbook, "Detail");
-  appendRow(detail, ["JENJANG", "SISWA", "HEB", "HADIR (hari)", "SAKIT", "IZIN", "ALFA", "LAIN2"]);
-  for (const level of report.jenjang as Row[]) for (const value of level.classes as Row[]) appendRow(detail, [level.name, value.student_count, value.summary?.heb ?? level.summary?.heb ?? report.heb_by_jenjang[level.name], value.hadir, value.sakit, value.izin, value.alfa, value.lain2]);
-  detail.getRow(1).font = { bold: true };
+  const summary = addWorksheet(workbook, "Rekap Manual");
+  const manual = report.manual_absence;
+  appendRow(summary, ["Rekap Manual Sakit / Izin / Alfa"]);
+  appendRow(summary, [`Tahun Ajaran ${report.scope.academic_year_label}`]);
+  appendRow(summary, [`Periode ${report.scope.start_date} – ${report.scope.end_date}`]);
+  appendRow(summary, ["Sumber: Input total bulanan per kelas"]);
+  appendRow(summary, ["Kelengkapan", manual.completeness.complete ? "Lengkap" : "Belum lengkap"]);
+  appendRow(summary, ["Entri kelas-bulan diharapkan", manual.completeness.expected_class_month_entries]);
+  appendRow(summary, ["Entri kelas-bulan tersimpan", manual.completeness.completed_class_month_entries]);
+  appendRow(summary, ["Entri kelas-bulan belum diisi", manual.completeness.missing_class_month_entries]);
+  appendRow(summary, []);
+  appendRow(summary, ["KELAS", "JENJANG", "PROGRAM", "SAKIT", "IZIN", "ALFA", "BULAN TERSIMPAN", "BULAN DIHARAPKAN"]);
+  for (const value of manual.classes) appendRow(summary, [value.class_name, value.jenjang, value.program, value.sakit ?? "Belum diinput", value.izin ?? "Belum diinput", value.alfa ?? "Belum diinput", value.completed_months, value.expected_months]);
+  appendRow(summary, ["TOTAL", "", "", manual.totals.sakit ?? "Belum diinput", manual.totals.izin ?? "Belum diinput", manual.totals.alfa ?? "Belum diinput"]);
+  for (const value of manual.completeness.missing) appendRow(summary, ["Belum diinput", value.class_name, value.month]);
+  summary.getRow(9).font = { bold: true };
+  summary.views = [{ state: "frozen", ySplit: 9 }];
+  autoSizeColumns(summary, 12, 36);
   return writeXlsxWorkbook(workbook);
 }
 
@@ -663,42 +687,112 @@ function pythonDuration(minutes: number | null | undefined): string {
   return hours > 0 ? `${hours}h${remainder ? ` ${remainder}m` : ""}` : `${remainder}m`;
 }
 
-function attendanceReport(context: AuthContext, startDate: string, endDate: string, jenjang?: string, className?: string): Row {
-  const academicYear = row(context, "SELECT id FROM academic_years WHERE start_date <= ? AND end_date >= ? LIMIT 1", [endDate, startDate]);
-  const params: any[] = [];
-  const enrollmentJoin = academicYear ? "LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ?" : "LEFT JOIN student_enrollments e ON e.student_id = s.id";
-  if (academicYear) params.push(academicYear.id);
-  const filters = ["a.date >= ?", "a.date <= ?"];
-  params.push(startDate, endDate);
-  const effectiveClass = "COALESCE(c.class_name, e.class_name, s.class_name)";
-  const effectiveJenjang = "COALESCE(j.name, s.jenjang)";
-  if (jenjang && normalizedLower(jenjang) !== "all") { filters.push(`${effectiveJenjang} = ?`); params.push(normalized(jenjang)); }
-  if (className && normalizedLower(className) !== "all") {
-    if (normalizedLower(className) === "unassigned") filters.push(`${effectiveClass} IS NULL`);
-    else { filters.push(`${effectiveClass} = ?`); params.push(normalized(className)); }
-  }
-  const values = rows(context, `SELECT s.id AS student_id, s.name, ${effectiveClass} AS class_name, ${effectiveJenjang} AS jenjang, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'on-time' THEN 1 ELSE 0 END) AS present_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN 1 ELSE 0 END) AS late_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'absent' THEN 1 ELSE 0 END) AS absent_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'incomplete' THEN 1 ELSE 0 END) AS incomplete_count, SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN COALESCE(a.late_duration, 0) ELSE 0 END) AS total_late_duration, COUNT(a.id) AS total_days FROM students s JOIN attendance a ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id ${enrollmentJoin} LEFT JOIN academic_classes c ON c.id = e.academic_class_id LEFT JOIN jenjangs j ON j.id = e.jenjang_id WHERE ${filters.join(" AND ")} GROUP BY s.id, s.name, ${effectiveClass}, ${effectiveJenjang} ORDER BY s.name`, params);
-  const absences = absenceMap(context, startDate, endDate);
-  const results = values.map((value) => {
-    const total = Number(value.total_days);
-    const attended = Number(value.present_count) + Number(value.late_count) + Number(value.incomplete_count);
-    const absence = absences.get(value.class_name) ?? { sakit: 0, izin: 0, alfa: 0 };
-    return { student_id: Number(value.student_id), name: value.name, class_name: value.class_name, jenjang: value.jenjang, present_count: Number(value.present_count), late_count: Number(value.late_count), absent_count: Number(value.absent_count), incomplete_count: Number(value.incomplete_count), sakit: Number(absence.sakit ?? 0), izin: Number(absence.izin ?? 0), alfa: Number(absence.alfa ?? 0), total_late_time_str: pythonDuration(value.total_late_duration), total_days: total, attendance_percentage: total > 0 ? roundHalfEven(attended / total * 100, 1) : 0 };
-  });
-  const totalLateMinutes = values.reduce((sum, value) => sum + Number(value.total_late_duration ?? 0), 0);
-  const totalLateCount = values.reduce((sum, value) => sum + Number(value.late_count ?? 0), 0);
-  const periods = monthPairs(startDate, endDate);
-  let hebDays = 0;
-  if (jenjang && normalizedLower(jenjang) !== "all") {
-    const original = row(context, "SELECT TRIM(jenjang) AS jenjang FROM students WHERE UPPER(TRIM(COALESCE(jenjang, 'Unassigned'))) = ? LIMIT 1", [normalized(jenjang).toUpperCase()]);
-    const target = original?.jenjang ?? normalized(jenjang);
-    hebDays = periods.reduce((sum, [year, month]) => sum + Number(calculateHeb(context, target, month, year).heb), 0);
+function attendanceReportRange(context: AuthContext, query: AttendanceReportQuery) {
+  const year = row(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [Number(query.academic_year_id)]);
+  if (!year) throw Object.assign(new Error("Academic year not found."), { status: 404 });
+  const allMonths = monthPairs(String(year.start_date), String(year.end_date)).map(([value, month]) => `${value}-${String(month).padStart(2, "0")}`);
+  let startDate: string; let endDate: string;
+  if (query.period_type === "month") {
+    const range = monthPeriod(query.period);
+    startDate = range[0] > year.start_date ? range[0] : String(year.start_date);
+    endDate = range[1] < year.end_date ? range[1] : String(year.end_date);
+    if (startDate > endDate) throw Object.assign(new Error("Month does not overlap the academic year."), { status: 422 });
+  } else if (query.period_type === "term") {
+    const termNumber = Number(query.period);
+    const term = effectiveAcademicTerms(context, year).find((value) => value.term_number === termNumber);
+    if (!term || String(term.start_date) > String(term.end_date)) throw Object.assign(new Error("Term configuration is invalid."), { status: 409 });
+    startDate = String(term.start_date); endDate = String(term.end_date);
+  } else if (query.period_type === "date_range") {
+    const validDate = (value: string | undefined) => !!value && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+    if (!validDate(query.start_date) || !validDate(query.end_date) || query.start_date! > query.end_date!
+        || query.start_date! < String(year.start_date) || query.end_date! > String(year.end_date))
+      throw Object.assign(new Error("Date range must stay within the selected academic year."), { status: 422 });
+    startDate = query.start_date!; endDate = query.end_date!;
+  } else if (query.period_type === "bimonthly" || query.period_type === "semester") {
+    const groupSize = query.period_type === "bimonthly" ? 2 : Math.ceil(allMonths.length / 2);
+    const group = Number(query.period);
+    const groupCount = Math.ceil(allMonths.length / groupSize);
+    if (!Number.isInteger(group) || group < 1 || group > groupCount) throw Object.assign(new Error("Period selection is invalid."), { status: 422 });
+    const selected = allMonths.slice((group - 1) * groupSize, group * groupSize);
+    const first = monthPeriod(selected[0]!)[0]; const last = monthPeriod(selected.at(-1)!)[1];
+    startDate = first > year.start_date ? first : String(year.start_date);
+    endDate = last < year.end_date ? last : String(year.end_date);
   } else {
-    const jenjangs = rows(context, "SELECT DISTINCT jenjang FROM students WHERE jenjang IS NOT NULL").map((value) => String(value.jenjang));
-    const total = jenjangs.reduce((sum, value) => sum + periods.reduce((periodSum, [year, month]) => periodSum + Number(calculateHeb(context, value, month, year).heb), 0), 0);
-    hebDays = jenjangs.length ? roundHalfEven(total / jenjangs.length, 0) : 0;
+    if (query.period !== "all") throw Object.assign(new Error("Period selection is invalid."), { status: 422 });
+    startDate = String(year.start_date); endDate = String(year.end_date);
   }
-  return { results, summary: { avg_late_time_str: pythonDuration(totalLateCount ? totalLateMinutes / totalLateCount : 0), heb_days: hebDays } };
+  return { year, startDate, endDate };
+}
+
+function buildAttendanceReport(context: AuthContext, query: AttendanceReportQuery): Row {
+  const { year, startDate, endDate } = attendanceReportRange(context, query);
+  const scope = {
+    academic_year_id: Number(year.id), start_date: startDate, end_date: endDate,
+    jenjang_id: query.jenjang_id === undefined ? undefined : Number(query.jenjang_id),
+    program_id: query.program_id === undefined ? undefined : Number(query.program_id),
+    class_id: query.class_id === undefined ? undefined : Number(query.class_id),
+  };
+  const canonical = attendancePeriodTotals(context, scope);
+  const manual = aggregateManualAbsenceForPeriod(context, scope);
+  const details = attendanceReportStudents(context, scope);
+  return {
+    scope: {
+      academic_year_id: Number(year.id), academic_year_label: String(year.label),
+      period_type: query.period_type, period: query.period, start_date: startDate, end_date: endDate,
+      manual_months: manual.months,
+    },
+    canonical_attendance: { source: "student_attendance_records", totals: canonical },
+    students: details.results,
+    summary: details.summary,
+    manual_absence: {
+      source: "manual_monthly_class_totals", period_policy: "include_full_intersecting_months",
+      completeness: manual.completeness,
+      classes: manual.classes.map((value) => ({
+        class_id: value.class_id, class_name: value.class_name, jenjang: value.jenjang, program: value.program,
+        sakit: value.sakit, izin: value.izin, alfa: value.alfa,
+        completed_months: value.completed_months, expected_months: value.expected_months, missing_months: value.missing_months,
+      })),
+      totals: manual.totals,
+    },
+  };
+}
+
+function attendanceReportStudents(context: AuthContext, scope: { academic_year_id: number; start_date: string; end_date: string; jenjang_id?: number; program_id?: number; class_id?: number }): Row {
+  const filters = ["a.date >= ?", "a.date <= ?"];
+  const params: unknown[] = [scope.academic_year_id, scope.start_date, scope.end_date];
+  if (scope.jenjang_id !== undefined) { filters.push("e.jenjang_id = ?"); params.push(scope.jenjang_id); }
+  if (scope.program_id !== undefined) { filters.push("g.program_id = ?"); params.push(scope.program_id); }
+  if (scope.class_id !== undefined) { filters.push("e.academic_class_id = ?"); params.push(scope.class_id); }
+  const effectiveClass = "COALESCE(c.class_name, e.class_name, s.class_name)";
+  const values = rows(context, `SELECT s.id AS student_id, s.name, ${effectiveClass} AS class_name, j.name AS jenjang,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'on-time' THEN 1 ELSE 0 END) AS hadir,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN 1 ELSE 0 END) AS late,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'absent' THEN 1 ELSE 0 END) AS absent,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'incomplete' THEN 1 ELSE 0 END) AS incomplete,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'sakit' THEN 1 ELSE 0 END) AS sakit,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'izin' THEN 1 ELSE 0 END) AS izin,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'alfa' THEN 1 ELSE 0 END) AS alfa,
+      SUM(CASE WHEN COALESCE(o.override_status, a.status) = 'late' THEN COALESCE(a.late_duration, 0) ELSE 0 END) AS total_late_duration,
+      COUNT(a.id) AS recorded
+    FROM students s JOIN attendance a ON s.id = a.student_id
+    JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ?
+    LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
+    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
+    LEFT JOIN academic_grades g ON g.id = c.grade_id
+    LEFT JOIN jenjangs j ON j.id = e.jenjang_id
+    WHERE ${filters.join(" AND ")}
+    GROUP BY s.id, s.name, ${effectiveClass}, j.name ORDER BY s.name`, params);
+  const results = values.map((value) => ({
+    student_id: Number(value.student_id), name: String(value.name), class_name: value.class_name === null ? null : String(value.class_name),
+    jenjang: value.jenjang === null ? null : String(value.jenjang),
+    hadir: Number(value.hadir), late: Number(value.late), absent: Number(value.absent), incomplete: Number(value.incomplete),
+    sakit: Number(value.sakit), izin: Number(value.izin), alfa: Number(value.alfa), recorded: Number(value.recorded),
+    total_late_time_str: pythonDuration(value.total_late_duration),
+  }));
+  const totalLateMinutes = values.reduce((sum, value) => sum + Number(value.total_late_duration ?? 0), 0);
+  const totalLateCount = values.reduce((sum, value) => sum + Number(value.late ?? 0), 0);
+  return { results, summary: { avg_late_time_str: pythonDuration(totalLateCount ? totalLateMinutes / totalLateCount : 0) } };
 }
 
 const activeInterventionStatuses = ["open", "in_progress", "monitoring"];
@@ -1039,9 +1133,9 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
     return rows(context, `SELECT COALESCE(c.class_name, e.class_name, s.class_name) AS class_name, strftime('%Y-%m', a.date) AS month, COUNT(*) AS late_count FROM attendance a JOIN students s ON s.id = a.student_id ${join} WHERE a.status = 'late' GROUP BY COALESCE(c.class_name, e.class_name, s.class_name), strftime('%Y-%m', a.date)`, params).map((value) => ({ class_name: value.class_name, month: value.month, late_count: Number(value.late_count) }));
   });
   app.get(`${prefix}/attendance-report`, (ctx: Context) => {
-    if (!auth(ctx)) return { detail: "Authentication required" };
-    try { return attendanceReport(context, ctx.query.start_date, ctx.query.end_date, ctx.query.jenjang, ctx.query.class_name); } catch (error) { return sendError(ctx, error); }
-  }, { query: t.Object({ start_date: t.String(), end_date: t.String(), jenjang: t.Optional(t.String()), class_name: t.Optional(t.String()) }) });
+    if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
+    try { return buildAttendanceReport(context, ctx.query as AttendanceReportQuery); } catch (error) { return sendError(ctx, error); }
+  }, { query: AttendanceReportQuerySchema, response: AttendanceReportResponseSchema });
   app.get(`${prefix}/intervention-impact`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return interventionImpact(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), student_id: t.Optional(t.String()), subject_id: t.Optional(t.String()), term: t.Optional(t.String()), status: t.Optional(t.String()), priority: t.Optional(t.String()), owner_name: t.Optional(t.String()), risk_level: t.Optional(t.String()) }) });
   app.get(`${prefix}/management-summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { return managementSummary(context, ctx.query); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), term: t.Optional(t.String()), subject_id: t.Optional(t.String()) }) });
   const historicalQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), term: t.Optional(t.String()), from_academic_year_id: t.Optional(t.String()), to_academic_year_id: t.Optional(t.String()), granularity: t.Optional(t.String()), include_forecast: t.Optional(t.Boolean()), forecast_method: t.Optional(t.String()) }) };
@@ -1066,8 +1160,17 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
   }, { query: t.Object({ month: t.String(), year: t.String() }) });
   app.get(`${prefix}/tardiness-report`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildTardiness(context, period, ctx.query.jenjang, true); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()), jenjang: t.Optional(t.String()) }) });
   for (const path of [`${prefix}/tardiness/summary-by-jenjang`, `${prefix}/tardiness-report/summary-by-jenjang`]) app.get(path, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return { period: period, rows: buildTardinessSummary(context, period, ctx.query.jenjang) }; } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()), jenjang: t.Optional(t.String()) }) });
-  app.get(`${prefix}/v2/rekap-absensi`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const month = queryNumber(ctx.query.month); const year = queryNumber(ctx.query.year); const period = reportPeriod(month ?? undefined, year ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildRekap(context, period); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()) }) });
-  app.get(`${prefix}/rekap-absensi`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return buildRekap(context, period); } catch (error) { return sendError(ctx, error); } }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()), date_to: t.Optional(t.String()), term: t.Optional(t.String()) }) });
+  const rekapQuerySchema = { query: t.Object({
+    academic_year_id: t.Optional(t.String()), period_type: t.Optional(t.Union([t.Literal("month"), t.Literal("term"), t.Literal("bimonthly"), t.Literal("semester"), t.Literal("yearly"), t.Literal("date_range")])), period: t.Optional(t.String()),
+    start_date: t.Optional(t.String()), end_date: t.Optional(t.String()),
+    jenjang_id: t.Optional(t.String()), program_id: t.Optional(t.String()), class_id: t.Optional(t.String()),
+    month: t.Optional(t.String()), year: t.Optional(t.String()), date_from: t.Optional(t.String()),
+    date_to: t.Optional(t.String()), term: t.Optional(t.String()), jenjang: t.Optional(t.String()),
+  }) };
+  for (const path of [`${prefix}/v2/rekap-absensi`, `${prefix}/rekap-absensi`]) app.get(path, (ctx: Context) => {
+    if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
+    try { return buildRekap(context, rekapQuery(context, ctx.query)); } catch (error) { return sendError(ctx, error); }
+  }, { ...rekapQuerySchema, response: ManualAbsenceReportResponseSchema });
   app.get(`${prefix}/summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; return { total_late: Number(row(context, "SELECT COUNT(*) AS count FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late'")?.count ?? 0), total_incomplete: Number(row(context, "SELECT COUNT(*) AS count FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'incomplete' AND a.check_in IS NOT NULL")?.count ?? 0), total_offenders: Number(row(context, "SELECT COUNT(*) AS count FROM (SELECT student_id FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'late' GROUP BY student_id HAVING COUNT(*) >= 3)")?.count ?? 0) }; });
   app.get(`${prefix}/attendance-date-range`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const value = row(context, "SELECT MIN(date) AS earliest_date, MAX(date) AS latest_date FROM attendance"); return { earliest_date: value?.earliest_date ?? null, latest_date: value?.latest_date ?? null }; });
   app.get(`${prefix}/incomplete-summary`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const value = rows(context, "SELECT student_id, date FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE COALESCE(o.override_status, a.status) = 'incomplete' AND a.check_in IS NOT NULL"); const dates = value.map((item) => item.date).sort(); return { total_incomplete: value.length, affected_students: new Set(value.map((item) => item.student_id)).size, earliest_date: dates[0] ?? null, latest_date: dates.at(-1) ?? null }; });
@@ -1077,8 +1180,13 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
   app.get(`${prefix}/pending-categorization`, (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; const year = row(context, "SELECT id FROM academic_years WHERE is_default = 1 LIMIT 1"); return year ? rows(context, "SELECT s.* FROM students s WHERE NOT EXISTS (SELECT 1 FROM student_enrollments e WHERE e.student_id = s.id AND e.academic_year_id = ?)", [year.id]) : rows(context, "SELECT * FROM students WHERE class_name IS NULL OR class_name = 'Unknown Class'"); });
   app.get(`${prefix}/tardiness-report/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); const report = buildTardiness(context, period, ctx.query.jenjang, true); return sendFile(await tardinessWorkbook(report, false), "xlsx", `tardiness-report-${period.label}`); } catch (error) { return sendError(ctx, error); } });
   app.get(`${prefix}/tardiness-report/export-management-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); const report = buildTardiness(context, period, ctx.query.jenjang, false); return sendFile(await tardinessWorkbook(report, true), "xlsx", `executive-tardiness-summary-${period.label}`); } catch (error) { return sendError(ctx, error); } });
-  app.get(`${prefix}/v2/rekap-absensi/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return sendFile(await rekapWorkbook(buildRekap(context, period)), "xlsx", `rekap-absensi-v2-${period.label}`); } catch (error) { return sendError(ctx, error); } });
-  app.get(`${prefix}/rekap-absensi/export-excel`, async (ctx: Context) => { if (!auth(ctx)) return { detail: "Authentication required" }; try { const period = reportPeriod(queryNumber(ctx.query.month) ?? undefined, queryNumber(ctx.query.year) ?? undefined, ctx.query.date_from, ctx.query.date_to, queryNumber(ctx.query.term) ?? undefined); return sendFile(await rekapWorkbook(buildRekap(context, period)), "xlsx", `rekap-absensi-${period.label}`); } catch (error) { return sendError(ctx, error); } });
+  for (const path of [`${prefix}/v2/rekap-absensi/export-excel`, `${prefix}/rekap-absensi/export-excel`]) app.get(path, async (ctx: Context) => {
+    if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
+    try {
+      const report = buildRekap(context, rekapQuery(context, ctx.query));
+      return sendFile(await rekapWorkbook(report), "xlsx", `rekap-absensi-${report.scope.period}`);
+    } catch (error) { return sendError(ctx, error); }
+  }, rekapQuerySchema);
 }
 
 export function reportRoutes(app: any, context: AuthContext): any {

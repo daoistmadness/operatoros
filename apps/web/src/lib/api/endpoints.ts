@@ -1,7 +1,16 @@
 import { API_BLOB_TYPES, apiRequest, type ApiResponse, type QueryParams } from './client';
+import type { ManualAbsenceReportResponse } from "@operatoros/contracts/reports";
 
 type JsonObject = Record<string, unknown>;
 export type ReportQuery = QueryParams & {
+  academic_year_id?: number | string;
+  period_type?: "month" | "term" | "bimonthly" | "semester" | "yearly" | "date_range";
+  period?: string;
+  start_date?: string;
+  end_date?: string;
+  jenjang_id?: number | string;
+  program_id?: number | string;
+  class_id?: number | string;
   month?: number;
   year?: number;
   term?: number;
@@ -9,52 +18,7 @@ export type ReportQuery = QueryParams & {
   date_to?: string;
   jenjang?: string;
 };
-export type AttendancePercentages = {
-  hadir_pct?: number | null;
-  sakit_pct?: number | null;
-  izin_pct?: number | null;
-  alfa_pct?: number | null;
-  lain2_pct?: number | null;
-  total_pct?: number | null;
-};
-
-export type RekapClassRow = {
-  class_name: string;
-  percentages: AttendancePercentages;
-  warning_flags: {
-    estimated_unrecorded?: boolean;
-    data_quality_issue?: boolean;
-    lain2_count?: number;
-  };
-};
-
-export type RekapJenjangRow = {
-  name: string;
-  summary: { percentages: AttendancePercentages };
-  classes: RekapClassRow[];
-};
-
-export type RekapChartRow = {
-  label: 'Hadir' | 'Sakit' | 'Izin' | 'Alfa' | string;
-  value: number;
-};
-
-export type RekapReport = JsonObject & {
-  report_title: string;
-  school_name: string;
-  jenjang: RekapJenjangRow[];
-  global_summary: JsonObject & { percentages?: AttendancePercentages };
-  global_flags: JsonObject & {
-    heb_missing?: boolean;
-    sia_missing?: boolean;
-    has_data_quality_issue?: boolean;
-    affected_classes?: number;
-  };
-  chart_data: RekapChartRow[];
-  warning_flags: JsonObject;
-  period: JsonObject & { label?: string };
-  heb_by_jenjang?: Record<string, number | null>;
-};
+export type RekapReport = ManualAbsenceReportResponse;
 export type TardinessCutoffRow = {
   jenjang_id: number | null;
   jenjang: string;
@@ -72,10 +36,6 @@ export type TardinessClassRow = {
   average_late_minutes_str: string;
   late_event_rate: number | null;
   days_with_late_arrivals: number;
-  sakit?: number | null;
-  izin?: number | null;
-  alfa?: number | null;
-  total_absence_reasons?: number | null;
 };
 export type TardinessJenjangSummaryRow = {
   jenjang: string;
@@ -167,7 +127,6 @@ export type DashboardSnapshot = {
   existingClasses: string[];
   incompleteSummary: DashboardIncompleteSummary | null;
   absenceSummary: AbsenceTotalRow[];
-  rekapAbsensiSummary: RekapReport | null;
   mappingWarning: string;
 };
 
@@ -189,13 +148,8 @@ function ensureNumber(value: unknown, fallback = 0): number {
 function ensureRekapReportShape(data: unknown): RekapReport {
   const report = ensureObject(data, 'Format data rekap absensi tidak valid.');
   return {
-    ...report,
-    jenjang: ensureArray<RekapJenjangRow>(report.jenjang),
-    global_summary: ensureObject(report.global_summary || {}, 'Ringkasan tidak valid.') as RekapReport['global_summary'],
-    global_flags: ensureObject(report.global_flags || {}, 'Flags tidak valid.') as RekapReport['global_flags'],
-    chart_data: ensureArray<RekapChartRow>(report.chart_data),
-    warning_flags: ensureObject(report.warning_flags || {}, 'Penanda peringatan rekap absensi tidak valid.'),
-    period: ensureObject(report.period || {}, 'Periode laporan rekap absensi tidak valid.') as RekapReport['period'],
+    scope: ensureObject(report.scope || {}, 'Periode laporan rekap absensi tidak valid.') as RekapReport['scope'],
+    manual_absence: ensureObject(report.manual_absence || {}, 'Rekap manual tidak valid.') as RekapReport['manual_absence'],
   } as RekapReport;
 }
 
@@ -308,10 +262,9 @@ export async function getDashboardSnapshot(currentDate: Date): Promise<Dashboard
     apiRequest<string[]>({ path: '/api/students/classes' }),
     apiRequest<DashboardIncompleteSummary>({ path: '/api/analytics/incomplete-summary' }),
     apiRequest<AbsenceTotalRow[]>({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
-    apiRequest({ path: '/api/analytics/v2/rekap-absensi', params: { month, year } }),
   ]);
 
-  const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm, rekapSumm] = requests;
+  const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm] = requests;
   const pendingRows = pend.status === 'fulfilled' && Array.isArray(pend.value.data) ? pend.value.data : [];
 
   return {
@@ -323,7 +276,6 @@ export async function getDashboardSnapshot(currentDate: Date): Promise<Dashboard
     existingClasses: cls.status === 'fulfilled' && Array.isArray(cls.value.data) ? cls.value.data : [],
     incompleteSummary: incSumm.status === 'fulfilled' ? incSumm.value.data : null,
     absenceSummary: absenceSumm.status === 'fulfilled' && Array.isArray(absenceSumm.value.data) ? absenceSumm.value.data : [],
-    rekapAbsensiSummary: rekapSumm.status === 'fulfilled' ? ensureRekapReportShape(rekapSumm.value.data) : null,
     mappingWarning:
       pendingRows.length > 0
         ? `${pendingRows.length} students have no class assigned. Some charts may be incomplete.`
