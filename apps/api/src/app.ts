@@ -21,6 +21,7 @@ import { recapitulationRoutes } from "./domains/recapitulation";
 import { dataQualityRoutes } from "./domains/data-quality";
 import { attendanceAnalyticsRoutes } from "./domains/attendance-analytics";
 import { termAttendanceRoutes } from "./domains/term-attendance";
+import { termLatenessRoutes } from "./domains/term-lateness";
 import { academicAnalyticsRoutes } from "./domains/academic-analytics";
 import { managementOverviewRoutes } from "./domains/management-overview";
 import { managementReviewProfileRoutes } from "./domains/management-review-profile";
@@ -92,6 +93,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     dataQualityRoutes(app, context);
     attendanceAnalyticsRoutes(app, context);
     termAttendanceRoutes(app, context);
+    termLatenessRoutes(app, context);
     academicAnalyticsRoutes(app, context);
     managementOverviewRoutes(app, context);
     managementReviewProfileRoutes(app, context);

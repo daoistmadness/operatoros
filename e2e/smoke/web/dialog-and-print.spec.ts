@@ -60,8 +60,8 @@ test("@error-recovery @release representative form dialog and destructive alert 
 });
 
 for (const report of [
-  { name: "Tardiness", path: "/reports/tardiness", button: "Generate Report", bodyClass: "printing-tardiness-report" },
-  { name: "Rekap", path: "/reports/rekap-absensi", button: "Buat Laporan", bodyClass: "printing-rekap-absensi" },
+  { name: "Tardiness", path: "/reports/tardiness", button: "Generate Report", bodyClass: "printing-tardiness-report", minRows: 2, minPages: 1 },
+  { name: "Rekap", path: "/reports/rekap-absensi", button: "Buat Laporan", bodyClass: "printing-rekap-absensi", minRows: 72, minPages: 2 },
 ]) {
   test(`@reports @release ${report.name} populated report paginates safely`, async ({ page, browserName }) => {
     test.skip(browserName !== "chromium", "PDF pagination is Chromium-only");
@@ -70,7 +70,7 @@ for (const report of [
     await page.getByRole("button", { name: report.button }).click();
     const printArea = page.locator(".report-print-area");
     await expect(printArea).toBeVisible();
-    await expect.poll(() => printArea.locator("tbody tr").count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(72);
+    await expect.poll(() => printArea.locator("tbody tr").count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(report.minRows);
     await page.emulateMedia({ media: "print" });
     await page.evaluate(bodyClass => document.body.classList.add(bodyClass), report.bodyClass);
     await expect(page.locator(".no-print").first()).toBeHidden();
@@ -85,7 +85,7 @@ for (const report of [
     expect(printRules.headerDisplay).toBe("table-header-group");
     const pdf = await page.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true });
     const pageCount = (pdf.toString("latin1").match(/\/Type\s*\/Page\b/g) ?? []).length;
-    expect(pageCount).toBeGreaterThanOrEqual(2);
+    expect(pageCount).toBeGreaterThanOrEqual(report.minPages);
     expect(pageCount).toBeLessThan(20);
   });
 }

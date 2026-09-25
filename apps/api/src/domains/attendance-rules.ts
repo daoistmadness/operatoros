@@ -38,13 +38,19 @@ export function insertCanonicalAttendanceRecord(client: any, input: { studentId:
 }
 
 export function calculateLateMinutes(checkIn: string | null, terlambat: unknown, jenjang: string | null, cutoffs: Record<string, string | undefined>): [number, LateSource] {
+  // Canonical rule: the configured cutoff is the single authority. A usable
+  // check-in is always measured against it; the workbook Terlambat column is
+  // only a fallback when no cutoff is configured. A missing check-in is never
+  // late, regardless of workbook content.
+  const cutoff = jenjang ? parseClockMinutes(cutoffs[jenjang] ?? cutoffs[jenjang.toUpperCase()]) : null;
+  if (cutoff !== null) {
+    const scan = parseClockMinutes(checkIn);
+    if (scan === null) return [0, "none"];
+    return [Math.max(0, scan - cutoff), "calculated"];
+  }
   const excelMinutes = parseExcelDurationMinutes(terlambat);
   if (excelMinutes > 0) return [excelMinutes, "excel"];
-  if (!checkIn) return [0, "none"];
-  const cutoff = jenjang ? parseClockMinutes(cutoffs[jenjang] ?? cutoffs[jenjang.toUpperCase()]) : null;
-  const scan = parseClockMinutes(checkIn);
-  if (cutoff === null || scan === null) return [0, "none"];
-  return [Math.max(0, scan - cutoff), "calculated"];
+  return [0, "none"];
 }
 
 export interface DepartureRuleInput {
