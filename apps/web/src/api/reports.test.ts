@@ -10,7 +10,7 @@ vi.mock("../lib/api/client", () => ({
   apiRequest: vi.fn(), createDownloadUrl: vi.fn(), revokeDownloadUrl: vi.fn(),
 }));
 
-const query = { academic_year_id: 4, scope: "combined" as const, month: "2026-01", class_name: "P1A", subject_id: 7 };
+const query = { academic_year_id: 4, scope: "combined" as const, month: "2026-01", class_id: 11, class_name: "P1A", subject_id: 7 };
 
 describe("reports API", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -26,7 +26,7 @@ describe("reports API", () => {
   it("generates a monthly report with every filter", async () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
     await getMonthlyReport(query);
-    expect(apiRequest).toHaveBeenCalledWith(expect.objectContaining({ path: "/api/reports/monthly", params: query }));
+    expect(apiRequest).toHaveBeenCalledWith(expect.objectContaining({ path: "/api/reports/monthly", params: expect.objectContaining(query) }));
   });
 
   it("generates an annual report without an incompatible month", async () => {

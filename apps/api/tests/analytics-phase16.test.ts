@@ -53,12 +53,13 @@ describe("Phase 16 canonical analytics aggregates", () => {
       expect(overview.summary).toMatchObject({
         student_count: 2,
         attendance_counts: { present: 2, late: 1, sakit: 1, izin: 0, alfa: 0 },
-        attendance_rate: { value: 66.7, numerator: 2, denominator: 3, status: "value" },
+        attendance_rate: { value: null, numerator: null, denominator: null, status: "unavailable" },
         grade_average: { value: 85, numerator: 170, denominator: 2, status: "value" },
       });
+      expect(overview.metric_definitions[0]).toMatchObject({ label: "Attendance Rate", numerator: "Hadir on expected student-days" });
       expect(overview.cohorts).toEqual(expect.arrayContaining([
         expect.objectContaining({ dimension: "jenjang", label: "SMP", student_count: 2 }),
-        expect.objectContaining({ dimension: "class", label: "7A", student_count: 1, attendance_rate: expect.objectContaining({ value: 100 }) }),
+        expect.objectContaining({ dimension: "class", label: "7A", student_count: 1, attendance_rate: expect.objectContaining({ value: null, status: "unavailable" }) }),
       ]));
     } finally {
       value.database.client.close();
@@ -71,7 +72,7 @@ describe("Phase 16 canonical analytics aggregates", () => {
       const trends = analyticsTrends(value, { academic_year_id: 1 });
       const points = trends.series[0]?.points ?? [];
       expect(points.map((point) => point.period)).toEqual(["2026-01", "2026-02", "2026-03"]);
-      expect(points[0]?.metric).toMatchObject({ value: 66.7, denominator: 3 });
+      expect(points[0]?.metric).toMatchObject({ value: null, numerator: null, denominator: null, status: "unavailable" });
       expect(points[1]?.metric).toMatchObject({ value: null, status: "unavailable" });
       expect(points[0]?.start_date).toBe("2026-01-01");
       expect(points[0]?.end_date).toBe("2026-01-31");
@@ -86,7 +87,7 @@ describe("Phase 16 canonical analytics aggregates", () => {
       expect(() => analyticsOverview(value, { academic_year_id: 1, start_date: "2026-02-01", end_date: "2026-01-01" })).toThrow("The analytics date range is invalid");
       const cohorts = analyticsCohorts(value, { academic_year_id: 1, class_name: "7B" }, "class");
       expect(cohorts.cohorts).toHaveLength(1);
-      expect(cohorts.cohorts[0]).toMatchObject({ label: "7B", student_count: 1, attendance_rate: { value: 0, status: "zero" } });
+      expect(cohorts.cohorts[0]).toMatchObject({ label: "7B", student_count: 1, attendance_rate: { value: null, status: "unavailable" } });
     } finally {
       value.database.client.close();
     }

@@ -7703,6 +7703,13 @@ export interface components {
             months: components["schemas"]["ValueLabel"][];
             /** Scopes */
             scopes: components["schemas"]["ValueLabel"][];
+            /** Class Options */
+            class_options: {
+                /** Id */
+                id: number;
+                /** Name */
+                name: string;
+            }[];
             /** Subjects */
             subjects: components["schemas"]["SubjectOption"][];
         };
@@ -15407,6 +15414,7 @@ export interface operations {
             query: {
                 academic_year_id: number;
                 scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };
@@ -15444,6 +15452,7 @@ export interface operations {
                 academic_year_id: number;
                 scope: "combined" | "early_year" | "primary" | "secondary";
                 format: "pdf" | "xlsx";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };
@@ -15515,6 +15524,7 @@ export interface operations {
                 academic_year_id: number;
                 month: string;
                 scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };
@@ -15553,6 +15563,7 @@ export interface operations {
                 month: string;
                 scope: "combined" | "early_year" | "primary" | "secondary";
                 format: "pdf" | "xlsx";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };
@@ -15590,6 +15601,7 @@ export interface operations {
                 academic_year_id: number;
                 month: string;
                 scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };
@@ -15628,6 +15640,7 @@ export interface operations {
                 month: string;
                 scope: "combined" | "early_year" | "primary" | "secondary";
                 format: "pdf" | "xlsx";
+                class_id?: number;
                 class_name?: string | null;
                 subject_id?: number | null;
             };

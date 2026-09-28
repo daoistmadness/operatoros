@@ -1,9 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
+import { Value } from "@sinclair/typebox/value";
 import { loadXlsxWorkbook } from "@operatoros/excel";
+import { ReportFiltersResponseSchema } from "@operatoros/contracts/reports";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
-import { calculateHeb, roundHalfEven, roundHalfUp } from "../src/domains/reports";
+import { calculateHeb, lateAmongPresentRate, roundHalfEven, roundHalfUp } from "../src/domains/reports";
 import { python } from "./python";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
@@ -135,20 +137,20 @@ describe("analytics and report parity", () => {
         const managementJson = await managementSummary.json() as any;
         expect(managementJson).toMatchObject({
           filters: { academic_year_id: 2, academic_year_label: "2026/2027-reports", jenjang_id: null, subject_id: null },
-          attendance_summary: { total_records: 24, status_counts: { hadir: 18, sakit: 3, izin: 2, alfa: 1 } },
+          attendance_summary: { total_records: null, status_counts: { hadir: 18, sakit: 3, izin: 2, alfa: 1 }, status_percentages: { hadir: null, sakit: null, izin: null, alfa: null } },
           thresholds: { kkm_edelweiss: 85, kkm_national: 75, legacy_fallback: 85 },
         });
-        expect(managementJson.terms_breakdown).toEqual(expect.arrayContaining([expect.objectContaining({ term_number: 1, hadir: 18, sakit: 3, izin: 2, alfa: 1, total_records: 24, attendance_percentage: 75 })]));
+        expect(managementJson.terms_breakdown).toEqual(expect.arrayContaining([expect.objectContaining({ term_number: 1, hadir: 18, sakit: 3, izin: 2, alfa: 1, total_records: null, attendance_percentage: null })]));
         const canonicalOverview = await app.handle(new Request("http://local/api/analytics/overview?academic_year_id=2", { headers: { cookie } }));
         expect(canonicalOverview.status).toBe(200);
         expect(await canonicalOverview.json()).toMatchObject({
           contract_version: "analytics.v1",
           filters: { academic_year_id: 2, start_date: "2026-07-01", end_date: "2027-06-30" },
-          summary: { attendance_rate: { value: 75, numerator: 18, denominator: 24 } },
+          summary: { attendance_rate: { value: null, numerator: null, denominator: null, status: "unavailable" } },
         });
         const canonicalTrends = await app.handle(new Request("http://local/api/analytics/trends?academic_year_id=2", { headers: { cookie } }));
         expect(canonicalTrends.status).toBe(200);
-        expect((await canonicalTrends.json() as any).series[0].points).toEqual(expect.arrayContaining([expect.objectContaining({ period: "2026-08", metric: expect.objectContaining({ value: 75 }) })]));
+        expect((await canonicalTrends.json() as any).series[0].points).toEqual(expect.arrayContaining([expect.objectContaining({ period: "2026-08", metric: expect.objectContaining({ value: null, status: "unavailable" }) })]));
         const canonicalCohorts = await app.handle(new Request("http://local/api/analytics/cohorts?academic_year_id=2&dimension=class", { headers: { cookie } }));
         expect(canonicalCohorts.status).toBe(200);
         expect((await canonicalCohorts.json() as any).cohorts).toEqual(expect.arrayContaining([expect.objectContaining({ label: "7A" })]));
@@ -156,10 +158,18 @@ describe("analytics and report parity", () => {
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(monthly.status).toBe(200);
       const monthlyJson = await monthly.json() as any;
-      expect(monthlyJson.executive_summary).toMatchObject({ total_students: 8, attendance_rate: 75, late_rate: 27.8, late_minutes: 85, below_kkm_count: 1, data_completeness_rate: 85.7 });
+      expect(monthlyJson.executive_summary).toMatchObject({ total_students: 8, attendance_rate: null, late_rate: 27.78, late_minutes: 85, below_kkm_count: 1, data_completeness_rate: null });
+      expect(monthlyJson.data_quality.warnings.some((value: string) => value.includes("Attendance Rate and data completeness are unavailable"))).toBe(true);
       expect(monthlyJson.attendance_summary).toMatchObject({ present: 18, sakit: 3, izin: 2, alfa: 1, incomplete: 4, late_days: 5, late_minutes: 85 });
       expect(monthlyJson.student_distribution.by_class).toEqual([{ name: "1A", count: 2, percentage: 25 }, { name: "7A", count: 3, percentage: 37.5 }, { name: "7B", count: 2, percentage: 25 }, { name: "7C", count: 1, percentage: 12.5 }]);
       expect(monthlyJson.academic_summary).toMatchObject({ availability: true, sumatif_average: 80, formatif_average: null, below_kkm_count: 1 });
+      const monthlyExcel = await app.handle(new Request("http://local/api/reports/monthly/export?academic_year_id=2&month=2026-08&scope=combined&format=xlsx", { headers: { cookie } }));
+      const monthlyWorkbook = await loadXlsxWorkbook(new Uint8Array(await monthlyExcel.arrayBuffer()));
+      const attendanceSheet = monthlyWorkbook.getWorksheet("Attendance")!;
+      expect(attendanceSheet.getRow(1).getCell(9).value).toBe("Attendance Rate");
+      expect(attendanceSheet.getRow(2).getCell(9).value).toBeNull();
+      expect(attendanceSheet.getRow(1).getCell(10).value).toBe("Late Among Present");
+      expect(attendanceSheet.getRow(2).getCell(10).value).toBe(monthlyJson.attendance_summary.late_rate);
 
       const empty = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-07&scope=combined", { headers: { cookie } }));
       expect(empty.status).toBe(200);
@@ -167,14 +177,14 @@ describe("analytics and report parity", () => {
 
       const management = await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(management.status).toBe(200);
-      expect((await management.json() as any).executive_summary).toMatchObject({ total_students: 8, total_classes: 4, attendance_rate: 75, students_below_kkm: 1 });
+      expect((await management.json() as any).executive_summary).toMatchObject({ total_students: 8, total_classes: 4, attendance_rate: null, attendance_denominator: null, students_below_kkm: 1 });
       expect((await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie: staff } }))).status).toBe(403);
 
       const annual = await app.handle(new Request("http://local/api/reports/annual?academic_year_id=2&scope=combined", { headers: { cookie } }));
       expect(annual.status).toBe(200);
       const annualJson = await annual.json() as any;
       expect(annualJson.trends).toHaveLength(12);
-      expect(annualJson.attendance_summary).toMatchObject({ present: 18, sakit: 3, izin: 2, alfa: 1, incomplete: 4, attendance_rate: 75 });
+      expect(annualJson.attendance_summary).toMatchObject({ present: 18, sakit: 3, izin: 2, alfa: 1, incomplete: 4, attendance_rate: null, late_rate: 27.78 });
 
       const heb = await app.handle(new Request("http://local/api/analytics/heb?month=8&year=2026", { headers: { cookie } }));
       expect(heb.status).toBe(200);
@@ -191,6 +201,9 @@ describe("analytics and report parity", () => {
       // canonically late (07:30 > 07:25); incidents are facts, so they count as
       // late events while Saturday stays out of the expected-day denominator.
       expect(tardinessJson.totals).toMatchObject({ expected_student_days: 168, late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7, unique_late_days: 3, tracked_school_days: 4, school_impact_rate_pct: 75 });
+      const noRecordedDays = await app.handle(new Request("http://local/api/analytics/tardiness-report?date_from=2027-01-03&date_to=2027-01-03", { headers: { cookie } }));
+      expect(noRecordedDays.status).toBe(200);
+      expect((await noRecordedDays.json() as any).totals).toMatchObject({ expected_student_days: 0, late_events: 0, tracked_school_days: 0, school_impact_rate_pct: null, late_event_rate: null });
       expect(tardinessJson.management_summary).toMatchObject({ late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7 });
       expect(tardinessJson.breakdown_by_class).toEqual(expect.arrayContaining([
         expect.objectContaining({ class_name: "7A", jenjang: "SMP", late_events: 3, affected_students: 3, total_late_minutes: 45 }),
@@ -232,6 +245,8 @@ describe("analytics and report parity", () => {
     expect(roundHalfEven(2.5, 0)).toBe(2);
     expect(roundHalfEven(3.5, 0)).toBe(4);
     expect(roundHalfUp(2.5, 0)).toBe(3);
+    expect(lateAmongPresentRate(10, 90)).toBe(11.11);
+    expect(lateAmongPresentRate(10, 0)).toBeNull();
   });
 
   it("uses canonical jenjang levels for dynamically named report scopes", async () => {
@@ -247,6 +262,41 @@ describe("analytics and report parity", () => {
       const body = await response.json() as any;
       expect(body.executive_summary.total_students).toBeGreaterThan(0);
       expect(body.data_quality.unmapped_levels).not.toContain("Round2 SD");
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+    }
+  }, 30000);
+
+  it("filters reports by class ID when display names repeat and keeps legacy names at the boundary", async () => {
+    const path = `/tmp/operatoros-report-class-id-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-report-class-id-audit-${process.pid}` } });
+    try {
+      const { academicYearId, classIds } = seedManualClassInventory(database.client);
+      const duplicateId = Number(database.client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, (SELECT id FROM academic_grades WHERE name = 'Grade Two' LIMIT 1), 'P1A', 'A2', 1)", [academicYearId]).lastInsertRowid);
+      const enrollmentIds = (database.client.query("SELECT id FROM student_enrollments WHERE academic_year_id = ? AND class_name = '1A' ORDER BY id LIMIT 2").all(academicYearId) as any[]).map((value) => Number(value.id));
+      expect(enrollmentIds).toHaveLength(2);
+      database.client.run("UPDATE student_enrollments SET academic_class_id = ?, class_name = 'P1A' WHERE id = ?", [classIds.P1A!, enrollmentIds[0]!]);
+      database.client.run("UPDATE student_enrollments SET academic_class_id = ?, class_name = 'P1A' WHERE id = ?", [duplicateId, enrollmentIds[1]!]);
+      const cookie = await adminCookie(app);
+      const filtersResponse = await app.handle(new Request(`http://local/api/reports/filters?academic_year_id=${academicYearId}&scope=primary`, { headers: { cookie } }));
+      const filters = await filtersResponse.json() as any;
+      expect(Value.Check(ReportFiltersResponseSchema, filters)).toBe(true);
+      expect(filters.class_options.filter((value: any) => value.name === "P1A").map((value: any) => value.id).sort()).toEqual([classIds.P1A, duplicateId].sort());
+
+      for (const classId of [classIds.P1A, duplicateId]) {
+        const result = await app.handle(new Request(`http://local/api/reports/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_id=${classId}&class_name=1A`, { headers: { cookie } }));
+        expect(result.status).toBe(200);
+        const body = await result.json() as any;
+        expect(body.executive_summary.total_students).toBe(1);
+        expect(body.student_distribution.by_class).toEqual([{ name: "P1A", count: 1, percentage: 100 }]);
+      }
+      const management = await app.handle(new Request(`http://local/api/reports/management/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_id=${duplicateId}`, { headers: { cookie } }));
+      expect((await management.json() as any).metadata.filters).toMatchObject({ class_id: duplicateId, class_name: "P1A" });
+      const legacy = await app.handle(new Request(`http://local/api/reports/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_name=P1A`, { headers: { cookie } }));
+      expect((await legacy.json() as any).executive_summary.total_students).toBe(2);
     } finally {
       database.close();
       rmSync(path, { force: true });
@@ -335,6 +385,7 @@ describe("analytics and report parity", () => {
       const names = workbook.worksheets.map((sheet) => sheet.name);
       expect(names).toEqual(expect.arrayContaining(["Management Summary", "Summary by Jenjang", "Class Breakdown", "Student Details"]));
       const classes = workbook.getWorksheet("Class Breakdown")!;
+      expect(classes.getRow(1).getCell(8).value).toBe("Late Event Rate %");
       const exportedRows = [2, 3, 4, 5, 6].map((rowNumber) => ({
         class_name: String(classes.getRow(rowNumber).getCell(1).value ?? ""),
         late_events: Number(classes.getRow(rowNumber).getCell(4).value ?? 0),
@@ -349,6 +400,7 @@ describe("analytics and report parity", () => {
       expect(metrics.get("late_events")).toBe(json.management_summary.late_events);
       expect(metrics.get("total_late_minutes")).toBe(json.management_summary.total_late_minutes);
       expect(metrics.get("affected_students")).toBe(json.management_summary.affected_students);
+      expect(metrics.get("late_event_rate")).toBe(json.management_summary.late_event_rate);
     } finally {
       database.close();
       rmSync(path, { force: true });

@@ -1,6 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 
 const DateStringSchema = Type.String({ pattern: "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$" });
+const NullableRate = Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]);
 
 export const AttendanceAnalyticsStatusCountsSchema = Type.Object({
   present: Type.Number({ minimum: 0 }),
@@ -53,11 +54,11 @@ export const AttendanceOverviewResponseSchema = Type.Object({
   students: Type.Number({ minimum: 0 }),
   classes: Type.Number({ minimum: 0 }),
   counts: AttendanceAnalyticsStatusCountsSchema,
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
-  tardinessRate: Type.Number({ minimum: 0, maximum: 100 }),
-  unexcusedAbsenceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: NullableRate,
+  tardinessRate: NullableRate,
+  unexcusedAbsenceRate: NullableRate,
   overriddenRecords: Type.Number({ minimum: 0 }),
-  overridePercentage: Type.Number({ minimum: 0, maximum: 100 }),
+  overridePercentage: NullableRate,
   hebTotal: Type.Number({ minimum: 0 }),
   generatedAt: Type.String(),
 });
@@ -67,9 +68,9 @@ export const AttendanceClassRowSchema = Type.Object({
   className: Type.String({ minLength: 1 }),
   students: Type.Number({ minimum: 0 }),
   counts: AttendanceAnalyticsStatusCountsSchema,
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
-  tardinessRate: Type.Number({ minimum: 0, maximum: 100 }),
-  unexcusedAbsenceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: NullableRate,
+  tardinessRate: NullableRate,
+  unexcusedAbsenceRate: NullableRate,
 });
 
 export const AttendanceClassesResponseSchema = Type.Object({
@@ -83,9 +84,9 @@ export const AttendanceJenjangRowSchema = Type.Object({
   jenjang: Type.String({ minLength: 1 }),
   students: Type.Number({ minimum: 0 }),
   counts: AttendanceAnalyticsStatusCountsSchema,
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
-  tardinessRate: Type.Number({ minimum: 0, maximum: 100 }),
-  unexcusedAbsenceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: NullableRate,
+  tardinessRate: NullableRate,
+  unexcusedAbsenceRate: NullableRate,
 });
 
 export const AttendanceJenjangResponseSchema = Type.Object({
@@ -98,7 +99,7 @@ export const AttendanceDailyRowSchema = Type.Object({
   date: DateStringSchema,
   records: Type.Number({ minimum: 0 }),
   counts: AttendanceAnalyticsStatusCountsSchema,
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: NullableRate,
 });
 
 export const AttendanceDailyResponseSchema = Type.Object({
@@ -112,9 +113,9 @@ export const AttendanceStudentRowSchema = Type.Object({
   studentName: Type.String({ minLength: 1 }),
   className: Type.Union([Type.String(), Type.Null()]),
   counts: AttendanceAnalyticsStatusCountsSchema,
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
-  tardinessRate: Type.Number({ minimum: 0, maximum: 100 }),
-  unexcusedAbsenceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: NullableRate,
+  tardinessRate: NullableRate,
+  unexcusedAbsenceRate: NullableRate,
 });
 
 export const AttendanceStudentsResponseSchema = Type.Object({

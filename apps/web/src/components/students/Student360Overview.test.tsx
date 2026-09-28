@@ -25,8 +25,11 @@ describe("Student360Overview", () => {
     await act(async () => { root?.render(<MemoryRouter><Student360Overview overview={overview} exporting={false} exportError={null} onExport={() => undefined} /></MemoryRouter>); });
     expect(container.textContent).toContain("Current student context");
     expect(container.textContent).toContain("Attendance");
+    expect(container.textContent).toContain("Recorded Presence Rate");
     expect(container.textContent).toContain("Academic");
     expect(container.textContent).toContain("Attendance trends");
+    expect(container.textContent).toContain("Late Among Present");
+    expect(container.textContent).toContain("Recorded Alfa Rate");
     expect(container.textContent).toContain("Data completeness");
     expect(container.textContent).toContain("Insufficient comparison data");
     expect(container.querySelector('a[href="/attendance/students/1"]')).not.toBeNull();

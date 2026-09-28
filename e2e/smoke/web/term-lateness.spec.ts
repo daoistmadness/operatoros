@@ -12,7 +12,7 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@lateness canonical cutoff classifies arrivals and drives the tardiness report", async ({ page }) => {
+test("@lateness @critical canonical cutoff classifies arrivals and drives the tardiness report", async ({ page }) => {
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) browserErrors.push(message.text()); });
@@ -73,14 +73,19 @@ test("@lateness canonical cutoff classifies arrivals and drives the tardiness re
   await expect(page.getByRole("heading", { name: "Attendance Cutoff" })).toBeVisible();
   await expect(page.getByText("Primary: 07:30")).toBeVisible();
   await expect(page.getByText("Late Events").first()).toBeVisible();
+  await expect(page.getByText("Late Event Rate", { exact: true })).toBeVisible();
+  await expect(page.getByText("Tardiness Rate", { exact: true })).toHaveCount(0);
   const classRow = page.getByRole("row").filter({ hasText: "Primary 1A" }).last();
   await expect(classRow).toContainText("Primary 1A");
   await expect(classRow).toContainText("00:01");
   const reportJson = await (await page.request.get(`/api/analytics/tardiness-report?date_from=${targetDate}&date_to=2026-08-05`)).json();
   expect(reportJson.totals).toMatchObject({ late_events: 1, affected_students: 1, total_late_minutes: 1, average_late_minutes: 1 });
+  expect(reportJson.totals.late_event_rate).toBeCloseTo(reportJson.totals.late_events / reportJson.totals.expected_student_days * 100);
   expect(reportJson.cutoffs).toEqual(expect.arrayContaining([expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30" })]));
   const classJson = reportJson.breakdown_by_class.find((row: any) => row.class_name === "Primary 1A");
   expect(classJson).toMatchObject({ late_events: 1, affected_students: 1, total_late_minutes: 1 });
+  expect(classJson.late_event_rate).toBeCloseTo(classJson.late_events / classJson.expected_student_days * 100);
+  await expect(classRow).toContainText(`${Number(classJson.late_event_rate).toFixed(1)}%`);
 
   // Scenario F: the summary endpoint and the Excel export reconcile with the report.
   const summaryJson = await (await page.request.get(`/api/analytics/tardiness-report/summary-by-jenjang?date_from=${targetDate}&date_to=2026-08-05`)).json();
