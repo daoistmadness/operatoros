@@ -15,10 +15,12 @@ async function login(page: Page) {
 
 test("@attendance @machine-preview @critical @release previews scan evidence against calendar rules without Alfa inference", async ({ page }) => {
   await login(page);
+  const cutoff = await page.request.put("/api/config/jenjang/Primary", { data: { cutoff_time: "07:30" } });
+  expect(cutoff.status()).toBe(200);
   await page.evaluate(async () => {
     const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
-    for (const date of ["2026-12-14", "2026-12-15"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
+    for (const weekday of [1, 2, 3, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
+    for (const date of ["2026-08-09", "2026-08-16"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
   });
   await page.goto("/upload");
   await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
@@ -29,10 +31,21 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
   await expect(page.getByRole("heading", { name: "Workbook recognized" })).toBeVisible();
   await expect(page.getByText("E2E Ada", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("E2E Unmapped", { exact: true }).first()).toBeVisible();
-  const previewTable = page.getByRole("table", { name: "Machine attendance preview reconciliation, canonical context, and resolution" });
+  const previewTable = page.getByRole("table", { name: "Machine attendance preview, canonical result, source quality, and resolution" });
   await expect(previewTable.getByRole("row").filter({ hasText: "E2E Unmapped" }).getByRole("link", { name: "Review student mapping", exact: true })).toHaveAttribute("href", "/students");
-  await expect(page.getByText("No scan on expected date")).toBeVisible();
-  await expect(page.getByText("No scan on non-school date")).toHaveCount(2);
+  const arrivalRow = previewTable.getByRole("row").filter({ hasText: "E2E Ada" }).filter({ hasText: "2026-08-10" });
+  await expect(arrivalRow).toContainText("Present");
+  await expect(arrivalRow).toContainText("Late · 8 min");
+  await expect(arrivalRow).toContainText("Invalid Scan Out");
+  await expect(arrivalRow).toContainText("Source Terlambat differs from canonical lateness");
+  const expectedNoScan = previewTable.getByRole("row").filter({ hasText: "2026-08-08" }).filter({ hasText: "E2E Ada" });
+  await expect(expectedNoScan).toContainText("No scan");
+  await expect(expectedNoScan).toContainText("Expected");
+  for (const date of ["2026-08-09", "2026-08-16"]) {
+    const nonExpected = previewTable.getByRole("row").filter({ hasText: date });
+    await expect(nonExpected).toContainText("Not expected");
+    await expect(nonExpected).toContainText("Evidence preserved; excluded from expected-day KPI");
+  }
   await expect(page.getByRole("button", { name: "Create 1 attendance records" })).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/automatic attendance status|Import attendance/);
   const apply = page.waitForResponse((response) => response.url().includes("/api/attendance/machine-import/apply") && response.status() === 200);
@@ -42,8 +55,22 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
   await page.goto("/attendance/class-entry?class_id=1&date=2026-08-10");
   await expect(page.getByRole("heading", { name: "Input Absensi Kelas" })).toBeVisible();
   await expect(page.getByRole("row").filter({ hasText: "E2E Ada" })).toBeVisible();
-  const attendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-10")).json()) as { items: Array<{ student_name: string; effective_status: string }> });
-  expect(attendance.items.find((item) => item.student_name === "E2E Ada")?.effective_status).toBe("on-time");
+  const attendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-10")).json()) as { items: Array<{ student_name: string; effective_status: string; scan_in: string | null }> });
+  expect(attendance.items.find((item) => item.student_name === "E2E Ada")).toMatchObject({ effective_status: "late", scan_in: "07:38" });
+
+  await page.goto("/reports/tardiness");
+  await expect(page.getByRole("heading", { name: "Tardiness Report" })).toBeVisible();
+  await page.getByRole("button", { name: "Date Range" }).click();
+  await page.getByLabel("Report start date").fill("2026-08-10");
+  await page.getByLabel("Report end date").fill("2026-08-10");
+  const generated = page.waitForResponse((response) => response.url().includes("/api/analytics/tardiness-report?") && response.status() === 200);
+  await page.getByRole("button", { name: "Generate Report" }).click();
+  await generated;
+  const report = await (await page.request.get("/api/analytics/tardiness-report?date_from=2026-08-10&date_to=2026-08-10")).json();
+  expect(report.totals).toMatchObject({ late_events: 1, total_late_minutes: 8 });
+  await expect(page.getByRole("row").filter({ hasText: "Primary 1A" }).last()).toContainText("00:08");
+  const cutoffRemoved = await page.request.delete("/api/config/jenjang/Primary");
+  expect(cutoffRemoved.status()).toBe(200);
 });
 
 test("@attendance @machine-import-redirect @critical @release redirects the legacy machine-import route to Data Import & Export", async ({ page }) => {
