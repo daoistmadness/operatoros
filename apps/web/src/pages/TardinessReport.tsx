@@ -173,7 +173,7 @@ function ClassLateRateChart({ data }: { data: TardinessClassRow[] }) {
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 print:border-slate-300">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h4 className="font-bold text-slate-800">Late Rate by Class</h4>
+          <h4 className="font-bold text-slate-800">Late Event Rate by Class</h4>
           <p className="text-sm text-slate-500">Late events per expected student-day — a fair comparison across different class sizes.</p>
         </div>
       </div>
@@ -280,7 +280,7 @@ function TardinessReport() {
     late_event_rate: null,
     unique_late_days: 0,
     tracked_school_days: 0,
-    school_impact_rate_pct: 0,
+    school_impact_rate_pct: null,
   };
 
   const managementSummary = report?.management_summary || {
@@ -665,7 +665,7 @@ function TardinessReport() {
               <span className="font-semibold text-slate-800">Interpretation:</span>{' '}
               {managementSummary.late_events} late events affected {managementSummary.affected_students} students with{' '}
               {managementLateTime.text} total late time{managementLateTime.note ? ` (${managementLateTime.note})` : ''} (avg {managementSummary.average_late_minutes_str} per event),{' '}
-              a late rate of {formatLateRate(managementSummary.late_event_rate)} across {managementSummary.expected_student_days} expected student-days.
+              a Late Event Rate of {formatLateRate(managementSummary.late_event_rate)} across {managementSummary.expected_student_days} expected student-days.
             </div>
           </Card>
 
@@ -733,7 +733,7 @@ function TardinessReport() {
                     <th className="py-3 pr-4 font-semibold">Total Late Minutes</th>
                     <th className="py-3 pr-4 font-semibold">Total Late Time</th>
                     <th className="py-3 pr-4 font-semibold">Avg Minutes Late</th>
-                    <th className="py-3 pr-4 font-semibold">Late Rate</th>
+                    <th className="py-3 pr-4 font-semibold">Late Event Rate</th>
                   </tr>
                 </thead>
                 <tbody>

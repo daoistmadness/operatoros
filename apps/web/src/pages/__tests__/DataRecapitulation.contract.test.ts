@@ -24,6 +24,6 @@ describe("data recapitulation page contract", () => {
 
   it("exposes export busy and error states", () => {
     expect(source).toContain("aria-busy={exporting === tab}");
-    expect(source).toContain("Recapitulation export failed.");
+    expect(source).toContain("Population Overview export failed.");
   });
 });

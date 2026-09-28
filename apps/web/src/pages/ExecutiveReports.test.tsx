@@ -18,22 +18,22 @@ vi.mock("chart.js", () => ({
   PointElement: {}, Tooltip: {}, Legend: {},
 }));
 
-const summary = { present: 18, sakit: 2, izin: 1, alfa: 1, incomplete: 3, late_days: 4, late_minutes: 27, attendance_rate: 81.82, late_rate: 18.18 };
+const summary = { present: 18, sakit: 2, izin: 1, alfa: 1, incomplete: 3, late_days: 4, late_minutes: 27, attendance_rate: null, late_rate: 22.22 };
 const report: ExecutiveReport = {
   meta: { report_type: "annual", scope: "combined", academic_year: { id: 2, name: "2025/2026" }, period: { start: "2025-07-01", end: "2026-06-30" }, generated_at: "2026-07-13T00:00:00Z" },
   report_period: { selected_month: "", academic_year_id: 2, academic_year_label: "2025/2026", sections: { attendance: { basis: "academic_year", month_bound: false, label: "Academic Year 2025/2026" }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: "Academic Year 2025/2026" }, academics: { basis: "available_academic_year_records", month_bound: false, label: "Available Academic Records - AY 2025/2026" } } },
-  executive_summary: { total_students: 25, male_students: 0, female_students: 0, attendance_rate: 81.82, late_rate: null, late_minutes: 27, below_kkm_count: 6, data_completeness_rate: 88.5 },
+  executive_summary: { total_students: 25, male_students: 0, female_students: 0, attendance_rate: null, late_rate: 22.22, late_minutes: 27, below_kkm_count: 6, data_completeness_rate: null },
   student_distribution: { by_level: [{ name: "Primary", count: 25, percentage: 100 }], by_class: [{ name: "P1A", count: 25, percentage: 100 }], by_gender: [], by_religion: [], by_domicile: [] },
   attendance_summary: summary,
   attendance_by_level: [{ level: "Primary", ...summary }],
   academic_summary: { availability: false, reason: "No valid grade rows for this selection.", sumatif_average: null, formatif_average: null, below_kkm_count: 0, by_subject: [] },
   trends: [
-    { month: "2025-09", label: "September 2025", ...summary, attendance_denominator: 22, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
-    { month: "2025-07", label: "July 2025", ...summary, attendance_denominator: 22, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
-    { month: "2025-08", label: "August 2025", ...summary, attendance_denominator: 22, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
+    { month: "2025-09", label: "September 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
+    { month: "2025-07", label: "July 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
+    { month: "2025-08", label: "August 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
   ],
-  comparisons: { highest_attendance_month: { name: "September 2025", attendance_rate: 90, attendance_denominator: 20 }, lowest_attendance_month: null, highest_attendance_level: { name: "Primary", attendance_rate: 82, attendance_denominator: 22 }, lowest_attendance_level: null },
-  data_quality: { missing_gender: 25, missing_religion: 25, missing_domicile: 25, incomplete_attendance: 3, empty_grade_cells: 7, unmapped_levels: ["Legacy X"], warnings: ["Demographic fields are unavailable.", "Population is an academic-year enrollment snapshot.", "Monthly academic trends are unavailable."] },
+  comparisons: { highest_attendance_month: null, lowest_attendance_month: null, highest_attendance_level: null, lowest_attendance_level: null },
+  data_quality: { missing_gender: 25, missing_religion: 25, missing_domicile: 25, incomplete_attendance: 3, empty_grade_cells: 7, unmapped_levels: ["Legacy X"], warnings: ["Demographic fields are unavailable.", "Population is an academic-year enrollment snapshot.", "Monthly academic trends are unavailable.", "Attendance Rate is unavailable because the report combines separate sources."] },
 };
 
 const markup = (node: React.ReactNode) => renderToStaticMarkup(<>{node}</>);
@@ -60,7 +60,7 @@ describe("Executive Reports presentation", () => {
 
   it("maps KPI values without recomputing them", () => {
     const html = markup(<ExecutiveSummaryCards report={report} />);
-    expect(html).toContain("Total Students"); expect(html).toContain(">25<"); expect(html).toContain("81.82%"); expect(html).toContain("88.5%");
+    expect(html).toContain("Total Students"); expect(html).toContain(">25<"); expect(html).toContain("22.22%"); expect(html).toContain("Not Available");
   });
 
   it("renders null KPI values as unavailable", () => {

@@ -35,8 +35,8 @@ function fail(set: any, detail: string): { detail: string } {
   return { detail };
 }
 
-function percentage(numerator: number, denominator: number): number {
-  return denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(2)) : 0;
+function rate(numerator: number, denominator: number): number | null {
+  return denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(2)) : null;
 }
 
 function countsFrom(value: Row): AttendanceAnalyticsStatusCounts {
@@ -58,18 +58,18 @@ function totalRecords(counts: AttendanceAnalyticsStatusCounts): number {
 
 // Preserve the existing analytics denominator. Late is attended. Incomplete
 // and raw absent rows remain visible but are outside that denominator.
-function attendanceRate(counts: AttendanceAnalyticsStatusCounts): number {
+function attendanceRate(counts: AttendanceAnalyticsStatusCounts): number | null {
   const denominator = counts.present + counts.late + counts.sakit + counts.izin + counts.alfa;
-  return percentage(counts.present + counts.late, denominator);
+  return rate(counts.present + counts.late, denominator);
 }
 
-function tardinessRate(counts: AttendanceAnalyticsStatusCounts): number {
-  return percentage(counts.late, counts.present + counts.late);
+function tardinessRate(counts: AttendanceAnalyticsStatusCounts): number | null {
+  return rate(counts.late, counts.present + counts.late);
 }
 
-function unexcusedAbsenceRate(counts: AttendanceAnalyticsStatusCounts): number {
+function unexcusedAbsenceRate(counts: AttendanceAnalyticsStatusCounts): number | null {
   const denominator = counts.present + counts.late + counts.sakit + counts.izin + counts.alfa;
-  return percentage(counts.alfa, denominator);
+  return rate(counts.alfa, denominator);
 }
 
 interface AttendanceScope {
@@ -229,7 +229,7 @@ function studentRows(context: AuthContext, scope: AttendanceScope, search: strin
              SUM(CASE WHEN effective_status IS NULL OR effective_status NOT IN ('on-time', 'late', 'incomplete', 'absent', 'sakit', 'izin', 'alfa', 'unrecorded') THEN 1 ELSE 0 END) AS unrecorded
         FROM selected GROUP BY student_id
     ), scored AS (
-      SELECT aggregated.*, CASE WHEN present + late + sakit + izin + alfa = 0 THEN 0 ELSE ROUND(100.0 * (present + late) / (present + late + sakit + izin + alfa), 2) END AS attendance_rate
+        SELECT aggregated.*, CASE WHEN present + late + sakit + izin + alfa = 0 THEN NULL ELSE ROUND(100.0 * (present + late) / (present + late + sakit + izin + alfa), 2) END AS attendance_rate
         FROM aggregated
     )
     SELECT * FROM scored ORDER BY ${order} ${direction}, label ASC, student_id ASC LIMIT ? OFFSET ?`;
@@ -251,7 +251,7 @@ export function attendanceOverview(context: AuthContext, query: Row): Attendance
   const value = aggregate(context, scope, "overview");
   const counts = countsFrom(value);
   const total = totalRecords(counts);
-  return { scope: scopeMetadata(scope, total), totalRecords: total, students: Number(value.students ?? 0), classes: Number(value.classes ?? 0), counts, attendanceRate: attendanceRate(counts), tardinessRate: tardinessRate(counts), unexcusedAbsenceRate: unexcusedAbsenceRate(counts), overriddenRecords: Number(value.overridden ?? 0), overridePercentage: percentage(Number(value.overridden ?? 0), total), hebTotal: hebTotal(context, scope), generatedAt: new Date().toISOString() };
+  return { scope: scopeMetadata(scope, total), totalRecords: total, students: Number(value.students ?? 0), classes: Number(value.classes ?? 0), counts, attendanceRate: attendanceRate(counts), tardinessRate: tardinessRate(counts), unexcusedAbsenceRate: unexcusedAbsenceRate(counts), overriddenRecords: Number(value.overridden ?? 0), overridePercentage: rate(Number(value.overridden ?? 0), total), hebTotal: hebTotal(context, scope), generatedAt: new Date().toISOString() };
 }
 
 export function attendanceStudentSummary(context: AuthContext, query: Row, studentId: number): Row | null {
@@ -345,30 +345,30 @@ export function attendanceAnalyticsRoutes(app: any, context: AuthContext): void 
     const summary = addWorksheet(workbook, "Summary");
     appendRow(summary, ["Metric", "Value"]); appendRow(summary, ["Date range", `${scope.dateFrom} – ${scope.dateTo}`]); appendRow(summary, ["Academic year", scope.academicYearLabel]); appendRow(summary, ["Total records", total]);
     for (const [label, amount] of [["Present", counts.present], ["Late", counts.late], ["Incomplete", counts.incomplete], ["Absent", counts.absent], ["Sakit", counts.sakit], ["Izin", counts.izin], ["Alfa", counts.alfa], ["Unrecorded", counts.unrecorded]] as const) appendRow(summary, [label, amount]);
-    appendRow(summary, ["Attendance rate %", attendanceRate(counts)]); appendRow(summary, ["Tardiness rate %", tardinessRate(counts)]); appendRow(summary, ["Unexcused absence rate %", unexcusedAbsenceRate(counts)]); appendRow(summary, ["Override-corrected records", Number(value.overridden ?? 0)]); appendRow(summary, ["HEB total", hebTotal(context, scope)]);
+    appendRow(summary, ["Recorded Presence Rate %", attendanceRate(counts)]); appendRow(summary, ["Late Among Present %", tardinessRate(counts)]); appendRow(summary, ["Unexcused Absence Rate %", unexcusedAbsenceRate(counts)]); appendRow(summary, ["Override-corrected records", Number(value.overridden ?? 0)]); appendRow(summary, ["HEB total", hebTotal(context, scope)]);
     styleHeader(summary); autoSizeColumns(summary, 16, 34);
 
     const classRows = groupedRows(context, scope, "class");
     const classSheet = addWorksheet(workbook, "By Class");
-    appendRow(classSheet, ["Class", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Attendance rate %", "Tardiness rate %", "Unexcused absence rate %"]);
+    appendRow(classSheet, ["Class", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
     for (const value of classRows) appendRow(classSheet, [value.className, value.students, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
     styleHeader(classSheet); autoSizeColumns(classSheet, 10, 22);
 
     const jenjangRows = groupedRows(context, scope, "jenjang");
     const jenjangSheet = addWorksheet(workbook, "By Jenjang");
-    appendRow(jenjangSheet, ["Jenjang", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Attendance rate %", "Tardiness rate %", "Unexcused absence rate %"]);
+    appendRow(jenjangSheet, ["Jenjang", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
     for (const value of jenjangRows) appendRow(jenjangSheet, [value.jenjang, value.students, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
     styleHeader(jenjangSheet); autoSizeColumns(jenjangSheet, 10, 22);
 
     const dailyRows = groupedRows(context, scope, "daily");
     const dailySheet = addWorksheet(workbook, "Daily");
-    appendRow(dailySheet, ["Date", "Records", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Attendance rate %"]);
+    appendRow(dailySheet, ["Date", "Records", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %"]);
     for (const value of dailyRows) appendRow(dailySheet, [value.date, value.records, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate]);
     styleHeader(dailySheet); autoSizeColumns(dailySheet, 12, 20);
 
     const students = studentRows(context, scope, "", "name", "ASC", 1, 200).rows;
     const studentSheet = addWorksheet(workbook, "By Student");
-    appendRow(studentSheet, ["Student", "Class", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Attendance rate %", "Tardiness rate %", "Unexcused absence rate %"]);
+    appendRow(studentSheet, ["Student", "Class", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
     for (const value of students) appendRow(studentSheet, [value.studentName, value.className ?? "No class", value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
     styleHeader(studentSheet); autoSizeColumns(studentSheet, 12, 22);
 

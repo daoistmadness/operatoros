@@ -5396,6 +5396,19 @@
             "title": "Scopes",
             "type": "array"
           },
+          "class_options": {
+            "items": {
+              "properties": {
+                "id": { "minimum": 1, "title": "Id", "type": "integer" },
+                "name": { "title": "Name", "type": "string" }
+              },
+              "required": ["id", "name"],
+              "title": "ClassOption",
+              "type": "object"
+            },
+            "title": "Class Options",
+            "type": "array"
+          },
           "subjects": {
             "items": {
               "$ref": "#/components/schemas/SubjectOption"
@@ -5410,6 +5423,7 @@
           "months",
           "scopes",
           "classes",
+          "class_options",
           "subjects"
         ],
         "title": "ReportFiltersResponse",
@@ -22691,6 +22705,16 @@
           },
           {
             "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
             "name": "class_name",
             "required": false,
             "schema": {
@@ -22807,6 +22831,16 @@
               ],
               "title": "Format",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
             }
           },
           {
@@ -23007,6 +23041,16 @@
           },
           {
             "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
             "name": "class_name",
             "required": false,
             "schema": {
@@ -23136,6 +23180,16 @@
           },
           {
             "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
             "name": "class_name",
             "required": false,
             "schema": {
@@ -23246,6 +23300,16 @@
               ],
               "title": "Scope",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
             }
           },
           {
@@ -23375,6 +23439,16 @@
               ],
               "title": "Format",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "class_id",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "title": "Class Id",
+              "type": "integer"
             }
           },
           {

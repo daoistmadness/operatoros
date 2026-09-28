@@ -13,11 +13,6 @@ export const useExecutiveReport = (type: ReportType, query: ReportQuery | null) 
   enabled: query !== null,
 });
 
-export const useManagementReportFilters = (academicYearId: number | null, scope: ReportScope) => useQuery({
-  queryKey: queryKeys.managementReports.metadata(academicYearId, scope),
-  queryFn: () => getReportFilters({ academic_year_id: academicYearId, scope }),
-});
-
 export const useMonthlyManagementReport = (query: ReportQuery | null) => useQuery({
   queryKey: query ? queryKeys.managementReports.monthly(query) : [...queryKeys.managementReports.all, "idle"],
   queryFn: () => getMonthlyManagementReport(query as ReportQuery),

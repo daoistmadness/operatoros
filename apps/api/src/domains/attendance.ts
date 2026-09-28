@@ -274,7 +274,7 @@ function scopedRoutes(app: any, context: AuthContext): void {
     for (const value of values) { const entry = students.get(Number(value.student_id)) ?? { name: String(value.student_name), days: [] }; if (value.date) entry.days.push(value); students.set(Number(value.student_id), entry); }
     const workbook = createWorkbook({ exportType: "assigned-class-attendance" });
     const recap = addWorksheet(workbook, "Rekap Siswa");
-    appendRow(recap, ["Siswa", "Hadir", "Terlambat", "Absen", "Tidak Lengkap", "Sakit", "Izin", "Alfa", "HEB", "Tingkat Kehadiran"]);
+    appendRow(recap, ["Siswa", "Hadir", "Terlambat", "Absen", "Tidak Lengkap", "Sakit", "Izin", "Alfa", "HEB", "Kehadiran Tercatat / HEB"]);
     for (const [studentId, entry] of students) {
       const count = (target: string) => entry.days.filter((value) => statusOf(value) === target).length;
       const attended = entry.days.filter((value) => statusOf(value) !== "absent" && statusOf(value) !== "unrecorded").length;
