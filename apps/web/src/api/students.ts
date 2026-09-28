@@ -129,6 +129,26 @@ export async function commitStudentUpdate(batchId: string, payload: unknown) {
   return (await apiRequest({ path: `/api/student-masters/management/update-commit/${batchId}`, method: "POST", body: payload })).data;
 }
 
+export async function fetchStudentUpdateHistory() {
+  return (await apiRequest({ path: "/api/student-masters/management/import-history", params: { page_size: 25 } })).data as { items: any[] };
+}
+
+export async function fetchStudentUpdateSession(batchId: string) {
+  return (await apiRequest({ path: `/api/student-masters/management/imports/${batchId}` })).data as any;
+}
+
+export async function downloadStudentUpdateResult(batchId: string): Promise<Blob> {
+  return (await apiRequest<Blob>({ path: `/api/student-masters/management/imports/${batchId}/result.xlsx`, responseType: "blob", expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] })).data;
+}
+
+export async function previewStudentUpdateRollback(sessionId: string) {
+  return (await apiRequest({ path: `/api/student-import-sessions/${sessionId}/rollback-preview`, method: "POST" })).data as any;
+}
+
+export async function commitStudentUpdateRollback(sessionId: string, payload: unknown) {
+  return (await apiRequest({ path: `/api/student-import-sessions/${sessionId}/rollback`, method: "POST", body: payload })).data as any;
+}
+
 export async function exportStudentTemplate(): Promise<Blob> {
   return (await apiRequest<Blob>({
     path: "/api/student-masters/management/export-template", responseType: "blob",

@@ -3,6 +3,7 @@ import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
+import { restoreStudentUpdate, studentUpdateState } from "./student-update-rollback";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -51,7 +52,12 @@ function preview(context: AuthContext, session: Row, user: Row): Row {
   for (const action of actions) {
     let eligibility = "ELIGIBLE"; let conflictCode: string | null = null; let reason: string | null = null;
     if (action.rollback_state === "APPLIED") { eligibility = "ALREADY_COMPENSATED"; conflictCode = "ACTION_ALREADY_COMPENSATED"; reason = "This action has already been compensated in a prior rollback."; compensated++; }
-    else if (action.entity_type === "STUDENT_MASTER" || action.action_type === "CREATE_STUDENT_MASTER") {
+    else if (action.action_type === "UPDATE_STUDENT_DATA") {
+      students.add(String(action.entity_id));
+      const after = parse(action.after_state);
+      const current = after && studentUpdateState(context, String(action.entity_id), after.fields, after.academicYearId);
+      if (!after || !current || canonical(current) !== canonical(after)) { eligibility = "BLOCKED"; conflictCode = "STUDENT_CHANGED_AFTER_IMPORT"; reason = "Student data changed after this update. Review the current record before rollback."; }
+    } else if (action.entity_type === "STUDENT_MASTER" || action.action_type === "CREATE_STUDENT_MASTER") {
       students.add(String(action.entity_id)); const student = row(context, "SELECT id FROM student_masters WHERE id = ?", [action.entity_id]);
       if (!student) { eligibility = "BLOCKED"; conflictCode = "STUDENT_NOT_FOUND"; reason = "Student master record no longer exists."; }
       else {
@@ -113,7 +119,14 @@ function commitRollback(context: AuthContext, session: Row, user: Row, body: Row
       for (const action of actions) {
         if (body.mode === "SELECTED_ACTIONS" && Array.isArray(body.selected_action_ids) && body.selected_action_ids.length && !body.selected_action_ids.map(Number).includes(Number(action.id))) continue;
         if (action.rollback_state === "APPLIED") continue;
-        if (action.action_type === "CREATE_STUDENT_MASTER") {
+        if (action.action_type === "UPDATE_STUDENT_DATA") {
+          const before = parse(action.before_state); const after = parse(action.after_state);
+          if (!before || !after || canonical(studentUpdateState(context, String(action.entity_id), after.fields, after.academicYearId)) !== canonical(after)) throw new Error("STUDENT_UPDATE_CHANGED");
+          restoreStudentUpdate(context, before, after, user.username, String(body.reason));
+          const restored = studentUpdateState(context, String(action.entity_id), after.fields, after.academicYearId);
+          const id = appendCompensation(context, session, user, action, "COMPENSATE_UPDATE_STUDENT_DATA", "STUDENT_MASTER", String(action.entity_id), after, restored, "RESTORE_STUDENT_UPDATE");
+          compensated++; compensationActions.push(id);
+        } else if (action.action_type === "CREATE_STUDENT_MASTER") {
           const student = row(context, "SELECT * FROM student_masters WHERE id = ?", [action.entity_id]);
           const device = student ? row(context, "SELECT legacy_student_id FROM student_device_identities WHERE student_master_id = ? LIMIT 1", [student.id]) : null;
           const attendanceCount = device?.legacy_student_id == null ? 0 : Number((row(context, "SELECT COUNT(*) AS count FROM attendance WHERE student_id = ?", [device.legacy_student_id]) as Row).count);
