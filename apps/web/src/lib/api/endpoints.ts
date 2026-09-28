@@ -59,7 +59,7 @@ export type TardinessTotals = {
   late_event_rate: number | null;
   unique_late_days: number;
   tracked_school_days: number;
-  school_impact_rate_pct: number;
+  school_impact_rate_pct: number | null;
 };
 export type TardinessManagementSummary = Pick<
   TardinessTotals,

@@ -25,12 +25,12 @@ export interface AnalyticsQuery {
 const METRIC_DEFINITIONS: AnalyticsMetricDefinition[] = [
   {
     id: "attendance_rate",
-    label: "Attendance rate",
+    label: "Attendance Rate",
     unit: "percent",
-    numerator: "present attendance records plus late attendance records",
-    denominator: "present, sick, excused, and unexplained absence records",
+    numerator: "Hadir on expected student-days",
+    denominator: "Expected Student-Days from Attendance Calendar and date-effective Enrollment",
     rounding: "round half even to one decimal place",
-    missing_data: "null when the denominator is zero",
+    missing_data: "unavailable until this legacy endpoint uses Attendance Calendar and date-effective Enrollment",
   },
   {
     id: "grade_average",
@@ -73,11 +73,12 @@ export function roundHalfEven(value: number, decimals = 1): number {
 }
 
 function metricValue(
-  numerator: number,
-  denominator: number,
+  numerator: number | null,
+  denominator: number | null,
   unit: AnalyticsMetricValue["unit"],
   value: number | null = null,
 ): AnalyticsMetricValue {
+  if (numerator === null || denominator === null) return { value: null, numerator: null, denominator: null, unit, status: "unavailable" };
   if (denominator === 0) return { value: null, numerator, denominator, unit, status: "unavailable" };
   const calculated = value ?? numerator / denominator;
   const rounded = unit === "percent" ? roundHalfEven(calculated * 100, 1) : roundHalfEven(calculated, 1);
@@ -156,35 +157,20 @@ function aggregateGrades(context: AuthContext, query: AnalyticsQuery, where: str
     WHERE ${gradeWhere.join(" AND ")}`, params) ?? { score_sum: 0, score_count: 0 };
 }
 
-function cohortData(context: AuthContext, query: AnalyticsQuery, dimension: "class" | "jenjang", range: { startDate: string; endDate: string }, where: string[], params: unknown[]): AnalyticsCohort[] {
+function cohortData(context: AuthContext, query: AnalyticsQuery, dimension: "class" | "jenjang", where: string[], params: unknown[]): AnalyticsCohort[] {
   const classLabel = "COALESCE(c.class_name, e.class_name, s.class_name)";
   const group = dimension === "class" ? `${classLabel}, e.academic_class_id, j.id, j.name` : "j.id, j.name";
   const select = dimension === "class"
     ? `${classLabel} AS label, e.academic_class_id AS cohort_id, j.id AS jenjang_id`
     : "j.name AS label, j.id AS cohort_id, j.id AS jenjang_id";
-  const attendanceRows = rows(context, `SELECT ${select}, COUNT(DISTINCT e.student_id) AS student_count,
-      COALESCE(SUM(CASE WHEN a.id IS NOT NULL AND COALESCE(o.override_status, a.status) IN ('on-time', 'late') THEN 1 ELSE 0 END), 0) AS present,
-      COALESCE(SUM(CASE WHEN a.id IS NOT NULL AND COALESCE(o.override_status, a.status) = 'late' THEN 1 ELSE 0 END), 0) AS late
+  const attendanceRows = rows(context, `SELECT ${select}, COUNT(DISTINCT e.student_id) AS student_count
     FROM student_enrollments e
     JOIN students s ON s.id = e.student_id
     JOIN jenjangs j ON j.id = e.jenjang_id
     LEFT JOIN academic_classes c ON c.id = e.academic_class_id
-    LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date >= ? AND a.date <= ?
-    LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
     WHERE ${where.join(" AND ")}
     GROUP BY ${group}
-    ORDER BY label`, [range.startDate, range.endDate, ...params]);
-  const absenceWhere = where.filter((value) => value !== "e.academic_year_id = ?");
-  const start = Number(range.startDate.slice(0, 4)) * 100 + Number(range.startDate.slice(5, 7));
-  const end = Number(range.endDate.slice(0, 4)) * 100 + Number(range.endDate.slice(5, 7));
-  const absenceRows = rows(context, `SELECT ${select}, COALESCE(SUM(ar.sakit), 0) AS sakit, COALESCE(SUM(ar.izin), 0) AS izin, COALESCE(SUM(ar.alfa), 0) AS alfa
-    FROM absence_reasons ar
-    JOIN student_enrollments e ON e.student_id = ar.student_id AND e.academic_year_id = ?
-    JOIN students s ON s.id = e.student_id
-    JOIN jenjangs j ON j.id = e.jenjang_id
-    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
-    WHERE (ar.year * 100 + ar.month) BETWEEN ? AND ?${absenceWhere.length ? ` AND ${absenceWhere.join(" AND ")}` : ""}
-    GROUP BY ${group}`, [query.academic_year_id, start, end, ...params.slice(1)]);
+    ORDER BY label`, params);
   const gradeWhere = [...where, "g.score IS NOT NULL"];
   if (query.subject_id !== undefined) gradeWhere.push("g.subject_id = ?");
   const gradeRows = rows(context, `SELECT ${select}, COALESCE(SUM(g.score), 0) AS score_sum, COUNT(g.score) AS score_count
@@ -196,23 +182,16 @@ function cohortData(context: AuthContext, query: AnalyticsQuery, dimension: "cla
     WHERE ${gradeWhere.join(" AND ")}
     GROUP BY ${group}`, [...params, ...(query.subject_id === undefined ? [] : [query.subject_id])]);
   const key = (value: Row) => dimension === "class" ? `${value.jenjang_id}|${value.label ?? ""}` : String(value.cohort_id);
-  const absenceByKey = new Map(absenceRows.map((value) => [key(value), value]));
   const gradeByKey = new Map(gradeRows.map((value) => [key(value), value]));
   return attendanceRows.map((value) => {
-    const absence = absenceByKey.get(key(value)) ?? {};
     const grade = gradeByKey.get(key(value)) ?? {};
-    const present = Number(value.present ?? 0);
-    const sakit = Number(absence.sakit ?? 0);
-    const izin = Number(absence.izin ?? 0);
-    const alfa = Number(absence.alfa ?? 0);
-    const attendanceDenominator = present + sakit + izin + alfa;
     const scoreCount = Number(grade.score_count ?? 0);
     return {
       dimension,
       id: dimension === "class" ? (value.cohort_id === null ? null : Number(value.cohort_id)) : Number(value.cohort_id),
       label: String(value.label || "Unknown"),
       student_count: Number(value.student_count ?? 0),
-      attendance_rate: metricValue(present, attendanceDenominator, "percent"),
+      attendance_rate: metricValue(null, null, "percent"),
       grade_average: metricValue(Number(grade.score_sum ?? 0), scoreCount, "score"),
     };
   });
@@ -229,14 +208,13 @@ function baseData(context: AuthContext, query: AnalyticsQuery): { filters: Analy
   const alfa = Number(absence.alfa ?? 0);
   const grade = aggregateGrades(context, query, where, params);
   const studentCount = row(context, `SELECT COUNT(DISTINCT e.student_id) AS count FROM student_enrollments e JOIN students s ON s.id = e.student_id LEFT JOIN academic_classes c ON c.id = e.academic_class_id WHERE ${where.join(" AND ")}`, params);
-  const attendanceDenominator = present + sakit + izin + alfa;
   return {
     filters,
     range: { startDate: range.startDate, endDate: range.endDate },
     summary: {
       student_count: Number(studentCount?.count ?? 0),
       attendance_counts: { present, sakit, izin, alfa, late: Number(attendance.late ?? 0) },
-      attendance_rate: metricValue(present, attendanceDenominator, "percent"),
+      attendance_rate: metricValue(null, null, "percent"),
       grade_average: metricValue(Number(grade.score_sum ?? 0), Number(grade.score_count ?? 0), "score"),
     },
   };
@@ -251,8 +229,8 @@ export function analyticsOverview(context: AuthContext, query: AnalyticsQuery): 
     metric_definitions: METRIC_DEFINITIONS,
     summary: data.summary,
     cohorts: [
-      ...cohortData(context, query, "jenjang", data.range, scoped.where, scoped.params),
-      ...cohortData(context, query, "class", data.range, scoped.where, scoped.params),
+      ...cohortData(context, query, "jenjang", scoped.where, scoped.params),
+      ...cohortData(context, query, "class", scoped.where, scoped.params),
     ],
   };
 }
@@ -269,39 +247,12 @@ export function analyticsTrends(context: AuthContext, query: AnalyticsQuery): An
   const data = baseData(context, query);
   const scoped = filterContext(context, query);
   const months = monthStarts(data.range.startDate, data.range.endDate);
-  const attendanceWhere = [...scoped.where, "a.date >= ?", "a.date <= ?"];
-  const attendanceRows = rows(context, `SELECT strftime('%Y-%m', a.date) AS period,
-      COALESCE(SUM(CASE WHEN COALESCE(o.override_status, a.status) IN ('on-time', 'late') THEN 1 ELSE 0 END), 0) AS present
-    FROM attendance a
-    JOIN student_enrollments e ON e.student_id = a.student_id AND e.academic_year_id = ?
-    JOIN students s ON s.id = e.student_id
-    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
-    LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
-    WHERE ${attendanceWhere.join(" AND ")}
-    GROUP BY period`, [query.academic_year_id, ...scoped.params, data.range.startDate, data.range.endDate]);
-  const absenceRows = rows(context, `SELECT printf('%04d-%02d', ar.year, ar.month) AS period,
-      COALESCE(SUM(ar.sakit), 0) AS sakit, COALESCE(SUM(ar.izin), 0) AS izin, COALESCE(SUM(ar.alfa), 0) AS alfa
-    FROM absence_reasons ar
-    JOIN student_enrollments e ON e.student_id = ar.student_id AND e.academic_year_id = ?
-    JOIN students s ON s.id = e.student_id
-    LEFT JOIN academic_classes c ON c.id = e.academic_class_id
-    WHERE (ar.year * 100 + ar.month) BETWEEN ? AND ?${scoped.where.length > 1 ? ` AND ${scoped.where.slice(1).join(" AND ")}` : ""}
-    GROUP BY period`, [query.academic_year_id, Number(data.range.startDate.slice(0, 7).replace("-", "")), Number(data.range.endDate.slice(0, 7).replace("-", "")), ...scoped.params.slice(1)]);
-  const attendanceByMonth = new Map(attendanceRows.map((value) => [String(value.period), value]));
-  const absenceByMonth = new Map(absenceRows.map((value) => [String(value.period), value]));
   const points: AnalyticsTrendPoint[] = months.map((period) => {
-    const attendance = attendanceByMonth.get(period) ?? {};
-    const absence = absenceByMonth.get(period) ?? {};
-    const present = Number(attendance.present ?? 0);
-    const sakit = Number(absence.sakit ?? 0);
-    const izin = Number(absence.izin ?? 0);
-    const alfa = Number(absence.alfa ?? 0);
-    const denominator = present + sakit + izin + alfa;
     const end = new Date(`${period}-01T00:00:00Z`);
     end.setUTCMonth(end.getUTCMonth() + 1, 0);
     const monthStart = period === data.range.startDate.slice(0, 7) ? data.range.startDate : `${period}-01`;
     const monthEnd = period === data.range.endDate.slice(0, 7) ? data.range.endDate : end.toISOString().slice(0, 10);
-    return { period, start_date: monthStart, end_date: monthEnd, metric: metricValue(present, denominator, "percent") };
+    return { period, start_date: monthStart, end_date: monthEnd, metric: metricValue(null, null, "percent") };
   });
   return { contract_version: "analytics.v1", filters: data.filters, metric_definitions: METRIC_DEFINITIONS, series: [{ metric_id: "attendance_rate", time_grain: "month", points }] };
 }
@@ -309,5 +260,5 @@ export function analyticsTrends(context: AuthContext, query: AnalyticsQuery): An
 export function analyticsCohorts(context: AuthContext, query: AnalyticsQuery, dimension: "class" | "jenjang"): AnalyticsCohortsResponse {
   const data = baseData(context, query);
   const scoped = filterContext(context, query);
-  return { contract_version: "analytics.v1", filters: data.filters, metric_definitions: METRIC_DEFINITIONS, dimension, cohorts: cohortData(context, query, dimension, data.range, scoped.where, scoped.params) };
+  return { contract_version: "analytics.v1", filters: data.filters, metric_definitions: METRIC_DEFINITIONS, dimension, cohorts: cohortData(context, query, dimension, scoped.where, scoped.params) };
 }

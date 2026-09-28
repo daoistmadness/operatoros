@@ -172,7 +172,7 @@ describe("attendance analytics expansion", () => {
       expect((await options.json() as any).classes.length).toBe(2);
       const empty = await value.app.handle(new Request("http://local/api/analytics/attendance/overview?academic_year_id=1&date_from=2026-09-01&date_to=2026-09-30", { headers: { cookie: value.admin.cookie } }));
       expect(empty.status).toBe(200);
-      expect((await empty.json() as any).totalRecords).toBe(0);
+      expect(await empty.json()).toMatchObject({ totalRecords: 0, attendanceRate: null, tardinessRate: null, unexcusedAbsenceRate: null, overridePercentage: null });
     } finally {
       value.cleanup();
     }

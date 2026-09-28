@@ -2,6 +2,7 @@ import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, safeExportFil
 import { randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
+import { calculateHeb } from "./heb";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -82,13 +83,6 @@ function monthLabel(key: string): string {
   return `${String(month).padStart(2, "0")}/${year}`;
 }
 
-function hebValue(context: AuthContext, jenjang: string, key: string, observed: number): number {
-  const [year, month] = key.split("-").map(Number);
-  const override = rows(context, "SELECT heb_value FROM heb_overrides WHERE jenjang = ? AND month = ? AND year = ?", [jenjang, month, year]);
-  if (override.length && override[0]) return Number(override[0].heb_value);
-  return observed;
-}
-
 export function studentAttendanceExportRoutes(app: any, context: AuthContext): void {
   app.get("/api/student-masters/:student_master_id/attendance-history/export-excel", async (ctx: Context) => {
     const { set, params, query } = ctx;
@@ -121,7 +115,8 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
       const incomplete = status((value) => effectiveStatus(value) === "incomplete");
       const absent = status((value) => effectiveStatus(value) === "absent");
       const attended = present + late;
-      const heb = hebValue(context, jenjang, key, attended);
+      const [year, month] = key.split("-").map(Number);
+      const heb = Number(calculateHeb(context, jenjang, month!, year!).heb);
       const legacy = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id IN (" + studentIds.map(() => "?").join(",") + ") AND month = ? AND year = ?", [...studentIds, Number(key.slice(5, 7)), Number(key.slice(0, 4))])[0];
       const category = (name: "sakit" | "izin" | "alfa") => status((value) => effectiveStatus(value) === name) || Number(legacy?.[name] ?? 0);
       return {
@@ -138,7 +133,7 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
 
     const workbook = createWorkbook({ exportType: "student-attendance-history" });
     const recapSheet = addWorksheet(workbook, "Rekap Bulanan");
-    appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Sakit", "Izin", "Alfa", "HEB", "Tingkat Kehadiran"]);
+    appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Sakit", "Izin", "Alfa", "HEB", "Recorded Presence / HEB"]);
     for (const item of recap) {
       appendRow(recapSheet, [item.month_label, item.present, item.late, item.incomplete, item.absent, item.sakit, item.izin, item.alfa, item.heb, item.attendance_rate ?? ""]);
     }

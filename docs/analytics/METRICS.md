@@ -1,89 +1,114 @@
-# OperatorOS metric reference
+# OperatorOS metric and filter contract
 
-These definitions apply to the Phase 16 canonical analytics routes.
+This file is the live authority for Analytics & Reports metric names,
+formulas, denominators, missing data, and source limits. Server services own
+the calculations. Web pages and exports format returned values.
 
-## Attendance Analytics Expansion
+## Canonical attendance and lateness registry
 
-The attendance expansion uses one event-level source. It joins attendance to
-the selected academic enrollment for the attendance date. An enrollment is
-selected once per attendance event. This prevents duplicate counting when
-enrollment history overlaps.
+| User-facing name | Stable key | Numerator | Denominator | Unit and zero behavior | Missing/unknown data | Canonical owner | Allowed alternate name | Source limits |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Expected Student-Days | `expected_student_days` | Not applicable | Not applicable | Student-Day count; zero is valid | Unknown calendar dates are reported separately and excluded from known expected-day totals | `term-attendance` via Attendance Calendar and date-effective Enrollment | None | Never estimate from recorded status counts or current class size |
+| Hadir | `hadir_count` | Expected-day records with effective status `on-time` or `late` | Not applicable | Student-Day count; zero is valid | Unrecorded expected days are separate; unknown statuses are reported as other status | `term-attendance` | Present, only where existing English UI requires it | Late remains Hadir |
+| Attendance Rate | `attendance_rate` | Hadir | Expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days remain in the denominator; unknown calendar dates are disclosed separately | `term-attendance` | None | Attendance Calendar plus date-effective Enrollment define expected days |
+| Coverage | `coverage_rate` | Recorded expected Student-Days | Expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days reduce coverage; unknown calendar dates are disclosed separately | `term-attendance` | Recording Coverage | Coverage measures records, not attendance presence |
+| Late Events | `late_events` | Attendance events classified as late under canonical Term Lateness rules | Not applicable | Event count; zero is valid | Events without usable duration remain events and are counted separately | `term-lateness` | Late arrivals, only in descriptive copy | A non-expected-day late event may still be counted; it does not add an expected day |
+| Students Affected | `affected_students` | Distinct students with one or more Late Events | Not applicable | Student count; zero is valid | Depends on canonical event and student identity resolution | `term-lateness` | None | Distinct students, not event count |
+| Total Late Minutes | `total_late_minutes` | Sum of known late-event durations | Not applicable | Minute count; zero is valid | Unknown-duration events are reported separately; zero can mean no known minutes | `term-lateness` | None | Does not infer missing duration |
+| Average Late Minutes | `average_late_minutes` | Total Late Minutes | Late Events with known duration | Minutes per event; null when denominator is zero | Events with unknown duration are excluded from this denominator | `term-lateness` | Average Minutes Late | Not the average across all late events when some durations are unknown |
+| Late Event Rate | `late_event_rate` | Late Events | Expected Student-Days | Percent; null when denominator is zero | Unknown calendar dates are disclosed separately | `term-lateness` | None | Management-facing canonical rate; not Late Events divided by Hadir |
+| Late Among Present | `late_among_present` | Late attendance events | Hadir attendance events (`on-time` plus `late`) | Percent; null when Hadir is zero | Missing attendance rows are not in this event-only denominator | Attendance Analytics, Student Trends, Student Indicators, and Executive Reports where retained | None | Valid distinct legacy `late_days / present` ratio: both values count attendance events. Never label it Late Event Rate or Tardiness Rate |
+| Late-affected recorded-day rate | `school_impact_rate_pct` (legacy API field) | Distinct dates with at least one late event | Distinct dates with any non-skipped attendance record | Percent; null when denominator is zero | Dates without recorded attendance are excluded | Legacy Tardiness Report service | None | Compatibility field only; denominator is recorded dates, not Attendance Calendar days or Expected Student-Days |
+| Recorded Presence Rate | `recorded_presence_rate` (legacy DTO fields may retain `attendance_rate`) | `on-time` plus `late` attendance events | `on-time` + `late` + `sakit` + `izin` + `alfa` recorded events | Percent; null when denominator is zero | Incomplete, Absent, Unrecorded, and unrecorded expected days are not in the denominator | Attendance Analytics; reused by Class Overview and Management Overview | None | Recorded-status ratio; it is not canonical Attendance Rate |
+| Recorded Attendance Rate | `recorded_attendance_rate` | Hadir | Recorded expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days are excluded by definition | `term-attendance` | None | API-only compatibility metric; do not label it Attendance Rate |
+| Recorded Presence / HEB | `student_presence_heb` (legacy DTO field `attendance_rate`) | Student `on-time` plus `late` events | Monthly HEB override, or legacy median estimate from the five highest student check-in counts in the jenjang | Ratio; null when HEB is zero | Missing attendance events do not create a numerator; missing HEB gives unavailable | Shared `heb` helper, Student Profile API, and Student Attendance Excel export | None | Legacy estimate, not Expected Student-Days; not comparable to canonical Attendance Rate |
+| Recorded Presence / Class Days | `class_recorded_presence` (legacy class-export cell) | Student `on-time` plus `late` events | Distinct class dates with attendance rows, or the manual monthly HEB override | Ratio; blank when denominator is zero | Dates without any class attendance row are excluded; incomplete and unrecorded events do not enter the numerator | Assigned Class Attendance Excel export | None | Legacy class-day denominator; differs from Student Profile's HEB estimate and is not Expected Student-Days |
+| Grade Average | `grade_average` | Sum of non-null `student_subject_grades.score` values | Count of non-null grade scores | Score; null when no score exists | Null scores are excluded, not treated as zero | Academic Analytics | Average Score | Academic-year scope; grade rows have no date field |
 
-### Effective status
+`term-attendance` counts Late within Hadir. The canonical Attendance Rate is
+Hadir divided by Expected Student-Days. Its denominator includes expected
+days recorded as Hadir, Sakit, Izin, Alfa, or Unrecorded.
 
-Every count uses `COALESCE(attendance_overrides.override_status,
-attendance.status)`. An override is authoritative. The API reports
-`on-time` as Present and keeps `late`, `incomplete`, `absent`, `sakit`,
-`izin`, and `alfa` as separate statuses. Null or unknown statuses are
-reported as Unrecorded.
+The canonical Attendance Rate and Late Event Rate return `null` when their
+Expected Student-Days denominator is zero. Web displays use the existing
+unavailable convention (`—` or `Not Available`). APIs do not substitute zero.
 
-### Attendance expansion rates
+The Attendance Analytics expansion still exposes compatible DTO fields such
+as `attendanceRate` and `tardinessRate`. Their current displayed names are
+Recorded Presence Rate and Late Among Present, matching their event-only
+formulas. DTO field names remain compatibility identifiers.
 
-- Attendance rate = `(Present + Late) / (Present + Late + Sakit + Izin + Alfa) * 100`.
-- Late counts as attended.
-- Tardiness rate = `Late / (Present + Late) * 100`.
-- Unexcused absence rate = `Alfa / (Present + Late + Sakit + Izin + Alfa) * 100`.
-- Incomplete, Absent, and Unrecorded remain visible as counts. They are not
-  added to the established attendance-rate denominator.
-- Percentages use the 0–100 scale and round to two decimals. A zero
-  denominator returns `0`.
-- Total records includes every selected effective-status event.
-- Override percentage uses override-corrected records divided by total
-  selected records.
+## Separate manual monthly S/I/A ledger
 
-### Scope and data limits
+The `absence_reasons` monthly ledger is separate from canonical student-level
+attendance events. Executive Reports, Monthly Management Report, and retained
+legacy summaries may show both raw sources. They do not add manual Sakit,
+Izin, or Alfa counts to canonical Hadir to construct a percentage. Their
+Attendance Rate and combined completeness rates are unavailable until a
+compatible denominator exists. Raw counts remain available with source labels.
 
-The scope requires an academic year and an inclusive attendance date range.
-Optional filters use canonical jenjang and academic class IDs. The API
-returns zero-valued aggregates for a valid empty scope.
+## Class and term filter contracts
 
-The daily and grouped views use event-level attendance statuses. The legacy
-monthly `absence_reasons` ledger has no attendance-date key, so it is not
-joined into these event aggregates. This avoids double counting and avoids
-inventing a date for a monthly reason. HEB is reported from the existing
-monthly `heb_overrides` values and does not change attendance rates.
+- `class_id` is the canonical application and API identity when available.
+  Class names are display labels and may change or repeat.
+- Executive and Monthly Management report requests use `class_id`. The
+  backend still accepts legacy `class_name` requests at the report boundary.
+  If both appear, `class_id` takes precedence.
+- `term_id` identifies an actual configured Academic Term record. It is the
+  canonical identity when a page selects a persisted term.
+- Academic Analytics `term_1` through `term_4` are grading-period categories
+  backed by `academic_assessment_sessions.term_number`. They are not term IDs.
+- Historical Management Analytics `term_1` through `term_4` select configured
+  or default reporting date ranges. They retain that endpoint's legacy
+  category contract and do not replace `term_id`.
+- Student Trends and Student Indicators `window=term` select a comparison
+  window around the latest observed attendance date. This is not a term
+  identifier and does not imply `term_id` equality.
 
-## `attendance_rate`
+## Service and export ownership
 
-- Meaning: observed attendance rate for the selected enrollment population.
-- Numerator: attendance records with effective status `on-time` or `late`.
-- Denominator: numerator plus stored `sakit`, `izin`, and `alfa` counts.
-- Date range: inclusive `start_date` through `end_date`, bounded by the
-  selected academic year. Attendance uses its ISO date. Absence reasons use
-  the stored month bucket that overlaps the selected months.
-- Grouping: all selected enrollments, or class and jenjang cohorts.
-- Unit: percent.
-- Rounding: `ROUND_HALF_EVEN` to one decimal place.
-- Missing data: `unavailable` with a null value when the denominator is zero.
-  A rounded value of zero uses status `zero`.
-- Late records count as present and also appear in the late count.
+- Term Attendance owns Expected Student-Days, Hadir, Attendance Rate, and
+  Coverage. It uses Attendance Calendar and date-effective Enrollment.
+- Term Lateness owns Late Events, Students Affected, Total Late Minutes,
+  Average Late Minutes, and Late Event Rate.
+- Management Review Excel continues to use canonical Term Attendance and
+  Term Lateness. Its metrics remain the parity reference when scopes match.
+- API DTOs are the business-value source for Web, Excel, and PDF output.
+  Exports must not independently recompute the same named metric.
+- `GET /api/reports/filters` has one Web query owner in `useReportFilters`.
+  Executive Reports and Monthly Management Report use the same query key.
+- The legacy `management-summary` endpoints remain because the report builder
+  and export routes still call `managementSummary`. They are retained for
+  compatibility, not current metric authority. Retirement requires a separate
+  caller and compatibility review.
 
-## `grade_average`
+## Other metric contracts
 
-- Meaning: average of available grade scores for the selected population.
-- Numerator: sum of non-null `student_subject_grades.score` values.
-- Denominator: count of non-null grade score values.
-- Date range: academic-year filter. Grade rows have no date field in the
-  current schema.
-- Grouping: all selected enrollments, or class and jenjang cohorts.
-- Unit: score.
-- Rounding: `ROUND_HALF_EVEN` to one decimal place.
-- Missing data: `unavailable` with a null value when no score exists.
-  A rounded value of zero uses status `zero`.
+### Attendance event scope
 
-## Shared rules
+Attendance Analytics uses effective status
+`COALESCE(attendance_overrides.override_status, attendance.status)`. It applies
+the selected academic-year and inclusive date filters and canonical class IDs.
+The monthly `absence_reasons` ledger is not joined to event aggregates.
+Override percentage is corrected events divided by selected events; a zero
+selected-event denominator is unavailable.
 
-- The API rejects invalid dates, inverted ranges, out-of-year ranges, and
-  unknown filter IDs.
-- Stable entity IDs drive filter and cohort queries. Labels are display data.
-- The API returns sample counts and numerator/denominator data with cohort
-  metrics.
-- Zero, unavailable, and not-applicable states are distinct contract values.
-- The existing report service keeps its accepted report-specific formulas.
-  Phase 16 does not silently change those response semantics.
+### Grade average
 
+The overall average is the sum of non-null scores divided by their count. It
+does not average group averages. The API uses the existing round-half-even
+rule to one decimal. Grade rows have no date field, so term analysis includes
+only rows attributed through assessment sessions. Period-unknown legacy rows
+are excluded from term-filtered results.
 
-## Data Recapitulation (2026-08)
+### Shared rules
+
+- Stable IDs drive filters and cohort queries. Names are display data.
+- Zero, unavailable, and not-applicable are distinct states.
+- Missing or unknown data is never reclassified as an absence.
+- No persisted analytics rollups or materialized aggregates are used.
+
+## Population Overview (2026-08)
 
 Descriptive counts computed server-side from canonical data.
 
@@ -210,11 +235,11 @@ aggregates. The browser only formats returned values.
 - Participation percentage is scored result slots divided by expected result
   slots, on the 0–100 scale. A zero denominator returns `0`.
 - New score entries belong to an `academic_assessment_sessions` parent with a
-  required canonical term number and an optional known assessment date. Term
-  numbers use the existing `academic_term_configs` authority, including its
-  explicit ordering; default periods are used only where that authority has no
-  custom row. Academic year remains a broad scope, not a precise assessment
-  period.
+  required term number and an optional known assessment date. `term_1` through
+  `term_4` select grading-period categories through `term_number`. They are not
+  `term_id` values. `academic_term_configs` supplies the configured date ranges
+  and ordering; default periods apply only when no custom row exists. Academic
+  year remains a broad scope, not a precise assessment period.
 - Historical grade rows migrated from S4.3 retain a null session and are
   explicitly period-unknown. They are included in the unfiltered view but are
   excluded from term-filtered results. No date is inferred from `created_at`,
@@ -248,7 +273,8 @@ not define a new cross-domain score or duplicate their formulas.
 
 - School Snapshot uses active student enrollment and active staff records from
   Data Recapitulation.
-- Attendance uses the effective-status and rate rules in Attendance Analytics.
+- Attendance displays Recorded Presence Rate from Attendance Analytics. It
+  uses recorded statuses only and does not replace canonical Attendance Rate.
 - Academic uses the score, average, and participation rules in Academic
   Analytics.
 - Data Quality uses the student and staff completeness rules in Data Quality.
@@ -267,33 +293,35 @@ authoritative export surfaces.
 ## Student Trend Insights (2026-08)
 
 Student Trends compares descriptive attendance values for one student across
-two deterministic windows. It reuses effective attendance status, where an
-attendance override replaces the original status.
+two deterministic comparison windows. It reuses effective attendance status,
+where an attendance override replaces the original status.
 
-- `rolling_4w`: the latest observed attendance date in the selected scope and
-  the preceding 28 calendar days, compared with the preceding 28 calendar
-  days. The current schema has no instructional-day calendar.
-- `term`: the configured or existing default term containing the latest
-  observed attendance date, compared with the equivalent elapsed calendar-day
-  portion of the preceding term.
-- Attendance rate is `(Present + Late) / (Present + Late + Sakit + Izin + Alfa)
-  * 100`, with Late counted as attended.
-- Tardiness is `Late / (Present + Late) * 100`.
-- Alfa is reported as the canonical unexcused absence rate using the
-  attendance-rate denominator.
+- `rolling_4w` compares the latest observed attendance date and preceding 28
+  calendar days with the previous 28 calendar days. The schema has no
+  instructional-day calendar.
+- `window=term` selects the configured or default comparison window containing
+  the latest observed attendance date. It is a window selector, not a Term ID.
+  The previous window is an elapsed-calendar-day comparison.
+- Recorded Presence Rate is `(on-time + late) / (on-time + late + sakit + izin
+  + alfa)` over recorded attendance events. It excludes expected days without
+  a record and is not canonical Attendance Rate.
+- Late Among Present is late attendance events divided by on-time plus late
+  attendance events. The denominator must be non-zero.
+- Recorded Alfa Rate uses Alfa records divided by the same recorded-status
+  denominator. It is not Alfa divided by Expected Student-Days.
 - Percent deltas use percentage points. Values use the existing two-decimal
   attendance convention.
 - A missing current or previous denominator returns `null` and
-  `insufficient_data`; it never becomes a zero comparison.
-- Every metric returns its current and previous sample size.
+  `insufficient_data`; it never becomes a zero comparison. Each metric returns
+  its current and previous sample size.
 
 Academic trend is available only when session-attributed scores exist for two
-adjacent canonical terms. It compares the mean scored result in the latest
-observed term with the immediately preceding observed term and returns both
-sample sizes. If either period is absent, the value is `null` with
-`insufficient_data`. Legacy period-unknown rows remain excluded. The feature
-does not infer a time axis from score IDs or write trend snapshots, rollups,
-thresholds, risk labels, alerts, or interventions.
+adjacent grading-period categories. It compares the mean scored result in the
+latest observed category with the immediately preceding observed category and
+returns both sample sizes. The categories use `term_number`, not `term_id`.
+Period-unknown legacy rows remain excluded. The feature does not infer a time
+axis from score IDs or write trend snapshots, rollups, thresholds, risk labels,
+alerts, or interventions.
 
 ## Student Indicator Discovery (2026-08)
 
@@ -303,30 +331,30 @@ student-trend attendance windows and academic-year scope.
 
 ### Candidate registry
 
-| ID | Domain | Canonical source | Unit | Status |
+| ID | User-facing name | Source | Unit | Status |
 | --- | --- | --- | --- | --- |
-| `attendance_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
-| `tardiness_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
-| `alfa_rate` | Attendance | Attendance Analytics / Student Trends | Percent | Accepted for Stage 2 |
-| `academic_average` | Academic | Academic Analytics score average | Score | Accepted for Stage 2 |
-| `academic_participation` | Academic | Academic Analytics result-slot participation | Percent | Accepted for Stage 2 |
-| Attendance override prevalence | Attendance | No student-level interpretation | Count/percent | Rejected: diagnostic context only |
-| Data-quality issue count | Data quality | Data Quality | Count | Rejected: confidence context, not a student indicator |
-| Academic trend | Academic | Session-attributed scores only | Score | Technically available for comparable session-backed terms; not added to the Stage 2 risk registry |
-| Mastery proportion | Academic | KKM exists for aggregate reporting only | Percent | Deferred: no existing student-level indicator contract |
+| `attendance_rate` | Recorded Presence Rate | Recorded attendance events | Percent | Accepted for Stage 2; not canonical Attendance Rate |
+| `tardiness_rate` | Late Among Present | Recorded attendance events | Percent | Accepted for Stage 2; not Late Event Rate |
+| `alfa_rate` | Recorded Alfa Rate | Recorded attendance events | Percent | Accepted for Stage 2 |
+| `academic_average` | Grade Average | Academic Analytics score average | Score | Accepted for Stage 2 |
+| `academic_participation` | Academic Participation | Academic Analytics result-slot participation | Percent | Accepted for Stage 2 |
+| Attendance override prevalence | None | No student-level interpretation | Count/percent | Rejected: diagnostic context only |
+| Data-quality issue count | None | Data Quality | Count | Rejected: confidence context, not a student indicator |
+| Academic trend | None | Session-attributed scores only | Score | Descriptive Student Trend output, not a Stage 2 risk registry item |
+| Mastery proportion | None | KKM exists for aggregate reporting only | Percent | Deferred: no existing student-level indicator contract |
 
-Accepted attendance values use the canonical effective status. An override
-replaces the original status before aggregation. Attendance rate is
-`(Present + Late) / (Present + Late + Sakit + Izin + Alfa) * 100`. Tardiness
-rate is `Late / (Present + Late) * 100`. Alfa rate uses the attendance-rate
+Accepted attendance values use effective status. An override replaces the
+original status before aggregation. Recorded Presence Rate is `(on-time +
+late) / (on-time + late + sakit + izin + alfa)`. Late Among Present is `late /
+(on-time + late)`. Recorded Alfa Rate uses the Recorded Presence Rate
 denominator. Percent deltas use percentage points.
 
-Academic average uses the stored non-null 0–100 scores and the existing
+Academic average uses stored non-null 0–100 scores and the existing
 round-half-even rule to one decimal. Academic participation is scored result
 slots divided by expected result slots. Missing scores are not numeric zero.
-Academic indicators continue to expose current values only. Session-backed
-academic trend is descriptive Student Trend output and is not automatically a
-Stage 2 risk indicator.
+Academic indicators expose current values only. Session-backed academic trend
+uses grading-period categories and is descriptive, not a Stage 2 risk
+indicator.
 
 ### Missing data and boundary
 

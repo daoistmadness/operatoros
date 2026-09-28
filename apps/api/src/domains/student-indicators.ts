@@ -15,9 +15,9 @@ type Context = any;
 type IndicatorUnit = StudentIndicatorValue["unit"];
 
 const INDICATOR_DEFINITIONS = [
-  { id: "attendance_rate", label: "Attendance rate", domain: "attendance", unit: "percent", sourceMetric: "Attendance Analytics / Student Trends attendance rate", missingData: "Null when no eligible attendance records or no comparable period exists." },
-  { id: "tardiness_rate", label: "Tardiness rate", domain: "attendance", unit: "percent", sourceMetric: "Attendance Analytics / Student Trends tardiness rate", missingData: "Null when no attended records exist in the period." },
-  { id: "alfa_rate", label: "Alfa rate", domain: "attendance", unit: "percent", sourceMetric: "Attendance Analytics / Student Trends unexcused absence rate", missingData: "Null when no eligible attendance records or no comparable period exists." },
+  { id: "attendance_rate", label: "Recorded Presence Rate", domain: "attendance", unit: "percent", sourceMetric: "(Present + Late) / (Present + Late + Sakit + Izin + Alfa) attendance events", missingData: "Null when the recorded-status denominator is zero or no comparison period exists." },
+  { id: "tardiness_rate", label: "Late Among Present", domain: "attendance", unit: "percent", sourceMetric: "Late attendance events / (Present + Late) attendance events", missingData: "Null when Hadir event count is zero." },
+  { id: "alfa_rate", label: "Recorded Alfa Rate", domain: "attendance", unit: "percent", sourceMetric: "Attendance Analytics / Student Trends unexcused absence rate", missingData: "Null when no eligible attendance records or no comparable period exists." },
   { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", sourceMetric: "Academic Analytics canonical score average", missingData: "Null when the selected student has no scored result." },
   { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", sourceMetric: "Academic Analytics scored results divided by expected result slots", missingData: "Null when the selected scope has no expected result slots." },
 ] as const;
@@ -210,9 +210,9 @@ export function studentIndicatorInsights(context: AuthContext, query: Row, canAt
     const previousAttendanceSamples = sampleSize(value, "previous");
     const currentAttended = attendedSampleSize(value, "current");
     const previousAttended = attendedSampleSize(value, "previous");
-    const attendance = canAttendance ? responseMetric(value, "attendance_rate", "Attendance rate", "attendance", "percent", rate(value, "current", "attendance"), rate(value, "previous", "attendance"), currentAttendanceSamples, previousAttendanceSamples, comparisonAvailable) : null;
-    const tardiness = canAttendance ? responseMetric(value, "tardiness_rate", "Tardiness rate", "attendance", "percent", rate(value, "current", "tardiness"), rate(value, "previous", "tardiness"), currentAttended, previousAttended, comparisonAvailable) : null;
-    const alfa = canAttendance ? responseMetric(value, "alfa_rate", "Alfa rate", "attendance", "percent", rate(value, "current", "alfa"), rate(value, "previous", "alfa"), currentAttendanceSamples, previousAttendanceSamples, comparisonAvailable) : null;
+    const attendance = canAttendance ? responseMetric(value, "attendance_rate", "Recorded Presence Rate", "attendance", "percent", rate(value, "current", "attendance"), rate(value, "previous", "attendance"), currentAttendanceSamples, previousAttendanceSamples, comparisonAvailable) : null;
+    const tardiness = canAttendance ? responseMetric(value, "tardiness_rate", "Late Among Present", "attendance", "percent", rate(value, "current", "tardiness"), rate(value, "previous", "tardiness"), currentAttended, previousAttended, comparisonAvailable) : null;
+    const alfa = canAttendance ? responseMetric(value, "alfa_rate", "Recorded Alfa Rate", "attendance", "percent", rate(value, "current", "alfa"), rate(value, "previous", "alfa"), currentAttendanceSamples, previousAttendanceSamples, comparisonAvailable) : null;
     const average = academicAverage(value);
     const participation = academicParticipation(value);
     return {

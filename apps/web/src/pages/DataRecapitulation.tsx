@@ -142,7 +142,7 @@ export default function DataRecapitulation() {
       link.click();
       revokeDownloadUrl(url);
     } catch (error) {
-      setExportError((error as { message?: string })?.message || "Recapitulation export failed.");
+      setExportError((error as { message?: string })?.message || "Population Overview export failed.");
     } finally {
       setExporting(null);
     }
@@ -156,7 +156,7 @@ export default function DataRecapitulation() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Analytics"
-        title="Data Recapitulation"
+        title="Population Overview"
         description="Descriptive summaries of canonical student and staff data, computed server-side."
         actions={can(tab === "students" ? "export_student_data" : "export_staff") && (
           <Button variant="outline" onClick={() => download(tab)} disabled={exporting !== null} aria-busy={exporting === tab} className="gap-2">
@@ -166,7 +166,7 @@ export default function DataRecapitulation() {
         )}
       />
       {exportError && <Alert variant="danger"><AlertTitle>Export failed</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
-      <div className="flex gap-2" role="tablist" aria-label="Recapitulation target">
+      <div className="flex gap-2" role="tablist" aria-label="Population Overview target">
         <Button variant={tab === "students" ? "primary" : "outline"} size="sm" onClick={() => setTab("students")} aria-pressed={tab === "students"} className="gap-2"><Users className="size-4" />Students</Button>
         {can("view_staff") && <Button variant={tab === "staff" ? "primary" : "outline"} size="sm" onClick={() => setTab("staff")} aria-pressed={tab === "staff"} className="gap-2"><UserRound className="size-4" />Staff / PTK</Button>}
       </div>
@@ -204,8 +204,8 @@ export default function DataRecapitulation() {
         </div>
       )}
 
-      {activeQuery.isPending && <LoadingState title="Loading recapitulation" />}
-      {activeQuery.isError && <ErrorState title="Recapitulation could not be loaded" description={activeQuery.error?.message} />}
+      {activeQuery.isPending && <LoadingState title="Loading population overview" />}
+      {activeQuery.isError && <ErrorState title="Population overview could not be loaded" description={activeQuery.error?.message} />}
       {activeQuery.data && activeRows.length === 0 && (
         <Card><CardContent><p className="text-sm text-muted-foreground">No records match the current scope. Adjust the filters.</p></CardContent></Card>
       )}

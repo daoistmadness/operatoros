@@ -74,6 +74,25 @@ describe("canonical lateness classifier", () => {
 });
 
 describe("canonical term lateness aggregate", () => {
+  it("uses Expected Student-Days for Late Event Rate and returns null at zero", () => {
+    const value = fixture();
+    try {
+      value.client.run("UPDATE academic_term_configs SET start_date = '2026-07-06', end_date = '2026-11-22' WHERE id = 11");
+      value.client.run("UPDATE student_enrollments SET effective_from = '2026-07-06' WHERE id = 1");
+      const dates: string[] = [];
+      for (const date = new Date("2026-07-06T00:00:00Z"); dates.length < 100; date.setUTCDate(date.getUTCDate() + 1))
+        if (date.getUTCDay() > 0 && date.getUTCDay() < 6) dates.push(date.toISOString().slice(0, 10));
+      dates.slice(0, 10).forEach((date) => value.attendance(date, "late", "07:45"));
+      expect(value.get().totals).toMatchObject({ expected_student_days: 100, late_events: 10, late_event_rate: 10 });
+    } finally { value.close(); }
+
+    const empty = fixture();
+    try {
+      empty.client.run("UPDATE attendance_calendar_weekday_rules SET expectation = 'NOT_EXPECTED' WHERE weekday BETWEEN 1 AND 5");
+      expect(empty.get().totals).toMatchObject({ expected_student_days: 0, late_event_rate: null });
+    } finally { empty.close(); }
+  });
+
   it("classifies 07:29/07:30 on-time and 07:31+ late with exact minutes", () => {
     const value = fixture();
     try {
