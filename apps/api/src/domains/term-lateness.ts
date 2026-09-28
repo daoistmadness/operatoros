@@ -73,18 +73,17 @@ export function resolveCutoff(cutoffs: Record<string, string | undefined>, ...na
 }
 
 export interface MachineLateness {
-  minutes: number;
-  source: "calculated" | "excel";
+  minutes: number | null;
+  source: "calculated" | "unavailable";
 }
 
-// Machine import consumes the same canonical rule: a usable first arrival is
-// measured against the configured cutoff. The workbook Terlambat value is only
-// a fallback when no cutoff is configured for the jenjang.
-export function canonicalMachineLateness(checkIn: string | null | undefined, workbookMinutes: number | null | undefined, cutoff: string | null | undefined): MachineLateness {
+// The machine Terlambat field is source evidence only. Without a configured
+// cutoff, punctuality is unavailable rather than inferred from that field.
+export function canonicalMachineLateness(checkIn: string | null | undefined, cutoff: string | null | undefined): MachineLateness {
   const scan = parseClockMinutes(checkIn == null ? null : String(checkIn).slice(0, 5));
   const limit = cutoff == null ? null : parseClockMinutes(String(cutoff).trim());
-  if (scan !== null && limit !== null) return { minutes: Math.max(0, scan - limit), source: "calculated" };
-  return { minutes: Math.max(0, Number(workbookMinutes ?? 0)), source: "excel" };
+  if (scan === null || limit === null) return { minutes: null, source: "unavailable" };
+  return { minutes: Math.max(0, scan - limit), source: "calculated" };
 }
 
 export interface LatenessScope {

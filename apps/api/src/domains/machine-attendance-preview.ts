@@ -16,7 +16,7 @@ import {
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { actor, legacyName } from "./core";
-import { deriveAttendanceStatus, insertCanonicalAttendanceRecord } from "./attendance-rules";
+import { insertCanonicalAttendanceRecord } from "./attendance-rules";
 import { canonicalMachineLateness, loadCutoffMap, resolveCutoff, type MachineLateness } from "./term-lateness";
 import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 import { schoolLocalDate } from "./attendance-submission-deadline";
@@ -29,6 +29,7 @@ type ProjectedRow = {
   response: PreviewItem;
   studentId: number | null;
   enrollmentId: number | null;
+  enrollment: Row | null;
   existing: Row | null;
   derivedLate: MachineLateness;
 };
@@ -45,7 +46,7 @@ const PAGE_SIZE = 50;
 const CONFIRMATION = "IMPORT_MACHINE_ATTENDANCE";
 const DEVICE_LINK_CONFIRMATION = "LINK_ATTENDANCE_DEVICE_ID";
 const DEVICE_SOURCE = "attendance_machine";
-const CONFLICTS = new Set<MachineImportApplyClassification>(["CONFLICT_EXISTING_ATTENDANCE", "CONFLICT_EXISTING_OVERRIDE"]);
+const CONFLICTS = new Set<MachineImportApplyClassification>(["CONFLICT_EXISTING_ATTENDANCE", "CONFLICT_EXISTING_OVERRIDE", "BLOCKED_SOURCE_IDENTITY_CONFLICT", "BLOCKED_STUDENT_DATE_CONFLICT"]);
 type ResolutionTargetType = NonNullable<PreviewItem["resolution"]["target"]>["type"];
 
 function row(context: AuthContext, sql: string, params: unknown[] = []): Row | null {
@@ -79,11 +80,11 @@ function identityMap(context: AuthContext, identifiers: string[]): Map<string, R
   const unique = [...new Set(identifiers)];
   if (!unique.length) return result;
   const placeholders = unique.map(() => "?").join(", ");
-  const values = rows(context, `SELECT d.device_identifier, d.student_master_id, d.legacy_student_id,
-      s.id AS student_id, s.name AS student_name, s.class_name, s.jenjang
+  const values = rows(context, `SELECT d.device_identifier, d.student_master_id, d.legacy_student_id, d.is_active,
+      d.effective_from, d.effective_to, s.id AS student_id, s.name AS student_name, s.class_name, s.jenjang
     FROM student_device_identities d
     LEFT JOIN students s ON s.id = d.legacy_student_id
-    WHERE d.is_active = 1 AND d.device_identifier IN (${placeholders})
+    WHERE d.device_identifier IN (${placeholders})
     ORDER BY d.device_identifier, d.id`, unique);
   for (const value of values) {
     const key = String(value.device_identifier);
@@ -106,15 +107,22 @@ function matchingState(source: MachineAttendanceRow, candidates: Row[]): Preview
   return candidates[0]?.student_id == null ? "INVALID_IDENTIFIER" : "MATCHED";
 }
 
-function reconciliation(state: string, evidence: string, expectation: string): PreviewItem["reconciliationState"] {
+function candidatesOnDate(source: MachineAttendanceRow, candidates: Row[]): Row[] {
+  if (!source.date) return [];
+  const effective = candidates.filter((value) => (Number(value.is_active) === 1 || value.effective_to != null)
+    && String(value.effective_from ?? "0000-01-01") <= source.date!
+    && (value.effective_to == null || String(value.effective_to) >= source.date!));
+  return [...new Map(effective.filter((value) => value.student_id != null).map((value) => [`${Number(value.student_id)}\u0000${String(value.student_master_id ?? "")}`, value])).values()];
+}
+
+function reconciliation(state: string, hasCheckIn: boolean, expectation: string): PreviewItem["reconciliationState"] {
   if (state === "UNMAPPED") return "UNMAPPED";
   if (state === "AMBIGUOUS") return "AMBIGUOUS";
   if (state === "INVALID_IDENTIFIER" || state === "INVALID_SOURCE_ROW") return "INVALID_SOURCE_ROW";
-  if (evidence === "INVALID_SCAN_VALUE") return "INVALID_SCAN";
-  if (evidence === "UNSUPPORTED_SOURCE_STATUS") return "UNSUPPORTED_SOURCE_STATUS";
+  if (!hasCheckIn && expectation !== "UNKNOWN" && expectation !== "NOT_EXPECTED") return "NO_SCAN_EXPECTED";
   if (expectation === "UNKNOWN") return "EXPECTATION_UNKNOWN";
-  if (expectation === "NOT_EXPECTED") return evidence === "NO_SCAN" ? "NO_SCAN_NOT_EXPECTED" : "SCAN_NOT_EXPECTED";
-  return evidence === "NO_SCAN" ? "NO_SCAN_EXPECTED" : "SCAN_EXPECTED";
+  if (expectation === "NOT_EXPECTED") return hasCheckIn ? "SCAN_NOT_EXPECTED" : "NO_SCAN_NOT_EXPECTED";
+  return hasCheckIn ? "SCAN_EXPECTED" : "NO_SCAN_EXPECTED";
 }
 
 function enrollmentMap(context: AuthContext, studentIds: number[], academicYearId: number): Map<number, Row[]> {
@@ -128,11 +136,37 @@ function enrollmentMap(context: AuthContext, studentIds: number[], academicYearI
     FROM student_enrollments e
     LEFT JOIN academic_classes c ON c.id = e.academic_class_id
     WHERE e.academic_year_id = ? AND e.student_id IN (${placeholders})
-      AND e.lifecycle_state = 'ACTIVE' AND e.class_assigned = 1
     ORDER BY e.student_id, e.id`, [academicYearId, ...unique]);
   for (const value of values) {
     const key = Number(value.student_id);
     result.set(key, [...(result.get(key) ?? []), value]);
+  }
+  return result;
+}
+
+function classMap(context: AuthContext, academicYearId: number): { byId: Map<number, Row>; byName: Map<string, Row[]> } {
+  const values = rows(context, `SELECT c.id, c.class_name, g.jenjang_id
+    FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id
+    WHERE c.academic_year_id = ?`, [academicYearId]);
+  const byId = new Map(values.map((value) => [Number(value.id), value]));
+  const byName = new Map<string, Row[]>();
+  for (const value of values) {
+    const key = `${Number(value.jenjang_id)}\u0000${String(value.class_name)}`;
+    byName.set(key, [...(byName.get(key) ?? []), value]);
+  }
+  return { byId, byName };
+}
+
+function classHistoryMap(context: AuthContext, enrollments: Map<number, Row[]>): Map<number, Row[]> {
+  const ids = [...new Set([...enrollments.values()].flat().map((value) => Number(value.id)))];
+  if (!ids.length) return new Map();
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = new Map<number, Row[]>();
+  for (const value of rows(context, `SELECT enrollment_id, class_name, effective_from, effective_to
+    FROM student_enrollment_class_history WHERE enrollment_id IN (${placeholders})
+    ORDER BY effective_from DESC, id DESC`, ids)) {
+    const id = Number(value.enrollment_id);
+    result.set(id, [...(result.get(id) ?? []), value]);
   }
   return result;
 }
@@ -161,24 +195,42 @@ function finalizedDates(context: AuthContext, dates: string[]): Set<string> {
   return new Set(rows(context, `SELECT attendance_date FROM attendance_periods WHERE status = 'FINALIZED' AND attendance_date IN (${placeholders})`, unique).map((value) => String(value.attendance_date)));
 }
 
-function dateEnrollment(enrollments: Row[], date: string, jenjangId: number): { value: Row | null; classification: MachineImportApplyClassification | null } {
+function dateEnrollment(
+  enrollments: Row[], date: string, jenjangId: number,
+  histories: Map<number, Row[]>, classes: ReturnType<typeof classMap>,
+): { value: Row | null; classification: MachineImportApplyClassification | null } {
   const effective = enrollments.filter((value) => (value.effective_from == null || String(value.effective_from) <= date) && (value.effective_to == null || String(value.effective_to) >= date));
   if (effective.length > 1) return { value: null, classification: "BLOCKED_AMBIGUOUS_ENROLLMENT" };
-  const value = effective[0];
-  if (!value) return { value: null, classification: "BLOCKED_NO_ACTIVE_ENROLLMENT" };
-  if (Number(value.jenjang_id) !== jenjangId) return { value: null, classification: "BLOCKED_OUT_OF_SCOPE" };
-  return { value, classification: null };
+  const enrollment = effective[0];
+  if (!enrollment) return { value: null, classification: "BLOCKED_NO_ACTIVE_ENROLLMENT" };
+  if (Number(enrollment.jenjang_id) !== jenjangId) return { value: null, classification: "BLOCKED_OUT_OF_SCOPE" };
+  const history = histories.get(Number(enrollment.id)) ?? [];
+  let historicalClass: Row | null = null;
+  if (history.length) {
+    const segments = history.filter((value) => String(value.effective_from) <= date && (value.effective_to == null || String(value.effective_to) >= date));
+    if (segments.length !== 1 || segments[0]?.class_name == null) return { value: null, classification: "BLOCKED_MISSING_CANONICAL_CLASS" };
+    const candidates = classes.byName.get(`${jenjangId}\u0000${String(segments[0].class_name)}`) ?? [];
+    if (candidates.length !== 1) return { value: null, classification: "BLOCKED_MISSING_CANONICAL_CLASS" };
+    historicalClass = candidates[0]!;
+  } else if (enrollment.academic_class_id != null) {
+    historicalClass = classes.byId.get(Number(enrollment.academic_class_id)) ?? null;
+  } else if (enrollment.class_name != null) {
+    const candidates = classes.byName.get(`${jenjangId}\u0000${String(enrollment.class_name)}`) ?? [];
+    if (candidates.length === 1) historicalClass = candidates[0]!;
+  }
+  if (!historicalClass || Number(historicalClass.jenjang_id) !== jenjangId) return { value: null, classification: "BLOCKED_MISSING_CANONICAL_CLASS" };
+  return { value: { ...enrollment, resolved_class_id: Number(historicalClass.id), resolved_class_name: String(historicalClass.class_name) }, classification: null };
 }
 
 function sameTime(value: unknown): string | null {
   return value == null || value === "" ? null : String(value).slice(0, 5);
 }
 
-function sameCanonical(existing: Row, source: MachineAttendanceRow, status: string, derivedMinutes: number): boolean {
+function sameCanonical(existing: Row, source: MachineAttendanceRow, status: string, derivedMinutes: number | null): boolean {
   return String(existing.status) === status
     && sameTime(existing.check_in) === source.checkIn
     && sameTime(existing.check_out) === source.checkOut
-    && Number(existing.late_duration ?? 0) === derivedMinutes;
+    && Number(existing.late_duration ?? 0) === (derivedMinutes ?? 0);
 }
 
 function appLink(path: string, values: Record<string, string | number | null | undefined>): string {
@@ -197,8 +249,8 @@ function resolution(
   jenjangId: number,
   capabilities: ReadonlySet<string>,
 ): PreviewItem["resolution"] {
-  const attendancePath = appLink("/attendance/daily", { date, academic_year_id: academicYearId, class_id: enrollment?.academic_class_id ?? null });
-  const correctionPath = appLink("/attendance/override-review", { academic_year_id: academicYearId, class_id: enrollment?.academic_class_id ?? null, date_from: date, date_to: date });
+  const attendancePath = appLink("/attendance/daily", { date, academic_year_id: academicYearId, class_id: enrollment?.resolved_class_id ?? enrollment?.academic_class_id ?? null });
+  const correctionPath = appLink("/attendance/override-review", { academic_year_id: academicYearId, class_id: enrollment?.resolved_class_id ?? enrollment?.academic_class_id ?? null, date_from: date, date_to: date });
   const calendarPath = appLink("/attendance/calendar", { academic_year_id: academicYearId, jenjang_id: jenjangId, date });
   const studentPath = student?.student_master_id == null ? "/students" : `/students/${encodeURIComponent(String(student.student_master_id))}`;
   const definition: { class: PreviewItem["resolution"]["class"]; note: string; target: { type: ResolutionTargetType; path: string; label: string; capability: string } | null } = (() => {
@@ -207,13 +259,18 @@ function resolution(
       case "CONFLICT_EXISTING_OVERRIDE": return { class: "ATTENDANCE_CORRECTION", note: "A canonical correction exists. Review it before any further change.", target: { type: "ATTENDANCE_CORRECTION", path: correctionPath, label: "Review correction", capability: "view_attendance_corrections" } };
       case "BLOCKED_UNMAPPED":
       case "BLOCKED_AMBIGUOUS": return { class: "STUDENT_DATA_RESOLUTION", note: "Review the canonical student/device identity mapping. No approximate match is used.", target: { type: "STUDENT_DATA_RESOLUTION", path: studentPath, label: "Review student mapping", capability: "view_student" } };
+      case "BLOCKED_SOURCE_IDENTITY_CONFLICT":
+      case "BLOCKED_STUDENT_DATE_CONFLICT": return { class: "SOURCE_FILE_REVIEW", note: "Source identity evidence conflicts for this student and date. Review the original rows.", target: null };
       case "BLOCKED_NO_ACTIVE_ENROLLMENT":
       case "BLOCKED_AMBIGUOUS_ENROLLMENT":
-      case "BLOCKED_OUT_OF_SCOPE": return { class: "ENROLLMENT_RESOLUTION", note: "Review the date-correct canonical enrollment before importing.", target: { type: "ENROLLMENT_RESOLUTION", path: studentPath, label: "Review enrollment", capability: "view_student" } };
-      case "BLOCKED_CALENDAR_NOT_EXPECTED": return { class: "CALENDAR_RESOLUTION", note: "The calendar does not expect attendance on this date. Review the calendar authority if this is an intended school day.", target: { type: "CALENDAR_RESOLUTION", path: calendarPath, label: "Review calendar", capability: "view_attendance" } };
+      case "BLOCKED_OUT_OF_SCOPE":
+      case "BLOCKED_MISSING_CANONICAL_CLASS": return { class: "ENROLLMENT_RESOLUTION", note: "Review the date-correct canonical enrollment and historical class before importing.", target: { type: "ENROLLMENT_RESOLUTION", path: studentPath, label: "Review enrollment", capability: "view_student" } };
+      case "BLOCKED_CUTOFF_UNAVAILABLE": return { class: "NOT_RESOLVABLE_IN_OPERATOROS", note: "A configured jenjang cutoff is required to derive canonical punctuality and lateness.", target: null };
+      case "NOOP_NOT_EXPECTED": return { class: "CALENDAR_RESOLUTION", note: "The source event is retained, but this date is excluded from expected-day KPIs.", target: { type: "CALENDAR_RESOLUTION", path: calendarPath, label: "Review calendar", capability: "view_attendance" } };
       case "BLOCKED_CALENDAR_UNKNOWN": return { class: "CALENDAR_RESOLUTION", note: "Calendar expectation is unknown, so the row is not safe to import.", target: { type: "CALENDAR_RESOLUTION", path: calendarPath, label: "Review calendar", capability: "view_attendance" } };
       case "BLOCKED_FINALIZED_PERIOD": return { class: "ATTENDANCE_REVIEW", note: "The attendance period is finalized. Use the canonical attendance workflow if reopening is authorized.", target: { type: "ATTENDANCE_REVIEW", path: attendancePath, label: "Review attendance", capability: "view_attendance" } };
-      case "BLOCKED_NO_SCAN": return { class: "NO_ACTION_REQUIRED", note: "No machine scan is present. No attendance status is inferred or created." , target: null };
+      case "NOOP_NO_CHECK_IN": return { class: "NO_ACTION_REQUIRED", note: "No valid Scan Masuk exists. No attendance status is inferred or created.", target: null };
+      case "BLOCKED_NO_SCAN": return { class: "NO_ACTION_REQUIRED", note: "No valid Scan Masuk exists. No attendance status is inferred or created.", target: null };
       case "BLOCKED_FUTURE_DATE": return { class: "NO_ACTION_REQUIRED", note: "Future attendance dates are not imported. Review the source again after the date.", target: null };
       case "BLOCKED_MULTIPLE_SCANS_UNCLEAR":
       case "BLOCKED_INVALID_SCAN":
@@ -234,19 +291,18 @@ function resolution(
   };
 }
 
-function classify(source: MachineAttendanceRow, state: PreviewItem["matchingState"], expectation: string, enrollment: { value: Row | null; classification: MachineImportApplyClassification | null }, existing: Row | null, finalized: boolean, today: string, canonicalStatus: string | null, derivedMinutes: number): MachineImportApplyClassification {
+function classify(source: MachineAttendanceRow, state: PreviewItem["matchingState"], expectation: string, enrollment: { value: Row | null; classification: MachineImportApplyClassification | null }, existing: Row | null, finalized: boolean, today: string, canonicalStatus: string | null, derivedMinutes: number | null, studentDateConflict: boolean): MachineImportApplyClassification {
   if (state === "INVALID_SOURCE_ROW" || state === "INVALID_IDENTIFIER") return "BLOCKED_INVALID_SOURCE_ROW";
   if (state === "UNMAPPED") return "BLOCKED_UNMAPPED";
   if (state === "AMBIGUOUS") return "BLOCKED_AMBIGUOUS";
+  if (source.sourceIdentityConflict) return "BLOCKED_SOURCE_IDENTITY_CONFLICT";
+  if (studentDateConflict) return "BLOCKED_STUDENT_DATE_CONFLICT";
   if (!source.date || source.date > today) return "BLOCKED_FUTURE_DATE";
   if (enrollment.classification) return enrollment.classification;
   if (expectation === "UNKNOWN") return "BLOCKED_CALENDAR_UNKNOWN";
-  if (expectation === "NOT_EXPECTED") return "BLOCKED_CALENDAR_NOT_EXPECTED";
-  if (source.machineEvidence === "NO_SCAN") return "BLOCKED_NO_SCAN";
-  if (source.machineEvidence === "MULTIPLE_SCANS") return "BLOCKED_MULTIPLE_SCANS_UNCLEAR";
-  if (source.machineEvidence === "INVALID_SCAN_VALUE") return "BLOCKED_INVALID_SCAN";
-  if (source.machineEvidence === "UNSUPPORTED_SOURCE_STATUS") return "BLOCKED_UNSUPPORTED_SOURCE_STATUS";
-  if (!source.checkIn || !source.checkOut || !canonicalStatus || !["on-time", "late"].includes(canonicalStatus)) return "BLOCKED_INCOMPLETE_SCAN";
+  if (expectation === "NOT_EXPECTED") return "NOOP_NOT_EXPECTED";
+  if (!source.checkIn) return "NOOP_NO_CHECK_IN";
+  if (!canonicalStatus || derivedMinutes === null) return "BLOCKED_CUTOFF_UNAVAILABLE";
   if (existing?.override_id != null) return "CONFLICT_EXISTING_OVERRIDE";
   if (existing && sameCanonical(existing, source, canonicalStatus, derivedMinutes)) return "NOOP_ALREADY_CANONICAL";
   if (existing) return "CONFLICT_EXISTING_ATTENDANCE";
@@ -258,10 +314,10 @@ function digestFor(fileFingerprint: string, academicYearId: number, jenjangId: n
   const payload = {
     fileFingerprint, academicYearId, jenjangId, evaluatedOn,
     rows: items.map(({ source, response, studentId, enrollmentId, existing, derivedLate }) => ({
-      sourceRows: source.sourceRows, machineStudentIdentifier: source.machineStudentIdentifier, date: source.date,
-      checkIn: source.checkIn, checkOut: source.checkOut, lateMinutes: source.lateMinutes, scanTimes: response.scanTimes,
+      sourceRows: source.sourceRows, sourceEvidence: source.sourceEvidence, machineStudentIdentifier: source.machineStudentIdentifier, date: source.date,
+      checkIn: source.checkIn, checkOut: source.checkOut, sourceLateMinutes: source.sourceLateMinutes, qualityWarnings: response.qualityWarnings, scanTimes: response.scanTimes,
       machineEvidence: response.machineEvidence, matchingState: response.matchingState, studentId, enrollmentId,
-      expectation: response.expectation, canonicalStatus: response.canonicalStatus,
+      expectation: response.expectation, canonicalStatus: response.canonicalStatus, historicalClass: response.historicalClass,
       canonicalLateMinutes: derivedLate.minutes, canonicalLateSource: derivedLate.source,
       applyClassification: response.applyClassification,
       existing: existing ? { id: Number(existing.id), status: String(existing.status), checkIn: sameTime(existing.check_in), checkOut: sameTime(existing.check_out), lateDuration: Number(existing.late_duration ?? 0), overrideId: existing.override_id == null ? null : Number(existing.override_id), overrideStatus: existing.override_status == null ? null : String(existing.override_status) } : null,
@@ -275,12 +331,22 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
   const identityByIdentifier = identityMap(context, identifiers);
   const dates = parsed.rows.map((value) => value.date).filter((value): value is string => value !== null);
   const expectationByDate = resolveAttendanceExpectationsForDates(context, { academicYearId, dates, startDate: String(year.start_date), endDate: String(year.end_date), jenjangIds: [jenjangId] });
-  const matchedCandidates = parsed.rows.map((source) => source.machineStudentIdentifier ? identityByIdentifier.get(source.machineStudentIdentifier)?.[0]?.student_id : null).filter((value): value is number => value != null);
+  const candidatesBySource = new Map(parsed.rows.map((source) => [source, source.machineStudentIdentifier ? candidatesOnDate(source, identityByIdentifier.get(source.machineStudentIdentifier) ?? []) : []]));
+  const matchedCandidates = [...new Set([...candidatesBySource.values()].flat().map((value) => value.student_id == null ? null : Number(value.student_id)).filter((value): value is number => value !== null))];
   const enrollmentsByStudent = enrollmentMap(context, matchedCandidates, academicYearId);
+  const histories = classHistoryMap(context, enrollmentsByStudent);
+  const classes = classMap(context, academicYearId);
   const attendancesByKey = attendanceMap(context, matchedCandidates, dates);
   const finalized = finalizedDates(context, dates);
   const jenjangName = row(context, "SELECT name FROM jenjangs WHERE id = ?", [jenjangId])?.name ?? null;
   const cutoff = resolveCutoff(loadCutoffMap(context), jenjangName == null ? null : String(jenjangName));
+  const sourceIdentifiersByStudentDate = new Map<string, Set<string>>();
+  for (const source of parsed.rows) {
+    const candidate = candidatesBySource.get(source)?.[0];
+    if (candidate?.student_id == null || !source.date || !source.machineStudentIdentifier) continue;
+    const key = `${Number(candidate.student_id)}\u0000${source.date}`;
+    sourceIdentifiersByStudentDate.set(key, new Set([...(sourceIdentifiersByStudentDate.get(key) ?? []), source.machineStudentIdentifier]));
+  }
   const matched = new Set<string>();
   const unmapped = new Set<string>();
   const ambiguous = new Set<string>();
@@ -292,36 +358,60 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
   let notExpectedNoScan = 0;
   let expectationUnknown = 0;
   const items: ProjectedRow[] = parsed.rows.map((source) => {
-    const candidates = source.machineStudentIdentifier ? identityByIdentifier.get(source.machineStudentIdentifier) ?? [] : [];
+    const candidates = candidatesBySource.get(source) ?? [];
     const state = matchingState(source, candidates);
     const canonical = state === "MATCHED" ? candidates[0] : null;
     const studentId = canonical?.student_id == null ? null : Number(canonical.student_id);
     const expectation = source.date ? expectationByDate.get(source.date)?.get(jenjangId) ?? unknownExpectation() : unknownExpectation();
-    const enrollment = studentId == null || !source.date ? { value: null, classification: null } : dateEnrollment(enrollmentsByStudent.get(studentId) ?? [], source.date, jenjangId);
+    const enrollment = studentId == null || !source.date ? { value: null, classification: null } : dateEnrollment(enrollmentsByStudent.get(studentId) ?? [], source.date, jenjangId, histories, classes);
     const existing = studentId == null || !source.date ? null : attendancesByKey.get(`${studentId}\u0000${source.date}`) ?? null;
-    const derivedLate = canonicalMachineLateness(source.checkIn, source.lateMinutes, cutoff);
-    const canonicalStatus = source.checkIn && source.checkOut && source.machineEvidence === "SCAN_PRESENT" ? deriveAttendanceStatus(source.checkIn, source.checkOut, derivedLate.minutes) : null;
-    const applyClassification = classify(source, state, expectation.status, enrollment, existing, finalized.has(source.date ?? ""), evaluatedOn, canonicalStatus, derivedLate.minutes);
+    const derivedLate = canonicalMachineLateness(source.checkIn, cutoff);
+    const canonicalStatus = derivedLate.minutes == null ? null : derivedLate.minutes > 0 ? "late" : "on-time";
+    const studentDateConflict = studentId != null && source.date != null && (sourceIdentifiersByStudentDate.get(`${studentId}\u0000${source.date}`)?.size ?? 0) > 1;
+    const applyClassification = classify(source, state, expectation.status, enrollment, existing, finalized.has(source.date ?? ""), evaluatedOn, canonicalStatus, derivedLate.minutes, studentDateConflict);
+    const qualityWarnings = new Set(source.qualityWarnings);
+    if (!source.checkIn) qualityWarnings.add("MISSING_SCAN_IN");
+    if (!source.checkOut && !source.sourceEvidence.some((value) => value.fields.scanOut.state === "INVALID")) qualityWarnings.add("MISSING_SCAN_OUT");
+    if (state === "UNMAPPED") qualityWarnings.add("UNKNOWN_STUDENT");
+    if (state === "AMBIGUOUS") qualityWarnings.add("AMBIGUOUS_IDENTITY");
+    if (source.sourceIdentityConflict) qualityWarnings.add("SOURCE_IDENTITY_CONFLICT");
+    if (!source.date) qualityWarnings.add("INVALID_DATE");
+    if (enrollment.classification === "BLOCKED_NO_ACTIVE_ENROLLMENT") qualityWarnings.add("NOT_IN_ACTIVE_ENROLLMENT");
+    if (enrollment.classification === "BLOCKED_OUT_OF_SCOPE") qualityWarnings.add("OUT_OF_SCOPE");
+    if (expectation.status === "NOT_EXPECTED") qualityWarnings.add("NON_EXPECTED_DATE");
+    if (expectation.status === "UNKNOWN") qualityWarnings.add("UNKNOWN_CALENDAR");
+    if (cutoff == null && source.checkIn) qualityWarnings.add("CUTOFF_UNCONFIGURED");
+    if (studentDateConflict) qualityWarnings.add("STUDENT_DATE_IDENTITY_CONFLICT");
+    if (source.sourceLateMinutes != null && derivedLate.minutes != null && source.sourceLateMinutes !== derivedLate.minutes) qualityWarnings.add("SOURCE_LATENESS_DISAGREEMENT");
+    if (CONFLICTS.has(applyClassification)) qualityWarnings.add("NEEDS_REVIEW");
+    if (applyClassification === "BLOCKED_MISSING_CANONICAL_CLASS") qualityWarnings.add("UNRESOLVED_HISTORICAL_CLASS");
     if (state === "MATCHED" && source.machineStudentIdentifier) matched.add(source.machineStudentIdentifier);
     if (state === "UNMAPPED" && source.machineStudentIdentifier) unmapped.add(source.machineStudentIdentifier);
     if (state === "AMBIGUOUS" && source.machineStudentIdentifier) ambiguous.add(source.machineStudentIdentifier);
     if (state === "INVALID_IDENTIFIER" || state === "INVALID_SOURCE_ROW") invalidIdentifiers++;
     if (source.scanTimes.length) scanFacts++;
     if (source.machineEvidence === "MULTIPLE_SCANS") multipleScans++;
-    if (state === "MATCHED" && expectation.status === "EXPECTED" && source.machineEvidence === "NO_SCAN") expectedNoScan++;
-    if (state === "MATCHED" && expectation.status === "NOT_EXPECTED" && source.machineEvidence === "NO_SCAN") notExpectedNoScan++;
+    if (state === "MATCHED" && expectation.status === "EXPECTED" && !source.checkIn) expectedNoScan++;
+    if (state === "MATCHED" && expectation.status === "NOT_EXPECTED" && !source.checkIn) notExpectedNoScan++;
     if (expectation.status === "UNKNOWN") expectationUnknown++;
     if (applyClassification.startsWith("BLOCKED_")) blockedByClassification[applyClassification] = (blockedByClassification[applyClassification] ?? 0) + 1;
     const response: PreviewItem = {
+      sourceRows: source.sourceRows,
       date: source.date, sourceStudentName: source.sourceStudentName, machineStudentIdentifier: source.machineStudentIdentifier,
       matchingState: state,
-      student: canonical ? { id: Number(canonical.student_id), masterId: canonical.student_master_id == null ? null : String(canonical.student_master_id), name: String(canonical.student_name), className: canonical.class_name == null ? null : String(canonical.class_name), jenjang: canonical.jenjang == null ? null : String(canonical.jenjang) } : null,
+      student: canonical ? { id: Number(canonical.student_id), masterId: canonical.student_master_id == null ? null : String(canonical.student_master_id), name: String(canonical.student_name), className: enrollment.value?.resolved_class_name ?? canonical.class_name ?? null, jenjang: canonical.jenjang == null ? jenjangName == null ? null : String(jenjangName) : String(canonical.jenjang) } : null,
       machineEvidence: source.machineEvidence, scanTimes: source.scanTimes, expectation,
-      reconciliationState: reconciliation(state, source.machineEvidence, expectation.status), applyClassification, canonicalStatus,
+      reconciliationState: reconciliation(state, Boolean(source.checkIn), expectation.status), applyClassification,
+      canonicalStatus: source.checkIn ? canonicalStatus : null,
+      canonicalAttendance: applyClassification === "ELIGIBLE_CREATE" || applyClassification === "NOOP_ALREADY_CANONICAL" ? "PRESENT" : applyClassification === "NOOP_NO_CHECK_IN" ? "NO_CHECK_IN" : "NOT_COMMITTED",
+      punctuality: !source.checkIn || derivedLate.minutes == null ? "N/A" : derivedLate.minutes > 0 ? "LATE" : "ON_TIME",
+      checkIn: source.checkIn, checkOut: source.checkOut, lateMinutes: derivedLate.minutes,
+      historicalClass: enrollment.value?.resolved_class_name ?? null,
+      qualityWarnings: [...qualityWarnings],
       existingAttendance: existing ? { baseStatus: String(existing.status), effectiveStatus: String(existing.override_status ?? existing.status), hasOverride: existing.override_id != null } : null,
       resolution: resolution(applyClassification, canonical ?? null, enrollment.value ?? null, source.date, academicYearId, jenjangId, capabilities),
     };
-    return { source, response, studentId, enrollmentId: enrollment.value?.id == null ? null : Number(enrollment.value.id), existing, derivedLate };
+    return { source, response, studentId, enrollmentId: enrollment.value?.id == null ? null : Number(enrollment.value.id), enrollment: enrollment.value, existing, derivedLate };
   });
   const eligibleCreates = items.filter((value) => value.response.applyClassification === "ELIGIBLE_CREATE").length;
   const alreadyCanonical = items.filter((value) => value.response.applyClassification === "NOOP_ALREADY_CANONICAL").length;
@@ -505,23 +595,69 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       const capabilities = new Set(capabilitiesForRole(user.role));
       const previewProjection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
       if (previewProjection.previewDigest !== expectedDigest) return stale(ctx.set);
-      const applyParsed = await parseMachineAttendanceWorkbook(buffer);
       const appliedAt = (context.now?.() ?? new Date()).toISOString();
       const result = inTransaction(context.database.client, () => {
-        const projection = buildProjection(context, applyParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
+        const projection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
         if (projection.previewDigest !== expectedDigest) throw new Error("PREVIEW_STALE");
         const batchId = randomUUID();
-        auditEvent(context.database.client, user, { entityType: "MACHINE_IMPORT", entityReference: batchId, operation: "MACHINE_IMPORT_APPLY", importSessionId: batchId, metadata: { file_sha256: fileFingerprint, academic_year_id: scope.academicYearId, jenjang_id: scope.jenjangId, rows_inspected: projection.items.length, eligible: projection.summary.eligibleCreates } });
+        context.database.client.run(`INSERT INTO attendance_import_batches
+          (id, filename, checksum, uploaded_by, status, total_rows, logical_rows)
+          VALUES (?, ?, ?, ?, 'committing', ?, ?)`, [batchId, scope.file.name, fileFingerprint, user.username, previewParsed.sourceRows, projection.items.length]);
+        auditEvent(context.database.client, user, { entityType: "MACHINE_IMPORT", entityReference: batchId, operation: "MACHINE_IMPORT_APPLY", importSessionId: batchId, metadata: { file_sha256: fileFingerprint, academic_year_id: scope.academicYearId, jenjang_id: scope.jenjangId, source_rows: previewParsed.sourceRows, logical_rows: projection.items.length, eligible: projection.summary.eligibleCreates } });
         let created = 0;
+        let alreadyCanonical = 0;
+        let conflicts = 0;
+        let invalid = 0;
         for (const value of projection.items) {
-          if (value.response.applyClassification !== "ELIGIBLE_CREATE" || value.studentId == null || value.source.date == null || value.response.canonicalStatus == null) continue;
-          const attendanceId = insertCanonicalAttendanceRecord(context.database.client, { studentId: value.studentId, date: value.source.date, checkIn: value.source.checkIn, checkOut: value.source.checkOut, lateDuration: value.derivedLate.minutes, lateSource: value.response.canonicalStatus === "late" ? value.derivedLate.source : "none", status: value.response.canonicalStatus });
-          auditEvent(context.database.client, user, { entityType: "ATTENDANCE", entityReference: `ATTENDANCE/${attendanceId}`, operation: "MACHINE_IMPORT_CREATE", importSessionId: batchId, changedFields: ["student_id", "date", "check_in", "check_out", "late_duration", "late_source", "status"], metadata: { attendance_id: attendanceId, date: value.source.date, status: value.response.canonicalStatus } });
-          created++;
+          const classification = value.response.applyClassification;
+          const importClassification = classification === "ELIGIBLE_CREATE" ? "NEW"
+            : classification === "NOOP_ALREADY_CANONICAL" ? "UNCHANGED"
+              : CONFLICTS.has(classification) || classification.startsWith("BLOCKED_") && classification !== "BLOCKED_INVALID_SOURCE_ROW" && classification !== "BLOCKED_FUTURE_DATE" ? "CONFLICT" : "INVALID";
+          const write = classification === "ELIGIBLE_CREATE";
+          const selected = write || classification === "NOOP_ALREADY_CANONICAL";
+          if (classification === "NOOP_ALREADY_CANONICAL") alreadyCanonical++;
+          else if (importClassification === "CONFLICT") conflicts++;
+          else if (importClassification === "INVALID") invalid++;
+          const operation = {
+            action: write ? "CREATE" : selected ? "NOOP_ALREADY_CANONICAL" : "NO_WRITE",
+            classification,
+            student_id: value.studentId,
+            attendance_date: value.source.date,
+            historical_class: value.response.historicalClass,
+            check_in: value.response.checkIn,
+            check_out: value.response.checkOut,
+            attendance: value.response.canonicalAttendance,
+            status: value.response.canonicalStatus,
+            punctuality: value.response.punctuality,
+            late_minutes: value.response.lateMinutes,
+            calendar_expectation: value.response.expectation,
+            quality: value.response.qualityWarnings,
+            source_sheet: previewParsed.sheet,
+            source_rows: value.source.sourceRows,
+            source_evidence: value.source.sourceEvidence,
+          };
+          const existingRecord = value.existing ? { id: value.existing.id, status: value.existing.status, check_in: value.existing.check_in, check_out: value.existing.check_out, late_duration: value.existing.late_duration } : null;
+          context.database.client.run(`INSERT INTO attendance_import_rows
+            (batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id,
+             classification, existing_record, proposed_change, validation_error, warning, selected_for_commit)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+            batchId, value.source.sourceRows[0] ?? null, value.source.machineStudentIdentifier, value.source.sourceStudentName,
+            value.source.date, value.existing?.id ?? null, importClassification, JSON.stringify(existingRecord), JSON.stringify(operation),
+            classification.startsWith("BLOCKED_") || CONFLICTS.has(classification) ? classification : null,
+            value.response.qualityWarnings.join("; ") || null, selected ? 1 : 0,
+          ]);
+          if (write && value.studentId != null && value.source.date != null && value.response.canonicalStatus != null) {
+            const attendanceId = insertCanonicalAttendanceRecord(context.database.client, { studentId: value.studentId, date: value.source.date, checkIn: value.source.checkIn, checkOut: value.source.checkOut, lateDuration: value.derivedLate.minutes ?? 0, lateSource: value.derivedLate.source === "calculated" && value.response.canonicalStatus === "late" ? "calculated" : "none", status: value.response.canonicalStatus });
+            auditEvent(context.database.client, user, { entityType: "ATTENDANCE", entityReference: `ATTENDANCE/${attendanceId}`, operation: "MACHINE_IMPORT_CREATE", importSessionId: batchId, changedFields: ["student_id", "date", "check_in", "check_out", "late_duration", "late_source", "status"], metadata: { attendance_id: attendanceId, date: value.source.date, status: value.response.canonicalStatus, source_rows: value.source.sourceRows } });
+            created++;
+          }
         }
-        return { batchId, created, rowsInspected: projection.items.length, summary: projection.summary };
+        const commitResult = { status: "committed", batch_id: batchId, rows_inserted: created, rows_updated: 0, rows_unchanged: alreadyCanonical, new_students: 0 };
+        context.database.client.run(`UPDATE attendance_import_batches SET status = 'committed', committed_at = CURRENT_TIMESTAMP,
+          new_records = ?, update_records = 0, unchanged_records = ?, conflict_records = ?, invalid_records = ?, commit_result = ? WHERE id = ?`, [created, alreadyCanonical, conflicts, invalid, JSON.stringify(commitResult), batchId]);
+        return { batchId, created, alreadyCanonical, rowsInspected: projection.items.length, summary: projection.summary };
       });
-      const response: MachineImportApplyResponse = { status: "APPLIED", batchId: result.batchId, fileFingerprint, appliedAt, summary: { rowsInspected: result.rowsInspected, created: result.created, alreadyCanonical: result.summary.alreadyCanonical, conflicts: result.summary.conflicts, blocked: result.summary.blocked, blockedByClassification: result.summary.blockedByClassification } };
+      const response: MachineImportApplyResponse = { status: "APPLIED", batchId: result.batchId, fileFingerprint, appliedAt, summary: { rowsInspected: result.rowsInspected, created: result.created, alreadyCanonical: result.alreadyCanonical, conflicts: result.summary.conflicts, blocked: result.summary.blocked, blockedByClassification: result.summary.blockedByClassification } };
       return response;
     } catch (error) {
       if (error instanceof Error && error.message === "PREVIEW_STALE") return stale(ctx.set);
