@@ -69,6 +69,8 @@ test("@attendance @machine-preview @critical @release previews scan evidence aga
   const report = await (await page.request.get("/api/analytics/tardiness-report?date_from=2026-08-10&date_to=2026-08-10")).json();
   expect(report.totals).toMatchObject({ late_events: 1, total_late_minutes: 8 });
   await expect(page.getByRole("row").filter({ hasText: "Primary 1A" }).last()).toContainText("00:08");
+  const cutoffRemoved = await page.request.delete("/api/config/jenjang/Primary");
+  expect(cutoffRemoved.status()).toBe(200);
 });
 
 test("@attendance @machine-import-redirect @critical @release redirects the legacy machine-import route to Data Import & Export", async ({ page }) => {
