@@ -28,6 +28,7 @@ import {
   type TardinessReport as TardinessReportData,
 } from '../lib/api/endpoints';
 import { TERM_OPTIONS } from '../lib/reportPeriods';
+import { resolveLateTimeDisplay } from '../lib/duration';
 import { HebBadgeRow } from '../components/HebBadgeRow';
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -137,6 +138,16 @@ function LoadingSkeleton() {
 
 function formatLateRate(value: number | null | undefined) {
   return value === null || value === undefined ? '—' : `${Number(value).toFixed(1)}%`;
+}
+
+function LateTimeCell({ row }: { row: { late_events: number; total_late_minutes: number; known_duration_events?: number; unknown_duration_events?: number } }) {
+  const display = resolveLateTimeDisplay(row);
+  return (
+    <span>
+      <span className={display.unavailable ? 'text-slate-400' : undefined}>{display.text}</span>
+      {display.note ? <span className="mt-0.5 block text-xs font-normal text-amber-600">{display.note}</span> : null}
+    </span>
+  );
 }
 
 function ClassLateRateChart({ data }: { data: TardinessClassRow[] }) {
@@ -285,6 +296,8 @@ function TardinessReport() {
   };
 
   const cutoffRows = report?.cutoffs || [];
+
+  const managementLateTime = resolveLateTimeDisplay(managementSummary);
 
   const currentParams = useMemo(
     () => buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang: selectedJenjang }),
@@ -636,7 +649,7 @@ function TardinessReport() {
               />
               <SummaryCard
                 title="Total Late Time"
-                value={managementSummary.total_late_minutes_str}
+                value={<LateTimeCell row={managementSummary} />}
                 icon={<Activity size={22} />}
                 tone="bg-amber-500 shadow-amber-500/25"
               />
@@ -651,7 +664,7 @@ function TardinessReport() {
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
               <span className="font-semibold text-slate-800">Interpretation:</span>{' '}
               {managementSummary.late_events} late events affected {managementSummary.affected_students} students with{' '}
-              {managementSummary.total_late_minutes_str} total late time (avg {managementSummary.average_late_minutes_str} per event),{' '}
+              {managementLateTime.text} total late time{managementLateTime.note ? ` (${managementLateTime.note})` : ''} (avg {managementSummary.average_late_minutes_str} per event),{' '}
               a late rate of {formatLateRate(managementSummary.late_event_rate)} across {managementSummary.expected_student_days} expected student-days.
             </div>
           </Card>
@@ -717,6 +730,7 @@ function TardinessReport() {
                     <th className="py-3 pr-4 font-semibold">Expected Student-Days</th>
                     <th className="py-3 pr-4 font-semibold">Late Events</th>
                     <th className="py-3 pr-4 font-semibold">Students Affected</th>
+                    <th className="py-3 pr-4 font-semibold">Total Late Minutes</th>
                     <th className="py-3 pr-4 font-semibold">Total Late Time</th>
                     <th className="py-3 pr-4 font-semibold">Avg Minutes Late</th>
                     <th className="py-3 pr-4 font-semibold">Late Rate</th>
@@ -726,7 +740,7 @@ function TardinessReport() {
                   {Object.entries(groupedClasses).map(([jenjang, rows]) => (
                     <Fragment key={jenjang}>
                       <tr className="bg-emerald-50 border-b border-emerald-100">
-                        <td colSpan={8} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
+                        <td colSpan={9} className="px-4 py-2.5 font-bold text-emerald-700 uppercase tracking-wide">
                           {jenjang}
                         </td>
                       </tr>
@@ -737,7 +751,8 @@ function TardinessReport() {
                           <td className="py-3 pr-4 text-slate-700">{row.expected_student_days}</td>
                           <td className="py-3 pr-4 font-semibold text-slate-900">{row.late_events}</td>
                           <td className="py-3 pr-4 text-slate-700">{row.affected_students}</td>
-                          <td className="py-3 pr-4 text-slate-700">{row.total_late_minutes_str}</td>
+                          <td className="py-3 pr-4 font-semibold text-slate-900">{row.total_late_minutes}</td>
+                          <td className="py-3 pr-4 text-slate-700"><LateTimeCell row={row} /></td>
                           <td className="py-3 pr-4 text-slate-700">{row.average_late_minutes_str}</td>
                           <td className="py-3 pr-4 font-semibold text-slate-900">{formatLateRate(row.late_event_rate)}</td>
                         </tr>
@@ -750,7 +765,8 @@ function TardinessReport() {
                     <td className="py-3 pr-4">{totals.expected_student_days}</td>
                     <td className="py-3 pr-4">{totals.late_events}</td>
                     <td className="py-3 pr-4">{totals.affected_students}</td>
-                    <td className="py-3 pr-4">{totals.total_late_minutes_str}</td>
+                    <td className="py-3 pr-4">{totals.total_late_minutes}</td>
+                    <td className="py-3 pr-4"><LateTimeCell row={totals} /></td>
                     <td className="py-3 pr-4">{totals.average_late_minutes_str}</td>
                     <td className="py-3 pr-4">{formatLateRate(totals.late_event_rate)}</td>
                   </tr>
@@ -766,7 +782,7 @@ function TardinessReport() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SummaryCard
                 title="Total Late Time"
-                value={totals.total_late_minutes_str}
+                value={<LateTimeCell row={totals} />}
                 icon={<TimerReset size={22} />}
                 tone="bg-emerald-500 shadow-emerald-500/25"
               />
