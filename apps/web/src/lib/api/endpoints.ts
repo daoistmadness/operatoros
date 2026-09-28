@@ -32,6 +32,8 @@ export type TardinessClassRow = {
   affected_students: number;
   total_late_minutes: number;
   total_late_minutes_str: string;
+  known_duration_events?: number;
+  unknown_duration_events?: number;
   average_late_minutes: number | null;
   average_late_minutes_str: string;
   late_event_rate: number | null;
@@ -50,6 +52,8 @@ export type TardinessTotals = {
   affected_students: number;
   total_late_minutes: number;
   total_late_minutes_str: string;
+  known_duration_events?: number;
+  unknown_duration_events?: number;
   average_late_minutes: number | null;
   average_late_minutes_str: string;
   late_event_rate: number | null;
@@ -59,7 +63,7 @@ export type TardinessTotals = {
 };
 export type TardinessManagementSummary = Pick<
   TardinessTotals,
-  'late_events' | 'affected_students' | 'total_late_minutes' | 'total_late_minutes_str' | 'average_late_minutes' | 'average_late_minutes_str' | 'late_event_rate' | 'expected_student_days' | 'unique_late_days'
+  'late_events' | 'affected_students' | 'total_late_minutes' | 'total_late_minutes_str' | 'known_duration_events' | 'unknown_duration_events' | 'average_late_minutes' | 'average_late_minutes_str' | 'late_event_rate' | 'expected_student_days' | 'unique_late_days'
 >;
 export type TardinessReport = JsonObject & {
   report_title: string;
