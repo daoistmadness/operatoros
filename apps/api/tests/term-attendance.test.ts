@@ -33,6 +33,29 @@ function fixture() {
 }
 
 describe("canonical term attendance", () => {
+  it("keeps Late in Hadir and Unrecorded expected days in Attendance Rate", () => {
+    const value = fixture();
+    try {
+      value.client.run("UPDATE academic_term_configs SET start_date = '2026-07-06', end_date = '2026-11-22' WHERE id = 11");
+      value.client.run("UPDATE student_enrollments SET effective_from = '2026-07-06' WHERE id = 1");
+      const dates: string[] = [];
+      for (const date = new Date("2026-07-06T00:00:00Z"); dates.length < 100; date.setUTCDate(date.getUTCDate() + 1))
+        if (date.getUTCDay() > 0 && date.getUTCDay() < 6) dates.push(date.toISOString().slice(0, 10));
+      const statuses = [...Array(80).fill("on-time"), ...Array(10).fill("late"), ...Array(3).fill("sakit"), ...Array(2).fill("izin"), "alfa"];
+      statuses.forEach((status, index) => value.attendance(dates[index]!, status, index + 1));
+      expect(value.get().totals).toMatchObject({ expected_student_days: 100, recorded_student_days: 96, unrecorded_student_days: 4,
+        hadir_count: 90, late_count: 10, sakit_count: 3, izin_count: 2, alfa_count: 1, attendance_rate: 90, coverage_rate: 96 });
+    } finally { value.close(); }
+  });
+
+  it("returns null rates when no expected student-days exist", () => {
+    const value = fixture();
+    try {
+      value.client.run("UPDATE attendance_calendar_weekday_rules SET expectation = 'NOT_EXPECTED' WHERE weekday BETWEEN 1 AND 5");
+      expect(value.get().totals).toMatchObject({ expected_student_days: 0, attendance_rate: null, coverage_rate: null });
+    } finally { value.close(); }
+  });
+
   it("uses configured dates, calendar, and expected-day rates without inventing Hadir or Alfa", () => {
     const value = fixture();
     try {

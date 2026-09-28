@@ -21,7 +21,7 @@ test("@indicators @analytics @release student indicators show neutral measuremen
   await expect(page.getByText("Academic trend unavailable").first()).toBeVisible();
   await expect(page.getByText(/AT_RISK|High Risk|Medium Risk|Low Risk|Alert|Intervention|Warning/)).toHaveCount(0);
 
-  const window = page.locator("label").filter({ hasText: /^Window/ }).locator("select");
+  const window = page.locator("label").filter({ hasText: /^Comparison window/ }).locator("select");
   const term = page.waitForResponse((response) => {
     if (!response.url().includes("/api/analytics/student-indicators")) return false;
     return new URL(response.url()).searchParams.get("window") === "term";

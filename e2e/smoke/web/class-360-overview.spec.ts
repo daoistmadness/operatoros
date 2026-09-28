@@ -28,7 +28,7 @@ test("@classes @class-360 @release class overview composes canonical class data 
     if (!response.url().includes("/api/classes/1/overview")) return false;
     return new URL(response.url()).searchParams.get("term") === "term_1" && response.status() === 200;
   });
-  await page.getByLabel("Academic term", { exact: true }).selectOption("term_1");
+  await page.getByLabel("Grading period", { exact: true }).selectOption("term_1");
   await termResponse;
   await expect(page.locator("dd").filter({ hasText: "Term 1" })).toBeVisible();
 

@@ -15,7 +15,7 @@ import {
   GradeSaveResponseSchema,
 } from "@operatoros/contracts/grades";
 import { ReportQuerySchema } from "@operatoros/contracts/reports";
-import { AnalyticsOverviewResponseSchema, ManagementOverviewResponseSchema } from "@operatoros/contracts/analytics";
+import { AcademicAnalyticsQuerySchema, AnalyticsOverviewResponseSchema, ManagementOverviewResponseSchema, ManagementReviewProfileQuerySchema, StudentTrendQuerySchema } from "@operatoros/contracts/analytics";
 import { ExcelWorksheetDtoSchema } from "@operatoros/contracts/excel";
 import { ReadinessResponseSchema } from "@operatoros/contracts/readiness";
 import {
@@ -29,6 +29,15 @@ import {
 } from "@operatoros/contracts/students";
 
 describe("@operatoros/contracts", () => {
+  it("keeps configured term IDs, grading-period categories, and trend windows distinct", () => {
+    expect(Value.Check(ManagementReviewProfileQuerySchema, { academic_year_id: "1", term_id: "17" })).toBe(true);
+    expect(Value.Check(ManagementReviewProfileQuerySchema, { academic_year_id: "1", term_id: "term_1" })).toBe(false);
+    expect(Value.Check(AcademicAnalyticsQuerySchema, { academic_year_id: "1", term: "term_1" })).toBe(true);
+    expect(Value.Check(AcademicAnalyticsQuerySchema, { academic_year_id: "1", term: "17" })).toBe(false);
+    expect(Value.Check(StudentTrendQuerySchema, { academic_year_id: "1", window: "term" })).toBe(true);
+    expect(Value.Check(StudentTrendQuerySchema, { academic_year_id: "1", window: "term_1" })).toBe(false);
+  });
+
   it("accepts valid auth and grade boundary values", () => {
     expect(Value.Check(LoginRequestSchema, { username: "admin", password: "secret" })).toBe(true);
     expect(Value.Check(AuthUserSchema, { id: 1, username: "admin", role: "admin", capabilities: [] })).toBe(true);

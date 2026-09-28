@@ -4,19 +4,10 @@ import {
   createDownloadUrl,
   revokeDownloadUrl,
 } from "../lib/api/client";
-import type { ReportQuery, ReportScope } from "@operatoros/contracts/reports";
+import type { ReportFiltersResponse, ReportQuery, ReportScope } from "@operatoros/contracts/reports";
 
 export type ReportType = "monthly" | "annual";
-export type { ReportQuery, ReportScope } from "@operatoros/contracts/reports";
-
-export interface ReportFiltersResponse {
-  academic_years: Array<{ id: number; name: string; start_date: string; end_date: string; is_default: boolean }>;
-  default_academic_year_id: number | null;
-  months: Array<{ value: string; label: string }>;
-  scopes: Array<{ value: ReportScope; label: string }>;
-  classes: string[];
-  subjects: Array<{ id: number; name: string; jenjang_id: number; jenjang_name: string }>;
-}
+export type { ReportFiltersResponse, ReportQuery, ReportScope } from "@operatoros/contracts/reports";
 
 export interface NamedCount { name: string; count: number; percentage: number | null }
 export interface AttendanceSummary {
@@ -31,8 +22,8 @@ export interface ExecutiveReport {
   attendance_summary: AttendanceSummary;
   attendance_by_level: Array<AttendanceSummary & { level: string }>;
   academic_summary: { availability: boolean; reason: string | null; sumatif_average: number | null; formatif_average: number | null; below_kkm_count: number; by_subject: Array<{ subject_id: number; subject_name: string; jenjang: string; sumatif_average: number | null; formatif_average: number | null; below_kkm_count: number }> };
-  trends: Array<{ month: string; label: string; present: number; sakit: number; izin: number; alfa: number; incomplete: number; attendance_denominator: number; attendance_rate: number | null; late_days: number; late_minutes: number; late_rate: number | null; sumatif_average: number | null; formatif_average: number | null; below_kkm_count: number }>;
-  comparisons?: Record<string, { name: string; attendance_rate: number; attendance_denominator: number } | null>;
+  trends: Array<{ month: string; label: string; present: number; sakit: number; izin: number; alfa: number; incomplete: number; attendance_denominator: number | null; attendance_rate: number | null; late_days: number; late_minutes: number; late_rate: number | null; sumatif_average: number | null; formatif_average: number | null; below_kkm_count: number }>;
+  comparisons?: Record<string, { name: string; attendance_rate: number | null; attendance_denominator: number | null } | null>;
   data_quality: { missing_gender: number; missing_religion: number; missing_domicile: number; incomplete_attendance: number; empty_grade_cells: number; unmapped_levels: string[]; warnings: string[] };
 }
 
@@ -44,7 +35,7 @@ export interface ReportPeriod {
 }
 
 export interface ManagementReport {
-  metadata: { report_type: "monthly_management"; title: string; scope: ReportScope; academic_year: { id: number; name: string }; generated_at: string; filters: { class_name: string | null; subject_id: number | null } };
+  metadata: { report_type: "monthly_management"; title: string; scope: ReportScope; academic_year: { id: number; name: string }; generated_at: string; filters: { class_id?: number | null; class_name: string | null; subject_id: number | null } };
   report_period: ReportPeriod;
   executive_summary: Record<string, number | null> & { total_students: number; total_classes: number; attendance_rate: number | null };
   student_population: { eligible_count: number; by_jenjang: Array<{ jenjang: string; student_count: number; percentage_of_eligible: number | null; class_count: number; classification: string }>; by_class: Array<{ jenjang: string; class_name: string; student_count: number; percentage_within_jenjang: number | null; percentage_of_eligible: number | null }> };
@@ -60,6 +51,7 @@ const reportParams = (query: ReportQuery) => ({
   academic_year_id: query.academic_year_id,
   scope: query.scope,
   month: query.month,
+  class_id: query.class_id || undefined,
   class_name: query.class_name || undefined,
   subject_id: query.subject_id || undefined,
 });

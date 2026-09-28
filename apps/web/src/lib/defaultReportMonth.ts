@@ -22,6 +22,7 @@ export const normalizeReportQuery = (query: import("../api/reports").ReportQuery
   academic_year_id: query.academic_year_id,
   scope: query.scope,
   month: query.month,
+  class_id: query.class_id ?? null,
   class_name: query.class_name?.trim() || null,
   subject_id: query.subject_id || null,
 });

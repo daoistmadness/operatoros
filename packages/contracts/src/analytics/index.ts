@@ -25,8 +25,8 @@ export type AnalyticsMetricDefinition = Static<typeof AnalyticsMetricDefinitionS
 
 export const AnalyticsMetricValueSchema = Type.Object({
   value: Type.Union([Type.Number(), Type.Null()]),
-  numerator: Type.Number({ minimum: 0 }),
-  denominator: Type.Number({ minimum: 0 }),
+  numerator: Type.Union([Type.Number({ minimum: 0 }), Type.Null()]),
+  denominator: Type.Union([Type.Number({ minimum: 0 }), Type.Null()]),
   unit: Type.Union([Type.Literal("count"), Type.Literal("percent"), Type.Literal("score")]),
   status: Type.Union([
     Type.Literal("value"),

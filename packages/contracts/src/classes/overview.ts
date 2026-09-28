@@ -46,9 +46,9 @@ const RosterSchema = Type.Object({
 const AttendanceSchema = Type.Object({
   status: Type.Literal("available"),
   totalRecords: Type.Number({ minimum: 0 }),
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
-  tardinessRate: Type.Number({ minimum: 0, maximum: 100 }),
-  unexcusedAbsenceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  tardinessRate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
+  unexcusedAbsenceRate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   counts: AttendanceAnalyticsStatusCountsSchema,
   overriddenRecords: Type.Number({ minimum: 0 }),
 });

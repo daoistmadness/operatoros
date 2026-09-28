@@ -133,7 +133,7 @@ describe('role-aware sidebar navigation', () => {
       ['Dashboard', 'Setup & Readiness'],
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
-      ['Management Analytics', 'Term Management Review', 'Data Recapitulation', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
+      ['Management Analytics', 'Student Profile Review', 'Population Overview', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management Report', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
       ['Data Import & Export'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Absence Reasons', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);

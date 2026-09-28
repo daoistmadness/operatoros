@@ -291,7 +291,7 @@ export default function StudentProfile() {
       labels,
       datasets: [
         {
-          label: 'Attendance Rate %',
+          label: 'Recorded Presence / HEB %',
           data: rates,
           borderColor: '#6366f1',
           backgroundColor: 'rgba(99,102,241,0.08)',
@@ -330,7 +330,7 @@ export default function StudentProfile() {
       tooltip: {
         callbacks: {
           label: (ctx: TooltipItem<'line'>) =>
-            ctx.dataset.label === 'Attendance Rate %'
+            ctx.dataset.label === 'Recorded Presence / HEB %'
               ? ` ${ctx.raw ?? '—'}%`
               : ` ${ctx.raw ?? '—'} days`,
         },
@@ -368,9 +368,9 @@ export default function StudentProfile() {
     ? `${Math.round(summary.attendance_rate * 100)}%`
     : '—';
 
-  const attendanceRate = summary?.attendance_rate ?? 0;
-  const rateColor: StatCardProps['color'] =
-    attendanceRate >= 0.9 ? 'green'
+  const attendanceRate = summary?.attendance_rate;
+  const rateColor: StatCardProps['color'] = attendanceRate === null || attendanceRate === undefined ? 'brand'
+    : attendanceRate >= 0.9 ? 'green'
     : attendanceRate >= 0.75 ? 'amber'
     : 'red';
 
@@ -467,9 +467,9 @@ export default function StudentProfile() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={TrendingUp}
-          label="Attendance Rate"
+          label="Recorded Presence / HEB"
           value={loadingSummary ? '…' : ratePercent}
-          sub={`HEB: ${summary?.heb ?? '—'} days`}
+          sub={`Legacy HEB estimate: ${summary?.heb ?? '—'} days`}
           color={loadingSummary ? 'brand' : rateColor}
         />
         <StatCard

@@ -1,4 +1,62 @@
-# Management Analytics Dashboard
+# Management Analytics: current ownership and historical notes
+
+## Current product and metric ownership
+
+The Management Analytics page is the `/analytics` overview. It consumes
+`GET /api/analytics/management-overview`. It composes existing API services;
+the browser does not calculate business metrics.
+
+- Population values come from canonical student and staff services.
+- Attendance shows Recorded Presence Rate from Attendance Analytics. It uses
+  recorded `on-time`, `late`, `sakit`, `izin`, and `alfa` events. Expected days
+  without records are outside this denominator.
+- Academic averages and participation come from Academic Analytics.
+- Data completeness comes from Data Quality.
+
+Recorded Presence Rate is distinct from canonical Attendance Rate. Canonical
+Attendance Rate is Hadir divided by Expected Student-Days. Attendance Calendar
+and date-effective Enrollment provide those expected days. Late remains Hadir,
+and Unrecorded expected days remain in the denominator. A zero denominator
+returns `null`. The complete contract is in [the metric reference](analytics/METRICS.md).
+
+Term Attendance owns Expected Student-Days, Hadir, Coverage, and Attendance
+Rate. Term Lateness owns Late Events, Students Affected, Total Late Minutes,
+Average Late Minutes, and Late Event Rate. Late Event Rate is Late Events
+divided by Expected Student-Days. Management Review Excel uses both canonical
+services as its value source.
+
+The Executive Reports page is the monthly and annual leadership workflow.
+Monthly Management Report is the recurring detailed monthly artifact. Both
+pages use the shared `useReportFilters` query owner and cache key for identical
+`GET /api/reports/filters` requests.
+
+Report filters use `class_id` as canonical identity. The backend still accepts
+legacy `class_name` at this boundary. When both are supplied, `class_id` wins.
+Existing report route URLs remain unchanged.
+
+`term_id` identifies a configured Academic Term. Academic Analytics
+`term_1` through `term_4` select grading-period categories. Student Trends and
+Student Indicators `window=term` selects a comparison window, not a Term ID.
+These filter values are not interchangeable.
+
+## Retained legacy management-summary service
+
+Caller audit result: `INTERNAL_CALLERS_EXIST`. The report builder and the
+management-summary PDF and Excel routes still call `managementSummary` in
+`apps/api/src/domains/reports.ts`. Tests also cover the compatibility routes.
+No current Web page is their owner. The API and export routes remain intact and
+are marked `RETIRE_LATER`; they are not the current metric authority.
+
+Their mixed attendance percentage is unavailable because canonical Hadir
+events and the manual monthly S/I/A ledger do not share a proven denominator.
+Raw source counts remain available. Do not use this legacy surface to infer
+canonical Attendance Rate.
+
+## Historical design notes (before Analytics & Reports Phase A)
+
+The sections below preserve earlier product and migration notes. Their old
+route and metric descriptions are historical. They do not override current
+service ownership or the live formulas in `docs/analytics/METRICS.md`.
 
 The **Management Analytics** page provides school administrators with a comprehensive, high-level summary of student attendance patterns, class tardiness records, and grade performance distribution.
 

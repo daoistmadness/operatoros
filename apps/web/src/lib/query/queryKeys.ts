@@ -36,7 +36,6 @@ export const queryKeys = {
   },
   managementReports: {
     all: ["management-reports"] as const,
-    metadata: (academicYearId?: number | null, scope?: ReportScope) => ["management-reports", "metadata", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
     monthly: (query: ReportQuery) => ["management-reports", "monthly", query] as const,
   },
   dashboard: {

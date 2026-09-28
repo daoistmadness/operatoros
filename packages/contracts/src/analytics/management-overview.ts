@@ -37,14 +37,14 @@ const StaffSnapshotSchema = Type.Object({
 const AttendanceSchema = Type.Object({
   status: Type.Literal("available"),
   totalRecords: Type.Number({ minimum: 0 }),
-  attendanceRate: Type.Number({ minimum: 0, maximum: 100 }),
+  attendanceRate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]),
   present: Type.Number({ minimum: 0 }),
   late: Type.Number({ minimum: 0 }),
   alfa: Type.Number({ minimum: 0 }),
   sakit: Type.Number({ minimum: 0 }),
   izin: Type.Number({ minimum: 0 }),
   overriddenRecords: Type.Number({ minimum: 0 }),
-  byJenjang: Type.Array(Type.Object({ label: Type.String({ minLength: 1 }), attendanceRate: Type.Number({ minimum: 0, maximum: 100 }), totalRecords: Type.Number({ minimum: 0 }) })),
+  byJenjang: Type.Array(Type.Object({ label: Type.String({ minLength: 1 }), attendanceRate: Type.Union([Type.Number({ minimum: 0, maximum: 100 }), Type.Null()]), totalRecords: Type.Number({ minimum: 0 }) })),
 });
 
 const AcademicSchema = Type.Object({

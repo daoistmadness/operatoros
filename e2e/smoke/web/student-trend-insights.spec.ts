@@ -20,7 +20,7 @@ test("@trends @analytics @release student trends compares periods and preserves 
   await expect(page.getByText("E2E Ada")).toBeVisible();
   await expect(page.getByText("Insufficient comparison data").first()).toBeVisible();
 
-  const window = page.getByLabel("Window", { exact: true });
+  const window = page.getByLabel("Comparison window", { exact: true });
   const term = page.waitForResponse((response) => {
     if (!response.url().includes("/api/analytics/student-trends")) return false;
     return new URL(response.url()).searchParams.get("window") === "term";
