@@ -76,6 +76,8 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
 
 test("@phase11 @imports machine attendance workbook validates and applies through Data Import & Export", async ({ page }) => {
   await login(page);
+  const cutoff = await page.request.put("/api/config/jenjang/Primary", { data: { cutoff_time: "07:30" } });
+  expect(cutoff.status()).toBe(200);
   await page.evaluate(async () => {
     const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
@@ -96,16 +98,19 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
   await page.locator("#machine-preview-file").setInputFiles({ name: "machine-attendance.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });
   await page.getByRole("button", { name: "Preview workbook" }).click();
   await expect(page.getByRole("heading", { name: "Workbook recognized" })).toBeVisible();
-  const createButton = page.getByRole("button", { name: /Create \d+ attendance records/ });
-  await expect(createButton).toBeVisible();
-  const eligible = Number((await createButton.textContent())?.match(/Create (\d+)/)?.[1] ?? "0");
-  if (eligible > 0) {
-    await createButton.click();
+  const applyButton = page.getByRole("button", { name: /Create \d+ attendance records|Record import evidence/ });
+  await expect(applyButton).toBeVisible();
+  const applyLabel = await applyButton.textContent();
+  if (applyLabel?.startsWith("Create ")) {
+    const eligible = Number(applyLabel.match(/Create (\d+)/)?.[1] ?? "0");
+    await applyButton.click();
     await expect(page.getByRole("status")).toContainText(`Import applied: ${eligible} created`);
   } else {
-    await expect(createButton).toBeDisabled();
-    await expect(page.getByText("Already canonical")).toBeVisible();
+    await applyButton.click();
+    await expect(page.getByRole("status")).toContainText("Import applied: 0 created, 1 already canonical");
   }
+  const cutoffRemoved = await page.request.delete("/api/config/jenjang/Primary");
+  expect(cutoffRemoved.status()).toBe(200);
 });
 
 test("@phase11 @reports monthly reports export a non-empty workbook", async ({ page }) => {
