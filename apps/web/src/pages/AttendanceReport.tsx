@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, Filter, Loader2 } from "lucide-react";
 
 import { fetchAttendanceReport } from "../api/attendanceReport";
-import { fetchAttendanceAnalyticsOptions } from "../api/attendanceAnalytics";
-import { fetchEffectiveTerms, type AcademicTermConfig } from "../api/academicConfig";
-import { getReportFilters, downloadReportBlob, type ReportFiltersResponse } from "../api/reports";
+import type { AcademicTermConfig } from "../api/academicConfig";
+import { downloadReportBlob, type ReportFiltersResponse } from "../api/reports";
 import type { AttendanceReportQuery, AttendanceReportResponse } from "@operatoros/contracts/reports";
 import { getPageApiError } from "../lib/api/errors";
 import { Card } from "../components/ui/card";
@@ -14,6 +13,10 @@ import { PageHeader } from "../components/common/page-header";
 import { EmptyState } from "../components/common/state-message";
 import { FormField, FieldLabel } from "../components/ui/field";
 import { NativeSelect } from "../components/ui/native-select";
+import { useAttendanceAnalyticsOptionsQuery } from "../hooks/useAttendanceAnalyticsQueries";
+import { useAttendanceEffectiveTermsQuery } from "../hooks/useAnalyticsQueries";
+import { useReportFilters } from "../hooks/useReportQueries";
+import { useSearchParams } from "react-router-dom";
 
 const PERIOD_TYPES = [
   { value: "month", label: "Bulanan" },
@@ -75,6 +78,21 @@ function downloadAttendanceReport(report: AttendanceReportResponse) {
     ...manual.classes.map((value) => [value.class_name, value.sakit ?? "Belum diinput", value.izin ?? "Belum diinput", value.alfa ?? "Belum diinput", value.completed_months, value.expected_months]),
     ["TOTAL", manual.totals.sakit ?? "Belum diinput", manual.totals.izin ?? "Belum diinput", manual.totals.alfa ?? "Belum diinput"],
     ...manual.completeness.missing.map((value) => ["Belum diinput", value.class_name, value.month]),
+    [],
+    ["Basis & Rekonsiliasi per Kelas-Bulan", "Tercatat = OBSERVED; Dilaporkan = DECLARED. S/I/A are Student-Days."],
+    ["Kelas", "Bulan", "Basis", "Canonical Sakit", "Canonical Izin", "Canonical Alfa", "Dilaporkan Sakit", "Dilaporkan Izin", "Dilaporkan Alfa", "Expected Student-Days", "Recorded", "Unrecorded", "Coverage (%)", "Rekonsiliasi", "Delta Student-Days", "Penjelasan", "Lateness"],
+    ...report.attendance_basis.map((value) => [
+      value.class_name, value.month,
+      value.basis === "OBSERVED" ? "Tercatat" : value.basis === "DECLARED" ? "Dilaporkan" : "Belum dilaporkan",
+      value.canonical.sakit_count, value.canonical.izin_count, value.canonical.alfa_count,
+      value.declared.sakit_student_days, value.declared.izin_student_days, value.declared.alfa_student_days,
+      value.canonical.expected_student_days, value.canonical.recorded_student_days,
+      value.canonical.unrecorded_student_days, value.canonical.coverage_rate,
+      value.reconciliation.status, value.conflict?.delta_student_days ?? null,
+      value.conflict ? "Declared S/I/A differs from canonical non-Hadir Student-Days." : value.reconciliation.reason_code,
+      value.lateness.availability === "UNAVAILABLE" ? "Lateness data unavailable" : value.lateness.late_events,
+    ]),
+    ...(report.attendance_basis_unavailable_reason ? [["Basis unavailable", report.attendance_basis_unavailable_reason]] : []),
   ];
   const csv = lines.map((line) => line.map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
@@ -86,51 +104,45 @@ function displayCount(value: number | null) {
 }
 
 function AttendanceReport() {
-  const [filters, setFilters] = useState<ReportFiltersResponse | null>(null);
-  const [academicYearId, setAcademicYearId] = useState(0);
-  const [months, setMonths] = useState<MonthOption[]>([]);
-  const [terms, setTerms] = useState<AcademicTermConfig[]>([]);
-  const [classes, setClasses] = useState<Array<{ id: number; name: string; jenjangId: number }>>([]);
-  const [jenjangs, setJenjangs] = useState<Array<{ id: number; name: string }>>([]);
-  const [periodType, setPeriodType] = useState<PeriodType>("month");
-  const [period, setPeriod] = useState("");
-  const [jenjangId, setJenjangId] = useState("all");
-  const [classId, setClassId] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [academicYearId, setAcademicYearId] = useState(() => Number(searchParams.get("academic_year_id")) || 0);
+  const [periodType, setPeriodType] = useState<PeriodType>(() => PERIOD_TYPES.some((item) => item.value === searchParams.get("period_type")) ? searchParams.get("period_type") as PeriodType : "month");
+  const [period, setPeriod] = useState(() => searchParams.get("period") ?? "");
+  const [jenjangId, setJenjangId] = useState(() => searchParams.get("jenjang_id") ?? "all");
+  const [classId, setClassId] = useState(() => searchParams.get("class_id") ?? "all");
   const [report, setReport] = useState<AttendanceReportResponse | null>(null);
-  const [loadingOptions, setLoadingOptions] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    getReportFilters().then((value) => {
-      setFilters(value);
-      setAcademicYearId(value.default_academic_year_id ?? value.academic_years.at(-1)?.id ?? 0);
-      setMonths(value.months);
-      setLoadingOptions(false);
-    }).catch((cause) => {
-      setError(getPageApiError(cause, "Gagal memuat pilihan laporan."));
-      setLoadingOptions(false);
-    });
-  }, []);
+  const filtersQuery = useReportFilters(academicYearId || null, "combined");
+  const optionsQuery = useAttendanceAnalyticsOptionsQuery(academicYearId || null, null);
+  const termsQuery = useAttendanceEffectiveTermsQuery(academicYearId || null);
+  const filters = filtersQuery.data ?? null;
+  const months = filters?.months ?? [];
+  const terms = termsQuery.data ?? [];
+  const classes = optionsQuery.data?.classes ?? [];
+  const jenjangs = optionsQuery.data?.jenjangs ?? [];
+  const loadingOptions = filtersQuery.isPending || Boolean(academicYearId && (optionsQuery.isPending || termsQuery.isPending));
 
   useEffect(() => {
-    if (!academicYearId) return;
-    setLoadingOptions(true);
-    Promise.all([
-      getReportFilters({ academic_year_id: academicYearId }),
-      fetchAttendanceAnalyticsOptions(academicYearId),
-      fetchEffectiveTerms(academicYearId),
-    ]).then(([reportFilters, attendanceOptions, effectiveTerms]) => {
-      setMonths(reportFilters.months);
-      setClasses(attendanceOptions.classes);
-      setJenjangs(attendanceOptions.jenjangs);
-      setTerms(effectiveTerms);
-      setLoadingOptions(false);
-    }).catch((cause) => {
-      setError(getPageApiError(cause, "Gagal memuat pilihan tahun ajaran."));
-      setLoadingOptions(false);
-    });
-  }, [academicYearId]);
+    if (!academicYearId && filters) setAcademicYearId(filters.default_academic_year_id ?? filters.academic_years.at(-1)?.id ?? 0);
+  }, [academicYearId, filters]);
+  useEffect(() => {
+    const cause = filtersQuery.error ?? optionsQuery.error ?? termsQuery.error;
+    if (cause) setError(getPageApiError(cause, "Gagal memuat pilihan laporan."));
+  }, [filtersQuery.error, optionsQuery.error, termsQuery.error]);
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const values: Record<string, string | number | null> = {
+      academic_year_id: academicYearId || null,
+      period_type: periodType,
+      period,
+      jenjang_id: jenjangId === "all" ? null : jenjangId,
+      class_id: classId === "all" ? null : classId,
+    };
+    for (const [key, value] of Object.entries(values)) value === null || value === "" ? next.delete(key) : next.set(key, String(value));
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [academicYearId, classId, jenjangId, period, periodType, searchParams, setSearchParams]);
 
   const options = useMemo(() => periodOptions(periodType, months, terms), [periodType, months, terms]);
   useEffect(() => {

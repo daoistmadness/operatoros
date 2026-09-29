@@ -11,7 +11,7 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@analytics @critical existing analytics and report routes keep distinct labels and shared filters", async ({ page }) => {
+test("@analytics @critical attendance views share one destination and reuse report filter metadata", async ({ page }) => {
   const browserErrors: string[] = [];
   const reportFilterRequests: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
@@ -25,7 +25,8 @@ test("@analytics @critical existing analytics and report routes keep distinct la
 
   await login(page);
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
-  await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(12);
+  await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(9);
+  await expect(navigation.getByRole("link", { name: "Attendance", exact: true })).toHaveAttribute("href", "/analytics/attendance");
   await expect(navigation.getByRole("link", { name: "Population Overview", exact: true })).toHaveAttribute("href", "/analytics/recapitulation");
   await expect(navigation.getByRole("link", { name: "Student Profile Review", exact: true })).toHaveAttribute("href", "/analytics/management-review/student-profile");
   await expect(navigation.getByRole("link", { name: "Executive Reports", exact: true })).toHaveAttribute("href", "/reports/monthly");
@@ -33,7 +34,10 @@ test("@analytics @critical existing analytics and report routes keep distinct la
 
   const routes = [
     { path: "/analytics", title: "Management Overview" },
-    { path: "/analytics/attendance", title: "Attendance Analytics" },
+    { path: "/analytics/attendance", title: "Attendance Analytics", view: "Overview" },
+    { path: "/analytics/attendance?view=report", title: "Laporan Kehadiran", view: "Report" },
+    { path: "/analytics/attendance?view=recap&period_type=date_range&start_date=2026-08-03&end_date=2026-08-14", title: "Rekap Absensi", view: "Recap", dateFrom: "2026-08-03", dateTo: "2026-08-14" },
+    { path: "/analytics/attendance?view=tardiness", title: "Tardiness Report", view: "Tardiness" },
     { path: "/analytics/academic", title: "Academic Analytics" },
     { path: "/analytics/student-insights?view=trends", title: "Student Insights", view: "Trends" },
     { path: "/analytics/student-insights?view=indicators", title: "Student Insights", view: "Indicators" },
@@ -42,24 +46,39 @@ test("@analytics @critical existing analytics and report routes keep distinct la
     { path: "/reports/monthly", title: "Executive Reports" },
     { path: "/reports/management/monthly", title: "Monthly Management Report" },
     { path: "/analytics/management-review/student-profile", title: "Student Profile" },
-    { path: "/reports/tardiness", title: "Tardiness Report" },
+    { path: "/reports/tardiness?month=8&year=2026", title: "Tardiness Report", view: "Tardiness", redirect: true },
   ] as const;
 
   for (const route of routes) {
     await page.goto(route.path);
-    const path = route.redirect ? "/analytics/student-insights" : route.path.split("?")[0];
-    if (route.redirect) await page.waitForURL((url) => url.pathname === path);
+    const path = route.redirect ? "view" in route && route.view === "Tardiness" ? "/analytics/attendance" : "/analytics/student-insights" : route.path.split("?")[0];
+    if (route.redirect) await page.waitForURL((url) => url.pathname === path && (path !== "/analytics/attendance" || url.searchParams.get("view") === "tardiness"));
     else expect(new URL(page.url()).pathname).toBe(path);
     await expect(page.getByRole("heading", { name: route.title, exact: true }).first()).toBeVisible();
     if ("view" in route) {
       await expect(page.getByRole("tab", { name: route.view, exact: true })).toHaveAttribute("aria-selected", "true");
       if (route.view === "Trends") await expect(page.getByText("Attendance Rate change", { exact: true })).toBeVisible();
-      else await expect(page.getByRole("columnheader", { name: "Late Event Rate" })).toBeVisible();
+      else if (route.view === "Indicators") await expect(page.getByRole("columnheader", { name: "Late Event Rate" })).toBeVisible();
+    }
+    if ("dateFrom" in route) {
+      await expect(page.getByLabel("Dari tanggal", { exact: true })).toHaveValue(route.dateFrom);
+      await expect(page.getByLabel("Sampai tanggal", { exact: true })).toHaveValue(route.dateTo);
     }
     if (route.path === "/analytics" || route.path === "/analytics/attendance") {
       await expect(page.getByText("Recorded Presence Rate", { exact: true }).first()).toBeVisible();
     }
   }
+
+  reportFilterRequests.length = 0;
+  await page.goto("/analytics/attendance?view=report");
+  await expect(page.getByRole("heading", { name: "Laporan Kehadiran", exact: true })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  const attendanceFilterRequests = reportFilterRequests.length;
+  expect(attendanceFilterRequests).toBeGreaterThan(0);
+  await page.getByRole("tab", { name: "Recap", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Rekap Absensi", exact: true })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(reportFilterRequests).toHaveLength(attendanceFilterRequests);
 
   reportFilterRequests.length = 0;
   await page.goto("/reports/monthly");

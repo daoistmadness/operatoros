@@ -3,10 +3,10 @@ import { Navigate } from 'react-router-dom';
 import { RequireCapability, RequireRole } from '../components/auth/RouteGuards';
 import { lazyNamedRoute } from './lazyRoute';
 import { ROUTE_GROUPS, type RouteGroup } from './routeGroups';
+import { AttendanceCompatibilityRedirect } from './AttendanceCompatibilityRedirect';
 
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const UploadCenter = lazy(() => import('../pages/UploadCenter'));
-const AttendanceReport = lazy(() => import('../pages/AttendanceReport'));
 const AttendanceReview = lazy(() => import('../pages/AttendanceReview'));
 const AttendanceCorrections = lazy(() => import('../pages/AttendanceCorrections'));
 const AttendanceCorrectionReview = lazy(() => import('../pages/AttendanceCorrectionReview'));
@@ -15,11 +15,9 @@ const AbsenceReasons = lazy(() => import('../pages/AbsenceReasons'));
 const HebConfig = lazy(() => import('../pages/HebConfig'));
 const JenjangConfig = lazy(() => import('../features/jenjang-config'));
 const Settings = lazy(() => import('../pages/Settings'));
-const TardinessReport = lazy(() => import('../pages/TardinessReport'));
-const RekapAbsensi = lazy(() => import('../pages/RekapAbsensi'));
 const DataRecapitulation = lazy(() => import('../pages/DataRecapitulation'));
 const DataQuality = lazy(() => import('../pages/DataQuality'));
-const AttendanceAnalytics = lazy(() => import('../pages/AttendanceAnalytics'));
+const AttendanceDestination = lazy(() => import('../pages/AttendanceDestination'));
 const AcademicAnalytics = lazy(() => import('../pages/AcademicAnalytics'));
 const StudentInsights = lazy(() => import('../pages/StudentInsights'));
 const StudentTrendsCompatibilityRedirect = lazyNamedRoute(() => import('../pages/StudentInsights'), 'StudentTrendsCompatibilityRedirect');
@@ -100,12 +98,12 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/reports/monthly', element: <ExecutiveReports reportType="monthly" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/reports/annual', element: <ExecutiveReports reportType="annual" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/reports/management/monthly', element: <MonthlyManagementReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
-  defineRoute({ path: '/reports/attendance', element: <AttendanceReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
-  defineRoute({ path: '/reports/tardiness', element: <TardinessReport />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
-  defineRoute({ path: '/reports/rekap-absensi', element: <RekapAbsensi />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/reports/attendance', element: <AttendanceCompatibilityRedirect view="report" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/analytics/attendance?view=report', authorization: authenticated() }),
+  defineRoute({ path: '/reports/tardiness', element: <AttendanceCompatibilityRedirect view="tardiness" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/analytics/attendance?view=tardiness', authorization: authenticated() }),
+  defineRoute({ path: '/reports/rekap-absensi', element: <AttendanceCompatibilityRedirect view="recap" />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, redirectTo: '/analytics/attendance?view=recap', authorization: authenticated() }),
   defineRoute({ path: '/analytics/recapitulation', element: <DataRecapitulation />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/data-quality', element: <DataQuality />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
-  defineRoute({ path: '/analytics/attendance', element: <AttendanceAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
+  defineRoute({ path: '/analytics/attendance', element: <AttendanceDestination />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/academic', element: <AcademicAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/student-insights', element: <StudentInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
   defineRoute({ path: '/analytics/trends', element: <StudentTrendsCompatibilityRedirect />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),

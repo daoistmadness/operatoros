@@ -441,7 +441,7 @@ function buildTardiness(context: AuthContext, period: Row, jenjang?: string | nu
   const breakdown = [...tally.byClass.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.class_name.localeCompare(b.class_name)).map((value) => ({ class_name: value.class_name, jenjang: value.jenjang, expected_student_days: value.expected_student_days, late_events: value.late_events, affected_students: value.affected_students.size, total_late_minutes: value.total_late_minutes, total_late_minutes_str: timeLabel(value.total_late_minutes), known_duration_events: value.known_minute_events, unknown_duration_events: value.late_events - value.known_minute_events, average_late_minutes: averageLateMinutes(value.total_late_minutes, value.known_minute_events), average_late_minutes_str: averageLateLabel(value.total_late_minutes, value.known_minute_events), late_event_rate: lateEventRate(value.late_events, value.expected_student_days), days_with_late_arrivals: value.late_dates.size }));
   const hebByJenjang: Row = {}; for (const name of rolled.keys()) { const raw = rows(context, "SELECT jenjang FROM students WHERE UPPER(TRIM(COALESCE(jenjang, 'Unassigned'))) = ? LIMIT 1", [name.toUpperCase()])[0]?.jenjang ?? name; hebByJenjang[name] = monthPairs(period.date_from, period.date_to).reduce((sum, [py, pm]) => sum + Number(calculateHeb(context, raw, pm, py).heb), 0); }
   const uniqueDays = tally.late_dates.size;
-  const totals = { expected_student_days: tally.expected_student_days, late_events: tally.late_events, affected_students: tally.affected_students.size, total_late_minutes: tally.total_late_minutes, total_late_minutes_str: timeLabel(tally.total_late_minutes), known_duration_events: tally.known_minute_events, unknown_duration_events: tally.late_events - tally.known_minute_events, average_late_minutes: averageLateMinutes(tally.total_late_minutes, tally.known_minute_events), average_late_minutes_str: averageLateLabel(tally.total_late_minutes, tally.known_minute_events), late_event_rate: lateEventRate(tally.late_events, tally.expected_student_days), unique_late_days: uniqueDays, tracked_school_days: tracked, school_impact_rate_pct: tracked ? roundHalfEven(uniqueDays / tracked * 100, 1) : null };
+  const totals = { expected_student_days: tally.expected_student_days, arrival_evidence_records: tally.arrival_evidence_records, late_events: tally.late_events, affected_students: tally.affected_students.size, total_late_minutes: tally.total_late_minutes, total_late_minutes_str: timeLabel(tally.total_late_minutes), known_duration_events: tally.known_minute_events, unknown_duration_events: tally.late_events - tally.known_minute_events, average_late_minutes: averageLateMinutes(tally.total_late_minutes, tally.known_minute_events), average_late_minutes_str: averageLateLabel(tally.total_late_minutes, tally.known_minute_events), late_event_rate: lateEventRate(tally.late_events, tally.expected_student_days), unique_late_days: uniqueDays, tracked_school_days: tracked, school_impact_rate_pct: tracked ? roundHalfEven(uniqueDays / tracked * 100, 1) : null };
   const result: Row = { report_title: reportTitle, school_name: schoolName, period: { label: period.label, date_from: period.date_from, date_to: period.date_to }, cutoffs: [...tally.cutoffs.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang)), heb_by_jenjang: hebByJenjang, summary_by_jenjang: summaryByJenjang, breakdown_by_class: breakdown, totals, management_summary: { late_events: totals.late_events, affected_students: totals.affected_students, total_late_minutes: totals.total_late_minutes, total_late_minutes_str: totals.total_late_minutes_str, known_duration_events: totals.known_duration_events, unknown_duration_events: totals.unknown_duration_events, average_late_minutes: totals.average_late_minutes, average_late_minutes_str: totals.average_late_minutes_str, late_event_rate: totals.late_event_rate, expected_student_days: totals.expected_student_days, unique_late_days: totals.unique_late_days } };
   if (includeDetail) {
     const names = new Map<number, string>();
@@ -470,7 +470,9 @@ function buildTardinessSummary(context: AuthContext, period: Row, jenjang?: stri
 
 function buildRekap(context: AuthContext, query: AttendanceReportQuery): ManualAbsenceReportResponse {
   const report = buildAttendanceReport(context, query);
-  return { scope: report.scope, manual_absence: report.manual_absence };
+  return { scope: report.scope, manual_absence: report.manual_absence,
+    attendance_basis: report.attendance_basis,
+    attendance_basis_unavailable_reason: report.attendance_basis_unavailable_reason };
 }
 
 function rekapQuery(context: AuthContext, params: Record<string, unknown>): AttendanceReportQuery {
@@ -562,6 +564,7 @@ async function rekapWorkbook(report: ManualAbsenceReportResponse): Promise<Uint8
   appendRow(summary, [`Tahun Ajaran ${report.scope.academic_year_label}`]);
   appendRow(summary, [`Periode ${report.scope.start_date} – ${report.scope.end_date}`]);
   appendRow(summary, ["Sumber: Input total bulanan per kelas"]);
+  appendRow(summary, ["Basis dan rekonsiliasi per kelas-bulan tersedia di sheet Basis & Rekonsiliasi"]);
   appendRow(summary, ["Kelengkapan", manual.completeness.complete ? "Lengkap" : "Belum lengkap"]);
   appendRow(summary, ["Entri kelas-bulan diharapkan", manual.completeness.expected_class_month_entries]);
   appendRow(summary, ["Entri kelas-bulan tersimpan", manual.completeness.completed_class_month_entries]);
@@ -571,13 +574,32 @@ async function rekapWorkbook(report: ManualAbsenceReportResponse): Promise<Uint8
   for (const value of manual.classes) appendRow(summary, [value.class_name, value.jenjang, value.program, value.sakit ?? "Belum diinput", value.izin ?? "Belum diinput", value.alfa ?? "Belum diinput", value.completed_months, value.expected_months]);
   appendRow(summary, ["TOTAL", "", "", manual.totals.sakit ?? "Belum diinput", manual.totals.izin ?? "Belum diinput", manual.totals.alfa ?? "Belum diinput"]);
   for (const value of manual.completeness.missing) appendRow(summary, ["Belum diinput", value.class_name, value.month]);
-  summary.getRow(9).font = { bold: true };
-  summary.views = [{ state: "frozen", ySplit: 9 }];
+  summary.getRow(11).font = { bold: true };
+  summary.views = [{ state: "frozen", ySplit: 11 }];
   autoSizeColumns(summary, 12, 36);
+
+  const basis = addWorksheet(workbook, "Basis & Rekonsiliasi");
+  appendRow(basis, ["Sumber: nilai kanonis dan ledger bulanan dari server. Tercatat = OBSERVED; Dilaporkan = DECLARED."]);
+  appendRow(basis, ["Kelas", "Bulan", "Basis", "Canonical Sakit", "Canonical Izin", "Canonical Alfa", "Dilaporkan Sakit", "Dilaporkan Izin", "Dilaporkan Alfa", "Expected Student-Days", "Recorded", "Unrecorded", "Coverage (%)", "Rekonsiliasi", "Canonical non-Hadir", "Dilaporkan total", "Delta Student-Days", "Penjelasan", "Lateness"]);
+  for (const value of report.attendance_basis) {
+    const conflict = value.conflict;
+    appendRow(basis, [value.class_name, value.month,
+      value.basis === "OBSERVED" ? "Tercatat" : value.basis === "DECLARED" ? "Dilaporkan" : "Belum dilaporkan",
+      value.canonical.sakit_count, value.canonical.izin_count, value.canonical.alfa_count,
+      value.declared.sakit_student_days, value.declared.izin_student_days, value.declared.alfa_student_days,
+      value.canonical.expected_student_days, value.canonical.recorded_student_days,
+      value.canonical.unrecorded_student_days, value.canonical.coverage_rate,
+      value.reconciliation.status, conflict?.canonical_non_hadir_student_days ?? null,
+      conflict?.declared_absence_student_days ?? null, conflict?.delta_student_days ?? null,
+      conflict ? "Declared S/I/A differs from canonical non-Hadir Student-Days." : value.reconciliation.reason_code,
+      value.lateness.availability === "UNAVAILABLE" ? "Lateness data unavailable" : value.lateness.late_events]);
+  }
+  autoSizeColumns(basis, 12, 42);
   return writeXlsxWorkbook(workbook);
 }
 
 async function tardinessWorkbook(report: Row, managementOnly: boolean): Promise<Uint8Array> {
+  if (!report.totals.arrival_evidence_records) throw Object.assign(new Error("Lateness data unavailable without canonical arrival evidence."), { status: 422 });
   const workbook = createWorkbook({ exportType: "tardiness-report" });
   const summary = addWorksheet(workbook, managementOnly ? "Executive Summary" : "Management Summary");
   appendRow(summary, ["Metric", "Value"]);

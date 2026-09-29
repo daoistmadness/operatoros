@@ -27,9 +27,17 @@ are inclusive ISO dates and must remain inside the academic year. Monthly
 absence reasons use their stored month bucket. The API preserves missing
 months as `unavailable`, not zero.
 
-Existing report routes remain available for compatibility. Their response
-shapes and report-specific metrics do not change. The canonical routes provide
-the shared aggregate contract for future reports and Excel work.
+Existing report routes and report-specific metrics remain available. The
+Recap response adds `attendance_basis` and
+`attendance_basis_unavailable_reason`, using the same server-resolved values as
+Attendance Report. The canonical routes provide the shared aggregate contract
+for future reports and Excel work.
+
+The browser consolidates Attendance Analytics, Attendance Report, Attendance
+Recap, and Tardiness under `/analytics/attendance?view=...`. The prior browser
+paths `/reports/attendance`, `/reports/rekap-absensi`, and
+`/reports/tardiness` redirect to their matching view and preserve query
+parameters. These redirects do not change API routes or metric ownership.
 
 ## Metric semantics
 
