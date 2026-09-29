@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { inTransaction } from "@operatoros/db";
-import type { ManualAbsenceMonthlyResponse, ManualAbsenceSaveRequest } from "@operatoros/contracts/reports";
+import type { ManualAbsenceMonthlyResponse, ManualAbsenceSaveRequest, ManualAbsenceStudentTotalsResponse } from "@operatoros/contracts/reports";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { expectedStudentDaysByClassAndEnrollment } from "./term-attendance";
 
@@ -158,6 +158,40 @@ export function getMonthlyClassAbsenceTotals(context: AuthContext, academicYearI
       is_locked: locked,
       expected_student_days: expectedDays,
       updated_at: revision?.created_at == null ? null : String(revision.created_at),
+      };
+    }),
+  };
+}
+
+export function getMonthlyClassAbsenceStudentTotals(context: AuthContext, academicYearId: number, month: string, classId: number): ManualAbsenceStudentTotalsResponse {
+  const scope = monthlyScope(context, academicYearId, month, { class_id: classId });
+  checkedPeriod(context, scope);
+  classInventory(context, scope);
+  const expected = expectedStudentDaysByClassAndEnrollment(context, {
+    academic_year_id: academicYearId, start_date: scope.start_date, end_date: scope.end_date,
+  }).get(classId) ?? new Map<number, number>();
+  const revision = latestLedger(context, academicYearId, classId, month);
+  const saved = new Map<number, Row>();
+  if (revision?.entry_mode === "PER_STUDENT")
+    for (const value of rows(context, "SELECT enrollment_id,sakit,izin,alfa FROM attendance_ledger_student_totals WHERE revision_id=?", [revision.id]))
+      saved.set(Number(value.enrollment_id), value);
+  const enrollmentIds = [...expected.keys()];
+  const roster = enrollmentIds.length ? rows(context, `SELECT e.id AS enrollment_id,
+      COALESCE(NULLIF(TRIM(m.full_name), ''), NULLIF(TRIM(s.name), ''), 'Unknown student') AS student_name
+    FROM student_enrollments e
+    LEFT JOIN student_masters m ON m.id=e.student_master_id
+    LEFT JOIN students s ON s.id=e.student_id
+    WHERE e.id IN (${enrollmentIds.map(() => "?").join(",")})
+    ORDER BY student_name COLLATE NOCASE, e.id`, enrollmentIds) : [];
+  return {
+    academic_year_id: academicYearId, month, class_id: classId,
+    students: roster.map((value) => {
+      const enrollmentId = Number(value.enrollment_id);
+      const total = saved.get(enrollmentId);
+      return {
+        enrollment_id: enrollmentId, student_name: String(value.student_name),
+        expected_student_days: expected.get(enrollmentId) ?? 0,
+        sakit: Number(total?.sakit ?? 0), izin: Number(total?.izin ?? 0), alfa: Number(total?.alfa ?? 0),
       };
     }),
   };

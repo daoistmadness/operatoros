@@ -84,6 +84,31 @@ export function resolveAttendanceBasis(context: AuthContext, query: Omit<Attenda
     const declaredTotal = submitted ? value.sakit + value.izin + value.alfa : null;
     if (declaredTotal !== null && declaredTotal > counts.expected_student_days)
       problem(409, "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS", `Submitted class S/I/A total ${declaredTotal} exceeds ${counts.expected_student_days} known Expected Student-Days for ${value.class_name} in ${query.month}.`);
+    const draft = value.state === "OPEN" ? {
+      sakit_student_days: value.sakit, izin_student_days: value.izin, alfa_student_days: value.alfa,
+    } : null;
+    const draftTotal = draft ? draft.sakit_student_days + draft.izin_student_days + draft.alfa_student_days : null;
+    let draftReconciliation: AttendanceBasisClass["draft_reconciliation"] = null;
+    let draftConflict: AttendanceBasisClass["draft_conflict"] = null;
+    if (draftTotal !== null) {
+      if (draftTotal > counts.expected_student_days)
+        draftReconciliation = emptyReconciliation("NOT_COMPARABLE", "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS");
+      else if (evidenceRecords === 0) draftReconciliation = emptyReconciliation("NOT_AVAILABLE", "NO_CANONICAL_EVIDENCE");
+      else if (counts.expected_student_days === 0) draftReconciliation = emptyReconciliation("NOT_COMPARABLE", "NO_EXPECTED_STUDENT_DAYS");
+      else if (counts.recorded_student_days !== counts.expected_student_days) draftReconciliation = emptyReconciliation("NOT_COMPARABLE", "CANONICAL_COVERAGE_INCOMPLETE");
+      else if (counts.other_status_count > 0) draftReconciliation = emptyReconciliation("NOT_COMPARABLE", "CANONICAL_STATUS_UNRESOLVED");
+      else {
+        const canonicalNonHadir = counts.expected_student_days - counts.hadir_count;
+        const delta = draftTotal - canonicalNonHadir;
+        draftReconciliation = { status: delta === 0 ? "MATCH" : "CONFLICT", reason_code: delta === 0 ? null : "ABSENCE_TOTAL_MISMATCH" };
+        if (delta !== 0) draftConflict = {
+          class_id: value.class_id, class_name: value.class_name, month: query.month,
+          canonical_non_hadir_student_days: canonicalNonHadir,
+          declared_absence_student_days: draftTotal, delta_student_days: delta,
+          reason_code: "ABSENCE_TOTAL_MISMATCH",
+        };
+      }
+    }
 
     const basis: AttendanceBasisClass["basis"] = evidenceRecords > 0 ? "OBSERVED" : submitted ? "DECLARED" : "NOT_REPORTED";
     const resolved = basis === "OBSERVED" ? {
@@ -133,7 +158,8 @@ export function resolveAttendanceBasis(context: AuthContext, query: Omit<Attenda
       month: query.month, basis, canonical_evidence_records: evidenceRecords,
       canonical: counts,
       ledger: { state: value.state, entry_mode: value.entry_mode },
-      declared, resolved, presumed_hadir_student_days: presumedHadir,
+      declared, draft, draft_reconciliation: draftReconciliation, draft_conflict: draftConflict,
+      resolved, presumed_hadir_student_days: presumedHadir,
       lateness: {
         availability: latenessAvailable ? "AVAILABLE" : "UNAVAILABLE",
         reason_code: latenessAvailable ? null : basis !== "OBSERVED" ? "NO_CANONICAL_EVIDENCE" : "CUTOFF_POLICY_UNCONFIGURED",

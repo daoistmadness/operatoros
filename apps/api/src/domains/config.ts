@@ -4,6 +4,10 @@ import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthCo
 import { actor } from "./core";
 import {
   ManualAbsenceMonthlyResponseSchema,
+  ManualAbsenceStudentTotalsQuerySchema,
+  ManualAbsenceStudentTotalsResponseSchema,
+  LegacyAbsenceReasonsQuerySchema,
+  LegacyAbsenceReasonsResponseSchema,
   ManualAbsenceLedgerActionRequestSchema,
   ManualAbsenceLedgerActionResponseSchema,
   ManualAbsenceLedgerReopenRequestSchema,
@@ -11,7 +15,7 @@ import {
   ManualAbsenceSaveRequestSchema,
   ManualAbsenceSaveResponseSchema,
 } from "@operatoros/contracts/reports";
-import { getMonthlyClassAbsenceTotals, reopenMonthlyClassAbsenceLedger, saveMonthlyClassAbsenceTotals, submitMonthlyClassAbsenceLedger } from "./manual-absence";
+import { getMonthlyClassAbsenceStudentTotals, getMonthlyClassAbsenceTotals, reopenMonthlyClassAbsenceLedger, saveMonthlyClassAbsenceTotals, submitMonthlyClassAbsenceLedger } from "./manual-absence";
 import { validCalendarDate } from "./attendance-calendar";
 
 type Row = Record<string, any>;
@@ -186,6 +190,26 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
       return fail(ctx.set, status, status >= 500 ? "Monthly absence totals could not be loaded." : error instanceof Error ? error.message : "Invalid absence scope.");
     }
   }, { query: ManualAbsenceQuerySchema, response: ManualAbsenceMonthlyResponseSchema });
+
+  app.get("/api/config/absence-reasons/students", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    try {
+      return getMonthlyClassAbsenceStudentTotals(context, Number(ctx.query.academic_year_id), ctx.query.month, Number(ctx.query.class_id));
+    } catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 500;
+      return fail(ctx.set, status, status >= 500 ? "Monthly student absence totals could not be loaded." : error instanceof Error ? error.message : "Invalid class-month scope.");
+    }
+  }, { query: ManualAbsenceStudentTotalsQuerySchema, response: ManualAbsenceStudentTotalsResponseSchema });
+
+  app.get("/api/config/absence-reasons/legacy", (ctx: Context) => {
+    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
+    const [year, month] = ctx.query.month.split("-").map(Number) as [number, number];
+    const values = rows(context, `SELECT COALESCE(NULLIF(TRIM(s.name), ''), 'Unknown student') AS student_name,
+        ar.class_name, ar.sakit, ar.izin, ar.alfa
+      FROM absence_reasons ar LEFT JOIN students s ON s.id=ar.student_id
+      WHERE ar.year=? AND ar.month=? ORDER BY ar.class_name COLLATE NOCASE, student_name COLLATE NOCASE, ar.student_id`, [year, month]);
+    return { month: ctx.query.month, rows: values.map((value) => ({ ...value, sakit: Number(value.sakit), izin: Number(value.izin), alfa: Number(value.alfa) })) };
+  }, { query: LegacyAbsenceReasonsQuerySchema, response: LegacyAbsenceReasonsResponseSchema });
 
   app.post("/api/config/absence-reasons/bulk", (ctx: Context) => {
     const user = actor(context, ctx, { role: "admin" });

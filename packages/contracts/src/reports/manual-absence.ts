@@ -40,6 +40,39 @@ export const ManualAbsenceMonthlyResponseSchema = Type.Object({
   classes: Type.Array(ManualAbsenceClassSchema),
 });
 
+export const ManualAbsenceStudentTotalsQuerySchema = Type.Object({
+  academic_year_id: Type.String({ pattern: "^[1-9]\\d*$" }),
+  month: MonthKey,
+  class_id: Type.String({ pattern: "^[1-9]\\d*$" }),
+});
+
+export const ManualAbsenceStudentTotalsResponseSchema = Type.Object({
+  academic_year_id: PositiveId,
+  month: MonthKey,
+  class_id: PositiveId,
+  students: Type.Array(Type.Object({
+    enrollment_id: PositiveId,
+    student_name: Type.String(),
+    expected_student_days: Type.Integer({ minimum: 0 }),
+    sakit: Type.Integer({ minimum: 0 }),
+    izin: Type.Integer({ minimum: 0 }),
+    alfa: Type.Integer({ minimum: 0 }),
+  })),
+});
+
+export const LegacyAbsenceReasonsQuerySchema = Type.Object({ month: MonthKey });
+
+export const LegacyAbsenceReasonsResponseSchema = Type.Object({
+  month: MonthKey,
+  rows: Type.Array(Type.Object({
+    student_name: Type.String(),
+    class_name: Type.Union([Type.String(), Type.Null()]),
+    sakit: Type.Integer({ minimum: 0 }),
+    izin: Type.Integer({ minimum: 0 }),
+    alfa: Type.Integer({ minimum: 0 }),
+  })),
+});
+
 export const ManualAbsenceSaveRequestSchema = Type.Object({
   academic_year_id: PositiveId,
   month: MonthKey,
@@ -181,6 +214,9 @@ export const AttendanceReportResponseSchema = Type.Object({
 
 export type ManualAbsenceQuery = Static<typeof ManualAbsenceQuerySchema>;
 export type ManualAbsenceMonthlyResponse = Static<typeof ManualAbsenceMonthlyResponseSchema>;
+export type ManualAbsenceStudentTotalsQuery = Static<typeof ManualAbsenceStudentTotalsQuerySchema>;
+export type ManualAbsenceStudentTotalsResponse = Static<typeof ManualAbsenceStudentTotalsResponseSchema>;
+export type LegacyAbsenceReasonsResponse = Static<typeof LegacyAbsenceReasonsResponseSchema>;
 export type ManualAbsenceSaveRequest = Static<typeof ManualAbsenceSaveRequestSchema>;
 export type ManualAbsenceLedgerActionRequest = Static<typeof ManualAbsenceLedgerActionRequestSchema>;
 export type ManualAbsenceLedgerReopenRequest = Static<typeof ManualAbsenceLedgerReopenRequestSchema>;

@@ -301,9 +301,9 @@ export default function Dashboard() {
           </div>
           
           <div className="mt-8 z-10 relative">
-            {user?.role === "admin" ? <Link to="/config/absence-reasons" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
+            {user?.role === "admin" ? <Link to="/attendance/monthly-recap" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
               Complete Review
-            </Link> : <p className="text-sm font-semibold text-slate-300">An administrator manages absence-reason configuration.</p>}
+            </Link> : <p className="text-sm font-semibold text-slate-300">An administrator manages monthly attendance recaps.</p>}
           </div>
         </motion.div>
       </div>
