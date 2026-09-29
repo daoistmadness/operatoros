@@ -79,12 +79,14 @@ function ledgerFinalizeWarnings(context: AuthContext, date: string): Row[] {
         AND (e.effective_to IS NULL OR e.effective_to >= ?)
         AND (e.student_id IS NOT NULL OR e.student_master_id IS NOT NULL))
       AND NOT EXISTS (SELECT 1 FROM student_enrollments e JOIN attendance a ON a.student_id = e.student_id
-        WHERE e.academic_year_id = c.academic_year_id AND e.academic_class_id = c.id AND a.date = ?
+        WHERE e.academic_year_id = c.academic_year_id AND e.academic_class_id = c.id
+          AND a.date >= substr(?, 1, 7) || '-01' AND a.date < date(substr(?, 1, 7) || '-01', '+1 month')
+          AND a.date BETWEEN y.start_date AND y.end_date
           AND e.lifecycle_state NOT IN ('DRAFT', 'VOIDED')
-          AND (e.effective_from IS NULL OR e.effective_from <= ?)
-          AND (e.effective_to IS NULL OR e.effective_to >= ?))
+          AND (e.effective_from IS NULL OR e.effective_from <= a.date)
+          AND (e.effective_to IS NULL OR e.effective_to >= a.date))
       AND COALESCE(r.state, 'MISSING') <> 'SUBMITTED'
-    ORDER BY c.class_name, c.id`, [date, date, date, date, date, date, date, date, date]);
+    ORDER BY c.class_name, c.id`, [date, date, date, date, date, date, date, date]);
 }
 function currentStatus(value: Row): string { return value.override_status ?? value.status; }
 function snapshot(value: Row): Row { return { attendance_id: value.id, status: currentStatus(value), check_in: time(value.override_check_in ?? value.check_in), check_out: time(value.override_check_out ?? value.check_out), override_id: value.override_id ?? null, override_reviewed_at: value.reviewed_at ?? null }; }
