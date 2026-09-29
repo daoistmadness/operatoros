@@ -6,6 +6,7 @@ export type StudentIndicatorFilters = {
   academic_year_id: number;
   jenjang_id?: number | null;
   class_id?: number | null;
+  student_id?: string;
   search?: string;
   sort?: "name" | "attendance_rate" | "attendance_delta" | "tardiness_rate" | "tardiness_delta" | "alfa_rate" | "alfa_delta" | "academic_average" | "academic_participation";
   order?: "asc" | "desc";
@@ -21,6 +22,7 @@ export async function fetchStudentIndicatorInsights(filters: StudentIndicatorFil
       academic_year_id: filters.academic_year_id,
       jenjang_id: filters.jenjang_id ?? undefined,
       class_id: filters.class_id ?? undefined,
+      student_id: filters.student_id || undefined,
       search: filters.search || undefined,
       sort: filters.sort ?? "name",
       order: filters.order ?? "asc",

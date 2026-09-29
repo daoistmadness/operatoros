@@ -117,6 +117,7 @@ export interface LatenessStudentClassDetail {
 
 export interface LatenessStudentTally {
   late_events: number;
+  late_events_by_date: Map<string, number>;
   total_late_minutes: number;
   known_minute_events: number;
   student_id: number | null;
@@ -156,7 +157,7 @@ function emptyClass(classId: number | null, className: string, jenjang: string):
     affected_students: new Set(), total_late_minutes: 0, known_minute_events: 0, late_dates: new Set() };
 }
 
-export function tallyLatenessRange(context: AuthContext, input: { startDate: string; endDate: string; academicYearId: number; scope?: LatenessScope }): LatenessRangeTally {
+export function tallyLatenessRange(context: AuthContext, input: { startDate: string; endDate: string; academicYearId: number; scope?: LatenessScope; scopeIsValidated?: boolean }): LatenessRangeTally {
   const scope: LatenessScope = input.scope ?? { jenjang_id: null, program_id: null, grade_id: null, class_id: null };
   const year = one(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [input.academicYearId]);
   if (!year) problem(404, "ACADEMIC_YEAR_NOT_FOUND", "Academic year not found.");
@@ -165,7 +166,7 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id
     JOIN academic_programs p ON p.id = g.program_id JOIN jenjangs j ON j.id = g.jenjang_id
     WHERE c.academic_year_id = ?`, [input.academicYearId]) as Class[];
-  if (scope.jenjang_id !== null && !one(context, "SELECT id FROM jenjangs WHERE id = ?", [scope.jenjang_id])) problem(404, "JENJANG_NOT_FOUND", "Jenjang not found.");
+  if (!input.scopeIsValidated && scope.jenjang_id !== null && !one(context, "SELECT id FROM jenjangs WHERE id = ?", [scope.jenjang_id])) problem(404, "JENJANG_NOT_FOUND", "Jenjang not found.");
   if (scope.program_id !== null && !one(context, "SELECT id FROM academic_programs WHERE id = ?", [scope.program_id])) problem(404, "PROGRAM_NOT_FOUND", "Academic program not found.");
   if (scope.grade_id !== null && !one(context, "SELECT id FROM academic_grades WHERE id = ?", [scope.grade_id])) problem(404, "GRADE_NOT_FOUND", "Grade not found.");
   if (scope.class_id !== null && !classes.some((value) => Number(value.id) === scope.class_id)) problem(404, "CLASS_NOT_FOUND", "Class not found in the selected academic year.");
@@ -277,8 +278,10 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     bucket.late_events++;
     bucket.affected_students.add(studentKey);
     bucket.late_dates.add(String(day.day));
-    const student = tally.byStudent.get(studentKey) ?? { late_events: 0, total_late_minutes: 0, known_minute_events: 0, student_id: day.student_id == null ? null : Number(day.student_id), classes: new Map<string, LatenessStudentClassDetail>() };
+    const student = tally.byStudent.get(studentKey) ?? { late_events: 0, late_events_by_date: new Map<string, number>(), total_late_minutes: 0, known_minute_events: 0, student_id: day.student_id == null ? null : Number(day.student_id), classes: new Map<string, LatenessStudentClassDetail>() };
     student.late_events++;
+    const eventDate = String(day.day);
+    student.late_events_by_date.set(eventDate, (student.late_events_by_date.get(eventDate) ?? 0) + 1);
     let detail = student.classes.get(classKey);
     if (!detail) { detail = { class_id: canonicalClass?.id ?? null, class_name: className, jenjang: canonicalJenjang, late_events: 0, total_late_minutes: 0, known_minute_events: 0 }; student.classes.set(classKey, detail); }
     detail.late_events++;

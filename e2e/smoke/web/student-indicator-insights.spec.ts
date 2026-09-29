@@ -13,15 +13,17 @@ async function login(page: Page) {
 
 test("@indicators @analytics @release student indicators show neutral measurements and preserve filters", async ({ page }) => {
   await login(page);
+  await page.getByRole("link", { name: "Student Insights", exact: true }).click();
   const initial = page.waitForResponse((response) => response.url().includes("/api/analytics/student-indicators") && response.status() === 200);
-  await page.getByRole("link", { name: "Student Indicators", exact: true }).click();
+  await page.getByRole("tab", { name: "Indicators", exact: true }).click();
   await initial;
-  await expect(page.getByRole("heading", { name: "Student Indicators" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Candidate measurements" })).toBeVisible();
-  await expect(page.getByText("Academic trend unavailable").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Student Insights" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Current measurements" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Attendance Rate" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Late Event Rate" })).toBeVisible();
   await expect(page.getByText(/AT_RISK|High Risk|Medium Risk|Low Risk|Alert|Intervention|Warning/)).toHaveCount(0);
 
-  const window = page.locator("label").filter({ hasText: /^Comparison window/ }).locator("select");
+  const window = page.getByLabel("Comparison window", { exact: true });
   const term = page.waitForResponse((response) => {
     if (!response.url().includes("/api/analytics/student-indicators")) return false;
     return new URL(response.url()).searchParams.get("window") === "term";
@@ -29,7 +31,7 @@ test("@indicators @analytics @release student indicators show neutral measuremen
   await window.selectOption("term");
   await term;
 
-  const classSelect = page.locator("label").filter({ hasText: /^Class/ }).locator("select");
+  const classSelect = page.getByLabel("Class", { exact: true });
   const classOption = classSelect.locator("option", { hasText: "Primary 1A" });
   await expect(classOption).toHaveCount(1);
   const classId = await classOption.getAttribute("value");

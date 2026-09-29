@@ -35,9 +35,10 @@ legacy `class_name` at this boundary. When both are supplied, `class_id` wins.
 Existing report route URLs remain unchanged.
 
 `term_id` identifies a configured Academic Term. Academic Analytics
-`term_1` through `term_4` select grading-period categories. Student Trends and
-Student Indicators `window=term` selects a comparison window, not a Term ID.
-These filter values are not interchangeable.
+`term_1` through `term_4` select grading-period categories. Student Insights
+`window=term` selects a comparison window, not a Term ID. Trends and Indicators
+are the two views in the single Student Insights destination. These filter
+values are not interchangeable.
 
 ## Retained legacy management-summary service
 
