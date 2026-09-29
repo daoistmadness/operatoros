@@ -1,6 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 export * from "./term-attendance";
 export * from "./term-lateness";
+export * from "./attendance-basis";
 
 const DateStringSchema = Type.String({ pattern: "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$" });
 

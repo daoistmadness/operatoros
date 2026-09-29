@@ -306,6 +306,28 @@ export function checkArchitecture(root: string): ArchitectureReport {
       }
     }
   }
+  const api = workspaces.find((workspace) => workspace.name === "@operatoros/api");
+  if (api) {
+    // ponytail: guard direct source-owner imports; replace with import-graph tracing if Attendance access moves behind wrappers.
+    for (const source of sourceFiles(resolve(api.path, "src/domains"))) {
+      if (source === resolve(api.path, "src/domains/attendance-basis.ts")) continue;
+      const sourceFile = ts.createSourceFile(source, readFileSync(source, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const imports = moduleSpecifiers(sourceFile).map(({ specifier }) => specifier);
+      const importsManualLedger = imports.some((specifier) => specifier.includes("manual-absence"));
+      const importsCanonicalAttendance = imports.some((specifier) => specifier.includes("term-attendance") || specifier.includes("term-lateness"));
+      if (!importsManualLedger || !importsCanonicalAttendance) continue;
+      let callsResolver = false;
+      const visit = (node: ts.Node) => {
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "resolveAttendanceBasis") callsResolver = true;
+        ts.forEachChild(node, visit);
+      };
+      visit(sourceFile);
+      if (!callsResolver) {
+        addViolation(violations, api, source, "manual and canonical attendance sources", "ATTENDANCE_BASIS_BYPASS_VIOLATION",
+          "mixed Attendance report semantics must use the basis resolver", "domain imports both source owners without calling resolveAttendanceBasis");
+      }
+    }
+  }
   return { workspaces, violations, importEdges, manifestEdges };
 }
 
