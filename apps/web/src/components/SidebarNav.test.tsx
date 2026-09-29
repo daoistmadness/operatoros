@@ -133,11 +133,11 @@ describe('role-aware sidebar navigation', () => {
     ]);
     expect(NAV_GROUPS.map((group) => group.items.map((item) => item.name))).toEqual([
       ['Dashboard', 'Setup & Readiness'],
-      ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
+      ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Monthly Recap Input', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
       ['Management Analytics', 'Student Profile Review', 'Population Overview', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Insights', 'Executive Reports', 'Monthly Management Report', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
       ['Data Import & Export'],
-      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Absence Reasons', 'Operations Audit', 'Employee Directory', 'Settings'],
+      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);
     for (const group of NAV_GROUPS) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
   });
