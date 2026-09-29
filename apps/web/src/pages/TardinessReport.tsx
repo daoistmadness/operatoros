@@ -21,17 +21,18 @@ import {
   downloadTardinessManagementExcel,
   getTardinessReport,
   getTardinessSummaryByJenjang,
-  getJenjangs,
   type ReportQuery,
   type TardinessClassRow,
   type TardinessJenjangSummaryRow,
   type TardinessReport as TardinessReportData,
 } from '../lib/api/endpoints';
+import { useTardinessJenjangsQuery } from "../hooks/useAnalyticsQueries";
 import { TERM_OPTIONS } from '../lib/reportPeriods';
 import { resolveLateTimeDisplay } from '../lib/duration';
 import { HebBadgeRow } from '../components/HebBadgeRow';
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { useSearchParams } from "react-router-dom";
 
 const FILTER_MODES = [
   { value: 'month', label: 'Month' },
@@ -75,6 +76,14 @@ function getTardinessError(error: unknown, fallback: string): string {
 
 function formatLocalDate(year: number, monthIndex: number, day: number) {
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function requestedFilterMode(params: URLSearchParams): FilterMode {
+  const value = params.get("filter_mode");
+  if (FILTER_MODES.some((item) => item.value === value)) return value as FilterMode;
+  if (params.get("date_from") && params.get("date_to")) return "date_range";
+  if (params.get("term")) return "term";
+  return "month";
 }
 
 function buildParams({ filterMode, month, year, term, dateFrom, dateTo, jenjang }: FilterValues): ReportQuery {
@@ -228,6 +237,7 @@ function ClassLateRateChart({ data }: { data: TardinessClassRow[] }) {
 }
 
 function TardinessReport() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const today = useMemo(() => new Date(), []);
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
@@ -237,14 +247,13 @@ function TardinessReport() {
     [currentYear, today]
   );
 
-  const [filterMode, setFilterMode] = useState<FilterMode>('month');
-  const [month, setMonth] = useState(currentMonth);
-  const [year, setYear] = useState(currentYear);
-  const [term, setTerm] = useState(1);
-  const [dateFrom, setDateFrom] = useState(currentMonthStart);
-  const [dateTo, setDateTo] = useState(currentMonthEnd);
-  const [jenjangs, setJenjangs] = useState<string[]>([]);
-  const [selectedJenjang, setSelectedJenjang] = useState('All');
+  const [filterMode, setFilterMode] = useState<FilterMode>(() => requestedFilterMode(searchParams));
+  const [month, setMonth] = useState(() => Number(searchParams.get("month")) || currentMonth);
+  const [year, setYear] = useState(() => Number(searchParams.get("year")) || currentYear);
+  const [term, setTerm] = useState(() => Number(searchParams.get("term")) || 1);
+  const [dateFrom, setDateFrom] = useState(() => searchParams.get("date_from") ?? currentMonthStart);
+  const [dateTo, setDateTo] = useState(() => searchParams.get("date_to") ?? currentMonthEnd);
+  const [selectedJenjang, setSelectedJenjang] = useState(() => searchParams.get("jenjang") ?? 'All');
   const [loading, setLoading] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingManagementExcel, setExportingManagementExcel] = useState(false);
@@ -254,9 +263,8 @@ function TardinessReport() {
   const [jenjangSummaryRows, setJenjangSummaryRows] = useState<TardinessJenjangSummaryRow[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
 
-  useEffect(() => {
-    getJenjangs().then(setJenjangs).catch(console.error);
-  }, []);
+  const jenjangOptions = useTardinessJenjangsQuery();
+  const jenjangs = jenjangOptions.data ?? [];
 
   const groupedClasses = useMemo(() => {
     const rows = report?.breakdown_by_class || [];
@@ -271,6 +279,7 @@ function TardinessReport() {
 
   const totals = report?.totals || {
     expected_student_days: 0,
+    arrival_evidence_records: 0,
     late_events: 0,
     affected_students: 0,
     total_late_minutes: 0,
@@ -304,8 +313,25 @@ function TardinessReport() {
     [filterMode, month, year, term, dateFrom, dateTo, selectedJenjang]
   );
 
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedJenjang === "All") next.delete("jenjang"); else next.set("jenjang", selectedJenjang);
+    if (filterMode === "date_range") {
+      next.set("filter_mode", filterMode); next.set("date_from", dateFrom); next.set("date_to", dateTo);
+      next.delete("month"); next.delete("term");
+    } else if (filterMode === "term") {
+      next.set("filter_mode", filterMode); next.set("term", String(term)); next.set("year", String(year));
+      next.delete("month"); next.delete("date_from"); next.delete("date_to");
+    } else {
+      next.set("filter_mode", filterMode); next.set("month", String(month)); next.set("year", String(year));
+      next.delete("term"); next.delete("date_from"); next.delete("date_to");
+    }
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [dateFrom, dateTo, filterMode, month, searchParams, selectedJenjang, setSearchParams, term, year]);
+
   const totalIncidentCount = totals.late_events;
-  const hasData = Boolean(report) && totalIncidentCount > 0;
+  const hasArrivalEvidence = totals.arrival_evidence_records > 0;
+  const hasData = Boolean(report) && (totalIncidentCount > 0 || hasArrivalEvidence);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -329,7 +355,7 @@ function TardinessReport() {
   };
 
   const handleExportExcel = async () => {
-    if (!report) {
+    if (!report || !hasArrivalEvidence) {
       return;
     }
 
@@ -351,7 +377,7 @@ function TardinessReport() {
   };
 
   const handlePrint = () => {
-    if (!report) {
+    if (!report || !hasArrivalEvidence) {
       return;
     }
 
@@ -369,7 +395,7 @@ function TardinessReport() {
   };
 
   const handleExportManagementExcel = async () => {
-    if (!report) {
+    if (!report || !hasArrivalEvidence) {
       return;
     }
 
@@ -534,7 +560,7 @@ function TardinessReport() {
           </div>
 
           <div className="export-actions">
-            {report ? (
+            {report && hasArrivalEvidence ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Button
                   type="button"
@@ -569,7 +595,7 @@ function TardinessReport() {
               </div>
             ) : (
               <div className="h-[46px] rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 flex items-center justify-center text-sm text-slate-400">
-                Export is available after the report is generated
+                {report ? "Exports are unavailable without canonical attendance evidence" : "Export is available after the report is generated"}
               </div>
             )}
           </div>
@@ -582,7 +608,8 @@ function TardinessReport() {
 
       {loading && <LoadingSkeleton />}
 
-      {!loading && hasGenerated && !hasData && !error && <EmptyState title="No tardiness data found for this period" description="Try changing the reporting period and generate the report again." />}
+      {!loading && report && !hasArrivalEvidence && !error && <EmptyState title="Lateness data unavailable" description="No canonical arrival evidence exists for this scope. Declared monthly absence totals do not establish arrival or lateness." />}
+      {!loading && hasGenerated && !report && !error && <EmptyState title="No tardiness data found for this period" description="Try changing the reporting period and generate the report again." />}
 
       {!loading && report && hasData && (
         <section className="report-print-area space-y-8">

@@ -26,14 +26,14 @@ function queryId(value: string | null): number | null { const parsed = Number(va
 
 export default function AttendanceAnalytics() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { can } = useAuth();
   const allowed = can("view_attendance");
   const [academicYearId, setAcademicYearId] = useState<number | null>(() => queryId(searchParams.get("academic_year_id")));
   const [jenjangId, setJenjangId] = useState<number | null>(() => queryId(searchParams.get("jenjang_id")));
   const [classId, setClassId] = useState<number | null>(() => queryId(searchParams.get("class_id")));
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(() => searchParams.get("date_from") ?? "");
+  const [dateTo, setDateTo] = useState(() => searchParams.get("date_to") ?? "");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("name");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
@@ -57,6 +57,18 @@ export default function AttendanceAnalytics() {
   }, [academicYearId, dateFrom, dateTo, optionsQuery.data]);
   useEffect(() => { if (classId !== null && optionsQuery.data && !optionsQuery.data.classes.some((item) => item.id === classId)) setClassId(null); }, [classId, optionsQuery.data]);
   useEffect(() => { setPage(1); }, [academicYearId, jenjangId, classId, dateFrom, dateTo, search, sort, order]);
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const values: Record<string, number | string | null> = {
+      academic_year_id: academicYearId,
+      jenjang_id: jenjangId,
+      class_id: classId,
+      date_from: dateFrom,
+      date_to: dateTo,
+    };
+    for (const [key, value] of Object.entries(values)) value === null || value === "" ? next.delete(key) : next.set(key, String(value));
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [academicYearId, classId, dateFrom, dateTo, jenjangId, searchParams, setSearchParams]);
 
   const filters = useMemo<AttendanceAnalyticsFilters | null>(() => {
     if (academicYearId === null || !dateFrom || !dateTo || dateFrom > dateTo) return null;

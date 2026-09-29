@@ -240,29 +240,29 @@ The following English-in-Indonesian contexts are permitted exceptions, documente
 | Field | Value |
 |-------|-------|
 | **Canonical feature label** | Attendance Report |
-| **Navigation label** | Attendance Report |
+| **Navigation label** | Attendance → Report tab |
 | **Page title** | Attendance Reports |
 | **Definition** | A raw attendance data report filterable by class, date range, and academic period. |
-| **Related route** | `/reports/attendance` |
+| **Related route** | `/analytics/attendance?view=report` |
 
 ### 3.17 Attendance Recap (Rekap Absensi)
 
 | Field | Value |
 |-------|-------|
-| **Canonical English navigation label** | Attendance Recap |
+| **Canonical English navigation label** | Attendance → Recap tab |
 | **Canonical page label** | Rekap Absensi |
 | **Definition** | A monthly or period-based summary of attendance status percentages (Hadir, Sakit, Izin, Alfa) by class and Jenjang. The page title uses the established Indonesian domain name "Rekap Absensi"; the navigation label uses the English equivalent. |
-| **Related route** | `/reports/rekap-absensi` |
+| **Related route** | `/analytics/attendance?view=recap` |
 
 ### 3.18 Tardiness Report
 
 | Field | Value |
 |-------|-------|
 | **Canonical feature label** | Tardiness Report |
-| **Navigation label** | Tardiness Report |
+| **Navigation label** | Attendance → Tardiness tab |
 | **Page title** | Tardiness Report |
 | **Definition** | A report of late-arrival (Terlambat) statistics by student, class, and period. |
-| **Related route** | `/reports/tardiness` |
+| **Related route** | `/analytics/attendance?view=tardiness` |
 
 ### 3.19 Data Import Center
 

@@ -173,6 +173,8 @@ export const ManualAbsenceReportResponseSchema = Type.Object({
     manual_months: Type.Array(MonthKey),
   }),
   manual_absence: ManualAbsenceAggregateSchema,
+  attendance_basis: Type.Array(AttendanceBasisClassSchema),
+  attendance_basis_unavailable_reason: Type.Union([Type.Literal("CANONICAL_CLASS_UNRESOLVED"), Type.Null()]),
 });
 
 export const AttendanceReportResponseSchema = Type.Object({
