@@ -21,13 +21,17 @@ async function saveMonth(page: Page, month: string, values: Record<string, [numb
     await page.getByLabel(`alfa ${className}`, { exact: true }).fill(String(alfa));
   }
   await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
-  await expect(page.getByText(`Draft tersimpan: 4 kelas untuk ${month}. Kirim setiap draft setelah data kelas lengkap.`)).toBeVisible();
+  await expect(page.getByText(`Draf tersimpan: 4 kelas untuk ${month}. Tinjau rekonsiliasi sebelum mengirim.`)).toBeVisible();
   const rows = page.locator("tbody tr");
   await expect(rows).toHaveCount(4);
   for (let index = 0; index < 4; index++) {
     const row = rows.nth(index);
     await expect(row).toContainText("Draft");
-    await row.getByRole("button", { name: "Kirim" }).click();
+    if (await row.getByRole("button", { name: "Tinjau selisih" }).count()) {
+      await row.getByRole("button", { name: "Tinjau selisih" }).click();
+      await expect(row.getByRole("button", { name: "Kirim dengan selisih" })).toBeVisible();
+      await row.getByRole("button", { name: "Kirim dengan selisih" }).click();
+    } else await row.getByRole("button", { name: "Kirim" }).click();
     await expect(row).toContainText("Terkirim");
   }
 }
@@ -71,6 +75,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   });
 
   await page.goto("/config/absence-reasons");
+  await expect(page).toHaveURL(/\/attendance\/monthly-recap$/);
   await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
   await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
@@ -124,6 +129,59 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
     return { term: term.totals, analytics: analytics.summary, lateness: lateness.totals };
   }, before.academicYearId);
   expect(after).toEqual({ term: before.term, analytics: before.analytics, lateness: before.lateness });
+
+  await page.goto("/attendance/monthly-recap");
+  await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
+  await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
+  await page.getByLabel("Bulan", { exact: true }).selectOption("2026-09");
+  await page.getByLabel("Kelas", { exact: true }).selectOption({ label: "Primary 1B" });
+  const perStudentClassRow = page.getByRole("row").filter({ hasText: "Primary 1B" }).first();
+  page.once("dialog", (dialog) => dialog.accept("Synthetic reopen before correction"));
+  await perStudentClassRow.getByRole("button", { name: "Buka kembali" }).click();
+  await expect(perStudentClassRow).toContainText("Draft");
+  await perStudentClassRow.getByLabel("Mode input Primary 1B").selectOption("PER_STUDENT");
+  page.once("dialog", (dialog) => dialog.accept("Synthetic switch to per student"));
+  await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
+  await expect(page.getByRole("heading", { name: "Sakit, Izin, dan Alfa per siswa — Primary 1B" })).toBeVisible();
+  const studentTable = page.locator('[aria-label="Sakit Izin Alfa per siswa Primary 1B"]');
+  await expect(studentTable.locator("tbody tr").first()).toBeVisible();
+  const studentRow = studentTable.locator("tbody tr").first();
+  const studentName = (await studentRow.locator("td").first().innerText()).trim();
+  await studentRow.getByLabel(`sakit ${studentName}`).fill("1");
+  await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
+  await expect(page.getByText("Draf tersimpan: 1 kelas untuk 2026-09. Tinjau rekonsiliasi sebelum mengirim.")).toBeVisible();
+  if (await perStudentClassRow.getByRole("button", { name: "Tinjau selisih" }).count()) {
+    await perStudentClassRow.getByRole("button", { name: "Tinjau selisih" }).click();
+    await expect(perStudentClassRow.getByRole("button", { name: "Kirim dengan selisih" })).toBeVisible();
+    await perStudentClassRow.getByRole("button", { name: "Kirim dengan selisih" }).click();
+  } else await perStudentClassRow.getByRole("button", { name: "Kirim" }).click();
+  await expect(perStudentClassRow).toContainText("Terkirim");
+  const classTotalsResponse = await page.request.get(`/api/config/absence-reasons?academic_year_id=${before.academicYearId}&month=2026-09`);
+  expect(classTotalsResponse.status()).toBe(200);
+  const classId = (await classTotalsResponse.json()).classes.find((value: { class_name: string }) => value.class_name === "Primary 1B").class_id;
+  const basisResponse = await page.request.get(`/api/analytics/attendance/basis?academic_year_id=${before.academicYearId}&month=2026-09&class_id=${classId}`);
+  expect(basisResponse.status()).toBe(200);
+  expect((await basisResponse.json()).classes[0]).toMatchObject({ ledger: { state: "SUBMITTED", entry_mode: "PER_STUDENT" }, declared: { sakit_student_days: 1, izin_student_days: 0, alfa_student_days: 0 } });
+
+  await page.getByLabel("Kelas", { exact: true }).selectOption({ label: "Primary 1A" });
+  const correctionRow = page.getByRole("row").filter({ hasText: "Primary 1A" }).first();
+  page.once("dialog", (dialog) => dialog.accept("Synthetic correction reason"));
+  await correctionRow.getByRole("button", { name: "Buka kembali" }).click();
+  await expect(correctionRow).toContainText("Draft");
+  await page.getByLabel("sakit Primary 1A", { exact: true }).fill("6");
+  await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
+  await expect(page.getByText("Draf tersimpan: 1 kelas untuk 2026-09. Tinjau rekonsiliasi sebelum mengirim.")).toBeVisible();
+  if (await correctionRow.getByRole("button", { name: "Tinjau selisih" }).count()) {
+    await correctionRow.getByRole("button", { name: "Tinjau selisih" }).click();
+    await expect(correctionRow.getByRole("button", { name: "Kirim dengan selisih" })).toBeVisible();
+    await correctionRow.getByRole("button", { name: "Kirim dengan selisih" }).click();
+  } else await correctionRow.getByRole("button", { name: "Kirim" }).click();
+  await expect(correctionRow).toContainText("Terkirim");
+  const correctionAudit = await page.request.get("/api/students/operations?entity_type=MANUAL_ABSENCE&operation=REOPEN_MANUAL_MONTHLY_ABSENCE_TOTALS&page_size=50");
+  expect(correctionAudit.status()).toBe(200);
+  expect((await correctionAudit.json()).items).toEqual(expect.arrayContaining([
+    expect.objectContaining({ operation: "REOPEN_MANUAL_MONTHLY_ABSENCE_TOTALS", details: expect.objectContaining({ reason: "Synthetic correction reason" }) }),
+  ]));
   expect(browserErrors).toEqual([]);
   } finally {
     await saveWeekdays(previousWeekdays);

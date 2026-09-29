@@ -37,6 +37,7 @@ const expectedPaths = [
   '/attendance/class-entry',
   '/attendance/daily',
   '/attendance/calendar',
+  '/attendance/monthly-recap',
   '/attendance/machine-import',
   '/classes/:id',
   '/attendance/departure-policies',
@@ -71,6 +72,7 @@ describe('route definitions', () => {
       { path: '/mapping', redirectTo: '/enrollment' },
       { path: '/reports', redirectTo: '/reports/monthly' },
       { path: '/attendance/machine-import', redirectTo: '/upload' },
+      { path: '/config/absence-reasons', redirectTo: '/attendance/monthly-recap' },
     ]);
   });
 

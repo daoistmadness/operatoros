@@ -8301,6 +8301,57 @@
           "classes"
         ]
       },
+      "ManualAbsenceStudentTotalsResponse": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceStudentTotalsResponse",
+        "type": "object",
+        "properties": {
+          "academic_year_id": { "minimum": 1, "type": "number" },
+          "month": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$" },
+          "class_id": { "minimum": 1, "type": "number" },
+          "students": {
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "enrollment_id": { "minimum": 1, "type": "number" },
+                "student_name": { "type": "string" },
+                "expected_student_days": { "minimum": 0, "type": "integer" },
+                "sakit": { "minimum": 0, "type": "integer" },
+                "izin": { "minimum": 0, "type": "integer" },
+                "alfa": { "minimum": 0, "type": "integer" }
+              },
+              "required": ["enrollment_id", "student_name", "expected_student_days", "sakit", "izin", "alfa"]
+            },
+            "type": "array"
+          }
+        },
+        "required": ["academic_year_id", "month", "class_id", "students"]
+      },
+      "LegacyAbsenceReasonsResponse": {
+        "additionalProperties": false,
+        "title": "LegacyAbsenceReasonsResponse",
+        "type": "object",
+        "properties": {
+          "month": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$" },
+          "rows": {
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "student_name": { "type": "string" },
+                "class_name": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+                "sakit": { "minimum": 0, "type": "integer" },
+                "izin": { "minimum": 0, "type": "integer" },
+                "alfa": { "minimum": 0, "type": "integer" }
+              },
+              "required": ["student_name", "class_name", "sakit", "izin", "alfa"]
+            },
+            "type": "array"
+          }
+        },
+        "required": ["month", "rows"]
+      },
       "ManualAbsenceStudentTotalInput": {
         "additionalProperties": false,
         "title": "ManualAbsenceStudentTotalInput",
@@ -8837,6 +8888,7 @@
                   "NO_EXPECTED_STUDENT_DAYS",
                   "CANONICAL_COVERAGE_INCOMPLETE",
                   "CANONICAL_STATUS_UNRESOLVED",
+                  "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS",
                   "ABSENCE_TOTAL_MISMATCH"
                 ],
                 "type": "string"
@@ -8954,6 +9006,33 @@
           "declared": {
             "$ref": "#/components/schemas/AttendanceBasisDeclared"
           },
+          "draft": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "sakit_student_days": { "minimum": 0, "type": "integer" },
+                  "izin_student_days": { "minimum": 0, "type": "integer" },
+                  "alfa_student_days": { "minimum": 0, "type": "integer" }
+                },
+                "required": ["sakit_student_days", "izin_student_days", "alfa_student_days"]
+              },
+              { "type": "null" }
+            ]
+          },
+          "draft_reconciliation": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/AttendanceBasisReconciliation" },
+              { "type": "null" }
+            ]
+          },
+          "draft_conflict": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/AttendanceBasisConflict" },
+              { "type": "null" }
+            ]
+          },
           "resolved": {
             "$ref": "#/components/schemas/AttendanceBasisResolved"
           },
@@ -9000,6 +9079,9 @@
           "canonical",
           "ledger",
           "declared",
+          "draft",
+          "draft_reconciliation",
+          "draft_conflict",
           "resolved",
           "presumed_hadir_student_days",
           "lateness",
@@ -21020,6 +21102,41 @@
         "tags": [
           "config"
         ]
+      }
+    },
+    "/api/config/absence-reasons/students": {
+      "get": {
+        "operationId": "get_monthly_class_absence_students",
+        "summary": "Get Monthly Class Absence Students",
+        "tags": ["config"],
+        "parameters": [
+          { "in": "query", "name": "academic_year_id", "required": true, "schema": { "pattern": "^[1-9]\\d*$", "type": "string" } },
+          { "in": "query", "name": "month", "required": true, "schema": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$" } },
+          { "in": "query", "name": "class_id", "required": true, "schema": { "pattern": "^[1-9]\\d*$", "type": "string" } },
+          { "in": "cookie", "name": "astyx_session", "required": false, "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ManualAbsenceStudentTotalsResponse" } } } },
+          "403": { "description": "Insufficient permissions" },
+          "404": { "description": "Selected class was not found" },
+          "422": { "description": "Validation Error" }
+        }
+      }
+    },
+    "/api/config/absence-reasons/legacy": {
+      "get": {
+        "operationId": "get_legacy_absence_reasons",
+        "summary": "Get Legacy Absence Reasons",
+        "tags": ["config"],
+        "parameters": [
+          { "in": "query", "name": "month", "required": true, "schema": { "type": "string", "pattern": "^\\d{4}-(0[1-9]|1[0-2])$" } },
+          { "in": "cookie", "name": "astyx_session", "required": false, "schema": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LegacyAbsenceReasonsResponse" } } } },
+          "403": { "description": "Insufficient permissions" },
+          "422": { "description": "Validation Error" }
+        }
       }
     },
     "/api/config/absence-reasons/bulk": {
