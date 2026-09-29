@@ -20,6 +20,7 @@ function seed(path: string): void {
     "db.executemany(\"INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)\", [('contract-admin', ph.hash('contract-admin-pass-1'), 'admin'), ('contract-staff', ph.hash('contract-staff-pass-1'), 'staff')])",
     "db.execute(\"INSERT INTO academic_years (label, start_date, end_date, status, is_default) VALUES ('Synthetic 2026/2027', '2026-07-01', '2027-06-30', 'active', 1)\")",
     "db.execute(\"INSERT INTO jenjangs (name, code, level, active) VALUES ('Synthetic SMP', 'SYN-SMP', 'junior', 1)\")",
+    "db.execute(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-07-01','07:30','RECORDED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic cutoff')\")",
     "db.execute(\"INSERT INTO academic_programs (jenjang_id, name, active) VALUES (1, 'Synthetic Program', 1)\")",
     "db.execute(\"INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number, active) VALUES (1, 1, 'Synthetic Grade', 1, 1)\")",
     "db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (1, 1, 'Synthetic 7A', 'SYN-A', 1)\")",
@@ -102,7 +103,6 @@ describe("class attendance response contract", () => {
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-canonical-audit-${process.pid}` } });
     try {
-      database.client.run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES ('Synthetic SMP', '07:30', CURRENT_TIMESTAMP)");
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const cookie = sessionCookie(login);
       const submit = async (date: string, entries: unknown) => app.handle(new Request(`http://local/api/attendance/classes/1/dates/${date}/entries`, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify({ entries }) }));

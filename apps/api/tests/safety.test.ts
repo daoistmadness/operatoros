@@ -36,6 +36,17 @@ describe("backup, restore, and scheduler safety", () => {
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
     try {
+      const yearId = Number(database.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027','2026-07-01','2027-06-30','active',1)").lastInsertRowid);
+      const jenjangId = Number(database.client.run("INSERT INTO jenjangs (name,code,level,active) VALUES ('Backup Primary','BP','primary',1)").lastInsertRowid);
+      const programId = Number(database.client.run("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?,'Backup Program',1)", [jenjangId]).lastInsertRowid);
+      const gradeId = Number(database.client.run("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?,'Backup Grade',1,1)", [jenjangId, programId]).lastInsertRowid);
+      const classId = Number(database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Backup Class','',1)", [yearId, gradeId]).lastInsertRowid);
+      database.client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (9001,'Backup Student','Backup Primary','Backup Class')");
+      const enrollmentId = Number(database.client.run("INSERT INTO student_enrollments (student_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (9001,?, ?, ?, 'Backup Class',1,'2026-07-01','ACTIVE')", [yearId, jenjangId, classId]).lastInsertRowid);
+      const classMonthId = Number(database.client.run("INSERT INTO attendance_ledger_class_months (academic_year_id,class_id,month) VALUES (?,?, '2026-08')", [yearId, classId]).lastInsertRowid);
+      const revisionId = Number(database.client.run("INSERT INTO attendance_ledger_revisions (class_month_id,revision_no,entry_mode,state,created_by,created_at) VALUES (?,1,'PER_STUDENT','OPEN','backup-test',CURRENT_TIMESTAMP)", [classMonthId]).lastInsertRowid);
+      database.client.run("INSERT INTO attendance_ledger_student_totals (revision_id,enrollment_id,sakit,izin,alfa) VALUES (?,?,1,0,0)", [revisionId, enrollmentId]);
+      database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?,'2026-07-01','07:30','BACKFILL_ASSUMED','backup-test',CURRENT_TIMESTAMP,'Synthetic backup policy')", [jenjangId]);
       const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
       const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie } }));
       expect(created.status).toBe(200);
@@ -63,6 +74,9 @@ describe("backup, restore, and scheduler safety", () => {
 
       database.client.run("CREATE TABLE restore_marker (value TEXT NOT NULL)");
       database.client.run("INSERT INTO restore_marker VALUES ('after-backup')");
+      const laterRevisionId = Number(database.client.run("INSERT INTO attendance_ledger_revisions (class_month_id,revision_no,entry_mode,state,created_by,created_at) VALUES (?,2,'PER_STUDENT','OPEN','backup-test',CURRENT_TIMESTAMP)", [classMonthId]).lastInsertRowid);
+      database.client.run("INSERT INTO attendance_ledger_student_totals (revision_id,enrollment_id,sakit,izin,alfa) VALUES (?,?,2,0,0)", [laterRevisionId, enrollmentId]);
+      database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?,'2099-01-01','07:45','RECORDED','backup-test',CURRENT_TIMESTAMP,'Future backup policy')", [jenjangId]);
       const preflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie } }));
       expect(preflight.status).toBe(200);
       const checked = await preflight.json() as any;
@@ -71,6 +85,9 @@ describe("backup, restore, and scheduler safety", () => {
       expect(restore.status).toBe(200);
       expect((await restore.json() as any).sessions_revoked).toBe(true);
       expect(database.client.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'restore_marker'").get()).toBeNull();
+      expect(database.client.query("SELECT revision_no,entry_mode,state FROM attendance_ledger_revisions WHERE class_month_id=? ORDER BY revision_no").all(classMonthId)).toEqual([{ revision_no: 1, entry_mode: "PER_STUDENT", state: "OPEN" }]);
+      expect(database.client.query("SELECT sakit,izin,alfa FROM attendance_ledger_student_totals WHERE revision_id=?").get(revisionId)).toEqual({ sakit: 1, izin: 0, alfa: 0 });
+      expect(database.client.query("SELECT effective_from,cutoff_time,source FROM jenjang_lateness_policy WHERE jenjang_id=?").all(jenjangId)).toEqual([{ effective_from: "2026-07-01", cutoff_time: "07:30", source: "BACKFILL_ASSUMED" }]);
       const postRestoreCookie = await login(app, "golden-admin", "golden-admin-pass-1");
 
       const corrupt = `${backupDir}/${backup.filename}`;

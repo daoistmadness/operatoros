@@ -76,8 +76,9 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
 
 test("@phase11 @imports machine attendance workbook validates and applies through Data Import & Export", async ({ page }) => {
   await login(page);
-  const cutoff = await page.request.put("/api/config/jenjang/Primary", { data: { cutoff_time: "07:30" } });
+  const cutoff = await page.request.get("/api/config/jenjang");
   expect(cutoff.status()).toBe(200);
+  expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
   await page.evaluate(async () => {
     const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
@@ -109,8 +110,6 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
     await applyButton.click();
     await expect(page.getByRole("status")).toContainText("Import applied: 0 created, 1 already canonical");
   }
-  const cutoffRemoved = await page.request.delete("/api/config/jenjang/Primary");
-  expect(cutoffRemoved.status()).toBe(200);
 });
 
 test("@phase11 @reports monthly reports export a non-empty workbook", async ({ page }) => {

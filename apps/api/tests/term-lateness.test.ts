@@ -20,6 +20,7 @@ function fixture() {
   client.run("CREATE TABLE attendance_calendar_weekday_rules (academic_year_id INTEGER, jenjang_id INTEGER, weekday INTEGER, expectation TEXT)");
   client.run("CREATE TABLE attendance_calendar_exceptions (academic_year_id INTEGER, jenjang_id INTEGER, date TEXT, expectation TEXT, reason TEXT)");
   client.run("CREATE TABLE jenjang_config (id INTEGER PRIMARY KEY, jenjang TEXT, cutoff_time TEXT, updated_at TEXT)");
+  client.run("CREATE TABLE jenjang_lateness_policy (id INTEGER PRIMARY KEY, jenjang_id INTEGER, effective_from TEXT, cutoff_time TEXT, source TEXT)");
   client.run("INSERT INTO academic_years VALUES (1,'2026/2027','2026-07-01','2027-06-30')");
   client.run("INSERT INTO academic_term_configs VALUES (11,1,1,'Configured Term 1','2026-08-03','2026-08-09')");
   client.run("INSERT INTO jenjangs VALUES (1,'Primary')");
@@ -29,6 +30,7 @@ function fixture() {
   client.run("INSERT INTO student_enrollments VALUES (1,101,'synthetic-1',1,1,10,'P1A','2026-08-03',NULL)");
   client.run("INSERT INTO students VALUES (101,'Synthetic One','Primary','P1A')");
   client.run("INSERT INTO jenjang_config VALUES (1,'Primary','07:30','2026-08-01')");
+  client.run("INSERT INTO jenjang_lateness_policy VALUES (1,1,'2026-07-01','07:30','BACKFILL_ASSUMED')");
   for (let weekday = 0; weekday < 7; weekday++) client.run("INSERT INTO attendance_calendar_weekday_rules VALUES (1,1,?,?)", [weekday, weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED"]);
   const context = { database: { client } } as any;
   const get = () => termLateness(context, { academic_year_id: "1", term_number: "1" });
@@ -103,7 +105,7 @@ describe("canonical term lateness aggregate", () => {
       value.attendance("2026-08-07", "late", "08:30");
       const result = value.get();
       expect(result.period).toMatchObject({ term_id: 11, start_date: "2026-08-03", end_date: "2026-08-09", source: "custom" });
-      expect(result.cutoffs).toEqual([{ jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:30" }]);
+      expect(result.cutoffs).toEqual([{ jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01", source: "BACKFILL_ASSUMED" }]);
       expect(result.totals).toMatchObject({ expected_student_days: 5, late_events: 3, affected_students: 1,
         total_late_minutes: 76, average_late_minutes: 76 / 3, late_event_rate: 60 });
       expect(result.students[0]?.average_late_minutes).toBe(76 / 3);
@@ -195,15 +197,19 @@ describe("canonical term lateness aggregate", () => {
     } finally { value.close(); }
   });
 
-  it("follows the configured cutoff instead of a hardcoded 07:30", () => {
+  it("uses the effective-dated cutoff and reports the policy source", () => {
     const value = fixture();
     try {
-      value.client.run("UPDATE jenjang_config SET cutoff_time = '07:45' WHERE jenjang = 'Primary'");
+      value.client.run("UPDATE jenjang_config SET cutoff_time = '08:00' WHERE jenjang = 'Primary'");
+      value.client.run("INSERT INTO jenjang_lateness_policy VALUES (2,1,'2026-08-05','07:45','RECORDED')");
       value.attendance("2026-08-04", "on-time", "07:40");
       value.attendance("2026-08-05", "late", "07:46");
       const result = value.get();
-      expect(result.cutoffs).toEqual([{ jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:45" }]);
-      expect(result.totals).toMatchObject({ late_events: 1, total_late_minutes: 1 });
+      expect(result.cutoffs).toEqual([
+        { jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01", source: "BACKFILL_ASSUMED" },
+        { jenjang_id: 1, jenjang: "Primary", cutoff_time: "07:45", effective_from: "2026-08-05", source: "RECORDED" },
+      ]);
+      expect(result.totals).toMatchObject({ late_events: 2, total_late_minutes: 11 });
     } finally { value.close(); }
   });
 });

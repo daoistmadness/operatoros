@@ -1918,57 +1918,125 @@
         "type": "object"
       },
       "DataResetScope": {
-        "enum": ["ATTENDANCE", "ACADEMIC_RESULTS", "STUDENTS", "ALL_SCHOOL_DATA"],
+        "enum": [
+          "ATTENDANCE",
+          "ACADEMIC_RESULTS",
+          "STUDENTS",
+          "ALL_SCHOOL_DATA"
+        ],
         "title": "DataResetScope",
         "type": "string"
       },
       "DataResetPreviewRequest": {
         "additionalProperties": false,
-        "properties": { "scope": { "$ref": "#/components/schemas/DataResetScope" } },
-        "required": ["scope"],
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/DataResetScope"
+          }
+        },
+        "required": [
+          "scope"
+        ],
         "title": "DataResetPreviewRequest",
         "type": "object"
       },
       "DataResetCommitRequest": {
         "additionalProperties": false,
         "properties": {
-          "scope": { "$ref": "#/components/schemas/DataResetScope" },
-          "confirmation": { "minLength": 1, "title": "Confirmation", "type": "string" }
+          "scope": {
+            "$ref": "#/components/schemas/DataResetScope"
+          },
+          "confirmation": {
+            "minLength": 1,
+            "title": "Confirmation",
+            "type": "string"
+          }
         },
-        "required": ["scope", "confirmation"],
+        "required": [
+          "scope",
+          "confirmation"
+        ],
         "title": "DataResetCommitRequest",
         "type": "object"
       },
       "DataResetPreviewResponse": {
         "properties": {
-          "scope": { "$ref": "#/components/schemas/DataResetScope" },
+          "scope": {
+            "$ref": "#/components/schemas/DataResetScope"
+          },
           "will_delete": {
             "items": {
               "properties": {
-                "domain": { "title": "Domain", "type": "string" },
-                "count": { "minimum": 0, "title": "Count", "type": "integer" }
+                "domain": {
+                  "title": "Domain",
+                  "type": "string"
+                },
+                "count": {
+                  "minimum": 0,
+                  "title": "Count",
+                  "type": "integer"
+                }
               },
-              "required": ["domain", "count"],
+              "required": [
+                "domain",
+                "count"
+              ],
               "type": "object"
             },
             "title": "Will Delete",
             "type": "array"
           },
-          "will_preserve": { "items": { "type": "string" }, "title": "Will Preserve", "type": "array" },
-          "encrypted_backup_required": { "const": true, "type": "boolean" }
+          "will_preserve": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Will Preserve",
+            "type": "array"
+          },
+          "encrypted_backup_required": {
+            "const": true,
+            "type": "boolean"
+          }
         },
-        "required": ["scope", "will_delete", "will_preserve", "encrypted_backup_required"],
+        "required": [
+          "scope",
+          "will_delete",
+          "will_preserve",
+          "encrypted_backup_required"
+        ],
         "title": "DataResetPreviewResponse",
         "type": "object"
       },
       "DataResetResult": {
         "properties": {
-          "scope": { "$ref": "#/components/schemas/DataResetScope" },
-          "deleted_counts": { "additionalProperties": { "minimum": 0, "type": "integer" }, "title": "Deleted Counts", "type": "object" },
-          "completed_at": { "format": "date-time", "title": "Completed At", "type": "string" },
-          "backup_filename": { "minLength": 1, "title": "Backup Filename", "type": "string" }
+          "scope": {
+            "$ref": "#/components/schemas/DataResetScope"
+          },
+          "deleted_counts": {
+            "additionalProperties": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "title": "Deleted Counts",
+            "type": "object"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "title": "Completed At",
+            "type": "string"
+          },
+          "backup_filename": {
+            "minLength": 1,
+            "title": "Backup Filename",
+            "type": "string"
+          }
         },
-        "required": ["scope", "deleted_counts", "completed_at", "backup_filename"],
+        "required": [
+          "scope",
+          "deleted_counts",
+          "completed_at",
+          "backup_filename"
+        ],
         "title": "DataResetResult",
         "type": "object"
       },
@@ -1976,14 +2044,25 @@
         "properties": {
           "detail": {
             "properties": {
-              "code": { "title": "Code", "type": "string" },
-              "message": { "title": "Message", "type": "string" }
+              "code": {
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              }
             },
-            "required": ["code", "message"],
+            "required": [
+              "code",
+              "message"
+            ],
             "type": "object"
           }
         },
-        "required": ["detail"],
+        "required": [
+          "detail"
+        ],
         "title": "DataResetError",
         "type": "object"
       },
@@ -2438,26 +2517,122 @@
       "DataQualityResolutionItem": {
         "additionalProperties": false,
         "properties": {
-          "issueKey": { "minLength": 1, "type": "string" },
-          "entityType": { "enum": ["STUDENT", "STAFF"], "type": "string" },
-          "entityId": { "minLength": 1, "type": "string" },
-          "entityLabel": { "minLength": 1, "type": "string" },
-          "context": { "minLength": 1, "type": "string" },
-          "field": { "minLength": 1, "type": "string" },
-          "qualityState": { "enum": ["MISSING", "UNKNOWN", "UNMAPPED"], "type": "string" },
-          "qualityType": { "minLength": 1, "type": "string" },
-          "label": { "minLength": 1, "type": "string" },
-          "currentValue": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
-          "resolutionClass": { "enum": ["EDITABLE_IN_OPERATOROS", "VIEW_ONLY_IN_OPERATOROS", "EXTERNAL_SOURCE_REQUIRED", "UNSUPPORTED_CORRECTION"], "type": "string" },
-          "resolutionNote": { "minLength": 1, "type": "string" },
+          "issueKey": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "entityType": {
+            "enum": [
+              "STUDENT",
+              "STAFF"
+            ],
+            "type": "string"
+          },
+          "entityId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "entityLabel": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "context": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "field": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "qualityState": {
+            "enum": [
+              "MISSING",
+              "UNKNOWN",
+              "UNMAPPED"
+            ],
+            "type": "string"
+          },
+          "qualityType": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "currentValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolutionClass": {
+            "enum": [
+              "EDITABLE_IN_OPERATOROS",
+              "VIEW_ONLY_IN_OPERATOROS",
+              "EXTERNAL_SOURCE_REQUIRED",
+              "UNSUPPORTED_CORRECTION"
+            ],
+            "type": "string"
+          },
+          "resolutionNote": {
+            "minLength": 1,
+            "type": "string"
+          },
           "resolutionTarget": {
             "anyOf": [
-              { "additionalProperties": false, "properties": { "type": { "enum": ["STUDENT_PROFILE", "STUDENT_ENROLLMENT", "STAFF_PROFILE"], "type": "string" }, "entityId": { "minLength": 1, "type": "string" }, "capability": { "minLength": 1, "type": "string" } }, "required": ["type", "entityId", "capability"], "type": "object" },
-              { "type": "null" }
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "STUDENT_PROFILE",
+                      "STUDENT_ENROLLMENT",
+                      "STAFF_PROFILE"
+                    ],
+                    "type": "string"
+                  },
+                  "entityId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "capability": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "entityId",
+                  "capability"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
-        "required": ["issueKey", "entityType", "entityId", "entityLabel", "context", "field", "qualityState", "qualityType", "label", "currentValue", "resolutionClass", "resolutionNote", "resolutionTarget"],
+        "required": [
+          "issueKey",
+          "entityType",
+          "entityId",
+          "entityLabel",
+          "context",
+          "field",
+          "qualityState",
+          "qualityType",
+          "label",
+          "currentValue",
+          "resolutionClass",
+          "resolutionNote",
+          "resolutionTarget"
+        ],
         "title": "DataQualityResolutionItem",
         "type": "object"
       },
@@ -2467,21 +2642,62 @@
           "summary": {
             "additionalProperties": false,
             "properties": {
-              "totalIssues": { "minimum": 0, "type": "integer" },
-              "editableIssues": { "minimum": 0, "type": "integer" },
-              "viewOnlyIssues": { "minimum": 0, "type": "integer" },
-              "externalIssues": { "minimum": 0, "type": "integer" },
-              "unsupportedIssues": { "minimum": 0, "type": "integer" }
+              "totalIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "editableIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "viewOnlyIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "externalIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "unsupportedIssues": {
+                "minimum": 0,
+                "type": "integer"
+              }
             },
-            "required": ["totalIssues", "editableIssues", "viewOnlyIssues", "externalIssues", "unsupportedIssues"],
+            "required": [
+              "totalIssues",
+              "editableIssues",
+              "viewOnlyIssues",
+              "externalIssues",
+              "unsupportedIssues"
+            ],
             "type": "object"
           },
-          "page": { "minimum": 1, "type": "integer" },
-          "pageSize": { "minimum": 1, "type": "integer" },
-          "total": { "minimum": 0, "type": "integer" },
-          "items": { "items": { "$ref": "#/components/schemas/DataQualityResolutionItem" }, "type": "array" }
+          "page": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "pageSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DataQualityResolutionItem"
+            },
+            "type": "array"
+          }
         },
-        "required": ["summary", "page", "pageSize", "total", "items"],
+        "required": [
+          "summary",
+          "page",
+          "pageSize",
+          "total",
+          "items"
+        ],
         "title": "DataQualityResolutionResponse",
         "type": "object"
       },
@@ -3332,12 +3548,19 @@
       "FinalizeRequest": {
         "additionalProperties": false,
         "properties": {
+          "acknowledge_ledger_warning": {
+            "title": "Acknowledge Ledger Warning",
+            "type": "boolean"
+          },
           "attendance_date": {
             "format": "date",
             "title": "Attendance Date",
             "type": "string"
           },
           "confirmation": {
+            "enum": [
+              "FINALIZE_ATTENDANCE_PERIOD"
+            ],
             "title": "Confirmation",
             "type": "string"
           },
@@ -3354,6 +3577,125 @@
           "confirmation"
         ],
         "title": "FinalizeRequest",
+        "type": "object"
+      },
+      "AttendanceLedgerFinalizeWarning": {
+        "additionalProperties": false,
+        "properties": {
+          "class_id": {
+            "minimum": 1,
+            "title": "Class Id",
+            "type": "integer"
+          },
+          "class_name": {
+            "title": "Class Name",
+            "type": "string"
+          },
+          "ledger_state": {
+            "enum": [
+              "MISSING",
+              "OPEN"
+            ],
+            "title": "Ledger State",
+            "type": "string"
+          },
+          "month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "class_id",
+          "class_name",
+          "month",
+          "ledger_state"
+        ],
+        "title": "AttendanceLedgerFinalizeWarning",
+        "type": "object"
+      },
+      "AttendancePeriodFinalizeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "attendance_date": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+            "title": "Attendance Date",
+            "type": "string"
+          },
+          "finalized_by": {
+            "title": "Finalized By",
+            "type": "string"
+          },
+          "ledger_warning": {
+            "items": {
+              "$ref": "#/components/schemas/AttendanceLedgerFinalizeWarning"
+            },
+            "title": "Ledger Warning",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "FINALIZED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          },
+          "warning_acknowledged": {
+            "title": "Warning Acknowledged",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "attendance_date",
+          "status",
+          "version",
+          "finalized_by",
+          "ledger_warning",
+          "warning_acknowledged"
+        ],
+        "title": "AttendancePeriodFinalizeResponse",
+        "type": "object"
+      },
+      "AttendancePeriodFinalizeConflict": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "additionalProperties": false,
+            "properties": {
+              "ledger_warning": {
+                "items": {
+                  "$ref": "#/components/schemas/AttendanceLedgerFinalizeWarning"
+                },
+                "title": "Ledger Warning",
+                "type": "array"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "requires_acknowledgement": {
+                "title": "Requires Acknowledgement",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "message",
+              "requires_acknowledgement",
+              "ledger_warning"
+            ],
+            "title": "Detail",
+            "type": "object"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "AttendancePeriodFinalizeConflict",
         "type": "object"
       },
       "FirstAdminRequest": {
@@ -5399,10 +5741,20 @@
           "class_options": {
             "items": {
               "properties": {
-                "id": { "minimum": 1, "title": "Id", "type": "integer" },
-                "name": { "title": "Name", "type": "string" }
+                "id": {
+                  "minimum": 1,
+                  "title": "Id",
+                  "type": "integer"
+                },
+                "name": {
+                  "title": "Name",
+                  "type": "string"
+                }
               },
-              "required": ["id", "name"],
+              "required": [
+                "id",
+                "name"
+              ],
               "title": "ClassOption",
               "type": "object"
             },
@@ -7547,38 +7899,122 @@
         "type": "object"
       },
       "AttendanceCalendarOverviewQuery": {
-        "properties": { "academic_year_id": { "pattern": "^[1-9]\\d*$", "type": "string" } },
-        "required": ["academic_year_id"],
+        "properties": {
+          "academic_year_id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "academic_year_id"
+        ],
         "title": "AttendanceCalendarOverviewQuery",
         "type": "object"
       },
       "AttendanceCalendarWeekdayRequest": {
         "properties": {
-          "academic_year_id": { "exclusiveMinimum": 0, "type": "integer" },
-          "jenjang_id": { "exclusiveMinimum": 0, "type": "integer" },
-          "weekday": { "maximum": 6, "minimum": 0, "type": "integer" },
-          "expectation": { "anyOf": [{ "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" }, { "type": "null" }] }
+          "academic_year_id": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "jenjang_id": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "weekday": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expectation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "EXPECTED",
+                  "NOT_EXPECTED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
         },
-        "required": ["academic_year_id", "jenjang_id", "weekday", "expectation"],
+        "required": [
+          "academic_year_id",
+          "jenjang_id",
+          "weekday",
+          "expectation"
+        ],
         "title": "AttendanceCalendarWeekdayRequest",
         "type": "object"
       },
       "AttendanceCalendarExceptionRequest": {
         "properties": {
-          "id": { "anyOf": [{ "exclusiveMinimum": 0, "type": "integer" }, { "type": "null" }] },
-          "academic_year_id": { "exclusiveMinimum": 0, "type": "integer" },
-          "jenjang_id": { "exclusiveMinimum": 0, "type": "integer" },
-          "date": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
-          "expectation": { "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" },
-          "reason": { "enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string" }
+          "id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "academic_year_id": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "jenjang_id": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "date": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+            "type": "string"
+          },
+          "expectation": {
+            "enum": [
+              "EXPECTED",
+              "NOT_EXPECTED"
+            ],
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "HOLIDAY",
+              "SCHOOL_BREAK",
+              "SCHOOL_CLOSED",
+              "NON_INSTRUCTIONAL_DAY",
+              "PROGRAM_NOT_IN_SESSION",
+              "REPLACEMENT_SCHOOL_DAY",
+              "SPECIAL_INSTRUCTIONAL_DAY"
+            ],
+            "type": "string"
+          }
         },
-        "required": ["academic_year_id", "jenjang_id", "date", "expectation", "reason"],
+        "required": [
+          "academic_year_id",
+          "jenjang_id",
+          "date",
+          "expectation",
+          "reason"
+        ],
         "title": "AttendanceCalendarExceptionRequest",
         "type": "object"
       },
       "AttendanceCalendarExceptionParams": {
-        "properties": { "id": { "pattern": "^[1-9]\\d*$", "type": "string" } },
-        "required": ["id"],
+        "properties": {
+          "id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
         "title": "AttendanceCalendarExceptionParams",
         "type": "object"
       },
@@ -7586,26 +8022,69 @@
         "properties": {
           "scope": {
             "properties": {
-              "academicYearId": { "exclusiveMinimum": 0, "type": "integer" },
-              "academicYearLabel": { "minLength": 1, "type": "string" },
-              "startDate": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
-              "endDate": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" }
+              "academicYearId": {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              "academicYearLabel": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "startDate": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              },
+              "endDate": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              }
             },
-            "required": ["academicYearId", "academicYearLabel", "startDate", "endDate"],
+            "required": [
+              "academicYearId",
+              "academicYearLabel",
+              "startDate",
+              "endDate"
+            ],
             "type": "object"
           },
           "jenjangs": {
             "items": {
               "properties": {
-                "id": { "exclusiveMinimum": 0, "type": "integer" },
-                "name": { "minLength": 1, "type": "string" },
+                "id": {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
                 "weekdays": {
                   "items": {
                     "properties": {
-                      "weekday": { "maximum": 6, "minimum": 0, "type": "integer" },
-                      "expectation": { "anyOf": [{ "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" }, { "type": "null" }] }
+                      "weekday": {
+                        "maximum": 6,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "expectation": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "EXPECTED",
+                              "NOT_EXPECTED"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
                     },
-                    "required": ["weekday", "expectation"],
+                    "required": [
+                      "weekday",
+                      "expectation"
+                    ],
                     "type": "object"
                   },
                   "maxItems": 7,
@@ -7615,27 +8094,538 @@
                 "exceptions": {
                   "items": {
                     "properties": {
-                      "id": { "exclusiveMinimum": 0, "type": "integer" },
-                      "date": { "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string" },
-                      "expectation": { "enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string" },
-                      "reason": { "enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string" }
+                      "id": {
+                        "exclusiveMinimum": 0,
+                        "type": "integer"
+                      },
+                      "date": {
+                        "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                        "type": "string"
+                      },
+                      "expectation": {
+                        "enum": [
+                          "EXPECTED",
+                          "NOT_EXPECTED"
+                        ],
+                        "type": "string"
+                      },
+                      "reason": {
+                        "enum": [
+                          "HOLIDAY",
+                          "SCHOOL_BREAK",
+                          "SCHOOL_CLOSED",
+                          "NON_INSTRUCTIONAL_DAY",
+                          "PROGRAM_NOT_IN_SESSION",
+                          "REPLACEMENT_SCHOOL_DAY",
+                          "SPECIAL_INSTRUCTIONAL_DAY"
+                        ],
+                        "type": "string"
+                      }
                     },
-                    "required": ["id", "date", "expectation", "reason"],
+                    "required": [
+                      "id",
+                      "date",
+                      "expectation",
+                      "reason"
+                    ],
                     "type": "object"
                   },
                   "type": "array"
                 },
-                "submissionDeadlineLocalTime": { "anyOf": [{ "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string" }, { "type": "null" }] }
+                "submissionDeadlineLocalTime": {
+                  "anyOf": [
+                    {
+                      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
               },
-              "required": ["id", "name", "weekdays", "exceptions", "submissionDeadlineLocalTime"],
+              "required": [
+                "id",
+                "name",
+                "weekdays",
+                "exceptions",
+                "submissionDeadlineLocalTime"
+              ],
               "type": "object"
             },
             "type": "array"
           }
         },
-        "required": ["scope", "jenjangs"],
+        "required": [
+          "scope",
+          "jenjangs"
+        ],
         "title": "AttendanceCalendarOverview",
         "type": "object"
+      },
+      "ManualAbsenceMonthlyClass": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceMonthlyClass",
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "class_name": {
+            "type": "string"
+          },
+          "grade_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "grade": {
+            "type": "string"
+          },
+          "program_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "program": {
+            "type": "string"
+          },
+          "jenjang_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "jenjang": {
+            "type": "string"
+          },
+          "sakit": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "izin": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "alfa": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "has_data": {
+            "type": "boolean"
+          },
+          "state": {
+            "enum": [
+              "MISSING",
+              "OPEN",
+              "SUBMITTED"
+            ],
+            "type": "string"
+          },
+          "entry_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "TOTALS_ONLY",
+                  "PER_STUDENT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_locked": {
+            "type": "boolean"
+          },
+          "expected_student_days": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "class_id",
+          "class_name",
+          "grade_id",
+          "grade",
+          "program_id",
+          "program",
+          "jenjang_id",
+          "jenjang",
+          "sakit",
+          "izin",
+          "alfa",
+          "has_data",
+          "state",
+          "entry_mode",
+          "is_locked",
+          "expected_student_days",
+          "updated_at"
+        ]
+      },
+      "ManualAbsenceMonthlyResponse": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceMonthlyResponse",
+        "type": "object",
+        "properties": {
+          "academic_year_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "academic_year_label": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/ManualAbsenceMonthlyClass"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "academic_year_label",
+          "month",
+          "classes"
+        ]
+      },
+      "ManualAbsenceStudentTotalInput": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceStudentTotalInput",
+        "type": "object",
+        "properties": {
+          "enrollment_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "sakit": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "izin": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "alfa": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enrollment_id",
+          "sakit",
+          "izin",
+          "alfa"
+        ]
+      },
+      "ManualAbsenceClassSaveInput": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceClassSaveInput",
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "entry_mode": {
+            "enum": [
+              "TOTALS_ONLY",
+              "PER_STUDENT"
+            ],
+            "type": "string"
+          },
+          "sakit": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "izin": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "alfa": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "student_totals": {
+            "items": {
+              "$ref": "#/components/schemas/ManualAbsenceStudentTotalInput"
+            },
+            "type": "array"
+          },
+          "change_reason": {
+            "minLength": 5,
+            "maxLength": 1000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "class_id"
+        ]
+      },
+      "ManualAbsenceSaveRequest": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceSaveRequest",
+        "type": "object",
+        "properties": {
+          "academic_year_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "jenjang_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "program_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/ManualAbsenceClassSaveInput"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "month",
+          "classes"
+        ]
+      },
+      "ManualAbsenceSaveResponse": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceSaveResponse",
+        "type": "object",
+        "properties": {
+          "inserted": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "updated": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "OPEN"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "inserted",
+          "updated",
+          "total",
+          "state"
+        ]
+      },
+      "ManualAbsenceLedgerActionRequest": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceLedgerActionRequest",
+        "type": "object",
+        "properties": {
+          "academic_year_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "class_id": {
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "month",
+          "class_id"
+        ]
+      },
+      "ManualAbsenceLedgerReopenRequest": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceLedgerReopenRequest",
+        "type": "object",
+        "properties": {
+          "academic_year_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "class_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "reason": {
+            "minLength": 5,
+            "maxLength": 1000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "month",
+          "class_id",
+          "reason"
+        ]
+      },
+      "ManualAbsenceLedgerActionResponse": {
+        "additionalProperties": false,
+        "title": "ManualAbsenceLedgerActionResponse",
+        "type": "object",
+        "properties": {
+          "academic_year_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "class_id": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "state": {
+            "enum": [
+              "OPEN",
+              "SUBMITTED"
+            ],
+            "type": "string"
+          },
+          "revision_no": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "class_id",
+          "month",
+          "state",
+          "revision_no"
+        ]
+      },
+      "JenjangCutoffPolicyWrite": {
+        "additionalProperties": false,
+        "title": "JenjangCutoffPolicyWrite",
+        "type": "object",
+        "properties": {
+          "cutoff_time": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "type": "string"
+          },
+          "effective_from": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 5,
+            "maxLength": 1000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "cutoff_time",
+          "effective_from",
+          "reason"
+        ]
+      },
+      "JenjangCutoffPolicyItem": {
+        "additionalProperties": false,
+        "title": "JenjangCutoffPolicyItem",
+        "type": "object",
+        "properties": {
+          "jenjang": {
+            "type": "string"
+          },
+          "cutoff_time": {
+            "type": "string"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "enum": [
+              "RECORDED",
+              "BACKFILL_ASSUMED",
+              "LEGACY_UNDATED"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "jenjang",
+          "cutoff_time",
+          "effective_from",
+          "source",
+          "updated_at"
+        ]
+      },
+      "JenjangConfigResponse": {
+        "additionalProperties": false,
+        "title": "JenjangConfigResponse",
+        "type": "object",
+        "properties": {
+          "configured": {
+            "items": {
+              "$ref": "#/components/schemas/JenjangCutoffPolicyItem"
+            },
+            "type": "array"
+          },
+          "unconfigured": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "configured",
+          "unconfigured"
+        ]
       }
     }
   },
@@ -14147,7 +15137,9 @@
                         "required": [
                           "jenjang_id",
                           "jenjang",
-                          "cutoff_time"
+                          "cutoff_time",
+                          "effective_from",
+                          "source"
                         ],
                         "properties": {
                           "jenjang_id": {
@@ -14173,6 +15165,24 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "effective_from": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "source": {
+                            "enum": [
+                              "RECORDED",
+                              "BACKFILL_ASSUMED",
+                              "UNCONFIGURED"
+                            ],
+                            "type": "string"
                           }
                         }
                       }
@@ -16729,10 +17739,22 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AttendancePeriodFinalizeResponse"
+                }
               }
             },
             "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendancePeriodFinalizeConflict"
+                }
+              }
+            },
+            "description": "Ledger warning acknowledgement required"
           },
           "422": {
             "content": {
@@ -17235,14 +18257,59 @@
       "get": {
         "operationId": "getDailyAttendanceStatus",
         "parameters": [
-          { "name": "date", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "academic_year_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get daily attendance recording coverage",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/classes/assigned": {
@@ -19221,36 +20288,38 @@
         "parameters": [
           {
             "in": "query",
+            "name": "academic_year_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "month",
             "required": true,
             "schema": {
-              "title": "Month",
-              "type": "integer"
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
             }
           },
           {
             "in": "query",
-            "name": "year",
-            "required": true,
-            "schema": {
-              "title": "Year",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "class_name",
+            "name": "jenjang_id",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Class Name"
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "program_id",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
             }
           },
           {
@@ -19265,8 +20334,7 @@
                 {
                   "type": "null"
                 }
-              ],
-              "title": "Astyx Session"
+              ]
             }
           }
         ],
@@ -19274,7 +20342,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAbsenceMonthlyResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -19321,15 +20391,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/BulkAbsenceReasonBody"
-                  },
-                  {
-                    "$ref": "#/components/schemas/BulkAbsenceReasonCatchupBody"
-                  }
-                ],
-                "title": "Body"
+                "$ref": "#/components/schemas/ManualAbsenceSaveRequest"
               }
             }
           },
@@ -19339,7 +20401,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAbsenceSaveResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -19749,7 +20813,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JenjangConfigResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -19906,7 +20972,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JenjangCutoffBody"
+                "$ref": "#/components/schemas/JenjangCutoffPolicyWrite"
               }
             }
           },
@@ -21740,20 +22806,136 @@
       "get": {
         "operationId": "getAssessmentOperations",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "term", "in": "query", "required": false, "schema": { "type": "string", "enum": ["term_1", "term_2", "term_3", "term_4"] } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "coverage_state", "in": "query", "required": false, "schema": { "type": "string", "enum": ["COMPLETE", "PARTIAL", "NONE", "EMPTY"] } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
-          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["assessment_date", "assessment", "class", "subject", "term", "applicable", "recorded", "unrecorded", "coverage"] } },
-          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "term_1",
+                "term_2",
+                "term_3",
+                "term_4"
+              ]
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "coverage_state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "COMPLETE",
+                "PARTIAL",
+                "NONE",
+                "EMPTY"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "assessment_date",
+                "assessment",
+                "class",
+                "subject",
+                "term",
+                "applicable",
+                "recorded",
+                "unrecorded",
+                "coverage"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get academic assessment operations",
-        "tags": ["grades"]
+        "tags": [
+          "grades"
+        ]
       }
     },
     "/api/grades/subjects": {
@@ -29371,17 +30553,29 @@
           "200": {
             "content": {
               "application/json": {
-                  "$ref": "#/components/schemas/DataResetPreviewResponse"
+                "$ref": "#/components/schemas/DataResetPreviewResponse"
               }
             },
             "description": "Reset preview"
           },
           "401": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Authentication required"
           },
           "403": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Administrator access or destructive-operation enablement required"
           },
           "422": {
@@ -29396,7 +30590,9 @@
           }
         },
         "summary": "Preview Data Reset",
-        "tags": ["system"]
+        "tags": [
+          "system"
+        ]
       }
     },
     "/api/system/data-reset": {
@@ -29409,51 +30605,114 @@
             "name": "astyx_session",
             "required": false,
             "schema": {
-              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
               "title": "Astyx Session"
             }
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetCommitRequest" } } },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataResetCommitRequest"
+              }
+            }
+          },
           "required": true
         },
         "responses": {
           "200": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetResult" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetResult"
+                }
+              }
+            },
             "description": "Reset committed"
           },
           "400": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Confirmation phrase does not match the selected scope"
           },
           "401": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Authentication required"
           },
           "403": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Administrator access or destructive-operation enablement required"
           },
           "409": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Another reset operation is active"
           },
           "422": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
             "description": "Validation Error"
           },
           "500": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Reset failed and all transactional database changes were rolled back"
           },
           "503": {
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataResetError" } } },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResetError"
+                }
+              }
+            },
             "description": "Encrypted pre-reset backup could not be created"
           }
         },
         "summary": "Commit Data Reset",
-        "tags": ["system"]
+        "tags": [
+          "system"
+        ]
       }
     },
     "/api/system/health": {
@@ -34169,22 +35428,135 @@
       "get": {
         "operationId": "data_quality_resolution_api_analytics_data_quality_resolution_get",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "employment_status", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "entity_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["ALL", "STUDENT", "STAFF"] } },
-          { "name": "quality_state", "in": "query", "required": false, "schema": { "type": "string", "enum": ["MISSING", "UNKNOWN", "UNMAPPED"] } },
-          { "name": "resolution_class", "in": "query", "required": false, "schema": { "type": "string", "enum": ["EDITABLE_IN_OPERATOROS", "VIEW_ONLY_IN_OPERATOROS", "EXTERNAL_SOURCE_REQUIRED", "UNSUPPORTED_CORRECTION"] } },
-          { "name": "field", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employment_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "STUDENT",
+                "STAFF"
+              ]
+            }
+          },
+          {
+            "name": "quality_state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "MISSING",
+                "UNKNOWN",
+                "UNMAPPED"
+              ]
+            }
+          },
+          {
+            "name": "resolution_class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EDITABLE_IN_OPERATOROS",
+                "VIEW_ONLY_IN_OPERATOROS",
+                "EXTERNAL_SOURCE_REQUIRED",
+                "UNSUPPORTED_CORRECTION"
+              ]
+            }
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataQualityResolutionResponse" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataQualityResolutionResponse"
+                }
+              }
+            }
+          }
+        },
         "summary": "Data Quality Resolution",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/data-quality/students/export-excel": {
@@ -34381,122 +35753,568 @@
       "get": {
         "operationId": "getAttendanceAnalyticsOptions",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics options",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/overview": {
       "get": {
         "operationId": "getAttendanceAnalyticsOverview",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics overview",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/classes": {
       "get": {
         "operationId": "getAttendanceAnalyticsClasses",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics by class",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/jenjang": {
       "get": {
         "operationId": "getAttendanceAnalyticsJenjang",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics by jenjang",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/daily": {
       "get": {
         "operationId": "getAttendanceAnalyticsDaily",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics by date",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/students": {
       "get": {
         "operationId": "getAttendanceAnalyticsStudents",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
-          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_rate", "late", "alfa"] } },
-          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "attendance_rate",
+                "late",
+                "alfa"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance analytics by student",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/attendance/export-excel": {
       "get": {
         "operationId": "exportAttendanceAnalyticsExcel",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "date_from", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { "schema": {} } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {}
+              }
+            }
+          }
+        },
         "summary": "Export attendance analytics",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/management-overview": {
       "get": {
         "operationId": "getManagementAnalyticsOverview",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "attendance_date_from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
-          { "name": "attendance_date_to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "attendance_date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "attendance_date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get management analytics overview",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/management-review/attendance/export.xlsx": {
@@ -35212,182 +37030,1315 @@
       "get": {
         "operationId": "getAcademicAnalyticsOptions",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get academic analytics options",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/academic/overview": {
       "get": {
         "operationId": "getAcademicAnalyticsOverview",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "assessment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sumatif",
+                "formatif"
+              ]
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get academic analytics overview",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/academic/students": {
       "get": {
         "operationId": "getAcademicAnalyticsStudents",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
-          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "average", "formative", "summative", "missing"] } },
-          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "assessment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sumatif",
+                "formatif"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "average",
+                "formative",
+                "summative",
+                "missing"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get academic analytics by student",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/academic/export-excel": {
       "get": {
         "operationId": "exportAcademicAnalyticsExcel",
         "parameters": [
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "subject_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "assessment_type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["sumatif", "formatif"] } }
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "assessment_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sumatif",
+                "formatif"
+              ]
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { "schema": {} } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {}
+              }
+            }
+          }
+        },
         "summary": "Export academic analytics",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/student-indicators": {
       "get": {
         "operationId": "getStudentIndicatorInsights",
         "parameters": [
-          { "name": "window", "in": "query", "required": false, "schema": { "type": "string", "enum": ["rolling_4w", "term"] } },
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "student_id", "in": "query", "required": false, "schema": { "type": "string", "minLength": 1, "maxLength": 64 } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
-          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_rate", "attendance_delta", "tardiness_rate", "tardiness_delta", "alfa_rate", "alfa_delta", "academic_average", "academic_participation"] } },
-          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "rolling_4w",
+                "term"
+              ]
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "student_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "attendance_rate",
+                "attendance_delta",
+                "tardiness_rate",
+                "tardiness_delta",
+                "alfa_rate",
+                "alfa_delta",
+                "academic_average",
+                "academic_participation"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get student indicator insights",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/analytics/student-trends": {
       "get": {
         "operationId": "getStudentTrendInsights",
         "parameters": [
-          { "name": "window", "in": "query", "required": false, "schema": { "type": "string", "enum": ["rolling_4w", "term"] } },
-          { "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "jenjang_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "class_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "student_id", "in": "query", "required": false, "schema": { "type": "string", "minLength": 1, "maxLength": 64 } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } },
-          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string", "enum": ["name", "attendance_delta", "academic_delta", "tardiness_delta", "alfa_delta"] } },
-          { "name": "order", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc", "desc"] } },
-          { "name": "page", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "page_size", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "rolling_4w",
+                "term"
+              ]
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "student_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "attendance_delta",
+                "academic_delta",
+                "tardiness_delta",
+                "alfa_delta"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get student trend insights",
-        "tags": ["analytics"]
+        "tags": [
+          "analytics"
+        ]
       }
     },
     "/api/classes/{class_id}/overview": {
       "get": {
         "operationId": "getClassOverview",
         "parameters": [
-          { "name": "class_id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } },
-          { "name": "term", "in": "query", "required": false, "schema": { "type": "string", "enum": ["term_1", "term_2", "term_3", "term_4"] } },
-          { "name": "attendance_date_from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
-          { "name": "attendance_date_to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
-          { "name": "search", "in": "query", "required": false, "schema": { "type": "string", "maxLength": 120 } }
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "term_1",
+                "term_2",
+                "term_3",
+                "term_4"
+              ]
+            }
+          },
+          {
+            "name": "attendance_date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "attendance_date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
         ],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get class overview",
-        "tags": ["classes"]
+        "tags": [
+          "classes"
+        ]
       }
     },
     "/api/student-masters/{student_master_id}/overview": {
       "get": {
         "operationId": "getStudentOverview",
-        "parameters": [{ "name": "student_master_id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get integrated student overview",
-        "tags": ["student-masters"]
+        "tags": [
+          "student-masters"
+        ]
       }
     },
     "/api/attendance/calendar": {
       "get": {
         "operationId": "getAttendanceCalendar",
-        "parameters": [{ "name": "academic_year_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarOverview" } } } } },
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceCalendarOverview"
+                }
+              }
+            }
+          }
+        },
         "summary": "Get attendance calendar",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/calendar/weekday": {
       "put": {
         "operationId": "saveAttendanceCalendarWeekday",
-        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarWeekdayRequest" } } }, "required": true },
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceCalendarWeekdayRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Save attendance calendar weekday rule",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
-    "/api/attendance/calendar/weekdays": {"put":{"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["academic_year_id","jenjang_id","weekdays"],"properties":{"academic_year_id":{"minimum":1,"type":"integer"},"jenjang_id":{"minimum":1,"type":"integer"},"weekdays":{"minItems":7,"maxItems":7,"type":"array","items":{"type":"object","required":["weekday","expectation"],"properties":{"weekday":{"minimum":0,"maximum":6,"type":"integer"},"expectation":{"anyOf":[{"anyOf":[{"const":"EXPECTED","type":"string"},{"const":"NOT_EXPECTED","type":"string"}]},{"type":"null"}]}}}}}}},"application/x-www-form-urlencoded":{"schema":{"type":"object","required":["academic_year_id","jenjang_id","weekdays"],"properties":{"academic_year_id":{"minimum":1,"type":"integer"},"jenjang_id":{"minimum":1,"type":"integer"},"weekdays":{"minItems":7,"maxItems":7,"type":"array","items":{"type":"object","required":["weekday","expectation"],"properties":{"weekday":{"minimum":0,"maximum":6,"type":"integer"},"expectation":{"anyOf":[{"anyOf":[{"const":"EXPECTED","type":"string"},{"const":"NOT_EXPECTED","type":"string"}]},{"type":"null"}]}}}}}}},"multipart/form-data":{"schema":{"type":"object","required":["academic_year_id","jenjang_id","weekdays"],"properties":{"academic_year_id":{"minimum":1,"type":"integer"},"jenjang_id":{"minimum":1,"type":"integer"},"weekdays":{"minItems":7,"maxItems":7,"type":"array","items":{"type":"object","required":["weekday","expectation"],"properties":{"weekday":{"minimum":0,"maximum":6,"type":"integer"},"expectation":{"anyOf":[{"anyOf":[{"const":"EXPECTED","type":"string"},{"const":"NOT_EXPECTED","type":"string"}]},{"type":"null"}]}}}}}}}}},"responses":{"200":{"description":"Response for status 200","content":{"application/json":{"schema":{"type":"object","required":["academicYearId","jenjangId","weekdays"],"properties":{"academicYearId":{"minimum":1,"type":"integer"},"jenjangId":{"minimum":1,"type":"integer"},"weekdays":{"minItems":7,"maxItems":7,"type":"array","items":{"type":"object","required":["weekday","expectation"],"properties":{"weekday":{"minimum":0,"maximum":6,"type":"integer"},"expectation":{"anyOf":[{"anyOf":[{"const":"EXPECTED","type":"string"},{"const":"NOT_EXPECTED","type":"string"}]},{"type":"null"}]}}}}}}}}}},"operationId":"putApiAttendanceCalendarWeekdays"}},
+    "/api/attendance/calendar/weekdays": {
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "weekdays"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "weekdays": {
+                    "minItems": 7,
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "expectation"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "minimum": 0,
+                          "maximum": 6,
+                          "type": "integer"
+                        },
+                        "expectation": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "const": "EXPECTED",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "NOT_EXPECTED",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "weekdays"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "weekdays": {
+                    "minItems": 7,
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "expectation"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "minimum": 0,
+                          "maximum": 6,
+                          "type": "integer"
+                        },
+                        "expectation": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "const": "EXPECTED",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "NOT_EXPECTED",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "weekdays"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "weekdays": {
+                    "minItems": 7,
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "expectation"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "minimum": 0,
+                          "maximum": 6,
+                          "type": "integer"
+                        },
+                        "expectation": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "const": "EXPECTED",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "NOT_EXPECTED",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "academicYearId",
+                    "jenjangId",
+                    "weekdays"
+                  ],
+                  "properties": {
+                    "academicYearId": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "jenjangId": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "weekdays": {
+                      "minItems": 7,
+                      "maxItems": 7,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "weekday",
+                          "expectation"
+                        ],
+                        "properties": {
+                          "weekday": {
+                            "minimum": 0,
+                            "maximum": 6,
+                            "type": "integer"
+                          },
+                          "expectation": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "const": "EXPECTED",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "NOT_EXPECTED",
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiAttendanceCalendarWeekdays"
+      }
+    },
     "/api/attendance/calendar/exception": {
       "put": {
         "operationId": "saveAttendanceCalendarException",
-        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttendanceCalendarExceptionRequest" } } }, "required": true },
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceCalendarExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Save attendance calendar exception",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/calendar/exception/{id}": {
       "delete": {
         "operationId": "deleteAttendanceCalendarException",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[1-9]\\d*$" } }],
-        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "type": "object" } } } } },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
         "summary": "Delete attendance calendar exception",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
-    "/api/attendance/calendar/deadline": {"put": {"requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "application/x-www-form-urlencoded": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}, "multipart/form-data": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "cutoff_time"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "cutoff_time": {"anyOf": [{"pattern": "^([01]\\d|2[0-3]):[0-5]\\d$", "type": "string"}, {"type": "null"}]}}}}}}, "operationId": "putApiAttendanceCalendarDeadline"}},
+    "/api/attendance/calendar/deadline": {
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "cutoff_time"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "cutoff_time": {
+                    "anyOf": [
+                      {
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "cutoff_time"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "cutoff_time": {
+                    "anyOf": [
+                      {
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "cutoff_time"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "cutoff_time": {
+                    "anyOf": [
+                      {
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiAttendanceCalendarDeadline"
+      }
+    },
     "/api/attendance/calendar/period/preview": {
       "post": {
         "operationId": "previewAttendanceCalendarPeriod",
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "start_date", "end_date", "expectation", "reason"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "start_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "end_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "expectation": {"enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string"}, "reason": {"enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string"}}}}}},
-        "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}}, "400": {"description": "Invalid or out-of-scope period"}},
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "start_date",
+                  "end_date",
+                  "expectation",
+                  "reason"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "start_date": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  },
+                  "end_date": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  },
+                  "expectation": {
+                    "enum": [
+                      "EXPECTED",
+                      "NOT_EXPECTED"
+                    ],
+                    "type": "string"
+                  },
+                  "reason": {
+                    "enum": [
+                      "HOLIDAY",
+                      "SCHOOL_BREAK",
+                      "SCHOOL_CLOSED",
+                      "NON_INSTRUCTIONAL_DAY",
+                      "PROGRAM_NOT_IN_SESSION",
+                      "REPLACEMENT_SCHOOL_DAY",
+                      "SPECIAL_INSTRUCTIONAL_DAY"
+                    ],
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or out-of-scope period"
+          }
+        },
         "summary": "Preview attendance calendar period",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/calendar/period/apply": {
       "post": {
         "operationId": "applyAttendanceCalendarPeriod",
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["academic_year_id", "jenjang_id", "start_date", "end_date", "expectation", "reason", "preview_digest", "confirmation"], "properties": {"academic_year_id": {"minimum": 1, "type": "integer"}, "jenjang_id": {"minimum": 1, "type": "integer"}, "start_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "end_date": {"pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$", "type": "string"}, "expectation": {"enum": ["EXPECTED", "NOT_EXPECTED"], "type": "string"}, "reason": {"enum": ["HOLIDAY", "SCHOOL_BREAK", "SCHOOL_CLOSED", "NON_INSTRUCTIONAL_DAY", "PROGRAM_NOT_IN_SESSION", "REPLACEMENT_SCHOOL_DAY", "SPECIAL_INSTRUCTIONAL_DAY"], "type": "string"}, "preview_digest": {"pattern": "^[a-f0-9]{64}$", "type": "string"}, "confirmation": {"const": "APPLY_ATTENDANCE_CALENDAR_PERIOD", "type": "string"}}}}}},
-        "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}}, "400": {"description": "Invalid or out-of-scope period"}, "409": {"description": "Period preview is stale or application conflicted"}},
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "academic_year_id",
+                  "jenjang_id",
+                  "start_date",
+                  "end_date",
+                  "expectation",
+                  "reason",
+                  "preview_digest",
+                  "confirmation"
+                ],
+                "properties": {
+                  "academic_year_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "jenjang_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "start_date": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  },
+                  "end_date": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  },
+                  "expectation": {
+                    "enum": [
+                      "EXPECTED",
+                      "NOT_EXPECTED"
+                    ],
+                    "type": "string"
+                  },
+                  "reason": {
+                    "enum": [
+                      "HOLIDAY",
+                      "SCHOOL_BREAK",
+                      "SCHOOL_CLOSED",
+                      "NON_INSTRUCTIONAL_DAY",
+                      "PROGRAM_NOT_IN_SESSION",
+                      "REPLACEMENT_SCHOOL_DAY",
+                      "SPECIAL_INSTRUCTIONAL_DAY"
+                    ],
+                    "type": "string"
+                  },
+                  "preview_digest": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string"
+                  },
+                  "confirmation": {
+                    "const": "APPLY_ATTENDANCE_CALENDAR_PERIOD",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or out-of-scope period"
+          },
+          "409": {
+            "description": "Period preview is stale or application conflicted"
+          }
+        },
         "summary": "Apply attendance calendar period",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/machine-import/preview": {
@@ -35399,24 +38350,56 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file", "academic_year_id", "jenjang_id"],
+                "required": [
+                  "file",
+                  "academic_year_id",
+                  "jenjang_id"
+                ],
                 "properties": {
-                  "file": {"type": "string", "format": "binary"},
-                  "academic_year_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
-                  "jenjang_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
-                  "page": {"type": "string", "pattern": "^[1-9]\\d*$"},
-                  "page_size": {"type": "string", "pattern": "^[1-9]\\d*$"}
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "academic_year_id": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  },
+                  "jenjang_id": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  },
+                  "page": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  },
+                  "page_size": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}},
-          "400": {"description": "Controlled workbook validation error"}
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Controlled workbook validation error"
+          }
         },
         "summary": "Preview attendance-machine XLSX",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/machine-import/apply": {
@@ -35428,25 +38411,61 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file", "academic_year_id", "jenjang_id", "expected_preview_digest", "confirmation"],
+                "required": [
+                  "file",
+                  "academic_year_id",
+                  "jenjang_id",
+                  "expected_preview_digest",
+                  "confirmation"
+                ],
                 "properties": {
-                  "file": {"type": "string", "format": "binary"},
-                  "academic_year_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
-                  "jenjang_id": {"type": "string", "pattern": "^[1-9]\\d*$"},
-                  "expected_preview_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-                  "confirmation": {"type": "string", "const": "IMPORT_MACHINE_ATTENDANCE"}
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "academic_year_id": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  },
+                  "jenjang_id": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$"
+                  },
+                  "expected_preview_digest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "confirmation": {
+                    "type": "string",
+                    "const": "IMPORT_MACHINE_ATTENDANCE"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {"description": "Successful Response", "content": {"application/json": {"schema": {"type": "object"}}}},
-          "400": {"description": "Controlled import validation error"},
-          "409": {"description": "Preview is stale or import was not applied"}
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Controlled import validation error"
+          },
+          "409": {
+            "description": "Preview is stale or import was not applied"
+          }
         },
         "summary": "Apply controlled attendance-machine XLSX import",
-        "tags": ["attendance"]
+        "tags": [
+          "attendance"
+        ]
       }
     },
     "/api/attendance/machine-import/device-identities/link": {
@@ -35457,36 +38476,87 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "required": [
+                  "device_identifier",
+                  "student_master_id",
+                  "effective_from",
+                  "confirmation"
+                ],
                 "properties": {
-                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
-                  "student_master_id": {"minLength": 1, "type": "string"},
-                  "effective_from": {"minLength": 1, "type": "string"},
-                  "confirmation": {"type": "string"}
+                  "device_identifier": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "student_master_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "effective_from": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "confirmation": {
+                    "type": "string"
+                  }
                 }
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
-                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "required": [
+                  "device_identifier",
+                  "student_master_id",
+                  "effective_from",
+                  "confirmation"
+                ],
                 "properties": {
-                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
-                  "student_master_id": {"minLength": 1, "type": "string"},
-                  "effective_from": {"minLength": 1, "type": "string"},
-                  "confirmation": {"type": "string"}
+                  "device_identifier": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "student_master_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "effective_from": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "confirmation": {
+                    "type": "string"
+                  }
                 }
               }
             },
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["device_identifier", "student_master_id", "effective_from", "confirmation"],
+                "required": [
+                  "device_identifier",
+                  "student_master_id",
+                  "effective_from",
+                  "confirmation"
+                ],
                 "properties": {
-                  "device_identifier": {"minLength": 1, "maxLength": 255, "type": "string"},
-                  "student_master_id": {"minLength": 1, "type": "string"},
-                  "effective_from": {"minLength": 1, "type": "string"},
-                  "confirmation": {"type": "string"}
+                  "device_identifier": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "student_master_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "effective_from": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "confirmation": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -35502,25 +38572,34 @@
             "name": "search",
             "in": "query",
             "required": false,
-            "schema": {"maxLength": 100, "type": "string"}
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
           },
           {
             "name": "academic_year_id",
             "in": "query",
             "required": true,
-            "schema": {"pattern": "^[1-9]\\d*$", "type": "string"}
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
           },
           {
             "name": "jenjang_id",
             "in": "query",
             "required": true,
-            "schema": {"pattern": "^[1-9]\\d*$", "type": "string"}
+            "schema": {
+              "pattern": "^[1-9]\\d*$",
+              "type": "string"
+            }
           }
         ],
         "operationId": "getApiAttendanceMachine-importStudent-search"
       }
     },
-    "/api/attendance/override-review":     {
+    "/api/attendance/override-review": {
       "get": {
         "parameters": [
           {
@@ -35904,6 +38983,114 @@
           }
         },
         "operationId": "getApiAttendanceOverride-review"
+      }
+    },
+    "/api/config/absence-reasons/submit": {
+      "post": {
+        "operationId": "submit_monthly_absence_ledger",
+        "summary": "Submit Monthly Absence Ledger",
+        "tags": [
+          "config"
+        ],
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualAbsenceLedgerActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAbsenceLedgerActionResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ledger state or period lock conflict"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        }
+      }
+    },
+    "/api/config/absence-reasons/reopen": {
+      "post": {
+        "operationId": "reopen_monthly_absence_ledger",
+        "summary": "Reopen Monthly Absence Ledger",
+        "tags": [
+          "config"
+        ],
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "astyx_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualAbsenceLedgerReopenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAbsenceLedgerActionResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ledger state or period lock conflict"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        }
       }
     }
   }

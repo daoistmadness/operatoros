@@ -198,6 +198,10 @@ def main() -> int:
         destination_year_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute("INSERT INTO jenjangs (name,code,level,active) VALUES ('Primary','PRI','primary',1)")
         jenjang_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
+        connection.execute(
+            "INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?,'2026-07-01','07:30','RECORDED','E2E_FIXTURE',CURRENT_TIMESTAMP,'Synthetic baseline cutoff policy')",
+            (jenjang_id,),
+        )
         connection.execute("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?,'MAIN',1)", (jenjang_id,))
         program_id = connection.execute("SELECT last_insert_rowid()").fetchone()[0]
         connection.execute(

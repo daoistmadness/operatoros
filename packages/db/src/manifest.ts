@@ -10,6 +10,7 @@ export const SCHEMA_MIGRATIONS = [
   "20260831_s44",
   "20260901_s45",
   "20260901_s46",
+  "20260929_s47",
 ] as const;
 
 export const CURRENT_SCHEMA_VERSION = SCHEMA_MIGRATIONS.at(-1)!;
@@ -21,7 +22,7 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "dd798cf0171b3221577774cc1396cb5e1d57c33d927587fc2fc0c2cd45a88b0a";
+  "79d3451a8ce6bebea9bcc6c8cd9c8ba605e939173d18ad5367210a914fbb4dbd";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -34,6 +35,20 @@ export const REQUIRED_TRIGGERS = [
   "trg_attendance_override_history_no_update",
   "trg_attendance_period_audit_no_delete",
   "trg_attendance_period_audit_no_update",
+  "trg_attendance_ledger_class_month_no_delete",
+  "trg_attendance_ledger_class_month_no_update",
+  "trg_attendance_ledger_revision_no_delete",
+  "trg_attendance_ledger_revision_no_update",
+  "trg_attendance_ledger_revision_sequence",
+  "trg_attendance_ledger_revision_transition",
+  "trg_attendance_ledger_class_month_scope",
+  "trg_attendance_ledger_student_totals_mode",
+  "trg_attendance_ledger_student_totals_scope",
+  "trg_attendance_ledger_student_totals_no_delete",
+  "trg_attendance_ledger_student_totals_no_update",
+  "trg_jenjang_lateness_policy_no_delete",
+  "trg_jenjang_lateness_policy_no_update",
+  "trg_jenjang_lateness_policy_backfill_once",
   "trg_student_enrollment_class_history_no_delete",
   "trg_student_enrollment_class_history_no_update",
   "trg_student_enrollment_lifecycle_audit_no_delete",

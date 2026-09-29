@@ -4,6 +4,7 @@ import { AttendanceImportCommitRequestSchema } from "@operatoros/contracts/atten
 import { inTransaction } from "@operatoros/db";
 import { actor } from "../domains/core";
 import { calculateLateMinutes, deriveAttendanceStatus, deriveJenjangFromClassName } from "./attendance-rules";
+import { cutoffPolicyForDate, loadCutoffPolicies } from "./term-lateness";
 import type { AuthContext } from "../auth/service";
 import { readAttendanceWorkbook, type AttendanceSourceRow, type WorkbookRows } from "../import/excel-reader";
 import { parseStoredDuration, secondsToTimeText } from "@operatoros/excel";
@@ -40,6 +41,15 @@ function cutoffs(context: AuthContext): Record<string, string | undefined> {
     result[String(item.jenjang).toUpperCase()] = item.cutoff_time == null ? undefined : String(item.cutoff_time);
   }
   return result;
+}
+function cutoffMapForEntry(entry: AttendanceSourceRow, student: Row,
+  policies: Map<number, Row[]>, legacy: Record<string, string | undefined>, jenjangIds: Map<string, number>): Record<string, string | undefined> {
+  const jenjang = String(student.jenjang || deriveJenjangFromClassName(student.class_name ?? null) || "").trim();
+  const jenjangId = jenjangIds.get(jenjang.toUpperCase());
+  if (jenjangId === undefined || !policies.has(jenjangId)) return legacy;
+  const policy = entry.date ? cutoffPolicyForDate(policies, jenjangId, entry.date) : null;
+  if (!policy) return {};
+  return { [jenjang]: String(policy.cutoff_time), [jenjang.toUpperCase()]: String(policy.cutoff_time) };
 }
 function resolveStudent(context: AuthContext, identifier: string): Row | null {
   return row(context.database.client, "SELECT s.*, d.id AS device_identity_id FROM student_device_identities d JOIN students s ON s.id = d.legacy_student_id WHERE d.device_identifier = ? AND d.is_active = 1 AND d.legacy_student_id IS NOT NULL ORDER BY d.id LIMIT 1", [identifier]);
@@ -129,7 +139,11 @@ function previewPayload(batch: Row, importRows: Row[]): Row {
 
 export function createPreview(context: AuthContext, workbook: WorkbookRows, filename: string, checksum: string, username: string): Row {
   const client = context.database.client;
-  const cutoffMap = cutoffs(context);
+  const legacyCutoffMap = cutoffs(context);
+  const jenjangRows = rows(client, "SELECT id,name FROM jenjangs");
+  const jenjangIds = new Map(jenjangRows.map((value) => [String(value.name).trim().toUpperCase(), Number(value.id)]));
+  const policyEndDate = workbook.rows.reduce((latest, value) => value.date && value.date > latest ? value.date : latest, "");
+  const cutoffPolicies = loadCutoffPolicies(context, [...jenjangIds.values()], policyEndDate);
   const batchId = randomUUID();
   const counts = { NEW: 0, UNCHANGED: 0, DIFFERENCE: 0, CONFLICT: 0, INVALID: 0 };
   inTransaction(client, () => {
@@ -151,7 +165,7 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
         validationError = "Student identifier belongs to a different existing name";
       } else {
         const before = attendancePayload(existing);
-        const proposed = proposedPayload(entry, student, existing, cutoffMap);
+        const proposed = proposedPayload(entry, student, existing, cutoffMapForEntry(entry, student, cutoffPolicies, legacyCutoffMap, jenjangIds));
         classification = existing == null ? "NEW" : equalJson(before, proposed) ? "UNCHANGED" : "DIFFERENCE";
         const finalWarning = row(client, "SELECT id FROM attendance_overrides WHERE attendance_id = ?", [existing?.id]) ? [warning, "Administrative override exists and remains authoritative"].filter(Boolean).join("; ") : warning;
         counts[classification as keyof typeof counts]++;
