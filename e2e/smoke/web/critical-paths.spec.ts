@@ -74,7 +74,7 @@ test("@analytics @release dashboard filters use the selected period", async ({ p
   await page.locator("#dashboard-year").selectOption("2025");
   await refresh;
   await expect(page.getByText("Januari 2025")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open report" })).toHaveAttribute("href", "/reports/rekap-absensi");
+  await expect(page.getByRole("link", { name: "Open report" })).toHaveAttribute("href", "/analytics/attendance?view=recap");
 });
 
 test("@configuration @release academic hierarchy reaches candidates without enrollment mutation", async ({ page, request }) => {

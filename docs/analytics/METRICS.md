@@ -4,6 +4,21 @@ This file is the live authority for Analytics & Reports metric names,
 formulas, denominators, missing data, and source limits. Server services own
 the calculations. Web pages and exports format returned values.
 
+## Attendance destination
+
+The primary browser destination is `/analytics/attendance`, with `view=overview`,
+`view=report`, `view=recap`, or `view=tardiness`. A missing `view` selects
+Overview. The legacy report paths redirect to the matching view. Monthly Recap
+Input remains at `/attendance/monthly-recap`.
+
+Overview uses Attendance Analytics. Report retains its canonical attendance
+summary, manual S/I/A projection, student detail, and CSV export. Recap retains
+the monthly S/I/A recap and its Excel/print exports, and shows server-resolved
+class-month basis, coverage, and reconciliation. Tardiness remains canonical-
+only and shows `Lateness data unavailable` when the selected scope has no
+canonical arrival evidence. An absence declaration does not establish an
+arrival.
+
 ## Canonical attendance and lateness registry
 
 | User-facing name | Stable key | Numerator | Denominator | Unit and zero behavior | Missing/unknown data | Canonical owner | Allowed alternate name | Source limits |
@@ -18,7 +33,7 @@ the calculations. Web pages and exports format returned values.
 | Average Late Minutes | `average_late_minutes` | Total Late Minutes | Late Events with known duration | Minutes per event; null when denominator is zero | Events with unknown duration are excluded from this denominator | `term-lateness` | Average Minutes Late | Not the average across all late events when some durations are unknown |
 | Late Event Rate | `late_event_rate` | Late Events | Expected Student-Days | Percent; null when denominator is zero | Unknown calendar dates are disclosed separately | `term-lateness` | None | Management-facing canonical rate; not Late Events divided by Hadir |
 | Late Among Present | `late_among_present` | Late attendance events | Hadir attendance events (`on-time` plus `late`) | Percent; null when Hadir is zero | Missing attendance rows are not in this event-only denominator | Attendance Analytics and Student Profile summary where retained | None | Event-only descriptive ratio. Never label it Late Event Rate or generic Tardiness Rate |
-| Late-affected recorded-day rate | `school_impact_rate_pct` (legacy API field) | Distinct dates with at least one late event | Distinct dates with any non-skipped attendance record | Percent; null when denominator is zero | Dates without recorded attendance are excluded | Legacy Tardiness Report service | None | Compatibility field only; denominator is recorded dates, not Attendance Calendar days or Expected Student-Days |
+| Late-affected recorded-day rate | `school_impact_rate_pct` (legacy API field) | Distinct dates with at least one late event | Distinct dates with any non-skipped attendance record | Percent; null when denominator is zero | Dates without recorded attendance are excluded | Tardiness view service | None | Compatibility field only; denominator is recorded dates, not Attendance Calendar days or Expected Student-Days |
 | Recorded Presence Rate | `recorded_presence_rate` (legacy DTO fields may retain `attendance_rate`) | `on-time` plus `late` attendance events | `on-time` + `late` + `sakit` + `izin` + `alfa` recorded events | Percent; null when denominator is zero | Incomplete, Absent, Unrecorded, and unrecorded expected days are not in the denominator | Attendance Analytics; reused by Class Overview and Management Overview | None | Recorded-status ratio; it is not canonical Attendance Rate |
 | Recorded Attendance Rate | `recorded_attendance_rate` | Hadir | Recorded expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days are excluded by definition | `term-attendance` | None | API-only compatibility metric; do not label it Attendance Rate |
 | Recorded Presence / HEB | `student_presence_heb` (legacy DTO field `attendance_rate`) | Student `on-time` plus `late` events | Monthly HEB override, or legacy median estimate from the five highest student check-in counts in the jenjang | Ratio; null when HEB is zero | Missing attendance events do not create a numerator; missing HEB gives unavailable | Shared `heb` helper, Student Profile API, and Student Attendance Excel export | None | Legacy estimate, not Expected Student-Days; not comparable to canonical Attendance Rate |

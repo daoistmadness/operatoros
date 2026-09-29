@@ -17,6 +17,7 @@ import type {
   ManualAbsenceMonthlyResponse,
   ManualAbsenceStudentTotalsResponse,
 } from "@operatoros/contracts/reports";
+import { useSearchParams } from "react-router-dom";
 import { getPageApiError, isApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
 import { Card } from "../components/ui/card";
@@ -60,17 +61,18 @@ function basisErrorMessage(cause: unknown) {
 }
 
 function ManualAbsenceEntry() {
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<ReportFiltersResponse | null>(null);
-  const [academicYearId, setAcademicYearId] = useState(0);
+  const [academicYearId, setAcademicYearId] = useState(() => Number(searchParams.get("academic_year_id")) || 0);
   const [months, setMonths] = useState<ReportFiltersResponse["months"]>([]);
-  const [month, setMonth] = useState("");
+  const [month, setMonth] = useState(() => searchParams.get("month") ?? "");
   const [rows, setRows] = useState<ManualClassRow[]>([]);
   const [students, setStudents] = useState<ManualStudentRow[]>([]);
   const [legacyRows, setLegacyRows] = useState<LegacyRow[]>([]);
   const [basisByClass, setBasisByClass] = useState<Map<number, AttendanceBasisClass>>(new Map());
   const [jenjangId, setJenjangId] = useState("all");
   const [programId, setProgramId] = useState("all");
-  const [classId, setClassId] = useState("all");
+  const [classId, setClassId] = useState(() => searchParams.get("class_id") ?? "all");
   const [loading, setLoading] = useState(true);
   const [studentLoading, setStudentLoading] = useState(false);
   const [legacyLoading, setLegacyLoading] = useState(false);
@@ -88,9 +90,11 @@ function ManualAbsenceEntry() {
   useEffect(() => {
     getReportFilters().then((value) => {
       setFilters(value);
-      setAcademicYearId(value.default_academic_year_id ?? value.academic_years.at(-1)?.id ?? 0);
+      setAcademicYearId((current) => current || value.default_academic_year_id || value.academic_years.at(-1)?.id || 0);
       setMonths(value.months);
-      setMonth(value.months.find((item) => item.value === monthKey())?.value ?? value.months[0]?.value ?? "");
+      setMonth((current) => value.months.some((item) => item.value === current)
+        ? current
+        : value.months.find((item) => item.value === monthKey())?.value ?? value.months[0]?.value ?? "");
     }).catch((cause) => setError(getPageApiError(cause, "Gagal memuat tahun ajaran."))).finally(() => setLoading(false));
   }, []);
 

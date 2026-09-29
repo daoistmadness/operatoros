@@ -71,6 +71,9 @@ describe('route definitions', () => {
       { path: '/upload-history', redirectTo: '/upload?section=history' },
       { path: '/mapping', redirectTo: '/enrollment' },
       { path: '/reports', redirectTo: '/reports/monthly' },
+      { path: '/reports/attendance', redirectTo: '/analytics/attendance?view=report' },
+      { path: '/reports/tardiness', redirectTo: '/analytics/attendance?view=tardiness' },
+      { path: '/reports/rekap-absensi', redirectTo: '/analytics/attendance?view=recap' },
       { path: '/attendance/machine-import', redirectTo: '/upload' },
       { path: '/config/absence-reasons', redirectTo: '/attendance/monthly-recap' },
     ]);

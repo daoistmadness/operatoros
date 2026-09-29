@@ -133,7 +133,7 @@ export default function Dashboard() {
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
         <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
-        <Link to="/reports/rekap-absensi" className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto")}><Download size={16} /> Open report</Link>
+        <Link to="/analytics/attendance?view=recap" className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto")}><Download size={16} /> Open report</Link>
       </FilterBar>
 
       {/* 2. Alert Banner */}
@@ -262,7 +262,7 @@ export default function Dashboard() {
           </div>
           
           <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <Link to="/reports/rekap-absensi" className="text-sm font-semibold text-brand group-hover:text-brand-hover inline-flex items-center gap-1">
+            <Link to="/analytics/attendance?view=recap" className="text-sm font-semibold text-brand group-hover:text-brand-hover inline-flex items-center gap-1">
               View Detailed Report <ChevronRight size={16} />
             </Link>
           </div>
