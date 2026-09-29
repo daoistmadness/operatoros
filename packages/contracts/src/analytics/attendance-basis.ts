@@ -15,6 +15,7 @@ const ReconciliationReason = Type.Union([
   Type.Literal("NO_EXPECTED_STUDENT_DAYS"),
   Type.Literal("CANONICAL_COVERAGE_INCOMPLETE"),
   Type.Literal("CANONICAL_STATUS_UNRESOLVED"),
+  Type.Literal("DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS"),
   Type.Literal("ABSENCE_TOTAL_MISMATCH"),
 ]);
 
@@ -56,6 +57,16 @@ export const AttendanceBasisClassSchema = Type.Object({
     izin_student_days: NullableCount,
     alfa_student_days: NullableCount,
   }),
+  draft: Type.Union([Type.Object({
+    sakit_student_days: Count,
+    izin_student_days: Count,
+    alfa_student_days: Count,
+  }), Type.Null()]),
+  draft_reconciliation: Type.Union([Type.Object({
+    status: Type.Union([Type.Literal("NOT_AVAILABLE"), Type.Literal("NOT_COMPARABLE"), Type.Literal("MATCH"), Type.Literal("CONFLICT")]),
+    reason_code: Type.Union([ReconciliationReason, Type.Null()]),
+  }), Type.Null()]),
+  draft_conflict: Type.Union([AttendanceBasisConflictSchema, Type.Null()]),
   resolved: Type.Object({
     hadir_student_days: NullableCount,
     sakit_student_days: NullableCount,

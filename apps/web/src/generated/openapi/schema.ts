@@ -2303,6 +2303,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/config/absence-reasons/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Class Absence Students */
+        get: operations["get_monthly_class_absence_students"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Legacy Absence Reasons */
+        get: operations["get_legacy_absence_reasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/config/absence-reasons/bulk": {
         parameters: {
             query?: never;
@@ -8560,6 +8594,31 @@ export interface components {
             month: string;
             classes: components["schemas"]["ManualAbsenceMonthlyClass"][];
         };
+        /** ManualAbsenceStudentTotalsResponse */
+        ManualAbsenceStudentTotalsResponse: {
+            academic_year_id: number;
+            month: string;
+            class_id: number;
+            students: {
+                enrollment_id: number;
+                student_name: string;
+                expected_student_days: number;
+                sakit: number;
+                izin: number;
+                alfa: number;
+            }[];
+        };
+        /** LegacyAbsenceReasonsResponse */
+        LegacyAbsenceReasonsResponse: {
+            month: string;
+            rows: {
+                student_name: string;
+                class_name: string | null;
+                sakit: number;
+                izin: number;
+                alfa: number;
+            }[];
+        };
         /** ManualAbsenceStudentTotalInput */
         ManualAbsenceStudentTotalInput: {
             enrollment_id: number;
@@ -8670,7 +8729,7 @@ export interface components {
         AttendanceBasisReconciliation: {
             /** @enum {string} */
             status: "NOT_AVAILABLE" | "NOT_COMPARABLE" | "MATCH" | "CONFLICT";
-            reason_code: ("NO_CANONICAL_EVIDENCE" | "LEDGER_NOT_SUBMITTED" | "NO_EXPECTED_STUDENT_DAYS" | "CANONICAL_COVERAGE_INCOMPLETE" | "CANONICAL_STATUS_UNRESOLVED" | "ABSENCE_TOTAL_MISMATCH") | null;
+            reason_code: ("NO_CANONICAL_EVIDENCE" | "LEDGER_NOT_SUBMITTED" | "NO_EXPECTED_STUDENT_DAYS" | "CANONICAL_COVERAGE_INCOMPLETE" | "CANONICAL_STATUS_UNRESOLVED" | "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS" | "ABSENCE_TOTAL_MISMATCH") | null;
         };
         /** AttendanceBasisLateness */
         AttendanceBasisLateness: {
@@ -8696,6 +8755,13 @@ export interface components {
             canonical: components["schemas"]["AttendanceBasisCanonicalCounts"];
             ledger: components["schemas"]["AttendanceBasisLedger"];
             declared: components["schemas"]["AttendanceBasisDeclared"];
+            draft: {
+                sakit_student_days: number;
+                izin_student_days: number;
+                alfa_student_days: number;
+            } | null;
+            draft_reconciliation: components["schemas"]["AttendanceBasisReconciliation"] | null;
+            draft_conflict: components["schemas"]["AttendanceBasisConflict"] | null;
             resolved: components["schemas"]["AttendanceBasisResolved"];
             presumed_hadir_student_days: number | null;
             lateness: components["schemas"]["AttendanceBasisLateness"];
@@ -13946,6 +14012,91 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    get_monthly_class_absence_students: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                month: string;
+                class_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceStudentTotalsResponse"];
+                };
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Selected class was not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_legacy_absence_reasons: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegacyAbsenceReasonsResponse"];
+                };
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

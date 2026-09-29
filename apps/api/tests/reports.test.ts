@@ -542,9 +542,27 @@ describe("analytics and report parity", () => {
       expect((await submit("2026-10", classIds.P1B!)).status).toBe(200);
       const perStudent = (await (await request(query("2026-10"))).json() as any).classes.find((value: any) => value.class_name === "P1B");
       expect(perStudent).toMatchObject({ sakit: 1, izin: 0, alfa: 0, state: "SUBMITTED", entry_mode: "PER_STUDENT" });
+      const studentTotalsResponse = await request(`/api/config/absence-reasons/students?academic_year_id=${academicYearId}&month=2026-10&class_id=${classIds.P1B}`);
+      expect(studentTotalsResponse.status).toBe(200);
+      expect(await studentTotalsResponse.json()).toMatchObject({
+        academic_year_id: academicYearId, month: "2026-10", class_id: classIds.P1B,
+        students: expect.arrayContaining([expect.objectContaining({ enrollment_id: enrollmentId, sakit: 1, izin: 0, alfa: 0 })]),
+      });
       expect(database.client.query(`SELECT r.sakit,r.izin,r.alfa FROM attendance_ledger_revisions r
         JOIN attendance_ledger_class_months cm ON cm.id=r.class_month_id
         WHERE cm.academic_year_id=? AND cm.class_id=? AND cm.month='2026-10' ORDER BY r.revision_no DESC LIMIT 1`).get(academicYearId, classIds.P1B!)).toEqual({ sakit: null, izin: null, alfa: null });
+
+      const legacyStudentId = Number(database.client.run("INSERT INTO students (name,jenjang,class_name) VALUES ('Legacy Recap Student','SD','P1B')").lastInsertRowid);
+      database.client.run(`INSERT INTO absence_reasons (student_id,class_name,month,year,sakit,izin,alfa,note,entered_by,entered_at,updated_at)
+        VALUES (?,'P1B',10,2026,2,1,0,'synthetic legacy row','golden-admin',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, [legacyStudentId]);
+      const legacyCount = Number((database.client.query("SELECT COUNT(*) AS count FROM absence_reasons").get() as any).count);
+      const legacyResponse = await request("/api/config/absence-reasons/legacy?month=2026-10");
+      expect(legacyResponse.status).toBe(200);
+      expect(await legacyResponse.json()).toMatchObject({
+        month: "2026-10", rows: expect.arrayContaining([expect.objectContaining({ student_name: "Legacy Recap Student", class_name: "P1B", sakit: 2, izin: 1, alfa: 0 })]),
+      });
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM absence_reasons").get() as any).count)).toBe(legacyCount);
+      expect((await app.handle(new Request("http://local/api/config/absence-reasons/legacy?month=2026-10", { headers: { cookie: staff } }))).status).toBe(403);
 
       const invalidClass = await save("2026-10", [{ class_id: classIds.P1A!, sakit: 10, izin: 10, alfa: 10 }, { class_id: 999999, sakit: 1, izin: 1, alfa: 1 }]);
       expect(invalidClass.status).toBe(422);
@@ -616,6 +634,17 @@ describe("attendance basis resolver", () => {
         VALUES (?, 'P1A','2026-08-03','2026-08-04','synthetic-test','synthetic-test'),
           (?, 'P1B','2026-08-05','2026-08-06','synthetic-test','synthetic-test')`, [transfer.enrollmentId, transfer.enrollmentId]);
       for (const date of ["2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"]) addAttendance(transfer.studentId, date, "on-time");
+      const rosterFor = async (classId: number) => {
+        const response = await request(`/api/config/absence-reasons/students?academic_year_id=${yearId}&month=2026-08&class_id=${classId}`);
+        expect(response.status, JSON.stringify(await response.clone().json())).toBe(200);
+        return (await response.json() as any).students;
+      };
+      expect(await rosterFor(classIds.P1A!)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ enrollment_id: transfer.enrollmentId, student_name: "C2 Transfer Student", expected_student_days: 2 }),
+      ]));
+      expect(await rosterFor(classIds.P1B!)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ enrollment_id: transfer.enrollmentId, student_name: "C2 Transfer Student", expected_student_days: 2 }),
+      ]));
       const nonExpected = addEnrollment("C2 Nonexpected Student", "NONEXPECTED", classIds.NONEXPECTED!, "2026-08-01", "2026-08-01");
       addAttendance(nonExpected.studentId, "2026-08-01", "on-time");
       database.client.run("UPDATE heb_overrides SET heb_value=99,note='Synthetic cutoff-independent override',set_by='golden-admin' WHERE jenjang='SD' AND month=8 AND year=2026");
@@ -653,6 +682,14 @@ describe("attendance basis resolver", () => {
       const reopen = await request("/api/config/absence-reasons/reopen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-08", class_id: classIds.P1A, reason: "Synthetic conflict case" }) });
       expect(reopen.status).toBe(200);
       expect((await save(classIds.P1A!, { sakit: 3, izin: 0, alfa: 0 })).status).toBe(200);
+      expect(await basisFor(classIds.P1A!)).toMatchObject({
+        basis: "OBSERVED", ledger: { state: "OPEN" },
+        declared: { sakit_student_days: null, izin_student_days: null, alfa_student_days: null },
+        draft: { sakit_student_days: 3, izin_student_days: 0, alfa_student_days: 0 },
+        draft_reconciliation: { status: "CONFLICT", reason_code: "ABSENCE_TOTAL_MISMATCH" },
+        draft_conflict: { canonical_non_hadir_student_days: 2, declared_absence_student_days: 3, delta_student_days: 1 },
+        conflict: null,
+      });
       expect((await submit(classIds.P1A!)).status).toBe(200);
       expect(await basisFor(classIds.P1A!)).toMatchObject({
         basis: "OBSERVED", reconciliation: { status: "CONFLICT", reason_code: "ABSENCE_TOTAL_MISMATCH" },
