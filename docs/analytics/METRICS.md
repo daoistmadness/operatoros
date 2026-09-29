@@ -41,12 +41,57 @@ remain compatibility identifiers.
 
 ## Separate manual monthly S/I/A ledger
 
-The `absence_reasons` monthly ledger is separate from canonical student-level
-attendance events. Executive Reports, Monthly Management Report, and retained
-legacy summaries may show both raw sources. They do not add manual Sakit,
-Izin, or Alfa counts to canonical Hadir to construct a percentage. Their
-Attendance Rate and combined completeness rates are unavailable until a
-compatible denominator exists. Raw counts remain available with source labels.
+The selected manual ledger is the only authority for declared monthly
+Sakit/Izin/Alfa. Its unit is Student-Days: school days on which students had
+each reason. It never writes canonical attendance or fabricates a check-in.
+
+Each class-month uses one mode. `TOTALS_ONLY` makes submitted class totals
+authoritative. `PER_STUDENT` makes sparse student-month rows authoritative and
+derives class totals; it never stores editable aggregate values. The existing
+`absence_reasons` table is historical-only. Exclude it from consolidated
+totals, and label any retained display as legacy. Do not merge it into either
+mode. Missing rows remain missing; explicit zero rows remain data.
+
+## Attendance basis and reconciliation
+
+Basis and coverage are separate. `OBSERVED` means canonical daily attendance
+evidence exists in scope. Partial coverage remains `OBSERVED`; return Expected
+Student-Days, recorded days, Unrecorded, and Coverage separately.
+`DECLARED` means there is no canonical daily attendance evidence and the
+selected ledger has a submitted class-month. `OPEN` and missing ledgers are not
+declarations. `NOT_REPORTED` means neither canonical evidence nor a submitted
+declaration exists. `CONFLICT` is a separate reconciliation flag, never a
+basis.
+
+- **Coverage:** recorded expected Student-Days divided by Expected
+  Student-Days. Return `null` when the denominator is zero. Unknown calendar
+  days are reported separately. A present row with an unsupported status is
+  recorded coverage and `Other Status`, not Unrecorded; it still makes report
+  readiness false.
+- **Declared Sakit/Izin/Alfa:** submitted Student-Day values from the active
+  ledger mode. Never treat them as observed events.
+- **Presumed Hadir:** for `DECLARED` only, derive Expected Student-Days minus
+  submitted S/I/A Student-Days when the denominator is known. It is read-only,
+  labeled calculated, and never persisted.
+- **Reconciliation delta:** compare declared S/I/A with canonical reason
+  Student-Days only when their class-month/student scope is compatible. For an
+  aggregate class-month comparison, canonical expected coverage must be
+  complete and all expected statuses resolved. Partial canonical coverage
+  does not create a conflict by itself.
+- **Conflict:** report a separate conflict when compatible values disagree.
+  Show canonical value, declared value, delta, and explanation. Never
+  auto-resolve.
+- **NOT_REPORTED:** no canonical evidence and no submitted declaration. A
+  finalized period without a submitted ledger stays `NOT_REPORTED`.
+
+New saves start `OPEN`; submission is explicit. Existing class-total rows
+migrate as `SUBMITTED` with `legacy_saved` provenance and the migration actor.
+Ledger lock is derived when any finalized attendance date overlaps the
+calendar month. Do not store a separate `CLOSED` state.
+
+Lateness stays canonical-only. For `DECLARED` scopes without canonical arrival
+evidence, lateness is unavailable, not zero. See the [C0 boundary audit](../architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md)
+for the source matrix, effective-dated cutoff contract, and phase requirements.
 
 ## Class and term filter contracts
 
