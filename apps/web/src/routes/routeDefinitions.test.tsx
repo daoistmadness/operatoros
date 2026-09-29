@@ -25,6 +25,7 @@ const expectedPaths = [
   '/analytics/data-quality',
   '/analytics/attendance',
   '/analytics/academic',
+  '/analytics/student-insights',
   '/analytics/trends',
   '/analytics/indicators',
   '/attendance-review',
@@ -71,6 +72,12 @@ describe('route definitions', () => {
       { path: '/reports', redirectTo: '/reports/monthly' },
       { path: '/attendance/machine-import', redirectTo: '/upload' },
     ]);
+  });
+
+  it('keeps both Student Insights compatibility routes beside the canonical destination', () => {
+    expect(authenticatedRoutes.find(({ path }) => path === '/analytics/student-insights')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/analytics/trends')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/analytics/indicators')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
   });
 
   it('keeps every route behind authentication metadata', () => {

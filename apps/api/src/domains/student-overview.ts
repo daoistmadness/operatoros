@@ -5,7 +5,7 @@ import type { AuthContext } from "../auth/service";
 import { attendanceStudentSummary } from "./attendance-analytics";
 import { studentQualityIssues } from "./data-quality";
 import { recentStudentAttendance } from "./student-attendance-export";
-import { studentIndicatorInsights } from "./student-indicators";
+import { studentAcademicMeasurements } from "./student-indicators";
 import { studentTrendInsights } from "./student-trends";
 import { hasAcademicTimelineTable, studentAcademicHistory } from "./academic-timeline";
 import { actor, studentDetail } from "./core";
@@ -45,8 +45,11 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
   const academicYearId = Number(enrollment?.academic_year_id ?? 0);
   const classId = enrollment?.academic_class_id == null ? null : Number(enrollment.academic_class_id);
   const scope = enrollment ? { academic_year_id: String(academicYearId), class_id: classId === null ? undefined : String(classId), student_id: studentMasterId, page_size: "1" } : null;
-  const indicators = scope ? studentIndicatorInsights(context, scope, canAttendance) : null;
-  const indicator = indicators?.rows[0] ?? null;
+  const academicMeasurements = enrollment ? studentAcademicMeasurements(context, {
+    academicYearId, academicYearLabel: String(enrollment.academic_year),
+    yearStart: String(enrollment.start_date), yearEnd: String(enrollment.end_date),
+    jenjangId: Number(enrollment.jenjang_id), classId,
+  }, studentMasterId) : null;
   const trends = scope ? studentTrendInsights(context, scope, canAttendance) : null;
   const trend = trends?.rows[0] ?? null;
   const academicHistory = enrollment ? studentAcademicHistory(context, Number(enrollment.id)) : [];
@@ -60,8 +63,8 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
   const dateEnd = enrollment ? (today < String(enrollment.start_date) ? String(enrollment.start_date) : today > String(enrollment.end_date) ? String(enrollment.end_date) : today) : null;
   const attendanceQuery = enrollment && dateEnd ? { academic_year_id: String(academicYearId), date_from: String(enrollment.start_date), date_to: dateEnd, class_id: classId === null ? undefined : String(classId) } : null;
   const attendance = canAttendance && attendanceQuery && enrollment?.student_id != null ? attendanceStudentSummary(context, attendanceQuery, Number(enrollment.student_id)) : null;
-  const academicAverage = indicator?.academicAverage.current ?? null;
-  const academicParticipation = indicator?.academicParticipation.current ?? null;
+  const academicAverage = academicMeasurements?.average ?? null;
+  const academicParticipation = academicMeasurements?.participation ?? null;
   const trendComparison = trend && trends?.window.comparison === "comparable" ? "available" : "insufficient_data";
 
   return {
@@ -87,8 +90,8 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
     academic: {
       status: !enrollment ? "not_applicable" : academicAverage === null && academicParticipation === null ? "no_data" : "available",
       average: academicAverage, participation: academicParticipation,
-      scoredResults: indicator?.academicAverage.currentSampleSize ?? 0,
-      expectedResults: indicator?.academicParticipation.currentSampleSize ?? 0,
+      scoredResults: academicMeasurements?.scoredResults ?? 0,
+      expectedResults: academicMeasurements?.expectedResults ?? 0,
       temporalTrend,
       history: academicHistory,
     },
@@ -108,8 +111,8 @@ export function studentOverview(context: AuthContext, studentMasterId: string, r
       attendanceAnalytics: canAttendance && attendanceQuery ? link("/analytics/attendance", attendanceQuery) : null,
       attendanceExport: canExport && hasAttendanceIdentity ? `/api/student-masters/${studentMasterId}/attendance-history/export-excel` : null,
       academicAnalytics: scope ? link("/analytics/academic", { academic_year_id: academicYearId, class_id: classId }) : null,
-      trends: canAttendance && scope ? link("/analytics/trends", { academic_year_id: academicYearId, class_id: classId, student_id: studentMasterId }) : null,
-      indicators: scope ? link("/analytics/indicators", { academic_year_id: academicYearId, class_id: classId, student_id: studentMasterId }) : null,
+      trends: canAttendance && scope ? link("/analytics/student-insights", { view: "trends", academic_year_id: academicYearId, class_id: classId, student_id: studentMasterId }) : null,
+      indicators: scope ? link("/analytics/student-insights", { view: "indicators", academic_year_id: academicYearId, class_id: classId, student_id: studentMasterId }) : null,
       dataQuality: scope ? link("/analytics/data-quality", { academic_year_id: academicYearId, class_id: classId }) : null,
     },
   };

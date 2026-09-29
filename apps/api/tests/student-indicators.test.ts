@@ -11,13 +11,18 @@ function context(): AuthContext {
   client.run(`
     CREATE TABLE academic_years (id INTEGER PRIMARY KEY, label TEXT, start_date TEXT, end_date TEXT);
     CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT);
-    CREATE TABLE academic_grades (id INTEGER PRIMARY KEY, jenjang_id INTEGER);
+    CREATE TABLE academic_programs (id INTEGER PRIMARY KEY, jenjang_id INTEGER, name TEXT);
+    CREATE TABLE academic_grades (id INTEGER PRIMARY KEY, jenjang_id INTEGER, program_id INTEGER, name TEXT);
     CREATE TABLE academic_classes (id INTEGER PRIMARY KEY, academic_year_id INTEGER, grade_id INTEGER, class_name TEXT);
     CREATE TABLE student_masters (id TEXT PRIMARY KEY, full_name TEXT);
-    CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT, class_name TEXT);
+    CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT, jenjang TEXT, class_name TEXT);
     CREATE TABLE student_enrollments (id INTEGER PRIMARY KEY, student_id INTEGER, student_master_id TEXT, academic_year_id INTEGER, jenjang_id INTEGER, academic_class_id INTEGER, class_name TEXT, effective_from TEXT, effective_to TEXT, lifecycle_state TEXT);
-    CREATE TABLE attendance (id INTEGER PRIMARY KEY, student_id INTEGER, date TEXT, status TEXT);
-    CREATE TABLE attendance_overrides (id INTEGER PRIMARY KEY, attendance_id INTEGER, original_status TEXT, override_status TEXT);
+    CREATE TABLE student_enrollment_class_history (id INTEGER PRIMARY KEY, enrollment_id INTEGER, class_name TEXT, effective_from TEXT, effective_to TEXT);
+    CREATE TABLE attendance (id INTEGER PRIMARY KEY, student_id INTEGER, date TEXT, check_in TEXT, check_out TEXT, status TEXT);
+    CREATE TABLE attendance_overrides (id INTEGER PRIMARY KEY, attendance_id INTEGER, original_status TEXT, override_status TEXT, override_check_in TEXT);
+    CREATE TABLE attendance_calendar_weekday_rules (academic_year_id INTEGER, jenjang_id INTEGER, weekday INTEGER, expectation TEXT);
+    CREATE TABLE attendance_calendar_exceptions (academic_year_id INTEGER, jenjang_id INTEGER, date TEXT, expectation TEXT, reason TEXT);
+    CREATE TABLE jenjang_config (id INTEGER PRIMARY KEY, jenjang TEXT, cutoff_time TEXT, updated_at TEXT);
     CREATE TABLE academic_term_configs (id INTEGER PRIMARY KEY, academic_year_id INTEGER, term_number INTEGER, label TEXT, start_date TEXT, end_date TEXT);
     CREATE TABLE kkm_thresholds (id INTEGER PRIMARY KEY, academic_year_id INTEGER, jenjang_id INTEGER, subject_id INTEGER, assessment_type TEXT, threshold REAL);
     CREATE TABLE subjects (id INTEGER PRIMARY KEY, name TEXT, jenjang_id INTEGER);
@@ -26,14 +31,36 @@ function context(): AuthContext {
   `);
   client.run("INSERT INTO academic_years VALUES (1, '2026/2027', '2026-01-01', '2026-03-31')");
   client.run("INSERT INTO jenjangs VALUES (1, 'SMP')");
-  client.run("INSERT INTO academic_grades VALUES (1, 1)");
+  client.run("INSERT INTO academic_programs VALUES (1, 1, 'Regular'); INSERT INTO academic_grades VALUES (1, 1, 1, '7')");
   client.run("INSERT INTO academic_classes VALUES (1, 1, 1, '7A')");
   client.run("INSERT INTO student_masters VALUES ('student-a', 'Alya'), ('student-b', 'Bima')");
-  client.run("INSERT INTO students VALUES (1, 'Alya legacy', '7A'), (2, 'Bima legacy', '7A')");
-  client.run("INSERT INTO student_enrollments VALUES (1, 1, 'student-a', 1, 1, 1, '7A', '2026-01-01', NULL, 'ACTIVE'), (2, 2, 'student-b', 1, 1, 1, '7A', '2026-01-01', NULL, 'ACTIVE')");
-  client.run("INSERT INTO academic_classes VALUES (2, 1, 1, '7B'); UPDATE student_enrollments SET academic_class_id = 2, class_name = '7B' WHERE id = 2");
-  client.run("INSERT INTO attendance VALUES (1, 1, '2026-01-30', 'late'), (2, 1, '2026-02-01', 'alfa'), (3, 1, '2026-03-10', 'on-time'), (4, 1, '2026-03-11', 'late'), (5, 1, '2026-03-12', 'alfa'), (6, 2, '2026-03-15', 'on-time')");
-  client.run("INSERT INTO attendance_overrides VALUES (1, 1, 'late', 'on-time')");
+  client.run("INSERT INTO students VALUES (1, 'Alya legacy', 'SMP', '7A'), (2, 'Bima legacy', 'SMP', '7B')");
+  client.run("INSERT INTO student_enrollments VALUES (1, 1, 'student-a', 1, 1, 1, '7A', '2026-01-01', NULL, 'ACTIVE'), (2, 2, 'student-b', 1, 1, 2, '7B', '2026-02-01', NULL, 'ACTIVE')");
+  client.run("INSERT INTO academic_classes VALUES (2, 1, 1, '7B')");
+  for (let weekday = 0; weekday < 7; weekday++) client.run("INSERT INTO attendance_calendar_weekday_rules VALUES (1, 1, ?, ?)", [weekday, weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED"]);
+  client.run("INSERT INTO jenjang_config VALUES (1, 'SMP', '08:00', '2026-01-01')");
+  const weekdays = (start: string, end: string) => {
+    const result: string[] = [];
+    for (const date = new Date(`${start}T00:00:00Z`); date <= new Date(`${end}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + 1))
+      if (date.getUTCDay() > 0 && date.getUTCDay() < 6) result.push(date.toISOString().slice(0, 10));
+    return result;
+  };
+  let attendanceId = 0;
+  const record = (studentId: number, date: string, status: string) => {
+    attendanceId++;
+    const checkIn = status === "late" ? "08:10" : status === "on-time" ? "07:50" : null;
+    client.run("INSERT INTO attendance VALUES (?, ?, ?, ?, '14:00', ?)", [attendanceId, studentId, date, checkIn, status]);
+    return attendanceId;
+  };
+  const previousStatuses = [...Array(14).fill("on-time"), ...Array(2).fill("late"), "sakit", "izin", ...Array(2).fill("alfa")];
+  weekdays("2026-01-19", "2026-02-15").forEach((date, index) => record(1, date, previousStatuses[index]!));
+  const currentStatuses = [...Array(14).fill("on-time"), ...Array(4).fill("late")];
+  const currentDates = weekdays("2026-02-16", "2026-03-15");
+  currentStatuses.forEach((status, index) => {
+    const id = record(1, currentDates[index]!, status);
+    if (index === 14) client.run("INSERT INTO attendance_overrides VALUES (1, ?, 'late', 'on-time', NULL)", [id]);
+  });
+  client.run("INSERT INTO attendance VALUES (?, 2, '2026-03-15', '07:50', '14:00', 'on-time')", [++attendanceId]);
   client.run("INSERT INTO subjects VALUES (1, 'Mathematics', 1)");
   client.run("INSERT INTO assessment_components VALUES (1, 'Quiz', 'formatif', 1), (2, 'Exam', 'sumatif', 1)");
   client.run("INSERT INTO student_subject_grades VALUES (1, 1, 1, 1, 80), (2, 1, 1, 2, 70)");
@@ -50,9 +77,9 @@ describe("student indicator insights", () => {
       const trends = studentTrendInsights(value, { academic_year_id: "1" });
       const trendAlya = trends.rows.find((student) => student.studentId === "student-a")!;
       const academic = academicOverview(value, { academic_year_id: "1", class_id: "1" })!;
-      expect(alya.attendanceRate).toMatchObject({ current: 66.67, previous: 50, delta: 16.67, currentSampleSize: 3, previousSampleSize: 2, dataStatus: "available" });
-      expect(alya.tardinessRate).toMatchObject({ current: 50, previous: 0, delta: 50, currentSampleSize: 2, previousSampleSize: 1 });
-      expect(alya.alfaRate).toMatchObject({ current: 33.33, previous: 50, delta: -16.67 });
+      expect(alya.attendanceRate).toMatchObject({ label: "Attendance Rate", current: 90, previous: 80, delta: 10, currentSampleSize: 20, previousSampleSize: 20, dataStatus: "available" });
+      expect(alya.tardinessRate).toMatchObject({ label: "Late Event Rate", current: 15, previous: 10, delta: 5, currentSampleSize: 20, previousSampleSize: 20 });
+      expect(alya.alfaRate).toMatchObject({ label: "Alfa Rate", current: 0, previous: 10, delta: -10 });
       expect(alya.academicAverage).toMatchObject({ current: 75, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2 });
       expect(alya.academicParticipation).toMatchObject({ current: 100, previous: null, delta: null, currentSampleSize: 2 });
       expect(alya.dataAvailability).toEqual({ attendance: "available", comparison: "available", academic: "available" });
@@ -77,6 +104,19 @@ describe("student indicator insights", () => {
       expect(response.rows[0]?.studentId).toBe("student-b");
       expect(response.rows[0]?.academicAverage).toMatchObject({ current: null, previous: null, delta: null, dataStatus: "not_applicable" });
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number }).count)).toBe(before);
+    } finally { value.database.client.close(); }
+  });
+
+  it("keeps Unrecorded in both canonical denominators and returns null when Expected Student-Days is zero", () => {
+    const value = context();
+    try {
+      const before = studentIndicatorInsights(value, { academic_year_id: "1" }).rows.find((student) => student.studentId === "student-a")!;
+      expect(before.attendanceRate).toMatchObject({ current: 90, currentSampleSize: 20 });
+      expect(before.tardinessRate).toMatchObject({ current: 15, currentSampleSize: 20 });
+      value.database.client.run("UPDATE attendance_calendar_weekday_rules SET expectation = 'NOT_EXPECTED'");
+      const empty = studentIndicatorInsights(value, { academic_year_id: "1" }).rows.find((student) => student.studentId === "student-a")!;
+      expect(empty.attendanceRate).toMatchObject({ current: null, dataStatus: "not_applicable" });
+      expect(empty.tardinessRate).toMatchObject({ current: null, dataStatus: "not_applicable" });
     } finally { value.database.client.close(); }
   });
 

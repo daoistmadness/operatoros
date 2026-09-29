@@ -21,8 +21,9 @@ const DataRecapitulation = lazy(() => import('../pages/DataRecapitulation'));
 const DataQuality = lazy(() => import('../pages/DataQuality'));
 const AttendanceAnalytics = lazy(() => import('../pages/AttendanceAnalytics'));
 const AcademicAnalytics = lazy(() => import('../pages/AcademicAnalytics'));
-const StudentTrendInsights = lazy(() => import('../pages/StudentTrendInsights'));
-const StudentIndicatorInsights = lazy(() => import('../pages/StudentIndicatorInsights'));
+const StudentInsights = lazy(() => import('../pages/StudentInsights'));
+const StudentTrendsCompatibilityRedirect = lazyNamedRoute(() => import('../pages/StudentInsights'), 'StudentTrendsCompatibilityRedirect');
+const StudentIndicatorsCompatibilityRedirect = lazyNamedRoute(() => import('../pages/StudentInsights'), 'StudentIndicatorsCompatibilityRedirect');
 const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const StudentManagement = lazy(() => import('../pages/StudentManagement'));
 const StaffManagement = lazy(() => import('../pages/StaffManagement'));
@@ -106,8 +107,9 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/analytics/data-quality', element: <DataQuality />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/attendance', element: <AttendanceAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
   defineRoute({ path: '/analytics/academic', element: <AcademicAnalytics />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: authenticated() }),
-  defineRoute({ path: '/analytics/trends', element: <StudentTrendInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
-  defineRoute({ path: '/analytics/indicators', element: <StudentIndicatorInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
+  defineRoute({ path: '/analytics/student-insights', element: <StudentInsights />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
+  defineRoute({ path: '/analytics/trends', element: <StudentTrendsCompatibilityRedirect />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
+  defineRoute({ path: '/analytics/indicators', element: <StudentIndicatorsCompatibilityRedirect />, group: ROUTE_GROUPS.REPORTS_ANALYTICS, authorization: capability('view_student') }),
   defineRoute({ path: '/attendance-review', element: <AttendanceReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance-corrections', element: <AttendanceCorrections />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),
   defineRoute({ path: '/attendance/override-review', element: <AttendanceCorrectionReview />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance_corrections') }),

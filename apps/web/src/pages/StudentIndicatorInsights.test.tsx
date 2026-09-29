@@ -18,7 +18,7 @@ const response = {
   scope: { academicYearId: 1, academicYearLabel: "2026/2027", jenjangId: null, classId: null },
   window: { kind: "rolling_4w", anchorDate: "2026-03-15", currentStart: "2026-02-16", currentEnd: "2026-03-15", previousStart: "2026-01-19", previousEnd: "2026-02-15", currentEligibleDays: 28, previousEligibleDays: 28, comparison: "comparable" },
   totalStudents: 1, page: 1, pageSize: 25,
-  rows: [{ studentId: "student-a", studentName: "Alya", className: "7A", jenjang: "SMP", attendanceRate: { id: "attendance_rate", label: "Recorded Presence Rate", domain: "attendance", unit: "percent", current: 66.67, previous: 50, delta: 16.67, direction: "up", currentSampleSize: 3, previousSampleSize: 2, dataStatus: "available" }, tardinessRate: null, alfaRate: null, academicAverage: { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", current: 75, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, dataStatus: "insufficient_data" }, academicParticipation: { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", current: 100, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, dataStatus: "insufficient_data" }, dataAvailability: { attendance: "available", comparison: "available", academic: "available" } }],
+  rows: [{ studentId: "student-a", studentName: "Alya", className: "7A", jenjang: "SMP", attendanceRate: { id: "attendance_rate", label: "Attendance Rate", domain: "attendance", unit: "percent", current: 90, previous: 80, delta: 10, direction: "up", currentSampleSize: 20, previousSampleSize: 20, dataStatus: "available" }, tardinessRate: { id: "tardiness_rate", label: "Late Event Rate", domain: "attendance", unit: "percent", current: 15, previous: 10, delta: 5, direction: "up", currentSampleSize: 20, previousSampleSize: 20, dataStatus: "available" }, alfaRate: { id: "alfa_rate", label: "Alfa Rate", domain: "attendance", unit: "percent", current: 0, previous: 10, delta: -10, direction: "down", currentSampleSize: 20, previousSampleSize: 20, dataStatus: "available" }, academicAverage: { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", current: 75, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, dataStatus: "insufficient_data" }, academicParticipation: { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", current: 100, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, dataStatus: "insufficient_data" }, dataAvailability: { attendance: "available", comparison: "available", academic: "available" } }],
   indicatorDefinitions: [], limitations: ["Academic indicators report current canonical scores and participation only because grade rows have no date or term field."],
 };
 
@@ -38,10 +38,13 @@ describe("StudentIndicatorInsights", () => {
 
   it("renders server measurements and keeps academic time-series limits neutral", async () => {
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
-    await act(async () => { root.render(<MemoryRouter><AuthContext.Provider value={auth}><StudentIndicatorInsights /></AuthContext.Provider></MemoryRouter>); });
-    expect(container.textContent).toContain("Student Indicators");
-    expect(container.textContent).toContain("50.00% → 66.67% (+16.67 pp)");
-    expect(container.textContent).toContain("75.0 · Academic trend unavailable");
+    await act(async () => { root.render(<MemoryRouter><AuthContext.Provider value={auth}><StudentIndicatorInsights filters={{ academic_year_id: 1, jenjang_id: null, class_id: null, window: "rolling_4w", search: "" }} enabled /></AuthContext.Provider></MemoryRouter>); });
+    expect(container.textContent).toContain("Attendance Rate");
+    expect(container.textContent).toContain("Late Event Rate");
+    expect(container.textContent).toContain("90.00%");
+    expect(container.textContent).toContain("15.00%");
+    expect(container.textContent).toContain("75.0");
+    expect(container.textContent).not.toContain("→");
     expect(container.textContent).not.toMatch(/high risk|medium risk|low risk|at.?risk|alert|intervention|warning severity|recommendation/i);
   });
 });

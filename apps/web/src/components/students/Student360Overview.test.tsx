@@ -12,7 +12,7 @@ const overview = {
   trends: { status: "available", window: { kind: "rolling_4w", anchorDate: "2026-03-31", currentStart: "2026-03-04", currentEnd: "2026-03-31", previousStart: "2026-02-04", previousEnd: "2026-03-03", currentEligibleDays: 28, previousEligibleDays: 28, comparison: "comparable" }, academic: null, attendance: { unit: "percent", current: 66.67, previous: 50, delta: 16.67, direction: "up", currentSampleSize: 3, previousSampleSize: 2 }, tardiness: null, alfa: null },
   dataCompleteness: { status: "available", issues: [{ field: "religion", type: "MISSING_OPTIONAL_FIELD", label: "Missing religion" }] },
   availability: { attendance: "available", academic: "available", trendComparison: "available" },
-  links: { attendanceDetails: "/attendance/students/1", attendanceAnalytics: "/analytics/attendance?academic_year_id=1", attendanceExport: "/api/student-masters/student-a/attendance-history/export-excel", academicAnalytics: "/analytics/academic?academic_year_id=1", trends: "/analytics/trends?academic_year_id=1", indicators: "/analytics/indicators?academic_year_id=1", dataQuality: "/analytics/data-quality?academic_year_id=1" },
+  links: { attendanceDetails: "/attendance/students/1", attendanceAnalytics: "/analytics/attendance?academic_year_id=1", attendanceExport: "/api/student-masters/student-a/attendance-history/export-excel", academicAnalytics: "/analytics/academic?academic_year_id=1", trends: "/analytics/student-insights?view=trends&academic_year_id=1", indicators: "/analytics/student-insights?view=indicators&academic_year_id=1", dataQuality: "/analytics/data-quality?academic_year_id=1" },
 } as never;
 
 describe("Student360Overview", () => {
@@ -28,8 +28,8 @@ describe("Student360Overview", () => {
     expect(container.textContent).toContain("Recorded Presence Rate");
     expect(container.textContent).toContain("Academic");
     expect(container.textContent).toContain("Attendance trends");
-    expect(container.textContent).toContain("Late Among Present");
-    expect(container.textContent).toContain("Recorded Alfa Rate");
+    expect(container.textContent).toContain("Late Event Rate");
+    expect(container.textContent).toContain("Alfa Rate");
     expect(container.textContent).toContain("Data completeness");
     expect(container.textContent).toContain("Insufficient comparison data");
     expect(container.querySelector('a[href="/attendance/students/1"]')).not.toBeNull();
