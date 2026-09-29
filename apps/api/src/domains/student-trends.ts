@@ -3,6 +3,8 @@ import { capabilitiesForRole } from "../auth/capabilities";
 import { actor } from "./core";
 import { effectiveAcademicTerms, hasAcademicTimelineTable } from "./academic-timeline";
 import { roundHalfEven } from "../analytics/queries";
+import { attendancePeriodStudentsByRanges } from "./term-attendance";
+import { tallyLatenessRange } from "./term-lateness";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -24,6 +26,16 @@ export interface StudentTrendDateWindow {
   previousStart: string | null;
   previousEnd: string | null;
   anchorDate: string;
+}
+
+export interface StudentPeriodAttendance {
+  expectedStudentDays: number;
+  hadir: number;
+  alfa: number;
+  lateEvents: number;
+  attendanceRate: number | null;
+  alfaRate: number | null;
+  lateEventRate: number | null;
 }
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
@@ -115,6 +127,42 @@ export function studentTrendScopeCte(scope: StudentTrendScope, search = "", stud
   };
 }
 
+export function studentInsightStudents(context: AuthContext, scope: StudentTrendScope, search = "", studentMasterId = ""): Row[] {
+  const base = studentTrendScopeCte(scope, search, studentMasterId);
+  return rows(context, `${base.sql}
+    SELECT student_master_id AS student_id, student_name, class_name, jenjang
+      FROM scope_students ORDER BY student_name, student_master_id`, base.params);
+}
+
+export function studentPeriodAttendance(context: AuthContext, scope: StudentTrendScope, current: { startDate: string; endDate: string }, previous?: { startDate: string; endDate: string }): { current: Map<string, StudentPeriodAttendance>; previous: Map<string, StudentPeriodAttendance> } {
+  const ranges = [{ key: "current", start_date: current.startDate, end_date: current.endDate }, ...(previous ? [{ key: "previous", start_date: previous.startDate, end_date: previous.endDate }] : [])];
+  const attendance = attendancePeriodStudentsByRanges(context, { academic_year_id: scope.academicYearId, jenjang_id: scope.jenjangId ?? undefined, ranges });
+  const startDate = previous && previous.startDate < current.startDate ? previous.startDate : current.startDate;
+  const endDate = previous && previous.endDate > current.endDate ? previous.endDate : current.endDate;
+  const lateness = tallyLatenessRange(context, {
+    startDate, endDate, academicYearId: scope.academicYearId,
+    scope: { jenjang_id: scope.jenjangId, program_id: null, grade_id: null, class_id: null },
+    scopeIsValidated: true,
+  });
+  const period = (key: "current" | "previous", range: { startDate: string; endDate: string } | undefined) => {
+    const result = new Map<string, StudentPeriodAttendance>();
+    if (!range) return result;
+    for (const [studentKey, counts] of attendance.get(key) ?? []) {
+      if (studentKey.startsWith("legacy:")) continue;
+      const lateEvents = [...(lateness.byStudent.get(studentKey)?.late_events_by_date ?? [])]
+        .reduce((sum, [date, count]) => date >= range.startDate && date <= range.endDate ? sum + count : sum, 0);
+      result.set(studentKey, {
+        expectedStudentDays: counts.expectedStudentDays, hadir: counts.hadir, alfa: counts.alfa, lateEvents,
+        attendanceRate: counts.expectedStudentDays ? roundPercent(counts.hadir / counts.expectedStudentDays * 100) : null,
+        alfaRate: counts.expectedStudentDays ? roundPercent(counts.alfa / counts.expectedStudentDays * 100) : null,
+        lateEventRate: counts.expectedStudentDays ? roundPercent(lateEvents / counts.expectedStudentDays * 100) : null,
+      });
+    }
+    return result;
+  };
+  return { current: period("current", current), previous: period("previous", previous) };
+}
+
 function latestAttendanceDate(context: AuthContext, scope: StudentTrendScope, studentMasterId = ""): string | null {
   const base = studentTrendScopeCte(scope, "", studentMasterId);
   const value = row(context, `${base.sql}
@@ -122,7 +170,8 @@ function latestAttendanceDate(context: AuthContext, scope: StudentTrendScope, st
       FROM scope_students ss
       JOIN attendance a ON a.student_id = ss.legacy_student_id
        AND a.date >= COALESCE(ss.effective_from, '0000-01-01')
-       AND a.date <= COALESCE(ss.effective_to, '9999-12-31')`, base.params);
+       AND a.date <= COALESCE(ss.effective_to, '9999-12-31')
+       AND a.date >= ? AND a.date <= ?`, [...base.params, scope.yearStart, scope.yearEnd]);
   return value?.anchor_date ? String(value.anchor_date) : null;
 }
 
@@ -189,80 +238,6 @@ function academicMetrics(context: AuthContext, scope: StudentTrendScope, student
   return result;
 }
 
-function attendanceMetric(value: Row, period: "current" | "previous", kind: "attendance" | "tardiness" | "alfa"): StudentTrendMetric {
-  const present = Number(value[`${period}_present`] ?? 0);
-  const late = Number(value[`${period}_late`] ?? 0);
-  const sakit = Number(value[`${period}_sakit`] ?? 0);
-  const izin = Number(value[`${period}_izin`] ?? 0);
-  const alfa = Number(value[`${period}_alfa`] ?? 0);
-  const denominator = present + late + sakit + izin + alfa;
-  const attended = present + late;
-  if (kind === "tardiness") return metric("percent", attended ? roundPercent(late / attended * 100) : null, null, attended, 0);
-  if (kind === "alfa") return metric("percent", denominator ? roundPercent(alfa / denominator * 100) : null, null, denominator, 0);
-  return metric("percent", denominator ? roundPercent(attended / denominator * 100) : null, null, denominator, 0);
-}
-
-function aggregateQuery(scope: StudentTrendScope, window: StudentTrendDateWindow, search: string, sort: string, order: "ASC" | "DESC", page: number, pageSize: number, studentMasterId = ""): { sql: string; params: unknown[] } {
-  const base = studentTrendScopeCte(scope, search, studentMasterId);
-  const hasPrevious = window.previousStart !== null && window.previousEnd !== null;
-  const periodCase = hasPrevious ? "CASE WHEN a.date >= ? AND a.date <= ? THEN 'current' ELSE 'previous' END" : "'current'";
-  const periodWhere = hasPrevious ? "(a.date >= ? AND a.date <= ? OR a.date >= ? AND a.date <= ?)" : "a.date >= ? AND a.date <= ?";
-  const params: unknown[] = [...base.params];
-  if (hasPrevious) params.push(window.currentStart, window.currentEnd);
-  params.push(window.currentStart, window.currentEnd);
-  if (hasPrevious) params.push(window.previousStart, window.previousEnd);
-  const sortColumn: Record<string, string> = { name: "student_name", attendance_delta: "attendance_delta", academic_delta: "academic_delta", tardiness_delta: "tardiness_delta", alfa_delta: "alfa_delta" };
-  const orderColumn = sortColumn[sort] ?? "student_name";
-  const currentDenominator = "(COALESCE(aa.current_present, 0) + COALESCE(aa.current_late, 0) + COALESCE(aa.current_sakit, 0) + COALESCE(aa.current_izin, 0) + COALESCE(aa.current_alfa, 0))";
-  const previousDenominator = "(COALESCE(aa.previous_present, 0) + COALESCE(aa.previous_late, 0) + COALESCE(aa.previous_sakit, 0) + COALESCE(aa.previous_izin, 0) + COALESCE(aa.previous_alfa, 0))";
-  const currentAttended = "(COALESCE(aa.current_present, 0) + COALESCE(aa.current_late, 0))";
-  const previousAttended = "(COALESCE(aa.previous_present, 0) + COALESCE(aa.previous_late, 0))";
-  const offset = (page - 1) * pageSize;
-  params.push(pageSize, offset);
-  return {
-    sql: `${base.sql}, attendance_events AS (
-      SELECT ss.student_master_id AS student_id, ${periodCase} AS period,
-             COALESCE(o.override_status, a.status) AS effective_status
-        FROM scope_students ss
-        JOIN attendance a ON a.student_id = ss.legacy_student_id
-         AND a.date >= COALESCE(ss.effective_from, '0000-01-01')
-         AND a.date <= COALESCE(ss.effective_to, '9999-12-31')
-        LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
-       WHERE ${periodWhere}
-    ), attendance_aggregates AS (
-      SELECT student_id,
-        SUM(CASE WHEN period = 'current' AND effective_status = 'on-time' THEN 1 ELSE 0 END) AS current_present,
-        SUM(CASE WHEN period = 'current' AND effective_status = 'late' THEN 1 ELSE 0 END) AS current_late,
-        SUM(CASE WHEN period = 'current' AND effective_status = 'sakit' THEN 1 ELSE 0 END) AS current_sakit,
-        SUM(CASE WHEN period = 'current' AND effective_status = 'izin' THEN 1 ELSE 0 END) AS current_izin,
-        SUM(CASE WHEN period = 'current' AND effective_status = 'alfa' THEN 1 ELSE 0 END) AS current_alfa,
-        SUM(CASE WHEN period = 'previous' AND effective_status = 'on-time' THEN 1 ELSE 0 END) AS previous_present,
-        SUM(CASE WHEN period = 'previous' AND effective_status = 'late' THEN 1 ELSE 0 END) AS previous_late,
-        SUM(CASE WHEN period = 'previous' AND effective_status = 'sakit' THEN 1 ELSE 0 END) AS previous_sakit,
-        SUM(CASE WHEN period = 'previous' AND effective_status = 'izin' THEN 1 ELSE 0 END) AS previous_izin,
-        SUM(CASE WHEN period = 'previous' AND effective_status = 'alfa' THEN 1 ELSE 0 END) AS previous_alfa
-      FROM attendance_events GROUP BY student_id
-    ), scored AS (
-      SELECT ss.student_master_id AS student_id, ss.student_name, ss.class_name, ss.jenjang,
-             COALESCE(aa.current_present, 0) AS current_present, COALESCE(aa.current_late, 0) AS current_late,
-             COALESCE(aa.current_sakit, 0) AS current_sakit, COALESCE(aa.current_izin, 0) AS current_izin,
-             COALESCE(aa.current_alfa, 0) AS current_alfa, COALESCE(aa.previous_present, 0) AS previous_present,
-             COALESCE(aa.previous_late, 0) AS previous_late, COALESCE(aa.previous_sakit, 0) AS previous_sakit,
-             COALESCE(aa.previous_izin, 0) AS previous_izin, COALESCE(aa.previous_alfa, 0) AS previous_alfa,
-             CASE WHEN ${currentDenominator} = 0 OR ${previousDenominator} = 0 THEN NULL ELSE ROUND(100.0 * ${currentAttended} / ${currentDenominator} - 100.0 * ${previousAttended} / ${previousDenominator}, 2) END AS attendance_delta,
-             CASE WHEN ${currentAttended} = 0 OR ${previousAttended} = 0 THEN NULL ELSE ROUND(100.0 * COALESCE(aa.current_late, 0) / ${currentAttended} - 100.0 * COALESCE(aa.previous_late, 0) / ${previousAttended}, 2) END AS tardiness_delta,
-             CASE WHEN ${currentDenominator} = 0 OR ${previousDenominator} = 0 THEN NULL ELSE ROUND(100.0 * COALESCE(aa.current_alfa, 0) / ${currentDenominator} - 100.0 * COALESCE(aa.previous_alfa, 0) / ${previousDenominator}, 2) END AS alfa_delta,
-             NULL AS academic_delta
-        FROM scope_students ss LEFT JOIN attendance_aggregates aa ON aa.student_id = ss.student_master_id
-    )
-    SELECT scored.*, (SELECT COUNT(*) FROM scored) AS total_students
-      FROM scored
-     ORDER BY CASE WHEN ${orderColumn} IS NULL THEN 1 ELSE 0 END, ${orderColumn} ${order}, student_name ASC, student_id ASC
-     LIMIT ? OFFSET ?`,
-    params,
-  };
-}
-
 export function studentTrendInsights(context: AuthContext, query: Row, canAttendance = true): StudentTrendInsightsResponse {
   const scope = buildStudentTrendScope(context, query);
   const windowKind: WindowKind = query.window === "term" ? "term" : "rolling_4w";
@@ -273,27 +248,51 @@ export function studentTrendInsights(context: AuthContext, query: Row, canAttend
   const search = String(query.search ?? "").trim();
   const sort = String(query.sort ?? "name");
   const order = String(query.order ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
-  const built = aggregateQuery(scope, window, search, sort, order, page, pageSize, studentMasterId);
-  const values = rows(context, built.sql, built.params);
+  const values = studentInsightStudents(context, scope, search, studentMasterId);
   const academicByStudent = academicMetrics(context, scope, studentMasterId);
+  const attendancePeriods = canAttendance ? studentPeriodAttendance(context, scope,
+    { startDate: window.currentStart, endDate: window.currentEnd },
+    window.previousStart && window.previousEnd ? { startDate: window.previousStart, endDate: window.previousEnd } : undefined)
+    : { current: new Map<string, StudentPeriodAttendance>(), previous: new Map<string, StudentPeriodAttendance>() };
+  const currentAttendance = attendancePeriods.current;
+  const previousAttendance = attendancePeriods.previous;
   const resultRows = values.map((value) => {
-    const currentValue = canAttendance ? attendanceMetric(value, "current", "attendance") : null;
-    const previousValue = canAttendance ? attendanceMetric(value, "previous", "attendance") : null;
-    const currentTardiness = canAttendance ? attendanceMetric(value, "current", "tardiness") : null;
-    const previousTardiness = canAttendance ? attendanceMetric(value, "previous", "tardiness") : null;
-    const currentAlfa = canAttendance ? attendanceMetric(value, "current", "alfa") : null;
-    const previousAlfa = canAttendance ? attendanceMetric(value, "previous", "alfa") : null;
-    const combine = (current: StudentTrendMetric | null, previous: StudentTrendMetric | null): StudentTrendMetric | null => current === null || previous === null ? null : metric(current.unit, current.current, previous.current, current.currentSampleSize, previous.currentSampleSize);
+    const id = String(value.student_id);
+    const current = currentAttendance.get(id);
+    const previous = previousAttendance.get(id);
+    const combine = (kind: "attendanceRate" | "lateEventRate" | "alfaRate"): StudentTrendMetric | null => !canAttendance ? null : metric(
+      "percent", current?.[kind] ?? null, previous?.[kind] ?? null,
+      current?.expectedStudentDays ?? 0, previous?.expectedStudentDays ?? 0,
+    );
     return {
       studentId: String(value.student_id), studentName: String(value.student_name), className: value.class_name === null ? null : String(value.class_name), jenjang: value.jenjang === null ? null : String(value.jenjang),
-      attendance: combine(currentValue, previousValue), academic: academicByStudent.get(String(value.student_id)) ?? metric("score", null, null, 0, 0),
-      tardiness: combine(currentTardiness, previousTardiness), alfa: combine(currentAlfa, previousAlfa),
+      attendance: combine("attendanceRate"), academic: academicByStudent.get(id) ?? metric("score", null, null, 0, 0),
+      tardiness: combine("lateEventRate"), alfa: combine("alfaRate"),
     };
+  });
+  const metricForSort = (value: StudentTrendInsightsResponse["rows"][number]): number | null => {
+    if (sort === "attendance_delta") return value.attendance?.delta ?? null;
+    if (sort === "academic_delta") return value.academic.delta;
+    if (sort === "tardiness_delta") return value.tardiness?.delta ?? null;
+    if (sort === "alfa_delta") return value.alfa?.delta ?? null;
+    return null;
+  };
+  const sortedRows = resultRows.sort((left, right) => {
+    let compared = 0;
+    if (sort === "name") compared = left.studentName.localeCompare(right.studentName) * (order === "DESC" ? -1 : 1);
+    else {
+      const a = metricForSort(left);
+      const b = metricForSort(right);
+      if (a === null && b !== null) return 1;
+      if (a !== null && b === null) return -1;
+      if (a !== null && b !== null) compared = (a - b) * (order === "DESC" ? -1 : 1);
+    }
+    return compared || left.studentName.localeCompare(right.studentName) || left.studentId.localeCompare(right.studentId);
   });
   return {
     scope: { academicYearId: scope.academicYearId, academicYearLabel: scope.academicYearLabel, jenjangId: scope.jenjangId, classId: scope.classId },
     window: { kind: windowKind, anchorDate: window.anchorDate, currentStart: window.currentStart, currentEnd: window.currentEnd, previousStart: window.previousStart, previousEnd: window.previousEnd, currentEligibleDays: dateDays(window.currentStart, window.currentEnd), previousEligibleDays: dateDays(window.previousStart, window.previousEnd), comparison: window.previousStart ? "comparable" : "insufficient_data" } satisfies StudentTrendWindow,
-    totalStudents: Number(values[0]?.total_students ?? 0), page, pageSize, rows: resultRows,
+    totalStudents: values.length, page, pageSize, rows: sortedRows.slice((page - 1) * pageSize, page * pageSize),
     limitations: [
       "Rolling and term windows use calendar dates because the current schema has no instructional-day calendar.",
       "Legacy grade rows with no date or term field remain period-unknown and are excluded from session-backed academic comparisons.",
