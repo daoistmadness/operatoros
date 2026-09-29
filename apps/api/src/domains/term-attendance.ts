@@ -8,6 +8,7 @@ import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 type Row = Record<string, any>;
 type Counts = TermAttendanceResponse["totals"];
 type Class = { id: number; class_name: string; grade_id: number; grade: string; program_id: number; program: string; jenjang_id: number; jenjang: string };
+type ExpectedDayObserver = (date: string, studentKey: string, status: string | null) => void;
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
   return context.database.client.query(sql).all(...(params as never[])) as Row[];
@@ -61,12 +62,12 @@ function bucket<K>(map: Map<K, Counts>, key: K, status: string | null): void {
   add(value, status);
 }
 
-function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }): TermAttendanceResponse {
+function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }, observeExpectedDay?: ExpectedDayObserver, scopeIsValidated = false): TermAttendanceResponse {
   const academicYearId = Number(query.academic_year_id);
   const year = one(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) problem(404, "ACADEMIC_YEAR_NOT_FOUND", "Academic year not found.");
   const termNumber = Number(query.term_number);
-  const configuredTerm = effectiveAcademicTerms(context, year).find((value) => value.term_number === termNumber);
+  const configuredTerm = requestedRange ? null : effectiveAcademicTerms(context, year).find((value) => value.term_number === termNumber);
   const term = requestedRange ? { id: null, term_number: termNumber, label: "Report period", start_date: requestedRange.start_date, end_date: requestedRange.end_date, source: "custom" as const } : configuredTerm;
   if (!term || term.start_date > term.end_date || term.start_date < year.start_date || term.end_date > year.end_date)
     problem(409, "TERM_CONFIGURATION_INVALID", "The term dates must be within the selected academic year.");
@@ -82,7 +83,7 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id
     JOIN academic_programs p ON p.id = g.program_id JOIN jenjangs j ON j.id = g.jenjang_id
     WHERE c.academic_year_id = ?`, [academicYearId]) as Class[];
-  if (scope.jenjang_id !== null && !one(context, "SELECT id FROM jenjangs WHERE id = ?", [scope.jenjang_id])) problem(404, "JENJANG_NOT_FOUND", "Jenjang not found.");
+  if (!scopeIsValidated && scope.jenjang_id !== null && !one(context, "SELECT id FROM jenjangs WHERE id = ?", [scope.jenjang_id])) problem(404, "JENJANG_NOT_FOUND", "Jenjang not found.");
   if (scope.program_id !== null && !one(context, "SELECT id FROM academic_programs WHERE id = ?", [scope.program_id])) problem(404, "PROGRAM_NOT_FOUND", "Academic program not found.");
   if (scope.grade_id !== null && !one(context, "SELECT id FROM academic_grades WHERE id = ?", [scope.grade_id])) problem(404, "GRADE_NOT_FOUND", "Grade not found.");
   if (scope.class_id !== null && !classes.some((value) => Number(value.id) === scope.class_id)) problem(404, "CLASS_NOT_FOUND", "Class not found in the selected academic year.");
@@ -158,6 +159,7 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     if (expectation !== "EXPECTED") continue;
     if (!canonicalClass) unresolvedClassDays++;
     const status = day.attendance_id == null ? null : String(day.effective_status ?? "unknown");
+    observeExpectedDay?.(String(day.day), studentKey, status);
     add(totals, status);
     bucket(byJenjang, Number(day.jenjang_id), status);
     bucket(byProgram, canonicalClass?.program_id ?? null, status);
@@ -198,6 +200,43 @@ export function attendancePeriodTotals(context: AuthContext, query: {
     grade_id: query.grade_id === undefined ? undefined : String(query.grade_id),
     class_id: query.class_id === undefined ? undefined : String(query.class_id),
   }, { start_date: query.start_date, end_date: query.end_date }).totals;
+}
+
+export function attendancePeriodStudents(context: AuthContext, query: {
+  academic_year_id: number; start_date: string; end_date: string;
+  jenjang_id?: number; class_id?: number;
+}): TermAttendanceResponse["students"] {
+  return termAttendanceInRange(context, {
+    academic_year_id: String(query.academic_year_id), term_number: "1",
+    jenjang_id: query.jenjang_id === undefined ? undefined : String(query.jenjang_id),
+    class_id: query.class_id === undefined ? undefined : String(query.class_id),
+  }, { start_date: query.start_date, end_date: query.end_date }).students;
+}
+
+export function attendancePeriodStudentsByRanges(context: AuthContext, query: {
+  academic_year_id: number; jenjang_id?: number;
+  ranges: Array<{ key: string; start_date: string; end_date: string }>;
+}): Map<string, Map<string, { expectedStudentDays: number; hadir: number; alfa: number }>> {
+  const startDate = query.ranges.reduce((value, range) => range.start_date < value ? range.start_date : value, query.ranges[0]?.start_date ?? "");
+  const endDate = query.ranges.reduce((value, range) => range.end_date > value ? range.end_date : value, query.ranges[0]?.end_date ?? "");
+  const result = new Map<string, Map<string, { expectedStudentDays: number; hadir: number; alfa: number }>>();
+  for (const range of query.ranges) result.set(range.key, new Map());
+  if (!startDate || !endDate) return result;
+  termAttendanceInRange(context, {
+    academic_year_id: String(query.academic_year_id), term_number: "1",
+    jenjang_id: query.jenjang_id === undefined ? undefined : String(query.jenjang_id),
+  }, { start_date: startDate, end_date: endDate }, (date, studentKey, status) => {
+    for (const range of query.ranges) {
+      if (date < range.start_date || date > range.end_date) continue;
+      const students = result.get(range.key)!;
+      const counts = students.get(studentKey) ?? { expectedStudentDays: 0, hadir: 0, alfa: 0 };
+      counts.expectedStudentDays++;
+      if (status === "on-time" || status === "late") counts.hadir++;
+      if (status === "alfa") counts.alfa++;
+      students.set(studentKey, counts);
+    }
+  }, true);
+  return result;
 }
 
 export function termAttendanceRoutes(app: any, context: AuthContext): void {

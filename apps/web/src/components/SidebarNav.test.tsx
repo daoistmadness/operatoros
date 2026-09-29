@@ -71,7 +71,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete administrator inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(38);
+    expect(container.querySelectorAll('nav a')).toHaveLength(37);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
@@ -93,6 +93,8 @@ describe('role-aware sidebar navigation', () => {
     expect(activeNames('/students/42')).toEqual(['Student Directory']);
     expect(activeNames('/students/operations')).toEqual(['Operations Audit']);
     expect(activeNames('/reports/monthly')).toEqual(['Executive Reports']);
+    expect(activeNames('/analytics/trends')).toEqual(['Student Insights']);
+    expect(activeNames('/analytics/indicators')).toEqual(['Student Insights']);
     expect(activeNames('/enrollment')).toEqual(['Student Enrollment']);
   });
 
@@ -133,7 +135,7 @@ describe('role-aware sidebar navigation', () => {
       ['Dashboard', 'Setup & Readiness'],
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
-      ['Management Analytics', 'Student Profile Review', 'Population Overview', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Trends', 'Student Indicators', 'Executive Reports', 'Monthly Management Report', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
+      ['Management Analytics', 'Student Profile Review', 'Population Overview', 'Data Quality', 'Attendance Analytics', 'Academic Analytics', 'Student Insights', 'Executive Reports', 'Monthly Management Report', 'Attendance Report', 'Attendance Recap', 'Tardiness Report'],
       ['Data Import & Export'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Absence Reasons', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);

@@ -63,8 +63,11 @@ Representative routes are `/`, `/students`, `/students/:id`, `/classes/:id`,
 `/attendance/calendar`, `/attendance/machine-import`, `/attendance-review`,
 `/attendance-corrections`, `/attendance/override-review`, `/grades`,
 `/grades/operations`, `/analytics/attendance`, `/analytics/academic`,
-`/analytics/data-quality`, `/analytics/trends`, `/analytics/indicators`,
+`/analytics/data-quality`, `/analytics/student-insights`,
 `/upload`, `/data-portability`, `/settings`, and `/settings/backups`.
+
+Student Insights contains Trends and Indicators views. The legacy paths
+`/analytics/trends` and `/analytics/indicators` redirect to their matching view.
 
 ## 3. Goals and non-goals
 

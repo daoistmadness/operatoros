@@ -17,7 +17,7 @@ the calculations. Web pages and exports format returned values.
 | Total Late Minutes | `total_late_minutes` | Sum of known late-event durations | Not applicable | Minute count; zero is valid | Unknown-duration events are reported separately; zero can mean no known minutes | `term-lateness` | None | Does not infer missing duration |
 | Average Late Minutes | `average_late_minutes` | Total Late Minutes | Late Events with known duration | Minutes per event; null when denominator is zero | Events with unknown duration are excluded from this denominator | `term-lateness` | Average Minutes Late | Not the average across all late events when some durations are unknown |
 | Late Event Rate | `late_event_rate` | Late Events | Expected Student-Days | Percent; null when denominator is zero | Unknown calendar dates are disclosed separately | `term-lateness` | None | Management-facing canonical rate; not Late Events divided by Hadir |
-| Late Among Present | `late_among_present` | Late attendance events | Hadir attendance events (`on-time` plus `late`) | Percent; null when Hadir is zero | Missing attendance rows are not in this event-only denominator | Attendance Analytics, Student Trends, Student Indicators, and Executive Reports where retained | None | Valid distinct legacy `late_days / present` ratio: both values count attendance events. Never label it Late Event Rate or Tardiness Rate |
+| Late Among Present | `late_among_present` | Late attendance events | Hadir attendance events (`on-time` plus `late`) | Percent; null when Hadir is zero | Missing attendance rows are not in this event-only denominator | Attendance Analytics and Student Profile summary where retained | None | Event-only descriptive ratio. Never label it Late Event Rate or generic Tardiness Rate |
 | Late-affected recorded-day rate | `school_impact_rate_pct` (legacy API field) | Distinct dates with at least one late event | Distinct dates with any non-skipped attendance record | Percent; null when denominator is zero | Dates without recorded attendance are excluded | Legacy Tardiness Report service | None | Compatibility field only; denominator is recorded dates, not Attendance Calendar days or Expected Student-Days |
 | Recorded Presence Rate | `recorded_presence_rate` (legacy DTO fields may retain `attendance_rate`) | `on-time` plus `late` attendance events | `on-time` + `late` + `sakit` + `izin` + `alfa` recorded events | Percent; null when denominator is zero | Incomplete, Absent, Unrecorded, and unrecorded expected days are not in the denominator | Attendance Analytics; reused by Class Overview and Management Overview | None | Recorded-status ratio; it is not canonical Attendance Rate |
 | Recorded Attendance Rate | `recorded_attendance_rate` | Hadir | Recorded expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days are excluded by definition | `term-attendance` | None | API-only compatibility metric; do not label it Attendance Rate |
@@ -33,10 +33,11 @@ The canonical Attendance Rate and Late Event Rate return `null` when their
 Expected Student-Days denominator is zero. Web displays use the existing
 unavailable convention (`—` or `Not Available`). APIs do not substitute zero.
 
-The Attendance Analytics expansion still exposes compatible DTO fields such
-as `attendanceRate` and `tardinessRate`. Their current displayed names are
-Recorded Presence Rate and Late Among Present, matching their event-only
-formulas. DTO field names remain compatibility identifiers.
+Attendance Analytics still exposes compatible DTO fields such as
+`attendanceRate` and `tardinessRate`. Its event-only values are labeled
+Recorded Presence Rate and Late Among Present. Student Insights uses the
+canonical expected-day Attendance Rate and Late Event Rate. DTO field names
+remain compatibility identifiers.
 
 ## Separate manual monthly S/I/A ledger
 
@@ -61,7 +62,7 @@ compatible denominator exists. Raw counts remain available with source labels.
 - Historical Management Analytics `term_1` through `term_4` select configured
   or default reporting date ranges. They retain that endpoint's legacy
   category contract and do not replace `term_id`.
-- Student Trends and Student Indicators `window=term` select a comparison
+- Student Insights `window=term` selects a comparison
   window around the latest observed attendance date. This is not a term
   identifier and does not imply `term_id` equality.
 
@@ -290,30 +291,37 @@ compatible academic-year, jenjang, and class filters.
 The overview has no dedicated export. Detailed analytics pages remain the
 authoritative export surfaces.
 
-## Student Trend Insights (2026-08)
+## Student Insights (2026-09)
 
-Student Trends compares descriptive attendance values for one student across
-two deterministic comparison windows. It reuses effective attendance status,
-where an attendance override replaces the original status.
+Student Insights is `/analytics/student-insights` with separate Trends and
+Indicators views. `/analytics/trends` and `/analytics/indicators` remain
+compatible links that open the corresponding view.
 
+- Trends describes period-to-period change. Attendance deltas are current
+  Attendance Rate minus previous Attendance Rate, in percentage points.
+- Indicators presents current-period measurements. It does not classify
+  students or recommend action.
 - `rolling_4w` compares the latest observed attendance date and preceding 28
   calendar days with the previous 28 calendar days. The schema has no
   instructional-day calendar.
 - `window=term` selects the configured or default comparison window containing
   the latest observed attendance date. It is a window selector, not a Term ID.
   The previous window is an elapsed-calendar-day comparison.
-- Recorded Presence Rate is `(on-time + late) / (on-time + late + sakit + izin
-  + alfa)` over recorded attendance events. It excludes expected days without
-  a record and is not canonical Attendance Rate.
-- Late Among Present is late attendance events divided by on-time plus late
-  attendance events. The denominator must be non-zero.
-- Recorded Alfa Rate uses Alfa records divided by the same recorded-status
-  denominator. It is not Alfa divided by Expected Student-Days.
-- Percent deltas use percentage points. Values use the existing two-decimal
-  attendance convention.
-- A missing current or previous denominator returns `null` and
-  `insufficient_data`; it never becomes a zero comparison. Each metric returns
-  its current and previous sample size.
+- Attendance Rate is Hadir divided by Expected Student-Days. Hadir includes
+  effective `on-time` and `late` statuses. Expected Student-Days come from the
+  Attendance Calendar and date-effective Enrollment. Sakit, Izin, Alfa, and
+  Unrecorded expected days remain in its denominator.
+- Late Event Rate is canonical Late Events divided by Expected Student-Days.
+  Late Events use Term Lateness cutoff, check-in, and effective-status rules.
+- Alfa Rate is Alfa divided by Expected Student-Days.
+- Zero Expected Student-Days returns `null` for these rates. The API and Web do
+  not replace an undefined value with `0%`.
+- Student Insights uses the shared server-owned period aggregation backed by
+  Term Attendance and Term Lateness. It does not use the Recorded Presence
+  Rate or Late Among Present formulas.
+- Percent deltas use percentage points. API sample sizes are Expected
+  Student-Days. A trend comparison without both values has `insufficient_data`
+  direction and does not invent a zero.
 
 Academic trend is available only when session-attributed scores exist for two
 adjacent grading-period categories. It compares the mean scored result in the
@@ -323,48 +331,29 @@ Period-unknown legacy rows remain excluded. The feature does not infer a time
 axis from score IDs or write trend snapshots, rollups, thresholds, risk labels,
 alerts, or interventions.
 
-## Student Indicator Discovery (2026-08)
+## Student Insights API fields
+
+The existing endpoint and DTO fields remain for compatibility. `tardiness_rate`
+is the stable field ID for the canonical Late Event Rate; it does not mean
+Late Among Present.
+
+| ID | User-facing name | Source and formula | Unit | Missing data and limitations |
+| --- | --- | --- | --- | --- |
+| `attendance_rate` | Attendance Rate | Term Attendance: Hadir / Expected Student-Days | Percent; null when denominator is zero | Unrecorded expected days remain in denominator; Late remains Hadir |
+| `tardiness_rate` | Late Event Rate | Term Lateness: Late Events / Expected Student-Days | Percent; null when denominator is zero | Events may occur on a non-expected day, but add no denominator day |
+| `alfa_rate` | Alfa Rate | Term Attendance: Alfa / Expected Student-Days | Percent; null when denominator is zero | Unknown calendar days are excluded and disclosed by canonical services |
+| `academic_average` | Academic average | Academic Analytics score average | Score | Null without a scored result; grade rows have no date or term field |
+| `academic_participation` | Academic participation | Scored result slots / expected result slots | Percent | Null when there are no expected result slots |
+
+Attendance indicators use the same expected-day calculations as Trends and
+Term Attendance or Term Lateness. Manual monthly Sakit, Izin, and Alfa ledger
+values are not combined with canonical student attendance. Percent comparison
+fields use percentage points. The Indicators view displays current values
+only; existing API comparison fields remain for compatibility.
 
 Student indicators are transparent measurements. They are not classifications.
-The endpoint is `/api/analytics/student-indicators` and reuses the existing
-student-trend attendance windows and academic-year scope.
-
-### Candidate registry
-
-| ID | User-facing name | Source | Unit | Status |
-| --- | --- | --- | --- | --- |
-| `attendance_rate` | Recorded Presence Rate | Recorded attendance events | Percent | Accepted for Stage 2; not canonical Attendance Rate |
-| `tardiness_rate` | Late Among Present | Recorded attendance events | Percent | Accepted for Stage 2; not Late Event Rate |
-| `alfa_rate` | Recorded Alfa Rate | Recorded attendance events | Percent | Accepted for Stage 2 |
-| `academic_average` | Grade Average | Academic Analytics score average | Score | Accepted for Stage 2 |
-| `academic_participation` | Academic Participation | Academic Analytics result-slot participation | Percent | Accepted for Stage 2 |
-| Attendance override prevalence | None | No student-level interpretation | Count/percent | Rejected: diagnostic context only |
-| Data-quality issue count | None | Data Quality | Count | Rejected: confidence context, not a student indicator |
-| Academic trend | None | Session-attributed scores only | Score | Descriptive Student Trend output, not a Stage 2 risk registry item |
-| Mastery proportion | None | KKM exists for aggregate reporting only | Percent | Deferred: no existing student-level indicator contract |
-
-Accepted attendance values use effective status. An override replaces the
-original status before aggregation. Recorded Presence Rate is `(on-time +
-late) / (on-time + late + sakit + izin + alfa)`. Late Among Present is `late /
-(on-time + late)`. Recorded Alfa Rate uses the Recorded Presence Rate
-denominator. Percent deltas use percentage points.
-
-Academic average uses stored non-null 0–100 scores and the existing
-round-half-even rule to one decimal. Academic participation is scored result
-slots divided by expected result slots. Missing scores are not numeric zero.
-Academic indicators expose current values only. Session-backed academic trend
-uses grading-period categories and is descriptive, not a Stage 2 risk
-indicator.
-
-### Missing data and boundary
-
-Each value includes sample sizes and a data status. `not_applicable` means the
-student has no applicable data. `insufficient_data` means a current value may
-exist, but a comparable previous value is unavailable. No zero is substituted.
-
-The Stage 2 surface contains no threshold, risk score, risk level, alert,
-intervention, recommendation, or prediction. Staff judgment remains
-authoritative. Threshold validation is a later stage.
+The surface contains no threshold, risk score, risk level, alert, intervention,
+recommendation, or prediction. Staff judgment remains authoritative.
 
 ## Class Overview (2026-08)
 
