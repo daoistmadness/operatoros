@@ -39,6 +39,27 @@ function cookie(response: Response): string {
 }
 
 describe("attendance parity slices", () => {
+  it("records cutoff changes as effective-dated policies with reasons", async () => {
+    const path = `/tmp/operatoros-cutoff-policy-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-cutoff-policy-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const body = { cutoff_time: "07:45", effective_from: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), reason: "Approved school schedule update" };
+      const backdated = await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ ...body, effective_from: "2026-08-10" }) }));
+      expect(backdated.status).toBe(400);
+      const saved = await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }));
+      expect(saved.status).toBe(200);
+      expect(database.client.query("SELECT jenjang_id,effective_from,cutoff_time,source,created_by,reason FROM jenjang_lateness_policy WHERE jenjang_id=(SELECT id FROM jenjangs WHERE name='SMP') AND effective_from=?").get(body.effective_from)).toMatchObject({ effective_from: body.effective_from, cutoff_time: "07:45", source: "RECORDED", created_by: "golden-admin", reason: body.reason });
+      expect((await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }))).status).toBe(409);
+      database.client.run("INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (9001,'2099-01-03','07:40:00',NULL,0,'calculated',0,'late')");
+      const covered = await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ ...body, cutoff_time: "07:50", effective_from: "2099-01-02" }) }));
+      expect(covered.status).toBe(409);
+      expect((await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "DELETE", headers: auth }))).status).toBe(409);
+      const config = await app.handle(new Request("http://local/api/config/jenjang", { headers: auth }));
+      expect(await config.json()).toMatchObject({ configured: [{ jenjang: "SMP", cutoff_time: "07:45", effective_from: body.effective_from, source: "RECORDED" }] });
+      expect((database.client.query("PRAGMA table_info(jenjang_lateness_policy)").all() as any[]).map((value) => value.name)).not.toContain("grace_minutes");
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
   it("keeps overrides append-only and blocks mutation after finalization", async () => {
     const path = `/tmp/operatoros-attendance-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-audit-${process.pid}` } });
     try {
@@ -53,6 +74,14 @@ describe("attendance parity slices", () => {
       expect(blocked.status).toBe(409);
       const reopened = await app.handle(new Request("http://local/api/attendance-corrections/periods/reopen", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-08-01", expected_version: 2, reason: "Correction is required", confirmation: "REOPEN_ATTENDANCE_PERIOD" }) }));
       expect(reopened.status).toBe(200); expect((await reopened.json() as any).status).toBe("OPEN");
+
+      database.client.run("UPDATE student_enrollments SET effective_from = '2025-07-01' WHERE id = 1");
+      const finalizeWithoutLedgerAck = await app.handle(new Request("http://local/api/attendance-corrections/periods/finalize", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-05-03", reason: "Daily review completed", confirmation: "FINALIZE_ATTENDANCE_PERIOD" }) }));
+      expect(finalizeWithoutLedgerAck.status).toBe(409);
+      expect(await finalizeWithoutLedgerAck.json()).toMatchObject({ detail: { requires_acknowledgement: true, ledger_warning: [{ class_id: 1, month: "2026-05", ledger_state: "MISSING" }] } });
+      const finalizeWithLedgerAck = await app.handle(new Request("http://local/api/attendance-corrections/periods/finalize", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-05-03", reason: "Daily review completed", confirmation: "FINALIZE_ATTENDANCE_PERIOD", acknowledge_ledger_warning: true }) }));
+      expect(finalizeWithLedgerAck.status).toBe(200);
+      expect(await finalizeWithLedgerAck.json()).toMatchObject({ warning_acknowledged: true, ledger_warning: [{ class_id: 1, ledger_state: "MISSING" }] });
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 

@@ -23,7 +23,7 @@ const ATTENDANCE_PLAN: readonly ResetGroup[] = [
   { domain: "Attendance overrides", tables: ["attendance_override_history", "attendance_overrides"] },
   { domain: "Attendance import history", tables: ["attendance_import_rows", "attendance_import_batches"] },
   { domain: "Attendance review periods", tables: ["attendance_period_audit", "attendance_periods"] },
-  { domain: "Attendance absence summaries", tables: ["absence_reasons", "absence_reason_class_entries"] },
+  { domain: "Attendance absence summaries", tables: ["attendance_ledger_student_totals", "attendance_ledger_revisions", "attendance_ledger_class_months", "absence_reasons", "absence_reason_class_entries"] },
   { domain: "Attendance upload history", tables: ["upload_logs"] },
   { domain: "Attendance records", tables: ["attendance"] },
 ];
@@ -56,7 +56,7 @@ const SCHOOL_STRUCTURE_PLAN: readonly ResetGroup[] = [
   { domain: "School report setup", tables: ["report_templates", "report_branding_configs", "staff_job_title_mappings"] },
   { domain: "School policies and academic mappings", tables: [
     "dismissal_policy_audits", "dismissal_policies", "student_academic_mapping_rules", "student_progression_mapping_rules",
-    "heb_overrides", "jenjang_config",
+    "heb_overrides", "jenjang_lateness_policy", "jenjang_config",
   ] },
   { domain: "Attendance and academic configuration", tables: [
     "attendance_calendar_exceptions", "attendance_calendar_weekday_rules", "attendance_submission_deadlines",
@@ -108,6 +108,11 @@ const DELETE_GUARDS = [
   { table: "attendance_override_history", name: "trg_history_no_delete" },
   { table: "attendance_correction_audit", name: "trg_attendance_correction_audit_no_delete" },
   { table: "attendance_period_audit", name: "trg_attendance_period_audit_no_delete" },
+  { table: "attendance_ledger_class_months", name: "trg_attendance_ledger_class_month_no_delete" },
+  { table: "attendance_ledger_revisions", name: "trg_attendance_ledger_revision_no_delete" },
+  { table: "attendance_ledger_student_totals", name: "trg_attendance_ledger_student_totals_no_delete" },
+  { table: "attendance_ledger_student_totals", name: "trg_attendance_ledger_student_totals_scope" },
+  { table: "jenjang_lateness_policy", name: "trg_jenjang_lateness_policy_no_delete" },
   { table: "attendance_follow_up_audit", name: "trg_attendance_follow_up_audit_no_delete" },
   { table: "student_enrollment_class_history", name: "trg_student_enrollment_class_history_no_delete" },
   { table: "student_enrollment_lifecycle_audit", name: "trg_student_enrollment_lifecycle_audit_no_delete" },

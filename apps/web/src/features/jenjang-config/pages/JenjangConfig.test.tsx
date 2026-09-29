@@ -18,7 +18,7 @@ vi.mock("../../../api", () => ({ default: { get: vi.fn(), put: vi.fn(), delete: 
 
 const admin: AuthContextValue = { user: { id: 1, username: "admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const staff: AuthContextValue = { ...admin, user: { id: 2, username: "staff", role: "staff", capabilities: [] }, can: () => false };
-const completeConfig: JenjangConfigPayload = { configured: [{ jenjang: "Primary", cutoff_time: "07:00", updated_at: null }], unconfigured: [] };
+const completeConfig: JenjangConfigPayload = { configured: [{ jenjang: "Primary", cutoff_time: "07:00", updated_at: null, effective_from: "2026-08-01", source: "RECORDED" }], unconfigured: [] };
 const available: AvailableJenjangPayload = { jenjang_list: ["Primary"] };
 let container: HTMLDivElement | null = null;
 let root: Root | null = null;
@@ -40,6 +40,17 @@ async function renderPage(auth: AuthContextValue = admin): Promise<HTMLDivElemen
 async function click(element: HTMLElement | undefined) {
   if (!element) throw new Error("Expected clickable element.");
   await act(async () => element.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+}
+
+async function fill(view: HTMLElement, selector: string, value: string) {
+  const input = view.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
+  if (!input) throw new Error(`Expected ${selector}.`);
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error("Expected input value setter.");
+    setter.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
 }
 
 describe("JenjangConfig", () => {
@@ -123,7 +134,9 @@ describe("JenjangConfig", () => {
       setter.call(input, "07:15");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    mockLoad({ configured: [{ jenjang: "Primary", cutoff_time: "07:15", updated_at: null }], unconfigured: [] });
+    await fill(view, 'input[type="date"]', "2026-10-01");
+    await fill(view, "textarea", "Approved cutoff update");
+    mockLoad({ configured: [{ jenjang: "Primary", cutoff_time: "07:15", updated_at: null, effective_from: "2026-10-01", source: "RECORDED" }], unconfigured: [] });
     vi.mocked(api.put).mockResolvedValue({ data: { jenjang: "Primary", cutoff_time: "07:15" }, status: 200, headers: {} } as never);
     const save = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Simpan"));
     await click(save);
@@ -142,6 +155,8 @@ describe("JenjangConfig", () => {
       if (!setter) throw new Error("Expected input value setter.");
       setter.call(input, "07:20"); input.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    await fill(view, 'input[type="date"]', "2026-10-01");
+    await fill(view, "textarea", "Approved cutoff update");
     vi.mocked(api.put).mockReturnValue(new Promise(() => {}));
     const save = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Simpan"));
     if (!save) throw new Error("Expected save button.");
@@ -150,10 +165,9 @@ describe("JenjangConfig", () => {
     expect(save.disabled).toBe(true);
   });
 
-  it("explains deletion as cutoff fallback rather than master deletion", async () => {
+  it("does not offer deletion for append-only cutoff policy history", async () => {
     const view = await renderPage();
-    await click(Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Hapus")));
-    expect(view.textContent).toContain("Data historis tidak dihapus");
+    expect(view.textContent).not.toContain("Hapus");
   });
 });
 

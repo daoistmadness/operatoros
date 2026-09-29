@@ -415,8 +415,9 @@ def migrate_database_to_current(path: Path) -> str:
     from core.academic_timeline_migration import migrate_academic_timeline_sqlite
     from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
     from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
+    from core.attendance_consolidation_migration import migrate_attendance_consolidation_sqlite
 
-    baseline_schema_version, s43_schema_version, s44_schema_version, s45_schema_version = schema_head_order()[4:8]
+    baseline_schema_version, s43_schema_version, s44_schema_version, s45_schema_version, s46_schema_version = schema_head_order()[4:9]
     current_version = current_schema_version()
     target = path.resolve(strict=True)
     with sqlite3.connect(f"file:{target.as_posix()}?mode=ro", uri=True) as connection:
@@ -435,7 +436,10 @@ def migrate_database_to_current(path: Path) -> str:
         migrate_attendance_calendar_sqlite(target)
         row = (s45_schema_version,)
     if row == (s45_schema_version,):
-        return migrate_attendance_submission_deadline_sqlite(target)
+        migrate_attendance_submission_deadline_sqlite(target)
+        row = (s46_schema_version,)
+    if row == (s46_schema_version,):
+        return migrate_attendance_consolidation_sqlite(target)
     if row != (current_version,):
         actual = row[0] if row else "missing"
         raise RuntimeError(
@@ -483,7 +487,7 @@ def _complete_model_schema(target: Path) -> None:
 
 
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
-    """Create the S4.2 baseline, then run registered migrations to S4.6."""
+    """Create the S4.2 baseline, then run registered migrations to S4.7."""
     current_version = current_schema_version()
     target = path.resolve(strict=False)
     if target.exists():
@@ -710,6 +714,8 @@ def main(argv: list[str] | None = None) -> int:
     upgrade_s45.add_argument("--database", required=True, type=Path)
     upgrade_s46 = commands.add_parser("upgrade-s46")
     upgrade_s46.add_argument("--database", required=True, type=Path)
+    upgrade_s47 = commands.add_parser("upgrade-s47")
+    upgrade_s47.add_argument("--database", required=True, type=Path)
     baseline = commands.add_parser("initialize-s42-baseline")
     baseline.add_argument("--database", required=True, type=Path)
     for table in PROTECTED_TABLES:
@@ -751,6 +757,10 @@ def main(argv: list[str] | None = None) -> int:
     if arguments.command == "upgrade-s46":
         from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
         print(json.dumps({"status": migrate_attendance_submission_deadline_sqlite(arguments.database)}))
+        return 0
+    if arguments.command == "upgrade-s47":
+        from core.attendance_consolidation_migration import migrate_attendance_consolidation_sqlite
+        print(json.dumps({"status": migrate_attendance_consolidation_sqlite(arguments.database)}))
         return 0
     if arguments.baseline != BASELINE.revision:
         raise RuntimeError("BASELINE_ID_INVALID")

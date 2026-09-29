@@ -9,7 +9,7 @@ const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-machine-preview-test-cookie-secret-32";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Absent", "Lembur", "Pengecualian", "week"];
 
-function seed(path: string): void {
+function seed(path: string, includeCutoffPolicy = true): void {
   const script = [
     "from pathlib import Path", "import sqlite3, sys", "sys.path.insert(0, 'backend/src')",
     "from core.schema_migrations import bootstrap_fresh_sqlite_database", "from argon2 import PasswordHasher", "path=Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db=sqlite3.connect(path); ph=PasswordHasher()",
@@ -19,6 +19,7 @@ function seed(path: string): void {
     "program_id=db.execute(\"INSERT INTO academic_programs (jenjang_id,name,active) VALUES (1,'Synthetic Program',1)\").lastrowid; grade_id=db.execute(\"INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (1,?,'Synthetic Grade',1,1)\",(program_id,)).lastrowid",
     "classes={name:db.execute(\"INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,?,?,?,1)\",(grade_id,name,name)).lastrowid for name in ('7A','7B','7C','P1A','P1B')}",
     "db.execute(\"INSERT INTO jenjang_config (jenjang,cutoff_time,updated_at) VALUES ('SMP','07:30',CURRENT_TIMESTAMP)\")",
+    "if sys.argv[2] == 'true': db.execute(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-01-01','07:30','BACKFILL_ASSUMED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic test cutoff')\")",
     "students=[(123,'Synthetic One','SMP','7A'),(456,'Synthetic Two','SMP','7A'),(999,'Synthetic Three','SMP','7B'),(1000,'Synthetic Four','SMP','7C')]",
     "for sid,name,jenjang,klass in students:", "    db.execute(\"INSERT INTO students (id,name,jenjang,class_name) VALUES (?,?,?,?)\",(sid,name,jenjang,klass)); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')\",(f'master-{sid}',name,name.lower()))",
     "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-123',123,'00123','attendance_machine','2026-01-01',1)\")",
@@ -34,7 +35,7 @@ function seed(path: string): void {
     "db.execute(\"INSERT INTO academic_term_configs (academic_year_id,term_number,label,start_date,end_date) VALUES (1,1,'Term 1','2026-04-01','2026-04-30')\")",
     "db.commit(); db.close()",
   ].join("\n");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: root, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, OPERATOROS_ISOLATED_TEST: "true" } });
+  const result = Bun.spawnSync([python, "-c", script, path, String(includeCutoffPolicy)], { cwd: root, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, OPERATOROS_ISOLATED_TEST: "true" } });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
 }
 
@@ -77,9 +78,9 @@ async function identityFixture(identifier: string, name: string): Promise<Uint8A
   return writeXlsxWorkbook(book);
 }
 
-async function setup(label: string) {
+async function setup(label: string, includeCutoffPolicy = true) {
   const path = `/tmp/operatoros-machine-preview-${label}-${process.pid}-${Date.now()}.db`;
-  seed(path);
+  seed(path, includeCutoffPolicy);
   const database = openDatabase(path);
   const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-machine-preview-audit-${process.pid}` } });
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "preview-admin", password: "preview-admin-pass-1" }) }));
@@ -206,7 +207,7 @@ describe("attendance machine preview", () => {
   it("derives machine lateness from the configured cutoff instead of the workbook value", async () => {
     const value = await setup("cutoff");
     try {
-      value.database.client.run("UPDATE jenjang_config SET cutoff_time = '06:50' WHERE jenjang = 'SMP'");
+      value.database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-04-03','06:50','RECORDED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic cutoff update')");
       const source = await fixture();
       const form = new FormData();
       form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
@@ -224,7 +225,7 @@ describe("attendance machine preview", () => {
   }, 30000);
 
   it("blocks a valid arrival when canonical jenjang cutoff is unavailable", async () => {
-    const value = await setup("missing-cutoff");
+    const value = await setup("missing-cutoff", false);
     try {
       value.database.client.run("DELETE FROM jenjang_config WHERE jenjang = 'SMP'");
       const source = await identityFixture("00123", "Synthetic One");
@@ -256,7 +257,7 @@ describe("attendance machine preview", () => {
   it("keeps a valid Scan Masuk when secondary fields and Scan Pulang are malformed", async () => {
     const value = await setup("bad-secondary");
     try {
-      value.database.client.run("UPDATE jenjang_config SET cutoff_time = '07:15' WHERE jenjang = 'SMP'");
+      value.database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-04-03','07:15','RECORDED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic cutoff update')");
       const source = await rowsFixture([
         ["00123", "Synthetic One", "03/04/2026", "07:21", "14", "14", "14", "14", "14", "Friday"],
         ["00456", "Synthetic Two", "03/04/2026", "14", "14:05", "00:03", "", "", "", "Friday"],
@@ -481,7 +482,7 @@ describe("attendance machine preview", () => {
       const source = await identityFixture("77777", "New Onboarded Student");
       const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
       const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
-      expect(preview.status).toBe(200);
+      expect(preview.status, JSON.stringify(await preview.clone().json())).toBe(200);
       expect((await preview.json() as any).identityReview).toEqual([]);
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);

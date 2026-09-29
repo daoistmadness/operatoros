@@ -23,6 +23,8 @@ export type TardinessCutoffRow = {
   jenjang_id: number | null;
   jenjang: string;
   cutoff_time: string | null;
+  effective_from: string | null;
+  source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED";
 };
 export type TardinessClassRow = {
   jenjang: string;

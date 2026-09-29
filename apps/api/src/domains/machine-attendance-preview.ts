@@ -17,7 +17,7 @@ import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { actor, legacyName } from "./core";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
-import { canonicalMachineLateness, loadCutoffMap, resolveCutoff, type MachineLateness } from "./term-lateness";
+import { canonicalMachineLateness, cutoffPolicyForDate, loadCutoffPolicies, type MachineLateness } from "./term-lateness";
 import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 
@@ -338,8 +338,7 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
   const classes = classMap(context, academicYearId);
   const attendancesByKey = attendanceMap(context, matchedCandidates, dates);
   const finalized = finalizedDates(context, dates);
-  const jenjangName = row(context, "SELECT name FROM jenjangs WHERE id = ?", [jenjangId])?.name ?? null;
-  const cutoff = resolveCutoff(loadCutoffMap(context), jenjangName == null ? null : String(jenjangName));
+  const cutoffPolicies = loadCutoffPolicies(context, [jenjangId], dates.reduce((latest, date) => date > latest ? date : latest, ""));
   const sourceIdentifiersByStudentDate = new Map<string, Set<string>>();
   for (const source of parsed.rows) {
     const candidate = candidatesBySource.get(source)?.[0];
@@ -365,6 +364,8 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
     const expectation = source.date ? expectationByDate.get(source.date)?.get(jenjangId) ?? unknownExpectation() : unknownExpectation();
     const enrollment = studentId == null || !source.date ? { value: null, classification: null } : dateEnrollment(enrollmentsByStudent.get(studentId) ?? [], source.date, jenjangId, histories, classes);
     const existing = studentId == null || !source.date ? null : attendancesByKey.get(`${studentId}\u0000${source.date}`) ?? null;
+    const policy = source.date ? cutoffPolicyForDate(cutoffPolicies, jenjangId, source.date) : null;
+    const cutoff = policy == null ? null : String(policy.cutoff_time);
     const derivedLate = canonicalMachineLateness(source.checkIn, cutoff);
     const canonicalStatus = derivedLate.minutes == null ? null : derivedLate.minutes > 0 ? "late" : "on-time";
     const studentDateConflict = studentId != null && source.date != null && (sourceIdentifiersByStudentDate.get(`${studentId}\u0000${source.date}`)?.size ?? 0) > 1;
@@ -399,7 +400,7 @@ function buildProjection(context: AuthContext, parsed: Awaited<ReturnType<typeof
       sourceRows: source.sourceRows,
       date: source.date, sourceStudentName: source.sourceStudentName, machineStudentIdentifier: source.machineStudentIdentifier,
       matchingState: state,
-      student: canonical ? { id: Number(canonical.student_id), masterId: canonical.student_master_id == null ? null : String(canonical.student_master_id), name: String(canonical.student_name), className: enrollment.value?.resolved_class_name ?? canonical.class_name ?? null, jenjang: canonical.jenjang == null ? jenjangName == null ? null : String(jenjangName) : String(canonical.jenjang) } : null,
+      student: canonical ? { id: Number(canonical.student_id), masterId: canonical.student_master_id == null ? null : String(canonical.student_master_id), name: String(canonical.student_name), className: enrollment.value?.resolved_class_name ?? canonical.class_name ?? null, jenjang: canonical.jenjang == null ? null : String(canonical.jenjang) } : null,
       machineEvidence: source.machineEvidence, scanTimes: source.scanTimes, expectation,
       reconciliationState: reconciliation(state, Boolean(source.checkIn), expectation.status), applyClassification,
       canonicalStatus: source.checkIn ? canonicalStatus : null,
