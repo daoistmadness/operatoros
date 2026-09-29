@@ -9,6 +9,7 @@ type Row = Record<string, any>;
 type Counts = TermAttendanceResponse["totals"];
 type Class = { id: number; class_name: string; grade_id: number; grade: string; program_id: number; program: string; jenjang_id: number; jenjang: string };
 type ExpectedDayObserver = (date: string, studentKey: string, status: string | null, enrollmentId: number, classId: number | null) => void;
+type AttendanceEvidenceObserver = (date: string, enrollmentId: number, classId: number | null) => void;
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
   return context.database.client.query(sql).all(...(params as never[])) as Row[];
@@ -22,12 +23,14 @@ function problem(status: number, code: string, message: string): never {
   throw Object.assign(new Error(message), { status, code });
 }
 
-function empty(): Counts {
+export function emptyTermAttendanceCounts(): TermAttendanceResponse["totals"] {
   return { expected_student_days: 0, recorded_student_days: 0, unrecorded_student_days: 0,
     hadir_count: 0, sakit_count: 0, izin_count: 0, alfa_count: 0, late_count: 0,
     other_status_count: 0, coverage_rate: null, hadir_rate: null, sakit_rate: null, izin_rate: null,
     alfa_rate: null, attendance_rate: null, recorded_attendance_rate: null };
 }
+
+const empty = emptyTermAttendanceCounts;
 
 function rate(numerator: number, denominator: number): number | null {
   return denominator ? numerator / denominator * 100 : null;
@@ -62,7 +65,7 @@ function bucket<K>(map: Map<K, Counts>, key: K, status: string | null): void {
   add(value, status);
 }
 
-function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }, observeExpectedDay?: ExpectedDayObserver, scopeIsValidated = false): TermAttendanceResponse {
+function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }, observeExpectedDay?: ExpectedDayObserver, scopeIsValidated = false, observeAttendanceEvidence?: AttendanceEvidenceObserver): TermAttendanceResponse {
   const academicYearId = Number(query.academic_year_id);
   const year = one(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) problem(404, "ACADEMIC_YEAR_NOT_FOUND", "Academic year not found.");
@@ -147,6 +150,9 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     const candidates = named == null ? [] : classByName.get(`${day.jenjang_id}\u0000${named}`) ?? [];
     const canonicalClass = ledger.length ? candidates.length === 1 ? candidates[0]! : null
       : classById.get(Number(day.academic_class_id)) ?? (candidates.length === 1 ? candidates[0]! : null);
+    if (day.attendance_id != null && !canonicalClass
+      && (scope.jenjang_id === null || Number(day.jenjang_id) === scope.jenjang_id))
+      observeAttendanceEvidence?.(String(day.day), Number(day.enrollment_id), null);
     if (scope.jenjang_id !== null && Number(day.jenjang_id) !== scope.jenjang_id) continue;
     if (scope.program_id !== null && canonicalClass?.program_id !== scope.program_id) continue;
     if (scope.grade_id !== null && canonicalClass?.grade_id !== scope.grade_id) continue;
@@ -155,6 +161,7 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     const classRepresentation = { class_id: canonicalClass?.id ?? null, class_name: canonicalClass?.class_name ?? String(named ?? "Unresolved class") };
     if (!represented.some((value) => value.class_id === classRepresentation.class_id && value.class_name === classRepresentation.class_name)) represented.push(classRepresentation);
     studentClasses.set(studentKey, represented);
+    if (day.attendance_id != null && canonicalClass) observeAttendanceEvidence?.(String(day.day), Number(day.enrollment_id), canonicalClass.id);
     if (expectation === "UNKNOWN") { unknownDays++; continue; }
     if (expectation !== "EXPECTED") continue;
     if (!canonicalClass) unresolvedClassDays++;
@@ -187,6 +194,17 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
 
 export function termAttendance(context: AuthContext, query: TermAttendanceQuery): TermAttendanceResponse {
   return termAttendanceInRange(context, query);
+}
+
+export function termAttendanceForRange(context: AuthContext, query: TermAttendanceQuery, range: { start_date: string; end_date: string }): {
+  attendance: TermAttendanceResponse;
+  evidence_by_class: Map<number | null, number>;
+} {
+  const evidence_by_class = new Map<number | null, number>();
+  const attendance = termAttendanceInRange(context, query, range, undefined, false, (_date, _enrollmentId, classId) => {
+    evidence_by_class.set(classId, (evidence_by_class.get(classId) ?? 0) + 1);
+  });
+  return { attendance, evidence_by_class };
 }
 
 export function attendancePeriodTotals(context: AuthContext, query: {

@@ -42,6 +42,19 @@ async function fixtureRoot(fixture: typeof architectureFixtures[number]) {
   return root;
 }
 
+async function attendanceRoot(source: string) {
+  const root = await mkdtemp(join(tmpdir(), "operatoros-attendance-architecture-"));
+  temporaryRoots.push(root);
+  const api = join(root, "apps/api");
+  await writeFile(join(root, "package.json"), JSON.stringify({ private: true, workspaces: { packages: ["apps/*"] } }));
+  await mkdir(api, { recursive: true });
+  await writeFile(join(api, "package.json"), JSON.stringify(manifestFor("@operatoros/api")));
+  const domains = join(api, "src/domains");
+  await mkdir(domains, { recursive: true });
+  await writeFile(join(domains, "attendance-report.ts"), source);
+  return root;
+}
+
 afterEach(async () => {
   while (temporaryRoots.length) await rm(temporaryRoots.pop()!, { recursive: true, force: true });
 });
@@ -59,5 +72,24 @@ describe("semantic architecture boundary checker", () => {
   test("current repository graph passes", () => {
     const report = checkArchitecture(join(import.meta.dir, "../.."));
     expect(report.violations).toEqual([]);
+  }, 15000);
+
+  test("mixed Attendance report source imports require the basis resolver", async () => {
+    const root = await attendanceRoot(`
+      import { aggregateManualAbsenceForPeriod } from "./manual-absence";
+      import { attendancePeriodTotals } from "./term-attendance";
+      export const report = { basis: "OBSERVED" };
+    `);
+    expect(checkArchitecture(root).violations.map((value) => value.kind)).toContain("ATTENDANCE_BASIS_BYPASS_VIOLATION");
+  });
+
+  test("mixed Attendance report passes when it calls the basis resolver", async () => {
+    const root = await attendanceRoot(`
+      import { aggregateManualAbsenceForPeriod } from "./manual-absence";
+      import { attendancePeriodTotals } from "./term-attendance";
+      import { resolveAttendanceBasis } from "./attendance-basis";
+      export const report = resolveAttendanceBasis({});
+    `);
+    expect(checkArchitecture(root).violations).toEqual([]);
   });
 });

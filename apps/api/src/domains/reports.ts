@@ -16,6 +16,7 @@ import { tallyLatenessRange, type LatenessRangeTally } from "./term-lateness";
 import { effectiveAcademicTerms } from "./academic-timeline";
 import { attendancePeriodTotals } from "./term-attendance";
 import { aggregateManualAbsenceForPeriod } from "./manual-absence";
+import { resolveAttendanceBasis } from "./attendance-basis";
 import { calculateAutoHeb, calculateHeb } from "./heb";
 import type { AuthContext } from "../auth/service";
 
@@ -729,6 +730,24 @@ function buildAttendanceReport(context: AuthContext, query: AttendanceReportQuer
   };
   const canonical = attendancePeriodTotals(context, scope);
   const manual = aggregateManualAbsenceForPeriod(context, scope);
+  const attendanceBasis: Row[] = [];
+  let attendanceBasisUnavailableReason: "CANONICAL_CLASS_UNRESOLVED" | null = null;
+  for (const month of manual.months) {
+    try {
+      attendanceBasis.push(...resolveAttendanceBasis(context, {
+        academic_year_id: scope.academic_year_id,
+        month,
+        jenjang_id: scope.jenjang_id === undefined ? undefined : String(scope.jenjang_id),
+        program_id: scope.program_id === undefined ? undefined : String(scope.program_id),
+        class_id: scope.class_id === undefined ? undefined : String(scope.class_id),
+      }).classes);
+    } catch (cause) {
+      if (!(cause instanceof Error) || !("code" in cause) || cause.code !== "CANONICAL_CLASS_UNRESOLVED") throw cause;
+      attendanceBasis.length = 0;
+      attendanceBasisUnavailableReason = "CANONICAL_CLASS_UNRESOLVED";
+      break;
+    }
+  }
   const details = attendanceReportStudents(context, scope);
   return {
     scope: {
@@ -739,6 +758,8 @@ function buildAttendanceReport(context: AuthContext, query: AttendanceReportQuer
     canonical_attendance: { source: "student_attendance_records", totals: canonical },
     students: details.results,
     summary: details.summary,
+    attendance_basis: attendanceBasis,
+    attendance_basis_unavailable_reason: attendanceBasisUnavailableReason,
     manual_absence: {
       source: "manual_monthly_class_totals", period_policy: "include_full_intersecting_months",
       completeness: manual.completeness,

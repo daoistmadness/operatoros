@@ -5909,6 +5909,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/attendance/basis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve attendance basis for a class-month */
+        get: operations["getApiAnalyticsAttendanceBasis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8618,6 +8635,120 @@ export interface components {
         JenjangConfigResponse: {
             configured: components["schemas"]["JenjangCutoffPolicyItem"][];
             unconfigured: string[];
+        };
+        /** AttendanceBasisCanonicalCounts */
+        AttendanceBasisCanonicalCounts: {
+            expected_student_days: number;
+            recorded_student_days: number;
+            unrecorded_student_days: number;
+            hadir_count: number;
+            sakit_count: number;
+            izin_count: number;
+            alfa_count: number;
+            late_count: number;
+            other_status_count: number;
+            coverage_rate: number | null;
+            hadir_rate: number | null;
+            sakit_rate: number | null;
+            izin_rate: number | null;
+            alfa_rate: number | null;
+            attendance_rate: number | null;
+            recorded_attendance_rate: number | null;
+        };
+        /** AttendanceBasisConflict */
+        AttendanceBasisConflict: {
+            class_id: number;
+            class_name: string;
+            month: string;
+            canonical_non_hadir_student_days: number;
+            declared_absence_student_days: number;
+            delta_student_days: number;
+            /** @enum {string} */
+            reason_code: "ABSENCE_TOTAL_MISMATCH";
+        };
+        /** AttendanceBasisReconciliation */
+        AttendanceBasisReconciliation: {
+            /** @enum {string} */
+            status: "NOT_AVAILABLE" | "NOT_COMPARABLE" | "MATCH" | "CONFLICT";
+            reason_code: ("NO_CANONICAL_EVIDENCE" | "LEDGER_NOT_SUBMITTED" | "NO_EXPECTED_STUDENT_DAYS" | "CANONICAL_COVERAGE_INCOMPLETE" | "CANONICAL_STATUS_UNRESOLVED" | "ABSENCE_TOTAL_MISMATCH") | null;
+        };
+        /** AttendanceBasisLateness */
+        AttendanceBasisLateness: {
+            /** @enum {string} */
+            availability: "AVAILABLE" | "UNAVAILABLE";
+            reason_code: ("NO_CANONICAL_EVIDENCE" | "CUTOFF_POLICY_UNCONFIGURED") | null;
+            late_events: number | null;
+        };
+        /** AttendanceBasisClass */
+        AttendanceBasisClass: {
+            class_id: number;
+            class_name: string;
+            grade_id: number;
+            grade: string;
+            program_id: number;
+            program: string;
+            jenjang_id: number;
+            jenjang: string;
+            month: string;
+            /** @enum {string} */
+            basis: "OBSERVED" | "DECLARED" | "NOT_REPORTED";
+            canonical_evidence_records: number;
+            canonical: components["schemas"]["AttendanceBasisCanonicalCounts"];
+            ledger: components["schemas"]["AttendanceBasisLedger"];
+            declared: components["schemas"]["AttendanceBasisDeclared"];
+            resolved: components["schemas"]["AttendanceBasisResolved"];
+            presumed_hadir_student_days: number | null;
+            lateness: components["schemas"]["AttendanceBasisLateness"];
+            reconciliation: components["schemas"]["AttendanceBasisReconciliation"];
+            conflict: components["schemas"]["AttendanceBasisConflict"] | null;
+        };
+        /** AttendanceBasisLedger */
+        AttendanceBasisLedger: {
+            /** @enum {string} */
+            state: "MISSING" | "OPEN" | "SUBMITTED";
+            entry_mode: ("TOTALS_ONLY" | "PER_STUDENT") | null;
+        };
+        /** AttendanceBasisDeclared */
+        AttendanceBasisDeclared: {
+            sakit_student_days: number | null;
+            izin_student_days: number | null;
+            alfa_student_days: number | null;
+        };
+        /** AttendanceBasisResolved */
+        AttendanceBasisResolved: {
+            hadir_student_days: number | null;
+            sakit_student_days: number | null;
+            izin_student_days: number | null;
+            alfa_student_days: number | null;
+        };
+        /** AttendanceBasisCutoff */
+        AttendanceBasisCutoff: {
+            jenjang_id: number | null;
+            jenjang: string;
+            cutoff_time: string | null;
+            effective_from: string | null;
+            /** @enum {string} */
+            source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED";
+        };
+        /** AttendanceBasisQuality */
+        AttendanceBasisQuality: {
+            unknown_calendar_dates: string[];
+            unknown_calendar_student_days: number;
+            unresolved_class_student_days: number;
+            other_status_student_days: number;
+        };
+        /** AttendanceBasisResponse */
+        AttendanceBasisResponse: {
+            academic_year_id: number;
+            academic_year_label: string;
+            month: string;
+            /** Format: date */
+            start_date: string;
+            /** Format: date */
+            end_date: string;
+            classes: components["schemas"]["AttendanceBasisClass"][];
+            cutoffs: components["schemas"]["AttendanceBasisCutoff"][];
+            quality: components["schemas"]["AttendanceBasisQuality"];
         };
     };
     responses: never;
@@ -21989,6 +22120,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getApiAnalyticsAttendanceBasis: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                month: string;
+                jenjang_id?: string;
+                program_id?: string;
+                grade_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceBasisResponse"];
+                };
             };
         };
     };

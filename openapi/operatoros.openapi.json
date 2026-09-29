@@ -8626,6 +8626,662 @@
           "configured",
           "unconfigured"
         ]
+      },
+      "AttendanceBasisCanonicalCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_student_days": {
+            "type": "number",
+            "minimum": 0
+          },
+          "recorded_student_days": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unrecorded_student_days": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hadir_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "sakit_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "izin_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "alfa_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "late_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "other_status_count": {
+            "type": "number",
+            "minimum": 0
+          },
+          "coverage_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hadir_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sakit_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "izin_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alfa_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attendance_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded_attendance_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "expected_student_days",
+          "recorded_student_days",
+          "unrecorded_student_days",
+          "hadir_count",
+          "sakit_count",
+          "izin_count",
+          "alfa_count",
+          "late_count",
+          "other_status_count",
+          "coverage_rate",
+          "hadir_rate",
+          "sakit_rate",
+          "izin_rate",
+          "alfa_rate",
+          "attendance_rate",
+          "recorded_attendance_rate"
+        ],
+        "title": "AttendanceBasisCanonicalCounts",
+        "type": "object"
+      },
+      "AttendanceBasisConflict": {
+        "additionalProperties": false,
+        "properties": {
+          "class_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "class_name": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "canonical_non_hadir_student_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "declared_absence_student_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "delta_student_days": {
+            "type": "integer"
+          },
+          "reason_code": {
+            "enum": [
+              "ABSENCE_TOTAL_MISMATCH"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "class_id",
+          "class_name",
+          "month",
+          "canonical_non_hadir_student_days",
+          "declared_absence_student_days",
+          "delta_student_days",
+          "reason_code"
+        ],
+        "title": "AttendanceBasisConflict",
+        "type": "object"
+      },
+      "AttendanceBasisReconciliation": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "NOT_AVAILABLE",
+              "NOT_COMPARABLE",
+              "MATCH",
+              "CONFLICT"
+            ],
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NO_CANONICAL_EVIDENCE",
+                  "LEDGER_NOT_SUBMITTED",
+                  "NO_EXPECTED_STUDENT_DAYS",
+                  "CANONICAL_COVERAGE_INCOMPLETE",
+                  "CANONICAL_STATUS_UNRESOLVED",
+                  "ABSENCE_TOTAL_MISMATCH"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "reason_code"
+        ],
+        "title": "AttendanceBasisReconciliation",
+        "type": "object"
+      },
+      "AttendanceBasisLateness": {
+        "additionalProperties": false,
+        "properties": {
+          "availability": {
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ],
+            "type": "string"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NO_CANONICAL_EVIDENCE",
+                  "CUTOFF_POLICY_UNCONFIGURED"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "late_events": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "availability",
+          "reason_code",
+          "late_events"
+        ],
+        "title": "AttendanceBasisLateness",
+        "type": "object"
+      },
+      "AttendanceBasisClass": {
+        "additionalProperties": false,
+        "properties": {
+          "class_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "class_name": {
+            "type": "string"
+          },
+          "grade_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "grade": {
+            "type": "string"
+          },
+          "program_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "program": {
+            "type": "string"
+          },
+          "jenjang_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "jenjang": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "basis": {
+            "enum": [
+              "OBSERVED",
+              "DECLARED",
+              "NOT_REPORTED"
+            ],
+            "type": "string"
+          },
+          "canonical_evidence_records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "canonical": {
+            "$ref": "#/components/schemas/AttendanceBasisCanonicalCounts"
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/AttendanceBasisLedger"
+          },
+          "declared": {
+            "$ref": "#/components/schemas/AttendanceBasisDeclared"
+          },
+          "resolved": {
+            "$ref": "#/components/schemas/AttendanceBasisResolved"
+          },
+          "presumed_hadir_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lateness": {
+            "$ref": "#/components/schemas/AttendanceBasisLateness"
+          },
+          "reconciliation": {
+            "$ref": "#/components/schemas/AttendanceBasisReconciliation"
+          },
+          "conflict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AttendanceBasisConflict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "class_id",
+          "class_name",
+          "grade_id",
+          "grade",
+          "program_id",
+          "program",
+          "jenjang_id",
+          "jenjang",
+          "month",
+          "basis",
+          "canonical_evidence_records",
+          "canonical",
+          "ledger",
+          "declared",
+          "resolved",
+          "presumed_hadir_student_days",
+          "lateness",
+          "reconciliation",
+          "conflict"
+        ],
+        "title": "AttendanceBasisClass",
+        "type": "object"
+      },
+      "AttendanceBasisLedger": {
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "enum": [
+              "MISSING",
+              "OPEN",
+              "SUBMITTED"
+            ],
+            "type": "string"
+          },
+          "entry_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "TOTALS_ONLY",
+                  "PER_STUDENT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "state",
+          "entry_mode"
+        ],
+        "title": "AttendanceBasisLedger",
+        "type": "object"
+      },
+      "AttendanceBasisDeclared": {
+        "additionalProperties": false,
+        "properties": {
+          "sakit_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "izin_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alfa_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sakit_student_days",
+          "izin_student_days",
+          "alfa_student_days"
+        ],
+        "title": "AttendanceBasisDeclared",
+        "type": "object"
+      },
+      "AttendanceBasisResolved": {
+        "additionalProperties": false,
+        "properties": {
+          "hadir_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sakit_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "izin_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alfa_student_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "hadir_student_days",
+          "sakit_student_days",
+          "izin_student_days",
+          "alfa_student_days"
+        ],
+        "title": "AttendanceBasisResolved",
+        "type": "object"
+      },
+      "AttendanceBasisCutoff": {
+        "additionalProperties": false,
+        "properties": {
+          "jenjang_id": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "jenjang": {
+            "type": "string"
+          },
+          "cutoff_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "enum": [
+              "RECORDED",
+              "BACKFILL_ASSUMED",
+              "UNCONFIGURED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "jenjang_id",
+          "jenjang",
+          "cutoff_time",
+          "effective_from",
+          "source"
+        ],
+        "title": "AttendanceBasisCutoff",
+        "type": "object"
+      },
+      "AttendanceBasisQuality": {
+        "additionalProperties": false,
+        "properties": {
+          "unknown_calendar_dates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array"
+          },
+          "unknown_calendar_student_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unresolved_class_student_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "other_status_student_days": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "unknown_calendar_dates",
+          "unknown_calendar_student_days",
+          "unresolved_class_student_days",
+          "other_status_student_days"
+        ],
+        "title": "AttendanceBasisQuality",
+        "type": "object"
+      },
+      "AttendanceBasisResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "academic_year_id": {
+            "type": "number",
+            "minimum": 1
+          },
+          "academic_year_label": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/AttendanceBasisClass"
+            },
+            "type": "array"
+          },
+          "cutoffs": {
+            "items": {
+              "$ref": "#/components/schemas/AttendanceBasisCutoff"
+            },
+            "type": "array"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/AttendanceBasisQuality"
+          }
+        },
+        "required": [
+          "academic_year_id",
+          "academic_year_label",
+          "month",
+          "start_date",
+          "end_date",
+          "classes",
+          "cutoffs",
+          "quality"
+        ],
+        "title": "AttendanceBasisResponse",
+        "type": "object"
       }
     }
   },
@@ -39091,6 +39747,83 @@
             "description": "Validation Error"
           }
         }
+      }
+    },
+    "/api/analytics/attendance/basis": {
+      "get": {
+        "operationId": "getApiAnalyticsAttendanceBasis",
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "jenjang_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "grade_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceBasisResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Resolve attendance basis for a class-month",
+        "tags": [
+          "analytics"
+        ]
       }
     }
   }
