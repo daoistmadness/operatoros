@@ -5875,6 +5875,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/config/absence-reasons/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Monthly Absence Ledger */
+        post: operations["submit_monthly_absence_ledger"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen Monthly Absence Ledger */
+        post: operations["reopen_monthly_absence_ledger"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7069,15 +7103,64 @@ export interface components {
         };
         /** FinalizeRequest */
         FinalizeRequest: {
+            /** Acknowledge Ledger Warning */
+            acknowledge_ledger_warning?: boolean;
             /**
              * Attendance Date
              * Format: date
              */
             attendance_date: string;
-            /** Confirmation */
-            confirmation: string;
+            /**
+             * Confirmation
+             * @enum {string}
+             */
+            confirmation: "FINALIZE_ATTENDANCE_PERIOD";
             /** Reason */
             reason: string;
+        };
+        /** AttendanceLedgerFinalizeWarning */
+        AttendanceLedgerFinalizeWarning: {
+            /** Class Id */
+            class_id: number;
+            /** Class Name */
+            class_name: string;
+            /**
+             * Ledger State
+             * @enum {string}
+             */
+            ledger_state: "MISSING" | "OPEN";
+            /** Month */
+            month: string;
+        };
+        /** AttendancePeriodFinalizeResponse */
+        AttendancePeriodFinalizeResponse: {
+            /** Attendance Date */
+            attendance_date: string;
+            /** Finalized By */
+            finalized_by: string;
+            /** Ledger Warning */
+            ledger_warning: components["schemas"]["AttendanceLedgerFinalizeWarning"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "FINALIZED";
+            /** Version */
+            version: number;
+            /** Warning Acknowledged */
+            warning_acknowledged: boolean;
+        };
+        /** AttendancePeriodFinalizeConflict */
+        AttendancePeriodFinalizeConflict: {
+            /** Detail */
+            detail: {
+                /** Ledger Warning */
+                ledger_warning: components["schemas"]["AttendanceLedgerFinalizeWarning"][];
+                /** Message */
+                message: string;
+                /** Requires Acknowledgement */
+                requires_acknowledgement: boolean;
+            };
         };
         /** FirstAdminRequest */
         FirstAdminRequest: {
@@ -8431,6 +8514,110 @@ export interface components {
                 }[];
                 submissionDeadlineLocalTime: string | null;
             }[];
+        };
+        /** ManualAbsenceMonthlyClass */
+        ManualAbsenceMonthlyClass: {
+            class_id: number;
+            class_name: string;
+            grade_id: number;
+            grade: string;
+            program_id: number;
+            program: string;
+            jenjang_id: number;
+            jenjang: string;
+            sakit: number;
+            izin: number;
+            alfa: number;
+            has_data: boolean;
+            /** @enum {string} */
+            state: "MISSING" | "OPEN" | "SUBMITTED";
+            entry_mode: ("TOTALS_ONLY" | "PER_STUDENT") | null;
+            is_locked: boolean;
+            expected_student_days: number;
+            updated_at: string | null;
+        };
+        /** ManualAbsenceMonthlyResponse */
+        ManualAbsenceMonthlyResponse: {
+            academic_year_id: number;
+            academic_year_label: string;
+            month: string;
+            classes: components["schemas"]["ManualAbsenceMonthlyClass"][];
+        };
+        /** ManualAbsenceStudentTotalInput */
+        ManualAbsenceStudentTotalInput: {
+            enrollment_id: number;
+            sakit: number;
+            izin: number;
+            alfa: number;
+        };
+        /** ManualAbsenceClassSaveInput */
+        ManualAbsenceClassSaveInput: {
+            class_id: number;
+            /** @enum {string} */
+            entry_mode?: "TOTALS_ONLY" | "PER_STUDENT";
+            sakit?: number;
+            izin?: number;
+            alfa?: number;
+            student_totals?: components["schemas"]["ManualAbsenceStudentTotalInput"][];
+            change_reason?: string;
+        };
+        /** ManualAbsenceSaveRequest */
+        ManualAbsenceSaveRequest: {
+            academic_year_id: number;
+            month: string;
+            jenjang_id?: number;
+            program_id?: number;
+            classes: components["schemas"]["ManualAbsenceClassSaveInput"][];
+        };
+        /** ManualAbsenceSaveResponse */
+        ManualAbsenceSaveResponse: {
+            inserted: number;
+            updated: number;
+            total: number;
+            /** @enum {string} */
+            state: "OPEN";
+        };
+        /** ManualAbsenceLedgerActionRequest */
+        ManualAbsenceLedgerActionRequest: {
+            academic_year_id: number;
+            month: string;
+            class_id: number;
+        };
+        /** ManualAbsenceLedgerReopenRequest */
+        ManualAbsenceLedgerReopenRequest: {
+            academic_year_id: number;
+            month: string;
+            class_id: number;
+            reason: string;
+        };
+        /** ManualAbsenceLedgerActionResponse */
+        ManualAbsenceLedgerActionResponse: {
+            academic_year_id: number;
+            class_id: number;
+            month: string;
+            /** @enum {string} */
+            state: "OPEN" | "SUBMITTED";
+            revision_no: number;
+        };
+        /** JenjangCutoffPolicyWrite */
+        JenjangCutoffPolicyWrite: {
+            cutoff_time: string;
+            effective_from: string;
+            reason: string;
+        };
+        /** JenjangCutoffPolicyItem */
+        JenjangCutoffPolicyItem: {
+            jenjang: string;
+            cutoff_time: string;
+            effective_from: string | null;
+            /** @enum {string} */
+            source: "RECORDED" | "BACKFILL_ASSUMED" | "LEGACY_UNDATED";
+            updated_at: string | null;
+        };
+        /** JenjangConfigResponse */
+        JenjangConfigResponse: {
+            configured: components["schemas"]["JenjangCutoffPolicyItem"][];
+            unconfigured: string[];
         };
     };
     responses: never;
@@ -11298,6 +11485,9 @@ export interface operations {
                             jenjang_id: number | null;
                             jenjang: string;
                             cutoff_time: string | null;
+                            effective_from: string | null;
+                            /** @enum {string} */
+                            source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED";
                         }[];
                         totals: {
                             expected_student_days: number;
@@ -12221,7 +12411,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AttendancePeriodFinalizeResponse"];
+                };
+            };
+            /** @description Ledger warning acknowledgement required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendancePeriodFinalizeConflict"];
                 };
             };
             /** @description Validation Error */
@@ -13586,9 +13785,10 @@ export interface operations {
     get_absence_reasons_api_config_absence_reasons_get: {
         parameters: {
             query: {
-                month: number;
-                year: number;
-                class_name?: string | null;
+                academic_year_id: string;
+                month: string;
+                jenjang_id?: string;
+                program_id?: string;
             };
             header?: never;
             path?: never;
@@ -13604,7 +13804,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ManualAbsenceMonthlyResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13629,7 +13829,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkAbsenceReasonBody"] | components["schemas"]["BulkAbsenceReasonCatchupBody"];
+                "application/json": components["schemas"]["ManualAbsenceSaveRequest"];
             };
         };
         responses: {
@@ -13639,7 +13839,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ManualAbsenceSaveResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13844,7 +14044,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["JenjangConfigResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13902,7 +14102,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["JenjangCutoffBody"];
+                "application/json": components["schemas"]["JenjangCutoffPolicyWrite"];
             };
         };
         responses: {
@@ -21709,6 +21909,86 @@ export interface operations {
                         }[];
                     };
                 };
+            };
+        };
+    };
+    submit_monthly_absence_ledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAbsenceLedgerActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
+                };
+            };
+            /** @description Ledger state or period lock conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reopen_monthly_absence_ledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAbsenceLedgerReopenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
+                };
+            };
+            /** @description Ledger state or period lock conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

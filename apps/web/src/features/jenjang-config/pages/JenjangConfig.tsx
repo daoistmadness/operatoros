@@ -48,6 +48,8 @@ export type JenjangConfigItem = {
   jenjang: string;
   cutoff_time: string;
   updated_at?: string | null;
+  effective_from?: string | null;
+  source?: "RECORDED" | "BACKFILL_ASSUMED" | "LEGACY_UNDATED";
 };
 
 export type JenjangConfigPayload = {
@@ -115,7 +117,7 @@ export function normalizeJenjangPayload(
     }
     const name = item.jenjang.trim();
     if (configuredMap[name]) throw new Error("DUPLICATE_CONFIG_ITEM");
-    configuredMap[name] = { jenjang: name, cutoff_time: item.cutoff_time, updated_at: item.updated_at || null };
+    configuredMap[name] = { ...item, jenjang: name, cutoff_time: item.cutoff_time, updated_at: item.updated_at || null };
   }
 
   const derivedUnconfigured = availableJenjangs.filter((name) => !configuredMap[name]);
@@ -138,7 +140,7 @@ function JenjangConfig() {
   const [permissionRestricted, setPermissionRestricted] = useState(false);
   const [editingJenjang, setEditingJenjang] = useState("");
   const [deleteConfirmJenjang, setDeleteConfirmJenjang] = useState("");
-  const [form, setForm] = useState({ cutoff_time: "07:00" });
+  const [form, setForm] = useState({ cutoff_time: "07:00", effective_from: new Date().toISOString().slice(0, 10), reason: "" });
   const [initialCutoff, setInitialCutoff] = useState("07:00");
   const [fieldError, setFieldError] = useState("");
   const requestIdRef = useRef(0);
@@ -175,13 +177,15 @@ function JenjangConfig() {
     jenjang,
     cutoff_time: data.configuredMap[jenjang]?.cutoff_time || "",
     updated_at: data.configuredMap[jenjang]?.updated_at || null,
+    effective_from: data.configuredMap[jenjang]?.effective_from || null,
+    source: data.configuredMap[jenjang]?.source,
     isConfigured: Boolean(data.configuredMap[jenjang]),
   })), [data]);
 
   const resetInlineForm = useCallback(() => {
     setEditingJenjang("");
     setDeleteConfirmJenjang("");
-    setForm({ cutoff_time: "07:00" });
+    setForm({ cutoff_time: "07:00", effective_from: new Date().toISOString().slice(0, 10), reason: "" });
     setInitialCutoff("07:00");
     setFieldError("");
   }, []);
@@ -192,19 +196,15 @@ function JenjangConfig() {
     setError("");
     setDeleteConfirmJenjang("");
     setEditingJenjang(row.jenjang);
-    setForm({ cutoff_time: cutoff });
+    setForm({ cutoff_time: cutoff, effective_from: new Date().toISOString().slice(0, 10), reason: "" });
     setInitialCutoff(cutoff);
     setFieldError("");
   }, []);
 
   const cutoff = form.cutoff_time.trim();
-  const isDirty = Boolean(editingJenjang) && cutoff !== initialCutoff;
+  const needsPolicyRecord = data.configuredMap[editingJenjang]?.source === "LEGACY_UNDATED" || !data.configuredMap[editingJenjang];
+  const isDirty = Boolean(editingJenjang) && (cutoff !== initialCutoff || needsPolicyRecord);
   const isValid = TIME_PATTERN.test(cutoff);
-
-  const updateCutoff = (value: string) => {
-    setForm({ cutoff_time: value });
-    if (TIME_PATTERN.test(value.trim())) setFieldError("");
-  };
 
   const handleSave = useCallback(async () => {
     if (!canEdit || mutationInFlightRef.current || !editingJenjang) return;
@@ -224,7 +224,9 @@ function JenjangConfig() {
     setMessage("");
     setError("");
     try {
-      await api.put(`/api/config/jenjang/${encodeURIComponent(editingJenjang)}`, { cutoff_time: nextCutoff });
+      await api.put(`/api/config/jenjang/${encodeURIComponent(editingJenjang)}`, {
+        cutoff_time: nextCutoff, effective_from: form.effective_from, reason: form.reason.trim(),
+      });
       const authoritative = await loadData({ background: true });
       if (!authoritative || authoritative.configuredMap[editingJenjang]?.cutoff_time !== nextCutoff) {
         setError("Perubahan diterima, tetapi hasil terbaru belum dapat dikonfirmasi. Muat ulang sebelum mencoba lagi.");
@@ -238,7 +240,7 @@ function JenjangConfig() {
       mutationInFlightRef.current = false;
       setSubmitting(false);
     }
-  }, [canEdit, editingJenjang, form.cutoff_time, initialCutoff, loadData, resetInlineForm, submitting]);
+  }, [canEdit, editingJenjang, form.cutoff_time, form.effective_from, form.reason, initialCutoff, loadData, resetInlineForm, submitting]);
 
   const handleDelete = useCallback(async (jenjang: string) => {
     if (!canEdit || mutationInFlightRef.current) return;
@@ -254,7 +256,7 @@ function JenjangConfig() {
         return;
       }
       resetInlineForm();
-      setMessage(`Cutoff khusus ${jenjang} dihapus. Perhitungan berikutnya tidak memiliki cutoff untuk jenjang ini.`);
+      setMessage(`Cutoff lama ${jenjang} dihapus. Riwayat kebijakan bertanggal tetap tersimpan.`);
     } catch (err) {
       setError(getJenjangConfigError(err, `Cutoff ${jenjang} belum dapat dihapus. Coba lagi.`));
     } finally {
@@ -304,7 +306,7 @@ function JenjangConfig() {
 
           {data.unconfigured.length > 0 && <div role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Konfigurasi belum lengkap.</strong> Atur cutoff untuk: {data.unconfigured.join(", ")}.</div>}
           {data.partial && <div role="status" className="mb-4 flex gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span>Daftar status dari server tidak konsisten. Status di bawah dihitung ulang dari data yang tersedia; muat ulang sebelum mengubah konfigurasi.</span></div>}
-          {!canEdit && <div role="note" className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Anda memiliki akses baca. Hanya administrator yang dapat mengubah atau menghapus cutoff.</div>}
+          {!canEdit && <div role="note" className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">Anda memiliki akses baca. Hanya administrator yang dapat mengubah cutoff.</div>}
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px]">
@@ -315,13 +317,13 @@ function JenjangConfig() {
                     <tr className="border-b border-slate-100">
                       <td className="py-3 pr-4 font-semibold text-slate-800 break-words">{row.jenjang}</td>
                       <td className="py-3 pr-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${row.isConfigured ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}`}>{row.isConfigured ? "Cutoff aktif" : "Cutoff belum diatur"}</span></td>
-                      <td className={`py-3 pr-4 ${row.isConfigured ? "text-slate-700" : "text-slate-400"}`}>{row.isConfigured ? row.cutoff_time : "Menggunakan bawaan"}</td>
+                      <td className={`py-3 pr-4 ${row.isConfigured ? "text-slate-700" : "text-slate-400"}`}>{row.isConfigured ? <>{row.cutoff_time}{row.effective_from && <span className="block text-xs text-slate-500">Berlaku dari {row.effective_from}{row.source === "BACKFILL_ASSUMED" ? " · asumsi backfill" : ""}</span>}</> : "Belum dicatat"}</td>
                       <td className="py-3 pr-4 text-sm text-slate-500">{row.updated_at ? new Date(row.updated_at).toLocaleString("id-ID") : "—"}</td>
                       {canEdit && <td className="py-3 text-right">
-                        {deleteConfirmJenjang === row.jenjang ? <div className="inline-flex items-center gap-2 text-xs"><span className="font-semibold text-rose-700">Hapus cutoff khusus? Data historis tidak dihapus.</span><button type="button" onClick={() => handleDelete(row.jenjang)} disabled={submitting} className="rounded-md bg-rose-600 px-2.5 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{submitting ? "Menghapus…" : "Konfirmasi"}</button><button type="button" onClick={() => setDeleteConfirmJenjang("")} disabled={submitting} className="rounded-md bg-slate-100 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">Batal</button></div> : <div className="inline-flex items-center gap-2"><button type="button" onClick={() => openInlineForm(row)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/20 disabled:opacity-50">{row.isConfigured ? <><Pencil size={13} aria-hidden="true" /> Ubah</> : <><CheckCircle2 size={13} aria-hidden="true" /> Atur Cutoff</>}</button>{row.isConfigured && <button type="button" onClick={() => setDeleteConfirmJenjang(row.jenjang)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"><Trash2 size={13} aria-hidden="true" /> Hapus</button>}</div>}
+                        {row.source === "LEGACY_UNDATED" && deleteConfirmJenjang === row.jenjang ? <div className="inline-flex items-center gap-2 text-xs"><span className="font-semibold text-rose-700">Hapus cutoff tanpa tanggal? Data historis tidak dihapus.</span><button type="button" onClick={() => handleDelete(row.jenjang)} disabled={submitting} className="rounded-md bg-rose-600 px-2.5 py-1 font-semibold text-white hover:bg-rose-700 disabled:opacity-50">{submitting ? "Menghapus…" : "Konfirmasi"}</button><button type="button" onClick={() => setDeleteConfirmJenjang("")} disabled={submitting} className="rounded-md bg-slate-100 px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">Batal</button></div> : <div className="inline-flex items-center gap-2"><button type="button" onClick={() => openInlineForm(row)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/20 disabled:opacity-50">{row.isConfigured ? <><Pencil size={13} aria-hidden="true" /> Ubah</> : <><CheckCircle2 size={13} aria-hidden="true" /> Atur Cutoff</>}</button>{row.source === "LEGACY_UNDATED" && <button type="button" onClick={() => setDeleteConfirmJenjang(row.jenjang)} disabled={submitting} className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-50"><Trash2 size={13} aria-hidden="true" /> Hapus</button>}</div>}
                       </td>}
                     </tr>
-                    {canEdit && editingJenjang === row.jenjang && <tr className="border-b border-slate-100 bg-slate-50"><td colSpan={5} className="p-4"><div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="grid grid-cols-1 items-end gap-4 md:grid-cols-[minmax(0,1fr)_auto]"><div className="space-y-2"><label htmlFor={`cutoff-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Latest On-Time Arrival for {row.jenjang}</label><input ref={cutoffRef} id={`cutoff-${row.jenjang}`} type="time" value={form.cutoff_time} onChange={(event) => updateCutoff(event.target.value)} disabled={submitting} aria-invalid={Boolean(fieldError)} aria-describedby={fieldError ? `cutoff-error-${row.jenjang}` : `cutoff-help-${row.jenjang}`} className="w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30" /><p id={`cutoff-help-${row.jenjang}`} className="text-xs text-slate-500">Students checking in after {isValid ? cutoff : "the cutoff"} are marked Late. A check-in at exactly {isValid ? cutoff : "the cutoff"} is On Time.</p>{isValid && cutoffPreview(cutoff).length > 0 && <ul className="flex flex-wrap gap-2 text-xs" aria-label="Cutoff preview">{cutoffPreview(cutoff).map((item) => <li key={item.time} className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">{item.time} → {item.label}</li>)}</ul>}{fieldError && <p id={`cutoff-error-${row.jenjang}`} className="text-xs font-semibold text-rose-700">{fieldError}</p>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={handleSave} disabled={submitting || !isDirty || !isValid || data.partial} title={!isDirty ? "Ubah waktu cutoff untuk mengaktifkan Simpan." : data.partial ? "Muat ulang data yang tidak konsisten sebelum menyimpan." : undefined} className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={16} aria-hidden="true" /> {submitting ? "Menyimpan…" : "Simpan"}</button><button type="button" onClick={resetInlineForm} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"><XCircle size={16} aria-hidden="true" /> Batal</button></div></div></div></td></tr>}
+                    {canEdit && editingJenjang === row.jenjang && <tr className="border-b border-slate-100 bg-slate-50"><td colSpan={5} className="p-4"><div className="rounded-2xl border border-slate-200 bg-white p-4"><div className="grid grid-cols-1 gap-4 md:grid-cols-3"><div className="space-y-2"><label htmlFor={`cutoff-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Latest On-Time Arrival for {row.jenjang}</label><input ref={cutoffRef} id={`cutoff-${row.jenjang}`} type="time" value={form.cutoff_time} onChange={(event) => { setForm((current) => ({ ...current, cutoff_time: event.target.value })); if (TIME_PATTERN.test(event.target.value.trim())) setFieldError(""); }} disabled={submitting} aria-invalid={Boolean(fieldError)} aria-describedby={fieldError ? `cutoff-error-${row.jenjang}` : `cutoff-help-${row.jenjang}`} className="w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30" /><p id={`cutoff-help-${row.jenjang}`} className="text-xs text-slate-500">Students checking in after {isValid ? cutoff : "the cutoff"} are marked Late. A check-in at exactly {isValid ? cutoff : "the cutoff"} is On Time.</p>{isValid && cutoffPreview(cutoff).length > 0 && <ul className="flex flex-wrap gap-2 text-xs" aria-label="Cutoff preview">{cutoffPreview(cutoff).map((item) => <li key={item.time} className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-700">{item.time} → {item.label}</li>)}</ul>}</div><div className="space-y-2"><label htmlFor={`cutoff-date-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Effective from</label><input id={`cutoff-date-${row.jenjang}`} type="date" value={form.effective_from} onChange={(event) => setForm((current) => ({ ...current, effective_from: event.target.value }))} disabled={submitting} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800" /><label htmlFor={`cutoff-reason-${row.jenjang}`} className="text-xs font-bold uppercase tracking-wider text-slate-500">Policy reason</label><textarea id={`cutoff-reason-${row.jenjang}`} value={form.reason} onChange={(event) => setForm((current) => ({ ...current, reason: event.target.value }))} disabled={submitting} minLength={5} maxLength={1000} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-800" /></div><div className="flex flex-wrap content-end gap-2"><button type="button" onClick={handleSave} disabled={submitting || !isDirty || !isValid || !form.effective_from || form.reason.trim().length < 5 || data.partial} title={!isDirty ? "Ubah waktu cutoff untuk mengaktifkan Simpan." : data.partial ? "Muat ulang data yang tidak konsisten sebelum menyimpan." : undefined} className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 font-semibold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"><CheckCircle2 size={16} aria-hidden="true" /> {submitting ? "Menyimpan…" : "Simpan"}</button><button type="button" onClick={resetInlineForm} disabled={submitting} className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"><XCircle size={16} aria-hidden="true" /> Batal</button></div>{fieldError && <p id={`cutoff-error-${row.jenjang}`} className="text-xs font-semibold text-rose-700">{fieldError}</p>}</div></div></td></tr>}
                   </Fragment>
                 ))}
               </tbody>

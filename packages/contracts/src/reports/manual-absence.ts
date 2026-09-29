@@ -25,6 +25,10 @@ export const ManualAbsenceClassSchema = Type.Object({
   izin: Type.Integer({ minimum: 0 }),
   alfa: Type.Integer({ minimum: 0 }),
   has_data: Type.Boolean(),
+  state: Type.Union([Type.Literal("MISSING"), Type.Literal("OPEN"), Type.Literal("SUBMITTED")]),
+  entry_mode: Type.Union([Type.Literal("TOTALS_ONLY"), Type.Literal("PER_STUDENT"), Type.Null()]),
+  is_locked: Type.Boolean(),
+  expected_student_days: Type.Integer({ minimum: 0 }),
   updated_at: Type.Union([Type.String(), Type.Null()]),
 });
 
@@ -42,9 +46,17 @@ export const ManualAbsenceSaveRequestSchema = Type.Object({
   program_id: Type.Optional(PositiveId),
   classes: Type.Array(Type.Object({
     class_id: PositiveId,
-    sakit: Type.Integer({ minimum: 0 }),
-    izin: Type.Integer({ minimum: 0 }),
-    alfa: Type.Integer({ minimum: 0 }),
+    entry_mode: Type.Optional(Type.Union([Type.Literal("TOTALS_ONLY"), Type.Literal("PER_STUDENT")])),
+    sakit: Type.Optional(Type.Integer({ minimum: 0 })),
+    izin: Type.Optional(Type.Integer({ minimum: 0 })),
+    alfa: Type.Optional(Type.Integer({ minimum: 0 })),
+    student_totals: Type.Optional(Type.Array(Type.Object({
+      enrollment_id: PositiveId,
+      sakit: Type.Integer({ minimum: 0 }),
+      izin: Type.Integer({ minimum: 0 }),
+      alfa: Type.Integer({ minimum: 0 }),
+    }))),
+    change_reason: Type.Optional(Type.String({ minLength: 5, maxLength: 1000 })),
   }), { minItems: 1 }),
 });
 
@@ -52,6 +64,28 @@ export const ManualAbsenceSaveResponseSchema = Type.Object({
   inserted: Type.Integer({ minimum: 0 }),
   updated: Type.Integer({ minimum: 0 }),
   total: Type.Integer({ minimum: 0 }),
+  state: Type.Literal("OPEN"),
+});
+
+export const ManualAbsenceLedgerActionRequestSchema = Type.Object({
+  academic_year_id: PositiveId,
+  month: MonthKey,
+  class_id: PositiveId,
+});
+
+export const ManualAbsenceLedgerReopenRequestSchema = Type.Object({
+  academic_year_id: PositiveId,
+  month: MonthKey,
+  class_id: PositiveId,
+  reason: Type.String({ minLength: 5, maxLength: 1000 }),
+});
+
+export const ManualAbsenceLedgerActionResponseSchema = Type.Object({
+  academic_year_id: PositiveId,
+  class_id: PositiveId,
+  month: MonthKey,
+  state: Type.Union([Type.Literal("OPEN"), Type.Literal("SUBMITTED")]),
+  revision_no: Type.Integer({ minimum: 1 }),
 });
 
 export const AttendanceReportQuerySchema = Type.Object({
@@ -145,6 +179,9 @@ export const AttendanceReportResponseSchema = Type.Object({
 export type ManualAbsenceQuery = Static<typeof ManualAbsenceQuerySchema>;
 export type ManualAbsenceMonthlyResponse = Static<typeof ManualAbsenceMonthlyResponseSchema>;
 export type ManualAbsenceSaveRequest = Static<typeof ManualAbsenceSaveRequestSchema>;
+export type ManualAbsenceLedgerActionRequest = Static<typeof ManualAbsenceLedgerActionRequestSchema>;
+export type ManualAbsenceLedgerReopenRequest = Static<typeof ManualAbsenceLedgerReopenRequestSchema>;
+export type ManualAbsenceLedgerActionResponse = Static<typeof ManualAbsenceLedgerActionResponseSchema>;
 export type AttendanceReportQuery = Static<typeof AttendanceReportQuerySchema>;
 export type AttendanceReportResponse = Static<typeof AttendanceReportResponseSchema>;
 export type ManualAbsenceReportResponse = Static<typeof ManualAbsenceReportResponseSchema>;

@@ -1,4 +1,4 @@
-// Accepted S4.6 schema snapshot. Runtime schema is validated by the migration manifest.
+// Accepted S4.7 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -155,6 +155,58 @@ export const academic_years = sqliteTable("academic_years", {
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const attendance_ledger_class_months = sqliteTable("attendance_ledger_class_months", {
+    "id": integer().primaryKey(),
+    "academic_year_id": integer().notNull().references(() => academic_years.id, { onDelete: "restrict" }),
+    "class_id": integer().notNull().references(() => academic_classes.id, { onDelete: "restrict" }),
+    "month": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("attendance_ledger_class_month_scope_uc").on(table.academic_year_id, table.class_id, table.month),
+    check("ck_attendance_ledger_class_month_format", sql`length(${table.month}) = 7 AND substr(${table.month}, 1, 4) GLOB '[0-9][0-9][0-9][0-9]' AND substr(${table.month}, 6, 2) BETWEEN '01' AND '12'`),
+]);
+export const attendance_ledger_revisions = sqliteTable("attendance_ledger_revisions", {
+    "id": integer().primaryKey(),
+    "class_month_id": integer().notNull().references(() => attendance_ledger_class_months.id, { onDelete: "restrict" }),
+    "revision_no": integer().notNull(),
+    "entry_mode": text().notNull(),
+    "state": text().notNull(),
+    "sakit": integer(),
+    "izin": integer(),
+    "alfa": integer(),
+    "created_by": text().notNull(),
+    "created_at": text().notNull(),
+    "change_reason": text(),
+    "submitted_by": text(),
+    "submitted_at": text(),
+    "legacy_saved": integer().notNull().default(0),
+    "legacy_source_entry_id": integer().references(() => absence_reason_class_entries.id, { onDelete: "restrict" }),
+    "note": text(),
+}, (table) => [
+    uniqueIndex("attendance_ledger_revision_number_uc").on(table.class_month_id, table.revision_no),
+    uniqueIndex("attendance_ledger_legacy_source_uc").on(table.legacy_source_entry_id),
+    check("ck_attendance_ledger_revision_number", sql`${table.revision_no} > 0`),
+    check("ck_attendance_ledger_revision_mode", sql`${table.entry_mode} IN ('TOTALS_ONLY', 'PER_STUDENT')`),
+    check("ck_attendance_ledger_revision_state", sql`${table.state} IN ('OPEN', 'SUBMITTED')`),
+    check("ck_attendance_ledger_revision_values", sql`(${table.entry_mode} = 'PER_STUDENT' AND ${table.sakit} IS NULL AND ${table.izin} IS NULL AND ${table.alfa} IS NULL) OR (${table.entry_mode} = 'TOTALS_ONLY' AND (${table.sakit} IS NULL OR (typeof(${table.sakit}) = 'integer' AND ${table.sakit} >= 0)) AND (${table.izin} IS NULL OR (typeof(${table.izin}) = 'integer' AND ${table.izin} >= 0)) AND (${table.alfa} IS NULL OR (typeof(${table.alfa}) = 'integer' AND ${table.alfa} >= 0)) AND (${table.state} = 'OPEN' OR (${table.sakit} IS NOT NULL AND ${table.izin} IS NOT NULL AND ${table.alfa} IS NOT NULL)))`),
+    check("ck_attendance_ledger_revision_submission", sql`(${table.state} = 'OPEN' AND ${table.submitted_by} IS NULL AND ${table.submitted_at} IS NULL) OR (${table.state} = 'SUBMITTED' AND ${table.submitted_by} IS NOT NULL AND ${table.submitted_at} IS NOT NULL)`),
+    check("ck_attendance_ledger_legacy_saved", sql`${table.legacy_saved} IN (0, 1) AND (${table.legacy_saved} = 0 OR (${table.state} = 'SUBMITTED' AND ${table.entry_mode} = 'TOTALS_ONLY' AND ${table.legacy_source_entry_id} IS NOT NULL))`),
+]);
+export const jenjang_lateness_policy = sqliteTable("jenjang_lateness_policy", {
+    "id": integer().primaryKey(),
+    "jenjang_id": integer().notNull().references(() => jenjangs.id, { onDelete: "restrict" }),
+    "effective_from": text().notNull(),
+    "cutoff_time": text().notNull(),
+    "source": text().notNull(),
+    "created_by": text().notNull(),
+    "created_at": text().notNull(),
+    "reason": text().notNull(),
+}, (table) => [
+    uniqueIndex("jenjang_lateness_policy_effective_uc").on(table.jenjang_id, table.effective_from),
+    check("ck_jenjang_lateness_policy_date", sql`length(${table.effective_from}) = 10 AND date(${table.effective_from}) = ${table.effective_from}`),
+    check("ck_jenjang_lateness_policy_cutoff", sql`${table.cutoff_time} GLOB '[0-9][0-9]:[0-9][0-9]' AND substr(${table.cutoff_time}, 1, 2) BETWEEN '00' AND '23' AND substr(${table.cutoff_time}, 4, 2) BETWEEN '00' AND '59'`),
+    check("ck_jenjang_lateness_policy_source", sql`${table.source} IN ('RECORDED', 'BACKFILL_ASSUMED')`),
+]);
 export const assessment_components = sqliteTable("assessment_components", {
     "id": integer().primaryKey(),
     "name": text().notNull(),
@@ -796,6 +848,17 @@ export const student_enrollments = sqliteTable("student_enrollments", {
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const attendance_ledger_student_totals = sqliteTable("attendance_ledger_student_totals", {
+    "id": integer().primaryKey(),
+    "revision_id": integer().notNull().references(() => attendance_ledger_revisions.id, { onDelete: "restrict" }),
+    "enrollment_id": integer().notNull().references(() => student_enrollments.id, { onDelete: "restrict" }),
+    "sakit": integer().notNull(),
+    "izin": integer().notNull(),
+    "alfa": integer().notNull(),
+}, (table) => [
+    uniqueIndex("attendance_ledger_student_enrollment_uc").on(table.revision_id, table.enrollment_id),
+    check("ck_attendance_ledger_student_totals_positive", sql`typeof(${table.sakit}) = 'integer' AND ${table.sakit} >= 0 AND typeof(${table.izin}) = 'integer' AND ${table.izin} >= 0 AND typeof(${table.alfa}) = 'integer' AND ${table.alfa} >= 0 AND ${table.sakit} + ${table.izin} + ${table.alfa} > 0`),
+]);
 export const student_health_profiles = sqliteTable("student_health_profiles", {
     "id": integer().primaryKey(),
     "student_master_id": text().notNull(),

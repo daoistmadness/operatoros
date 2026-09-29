@@ -14,14 +14,22 @@ async function login(page: Page) {
 
 async function saveMonth(page: Page, month: string, values: Record<string, [number, number, number]>) {
   await page.getByLabel("Bulan", { exact: true }).selectOption(month);
-  await expect(page.getByLabel("sakit P1A", { exact: true })).toHaveValue("0");
+  await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("0");
   for (const [className, [sakit, izin, alfa]] of Object.entries(values)) {
     await page.getByLabel(`sakit ${className}`, { exact: true }).fill(String(sakit));
     await page.getByLabel(`izin ${className}`, { exact: true }).fill(String(izin));
     await page.getByLabel(`alfa ${className}`, { exact: true }).fill(String(alfa));
   }
   await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
-  await expect(page.getByText(`Tersimpan: 4 kelas untuk ${month}.`)).toBeVisible();
+  await expect(page.getByText(`Draft tersimpan: 4 kelas untuk ${month}. Kirim setiap draft setelah data kelas lengkap.`)).toBeVisible();
+  const rows = page.locator("tbody tr");
+  await expect(rows).toHaveCount(4);
+  for (let index = 0; index < 4; index++) {
+    const row = rows.nth(index);
+    await expect(row).toContainText("Draft");
+    await row.getByRole("button", { name: "Kirim" }).click();
+    await expect(row).toContainText("Terkirim");
+  }
 }
 
 test("@attendance @manual-absence-reporting @critical @release enters monthly totals and keeps canonical attendance unchanged", async ({ page }) => {
@@ -32,6 +40,27 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   });
   await login(page);
 
+  const filtersResponse = await page.request.get("/api/reports/filters");
+  expect(filtersResponse.status()).toBe(200);
+  const filters = await filtersResponse.json();
+  const academicYearId = Number(filters.default_academic_year_id);
+  const calendarResponse = await page.request.get(`/api/attendance/calendar?academic_year_id=${academicYearId}`);
+  expect(calendarResponse.status()).toBe(200);
+  const primary = (await calendarResponse.json()).jenjangs.find((value: { name: string }) => value.name === "Primary");
+  expect(primary).toBeTruthy();
+  const saveWeekdays = async (weekdays: Array<{ weekday: number; expectation: "EXPECTED" | "NOT_EXPECTED" | null }>) => {
+    const response = await page.request.put("/api/attendance/calendar/weekdays", {
+      data: { academic_year_id: academicYearId, jenjang_id: primary.id, weekdays },
+    });
+    expect(response.status()).toBe(200);
+  };
+  const previousWeekdays = primary.weekdays;
+  await saveWeekdays(Array.from({ length: 7 }, (_, weekday) => ({
+    weekday,
+    expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" as const : "EXPECTED" as const,
+  })));
+
+  try {
   const before = await page.evaluate(async () => {
     const filters = await (await fetch("/api/reports/filters")).json();
     const academicYearId = filters.default_academic_year_id;
@@ -43,15 +72,15 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
 
   await page.goto("/config/absence-reasons");
   await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
-  await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "Primary" })).toHaveCount(1);
-  await page.getByLabel("Program", { exact: true }).selectOption({ label: "Primary" });
-  await expect(page.getByLabel("sakit P1A", { exact: true })).toHaveValue("0");
-  await saveMonth(page, "2026-07", { P1A: [1, 0, 0], P1B: [2, 0, 0] });
-  await saveMonth(page, "2026-08", { P1A: [2, 0, 0], P1B: [3, 0, 0] });
-  await saveMonth(page, "2026-09", { P1A: [5, 2, 1], P1B: [3, 1, 0] });
+  await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
+  await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
+  await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("0");
+  await saveMonth(page, "2026-07", { "Primary 1A": [1, 0, 0], "Primary 1B": [0, 0, 0] });
+  await saveMonth(page, "2026-08", { "Primary 1A": [2, 0, 0], "Primary 1B": [0, 0, 0] });
+  await saveMonth(page, "2026-09", { "Primary 1A": [5, 2, 1], "Primary 1B": [0, 0, 0] });
   await page.reload();
-  await expect(page.getByLabel("sakit P1A", { exact: true })).toHaveValue("5");
-  await expect(page.getByLabel("izin P1B", { exact: true })).toHaveValue("1");
+  await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("5");
+  await expect(page.getByLabel("izin Primary 1B", { exact: true })).toHaveValue("0");
 
   await page.goto("/reports/attendance");
   await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
@@ -62,18 +91,19 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await expect(page.getByText("Sumber: Catatan kehadiran siswa dan koreksi yang berlaku.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Rekap Manual Sakit / Izin / Alfa" })).toBeVisible();
   await expect(page.getByText("Sumber: Input total bulanan per kelas.")).toBeVisible();
-  const p1aRow = page.getByRole("row").filter({ has: page.getByText("P1A", { exact: true }) });
-  const p1bRow = page.getByRole("row").filter({ has: page.getByText("P1B", { exact: true }) });
+  const monthlyManualReport = page.getByRole("region", { name: "Rekap Manual Sakit / Izin / Alfa" });
+  const p1aRow = monthlyManualReport.getByRole("row").filter({ has: page.getByText("Primary 1A", { exact: true }) });
+  const p1bRow = monthlyManualReport.getByRole("row").filter({ has: page.getByText("Primary 1B", { exact: true }) });
   await expect(p1aRow).toContainText("5");
   await expect(p1aRow).toContainText("2");
-  await expect(p1bRow).toContainText("3");
+  await expect(p1bRow).toContainText("0");
 
   const csvPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Ekspor CSV" }).click();
   const csv = await csvPromise;
   const csvPath = await csv.path();
   expect(csvPath).toBeTruthy();
-  expect(readFileSync(csvPath!, "utf8")).toContain("P1A,5,2,1");
+  expect(readFileSync(csvPath!, "utf8")).toContain("Primary 1A,5,2,1");
 
   await page.getByLabel("Periode", { exact: true }).selectOption("term");
   await page.getByLabel("Pilih periode", { exact: true }).selectOption("1");
@@ -82,11 +112,10 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await expect(manualReport.getByText("Data belum lengkap", { exact: true })).toBeVisible();
   await expect(manualReport.getByText(/Entri yang diharapkan:\s*24/)).toBeVisible();
   await expect(manualReport.getByText(/Entri lengkap:\s*12/)).toBeVisible();
-  const totalRow = page.getByRole("row").filter({ hasText: "TOTAL" });
-  await expect(totalRow).toContainText("16");
-  await expect(totalRow).toContainText("3");
+  const totalRow = manualReport.getByRole("row").filter({ hasText: "TOTAL" });
+  await expect(totalRow).toContainText("8");
+  await expect(totalRow).toContainText("2");
   await expect(totalRow).toContainText("1");
-  await expect(manualReport.getByText("Primary 1 / MAIN / 2026-07")).toBeVisible();
 
   const after = await page.evaluate(async (academicYearId) => {
     const term = await (await fetch(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`)).json();
@@ -96,4 +125,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   }, before.academicYearId);
   expect(after).toEqual({ term: before.term, analytics: before.analytics, lateness: before.lateness });
   expect(browserErrors).toEqual([]);
+  } finally {
+    await saveWeekdays(previousWeekdays);
+  }
 });

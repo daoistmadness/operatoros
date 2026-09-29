@@ -22,6 +22,7 @@ function seed(path: string): void {
     "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_reports(path)",
     "db = sqlite3.connect(path); year_id = db.execute(\"SELECT id FROM academic_years WHERE label = '2026/2027-reports'\").fetchone()[0]; smp_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SMP'\").fetchone()[0]; sd_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SD'\").fetchone()[0]",
     "db.executemany(\"INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)\", [('SMP', '07:30'), ('SD', '07:25')])",
+    "db.executemany(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?, '2026-08-01', ?, 'BACKFILL_ASSUMED', 'TEST_SEED', CURRENT_TIMESTAMP, 'Synthetic test cutoff backfill')\", [(smp_id, '07:30'), (sd_id, '07:25')])",
     "db.executemany(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id, jenjang_id, weekday, expectation) VALUES (?, ?, ?, ?)\", [(year_id, j, w, 'EXPECTED' if 1 <= w <= 5 else 'NOT_EXPECTED') for j in (smp_id, sd_id) for w in range(7)])",
     "master = str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'active')\", (master, 'Hana SMP7C', 'hana smp7c')); db.execute(\"INSERT INTO students (name, jenjang, class_name) VALUES ('Hana SMP7C', 'SMP', '7C')\"); hana_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, class_name, class_assigned, lifecycle_state) VALUES (?, ?, ?, ?, '7C', 1, 'ACTIVE')\", (hana_id, master, year_id, smp_id))",
     "db.execute(\"INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Matematika', ?, 1, 1)\", (smp_id,)); subject_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('UH1', 'sumatif', ?), ('UH2', 'sumatif', ?)\", (subject_id, subject_id)); components = [row[0] for row in db.execute(\"SELECT id FROM assessment_components WHERE subject_id = ? ORDER BY id\", (subject_id,)).fetchall()]; enrollments = [row for row in db.execute(\"SELECT e.id, s.name FROM student_enrollments e JOIN students s ON s.id = e.student_id WHERE e.academic_year_id = ? AND e.jenjang_id = ? ORDER BY e.id\", (year_id, smp_id)).fetchall()]; db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, score) VALUES (?, ?, ?, 80), (?, ?, ?, 90), (?, ?, ?, 70)\", (enrollments[0][0], subject_id, components[0], enrollments[0][0], subject_id, components[1], enrollments[1][0], subject_id, components[0])); db.commit(); db.close()",
@@ -41,6 +42,13 @@ function seedManualClassInventory(client: any): { academicYearId: number; previo
   const previousAcademicYearId = Number(client.run("INSERT INTO academic_years (label, start_date, end_date, status, is_default) VALUES ('2025/2026-manual', '2025-07-01', '2026-06-30', 'closed', 0)").lastInsertRowid);
   client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, 'OLD', 'OLD', 1)", [previousAcademicYearId, grade1]);
   const classIds = Object.fromEntries((client.query("SELECT c.class_name, c.id FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id WHERE c.academic_year_id = ? AND c.class_name IN ('P1A', 'P1B', 'P2')").all(academicYearId) as any[]).map((value) => [value.class_name, Number(value.id)]));
+  for (const [className, classId] of Object.entries(classIds)) for (let index = 0; index < 3; index++) {
+    const masterId = `manual-${className}-${index}`;
+    client.run("INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')", [masterId, masterId, masterId]);
+    client.run(`INSERT INTO student_enrollments
+      (student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state)
+      VALUES (?,?,?,?,?,1,'2026-07-01','ACTIVE')`, [masterId, academicYearId, jenjangId, classId, className]);
+  }
   return { academicYearId, previousAcademicYearId, classIds };
 }
 
@@ -433,6 +441,9 @@ describe("analytics and report parity", () => {
       const save = async (month: string, classes: Array<{ class_id: number; sakit: number; izin: number; alfa: number }>) => request("/api/config/absence-reasons/bulk", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month, classes }),
       });
+      const submit = (month: string, class_id: number) => request("/api/config/absence-reasons/submit", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month, class_id }),
+      });
       const classes = (values: Array<[string, number, number, number]>) => values.map(([name, sakit, izin, alfa]) => ({ class_id: classIds[name]!, sakit, izin, alfa }));
       const beforeTerm = await request(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`);
       const beforeOverview = await request(`/api/analytics/overview?academic_year_id=${academicYearId}`);
@@ -454,12 +465,24 @@ describe("analytics and report parity", () => {
       expect((await save("2026-07", classes([["P1A", 2, 1, 0], ["P1B", 1, 0, 1], ["P2", 0, 1, 0]]))).status).toBe(200);
       expect((await save("2026-08", classes([["P1A", 1, 1, 0], ["P1B", 0, 1, 0], ["P2", 3, 0, 1]]))).status).toBe(200);
       expect((await save("2026-09", classes([["P1A", 5, 2, 1], ["P1B", 3, 1, 0]]))).status).toBe(200);
+      expect((await (await request(query("2026-09"))).json() as any).classes.find((value: any) => value.class_name === "P1A")).toMatchObject({ state: "OPEN", has_data: true });
+      const draftReport = await request(`/api/analytics/attendance-report?academic_year_id=${academicYearId}&period_type=month&period=2026-09`);
+      expect((await draftReport.json() as any).manual_absence.completeness).toMatchObject({ completed_class_month_entries: 0, missing_class_month_entries: 3 });
+      expect((await request("/api/config/absence-reasons/summary?month=9&year=2026")).status).toBe(200);
+      for (const month of ["2026-07", "2026-08"]) for (const class_id of Object.values(classIds)) {
+        expect((await submit(month, class_id)).status).toBe(200);
+      }
+      for (const name of ["P1A", "P1B"]) expect((await submit("2026-09", classIds[name]!)).status).toBe(200);
       const dashboardSummary = await app.handle(new Request("http://local/api/config/absence-reasons/summary?month=9&year=2026", { headers: { cookie: staff } }));
       expect(dashboardSummary.status).toBe(200);
       expect(await dashboardSummary.json()).toEqual(expect.arrayContaining([
         expect.objectContaining({ jenjang: "SD", total_sakit: 8, total_izin: 3, total_alfa: 1, classes_entered: 2 }),
       ]));
       expect((await save("2026-10", classes([["P1A", 9, 8, 7]]))).status).toBe(200);
+      expect((await submit("2026-10", classIds.P1A!)).status).toBe(200);
+      expect((await save("2026-10", classes([["P1A", 9, 8, 7]]))).status).toBe(409);
+      const reopened = await request("/api/config/absence-reasons/reopen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month: "2026-10", class_id: classIds.P1A, reason: "Correcting the saved totals" }) });
+      expect(reopened.status, JSON.stringify(await reopened.clone().json())).toBe(200);
       const duplicateMonthSave = await save("2026-10", classes([["P1A", 9, 8, 7]]));
       expect(duplicateMonthSave.status).toBe(200);
       expect(await duplicateMonthSave.json()).toMatchObject({ inserted: 0, updated: 1, total: 1 });
@@ -511,6 +534,16 @@ describe("analytics and report parity", () => {
       expect((await afterOverview.json() as any).summary).toEqual((await beforeOverview.json() as any).summary);
       expect((database.client.query("SELECT COUNT(*) AS count FROM absence_reasons WHERE class_name LIKE 'P1%' OR class_name = 'P2'").get() as any).count).toBe(0);
 
+      const enrollmentId = Number((database.client.query("SELECT id FROM student_enrollments WHERE academic_class_id = ? ORDER BY id LIMIT 1").get(classIds.P1B!) as any).id);
+      const perStudentSave = await request("/api/config/absence-reasons/bulk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month: "2026-10", classes: [{ class_id: classIds.P1B!, entry_mode: "PER_STUDENT", student_totals: [{ enrollment_id: enrollmentId, sakit: 1, izin: 0, alfa: 0 }] }] }) });
+      expect(perStudentSave.status).toBe(200);
+      expect((await submit("2026-10", classIds.P1B!)).status).toBe(200);
+      const perStudent = (await (await request(query("2026-10"))).json() as any).classes.find((value: any) => value.class_name === "P1B");
+      expect(perStudent).toMatchObject({ sakit: 1, izin: 0, alfa: 0, state: "SUBMITTED", entry_mode: "PER_STUDENT" });
+      expect(database.client.query(`SELECT r.sakit,r.izin,r.alfa FROM attendance_ledger_revisions r
+        JOIN attendance_ledger_class_months cm ON cm.id=r.class_month_id
+        WHERE cm.academic_year_id=? AND cm.class_id=? AND cm.month='2026-10' ORDER BY r.revision_no DESC LIMIT 1`).get(academicYearId, classIds.P1B!)).toEqual({ sakit: null, izin: null, alfa: null });
+
       const invalidClass = await save("2026-10", [{ class_id: classIds.P1A!, sakit: 10, izin: 10, alfa: 10 }, { class_id: 999999, sakit: 1, izin: 1, alfa: 1 }]);
       expect(invalidClass.status).toBe(422);
       const decimal = await save("2026-10", [{ class_id: classIds.P1A!, sakit: 1.5, izin: 0, alfa: 0 }]);
@@ -518,7 +551,7 @@ describe("analytics and report parity", () => {
       const unauthorized = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { cookie: staff, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month: "2026-10", classes: [{ class_id: classIds.P1A, sakit: 1, izin: 1, alfa: 1 }] }) }));
       expect(unauthorized.status).toBe(403);
       const savedValue = await request(query("2026-10"));
-      expect((await savedValue.json() as any).classes.find((value: any) => value.class_name === "P1A")).toMatchObject({ sakit: 9, izin: 8, alfa: 7 });
+      expect((await savedValue.json() as any).classes.find((value: any) => value.class_name === "P1A")).toMatchObject({ sakit: 9, izin: 8, alfa: 7, state: "OPEN" });
       expect((database.client.query("SELECT actor_id, metadata FROM operations_audit_events WHERE operation = 'SAVE_MANUAL_MONTHLY_ABSENCE_TOTALS' ORDER BY rowid DESC LIMIT 1").get() as any).actor_id).toBe("golden-admin");
     } finally {
       database.close();

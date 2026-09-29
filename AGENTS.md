@@ -126,10 +126,11 @@ historical evidence unless they explicitly identify a current procedure.
 
 ## Schema and rollback
 
-- `20260724_s42` is the fresh-bootstrap baseline; `20260725_s43` is the
-  current runtime and operational head. Existing S4.2 databases require an
-  explicit controlled migration.
-- Current normal application pairs with S4.3. Rollback pairs a restored S4.2
+- `20260724_s42` is the fresh-bootstrap baseline; `20260929_s47` is the
+  current application schema head. The protected operational database remains
+  S4.3 until a separately authorized operational migration. Existing S4.2
+  databases require an explicit controlled migration.
+- Current normal application pairs with S4.7. Rollback pairs a restored S4.2
   database with `c06a6220c2c0c2059521c1a396d1b914635aacff` from
   `maintenance/s42-rollback`. The historical
   `b47632c4210720f81804212544452c7c900c928c` is audit-only and must not run.

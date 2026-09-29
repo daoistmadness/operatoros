@@ -25,7 +25,13 @@ export const TermLatenessQuerySchema = Type.Object({
 export const TermLatenessResponseSchema = Type.Object({
   period: Type.Object({ academic_year_id: Type.Number({ minimum: 1 }), academic_year_label: Type.String(), term_id: NullableId, term_number: Type.Number({ minimum: 1, maximum: 4 }), term_label: Type.String(), start_date: Type.String(), end_date: Type.String(), source: Type.Union([Type.Literal("custom"), Type.Literal("default")]) }),
   scope: Type.Object({ jenjang_id: NullableId, program_id: NullableId, grade_id: NullableId, class_id: NullableId }),
-  cutoffs: Type.Array(Type.Object({ jenjang_id: NullableId, jenjang: Type.String(), cutoff_time: Type.Union([Type.String(), Type.Null()]) })),
+  cutoffs: Type.Array(Type.Object({
+    jenjang_id: NullableId,
+    jenjang: Type.String(),
+    cutoff_time: Type.Union([Type.String(), Type.Null()]),
+    effective_from: Type.Union([Type.String(), Type.Null()]),
+    source: Type.Union([Type.Literal("RECORDED"), Type.Literal("BACKFILL_ASSUMED"), Type.Literal("UNCONFIGURED")]),
+  })),
   totals: Totals,
   classes: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String(), totals: Totals })),
   students: Type.Array(Type.Object({ student_key: Type.String(), class_representations: Type.Array(Type.Object({ class_id: NullableId, class_name: Type.String() })), late_events: Type.Number({ minimum: 0 }), total_late_minutes: Type.Number({ minimum: 0 }), average_late_minutes: NullableRate })),

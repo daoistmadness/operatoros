@@ -4,6 +4,7 @@ export * from "./class-attendance";
 export * from "./submission-deadline";
 export * from "./correction-review";
 export * from "./machine-import-preview";
+export * from "./periods";
 import { AttendanceCalendarExpectationSchema } from "./calendar";
 import { AttendanceSubmissionTimingSchema } from "./submission-deadline";
 

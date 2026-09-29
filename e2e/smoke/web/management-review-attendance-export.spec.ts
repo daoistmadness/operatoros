@@ -54,9 +54,6 @@ test("@management @attendance @critical @release exports canonical Term 1 attend
     const calendar = await response.json();
     return calendar.jenjangs.find((value: { id: number }) => value.id === jenjangId).weekdays;
   }, scope);
-  const previousCutoffs = await page.request.get("/api/config/jenjang");
-  expect(previousCutoffs.status()).toBe(200);
-  const cutoffConfig = (await previousCutoffs.json()).configured.find((value: { jenjang: string }) => value.jenjang === "Primary");
   const saveWeekdays = async (weekdays: Array<{ weekday: number; expectation: "EXPECTED" | "NOT_EXPECTED" | null }>) => {
     const result = await page.evaluate(async (value) => {
       const response = await fetch("/api/attendance/calendar/weekdays", {
@@ -71,8 +68,9 @@ test("@management @attendance @critical @release exports canonical Term 1 attend
   const downloadPromise = page.waitForEvent("download");
   const exportResponsePromise = page.waitForResponse((response) => response.url().includes("/api/analytics/management-review/attendance/export.xlsx"));
   try {
-    const cutoff = await page.request.put("/api/config/jenjang/Primary", { data: { cutoff_time: "07:30" } });
+    const cutoff = await page.request.get("/api/config/jenjang");
     expect(cutoff.status()).toBe(200);
+    expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
     await saveWeekdays(Array.from({ length: 7 }, (_, weekday) => ({ weekday, expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED" })));
     await expect(page.getByRole("button", { name: "Export Management Review Excel" })).toBeEnabled();
     await page.getByRole("button", { name: "Export Management Review Excel" }).click();
@@ -156,13 +154,6 @@ test("@management @attendance @critical @release exports canonical Term 1 attend
     expect(ada!.getCell(14).value).toBe(adaLateness?.total_late_minutes ?? 0);
   } finally {
     await saveWeekdays(previousWeekdays);
-    if (cutoffConfig) {
-      const restored = await page.request.put("/api/config/jenjang/Primary", { data: { cutoff_time: cutoffConfig.cutoff_time } });
-      expect(restored.status()).toBe(200);
-    } else {
-      const removed = await page.request.delete("/api/config/jenjang/Primary");
-      expect(removed.status()).toBe(200);
-    }
   }
   expect(browserErrors).toEqual([]);
 });

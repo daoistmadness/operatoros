@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
-import { assertDatabasePath, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
+import { assertDatabasePath, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
 import * as schema from "../src/schema";
 
 describe("@operatoros/db", () => {
@@ -51,7 +51,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(82);
+    expect(REQUIRED_TABLES.length).toBe(86);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
     for (const domain of ["staff_members", "dismissal_policies", "teacher_class_assignments"]) {
       expect(REQUIRED_TABLES).toContain(domain);
@@ -71,6 +71,13 @@ describe("@operatoros/db existing-schema validation authority", () => {
       "trg_attendance_follow_up_audit_no_delete", "trg_attendance_follow_up_audit_no_update",
       "trg_attendance_override_history_no_delete", "trg_attendance_override_history_no_update",
       "trg_attendance_period_audit_no_delete", "trg_attendance_period_audit_no_update",
+      "trg_attendance_ledger_class_month_no_delete", "trg_attendance_ledger_class_month_no_update",
+      "trg_attendance_ledger_revision_no_delete", "trg_attendance_ledger_revision_no_update",
+      "trg_attendance_ledger_revision_sequence", "trg_attendance_ledger_class_month_scope",
+      "trg_attendance_ledger_revision_transition",
+      "trg_attendance_ledger_student_totals_mode", "trg_attendance_ledger_student_totals_scope", "trg_attendance_ledger_student_totals_no_delete",
+      "trg_attendance_ledger_student_totals_no_update", "trg_jenjang_lateness_policy_no_delete",
+      "trg_jenjang_lateness_policy_no_update", "trg_jenjang_lateness_policy_backfill_once",
       "trg_student_enrollment_class_history_no_delete", "trg_student_enrollment_class_history_no_update",
       "trg_student_enrollment_lifecycle_audit_no_delete", "trg_student_enrollment_lifecycle_audit_no_update",
       "trg_student_import_actions_immutable", "trg_student_import_actions_no_delete",
@@ -85,13 +92,11 @@ describe("@operatoros/db existing-schema validation authority", () => {
     }
   }
 
-  const CURRENT_FINGERPRINT = "dd798cf0171b3221577774cc1396cb5e1d57c33d927587fc2fc0c2cd45a88b0a";
-
   it("accepts a current-version ledger whose timestamps are not wall-clock ordered", () => {
     const client = new Database(":memory:");
     buildValidSchema(client, [
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"],
-      ["20260901_s46", CURRENT_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"],
+      [CURRENT_SCHEMA_VERSION, CURRENT_SCHEMA_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"],
     ]);
     try {
       expect(validateDatabase(client)).toBeUndefined();
@@ -103,7 +108,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   it("fails closed when the ledger reports a newer schema than the application knows", () => {
     const client = new Database(":memory:");
     buildValidSchema(client, [
-      ["20260725_s43", CURRENT_FINGERPRINT, "2026-08-29T10:00:00+00:00"],
+      ["20260725_s43", CURRENT_SCHEMA_FINGERPRINT, "2026-08-29T10:00:00+00:00"],
       ["20990101_s99", "future", "2026-08-29T10:00:01+00:00"],
     ]);
     try {

@@ -286,7 +286,7 @@ describe("core CRUD parity slices", () => {
       expect(mappings.status).toBe(200); expect(await mappings.json()).toMatchObject({ summary: { total: 5 } });
       const legacyPreview = await app.handle(new Request("http://local/api/student-masters/legacy-link/preview", { method: "POST", headers: auth }));
       expect(legacyPreview.status).toBe(200); expect(await legacyPreview.json()).toMatchObject({ summary: { total: 5 } });
-      const absence = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-07", classes: [{ class_id: Number(secondClass.lastInsertRowid), sakit: 1, izin: 0, alfa: 0 }] }) }));
+      const absence = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-07", classes: [{ class_id: Number(secondClass.lastInsertRowid), sakit: 0, izin: 0, alfa: 0 }] }) }));
       expect(absence.status).toBe(200); expect(await absence.json()).toMatchObject({ inserted: 1, updated: 0, total: 1 });
       expect(database.client.query("SELECT COUNT(*) AS count FROM absence_reasons WHERE class_name = '7B' AND year = 2026 AND month = 7").get()).toMatchObject({ count: 0 });
       const preview = await app.handle(new Request("http://local/api/student-enrollments/populate/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, legacy_student_ids: [701, 702], effective_start_date: "2026-07-01" }) }));

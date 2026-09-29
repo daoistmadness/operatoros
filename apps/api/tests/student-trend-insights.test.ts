@@ -21,6 +21,7 @@ function context(): AuthContext {
     CREATE TABLE attendance_calendar_weekday_rules (academic_year_id INTEGER, jenjang_id INTEGER, weekday INTEGER, expectation TEXT);
     CREATE TABLE attendance_calendar_exceptions (academic_year_id INTEGER, jenjang_id INTEGER, date TEXT, expectation TEXT, reason TEXT);
     CREATE TABLE jenjang_config (id INTEGER PRIMARY KEY, jenjang TEXT, cutoff_time TEXT, updated_at TEXT);
+    CREATE TABLE jenjang_lateness_policy (jenjang_id INTEGER, effective_from TEXT, cutoff_time TEXT, source TEXT);
     CREATE TABLE academic_term_configs (id INTEGER PRIMARY KEY, academic_year_id INTEGER, term_number INTEGER, label TEXT, start_date TEXT, end_date TEXT);
   `);
   client.run("INSERT INTO academic_years VALUES (1, '2026/2027', '2026-01-01', '2026-03-31')");
@@ -32,6 +33,7 @@ function context(): AuthContext {
   client.run("INSERT INTO student_enrollments VALUES (1, 1, 'student-a', 1, 1, 1, '7A', '2026-01-01', NULL, 'ACTIVE'), (2, 2, 'student-b', 1, 1, 1, '7A', '2026-02-01', NULL, 'ACTIVE')");
   for (let weekday = 0; weekday < 7; weekday++) client.run("INSERT INTO attendance_calendar_weekday_rules VALUES (1, 1, ?, ?)", [weekday, weekday === 0 || weekday === 6 ? "NOT_EXPECTED" : "EXPECTED"]);
   client.run("INSERT INTO jenjang_config VALUES (1, 'SMP', '08:00', '2026-01-01')");
+  client.run("INSERT INTO jenjang_lateness_policy VALUES (1, '2026-01-01', '08:00', 'RECORDED')");
   const weekdays = (start: string, end: string) => {
     const result: string[] = [];
     for (const date = new Date(`${start}T00:00:00Z`); date <= new Date(`${end}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + 1))

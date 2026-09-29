@@ -12,7 +12,7 @@
 
 ## Architecture
 
-- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.3 runtime model.
+- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.7 application model.
 - [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
 - [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — workspace ownership and modernization boundaries.
 - [Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md) — ownership, contracts, query invalidation, state semantics, and feature validation conventions.

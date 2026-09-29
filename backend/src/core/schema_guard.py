@@ -22,10 +22,28 @@ CURRENT_SCHEMA_TABLES = {
     "attendance_calendar_weekday_rules",
     "attendance_calendar_exceptions",
     "attendance_submission_deadlines",
+    "attendance_ledger_class_months",
+    "attendance_ledger_revisions",
+    "attendance_ledger_student_totals",
+    "jenjang_lateness_policy",
 }
 CURRENT_SCHEMA_TRIGGERS = {
     "trg_attendance_follow_up_audit_no_update",
     "trg_attendance_follow_up_audit_no_delete",
+    "trg_attendance_ledger_class_month_no_update",
+    "trg_attendance_ledger_class_month_no_delete",
+    "trg_attendance_ledger_revision_no_update",
+    "trg_attendance_ledger_revision_no_delete",
+    "trg_attendance_ledger_revision_sequence",
+    "trg_attendance_ledger_revision_transition",
+    "trg_attendance_ledger_class_month_scope",
+    "trg_attendance_ledger_student_totals_mode",
+    "trg_attendance_ledger_student_totals_scope",
+    "trg_attendance_ledger_student_totals_no_update",
+    "trg_attendance_ledger_student_totals_no_delete",
+    "trg_jenjang_lateness_policy_no_update",
+    "trg_jenjang_lateness_policy_no_delete",
+    "trg_jenjang_lateness_policy_backfill_once",
 }
 
 
@@ -88,7 +106,7 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TABLES.issubset(tables):
             missing = sorted(CURRENT_SCHEMA_TABLES - tables)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.6 tables missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.7 tables missing: " + ", ".join(missing)
             )
         if "student_enrollment_lifecycle_audit" not in tables:
             raise DatabaseStartupError("DATABASE_SCHEMA_INVALID: enrollment lifecycle audit missing")
@@ -119,7 +137,7 @@ def _validate_sqlite_file(path: Path) -> None:
         if not CURRENT_SCHEMA_TRIGGERS.issubset(triggers):
             missing = sorted(CURRENT_SCHEMA_TRIGGERS - triggers)
             raise DatabaseStartupError(
-                "DATABASE_SCHEMA_INVALID: S4.6 triggers missing: " + ", ".join(missing)
+                "DATABASE_SCHEMA_INVALID: S4.7 triggers missing: " + ", ".join(missing)
             )
         grade_columns = {item[1] for item in connection.execute("PRAGMA table_info(student_subject_grades)")}
         if "assessment_session_id" not in grade_columns:
