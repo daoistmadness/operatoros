@@ -126,6 +126,7 @@ export interface LatenessStudentTally {
 
 export interface LatenessRangeTally {
   expected_student_days: number;
+  arrival_evidence_records: number;
   late_events: number;
   affected_students: Set<string>;
   total_late_minutes: number;
@@ -241,7 +242,7 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     startDate: String(year.start_date), endDate: String(year.end_date), jenjangIds });
   const policies = loadCutoffPolicies(context, jenjangIds, input.endDate);
 
-  const tally: LatenessRangeTally = { expected_student_days: 0, late_events: 0, affected_students: new Set(),
+  const tally: LatenessRangeTally = { expected_student_days: 0, arrival_evidence_records: 0, late_events: 0, affected_students: new Set(),
     total_late_minutes: 0, known_minute_events: 0, late_dates: new Set(), unknown_calendar_dates: [],
     unknown_calendar_student_days: 0, unresolved_class_student_days: 0, other_status_student_days: 0,
     cutoffs: new Map(), byClass: new Map(), byStudent: new Map() };
@@ -297,6 +298,7 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     }
     if (day.attendance_id == null) continue;
     const status = day.effective_status == null ? String(day.base_status ?? "unknown") : String(day.effective_status);
+    if (["on-time", "late"].includes(status.toLowerCase()) || day.effective_check_in != null) tally.arrival_evidence_records++;
     if (!["on-time", "late", "sakit", "izin", "alfa"].includes(status.toLowerCase())) { tally.other_status_student_days++; continue; }
     const policy = cutoffPolicyForDate(policies, Number(day.jenjang_id), String(day.day));
     const cutoff = policy == null ? null : String(policy.cutoff_time);

@@ -56,7 +56,10 @@ Current ownership:
 The current route authority includes dashboard, students, classes, enrollment,
 daily/class attendance, calendar, machine import, review/correction queues,
 academic management and grades, analytics, reports, uploads, data portability,
-and settings. Read `routeDefinitions.tsx` before claiming a new route.
+and settings. Attendance Analytics, Attendance Report, Attendance Recap, and
+Tardiness now share `/analytics/attendance?view=...`; their prior report paths
+remain query-preserving compatibility redirects. Read `routeDefinitions.tsx`
+before claiming a new route.
 
 Representative routes are `/`, `/students`, `/students/:id`, `/classes/:id`,
 `/enrollment`, `/attendance/daily`, `/attendance/class-entry`,

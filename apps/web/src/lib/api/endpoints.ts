@@ -50,6 +50,7 @@ export type TardinessJenjangSummaryRow = {
 };
 export type TardinessTotals = {
   expected_student_days: number;
+  arrival_evidence_records: number;
   late_events: number;
   affected_students: number;
   total_late_minutes: number;

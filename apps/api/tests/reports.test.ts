@@ -211,9 +211,21 @@ describe("analytics and report parity", () => {
       // canonically late (07:30 > 07:25); incidents are facts, so they count as
       // late events while Saturday stays out of the expected-day denominator.
       expect(tardinessJson.totals).toMatchObject({ expected_student_days: 168, late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7, unique_late_days: 3, tracked_school_days: 4, school_impact_rate_pct: 75 });
+      expect(tardinessJson.totals.arrival_evidence_records).toBeGreaterThan(0);
       const noRecordedDays = await app.handle(new Request("http://local/api/analytics/tardiness-report?date_from=2027-01-03&date_to=2027-01-03", { headers: { cookie } }));
       expect(noRecordedDays.status).toBe(200);
-      expect((await noRecordedDays.json() as any).totals).toMatchObject({ expected_student_days: 0, late_events: 0, tracked_school_days: 0, school_impact_rate_pct: null, late_event_rate: null });
+      expect((await noRecordedDays.json() as any).totals).toMatchObject({ expected_student_days: 0, arrival_evidence_records: 0, late_events: 0, tracked_school_days: 0, school_impact_rate_pct: null, late_event_rate: null });
+      const absentStudentId = Number((database.client.query("SELECT id FROM students WHERE name = 'Alice SMP7A'").get() as any).id);
+      database.client.run("INSERT INTO attendance (student_id, date, late_duration, late_source, status, is_absent) VALUES (?, '2026-08-31', 0, 'test', 'sakit', 1)", [absentStudentId]);
+      const absenceOnly = await app.handle(new Request("http://local/api/analytics/tardiness-report?date_from=2026-08-31&date_to=2026-08-31", { headers: { cookie } }));
+      expect(absenceOnly.status).toBe(200);
+      const absenceOnlyTotals = (await absenceOnly.json() as any).totals;
+      expect(absenceOnlyTotals).toMatchObject({ arrival_evidence_records: 0, late_events: 0 });
+      expect(absenceOnlyTotals.expected_student_days).toBeGreaterThan(0);
+      for (const exportPath of ["export-excel", "export-management-excel"]) {
+        const unavailableExport = await app.handle(new Request(`http://local/api/analytics/tardiness-report/${exportPath}?date_from=2026-08-31&date_to=2026-08-31`, { headers: { cookie } }));
+        expect(unavailableExport.status).toBe(422);
+      }
       expect(tardinessJson.management_summary).toMatchObject({ late_events: 7, affected_students: 5, total_late_minutes: 95, average_late_minutes: 95 / 7 });
       expect(tardinessJson.breakdown_by_class).toEqual(expect.arrayContaining([
         expect.objectContaining({ class_name: "7A", jenjang: "SMP", late_events: 3, affected_students: 3, total_late_minutes: 45 }),
@@ -522,13 +534,16 @@ describe("analytics and report parity", () => {
       expect(rekapResponse.status).toBe(200);
       const rekap = await rekapResponse.json() as any;
       expect(rekap.manual_absence).toEqual(report.manual_absence);
+      expect(rekap.attendance_basis).toEqual(report.attendance_basis);
       const exportResponse = await request(`/api/analytics/v2/rekap-absensi/export-excel?academic_year_id=${academicYearId}&period_type=term&period=1`);
       expect(exportResponse.status).toBe(200);
       const workbook = await loadXlsxWorkbook(new Uint8Array(await exportResponse.arrayBuffer()));
       const exportSheet = workbook.getWorksheet("Rekap Manual")!;
-      expect(exportSheet.getRow(14).getCell(4).value).toBe(15);
-      expect(exportSheet.getRow(14).getCell(5).value).toBe(7);
-      expect(exportSheet.getRow(14).getCell(6).value).toBe(3);
+      expect(exportSheet.getRow(15).getCell(4).value).toBe(15);
+      expect(exportSheet.getRow(15).getCell(5).value).toBe(7);
+      expect(exportSheet.getRow(15).getCell(6).value).toBe(3);
+      const reconciliation = workbook.getWorksheet("Basis & Rekonsiliasi")!;
+      expect(reconciliation.getRow(2).getCell(3).value).toBe("Basis");
 
       const afterTerm = await request(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`);
       const afterOverview = await request(`/api/analytics/overview?academic_year_id=${academicYearId}`);
@@ -744,6 +759,12 @@ describe("attendance basis resolver", () => {
         expect.objectContaining({ class_id: classIds.P1A, month: "2026-08", basis: "OBSERVED" }),
         expect.objectContaining({ class_id: classIds.P2, month: "2026-08", basis: "DECLARED" }),
       ]));
+      const basisExport = await request(`/api/analytics/v2/rekap-absensi/export-excel?academic_year_id=${yearId}&period_type=month&period=2026-08&class_id=${classIds.P1A}`);
+      expect(basisExport.status).toBe(200);
+      const basisWorkbook = await loadXlsxWorkbook(new Uint8Array(await basisExport.arrayBuffer()));
+      const basisSheet = basisWorkbook.getWorksheet("Basis & Rekonsiliasi")!;
+      expect(basisSheet.getRow(2).getCell(3).value).toBe("Basis");
+      expect(basisSheet.getRow(3).getCell(3).value).toBe("Tercatat");
       for (const date of ["2026-08-03", "2026-08-04"]) database.client.run(`INSERT INTO attendance_calendar_exceptions
         (academic_year_id,jenjang_id,date,expectation,reason,created_by) VALUES (?,?,?,'NOT_EXPECTED','SCHOOL_CLOSED','synthetic-test')`, [yearId, jenjangId, date]);
       const invalidatedDeclaration = await request(`/api/analytics/attendance/basis?academic_year_id=${yearId}&month=2026-08&class_id=${classIds.P2}`);

@@ -12,10 +12,11 @@ import {
   type FetchInterventionImpactParams,
   type FetchSummaryParams,
 } from "../api/analytics";
-import { getDashboardSnapshot } from "../lib/api/endpoints";
+import { getDashboardSnapshot, getJenjangs } from "../lib/api/endpoints";
 import { queryKeys } from "../lib/query/queryKeys";
 import { fetchManagementOverview, type ManagementOverviewFilters } from "../api/managementOverview";
 import { fetchConfiguredTerms, fetchManagementReviewProfile, type ManagementReviewProfileFilters } from "../api/managementReviewProfile";
+import { fetchEffectiveTerms } from "../api/academicConfig";
 import { fetchStudentTrendInsights, type StudentTrendFilters } from "../api/studentTrends";
 import { fetchStudentIndicatorInsights, type StudentIndicatorFilters } from "../api/studentIndicators";
 import { fetchAcademicPrograms } from "../api/academicMasters";
@@ -59,6 +60,18 @@ export function useManagementOverviewQuery(params: ManagementOverviewFilters | n
 
 export function useManagementReviewTermsQuery(academicYearId: number | null, enabled = true) {
   return useQuery({ queryKey: queryKeys.analytics.managementReviewTerms(academicYearId), queryFn: () => fetchConfiguredTerms(academicYearId as number), enabled: enabled && academicYearId !== null });
+}
+
+export function useAttendanceEffectiveTermsQuery(academicYearId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.analytics.attendanceEffectiveTerms(academicYearId),
+    queryFn: () => fetchEffectiveTerms(academicYearId as number),
+    enabled: enabled && academicYearId !== null,
+  });
+}
+
+export function useTardinessJenjangsQuery(enabled = true) {
+  return useQuery({ queryKey: queryKeys.analytics.tardinessJenjangs, queryFn: getJenjangs, enabled });
 }
 
 export function useManagementReviewProgramsQuery(enabled = true) {
