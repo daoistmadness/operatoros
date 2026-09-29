@@ -153,8 +153,6 @@ function GradeLedgerContent() {
       setJenjangs(jenjangPayload);
       setJenjangId(defaultJenjang?.id ?? 0);
       setSelectedAcademicYearId(yearsPayload.some((year) => year.id === requestedAcademicYearId) ? requestedAcademicYearId : defaultYear?.id ?? null);
-      setAssessmentSessions([]);
-      setSelectedAssessmentSessionId(null);
     } catch (loadError) {
       console.error("Grade Ledger master data failure", loadError);
       setError(getErrorMessage(loadError));
