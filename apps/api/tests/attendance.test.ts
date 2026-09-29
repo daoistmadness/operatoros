@@ -75,6 +75,10 @@ describe("attendance parity slices", () => {
       const reopened = await app.handle(new Request("http://local/api/attendance-corrections/periods/reopen", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-08-01", expected_version: 2, reason: "Correction is required", confirmation: "REOPEN_ATTENDANCE_PERIOD" }) }));
       expect(reopened.status).toBe(200); expect((await reopened.json() as any).status).toBe("OPEN");
 
+      const finalizeWithMonthlyCoverage = await app.handle(new Request("http://local/api/attendance-corrections/periods/finalize", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-08-03", reason: "Daily review completed", confirmation: "FINALIZE_ATTENDANCE_PERIOD" }) }));
+      expect(finalizeWithMonthlyCoverage.status).toBe(200);
+      expect(await finalizeWithMonthlyCoverage.json()).toMatchObject({ warning_acknowledged: false, ledger_warning: [] });
+
       database.client.run("UPDATE student_enrollments SET effective_from = '2025-07-01' WHERE id = 1");
       const finalizeWithoutLedgerAck = await app.handle(new Request("http://local/api/attendance-corrections/periods/finalize", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_date: "2026-05-03", reason: "Daily review completed", confirmation: "FINALIZE_ATTENDANCE_PERIOD" }) }));
       expect(finalizeWithoutLedgerAck.status).toBe(409);
