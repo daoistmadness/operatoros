@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+import { AttendanceBasisClassSchema } from "../analytics/attendance-basis";
 import { TermAttendanceCountsSchema } from "../analytics/term-attendance";
 
 const MonthKey = Type.String({ pattern: "^\\d{4}-(0[1-9]|1[0-2])$" });
@@ -174,6 +175,8 @@ export const AttendanceReportResponseSchema = Type.Object({
   })),
   summary: Type.Object({ avg_late_time_str: Type.String() }),
   manual_absence: ManualAbsenceAggregateSchema,
+  attendance_basis: Type.Array(AttendanceBasisClassSchema),
+  attendance_basis_unavailable_reason: Type.Union([Type.Literal("CANONICAL_CLASS_UNRESOLVED"), Type.Null()]),
 });
 
 export type ManualAbsenceQuery = Static<typeof ManualAbsenceQuerySchema>;

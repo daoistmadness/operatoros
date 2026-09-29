@@ -54,6 +54,12 @@ mode. Missing rows remain missing; explicit zero rows remain data.
 
 ## Attendance basis and reconciliation
 
+`GET /api/analytics/attendance/basis` is the server owner for one Academic
+Year/class/calendar-month result. Attendance Report returns these same
+class-month results in `attendance_basis`. A report that spans only part of a
+month still labels the basis row with that full intersecting calendar month;
+its canonical period totals retain the requested date range.
+
 Basis and coverage are separate. `OBSERVED` means canonical daily attendance
 evidence exists in scope. Partial coverage remains `OBSERVED`; return Expected
 Student-Days, recorded days, Unrecorded, and Coverage separately.
@@ -81,6 +87,10 @@ basis.
 - **Conflict:** report a separate conflict when compatible values disagree.
   Show canonical value, declared value, delta, and explanation. Never
   auto-resolve.
+- **Evidence scope:** any canonical attendance row linked to a date-effective
+  enrollment and class inside the class-month establishes `OBSERVED`, even if
+  its calendar date is `NOT_EXPECTED` or `UNKNOWN`. Such rows do not add to
+  Expected Student-Days; unknown calendar states remain separate quality data.
 - **NOT_REPORTED:** no canonical evidence and no submitted declaration. A
   finalized period without a submitted ledger stays `NOT_REPORTED`.
 
