@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { Value } from "@sinclair/typebox/value";
 import { loadXlsxWorkbook } from "@operatoros/excel";
+import { AttendanceBasisResponseSchema } from "@operatoros/contracts/analytics";
 import { ReportFiltersResponseSchema } from "@operatoros/contracts/reports";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -130,6 +131,7 @@ describe("analytics and report parity", () => {
           scope: { academic_year_id: 2, period_type: "date_range", start_date: "2026-08-01", end_date: "2026-08-05" },
           canonical_attendance: { source: "student_attendance_records", totals: expect.objectContaining({ recorded_student_days: expect.any(Number), hadir_count: expect.any(Number) }) },
           manual_absence: { source: "manual_monthly_class_totals", period_policy: "include_full_intersecting_months" },
+          attendance_basis: [], attendance_basis_unavailable_reason: "CANONICAL_CLASS_UNRESOLVED",
           students: expect.arrayContaining([expect.objectContaining({ name: "Alice SMP7A", hadir: expect.any(Number), recorded: expect.any(Number) })]),
         });
         const interventionImpact = await app.handle(new Request(`http://local${alias}/intervention-impact?academic_year_id=2`, { headers: { cookie } }));
@@ -558,4 +560,170 @@ describe("analytics and report parity", () => {
       rmSync(path, { force: true });
     }
   }, 30000);
+});
+
+describe("attendance basis resolver", () => {
+  it("resolves canonical, declared, partial, transfer, override, and unreported class-months", async () => {
+    const path = `/tmp/operatoros-c2-basis-${process.pid}-${Date.now()}.db`;
+    const auditDir = `/tmp/operatoros-c2-basis-audit-${process.pid}-${Date.now()}`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
+    try {
+      const cookie = await adminCookie(app);
+      const request = (route: string, init: RequestInit = {}) => app.handle(new Request(`http://local${route}`, { ...init, headers: { cookie, ...(init.headers ?? {}) } }));
+      database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=?", [Number((database.client.query("SELECT id FROM academic_years WHERE label='2026/2027-reports'").get() as any).id)]);
+      const inventory = seedManualClassInventory(database.client);
+      const yearId = inventory.academicYearId;
+      const classIds: Record<string, number> = { ...inventory.classIds };
+      const gradeId = Number((database.client.query("SELECT grade_id FROM academic_classes WHERE id=?").get(classIds.P1A!) as any).grade_id);
+      for (const [name, section] of [["PARTIAL", "C"], ["ZERO", "Z"], ["OPEN", "O"], ["MISSING", "M"], ["NONEXPECTED", "N"]] as const) {
+        classIds[name] = Number(database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,?,?,1)", [yearId, gradeId, name, section]).lastInsertRowid);
+      }
+      const jenjangId = Number((database.client.query("SELECT id FROM jenjangs WHERE name='SD'").get() as any).id);
+      const addStudent = (name: string) => {
+        const masterId = `c2-${name.toLowerCase().replaceAll(" ", "-")}`;
+        database.client.run("INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')", [masterId, name, name.toLowerCase()]);
+        const studentId = Number(database.client.run("INSERT INTO students (name,jenjang,class_name) VALUES (?,'SD','P1A')", [name]).lastInsertRowid);
+        return { masterId, studentId };
+      };
+      const addEnrollment = (name: string, className: string, classId: number, start: string, end: string | null) => {
+        const student = addStudent(name);
+        const enrollmentId = Number(database.client.run(`INSERT INTO student_enrollments
+          (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,effective_to,lifecycle_state)
+          VALUES (?,?,?,?,?,?,1,?,?,'ACTIVE')`, [student.studentId, student.masterId, yearId, jenjangId, classId, className, start, end]).lastInsertRowid);
+        return { ...student, enrollmentId };
+      };
+      const addAttendance = (studentId: number, date: string, status: string, checkIn: string | null = "07:20:00") => Number(database.client.run(`INSERT INTO attendance
+        (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status)
+        VALUES (?,?,?,NULL,0,'calculated',0,?)`, [studentId, date, checkIn, status]).lastInsertRowid);
+
+      const p1aEnrollments = database.client.query("SELECT id FROM student_enrollments WHERE academic_class_id=? ORDER BY id").all(classIds.P1A!) as any[];
+      const p1aStudents = p1aEnrollments.map((enrollment, index) => {
+        const student = addStudent(`C2 P1A ${index}`);
+        database.client.run("UPDATE student_enrollments SET student_id=?,effective_from='2026-08-03',effective_to='2026-08-04' WHERE id=?", [student.studentId, enrollment.id]);
+        return student;
+      });
+      const p1aSickAttendance = p1aStudents.map((student, index) => addAttendance(student.studentId, "2026-08-04", "sakit"));
+      const p1aOnTimeAttendance = p1aStudents.map((student, index) => addAttendance(student.studentId, "2026-08-03", "on-time", index === 0 ? "07:40:00" : "07:20:00"));
+
+      database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_class_id=?", [classIds.P1B!]);
+      database.client.run("UPDATE student_enrollments SET effective_from='2026-08-03',effective_to='2026-08-04' WHERE academic_class_id=?", [classIds.P2!]);
+      const partial = addEnrollment("C2 Partial Student", "PARTIAL", classIds.PARTIAL!, "2026-08-03", "2026-08-04");
+      addAttendance(partial.studentId, "2026-08-03", "on-time");
+      const transfer = addEnrollment("C2 Transfer Student", "P1B", classIds.P1B!, "2026-08-03", "2026-08-06");
+      database.client.run(`INSERT INTO student_enrollment_class_history (enrollment_id,class_name,effective_from,effective_to,changed_by,source)
+        VALUES (?, 'P1A','2026-08-03','2026-08-04','synthetic-test','synthetic-test'),
+          (?, 'P1B','2026-08-05','2026-08-06','synthetic-test','synthetic-test')`, [transfer.enrollmentId, transfer.enrollmentId]);
+      for (const date of ["2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"]) addAttendance(transfer.studentId, date, "on-time");
+      const nonExpected = addEnrollment("C2 Nonexpected Student", "NONEXPECTED", classIds.NONEXPECTED!, "2026-08-01", "2026-08-01");
+      addAttendance(nonExpected.studentId, "2026-08-01", "on-time");
+      database.client.run("UPDATE heb_overrides SET heb_value=99,note='Synthetic cutoff-independent override',set_by='golden-admin' WHERE jenjang='SD' AND month=8 AND year=2026");
+
+      const override = await request(`/api/review/attendance/${p1aSickAttendance[0]}/override`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ override_status: "on-time", note: "Synthetic approved attendance correction" }) });
+      expect(override.status).toBe(200);
+      const save = (classId: number, body: Record<string, unknown>) => request("/api/config/absence-reasons/bulk", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ academic_year_id: yearId, month: "2026-08", classes: [{ class_id: classId, ...body }] }),
+      });
+      const submit = (classId: number) => request("/api/config/absence-reasons/submit", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-08", class_id: classId }),
+      });
+      const basisFor = async (classId: number) => {
+        const response = await request(`/api/analytics/attendance/basis?academic_year_id=${yearId}&month=2026-08&class_id=${classId}`);
+        expect(response.status, JSON.stringify(await response.clone().json())).toBe(200);
+        const result = await response.json() as any;
+        expect(Value.Check(AttendanceBasisResponseSchema, result)).toBe(true);
+        return result.classes[0];
+      };
+
+      expect((await save(classIds.P1A!, { sakit: 2, izin: 0, alfa: 0 })).status).toBe(200);
+      expect((await submit(classIds.P1A!)).status).toBe(200);
+      const matching = await basisFor(classIds.P1A!);
+      expect(matching).toMatchObject({
+        basis: "OBSERVED", canonical_evidence_records: 8,
+        canonical: { expected_student_days: 8, recorded_student_days: 8, hadir_count: 6, sakit_count: 2, unrecorded_student_days: 0, coverage_rate: 100 },
+        ledger: { state: "SUBMITTED", entry_mode: "TOTALS_ONLY" },
+        resolved: { hadir_student_days: 6, sakit_student_days: 2 },
+        lateness: { availability: "AVAILABLE", late_events: 1 },
+        reconciliation: { status: "MATCH", reason_code: null }, conflict: null,
+      });
+      expect(matching).toHaveProperty("month", "2026-08");
+
+      const reopen = await request("/api/config/absence-reasons/reopen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, month: "2026-08", class_id: classIds.P1A, reason: "Synthetic conflict case" }) });
+      expect(reopen.status).toBe(200);
+      expect((await save(classIds.P1A!, { sakit: 3, izin: 0, alfa: 0 })).status).toBe(200);
+      expect((await submit(classIds.P1A!)).status).toBe(200);
+      expect(await basisFor(classIds.P1A!)).toMatchObject({
+        basis: "OBSERVED", reconciliation: { status: "CONFLICT", reason_code: "ABSENCE_TOTAL_MISMATCH" },
+        conflict: { class_id: classIds.P1A, month: "2026-08", canonical_non_hadir_student_days: 2, declared_absence_student_days: 3, delta_student_days: 1, reason_code: "ABSENCE_TOTAL_MISMATCH" },
+      });
+      database.client.run("UPDATE attendance SET status='unknown' WHERE id=?", [p1aOnTimeAttendance[1]!]);
+      expect(await basisFor(classIds.P1A!)).toMatchObject({
+        basis: "OBSERVED", canonical: { recorded_student_days: 8, other_status_count: 1 },
+        reconciliation: { status: "NOT_COMPARABLE", reason_code: "CANONICAL_STATUS_UNRESOLVED" }, conflict: null,
+      });
+
+      expect((await save(classIds.PARTIAL!, { sakit: 1, izin: 0, alfa: 0 })).status).toBe(200);
+      expect((await submit(classIds.PARTIAL!)).status).toBe(200);
+      expect(await basisFor(classIds.PARTIAL!)).toMatchObject({
+        basis: "OBSERVED", canonical: { expected_student_days: 2, recorded_student_days: 1, unrecorded_student_days: 1, coverage_rate: 50 },
+        reconciliation: { status: "NOT_COMPARABLE", reason_code: "CANONICAL_COVERAGE_INCOMPLETE" }, conflict: null,
+      });
+      expect(await basisFor(classIds.P1B!)).toMatchObject({ basis: "OBSERVED", canonical: { expected_student_days: 2, recorded_student_days: 2 }, ledger: { state: "MISSING" } });
+
+      const perStudent = database.client.query("SELECT id FROM student_enrollments WHERE academic_class_id=? ORDER BY id LIMIT 1").get(classIds.P2!) as any;
+      expect((await save(classIds.P2!, { entry_mode: "PER_STUDENT", student_totals: [{ enrollment_id: Number(perStudent.id), sakit: 1, izin: 0, alfa: 0 }] })).status).toBe(200);
+      expect((await submit(classIds.P2!)).status).toBe(200);
+      expect(await basisFor(classIds.P2!)).toMatchObject({
+        basis: "DECLARED", canonical: { expected_student_days: 6, recorded_student_days: 0, unrecorded_student_days: 6 },
+        ledger: { state: "SUBMITTED", entry_mode: "PER_STUDENT" },
+        declared: { sakit_student_days: 1, izin_student_days: 0, alfa_student_days: 0 },
+        resolved: { hadir_student_days: 5, sakit_student_days: 1 }, presumed_hadir_student_days: 5,
+        lateness: { availability: "UNAVAILABLE", reason_code: "NO_CANONICAL_EVIDENCE", late_events: null },
+      });
+
+      expect((await save(classIds.ZERO!, { sakit: 0, izin: 0, alfa: 0 })).status).toBe(200);
+      expect((await submit(classIds.ZERO!)).status).toBe(200);
+      expect(await basisFor(classIds.ZERO!)).toMatchObject({
+        basis: "DECLARED", canonical: { expected_student_days: 0, coverage_rate: null },
+        resolved: { hadir_student_days: 0, sakit_student_days: 0 }, presumed_hadir_student_days: 0,
+      });
+      expect((await save(classIds.OPEN!, { sakit: 0, izin: 0, alfa: 0 })).status).toBe(200);
+      expect(await basisFor(classIds.OPEN!)).toMatchObject({ basis: "NOT_REPORTED", ledger: { state: "OPEN" }, resolved: { hadir_student_days: null, sakit_student_days: null } });
+      expect(await basisFor(classIds.MISSING!)).toMatchObject({ basis: "NOT_REPORTED", ledger: { state: "MISSING" }, resolved: { hadir_student_days: null, sakit_student_days: null } });
+      expect(await basisFor(classIds.NONEXPECTED!)).toMatchObject({
+        basis: "OBSERVED", canonical_evidence_records: 1, canonical: { expected_student_days: 0, recorded_student_days: 0, coverage_rate: null },
+        lateness: { availability: "AVAILABLE", late_events: 0 },
+      });
+      expect(matching.canonical.expected_student_days).toBe(8); // The HEB override does not replace the calendar denominator.
+      expect(matching).toHaveProperty("month", "2026-08");
+      expect(matching.lateness).toHaveProperty("availability", "AVAILABLE");
+      expect((await basisFor(classIds.P1A!)).canonical.expected_student_days).toBe(8);
+
+      const report = await request(`/api/analytics/attendance-report?academic_year_id=${yearId}&period_type=month&period=2026-08`);
+      expect(report.status).toBe(200);
+      expect((await report.json() as any).attendance_basis).toEqual(expect.arrayContaining([
+        expect.objectContaining({ class_id: classIds.P1A, month: "2026-08", basis: "OBSERVED" }),
+        expect.objectContaining({ class_id: classIds.P2, month: "2026-08", basis: "DECLARED" }),
+      ]));
+      for (const date of ["2026-08-03", "2026-08-04"]) database.client.run(`INSERT INTO attendance_calendar_exceptions
+        (academic_year_id,jenjang_id,date,expectation,reason,created_by) VALUES (?,?,?,'NOT_EXPECTED','SCHOOL_CLOSED','synthetic-test')`, [yearId, jenjangId, date]);
+      const invalidatedDeclaration = await request(`/api/analytics/attendance/basis?academic_year_id=${yearId}&month=2026-08&class_id=${classIds.P2}`);
+      expect(invalidatedDeclaration.status).toBe(409);
+      expect(await invalidatedDeclaration.json()).toMatchObject({ detail: { code: "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS" } });
+
+      const unresolved = addEnrollment("C2 Unresolved Student", "NO MATCHING CLASS", classIds.P2!, "2026-08-03", "2026-08-03");
+      database.client.run(`INSERT INTO student_enrollment_class_history (enrollment_id,class_name,effective_from,effective_to,changed_by,source)
+        VALUES (?, 'NO SUCH CLASS','2026-08-03','2026-08-03','synthetic-test','synthetic-test')`, [unresolved.enrollmentId]);
+      addAttendance(unresolved.studentId, "2026-08-03", "on-time");
+      const unresolvedBasis = await request(`/api/analytics/attendance/basis?academic_year_id=${yearId}&month=2026-08&class_id=${classIds.MISSING}`);
+      expect(unresolvedBasis.status).toBe(409);
+      expect(await unresolvedBasis.json()).toMatchObject({ detail: { code: "CANONICAL_CLASS_UNRESOLVED" } });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(auditDir, { recursive: true, force: true });
+    }
+  }, 60000);
 });
