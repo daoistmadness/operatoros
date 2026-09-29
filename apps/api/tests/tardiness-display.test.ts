@@ -36,6 +36,7 @@ async function seed(withCutoff: boolean): Promise<{ path: string; cleanup: () =>
   run("INSERT INTO jenjangs (name) VALUES ('Primary')");
   const jenjangId = Number(get("SELECT id FROM jenjangs WHERE name='Primary'").id);
   if (withCutoff) run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES ('Primary','07:30',CURRENT_TIMESTAMP)");
+  if (withCutoff) run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?, '2026-07-01', '07:30', 'RECORDED', 'test', CURRENT_TIMESTAMP, 'Synthetic policy')", [jenjangId]);
   run("INSERT INTO academic_programs (jenjang_id, name) VALUES (?, 'Primary')", [jenjangId]);
   const programId = Number(get("SELECT id FROM academic_programs WHERE name='Primary'").id);
   run("INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number) VALUES (?,?, 'P1', 1)", [jenjangId, programId]);

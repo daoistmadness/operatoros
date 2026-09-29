@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Save } from "lucide-react";
 
-import { getMonthlyClassAbsenceTotals, saveMonthlyClassAbsenceTotals } from "../api/manualAbsence";
+import { getMonthlyClassAbsenceTotals, reopenMonthlyClassAbsenceLedger, saveMonthlyClassAbsenceTotals, submitMonthlyClassAbsenceLedger } from "../api/manualAbsence";
 import { getReportFilters, type ReportFiltersResponse } from "../api/reports";
 import type { ManualAbsenceMonthlyResponse } from "@operatoros/contracts/reports";
 import { getPageApiError } from "../lib/api/errors";
@@ -18,6 +18,13 @@ function monthKey(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function manualRows(value: ManualAbsenceMonthlyResponse): ManualClassRow[] {
+  return value.classes.map((item) => {
+    const original = { sakit: String(item.sakit), izin: String(item.izin), alfa: String(item.alfa) };
+    return { ...item, ...original, original };
+  });
+}
+
 function ManualAbsenceEntry() {
   const [filters, setFilters] = useState<ReportFiltersResponse | null>(null);
   const [academicYearId, setAcademicYearId] = useState(0);
@@ -28,6 +35,7 @@ function ManualAbsenceEntry() {
   const [programId, setProgramId] = useState("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [actionClassId, setActionClassId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -53,10 +61,7 @@ function ManualAbsenceEntry() {
     setLoading(true);
     setError("");
     getMonthlyClassAbsenceTotals(academicYearId, month).then((value) => {
-      setRows(value.classes.map((item) => {
-        const original = { sakit: String(item.sakit), izin: String(item.izin), alfa: String(item.alfa) };
-        return { ...item, ...original, original };
-      }));
+      setRows(manualRows(value));
     }).catch((cause) => {
       setRows([]);
       setError(getPageApiError(cause, "Gagal memuat rekap manual."));
@@ -69,7 +74,9 @@ function ManualAbsenceEntry() {
     (jenjangId === "all" || item.jenjang_id === Number(jenjangId)) &&
     (programId === "all" || item.program_id === Number(programId))), [rows, jenjangId, programId]);
   const changed = (item: ManualClassRow) => item.sakit !== item.original.sakit || item.izin !== item.original.izin || item.alfa !== item.original.alfa;
-  const canSave = visibleRows.length > 0 && visibleRows.some((item) => !item.has_data || changed(item));
+  const canSave = visibleRows.length > 0 && !visibleRows.some((item) => item.is_locked) && visibleRows.some((item) => item.state !== "SUBMITTED" && (!item.has_data || changed(item)));
+
+  const refreshRows = async () => setRows(manualRows(await getMonthlyClassAbsenceTotals(academicYearId, month)));
 
   const update = (classId: number, field: "sakit" | "izin" | "alfa", value: string) => {
     setRows((current) => current.map((item) => item.class_id === classId ? { ...item, [field]: value } : item));
@@ -90,24 +97,42 @@ function ManualAbsenceEntry() {
         month,
         jenjang_id: jenjangId === "all" ? undefined : Number(jenjangId),
         program_id: programId === "all" ? undefined : Number(programId),
-        classes: visibleRows.map((item) => ({
+        classes: visibleRows.filter((item) => item.state !== "SUBMITTED" && (!item.has_data || changed(item))).map((item) => ({
           class_id: item.class_id,
           sakit: Number(item.sakit),
           izin: Number(item.izin),
           alfa: Number(item.alfa),
         })),
       });
-      setMessage(`Tersimpan: ${result.total} kelas untuk ${month}.`);
-      const value = await getMonthlyClassAbsenceTotals(academicYearId, month);
-      setRows(value.classes.map((item) => {
-        const original = { sakit: String(item.sakit), izin: String(item.izin), alfa: String(item.alfa) };
-        return { ...item, ...original, original };
-      }));
+      setMessage(`Draft tersimpan: ${result.total} kelas untuk ${month}. Kirim setiap draft setelah data kelas lengkap.`);
+      await refreshRows();
     } catch (cause) {
       setError(getPageApiError(cause, "Gagal menyimpan rekap manual."));
     } finally {
       setSaving(false);
     }
+  };
+
+  const submit = async (item: ManualClassRow) => {
+    setActionClassId(item.class_id); setError(""); setMessage("");
+    try {
+      await submitMonthlyClassAbsenceLedger({ academic_year_id: academicYearId, month, class_id: item.class_id });
+      setMessage(`Rekap ${item.class_name} untuk ${month} berhasil dikirim.`);
+      await refreshRows();
+    } catch (cause) { setError(getPageApiError(cause, "Gagal mengirim rekap manual.")); }
+    finally { setActionClassId(null); }
+  };
+
+  const reopen = async (item: ManualClassRow) => {
+    const reason = window.prompt(`Alasan membuka kembali rekap ${item.class_name} untuk ${month}:`)?.trim();
+    if (!reason) return;
+    setActionClassId(item.class_id); setError(""); setMessage("");
+    try {
+      await reopenMonthlyClassAbsenceLedger({ academic_year_id: academicYearId, month, class_id: item.class_id, reason });
+      setMessage(`Rekap ${item.class_name} dibuka kembali.`);
+      await refreshRows();
+    } catch (cause) { setError(getPageApiError(cause, "Gagal membuka kembali rekap manual.")); }
+    finally { setActionClassId(null); }
   };
 
   const selectedYear = filters?.academic_years.find((value) => value.id === academicYearId);
@@ -156,7 +181,7 @@ function ManualAbsenceEntry() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
           <div>
             <h2 className="font-semibold text-slate-900">Kelas — {months.find((value) => value.value === month)?.label ?? month}</h2>
-            <p className="text-sm text-slate-500">Nilai awal nol belum dianggap tersimpan. Simpan untuk mengonfirmasi total setiap kelas.</p>
+            <p className="text-sm text-slate-500">Sakit, Izin, dan Alfa dihitung dalam hari-siswa. Simpan membuat draft; kirim setiap kelas setelah datanya lengkap.</p>
           </div>
           <Button onClick={save} disabled={saving || loading || !canSave}>
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
@@ -167,16 +192,21 @@ function ManualAbsenceEntry() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                <tr><th className="px-5 py-3">Kelas</th><th className="w-32 px-5 py-3 text-center">Sakit</th><th className="w-32 px-5 py-3 text-center">Izin</th><th className="w-32 px-5 py-3 text-center">Alfa</th><th className="w-44 px-5 py-3">Status</th></tr>
+                <tr><th className="px-5 py-3">Kelas</th><th className="w-32 px-5 py-3 text-center">Sakit</th><th className="w-32 px-5 py-3 text-center">Izin</th><th className="w-32 px-5 py-3 text-center">Alfa</th><th className="w-56 px-5 py-3">Status · Expected Student-Days</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {visibleRows.map((item) => (
                   <tr key={item.class_id}>
                     <td className="px-5 py-3"><span className="font-semibold text-slate-900">{item.class_name}</span><span className="ml-2 text-xs text-slate-500">{item.jenjang} · {item.program} · {item.grade}</span></td>
                     {(["sakit", "izin", "alfa"] as const).map((field) => <td key={field} className="px-5 py-3">
-                      <input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${item.class_name}`} className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-center" value={item[field]} onChange={(event) => update(item.class_id, field, event.target.value)} />
+                      <input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${item.class_name}`} className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-center disabled:bg-slate-100" value={item[field]} disabled={item.state === "SUBMITTED" || item.is_locked || item.entry_mode === "PER_STUDENT"} onChange={(event) => update(item.class_id, field, event.target.value)} />
                     </td>)}
-                    <td className="px-5 py-3"><span className={item.has_data && !changed(item) ? "text-emerald-700" : "text-amber-700"}>{item.has_data && !changed(item) ? "Tersimpan" : changed(item) ? "Belum disimpan" : "Belum diisi"}</span></td>
+                    <td className="px-5 py-3">
+                      <span className={item.state === "SUBMITTED" ? "text-emerald-700" : "text-amber-700"}>{item.is_locked ? "Dikunci" : item.state === "SUBMITTED" ? "Terkirim" : item.state === "OPEN" ? "Draft" : changed(item) ? "Belum disimpan" : "Belum diisi"}</span>
+                      <span className="ml-2 text-xs text-slate-500">{item.expected_student_days} hari-siswa · {item.entry_mode ?? "TOTALS_ONLY"}</span>
+                      {item.state === "OPEN" && <button type="button" onClick={() => submit(item)} disabled={saving || actionClassId !== null || item.is_locked} className="ml-2 text-xs font-semibold text-brand underline disabled:opacity-50">{actionClassId === item.class_id ? "Mengirim…" : "Kirim"}</button>}
+                      {item.state === "SUBMITTED" && <button type="button" onClick={() => reopen(item)} disabled={saving || actionClassId !== null || item.is_locked} className="ml-2 text-xs font-semibold text-brand underline disabled:opacity-50">{actionClassId === item.class_id ? "Membuka…" : "Buka kembali"}</button>}
+                    </td>
                   </tr>
                 ))}
               </tbody>

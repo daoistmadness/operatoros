@@ -605,8 +605,8 @@ function TardinessReport() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {cutoffRows.map((row) => (
-                  <span key={row.jenjang} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">
-                    {row.jenjang}: {row.cutoff_time ?? 'not configured'}
+                  <span key={`${row.jenjang_id}-${row.effective_from ?? "none"}`} className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">
+                    {row.jenjang}: {row.cutoff_time ?? 'not configured'}{row.effective_from ? ` · from ${row.effective_from}` : ""}{row.source === "BACKFILL_ASSUMED" ? " · assumed" : ""}
                   </span>
                 ))}
               </div>

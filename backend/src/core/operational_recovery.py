@@ -23,7 +23,7 @@ from pathlib import Path
 os.environ.setdefault("OPERATOROS_ISOLATED_TEST", "true")
 os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/operatoros_isolated_recovery.db")
 
-from core.schema_authority import current_schema_version
+from core.schema_authority import current_schema_version, schema_head_order
 from core.schema_guard import LEDGER_TABLE, _validate_sqlite_file
 from core.schema_migrations import (
     adopt_current_sqlite_schema,
@@ -39,6 +39,7 @@ from core.attendance_followup_migration import migrate_attendance_followup_sqlit
 from core.academic_timeline_migration import migrate_academic_timeline_sqlite
 from core.attendance_calendar_migration import migrate_attendance_calendar_sqlite
 from core.attendance_submission_deadline_migration import migrate_attendance_submission_deadline_sqlite
+from core.attendance_consolidation_migration import migrate_attendance_consolidation_sqlite
 
 LOGGER = logging.getLogger("operatoros.operational_recovery")
 
@@ -334,6 +335,18 @@ def run_operational_recovery(
             Base.metadata.create_all(bind=recovery_engine)
         finally:
             recovery_engine.dispose()
+
+        # Legacy ORM tables are present before S4.7 validates its backfill sources.
+        conn = sqlite3.connect(temporary_path)
+        try:
+            conn.execute(
+                f"UPDATE {LEDGER_TABLE} SET schema_fingerprint=? WHERE version=?",
+                (_schema_fingerprint(conn), schema_head_order()[-2]),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        migrate_attendance_consolidation_sqlite(temporary_path)
 
         # Step K: Update ledger fingerprint to exact current schema fingerprint
         conn = sqlite3.connect(temporary_path)

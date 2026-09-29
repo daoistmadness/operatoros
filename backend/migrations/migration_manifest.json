@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "baseline_schema": "20260724_s42",
-  "current_schema": "20260901_s46",
+  "current_schema": "20260929_s47",
   "startup_is_migration_runner": false,
   "states": [
     {
@@ -51,7 +51,7 @@
     },
     {
       "state": "current",
-      "detection": "ledger head and immutable schema fingerprint equal 20260901_s46",
+      "detection": "ledger head and immutable schema fingerprint equal 20260929_s47",
       "schema_fingerprint": "ledger-bound",
       "migration_id": null,
       "outcome": "MIGRATION_COMPLETE",
@@ -83,7 +83,7 @@
       "description": "Atomically create the S4.2 empty baseline, then apply registered incremental migrations",
       "predecessor": null,
       "supported_source_schema": "empty",
-      "resulting_schema": "20260901_s45",
+      "resulting_schema": "20260929_s47",
       "checksum": "f44b8760448d64271798ee4e8fbef48280648614d34db88005860f51a99749d0",
       "upgrade_entry_point": "core.schema_migrations.bootstrap_fresh_sqlite_database",
       "validation_queries": ["PRAGMA integrity_check", "PRAGMA foreign_key_check", "protected table counts all zero"],
@@ -227,6 +227,33 @@
       ],
       "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
       "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, calendar, and audit values remain unchanged"
+    },
+    {
+      "id": "20260901_s46_to_20260929_s47",
+      "description": "Add append-only class-month attendance ledger and effective-dated lateness cutoffs",
+      "predecessor": "20260901_s46",
+      "supported_source_schema": "ledger-validated 20260901_s46",
+      "resulting_schema": "20260929_s47",
+      "sqlite_migration": "core.attendance_consolidation_migration.migrate_attendance_consolidation_sqlite",
+      "schema_objects": [
+        "attendance_ledger_class_months",
+        "attendance_ledger_revisions",
+        "attendance_ledger_student_totals",
+        "jenjang_lateness_policy with cutoff_time only",
+        "append-only ledger and cutoff-policy triggers",
+        "ledger revision, enrollment-year, and class-month scope constraints"
+      ],
+      "historical_backfill": "saved class totals become SUBMITTED TOTALS_ONLY revisions with S47_MIGRATION provenance; each attendance jenjang gets one BACKFILL_ASSUMED cutoff from its earliest attendance date and current configured cutoff; attendance status and duration are not recomputed",
+      "preflight": "fail without publishing changes when a legacy class-month cannot map to exactly one academic class or an attendance jenjang lacks exactly one configured cutoff",
+      "validation_queries": [
+        "source revision exactly 20260901_s46",
+        "protected row counts unchanged",
+        "PRAGMA integrity_check",
+        "PRAGMA foreign_key_check",
+        "migration idempotence"
+      ],
+      "downgrade_policy": "automatic downgrade forbidden; discard failed SQLite copy",
+      "protected_data_expectation": "existing student, identity, enrollment, attendance, grade, and audit values remain unchanged"
     }
   ]
 }

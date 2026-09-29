@@ -1,13 +1,18 @@
 import { t } from "elysia";
+import { inTransaction } from "@operatoros/db";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
 import {
   ManualAbsenceMonthlyResponseSchema,
+  ManualAbsenceLedgerActionRequestSchema,
+  ManualAbsenceLedgerActionResponseSchema,
+  ManualAbsenceLedgerReopenRequestSchema,
   ManualAbsenceQuerySchema,
   ManualAbsenceSaveRequestSchema,
   ManualAbsenceSaveResponseSchema,
 } from "@operatoros/contracts/reports";
-import { getMonthlyClassAbsenceTotals, saveMonthlyClassAbsenceTotals } from "./manual-absence";
+import { getMonthlyClassAbsenceTotals, reopenMonthlyClassAbsenceLedger, saveMonthlyClassAbsenceTotals, submitMonthlyClassAbsenceLedger } from "./manual-absence";
+import { validCalendarDate } from "./attendance-calendar";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -86,13 +91,21 @@ function validateTerm(context: AuthContext, values: { academic_year_id: number; 
   return true;
 }
 
-const cutoffBody = t.Object({ cutoff_time: t.String() });
+const cutoffBody = t.Object({ cutoff_time: t.String(), effective_from: t.String(), reason: t.String({ minLength: 5, maxLength: 1000 }) });
 
 export function configRoutes(app: any, context: AuthContext, config: { deploymentMode?: string } = {}): any {
   app.get("/api/config/jenjang", (ctx: Context) => {
     if (!currentUser(context, ctx)) return { detail: "Authentication required" };
     const available = rows(context, "SELECT DISTINCT trim(jenjang) AS jenjang FROM students WHERE jenjang IS NOT NULL AND trim(jenjang) <> '' ORDER BY jenjang").map((item) => item.jenjang);
-    const configured = rows(context, "SELECT jenjang, cutoff_time, updated_at FROM jenjang_config ORDER BY jenjang").filter((item) => available.includes(item.jenjang));
+    const configured: Row[] = [];
+    for (const jenjang of available) {
+      const ids = rows(context, "SELECT id FROM jenjangs WHERE trim(name) = ? ORDER BY id", [jenjang]);
+      const policy = ids.length === 1 ? row(context, `SELECT cutoff_time, effective_from, source, created_at AS updated_at
+        FROM jenjang_lateness_policy WHERE jenjang_id = ? ORDER BY effective_from DESC LIMIT 1`, [ids[0]!.id]) : null;
+      const legacy = row(context, "SELECT cutoff_time, updated_at FROM jenjang_config WHERE trim(jenjang) = ? ORDER BY id DESC LIMIT 1", [jenjang]);
+      if (policy) configured.push({ jenjang, ...policy });
+      else if (legacy) configured.push({ jenjang, ...legacy, effective_from: null, source: "LEGACY_UNDATED" });
+    }
     const names = new Set(configured.map((item) => item.jenjang));
     return { configured, unconfigured: available.filter((item) => !names.has(item)) };
   });
@@ -105,13 +118,33 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
     const key = ctx.params.jenjang.trim(); const cutoff = ctx.body.cutoff_time.trim();
     if (!key) return fail(ctx.set, 400, "jenjang must be a non-empty string");
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)) return fail(ctx.set, 400, "cutoff_time must be in HH:MM format");
+    if (!validCalendarDate(ctx.body.effective_from)) return fail(ctx.set, 400, "effective_from must be a valid YYYY-MM-DD date");
+    if (ctx.body.effective_from < new Date().toISOString().slice(0, 10)) return fail(ctx.set, 400, "A cutoff policy cannot be backdated.");
+    if (ctx.body.reason.trim().length < 5) return fail(ctx.set, 400, "A policy reason of at least five characters is required");
     if (!row(context, "SELECT 1 FROM students WHERE trim(jenjang) = ? LIMIT 1", [key])) return fail(ctx.set, 400, "jenjang must exist in students data");
-    context.database.client.run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(jenjang) DO UPDATE SET cutoff_time = excluded.cutoff_time, updated_at = CURRENT_TIMESTAMP", [key, cutoff]);
+    const ids = rows(context, "SELECT id FROM jenjangs WHERE trim(name) = ? ORDER BY id", [key]);
+    if (ids.length !== 1) return fail(ctx.set, 409, "Jenjang must map to exactly one academic Jenjang before recording a cutoff policy");
+    const coveredThrough = row(context, `SELECT MAX(a.date) AS latest_date FROM attendance a
+      JOIN students s ON s.id = a.student_id WHERE trim(s.jenjang) = ?`, [key])?.latest_date;
+    if (coveredThrough && ctx.body.effective_from <= String(coveredThrough)) return fail(ctx.set, 409, "A cutoff policy cannot backdate over recorded attendance.");
+    if (row(context, "SELECT id FROM jenjang_lateness_policy WHERE jenjang_id = ? AND effective_from = ?", [ids[0]!.id, ctx.body.effective_from]))
+      return fail(ctx.set, 409, "A cutoff policy already exists for this effective date; record a new effective date");
+    try {
+      inTransaction(context.database.client, () => {
+        context.database.client.run(`INSERT INTO jenjang_lateness_policy
+          (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason)
+          VALUES (?,?,?,'RECORDED',?,CURRENT_TIMESTAMP,?)`, [ids[0]!.id, ctx.body.effective_from, cutoff, user.username, ctx.body.reason.trim()]);
+        context.database.client.run("INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(jenjang) DO UPDATE SET cutoff_time = excluded.cutoff_time, updated_at = CURRENT_TIMESTAMP", [key, cutoff]);
+      });
+    } catch { return fail(ctx.set, 409, "Cutoff policy could not be recorded for this effective date"); }
     return row(context, "SELECT jenjang, cutoff_time, updated_at FROM jenjang_config WHERE jenjang = ?", [key]);
   }, { params: t.Object({ jenjang: t.String({ minLength: 1 }) }), body: cutoffBody });
   app.delete("/api/config/jenjang/:jenjang", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
-    const key = ctx.params.jenjang.trim(); const result = context.database.client.run("DELETE FROM jenjang_config WHERE jenjang = ?", [key]);
+    const key = ctx.params.jenjang.trim();
+    const jenjangId = row(context, "SELECT id FROM jenjangs WHERE trim(name) = ?", [key])?.id;
+    if (jenjangId && row(context, "SELECT id FROM jenjang_lateness_policy WHERE jenjang_id = ? LIMIT 1", [jenjangId])) return fail(ctx.set, 409, "Cutoff policy history is append-only; record a new effective-dated policy instead");
+    const result = context.database.client.run("DELETE FROM jenjang_config WHERE jenjang = ?", [key]);
     if (!result.changes) return fail(ctx.set, 404, "Jenjang config not found");
     return { deleted: key };
   }, { params: t.Object({ jenjang: t.String({ minLength: 1 }) }) });
@@ -165,6 +198,26 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
     }
   }, { body: ManualAbsenceSaveRequestSchema, response: ManualAbsenceSaveResponseSchema });
 
+  app.post("/api/config/absence-reasons/submit", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    try { return submitMonthlyClassAbsenceLedger(context, user, ctx.body); }
+    catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 409;
+      return fail(ctx.set, status, status >= 500 ? "Monthly absence ledger could not be submitted." : error instanceof Error ? error.message : "Invalid absence ledger.");
+    }
+  }, { body: ManualAbsenceLedgerActionRequestSchema, response: ManualAbsenceLedgerActionResponseSchema });
+
+  app.post("/api/config/absence-reasons/reopen", (ctx: Context) => {
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    try { return reopenMonthlyClassAbsenceLedger(context, user, ctx.body); }
+    catch (error) {
+      const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : 409;
+      return fail(ctx.set, status, status >= 500 ? "Monthly absence ledger could not be reopened." : error instanceof Error ? error.message : "Invalid ledger reopen request.");
+    }
+  }, { body: ManualAbsenceLedgerReopenRequestSchema, response: ManualAbsenceLedgerActionResponseSchema });
+
   app.get("/api/config/absence-reasons/summary", (ctx: Context) => {
     if (!actor(context, ctx, { capability: "view_attendance" })) return { detail: "Insufficient permissions" };
     const month = Number(ctx.query.month); const year = Number(ctx.query.year);
@@ -180,10 +233,11 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
       const byJenjang = new Map<string, Row>();
       for (const value of totals.classes) {
         const current = byJenjang.get(value.jenjang) ?? { jenjang: value.jenjang, month, year, total_sakit: 0, total_izin: 0, total_alfa: 0, classes_entered: 0, classes_total: 0 };
-        current.total_sakit += value.has_data ? value.sakit : 0;
-        current.total_izin += value.has_data ? value.izin : 0;
-        current.total_alfa += value.has_data ? value.alfa : 0;
-        current.classes_entered += Number(value.has_data);
+        const submitted = value.state === "SUBMITTED";
+        current.total_sakit += submitted ? value.sakit : 0;
+        current.total_izin += submitted ? value.izin : 0;
+        current.total_alfa += submitted ? value.alfa : 0;
+        current.classes_entered += Number(submitted);
         current.classes_total++;
         byJenjang.set(value.jenjang, current);
       }

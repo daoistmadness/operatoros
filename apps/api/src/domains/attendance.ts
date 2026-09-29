@@ -5,6 +5,8 @@ import {
   AttendanceCorrectionRequestSchema,
   AttendanceCorrectionReviewQuerySchema,
   AttendanceCorrectionReviewResponseSchema,
+  AttendancePeriodFinalizeRequestSchema,
+  AttendancePeriodFinalizeResponseSchema,
   ClassAttendanceEntriesResponseSchema,
   ClassAttendanceResponseSchema,
   type ClassAttendanceEntriesResponse,
@@ -15,7 +17,7 @@ import {
 import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
-import { classifyLateness, loadCutoffMap, resolveCutoff } from "./term-lateness";
+import { classifyLateness, cutoffPolicyForDate, loadCutoffPolicies } from "./term-lateness";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { earlyDepartureRoutes } from "./early-departure";
@@ -62,6 +64,28 @@ function mapClassAttendanceResponse(
 function validAttendanceDate(value: unknown): value is string { if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false; const date = new Date(`${value}T00:00:00Z`); return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value; }
 function parsePositiveInteger(value: unknown, fallback: number): number { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback; }
 function periodOpen(context: AuthContext, date: string): boolean { return !row(context, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [date]); }
+function ledgerFinalizeWarnings(context: AuthContext, date: string): Row[] {
+  return rows(context, `SELECT c.id AS class_id, c.class_name, substr(?, 1, 7) AS month,
+      COALESCE(r.state, 'MISSING') AS ledger_state
+    FROM academic_classes c JOIN academic_years y ON y.id = c.academic_year_id
+    LEFT JOIN attendance_ledger_class_months cm
+      ON cm.academic_year_id = c.academic_year_id AND cm.class_id = c.id AND cm.month = substr(?, 1, 7)
+    LEFT JOIN attendance_ledger_revisions r ON r.class_month_id = cm.id
+      AND r.revision_no = (SELECT MAX(latest.revision_no) FROM attendance_ledger_revisions latest WHERE latest.class_month_id = cm.id)
+    WHERE c.active = 1 AND y.start_date <= ? AND y.end_date >= ?
+      AND EXISTS (SELECT 1 FROM student_enrollments e WHERE e.academic_year_id = c.academic_year_id
+        AND e.academic_class_id = c.id AND e.lifecycle_state NOT IN ('DRAFT', 'VOIDED')
+        AND (e.effective_from IS NULL OR e.effective_from <= ?)
+        AND (e.effective_to IS NULL OR e.effective_to >= ?)
+        AND (e.student_id IS NOT NULL OR e.student_master_id IS NOT NULL))
+      AND NOT EXISTS (SELECT 1 FROM student_enrollments e JOIN attendance a ON a.student_id = e.student_id
+        WHERE e.academic_year_id = c.academic_year_id AND e.academic_class_id = c.id AND a.date = ?
+          AND e.lifecycle_state NOT IN ('DRAFT', 'VOIDED')
+          AND (e.effective_from IS NULL OR e.effective_from <= ?)
+          AND (e.effective_to IS NULL OR e.effective_to >= ?))
+      AND COALESCE(r.state, 'MISSING') <> 'SUBMITTED'
+    ORDER BY c.class_name, c.id`, [date, date, date, date, date, date, date, date, date]);
+}
 function currentStatus(value: Row): string { return value.override_status ?? value.status; }
 function snapshot(value: Row): Row { return { attendance_id: value.id, status: currentStatus(value), check_in: time(value.override_check_in ?? value.check_in), check_out: time(value.override_check_out ?? value.check_out), override_id: value.override_id ?? null, override_reviewed_at: value.reviewed_at ?? null }; }
 function fingerprint(value: Row): string { return createHash("sha256").update(JSON.stringify(value, Object.keys(value).sort())).digest("hex"); }
@@ -308,9 +332,9 @@ function scopedRoutes(app: any, context: AuthContext): void {
     if (!periodOpen(context, ctx.params.date_val)) return fail(ctx.set, 400, "Attendance for target date is finalized and locked.");
     const client = context.database.client; const entries = ctx.body.entries; const seen = new Set<number>(); const enrolled = new Set(rows(context, "SELECT student_id FROM student_enrollments WHERE academic_class_id = ? AND lifecycle_state = 'ACTIVE' AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]).map((value) => Number(value.student_id)));
     for (const entry of entries) { if (seen.has(entry.student_id)) return fail(ctx.set, 400, `Duplicate entry for student ID ${entry.student_id}.`); seen.add(entry.student_id); if (!enrolled.has(entry.student_id)) return fail(ctx.set, 400, `Student ID ${entry.student_id} is not effectively enrolled in class on target date.`); if (!(manualStatuses as readonly string[]).includes(entry.status.trim().toLowerCase())) return fail(ctx.set, 400, `Status '${entry.status}' is invalid.`); }
-    const classJenjang = row(context, "SELECT j.name AS jenjang FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id JOIN jenjangs j ON j.id = g.jenjang_id WHERE c.id = ?", [ctx.params.class_id])?.jenjang ?? null;
-    const cutoffMap = loadCutoffMap(context);
-    const cutoff = resolveCutoff(cutoffMap, classJenjang == null ? null : String(classJenjang));
+    const classJenjang = row(context, "SELECT j.id AS jenjang_id FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id JOIN jenjangs j ON j.id = g.jenjang_id WHERE c.id = ?", [ctx.params.class_id]);
+    const policy = classJenjang ? cutoffPolicyForDate(loadCutoffPolicies(context, [Number(classJenjang.jenjang_id)], ctx.params.date_val), Number(classJenjang.jenjang_id), ctx.params.date_val) : null;
+    const cutoff = policy == null ? null : String(policy.cutoff_time);
     // Manual entries with a usable arrival time derive on-time/late from the
     // canonical cutoff; explicit Sakit/Izin/Alfa/Absent/Incomplete and entries
     // without a usable time keep the operator status (late without a time is
@@ -342,7 +366,30 @@ function correctionRoutes(app: any, context: AuthContext): void {
   app.post("/api/attendance-corrections/:request_id/submit", (ctx: Context) => { const user = actor(context, ctx, { capability: "request_attendance_correction" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [ctx.params.request_id]); if (!value || value.state !== "DRAFT" || value.requester !== user.username && user.role !== "admin") return fail(ctx.set, 409, { code: "ATTENDANCE_CORRECTION_NOT_REVIEWABLE", message: "Correction request cannot be submitted." }); context.database.client.run("UPDATE attendance_correction_requests SET state = 'SUBMITTED', submitted_at = CURRENT_TIMESTAMP, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [value.id]); context.database.client.run("INSERT INTO attendance_correction_audit (request_id, action, prior_state, new_state, actor, effective_date, reason_code, explanation_summary, source_workflow, metadata_version, created_at) VALUES (?, 'SUBMIT', 'DRAFT', 'SUBMITTED', ?, (SELECT date FROM attendance WHERE id = ?), ?, ?, 'ATTENDANCE_CORRECTION', 1, CURRENT_TIMESTAMP)", [value.id, user.username, value.attendance_id, value.reason_code, value.explanation.slice(0, 255)]); return requestPayload(context, row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [value.id]) as Row); }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }) });
   app.post("/api/attendance-corrections/:request_id/reject", (ctx: Context) => { const user = actor(context, ctx, { capability: "reject_attendance_correction" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [ctx.params.request_id]); if (!value || value.state !== "SUBMITTED") return fail(ctx.set, 409, "Correction request is not reviewable."); const reason = ctx.body.rejection_reason.trim(); context.database.client.run("UPDATE attendance_correction_requests SET state = 'REJECTED', active_key = NULL, approver = ?, decided_at = CURRENT_TIMESTAMP, rejection_reason = ?, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [user.username, reason, value.id]); context.database.client.run("INSERT INTO attendance_correction_audit (request_id, action, prior_state, new_state, actor, effective_date, reason_code, explanation_summary, source_workflow, metadata_version, created_at) VALUES (?, 'REJECT', 'SUBMITTED', 'REJECTED', ?, (SELECT date FROM attendance WHERE id = ?), ?, ?, 'ATTENDANCE_CORRECTION', 1, CURRENT_TIMESTAMP)", [value.id, user.username, value.attendance_id, value.reason_code, reason.slice(0, 255)]); return requestPayload(context, row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [value.id]) as Row); }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }), body: t.Object({ rejection_reason: t.String({ minLength: 5, maxLength: 1000 }) }) });
   app.post("/api/attendance-corrections/:request_id/cancel", (ctx: Context) => { const user = actor(context, ctx, { capability: "cancel_attendance_correction" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [ctx.params.request_id]); if (!value || !["DRAFT", "SUBMITTED"].includes(value.state) || value.requester !== user.username && user.role !== "admin") return fail(ctx.set, 409, "Correction request cannot be cancelled."); context.database.client.run("UPDATE attendance_correction_requests SET state = 'CANCELLED', active_key = NULL, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [value.id]); context.database.client.run("INSERT INTO attendance_correction_audit (request_id, action, prior_state, new_state, actor, effective_date, reason_code, explanation_summary, source_workflow, metadata_version, created_at) VALUES (?, 'CANCEL', ?, 'CANCELLED', ?, (SELECT date FROM attendance WHERE id = ?), ?, ?, 'ATTENDANCE_CORRECTION', 1, CURRENT_TIMESTAMP)", [value.id, value.state, user.username, value.attendance_id, value.reason_code, value.explanation.slice(0, 255)]); return requestPayload(context, row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [value.id]) as Row); }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }) });
-  app.post("/api/attendance-corrections/periods/finalize", (ctx: Context) => { const user = actor(context, ctx, { capability: "finalize_attendance_period" }); if (!user) return { detail: "Insufficient permissions" }; if (ctx.body.confirmation !== "FINALIZE_ATTENDANCE_PERIOD") return fail(ctx.set, 400, "Finalization confirmation is required."); const existing = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.body.attendance_date]); const client = context.database.client; inTransaction(client, () => { if (!existing) { const result = client.run("INSERT INTO attendance_periods (attendance_date, status, finalized_by, finalized_at, reason, version) VALUES (?, 'FINALIZED', ?, CURRENT_TIMESTAMP, ?, 2)", [ctx.body.attendance_date, user.username, ctx.body.reason.trim()]); const created = row(context, "SELECT * FROM attendance_periods WHERE id = ?", [Number(result.lastInsertRowid)]) as Row; client.run("INSERT INTO attendance_period_audit (period_id, action, prior_status, new_status, actor, reason, prior_version, new_version, created_at) VALUES (?, 'FINALIZE', 'OPEN', 'FINALIZED', ?, ?, 1, 2, CURRENT_TIMESTAMP)", [created.id, user.username, ctx.body.reason.trim()]); } else { client.run("UPDATE attendance_periods SET status = 'FINALIZED', finalized_by = ?, finalized_at = CURRENT_TIMESTAMP, reason = ?, version = version + 1 WHERE id = ?", [user.username, ctx.body.reason.trim(), existing.id]); client.run("INSERT INTO attendance_period_audit (period_id, action, prior_status, new_status, actor, reason, prior_version, new_version, created_at) VALUES (?, 'REFINALIZE', ?, 'FINALIZED', ?, ?, ?, ?, CURRENT_TIMESTAMP)", [existing.id, existing.status, user.username, ctx.body.reason.trim(), existing.version, existing.version + 1]); } }); const value = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.body.attendance_date]) as Row; return { attendance_date: value.attendance_date, status: value.status, version: value.version, finalized_by: value.finalized_by }; }, { body: t.Object({ attendance_date: t.String(), reason: t.String({ minLength: 5, maxLength: 1000 }), confirmation: t.String() }) });
+  app.post("/api/attendance-corrections/periods/finalize", (ctx: Context) => {
+    const user = actor(context, ctx, { capability: "finalize_attendance_period" }); if (!user) return { detail: "Insufficient permissions" };
+    if (ctx.body.confirmation !== "FINALIZE_ATTENDANCE_PERIOD") return fail(ctx.set, 400, "Finalization confirmation is required.");
+    if (!validAttendanceDate(ctx.body.attendance_date)) return fail(ctx.set, 400, "Attendance date is invalid.");
+    const warnings = ledgerFinalizeWarnings(context, ctx.body.attendance_date);
+    if (warnings.length && ctx.body.acknowledge_ledger_warning !== true) {
+      return fail(ctx.set, 409, { message: "Acknowledge the unreported class-month warning before finalization.", requires_acknowledgement: true, ledger_warning: warnings });
+    }
+    const existing = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.body.attendance_date]);
+    const client = context.database.client;
+    inTransaction(client, () => {
+      if (!existing) {
+        const result = client.run("INSERT INTO attendance_periods (attendance_date, status, finalized_by, finalized_at, reason, version) VALUES (?, 'FINALIZED', ?, CURRENT_TIMESTAMP, ?, 2)", [ctx.body.attendance_date, user.username, ctx.body.reason.trim()]);
+        const created = row(context, "SELECT * FROM attendance_periods WHERE id = ?", [Number(result.lastInsertRowid)]) as Row;
+        client.run("INSERT INTO attendance_period_audit (period_id, action, prior_status, new_status, actor, reason, prior_version, new_version, created_at) VALUES (?, 'FINALIZE', 'OPEN', 'FINALIZED', ?, ?, 1, 2, CURRENT_TIMESTAMP)", [created.id, user.username, ctx.body.reason.trim()]);
+      } else {
+        client.run("UPDATE attendance_periods SET status = 'FINALIZED', finalized_by = ?, finalized_at = CURRENT_TIMESTAMP, reason = ?, version = version + 1 WHERE id = ?", [user.username, ctx.body.reason.trim(), existing.id]);
+        client.run("INSERT INTO attendance_period_audit (period_id, action, prior_status, new_status, actor, reason, prior_version, new_version, created_at) VALUES (?, 'REFINALIZE', ?, 'FINALIZED', ?, ?, ?, ?, CURRENT_TIMESTAMP)", [existing.id, existing.status, user.username, ctx.body.reason.trim(), existing.version, existing.version + 1]);
+      }
+    });
+    const value = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.body.attendance_date]) as Row;
+    return { attendance_date: value.attendance_date, status: value.status, version: value.version, finalized_by: value.finalized_by,
+      ledger_warning: warnings, warning_acknowledged: warnings.length > 0 };
+  }, { body: AttendancePeriodFinalizeRequestSchema, response: { 200: AttendancePeriodFinalizeResponseSchema } });
   app.post("/api/attendance-corrections/periods/reopen", (ctx: Context) => { const user = actor(context, ctx, { capability: "reopen_attendance_period" }); if (!user) return { detail: "Insufficient permissions" }; if (ctx.body.confirmation !== "REOPEN_ATTENDANCE_PERIOD") return fail(ctx.set, 400, "Reopening confirmation is required."); const value = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.body.attendance_date]); if (!value || value.status !== "FINALIZED") return fail(ctx.set, 409, "Attendance period is not finalized."); if (value.version !== ctx.body.expected_version) return fail(ctx.set, 409, "Attendance period changed; refresh and retry."); const nextVersion = value.version + 1; context.database.client.run("UPDATE attendance_periods SET status = 'OPEN', reopened_by = ?, reopened_at = CURRENT_TIMESTAMP, version = ? WHERE id = ?", [user.username, nextVersion, value.id]); context.database.client.run("INSERT INTO attendance_period_audit (period_id, action, prior_status, new_status, actor, reason, prior_version, new_version, created_at) VALUES (?, 'REOPEN', 'FINALIZED', 'OPEN', ?, ?, ?, ?, CURRENT_TIMESTAMP)", [value.id, user.username, ctx.body.reason.trim(), value.version, nextVersion]); return { attendance_date: value.attendance_date, status: "OPEN", version: nextVersion, reopened_by: user.username }; }, { body: t.Object({ attendance_date: t.String(), reason: t.String({ minLength: 5, maxLength: 1000 }), confirmation: t.String(), expected_version: t.Number({ minimum: 1 }) }) });
   app.get("/api/attendance-corrections/periods/status", (ctx: Context) => { const user = actor(context, ctx, { capability: "view_attendance_corrections" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context, "SELECT * FROM attendance_periods WHERE attendance_date = ?", [ctx.query.attendance_date]); if (!value) return { attendance_date: ctx.query.attendance_date, status: "OPEN", version: 0, audit: [] }; return { attendance_date: value.attendance_date, status: value.status, version: value.version, finalized_by: value.finalized_by, reopened_by: value.reopened_by, audit: rows(context, "SELECT action, actor, prior_status, new_status, created_at FROM attendance_period_audit WHERE period_id = ? ORDER BY id", [value.id]) }; }, { query: t.Object({ attendance_date: t.String() }) });
   app.post("/api/attendance-corrections/:request_id/approve", (ctx: Context) => {

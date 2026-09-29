@@ -8,7 +8,7 @@ import { resolveAttendanceExpectationsForDates } from "./attendance-calendar";
 type Row = Record<string, any>;
 type Counts = TermAttendanceResponse["totals"];
 type Class = { id: number; class_name: string; grade_id: number; grade: string; program_id: number; program: string; jenjang_id: number; jenjang: string };
-type ExpectedDayObserver = (date: string, studentKey: string, status: string | null) => void;
+type ExpectedDayObserver = (date: string, studentKey: string, status: string | null, enrollmentId: number, classId: number | null) => void;
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
   return context.database.client.query(sql).all(...(params as never[])) as Row[];
@@ -159,7 +159,7 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     if (expectation !== "EXPECTED") continue;
     if (!canonicalClass) unresolvedClassDays++;
     const status = day.attendance_id == null ? null : String(day.effective_status ?? "unknown");
-    observeExpectedDay?.(String(day.day), studentKey, status);
+    observeExpectedDay?.(String(day.day), studentKey, status, Number(day.enrollment_id), canonicalClass?.id ?? null);
     add(totals, status);
     bucket(byJenjang, Number(day.jenjang_id), status);
     bucket(byProgram, canonicalClass?.program_id ?? null, status);
@@ -200,6 +200,21 @@ export function attendancePeriodTotals(context: AuthContext, query: {
     grade_id: query.grade_id === undefined ? undefined : String(query.grade_id),
     class_id: query.class_id === undefined ? undefined : String(query.class_id),
   }, { start_date: query.start_date, end_date: query.end_date }).totals;
+}
+
+export function expectedStudentDaysByClassAndEnrollment(context: AuthContext, query: {
+  academic_year_id: number; start_date: string; end_date: string;
+}): Map<number, Map<number, number>> {
+  const result = new Map<number, Map<number, number>>();
+  termAttendanceInRange(context, {
+    academic_year_id: String(query.academic_year_id), term_number: "1",
+  }, { start_date: query.start_date, end_date: query.end_date }, (_date, _studentKey, _status, enrollmentId, classId) => {
+    if (classId === null) return;
+    const enrollments = result.get(classId) ?? new Map<number, number>();
+    enrollments.set(enrollmentId, (enrollments.get(enrollmentId) ?? 0) + 1);
+    result.set(classId, enrollments);
+  });
+  return result;
 }
 
 export function attendancePeriodStudents(context: AuthContext, query: {

@@ -135,7 +135,7 @@ export interface LatenessRangeTally {
   unknown_calendar_student_days: number;
   unresolved_class_student_days: number;
   other_status_student_days: number;
-  cutoffs: Map<string, { jenjang_id: number | null; jenjang: string; cutoff_time: string | null }>;
+  cutoffs: Map<string, { jenjang_id: number | null; jenjang: string; cutoff_time: string | null; effective_from: string | null; source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED" }>;
   byClass: Map<string, LatenessClassTally>;
   byStudent: Map<string, LatenessStudentTally>;
 }
@@ -155,6 +155,32 @@ function problem(status: number, code: string, message: string): never {
 function emptyClass(classId: number | null, className: string, jenjang: string): LatenessClassTally {
   return { class_id: classId, class_name: className, jenjang, expected_student_days: 0, late_events: 0,
     affected_students: new Set(), total_late_minutes: 0, known_minute_events: 0, late_dates: new Set() };
+}
+
+export function loadCutoffPolicies(context: AuthContext, jenjangIds: number[], endDate: string): Map<number, Row[]> {
+  const ids = [...new Set(jenjangIds)];
+  if (!ids.length) return new Map();
+  const values = rows(context, `SELECT jenjang_id,effective_from,cutoff_time,source FROM jenjang_lateness_policy
+    WHERE jenjang_id IN (${ids.map(() => "?").join(",")}) AND effective_from <= ? ORDER BY jenjang_id,effective_from`, [...ids, endDate]);
+  const result = new Map<number, Row[]>();
+  for (const value of values) result.set(Number(value.jenjang_id), [...(result.get(Number(value.jenjang_id)) ?? []), value]);
+  return result;
+}
+
+export function cutoffPolicyForDate(policies: Map<number, Row[]>, jenjangId: number, date: string): Row | null {
+  let effective: Row | null = null;
+  for (const value of policies.get(jenjangId) ?? []) {
+    if (String(value.effective_from) > date) break;
+    effective = value;
+  }
+  return effective;
+}
+
+function addCutoff(tally: LatenessRangeTally, jenjangId: number | null, jenjang: string, policy: Row | null): void {
+  const effectiveFrom = policy == null ? null : String(policy.effective_from);
+  const source = policy == null ? "UNCONFIGURED" : String(policy.source) as "RECORDED" | "BACKFILL_ASSUMED";
+  const key = `${jenjangId ?? "none"}:${effectiveFrom ?? "none"}`;
+  tally.cutoffs.set(key, { jenjang_id: jenjangId, jenjang, cutoff_time: policy == null ? null : String(policy.cutoff_time), effective_from: effectiveFrom, source });
 }
 
 export function tallyLatenessRange(context: AuthContext, input: { startDate: string; endDate: string; academicYearId: number; scope?: LatenessScope; scopeIsValidated?: boolean }): LatenessRangeTally {
@@ -213,7 +239,7 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
   const jenjangIds = [...new Set([...classes.map((value) => Number(value.jenjang_id)), ...enrolledJenjangIds])];
   const calendar = resolveAttendanceExpectationsForDates(context, { academicYearId: input.academicYearId, dates,
     startDate: String(year.start_date), endDate: String(year.end_date), jenjangIds });
-  const cutoffMap = loadCutoffMap(context);
+  const policies = loadCutoffPolicies(context, jenjangIds, input.endDate);
 
   const tally: LatenessRangeTally = { expected_student_days: 0, late_events: 0, affected_students: new Set(),
     total_late_minutes: 0, known_minute_events: 0, late_dates: new Set(), unknown_calendar_dates: [],
@@ -222,7 +248,12 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
   for (const jenjangId of jenjangIds) {
     if (scope.jenjang_id !== null && scope.jenjang_id !== jenjangId) continue;
     const jenjang = jenjangNameById.get(jenjangId) ?? "Unassigned";
-    tally.cutoffs.set(jenjang, { jenjang_id: jenjangId, jenjang, cutoff_time: resolveCutoff(cutoffMap, jenjang) });
+    const candidates = policies.get(jenjangId) ?? [];
+    const baseline = cutoffPolicyForDate(policies, jenjangId, input.startDate);
+    if (!baseline) addCutoff(tally, jenjangId, jenjang, null);
+    else addCutoff(tally, jenjangId, jenjang, baseline);
+    for (const policy of candidates) if (String(policy.effective_from) > input.startDate && String(policy.effective_from) <= input.endDate)
+      addCutoff(tally, jenjangId, jenjang, policy);
   }
   const unknownDates = new Set<string>();
   for (const date of dates) for (const jenjangId of jenjangIds) {
@@ -267,8 +298,9 @@ export function tallyLatenessRange(context: AuthContext, input: { startDate: str
     if (day.attendance_id == null) continue;
     const status = day.effective_status == null ? String(day.base_status ?? "unknown") : String(day.effective_status);
     if (!["on-time", "late", "sakit", "izin", "alfa"].includes(status.toLowerCase())) { tally.other_status_student_days++; continue; }
-    const cutoff = resolveCutoff(cutoffMap, canonicalJenjang, day.legacy_jenjang);
-    if (!tally.cutoffs.has(canonicalJenjang)) tally.cutoffs.set(canonicalJenjang, { jenjang_id: Number(day.jenjang_id), jenjang: canonicalJenjang, cutoff_time: cutoff });
+    const policy = cutoffPolicyForDate(policies, Number(day.jenjang_id), String(day.day));
+    const cutoff = policy == null ? null : String(policy.cutoff_time);
+    if (policy == null) addCutoff(tally, Number(day.jenjang_id), canonicalJenjang, null);
     const result = classifyLateness({ checkIn: day.effective_check_in == null ? null : String(day.effective_check_in),
       useTimeAuthority: day.override_id == null || day.override_check_in != null, status, cutoff });
     if (!result.is_late) continue;
@@ -331,7 +363,7 @@ export function termLateness(context: AuthContext, query: TermLatenessQuery): Te
     period: { academic_year_id: academicYearId, academic_year_label: String(year.label), term_id: term.id,
       term_number: termNumber, term_label: term.label, start_date: term.start_date, end_date: term.end_date, source: term.source },
     scope,
-    cutoffs: [...tally.cutoffs.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang)),
+    cutoffs: [...tally.cutoffs.values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || String(a.effective_from ?? "").localeCompare(String(b.effective_from ?? ""))),
     totals: totals(tally.expected_student_days, tally.late_events, tally.affected_students.size, tally.total_late_minutes, tally.known_minute_events),
     classes,
     students: [...tally.byStudent.entries()].map(([student_key, value]) => ({ student_key,
