@@ -42,7 +42,8 @@ def create_operatoros_checkout(base, name):
     shutil.copyfile(ROOT / 'start-dev.sh', repo / 'start-dev.sh')
     (repo / 'scripts').mkdir()
     shutil.copyfile(ROOT / 'scripts/operatoros_dev_config.py', repo / 'scripts/operatoros_dev_config.py')
-    git(repo, 'add', 'apps/api/package.json', 'apps/web/package.json', 'start-dev.sh', 'scripts/operatoros_dev_config.py')
+    shutil.copyfile(ROOT / 'scripts/operatoros-dev-runtime.ts', repo / 'scripts/operatoros-dev-runtime.ts')
+    git(repo, 'add', 'apps/api/package.json', 'apps/web/package.json', 'start-dev.sh', 'scripts/operatoros_dev_config.py', 'scripts/operatoros-dev-runtime.ts')
     git(repo, 'commit', '-m', 'fixture')
     return repo
 

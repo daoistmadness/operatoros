@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { createHash } from "node:crypto";
 import { getTableName, is, Table } from "drizzle-orm";
 import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
@@ -30,6 +31,14 @@ export interface DatabaseHandle {
 
 type SchemaObject = { name: string; type: string; tbl_name: string; sql: string | null };
 type LedgerRow = { version: string; schema_fingerprint: string };
+
+export function schemaFingerprint(client: Database): string {
+  const objects = client.query(
+    "SELECT type, name, tbl_name, COALESCE(sql, '') AS sql FROM sqlite_master " +
+    "WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations' ORDER BY type, name",
+  ).all();
+  return createHash("sha256").update(JSON.stringify(objects)).digest("hex");
+}
 
 function fail(code: string, detail: string): never {
   throw new Error(`${code}: ${detail}`);
@@ -84,6 +93,9 @@ function validateSchema(client: Database): void {
   }
   if (currentRow.schema_fingerprint !== CURRENT_SCHEMA_FINGERPRINT) {
     fail("DATABASE_CHECKSUM_MISMATCH", "schema fingerprint differs from the accepted current schema");
+  }
+  if (schemaFingerprint(client) !== CURRENT_SCHEMA_FINGERPRINT) {
+    fail("DATABASE_CHECKSUM_MISMATCH", "physical schema differs from the accepted current schema");
   }
 }
 

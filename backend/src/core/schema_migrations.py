@@ -12,6 +12,7 @@ import shutil
 import uuid
 import re
 import logging
+import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -488,6 +489,18 @@ def _complete_model_schema(target: Path) -> None:
 
 def bootstrap_fresh_sqlite_database(path: Path) -> str:
     """Create the S4.2 baseline, then run registered migrations to S4.7."""
+    if os.environ.get("OPERATOROS_TS_BOOTSTRAP_TESTS") == "1":
+        # Transitional Python test fixtures call the Bun-owned bootstrap.
+        root = Path(__file__).resolve().parents[3]
+        subprocess.run(
+            ["bun", "-e", "import {createFreshDatabase} from './packages/db/src/bootstrap.ts'; createFreshDatabase(process.argv[1]);", str(path.resolve(strict=False))],
+            cwd=root,
+            check=True,
+        )
+        for model in sorted((root / "backend/src/models").glob("*.py")):
+            if model.stem != "__init__":
+                importlib.import_module(f"models.{model.stem}")
+        return "MIGRATION_COMPLETE"
     current_version = current_schema_version()
     target = path.resolve(strict=False)
     if target.exists():

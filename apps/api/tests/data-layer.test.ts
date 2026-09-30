@@ -98,7 +98,7 @@ describe("S4.7 data layer", () => {
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
       expect(before.split(",").length).toBe(REQUIRED_TABLES.length - 13);
-      expect(ledgerBefore).toBe("20260724_s42,20260725_s43,20260831_s44,20260901_s45,20260901_s46,20260929_s47");
+      expect(ledgerBefore).toBe("20260929_s47");
       let error: unknown;
       try {
         openDatabase(path);
@@ -152,16 +152,14 @@ describe("S4.7 data layer", () => {
     }
   }, 30000);
 
-  it("accepts a complete schema that carries benign extra tables", () => {
+  it("rejects an unknown physical schema with extra tables", () => {
     const path = disposableDatabasePath("extras");
     bootstrapDatabase(path);
     try {
       const client = new Database(path);
       client.run("CREATE TABLE unrelated_legacy_notes (id INTEGER PRIMARY KEY, note TEXT)");
       client.close();
-      const handle = openDatabase(path, { readonly: true });
-      expect(handle.db).toBeDefined();
-      handle.close();
+      expect(() => openDatabase(path, { readonly: true })).toThrow("DATABASE_CHECKSUM_MISMATCH");
     } finally {
       unlinkSync(path);
     }

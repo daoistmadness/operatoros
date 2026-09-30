@@ -29,6 +29,7 @@ jobs:
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
       OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
       OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
+      OPERATOROS_TS_BOOTSTRAP_TESTS: "1"
     steps:
       - name: Check out repository
         uses: actions/checkout@v5

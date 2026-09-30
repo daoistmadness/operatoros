@@ -1,0 +1,2 @@
+src/s47-schema.sql -whitespace
+tests/fixtures/s46-schema.sql -whitespace

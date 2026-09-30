@@ -8,12 +8,9 @@ PROJECT_ROOT="$SCRIPT_DIR"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 API_DIR="$PROJECT_ROOT/apps/api"
 FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/apps/web}"
-VENV=""
-PYTHON_TOOLING_HELPER="$PROJECT_ROOT/scripts/python-tooling-env.ts"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
-RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
-PRIMARY_CONFIG_HELPER="$PROJECT_ROOT/scripts/operatoros_dev_config.py"
-DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/scripts/development_database.py"
+RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.ts"
+DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/packages/db/src/dev-db-cli.ts"
 WSL_BUN_HELPER="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
@@ -96,10 +93,10 @@ fail_preflight() {
 }
 
 resolve_worktree_identity() {
-  if ! PRIMARY_CHECKOUT_PATH="$(python3 "$PRIMARY_CONFIG_HELPER" primary-path 2>/dev/null)"; then
+  if ! PRIMARY_CHECKOUT_PATH="$(bun "$RUNTIME_HELPER" primary-path 2>/dev/null)"; then
     fail_preflight "PRIMARY_CHECKOUT_CONFIGURATION_INVALID" "The canonical primary checkout path could not be resolved."
   fi
-  if ! WORKTREE_ROLE="$(python3 "$PRIMARY_CONFIG_HELPER" worktree-role --repo "$PROJECT_ROOT")" || [[ "$WORKTREE_ROLE" != PRIMARY && "$WORKTREE_ROLE" != SECONDARY ]]; then
+  if ! WORKTREE_ROLE="$(bun "$RUNTIME_HELPER" worktree-role --repo "$PROJECT_ROOT")" || [[ "$WORKTREE_ROLE" != PRIMARY && "$WORKTREE_ROLE" != SECONDARY ]]; then
     fail_preflight "PRIMARY_CHECKOUT_CONFIGURATION_INVALID" "The current worktree role could not be resolved."
   fi
 }
@@ -208,7 +205,7 @@ report_configuration_drift() {
     printf '          Resolved database: %s\n' "$EXPECTED_PERSISTENT_DB"
   fi
 
-  if [[ -f "$BACKEND_DIR/.env" ]] && [[ "$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" dotenv-database-url --env-file "$BACKEND_DIR/.env")" == true ]]; then
+  if [[ -f "$BACKEND_DIR/.env" ]] && [[ "$(bun "$RUNTIME_HELPER" dotenv-database-url --env-file "$BACKEND_DIR/.env")" == true ]]; then
     printf '[warn] backend/.env defines DATABASE_URL; managed development ignores it\n'
     if (( VERBOSE == 1 )); then
       printf '      Managed OperatorOS development uses the canonical persistent database instead.\n'
@@ -223,18 +220,11 @@ require_command() {
 }
 
 port_is_free() {
-  "$VENV/bin/python" - "$1" "$2" <<'PY'
-import socket, sys
-host, port = sys.argv[1], int(sys.argv[2])
-family = socket.AF_INET6 if ':' in host else socket.AF_INET
-with socket.socket(family, socket.SOCK_STREAM) as sock:
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((host, port))
-PY
+  bun "$RUNTIME_HELPER" port-free --host "$1" --port "$2"
 }
 
 prepare_local_environment() {
-  if ! DEV_DATABASE="$($VENV/bin/python "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR" --expected-schema "$CURRENT_SCHEMA_VERSION")"; then
+  if ! DEV_DATABASE="$(bun "$DEVELOPMENT_DATABASE_HELPER" ensure --repo "$PROJECT_ROOT" --data-dir "$OPERATOROS_DATA_DIR" --expected-schema "$CURRENT_SCHEMA_VERSION")"; then
     fail_preflight "${DEV_DATABASE:-PERSISTENT_DEVELOPMENT_DATABASE_OPERATION_FAILED}" "Use make dev-db-status to inspect the persistent development database."
   fi
   [[ "$DEV_DATABASE" == "$EXPECTED_PERSISTENT_DB" ]] \
@@ -247,7 +237,7 @@ prepare_local_environment() {
     mkdir -p "$DEV_STATE_DIR"
     chmod 700 "$DEV_STATE_DIR"
     if [[ ! -s "$DEV_SECRET_FILE" ]]; then
-      "$VENV/bin/python" -c 'import secrets,sys; open(sys.argv[1],"x",encoding="utf-8").write(secrets.token_urlsafe(48))' "$DEV_SECRET_FILE"
+      bun "$RUNTIME_HELPER" random-secret > "$DEV_SECRET_FILE"
       chmod 600 "$DEV_SECRET_FILE"
     fi
     export AUTH_COOKIE_SECRET="$(<"$DEV_SECRET_FILE")"
@@ -272,10 +262,6 @@ run_preflight() {
   if ! operatoros_wsl_prepare_bun "$PROJECT_ROOT"; then
     fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
   fi
-  if ! PYTHON="$(bun "$PYTHON_TOOLING_HELPER" --repo "$PROJECT_ROOT" print-executable)"; then
-    fail_preflight "Python tooling environment is missing or stale" "Run: mise run python:bootstrap"
-  fi
-  VENV="$(dirname "$(dirname "$PYTHON")")"
   JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
   printf '  [ok] Linux Bun %s\n' "$OPERATOROS_BUN_VERSION"
   [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
@@ -290,7 +276,7 @@ safe_cleanup_or_block() {
   local options=(--human)
   (( VERBOSE == 0 )) || options+=(--verbose)
   (( CLEAN_STALE == 1 )) || options+=(--no-clean)
-  if ! "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$host" --port "$port" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${options[@]}"; then
+  if ! bun "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$host" --port "$port" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${options[@]}"; then
     printf '\nNo OperatorOS services were started.\n'
     exit 2
   fi
@@ -299,8 +285,8 @@ safe_cleanup_or_block() {
 check_existing_session() {
   local active_session options=(--human)
   (( VERBOSE == 0 )) || options+=(--verbose)
-  if ! active_session="$($VENV/bin/python "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
-    "$VENV/bin/python" "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" "${options[@]}"
+  if ! active_session="$(bun "$RUNTIME_HELPER" require-no-active-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")"; then
+    bun "$RUNTIME_HELPER" status --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" "${options[@]}"
     printf '\nSINGLE_ACTIVE_DEVELOPMENT_SESSION: no services were started.\n'
     printf 'Unverified session records and processes are preserved. Inspect with make dev-sessions-status.\n'
     exit 2
@@ -314,7 +300,7 @@ secondary_active_port_conflict() {
     host="$BACKEND_HOST"
     [[ "$port" == "$FRONTEND_PORT" ]] && host="$FRONTEND_HOST"
     port_is_free "$host" "$port" 2>/dev/null && continue
-    decision="$($VENV/bin/python "$RUNTIME_HELPER" classify-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --port "$port" --decision 2>/dev/null || printf UNKNOWN_OWNER)"
+    decision="$(bun "$RUNTIME_HELPER" classify-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --port "$port" --decision 2>/dev/null || printf UNKNOWN_OWNER)"
     case "$decision" in
       OTHER_WORKTREE_ACTIVE_SESSION|OPERATOROS_OTHER_WORKTREE) return 0 ;;
     esac
@@ -323,7 +309,7 @@ secondary_active_port_conflict() {
 }
 
 resolve_shared_registry() {
-  if ! REGISTRY_DIR="$($VENV/bin/python "$RUNTIME_HELPER" registry-path --repo "$PROJECT_ROOT")" || [[ -z "$REGISTRY_DIR" ]]; then
+  if ! REGISTRY_DIR="$(bun "$RUNTIME_HELPER" registry-path --repo "$PROJECT_ROOT")" || [[ -z "$REGISTRY_DIR" ]]; then
     fail_preflight "SESSION_REGISTRY_UNAVAILABLE" "The shared Git common-directory session registry could not be resolved."
   fi
   mkdir -p "$REGISTRY_DIR"
@@ -354,20 +340,20 @@ allocate_ports() {
     local _frontend_orig="$FRONTEND_PORT" _backend_orig="$BACKEND_PORT"
     if ! port_is_free "$FRONTEND_HOST" "$FRONTEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
       if (( VERBOSE == 1 )); then
-        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --human --verbose || true
+        bun "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --human --verbose || true
       else
-        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
+        bun "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
       fi
     fi
     if ! port_is_free "$BACKEND_HOST" "$BACKEND_PORT" 2>/dev/null && (( CLEAN_STALE == 1 )); then
       if (( VERBOSE == 1 )); then
-        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --human --verbose || true
+        bun "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" --human --verbose || true
       else
-        "$VENV/bin/python" "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
+        bun "$RUNTIME_HELPER" cleanup-port --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --host "$BACKEND_HOST" --port "$BACKEND_PORT" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" > /dev/null 2>&1 || true
       fi
     fi
-    FRONTEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$FRONTEND_HOST" --preferred "$FRONTEND_PORT" --maximum 5199 --auto)" || fail_preflight "No frontend port is available" "Allowed range: 5173-5199."
-    BACKEND_PORT="$("$VENV/bin/python" "$RUNTIME_HELPER" allocate --host "$BACKEND_HOST" --preferred "$BACKEND_PORT" --maximum 8099 --auto)" || fail_preflight "No backend port is available" "Allowed range: 8000-8099."
+    FRONTEND_PORT="$(bun "$RUNTIME_HELPER" allocate --host "$FRONTEND_HOST" --preferred "$FRONTEND_PORT" --maximum 5199 --auto)" || fail_preflight "No frontend port is available" "Allowed range: 5173-5199."
+    BACKEND_PORT="$(bun "$RUNTIME_HELPER" allocate --host "$BACKEND_HOST" --preferred "$BACKEND_PORT" --maximum 8099 --auto)" || fail_preflight "No backend port is available" "Allowed range: 8000-8099."
     if [[ "$FRONTEND_PORT" != "$_frontend_orig" || "$BACKEND_PORT" != "$_backend_orig" ]]; then
       printf '\nRequested ports are occupied.\n'
       printf 'Selected:\n'
@@ -421,7 +407,7 @@ cleanup() {
       (( VERBOSE == 1 )) || cleanup_pid_args+=(--human)
       [[ -n "$FRONTEND_PID" ]] && cleanup_pid_args+=(--frontend-pid "$FRONTEND_PID")
       [[ -n "$BACKEND_PID" ]] && cleanup_pid_args+=(--backend-pid "$BACKEND_PID")
-      cleanup_result="$(setsid "$VENV/bin/python" "$RUNTIME_HELPER" stop-owned-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${cleanup_pid_args[@]}")" || cleanup_status=$?
+      cleanup_result="$(setsid bun "$RUNTIME_HELPER" stop-owned-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${cleanup_pid_args[@]}")" || cleanup_status=$?
       printf '%s\n' "$cleanup_result"
       if (( cleanup_status == 0 )); then
         [[ -n "$FRONTEND_PID" ]] && printf '  [ok] Frontend stopped\n'
@@ -434,8 +420,8 @@ cleanup() {
   fi
   if [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 && "$FINALIZATION_STARTED" == 0 && -f "$SESSION_DIR/session.json" ]]; then
     FINALIZATION_STARTED=1
-    setsid "$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status stopped || true
-    setsid "$VENV/bin/python" "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
+    setsid bun "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status stopped || true
+    setsid bun "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
   fi
   if (( LOCK_HELD == 1 )); then flock -u 9 || true; LOCK_HELD=0; fi
 }
@@ -531,8 +517,8 @@ DEV_DATABASE="$EXPECTED_PERSISTENT_DB"
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 prepare_local_environment
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
-SETUP_TOKEN="$($VENV/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
-"$VENV/bin/python" "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --backend-runtime "$BACKEND_RUNTIME" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
+SETUP_TOKEN="$(bun "$RUNTIME_HELPER" random-secret)"
+bun "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --mode "$MODE" --token "$SESSION_TOKEN" --javascript-runtime "$JS_RUNTIME" --javascript-runtime-version "$JS_RUNTIME_VERSION" --backend-runtime "$BACKEND_RUNTIME" --launcher-pid "$$" --frontend-host "$FRONTEND_HOST" --frontend-port "$FRONTEND_PORT" --backend-host "$BACKEND_HOST" --backend-port "$BACKEND_PORT" --database-path "$DEV_DATABASE" >/dev/null
 SESSION_INITIALIZED=1
 
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
@@ -554,7 +540,7 @@ LAUNCHER_STATE=STARTING_BACKEND
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
-"$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role backend --token "$SESSION_TOKEN" --pid "$BACKEND_PID" --port "$BACKEND_PORT" || true
+bun "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role backend --token "$SESSION_TOKEN" --pid "$BACKEND_PID" --port "$BACKEND_PORT" || true
 
 # A first-run persistent database has no administrator yet, but that is still
 # a healthy backend.  Establish backend readiness before the frontend starts
@@ -581,7 +567,7 @@ LAUNCHER_STATE=STARTING_FRONTEND
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
-"$VENV/bin/python" "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true
+bun "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true
 
 if wait_until_ready Frontend "$OPERATOROS_FRONTEND_URL" "$FRONTEND_PID" "$FRONTEND_LOG"; then
   :
@@ -590,7 +576,7 @@ else
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
   exit "$readiness_rc"
 fi
-"$VENV/bin/python" "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status ready
+bun "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status ready
 flock -u 9; LOCK_HELD=0
 
 GIT_COMMIT="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
