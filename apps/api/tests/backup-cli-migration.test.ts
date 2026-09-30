@@ -1,6 +1,6 @@
 import { expect, it } from "bun:test";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
@@ -27,6 +27,12 @@ it("backs up and restores only an explicit disposable data root", () => {
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
+    const active = openDatabase(databasePath);
+    expect(command("backup").stderr.toString()).toContain("DATABASE_OPEN_HANDLE");
+    active.close();
+    const wal = openDatabase(databasePath);
+    wal.client.exec("PRAGMA journal_mode=WAL");
+    wal.close();
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
     const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
@@ -34,9 +40,22 @@ it("backs up and restores only an explicit disposable data root", () => {
 
     const restore = command("restore-disposable", artifact, restored);
     expect(restore.exitCode).toBe(0);
+    expect(existsSync(join(restored, "operatoros.sqlite-wal"))).toBe(false);
+    expect(existsSync(join(restored, "operatoros.sqlite-shm"))).toBe(false);
     const handle = openDatabase(join(restored, "operatoros.sqlite"), { readonly: true });
     handle.close();
+    writeFileSync(`${databasePath}-wal`, "");
+    writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
     expect(command("migrate-existing", artifact, source).stdout.toString()).toContain("NOOP 20260929_s47");
+    expect(existsSync(`${databasePath}-wal`)).toBe(false);
+    expect(existsSync(`${databasePath}-shm`)).toBe(false);
+
+    writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
+    writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
+    expect(command("migrate-existing", artifact, source).stderr.toString()).toContain("DATABASE_SIDECAR_PRESENT");
+    expect(existsSync(`${databasePath}-wal`)).toBe(true);
+    rmSync(`${databasePath}-wal`);
+    rmSync(`${databasePath}-shm`);
 
     const changed = openDatabase(databasePath);
     changed.client.run("INSERT INTO students (id,name) VALUES (1,'Synthetic Student')");
