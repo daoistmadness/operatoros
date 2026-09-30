@@ -11,16 +11,7 @@ function pathFor(label: string): string {
 }
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const python = (() => {
-  const candidates = [process.env.OPERATOROS_PYTHON_VENV ? `${process.env.OPERATOROS_PYTHON_VENV}/bin/python` : null, `${process.env.HOME}/.cache/operatoros/python/venv/bin/python`, "/usr/bin/python3"].filter(Boolean) as string[];
-  for (const c of candidates) {
-    try {
-      const r = Bun.spawnSync(["test", "-x", c]);
-      if (r.exitCode === 0) return c;
-    } catch {}
-  }
-  return "python3";
-})();
+import { python } from "./python";;
 
 function seed(path: string): void {
   const script = [

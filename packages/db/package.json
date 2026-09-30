@@ -5,7 +5,10 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "resolve-data-dir": "bun src/data-dir-cli.ts"
+    "resolve-data-dir": "bun src/data-dir-cli.ts",
+    "db:bootstrap": "bun src/db-cli.ts bootstrap",
+    "db:migrate-existing": "bun src/db-cli.ts migrate-existing",
+    "db:validate": "bun src/db-cli.ts validate"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2"

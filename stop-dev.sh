@@ -3,8 +3,7 @@ set -Eeuo pipefail
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
-HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.py"
-PYTHON=""
+HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.ts"
 SESSION=""
 ALL=0
 
@@ -19,10 +18,7 @@ done
 
 source "$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 operatoros_wsl_prepare_bun "$PROJECT_ROOT" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
-PYTHON="$(bun "$PROJECT_ROOT/scripts/python-tooling-env.ts" --repo "$PROJECT_ROOT" print-executable)"
-
-[[ -x "$PYTHON" ]] || { printf 'OperatorOS Python environment unavailable. No process was terminated.\n' >&2; exit 2; }
 arguments=(stop --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT")
 [[ -n "$SESSION" ]] && arguments+=(--session "$SESSION")
 (( ALL == 1 )) && arguments+=(--all)
-exec "$PYTHON" "$HELPER" "${arguments[@]}"
+exec bun "$HELPER" "${arguments[@]}"
