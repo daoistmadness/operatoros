@@ -64,7 +64,11 @@ function AcademicSection({ report }: { report: MonthlyReportResponse }) {
     <CardHeader><CardTitle>Academic Snapshot — Academic Year Records</CardTitle><p className="text-sm text-muted-foreground">{report.report_period.sections.academics.label}. Grades have no assessment-month field, so these values are not month-bound.</p></CardHeader>
     <CardContent>
       {!academic.availability ? <p role="status" className="rounded-md bg-surface-muted p-4 text-sm">{academic.reason ?? "Academic data is unavailable."}</p> : <>
-        <div className="mb-5 grid gap-3 sm:grid-cols-3"><SummaryCard label="Sumatif Average" value={value(academic.sumatif_average)} /><SummaryCard label="Formatif Average" value={value(academic.formatif_average)} /><SummaryCard label="Below KKM" value={academic.below_kkm_count} /></div>
+        <dl className="mb-5 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+          <div><dt className="text-muted-foreground">Sumatif Average</dt><dd className="font-bold">{value(academic.sumatif_average)}</dd></div>
+          <div><dt className="text-muted-foreground">Formatif Average</dt><dd className="font-bold">{value(academic.formatif_average)}</dd></div>
+          <div><dt className="text-muted-foreground">Below KKM</dt><dd className="font-bold">{academic.below_kkm_count}</dd></div>
+        </dl>
         <div className="overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-muted-foreground"><th className="p-3">Subject</th><th className="p-3">Jenjang</th><th className="p-3">Sumatif</th><th className="p-3">Formatif</th><th className="p-3">Below KKM</th></tr></thead><tbody>{academic.by_subject.map((row) => <tr className="border-b" key={`${row.subject_id}-${row.jenjang}`}><th className="p-3 text-left">{row.subject_name}</th><td className="p-3">{row.jenjang}</td><td className="p-3">{value(row.sumatif_average)}</td><td className="p-3">{value(row.formatif_average)}</td><td className="p-3">{row.below_kkm_count}</td></tr>)}</tbody></table></div>
       </>}
     </CardContent>
@@ -74,14 +78,15 @@ function AcademicSection({ report }: { report: MonthlyReportResponse }) {
 function MonthlyReportView({ report }: { report: MonthlyReportResponse }) {
   const quality = report.data_quality;
   return <div className="space-y-6" aria-live="polite">
-    <section className="grid gap-3 sm:grid-cols-2">
-      <SummaryCard label="Students" value={report.population.total_students} note={report.report_period.sections.population.label} />
-      <SummaryCard label="Classes" value={report.population.total_classes} note="Academic Year enrollment snapshot" />
-    </section>
+    <p className="text-sm text-muted-foreground">{report.report_period.sections.population.label}: <strong className="text-foreground">{report.population.total_students} students</strong> across <strong className="text-foreground">{report.population.total_classes} classes</strong>.</p>
     <AttendanceSection report={report} />
     <AcademicSection report={report} />
     <Card><CardHeader><CardTitle>Data Quality</CardTitle><p className="text-sm text-muted-foreground">Summary signals for this report scope.</p></CardHeader><CardContent className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><SummaryCard label="Unresolved Attendance Conflicts" value={quality.unresolved_conflicts} /><SummaryCard label="Observed Classes With Gaps" value={quality.partial_observed_classes} /><SummaryCard label="Not Reported Classes" value={quality.not_reported_classes} /><SummaryCard label="Empty Grade Cells" value={quality.empty_grade_cells} /></div>
+      <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
+        <div><dt className="text-muted-foreground">Observed Classes With Gaps</dt><dd className="font-bold">{quality.partial_observed_classes}</dd></div>
+        <div><dt className="text-muted-foreground">Not Reported Classes</dt><dd className="font-bold">{quality.not_reported_classes}</dd></div>
+        <div><dt className="text-muted-foreground">Empty Grade Cells</dt><dd className="font-bold">{quality.empty_grade_cells}</dd></div>
+      </dl>
       {quality.warnings.map((warning) => <p className="text-sm text-muted-foreground" key={warning}>{warning}</p>)}
       <div className="flex flex-wrap gap-4 text-sm font-semibold"><Link className="text-primary underline" to="/analytics/data-quality">Review Data Quality</Link><Link className="text-primary underline" to="/analytics/recapitulation">Open Population Overview</Link></div>
     </CardContent></Card>
