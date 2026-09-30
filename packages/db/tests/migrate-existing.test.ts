@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
-import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint } from "../src";
@@ -34,6 +34,16 @@ function academicScope(db: Database): void {
 }
 
 describe("Bun S4.6 to S4.7 migration", () => {
+  it("migrates a cleanly closed WAL-mode source without leaving sidecars", () => withDatabases((_, path) => {
+    const db = source(path);
+    db.exec("PRAGMA journal_mode=WAL");
+    db.close();
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    expect(existsSync(`${path}-wal`)).toBe(false);
+    expect(existsSync(`${path}-shm`)).toBe(false);
+  }));
+
   it("transforms synthetic attendance, preserves identities, and matches fresh structure", () => withDatabases((_, path, freshPath) => {
     const db = source(path);
     academicScope(db);
