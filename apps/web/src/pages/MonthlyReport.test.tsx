@@ -35,8 +35,8 @@ const report = {
     observed: { class_count: 1, expected_student_days: 10, hadir_student_days: 7, sakit_student_days: 1, izin_student_days: 0, alfa_student_days: 0, recorded_student_days: 8, unrecorded_student_days: 2, other_status_student_days: 0, attendance_rate: 70, coverage_rate: 80 },
     lateness: { availability: "PARTIAL", late_events: 1, late_minutes: 5, unknown_duration_events: 0, late_event_rate: null, late_among_present: null, covered_expected_student_days: 10, available_hadir_student_days: 7, scope_expected_student_days: 30, coverage_rate: 33.3 }, conflict_count: 1,
   } },
-  academic_summary: { availability: false, reason: "No academic rows", sumatif_average: null, formatif_average: null, below_kkm_count: 0, by_subject: [] },
-  data_quality: { empty_grade_cells: 0, unmapped_levels: [], not_reported_classes: 1, partial_observed_classes: 1, unresolved_conflicts: 1, warnings: ["Academic values are not month-bound."] },
+  academic_summary: { availability: true, reason: null, sumatif_average: 87, formatif_average: 90, below_kkm_count: 2, by_subject: [{ subject_id: 1, subject_name: "Mathematics", jenjang: "Primary", sumatif_average: 87, formatif_average: 90, below_kkm_count: 2 }] },
+  data_quality: { empty_grade_cells: 4, unmapped_levels: [], not_reported_classes: 1, partial_observed_classes: 1, unresolved_conflicts: 1, warnings: ["Academic values are not month-bound."] },
 } as unknown as MonthlyReportResponse;
 
 let root: Root | undefined;
@@ -59,6 +59,11 @@ describe("Monthly Report view", () => {
     expect(container?.textContent).toContain("OBSERVED");
     expect(container?.textContent).toContain("Unrecorded");
     expect(container?.textContent).toContain("CONFLICT");
+    expect(container?.textContent).toContain("12 students across 3 classes");
+    expect(container?.textContent).toContain("Sumatif Average");
+    expect(container?.textContent).toContain("Mathematics");
+    expect(container?.textContent).toContain("Observed Classes With Gaps");
+    expect(container?.textContent).not.toContain("Unresolved Attendance Conflicts");
     expect(container?.textContent).toContain("Beta");
     expect(container?.textContent).toContain("Unavailable");
     expect(container?.textContent).toContain("Gamma");
