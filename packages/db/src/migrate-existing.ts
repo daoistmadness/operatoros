@@ -4,10 +4,10 @@ import { dirname, join } from "node:path";
 import { assertDatabasePath, schemaFingerprint, validateDatabase } from "./connection";
 import { installS47Schema, installS47Triggers } from "./bootstrap";
 import { legacySchemaFingerprint } from "./legacy-fingerprint";
-import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS } from "./manifest";
+import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS } from "./manifest";
 
 const SOURCE_VERSION = "20260901_s46";
-const SOURCE_FINGERPRINT = "5b5ac2055aee5e90ee0f83ca5d309bd3503f8ecb61372cb491113de55cfb0ee4";
+type SourceVariant = keyof typeof S46_SOURCE_VARIANTS;
 type Ledger = { version: string; schema_fingerprint: string };
 type Named = { name: string };
 type LegacyTotal = { id: number; class_name: string; month: number; year: number; sakit: number; izin: number; alfa: number; note: string | null; entered_at: string | null; updated_at: string | null };
@@ -25,7 +25,7 @@ function date(value: unknown): string {
   return text;
 }
 
-function sourceVersion(client: Database): "S46" | "CURRENT" {
+function sourceVariant(client: Database): SourceVariant | "CURRENT" {
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check: string };
   if (integrity.integrity_check !== "ok" || client.query("PRAGMA foreign_key_check").all().length) throw new Error("DATABASE_INTEGRITY_FAILED");
   const hasLedger = client.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='operatoros_schema_migrations'").get();
@@ -44,8 +44,9 @@ function sourceVersion(client: Database): "S46" | "CURRENT" {
   }
   const source = rows.find((row) => row.version === SOURCE_VERSION)!;
   if (source.schema_fingerprint !== legacySchemaFingerprint(client)) throw new Error("DATABASE_MIGRATION_CHECKSUM_MISMATCH");
-  if (source.schema_fingerprint !== SOURCE_FINGERPRINT) throw new Error("UNSUPPORTED_SCHEMA: unapproved S4.6 fingerprint");
-  return "S46";
+  const variant = Object.entries(S46_SOURCE_VARIANTS).find(([, fingerprint]) => fingerprint === source.schema_fingerprint)?.[0] as SourceVariant | undefined;
+  if (!variant) throw new Error("UNAPPROVED_SOURCE_SCHEMA");
+  return variant;
 }
 
 function copyData(target: Database): void {
@@ -117,7 +118,8 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
   try {
     source.exec("PRAGMA foreign_keys = ON");
     source.exec("BEGIN EXCLUSIVE");
-    if (sourceVersion(source) === "CURRENT") { source.exec("ROLLBACK"); return "NOOP"; }
+    const variant = sourceVariant(source);
+    if (variant === "CURRENT") { source.exec("ROLLBACK"); return "NOOP"; }
     temporary = mkdtempSync(join(dirname(path), ".operatoros-s47-"));
     chmodSync(temporary, 0o700);
     const snapshot = join(temporary, "source.sqlite");
@@ -135,7 +137,7 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
         if (schemaFingerprint(target) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("MIGRATION_SCHEMA_MISMATCH");
         const counts = Object.fromEntries(["students", "student_masters", "student_device_identities", "attendance", "student_enrollments"].map((table) =>
           [table, (target.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count]));
-        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S47_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, SOURCE_VERSION, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ protected_counts: counts }), new Date().toISOString()]);
+        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S47_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, SOURCE_VERSION, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ source_variant: variant, protected_counts: counts }), new Date().toISOString()]);
         validateDatabase(target);
       }).immediate();
       target.run("DETACH DATABASE previous");
