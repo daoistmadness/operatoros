@@ -33,10 +33,22 @@ it("backs up and restores only an explicit disposable data root", () => {
     const wal = openDatabase(databasePath);
     wal.client.exec("PRAGMA journal_mode=WAL");
     wal.close();
+    writeFileSync(`${databasePath}-wal`, "");
+    writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
+    expect(existsSync(`${databasePath}-wal`)).toBe(false);
+    expect(existsSync(`${databasePath}-shm`)).toBe(false);
     const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
     expect(artifact).toStartWith(join(source, "backups"));
+
+    writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
+    writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
+    expect(command("backup").stderr.toString()).toContain("DATABASE_SIDECAR_PRESENT");
+    expect(existsSync(`${databasePath}-wal`)).toBe(true);
+    expect(existsSync(`${databasePath}-shm`)).toBe(true);
+    rmSync(`${databasePath}-wal`);
+    rmSync(`${databasePath}-shm`);
 
     const restore = command("restore-disposable", artifact, restored);
     expect(restore.exitCode).toBe(0);
