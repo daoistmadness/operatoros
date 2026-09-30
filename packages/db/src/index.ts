@@ -4,8 +4,11 @@ export {
   openDatabase,
   validateDatabase,
   REQUIRED_TABLES,
+  schemaFingerprint,
 } from "./connection";
 export type { AppDatabase, DatabaseHandle } from "./connection";
+export { createFreshDatabase } from "./bootstrap";
+export { migrateExistingDatabase } from "./migrate-existing";
 export {
   assertDatabaseMigrationSafe,
   ensureOperatorOSDirectories,

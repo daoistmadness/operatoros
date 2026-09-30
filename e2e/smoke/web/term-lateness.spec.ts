@@ -7,9 +7,10 @@ const dateAfterDays = (days: number) => {
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 };
-const targetDate = dateAfterDays(3);
-const nextDate = dateAfterDays(4);
-const laterDate = dateAfterDays(5);
+const daysToNextMonday = (8 - new Date().getUTCDay()) % 7 || 7;
+const targetDate = dateAfterDays(daysToNextMonday);
+const nextDate = dateAfterDays(daysToNextMonday + 1);
+const laterDate = dateAfterDays(daysToNextMonday + 2);
 
 async function login(page: Page) {
   await page.goto("/login");

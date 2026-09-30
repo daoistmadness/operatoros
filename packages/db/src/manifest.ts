@@ -22,7 +22,7 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "79d3451a8ce6bebea9bcc6c8cd9c8ba605e939173d18ad5367210a914fbb4dbd";
+  "171c0e5e92d080a3f81931ec8c7f299c07cb153d038bba3dd890de96a6dd4f8d";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -35,6 +35,10 @@ export const REQUIRED_TRIGGERS = [
   "trg_attendance_override_history_no_update",
   "trg_attendance_period_audit_no_delete",
   "trg_attendance_period_audit_no_update",
+  "trg_dismissal_policy_audits_no_delete",
+  "trg_dismissal_policy_audits_no_update",
+  "trg_early_departure_excuse_audits_no_delete",
+  "trg_early_departure_excuse_audits_no_update",
   "trg_attendance_ledger_class_month_no_delete",
   "trg_attendance_ledger_class_month_no_update",
   "trg_attendance_ledger_revision_no_delete",
@@ -61,6 +65,8 @@ export const REQUIRED_TRIGGERS = [
   "trg_student_master_change_history_no_update",
   "trg_student_progression_audit_no_delete",
   "trg_student_progression_audit_no_update",
+  "trg_teacher_class_assignment_audit_no_delete",
+  "trg_teacher_class_assignment_audit_no_update",
 ] as const;
 
 export const PROTECTED_DATABASE_BASENAME = "attendance.db";

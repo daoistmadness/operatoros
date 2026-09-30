@@ -46,7 +46,8 @@ def create_repo(tmp_path: Path, name: str = "primary") -> Path:
     (repo / "scripts").mkdir()
     shutil.copy(ROOT / "start-dev.sh", repo / "start-dev.sh")
     shutil.copy(ROOT / "scripts/operatoros_dev_config.py", repo / "scripts/operatoros_dev_config.py")
-    git(repo, "add", "apps/api/package.json", "apps/web/package.json", "package.json", "bun.lock", "mise.toml", "scripts/operatoros_dev_config.py", "start-dev.sh")
+    shutil.copy(ROOT / "scripts/operatoros-dev-runtime.ts", repo / "scripts/operatoros-dev-runtime.ts")
+    git(repo, "add", "apps/api/package.json", "apps/web/package.json", "package.json", "bun.lock", "mise.toml", "scripts/operatoros_dev_config.py", "scripts/operatoros-dev-runtime.ts", "start-dev.sh")
     git(repo, "commit", "-m", "initial")
     origin = tmp_path / f"{name}-origin.git"
     git(tmp_path, "init", "--bare", str(origin))
@@ -129,6 +130,7 @@ def test_secondary_is_exempt_and_reports_na(tmp_path: Path):
     secondary = tmp_path / "secondary"
     git(primary, "worktree", "add", str(secondary), "-b", "task")
     shutil.copy(ROOT / "start-dev.sh", secondary / "start-dev.sh")
+    shutil.copy(ROOT / "scripts/operatoros-dev-runtime.ts", secondary / "scripts/operatoros-dev-runtime.ts")
     shutil.copy(ROOT / "scripts/operatoros_dev_config.py", secondary / "scripts/operatoros_dev_config.py")
     result = run_launcher(secondary, primary)
     assert result.returncode == 2
