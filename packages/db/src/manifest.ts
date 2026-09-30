@@ -15,6 +15,11 @@ export const SCHEMA_MIGRATIONS = [
 
 export const CURRENT_SCHEMA_VERSION = SCHEMA_MIGRATIONS.at(-1)!;
 
+export const S46_SOURCE_VARIANTS = {
+  S4_6_VARIANT_A: "5b5ac2055aee5e90ee0f83ca5d309bd3503f8ecb61372cb491113de55cfb0ee4",
+  S4_6_VARIANT_B: "dd798cf0171b3221577774cc1396cb5e1d57c33d927587fc2fc0c2cd45a88b0a",
+} as const;
+
 export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 | undefined {
   const leftIndex = SCHEMA_MIGRATIONS.indexOf(left as (typeof SCHEMA_MIGRATIONS)[number]);
   const rightIndex = SCHEMA_MIGRATIONS.indexOf(right as (typeof SCHEMA_MIGRATIONS)[number]);
