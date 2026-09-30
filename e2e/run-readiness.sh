@@ -14,7 +14,7 @@ fi
 runtime_root="$(mktemp -d /tmp/operatoros-readiness-e2e.XXXXXX)"
 workspace="$runtime_root/workspace"
 database="$workspace/state/operatoros.sqlite"
-mkdir -p "$workspace/state" "$workspace/runtime" "$workspace/logs" "$workspace/state/backups"
+mkdir -p "$workspace/runtime" "$workspace/logs"
 
 export OPERATOROS_E2E_ADMIN_USERNAME="operatoros_readiness_admin"
 export OPERATOROS_E2E_ADMIN_PASSWORD="Readiness-E2E-2026-Secure!"
@@ -34,7 +34,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-(cd "$repo_root/backend" && export PYTHONPATH="$PWD/src" && "$python" -m core.schema_migrations initialize-fresh --database "$database") >"$workspace/logs/initialize.log" 2>&1
+"$OPERATOROS_BUN_REALPATH" "$repo_root/packages/db/src/db-cli.ts" bootstrap --data-dir "$OPERATOROS_DATA_DIR" >"$workspace/logs/initialize.log" 2>&1
+mkdir -p "$workspace/state/backups"
 "$python" "$repo_root/e2e/helpers/seed-readiness-database.py" --database "$database" >"$workspace/logs/seed.log" 2>&1
 bash "$repo_root/e2e/start-elysia-test-stack.sh" "$workspace" "$workspace/logs"
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"

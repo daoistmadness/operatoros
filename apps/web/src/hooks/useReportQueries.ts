@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAnnualReport, getMonthlyManagementReport, getMonthlyReport, getReportFilters, type ReportQuery, type ReportScope, type ReportType } from "../api/reports";
+import { getAnnualReport, getMonthlyReport, getReportFilters, type ReportQuery, type ReportScope } from "../api/reports";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export const useReportFilters = (academicYearId: number | null, scope: ReportScope) => useQuery({
@@ -7,14 +7,14 @@ export const useReportFilters = (academicYearId: number | null, scope: ReportSco
   queryFn: () => getReportFilters({ academic_year_id: academicYearId, scope }),
 });
 
-export const useExecutiveReport = (type: ReportType, query: ReportQuery | null) => useQuery({
-  queryKey: query ? queryKeys.reports.detail(type, query) : [...queryKeys.reports.all, type, "idle"],
-  queryFn: () => type === "monthly" ? getMonthlyReport(query as ReportQuery) : getAnnualReport(query as ReportQuery),
+export const useMonthlyReport = (query: ReportQuery | null) => useQuery({
+  queryKey: query ? queryKeys.reports.detail("monthly", query) : [...queryKeys.reports.all, "monthly", "idle"],
+  queryFn: () => getMonthlyReport(query as ReportQuery),
   enabled: query !== null,
 });
 
-export const useMonthlyManagementReport = (query: ReportQuery | null) => useQuery({
-  queryKey: query ? queryKeys.managementReports.monthly(query) : [...queryKeys.managementReports.all, "idle"],
-  queryFn: () => getMonthlyManagementReport(query as ReportQuery),
+export const useAnnualReport = (query: ReportQuery | null) => useQuery({
+  queryKey: query ? queryKeys.reports.detail("annual", query) : [...queryKeys.reports.all, "annual", "idle"],
+  queryFn: () => getAnnualReport(query as ReportQuery),
   enabled: query !== null,
 });

@@ -60,11 +60,8 @@ cleanup() {
 trap cleanup EXIT
 
 export DATABASE_URL="sqlite:///$database"
-(
-  cd "$repo_root/backend"
-  export PYTHONPATH="$repo_root/backend/src"
-  "$python" -m core.schema_migrations initialize-fresh --database "$database"
-) >"$logs/fixture-initialize.log" 2>&1
+"$OPERATOROS_BUN_REALPATH" "$repo_root/packages/db/src/db-cli.ts" bootstrap --data-dir "$OPERATOROS_DATA_DIR" >"$logs/fixture-initialize.log" 2>&1
+mkdir -p "$workspace/state/backups"
 
 export AUTH_COOKIE_SECRET="operatoros-e2e-cookie-secret-2026-at-least-32-characters"
 export BACKUP_ENCRYPTION_KEY="b3BlcmF0b3Jvcy1lMmUtYmFja3VwLWtleS0yMDI2LTA="

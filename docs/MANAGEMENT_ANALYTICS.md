@@ -25,14 +25,36 @@ Average Late Minutes, and Late Event Rate. Late Event Rate is Late Events
 divided by Expected Student-Days. Management Review Excel uses both canonical
 services as its value source.
 
-The Executive Reports page is the monthly and annual leadership workflow.
-Monthly Management Report is the recurring detailed monthly artifact. Both
-pages use the shared `useReportFilters` query owner and cache key for identical
-`GET /api/reports/filters` requests.
+Reports & Reviews is the formal-report destination. Its Monthly view is the
+single recurring management report. The Annual view remains an Academic Year
+leadership summary. Term Review remains a separate term-scoped Student Profile
+and Management Review workflow. Only the active view renders. Monthly and
+Annual share `useReportFilters` ownership for `GET /api/reports/filters`.
 
 Report filters use `class_id` as canonical identity. The backend still accepts
 legacy `class_name` at this boundary. When both are supplied, `class_id` wins.
-Existing report route URLs remain unchanged.
+The legacy monthly, annual, management-monthly, and Student Profile Review URLs
+redirect to their matching Reports & Reviews view.
+
+### Monthly workflow consolidation
+
+The origin/main comparison found these overlapping monthly sections:
+
+| Section | Executive Monthly | Monthly Management | Classification | Monthly Report decision |
+|---|---|---|---|---|
+| Executive summary | Six cards for students, attendance, lateness, KKM, and completeness | Ten cards for students, classes, attendance statuses, lateness, KKM, and completeness | `SAME_DATA_DIFFERENT_PRESENTATION` with several mismatched or unavailable values | Keep only useful student/class context cards. Use the canonical attendance and academic sections for their values. |
+| Enrollment | Academic Year distribution tables by level and class | Population chart and tables | `SAME_DATA_DIFFERENT_PRESENTATION` | Keep student/class context counts. Leave the distribution analysis in Population Overview. |
+| Demographics | None | Religion, gender, and residential-area distributions | `MANAGEMENT_ONLY` | Remove from the recurring report. Population Overview already owns this exploratory analysis and its known/unknown context. |
+| Attendance | Monthly aggregate cards and class/level tables | Monthly aggregate cards backed by the same executive builder | `IDENTICAL` source with duplicate presentation | Replace both with resolver-backed class rows and one summary. Preserve basis, coverage, Unrecorded, and conflict. |
+| Academic performance | Academic Year averages and subject table | Academic Year averages in summary form | `SAME_DATA_DIFFERENT_PRESENTATION` | Keep one Academic Year snapshot. Label it as not month-bound. |
+| Data quality | Completeness cards and warnings | Reconciliation and section coverage detail | `SAME_DATA_DIFFERENT_PRESENTATION` | Keep a concise report-scope summary and link to Data Quality. |
+| Annual trends and comparisons | Annual-only chart, table, and comparisons | None | `EXECUTIVE_ONLY` | Keep in Annual. |
+| Report time-base note | Shared month, population, and academic scope note | Same scope note | `LEGACY_DUPLICATE` | Keep scope labels in the canonical DTO and relevant section descriptions. |
+| Monthly PDF and XLSX | Executive Monthly filenames and workbook | Management Monthly filenames and workbook | `LEGACY_DUPLICATE` | Route both compatibility paths through `buildMonthlyReport`; use one Monthly export family. |
+
+Monthly does not contain month-attributed grades. The contract labels those
+values as Academic Year records. It also does not copy demographics into a
+formal report when Population Overview owns that exploratory analysis.
 
 `term_id` identifies a configured Academic Term. Academic Analytics
 `term_1` through `term_4` select grading-period categories. Student Insights
@@ -42,11 +64,17 @@ values are not interchangeable.
 
 ## Retained legacy management-summary service
 
-Caller audit result: `INTERNAL_CALLERS_EXIST`. The report builder and the
-management-summary PDF and Excel routes still call `managementSummary` in
-`apps/api/src/domains/reports.ts`. Tests also cover the compatibility routes.
-No current Web page is their owner. The API and export routes remain intact and
-are marked `RETIRE_LATER`; they are not the current metric authority.
+`buildMonthlyReport` in `apps/api/src/domains/reports.ts` is the Monthly
+business-value authority for the API, PDF, and XLSX outputs. The former
+management monthly endpoint remains an admin-only compatibility route to that
+same builder. Annual remains a separate Academic Year report, and Term Review
+retains its canonical `term_id` workflow and Management Review workbook.
+
+Caller audit result: `INTERNAL_CALLERS_EXIST`. `historicalTrends` uses
+`managementSummary` across Academic Years and Terms. The Management Analytics
+export builder also uses it. The API and export routes remain intact and are
+marked `RETIRE_LATER`; no current Web page owns the direct management-summary
+endpoint, and documented external callers are not known.
 
 Their mixed attendance percentage is unavailable because canonical Hadir
 events and the manual monthly S/I/A ledger do not share a proven denominator.
