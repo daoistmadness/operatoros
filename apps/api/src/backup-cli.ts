@@ -127,6 +127,7 @@ function backup(): void {
   const directory = mkdtempSync(join(backupDir, ".operatoros-backup-cli-")); chmodSync(directory, 0o700);
   const name = nextFilename(backupDir);
   try {
+    clearOrphanedEmptyWal(databasePath);
     const database = openOfflineSnapshot(databasePath); const plaintext = database.serialize(); database.close();
     const encrypted = encryptBackup(plaintext, value.backupEncryption);
     const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger: "manual", schema_version: "unknown", sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
