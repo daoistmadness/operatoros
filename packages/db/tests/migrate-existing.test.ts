@@ -1,0 +1,114 @@
+import { describe, expect, it } from "bun:test";
+import { Database } from "bun:sqlite";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint } from "../src";
+import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
+import { migrateExistingDatabase } from "../src/migrate-existing";
+
+const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
+
+function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
+  const root = mkdtempSync(join(tmpdir(), "operatoros-ts-migration-"));
+  try { run(root, join(root, "source.sqlite"), join(root, "fresh.sqlite")); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+}
+
+function source(path: string): Database {
+  const db = new Database(path, { create: true });
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec(s46Sql);
+  expect(legacySchemaFingerprint(db)).toBe("5b5ac2055aee5e90ee0f83ca5d309bd3503f8ecb61372cb491113de55cfb0ee4");
+  db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260901_s46',NULL,?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [legacySchemaFingerprint(db)]);
+  return db;
+}
+
+function academicScope(db: Database): void {
+  db.run("INSERT INTO academic_years (id,label,start_date,end_date,status,is_default) VALUES (1,'2026/2027','2026-07-01','2027-06-30','active',1)");
+  db.run("INSERT INTO jenjangs (id,code,name,level) VALUES (1,'SD','SD','SD')");
+  db.run("INSERT INTO jenjang_config (id,jenjang,cutoff_time,updated_at) VALUES (1,'SD','07:30','2026-07-01')");
+  db.run("INSERT INTO academic_programs (id,jenjang_id,name) VALUES (1,1,'General')");
+  db.run("INSERT INTO academic_grades (id,jenjang_id,program_id,name,sequence_number) VALUES (1,1,1,'Grade 1',1)");
+  db.run("INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,1,1,'1A')");
+}
+
+describe("Bun S4.6 to S4.7 migration", () => {
+  it("transforms synthetic attendance, preserves identities, and matches fresh structure", () => withDatabases((_, path, freshPath) => {
+    const db = source(path);
+    academicScope(db);
+    db.run("INSERT INTO students (id,name,jenjang) VALUES (11,'Same Name','SD')");
+    db.run("INSERT INTO student_masters (id,full_name,normalized_name,nipd) VALUES ('master-11','Same Name','same name','N011')");
+    db.run("INSERT INTO attendance (id,student_id,date,late_duration,late_source,is_absent,status) VALUES (21,11,'2026-08-03',0,'manual',0,'present')");
+    db.run("INSERT INTO absence_reason_class_entries (id,class_name,month,year,sakit,izin,alfa,entered_by,entered_at,updated_at) VALUES (31,'1A',8,2026,1,0,0,'test','2026-08-31','2026-08-31')");
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    expect(migrateExistingDatabase(path)).toBe("NOOP");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT version FROM operatoros_schema_migrations WHERE version = ?").get(CURRENT_SCHEMA_VERSION)).toEqual({ version: CURRENT_SCHEMA_VERSION });
+      expect(migrated.client.query("SELECT id, name FROM students WHERE id=11").get()).toEqual({ id: 11, name: "Same Name" });
+      expect(migrated.client.query("SELECT nipd FROM student_masters WHERE id='master-11'").get()).toEqual({ nipd: "N011" });
+      expect(migrated.client.query("SELECT cutoff_time, source FROM jenjang_lateness_policy").get()).toEqual({ cutoff_time: "07:30", source: "BACKFILL_ASSUMED" });
+      expect(migrated.client.query("SELECT sakit, legacy_source_entry_id FROM attendance_ledger_revisions").get()).toEqual({ sakit: 1, legacy_source_entry_id: 31 });
+      migrated.client.run("INSERT INTO students (id,name,jenjang) VALUES (12,'Same Name','SD')");
+      expect(() => migrated.client.run("INSERT INTO student_masters (id,full_name,normalized_name,nipd) VALUES ('master-12','Same Name','same name','N011')")).toThrow();
+      expect(() => migrated.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027','2027-07-01','2028-06-30','active',0)")).toThrow();
+      expect(() => migrated.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2027/2028','2027-07-01','2028-06-30','active',1)")).toThrow();
+      expect(() => migrated.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2027/2028','2027-07-01','2028-06-30','invalid',0)")).toThrow();
+      for (const status of ["upcoming", "active", "closed"]) {
+        migrated.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES (?, '2027-07-01','2028-06-30',?,0)", [`${status}-year`, status]);
+      }
+      migrated.client.run("INSERT INTO student_master_change_history (student_master_id,action,source,changed_by) VALUES ('master-11','UPDATE','synthetic-test','test')");
+      expect(() => migrated.client.run("UPDATE student_master_change_history SET action='DELETE'")).toThrow();
+      expect(() => migrated.client.run("DELETE FROM student_master_change_history")).toThrow();
+      expect(() => migrated.client.run("UPDATE attendance_ledger_revisions SET sakit=2")).toThrow();
+      expect(() => migrated.client.run("DELETE FROM attendance_ledger_revisions")).toThrow();
+      expect(() => migrated.client.run("INSERT INTO attendance_ledger_student_totals (revision_id,enrollment_id,sakit,izin,alfa) VALUES (999,999,1,0,0)")).toThrow();
+      expect((migrated.client.query("SELECT COUNT(*) AS count FROM operatoros_schema_migrations WHERE version=?").get(CURRENT_SCHEMA_VERSION) as { count: number }).count).toBe(1);
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { migrated.close(); fresh.close(); }
+  }));
+
+  it("leaves S4.6 unchanged after a failed data preflight and can then retry", () => withDatabases((_, path) => {
+    const db = source(path);
+    db.run("INSERT INTO absence_reason_class_entries (id,class_name,month,year,sakit,izin,alfa,entered_by,entered_at,updated_at) VALUES (31,'Missing Class',8,2026,1,0,0,'test','2026-08-31','2026-08-31')");
+    db.close();
+    const before = readFileSync(path);
+    expect(() => migrateExistingDatabase(path)).toThrow("legacy class-month mapping ambiguous");
+    expect(readFileSync(path)).toEqual(before);
+    const unchanged = new Database(path);
+    expect(unchanged.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC LIMIT 1").get()).toEqual({ version: "20260901_s46" });
+    expect(unchanged.query("SELECT name FROM sqlite_master WHERE name='attendance_ledger_revisions'").get()).toBeNull();
+    expect(unchanged.query("SELECT id FROM absence_reason_class_entries").get()).toEqual({ id: 31 });
+    academicScope(unchanged);
+    unchanged.run("UPDATE absence_reason_class_entries SET class_name='1A' WHERE id=31");
+    unchanged.close();
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+  }));
+
+  it("refuses missing, unknown, newer, and mismatched source metadata", () => withDatabases((root, path) => {
+    expect(() => migrateExistingDatabase(path)).toThrow("DATABASE_PATH_MISSING");
+    const db = source(path);
+    db.run("UPDATE operatoros_schema_migrations SET schema_fingerprint='wrong'");
+    db.close();
+    expect(() => migrateExistingDatabase(path)).toThrow("DATABASE_MIGRATION_CHECKSUM_MISMATCH");
+    const newer = new Database(path);
+    newer.run("UPDATE operatoros_schema_migrations SET version='20990101_s99'");
+    newer.close();
+    expect(() => migrateExistingDatabase(path)).toThrow("unknown migration metadata");
+    expect(root).toContain("operatoros-ts-migration-");
+  }));
+
+  it("refuses a self-consistent but unapproved S4.6 physical schema", () => withDatabases((_, path) => {
+    const db = source(path);
+    db.exec("CREATE INDEX synthetic_extra_index ON students(name)");
+    db.run("UPDATE operatoros_schema_migrations SET schema_fingerprint=?", [legacySchemaFingerprint(db)]);
+    db.close();
+    expect(() => migrateExistingDatabase(path)).toThrow("UNSUPPORTED_SCHEMA: unapproved S4.6 fingerprint");
+  }));
+});

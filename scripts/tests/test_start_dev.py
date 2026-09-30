@@ -89,7 +89,7 @@ def test_controlled_preflight_failure_does_not_finalize_missing_session(tmp_path
 
     assert result.returncode == 2
     output = result.stdout + result.stderr
-    assert "DEVELOPMENT_DATABASE_INTEGRITY_FAILURE" in output
+    assert "DATA_DIR_LEGACY_DATABASE_REQUIRES_MANUAL_MIGRATION" in output
     assert output.count("No OperatorOS services were started.") == 1
     assert "Traceback" not in output
     assert "FileNotFoundError" not in output

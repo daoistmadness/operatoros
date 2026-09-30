@@ -154,7 +154,11 @@ export const academic_years = sqliteTable("academic_years", {
     "is_default": integer().notNull(),
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+    uniqueIndex("ix_academic_years_label").on(table.label),
+    uniqueIndex("uq_academic_year_default").on(table.is_default).where(sql`${table.is_default} = 1`),
+    check("ck_academic_year_status", sql`${table.status} IN ('upcoming', 'active', 'closed')`),
+]);
 export const attendance_ledger_class_months = sqliteTable("attendance_ledger_class_months", {
     "id": integer().primaryKey(),
     "academic_year_id": integer().notNull().references(() => academic_years.id, { onDelete: "restrict" }),
@@ -226,7 +230,11 @@ export const attendance = sqliteTable("attendance", {
     "exception": text(),
     "week": text(),
     "status": text().notNull(),
-});
+}, (table) => [
+    index("idx_attendance_date").on(table.date),
+    index("idx_attendance_status").on(table.status),
+    index("idx_attendance_student_id").on(table.student_id),
+]);
 export const attendance_calendar_exceptions = sqliteTable("attendance_calendar_exceptions", {
     "id": integer().primaryKey(),
     "academic_year_id": integer().notNull(),
@@ -988,7 +996,9 @@ export const student_masters = sqliteTable("student_masters", {
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "created_by": text(),
     "updated_by": text(),
-});
+}, (table) => [
+    uniqueIndex("uq_student_masters_nipd").on(table.nipd).where(sql`${table.nipd} IS NOT NULL`),
+]);
 export const student_parent_guardians = sqliteTable("student_parent_guardians", {
     "id": integer().primaryKey(),
     "student_master_id": text().notNull(),
@@ -1062,7 +1072,9 @@ export const students = sqliteTable("students", {
     "jenjang": text(),
     "class_name": text(),
     "id_updated_at": text(),
-});
+}, (table) => [
+    index("idx_students_class_name").on(table.class_name),
+]);
 export const subjects = sqliteTable("subjects", {
     "id": integer().primaryKey(),
     "name": text().notNull(),

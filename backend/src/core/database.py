@@ -467,15 +467,18 @@ def init_db():
     startup_tables = [
         table for table in Base.metadata.sorted_tables if table.name not in {"users", "sessions"}
     ]
-    Base.metadata.create_all(bind=engine, tables=startup_tables)
-    _ensure_academic_master_compatibility()
+    ts_bootstrap_fixture = os.environ.get("OPERATOROS_TS_BOOTSTRAP_TESTS") == "1"
+    if not ts_bootstrap_fixture:
+        Base.metadata.create_all(bind=engine, tables=startup_tables)
+        _ensure_academic_master_compatibility()
     run_grade_ledger_patches(engine)
     _seed_grade_ledger_minimum(engine)
-    _ensure_students_schema_compatibility()
-    _ensure_upload_logs_schema_compatibility()
-    _ensure_attendance_schema_compatibility()
-    _ensure_attendance_index_compatibility()
-    _ensure_student_foundation_compatibility()
+    if not ts_bootstrap_fixture:
+        _ensure_students_schema_compatibility()
+        _ensure_upload_logs_schema_compatibility()
+        _ensure_attendance_schema_compatibility()
+        _ensure_attendance_index_compatibility()
+        _ensure_student_foundation_compatibility()
     from services.report_builder import seed_report_builder_defaults
 
     seed_report_builder_defaults()
