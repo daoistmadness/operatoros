@@ -1,101 +1,50 @@
-import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
-import {
-  AcademicSection, AnnualTrendsSection, AttendanceSection, DataQualityPanel,
-  DEFAULT_REPORT_SCOPE, DEFAULT_REPORT_TYPE, displayValue, ExecutiveSummaryCards,
-  ReportFeedback, selectFilterDefaults, staleReport, StudentDistributionSection,
-} from "./ExecutiveReports";
+import React, { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExecutiveReport, ReportFiltersResponse } from "../api/reports";
-import appSource from "../App.tsx?raw";
+import ExecutiveReports from "./ExecutiveReports";
 
-vi.mock("react-chartjs-2", () => ({
-  Bar: ({ data }: { data: { labels: string[] } }) => <div data-chart="bar">{data.labels.join("|")}</div>,
-  Line: ({ data }: { data: { labels: string[] } }) => <div data-chart="line">{data.labels.join("|")}</div>,
+const mocks = vi.hoisted(() => ({ report: null as unknown, refetch: vi.fn() }));
+vi.mock("../hooks/useReportQueries", () => ({
+  useReportFilters: () => ({ data: { default_academic_year_id: 2, academic_years: [{ id: 2, name: "2025/2026", start_date: "2025-07-01", end_date: "2026-06-30", is_default: true }], months: [], scopes: [{ value: "combined", label: "Combined" }], classes: [], class_options: [], subjects: [] } as ReportFiltersResponse, isPending: false, error: null, refetch: vi.fn() }),
+  useAnnualReport: (query: unknown) => ({ data: query ? mocks.report : undefined, isPending: false, isFetching: false, error: null, refetch: mocks.refetch }),
 }));
-vi.mock("chart.js", () => ({
-  Chart: { register: vi.fn() }, CategoryScale: {}, LinearScale: {}, BarElement: {}, LineElement: {},
-  PointElement: {}, Tooltip: {}, Legend: {},
-}));
+vi.mock("../api/reports", () => ({ downloadReportBlob: vi.fn(), exportAnnualReport: vi.fn() }));
+vi.mock("react-chartjs-2", () => ({ Line: () => <div data-chart="annual-trends" /> }));
+vi.mock("chart.js", () => ({ Chart: { register: vi.fn() }, CategoryScale: {}, LinearScale: {}, LineElement: {}, PointElement: {}, Tooltip: {}, Legend: {} }));
 
-const summary = { present: 18, sakit: 2, izin: 1, alfa: 1, incomplete: 3, late_days: 4, late_minutes: 27, attendance_rate: null, late_rate: 22.22 };
-const report: ExecutiveReport = {
-  meta: { report_type: "annual", scope: "combined", academic_year: { id: 2, name: "2025/2026" }, period: { start: "2025-07-01", end: "2026-06-30" }, generated_at: "2026-07-13T00:00:00Z" },
-  report_period: { selected_month: "", academic_year_id: 2, academic_year_label: "2025/2026", sections: { attendance: { basis: "academic_year", month_bound: false, label: "Academic Year 2025/2026" }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: "Academic Year 2025/2026" }, academics: { basis: "available_academic_year_records", month_bound: false, label: "Available Academic Records - AY 2025/2026" } } },
-  executive_summary: { total_students: 25, male_students: 0, female_students: 0, attendance_rate: null, late_rate: 22.22, late_minutes: 27, below_kkm_count: 6, data_completeness_rate: null },
-  student_distribution: { by_level: [{ name: "Primary", count: 25, percentage: 100 }], by_class: [{ name: "P1A", count: 25, percentage: 100 }], by_gender: [], by_religion: [], by_domicile: [] },
-  attendance_summary: summary,
-  attendance_by_level: [{ level: "Primary", ...summary }],
-  academic_summary: { availability: false, reason: "No valid grade rows for this selection.", sumatif_average: null, formatif_average: null, below_kkm_count: 0, by_subject: [] },
-  trends: [
-    { month: "2025-09", label: "September 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
-    { month: "2025-07", label: "July 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
-    { month: "2025-08", label: "August 2025", ...summary, attendance_denominator: null, sumatif_average: null, formatif_average: null, below_kkm_count: 0 },
-  ],
+const report = {
+  meta: { report_type: "annual", scope: "combined", academic_year: { id: 2, name: "2025/2026" }, period: { start: "2025-07-01", end: "2026-06-30" }, generated_at: "2026-06-30T00:00:00Z" },
+  report_period: { selected_month: "", academic_year_id: 2, academic_year_label: "2025/2026", sections: { attendance: { basis: "attendance_basis_resolver_by_class_month", month_bound: false, label: "Academic Year 2025/2026" }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: "Academic Year 2025/2026" }, academics: { basis: "academic_year_records_without_assessment_dates", month_bound: false, label: "Academic Year Records 2025/2026" } } },
+  executive_summary: { total_students: 2, attendance_rate: 100, late_rate: 50, late_event_rate: 10, late_minutes: 5, below_kkm_count: 0, data_completeness_rate: null },
+  student_distribution: { by_level: [], by_class: [], by_gender: [], by_religion: [], by_domicile: [] },
+  attendance_summary: { present: 20, sakit: 0, izin: 0, alfa: 0, incomplete: 0, late_days: 2, late_minutes: 5, attendance_rate: 100, coverage_rate: 100, expected_student_days: 20, recorded_student_days: 20, unrecorded_student_days: 0, late_event_rate: 10, late_among_present: 50, lateness_availability: "AVAILABLE", lateness_coverage_rate: 100, late_unknown_duration_events: 0, basis_counts: { observed: 2, declared: 1, not_reported: 1 }, conflict_count: 1 },
+  attendance_by_level: [{ level: "Primary", present: 20, sakit: 0, izin: 0, alfa: 0, incomplete: 0, attendance_denominator: 20, attendance_rate: 100, recorded_student_days: 20, unrecorded_student_days: 0, coverage_rate: 100, observed_class_months: 2, declared_class_months: 1, not_reported_class_months: 1, late_events: 2, late_event_rate: 10, lateness_availability: "AVAILABLE", lateness_coverage_rate: 100, late_minutes: 5, unknown_duration_events: 0, conflict_count: 1 }],
+  academic_summary: { availability: false, reason: "No academic rows", sumatif_average: null, formatif_average: null, below_kkm_count: 0, by_subject: [] },
+  trends: [{ month: "2025-07", label: "July 2025", present: 20, sakit: 0, izin: 0, alfa: 0, incomplete: 0, attendance_denominator: 20, attendance_rate: 100, recorded_student_days: 20, unrecorded_student_days: 0, coverage_rate: 100, basis_counts: { observed: 2, declared: 1, not_reported: 1 }, conflict_count: 1, late_days: 2, late_event_rate: 10, lateness_availability: "AVAILABLE", lateness_coverage_rate: 100, late_minutes: 5, unknown_duration_events: 0, late_rate: 50, sumatif_average: null, formatif_average: null, below_kkm_count: 0 }],
   comparisons: { highest_attendance_month: null, lowest_attendance_month: null, highest_attendance_level: null, lowest_attendance_level: null },
-  data_quality: { missing_gender: 25, missing_religion: 25, missing_domicile: 25, incomplete_attendance: 3, empty_grade_cells: 7, unmapped_levels: ["Legacy X"], warnings: ["Demographic fields are unavailable.", "Population is an academic-year enrollment snapshot.", "Monthly academic trends are unavailable.", "Attendance Rate is unavailable because the report combines separate sources."] },
-};
+  data_quality: { not_reported_class_months: 1, partial_observed_class_months: 0, unresolved_conflicts: 1, empty_grade_cells: 0, unmapped_levels: [], warnings: ["Annual attendance rates and coverage summarize OBSERVED class-months."] },
+} as unknown as ExecutiveReport;
 
-const markup = (node: React.ReactNode) => renderToStaticMarkup(<>{node}</>);
+let root: Root | undefined;
+let container: HTMLDivElement | undefined;
 
-describe("Executive Reports presentation", () => {
-  it("allows the application main area to shrink at narrow viewports", () => {
-    expect(appSource).toContain('className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8');
-    expect(appSource).toContain("navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'");
-    expect(appSource).toContain('aria-label={navigationOpen ? \'Close navigation\' : \'Open navigation\'}');
-  });
-  it("defines Monthly as the default report type", () => expect(DEFAULT_REPORT_TYPE).toBe("monthly"));
-  it("defines Combined as the default scope", () => expect(DEFAULT_REPORT_SCOPE).toBe("combined"));
+afterEach(async () => { if (root) await act(async () => root?.unmount()); container?.remove(); root = undefined; container = undefined; mocks.report = null; vi.clearAllMocks(); });
 
-  it("selects the current month inside the backend default academic year", () => {
-    const filters = { default_academic_year_id: 2, academic_years: [{ id: 1 }, { id: 2, start_date: "2025-07-01", end_date: "2026-06-30" }], months: [{ value: "2025-07" }, { value: "2026-02" }] } as ReportFiltersResponse;
-    expect(selectFilterDefaults(filters, new Date("2026-02-15T00:00:00Z"))).toEqual({ academicYearId: 2, month: "2026-02" });
-  });
-
-  it("clears stale report data", () => expect(staleReport()).toBeNull());
-
-  it("renders a loading state", () => expect(markup(<ReportFeedback loading error={null} />)).toContain("Loading report"));
-  it("renders an API error state", () => expect(markup(<ReportFeedback loading={false} error="Request failed" />)).toContain("Request failed"));
-  it("renders the explicit empty state", () => expect(markup(<ReportFeedback loading={false} error={null} />)).toContain("Generate an executive report"));
-
-  it("maps KPI values without recomputing them", () => {
-    const html = markup(<ExecutiveSummaryCards report={report} />);
-    expect(html).toContain("Total Students"); expect(html).toContain(">25<"); expect(html).toContain("22.22%"); expect(html).toContain("Not Available");
-  });
-
-  it("renders null KPI values as unavailable", () => {
-    expect(displayValue(null, "%")).toBe("Not Available");
-    expect(markup(<ExecutiveSummaryCards report={report} />)).toContain("Not Available");
-  });
-
-  it("maps attendance values to an auditable level table", () => {
-    const html = markup(<AttendanceSection report={report} />);
-    expect(html).toContain("Attendance by Level chart"); expect(html).toContain("Primary"); expect(html).toContain(">18<"); expect(html).toContain("27");
-  });
-
-  it("renders the backend academic unavailable reason", () => {
-    expect(markup(<AcademicSection report={report} />)).toContain("No valid grade rows for this selection.");
-  });
-
-  it("discloses unavailable demographics without empty charts", () => {
-    const html = markup(<StudentDistributionSection report={report} />);
-    expect(html).toContain("Gender, religion, and domicile distributions are unavailable");
-    expect(html).not.toContain("Gender chart");
-  });
-
-  it("shows all backend data-quality warnings and unmapped levels", () => {
-    const html = markup(<DataQualityPanel report={report} />);
-    expect(html).toContain("Legacy X"); expect(html).toContain("Demographic fields are unavailable."); expect(html).toContain("academic-year enrollment snapshot"); expect(html).toContain("Monthly academic trends are unavailable.");
-  });
-
-  it("preserves the chronological order supplied by the backend", () => {
-    const html = markup(<AnnualTrendsSection report={report} />);
-    expect(html.indexOf("September 2025")).toBeLessThan(html.indexOf("July 2025"));
-    expect(html.indexOf("July 2025")).toBeLessThan(html.indexOf("August 2025"));
-  });
-
-  it("renders null annual comparisons as unavailable", () => {
-    const html = markup(<AnnualTrendsSection report={report} />);
-    expect(html).toContain("Lowest Attendance Month"); expect(html).toContain("Not Available");
+describe("Annual report view", () => {
+  it("keeps its Academic Year scope explicit and shows basis and coverage", async () => {
+    mocks.report = report;
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => root?.render(<MemoryRouter><ExecutiveReports /></MemoryRouter>));
+    await vi.waitFor(() => expect(container?.querySelector("#annual-report-year")?.textContent).toContain("2025/2026"));
+    const button = Array.from(container.querySelectorAll("button")).find((item) => item.textContent?.includes("Generate Report"));
+    await act(async () => button?.click());
+    await vi.waitFor(() => expect(container?.textContent).toContain("Academic-Year Attendance"));
+    expect(container.textContent).toContain("Academic Year 2025/2026");
+    expect(container.textContent).toContain("Observed Class-Months");
+    expect(container.textContent).toContain("Not Reported");
+    expect(container.textContent).toContain("Coverage");
+    expect(container.querySelectorAll("[data-chart='annual-trends']")).toHaveLength(1);
   });
 });

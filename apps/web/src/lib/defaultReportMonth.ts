@@ -5,6 +5,15 @@ export interface DefaultMonthInput {
   availableMonths: string[];
 }
 
+export function selectReportFilterDefaults(filters: import("../api/reports").ReportFiltersResponse, currentDate = new Date()) {
+  const academicYearId = filters.default_academic_year_id || filters.academic_years[0]?.id || null;
+  const year = filters.academic_years.find((item) => item.id === academicYearId);
+  return {
+    academicYearId,
+    month: selectDefaultReportMonth({ academicYearStart: year?.start_date, academicYearEnd: year?.end_date, currentDate, availableMonths: filters.months.map((item) => item.value) }),
+  };
+}
+
 const monthValue = (date: Date) => `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 
 export function selectDefaultReportMonth({ academicYearStart, academicYearEnd, currentDate, availableMonths }: DefaultMonthInput): string {

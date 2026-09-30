@@ -6,7 +6,7 @@ import * as reportsApi from "../api/reports";
 import { useReportFilters } from "./useReportQueries";
 
 vi.mock("../api/reports", () => ({
-  getAnnualReport: vi.fn(), getMonthlyManagementReport: vi.fn(), getMonthlyReport: vi.fn(), getReportFilters: vi.fn(),
+  getAnnualReport: vi.fn(), getMonthlyReport: vi.fn(), getReportFilters: vi.fn(),
 }));
 
 let root: Root | undefined;

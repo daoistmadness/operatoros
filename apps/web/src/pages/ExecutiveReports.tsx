@@ -1,187 +1,98 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bar, Line } from "react-chartjs-2";
-import {
-  BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Tooltip,
-} from "chart.js";
-import {
-  AlertTriangle, CalendarDays, CheckCircle2, Clock3, Download, GraduationCap,
-  Loader2, RefreshCw, ShieldAlert, Users,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Line } from "react-chartjs-2";
+import { CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Tooltip } from "chart.js";
+import { Download, Printer, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
-
-import {
-  downloadReportBlob, ExecutiveReport, exportAnnualReport, exportMonthlyReport,
-  ReportFiltersResponse, ReportQuery, ReportScope, ReportType,
-} from "../api/reports";
-import { useExecutiveReport, useReportFilters } from "../hooks/useReportQueries";
+import type { ExecutiveReport, ReportFiltersResponse, ReportQuery, ReportScope } from "../api/reports";
+import { downloadReportBlob, exportAnnualReport } from "../api/reports";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { FieldLabel, FormField } from "../components/ui/field";
 import { NativeSelect } from "../components/ui/native-select";
 import { FilterBar } from "../components/common/filter-bar";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { normalizeReportQuery, selectDefaultReportMonth } from "../lib/defaultReportMonth";
+import { useAnnualReport, useReportFilters } from "../hooks/useReportQueries";
+import { normalizeReportQuery, selectReportFilterDefaults } from "../lib/defaultReportMonth";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend);
+const unavailable = "—";
+const display = (value: number | null | undefined, suffix = "") => value == null ? unavailable : `${value}${suffix}`;
 
-const unavailable = "Not Available";
-export const DEFAULT_REPORT_TYPE: ReportType = "monthly";
-export const DEFAULT_REPORT_SCOPE: ReportScope = "combined";
-export const displayValue = (value: number | null, suffix = "") => value === null ? unavailable : `${value}${suffix}`;
-export const staleReport = () => null;
-export const selectFilterDefaults = (filters: ReportFiltersResponse, currentDate = new Date()) => {
-  const academicYearId = filters.default_academic_year_id || filters.academic_years[0]?.id || null;
-  const year = filters.academic_years.find((item) => item.id === academicYearId);
-  return {
-    academicYearId,
-    month: selectDefaultReportMonth({ academicYearStart: year?.start_date, academicYearEnd: year?.end_date, currentDate, availableMonths: filters.months.map((item) => item.value) }),
-  };
-};
+function Metric({ label, value, note }: { label: string; value: string | number; note?: string }) {
+  return <Card><CardContent className="p-4"><p className="text-xs font-bold text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-black tabular-nums">{value}</p>{note && <p className="mt-1 text-xs text-muted-foreground">{note}</p>}</CardContent></Card>;
+}
 
-const cardClass = "rounded-3xl border border-slate-100 bg-white p-5 shadow-sm";
+function AnnualAttendance({ report }: { report: ExecutiveReport }) {
+  const value = report.attendance_summary;
+  return <Card><CardHeader><CardTitle>Academic-Year Attendance</CardTitle><p className="text-sm text-muted-foreground">{report.report_period.sections.attendance.label}. Attendance Rate and Coverage summarize OBSERVED class-months only.</p></CardHeader><CardContent className="space-y-5">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <Metric label="Attendance Rate" value={display(value.attendance_rate, "%")} note="OBSERVED class-months" />
+      <Metric label="Coverage" value={display(value.coverage_rate, "%")} note="OBSERVED class-months" />
+      <Metric label="Unrecorded" value={value.unrecorded_student_days} note="OBSERVED Student-Days" />
+      <Metric label="Late Event Rate" value={display(value.late_event_rate, "%")} note={`${value.lateness_availability.toLowerCase()} · ${display(value.lateness_coverage_rate, "%")} coverage`} />
+      <Metric label="Late Among Present" value={display(value.late_among_present, "%")} note="Shown only when lateness is fully available" />
+    </div>
+    <div className="overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-muted-foreground"><th className="p-3">Jenjang</th><th className="p-3">Observed Class-Months</th><th className="p-3">Declared</th><th className="p-3">Not Reported</th><th className="p-3">Expected Student-Days</th><th className="p-3">Hadir</th><th className="p-3">Unrecorded</th><th className="p-3">Attendance Rate</th><th className="p-3">Coverage</th><th className="p-3">Conflicts</th></tr></thead><tbody>{report.attendance_by_level.map((row) => <tr className="border-b" key={row.level}><th className="p-3 text-left">{row.level}</th><td className="p-3">{row.observed_class_months}</td><td className="p-3">{row.declared_class_months}</td><td className="p-3">{row.not_reported_class_months}</td><td className="p-3">{row.attendance_denominator}</td><td className="p-3">{row.present}</td><td className="p-3">{row.unrecorded_student_days}</td><td className="p-3">{display(row.attendance_rate, "%")}</td><td className="p-3">{display(row.coverage_rate, "%")}</td><td className="p-3">{row.conflict_count}</td></tr>)}</tbody></table></div>
+  </CardContent></Card>;
+}
 
-function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: string | number; icon: typeof Users; tone: string }) {
-  return <div className={`${cardClass} flex items-center gap-4`}>
-    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tone}`}><Icon className="h-5 w-5" /></div>
-    <div><p className="text-xs font-bold text-slate-400">{label}</p><p className="mt-1 text-2xl font-black text-slate-800">{value}</p></div>
+function AnnualTrends({ report }: { report: ExecutiveReport }) {
+  const chart = { labels: report.trends.map((row) => row.label), datasets: [{ label: "Attendance Rate · OBSERVED class-months", data: report.trends.map((row) => row.attendance_rate), borderColor: "#10b981", backgroundColor: "#10b981", spanGaps: false }] };
+  return <Card><CardHeader><CardTitle>Annual Trends</CardTitle><p className="text-sm text-muted-foreground">The chart shows observed attendance patterns. The table keeps basis, coverage, and reporting gaps visible.</p></CardHeader><CardContent>
+    <div className="mb-5 h-72" aria-label="Annual observed attendance rate chart"><Line data={chart} options={{ responsive: true, maintainAspectRatio: false }} /></div>
+    <div className="overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-muted-foreground"><th className="p-3">Month</th><th className="p-3">Observed</th><th className="p-3">Declared</th><th className="p-3">Not Reported</th><th className="p-3">Expected</th><th className="p-3">Hadir</th><th className="p-3">Unrecorded</th><th className="p-3">Attendance Rate</th><th className="p-3">Coverage</th><th className="p-3">Lateness</th><th className="p-3">Late Events</th><th className="p-3">Late Event Rate</th></tr></thead><tbody>{report.trends.map((row) => <tr className="border-b" key={row.month}><th className="p-3 text-left">{row.label}</th><td className="p-3">{row.basis_counts.observed}</td><td className="p-3">{row.basis_counts.declared}</td><td className="p-3">{row.basis_counts.not_reported}</td><td className="p-3">{row.attendance_denominator}</td><td className="p-3">{row.present}</td><td className="p-3">{row.unrecorded_student_days}</td><td className="p-3">{display(row.attendance_rate, "%")}</td><td className="p-3">{display(row.coverage_rate, "%")}</td><td className="p-3">{row.lateness_availability.toLowerCase()} · {display(row.lateness_coverage_rate, "%")}</td><td className="p-3">{display(row.late_days)}</td><td className="p-3">{display(row.late_event_rate, "%")}</td></tr>)}</tbody></table></div>
+  </CardContent></Card>;
+}
+
+function AcademicSnapshot({ report }: { report: ExecutiveReport }) {
+  const academic = report.academic_summary;
+  return <Card><CardHeader><CardTitle>Academic Snapshot — Academic Year Records</CardTitle><p className="text-sm text-muted-foreground">{report.report_period.sections.academics.label}. Monthly grade trends are unavailable because scores have no assessment-month field.</p></CardHeader><CardContent>
+    {!academic.availability ? <p role="status" className="p-4">{academic.reason ?? "Academic data is unavailable."}</p> : <>
+      <div className="mb-5 grid gap-3 sm:grid-cols-3"><Metric label="Sumatif Average" value={display(academic.sumatif_average)} /><Metric label="Formatif Average" value={display(academic.formatif_average)} /><Metric label="Below KKM" value={academic.below_kkm_count} /></div>
+      <div className="overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-muted-foreground"><th className="p-3">Subject</th><th className="p-3">Jenjang</th><th className="p-3">Sumatif</th><th className="p-3">Formatif</th><th className="p-3">Below KKM</th></tr></thead><tbody>{academic.by_subject.map((row) => <tr className="border-b" key={`${row.subject_id}-${row.jenjang}`}><th className="p-3 text-left">{row.subject_name}</th><td className="p-3">{row.jenjang}</td><td className="p-3">{display(row.sumatif_average)}</td><td className="p-3">{display(row.formatif_average)}</td><td className="p-3">{row.below_kkm_count}</td></tr>)}</tbody></table></div>
+    </>}
+  </CardContent></Card>;
+}
+
+function AnnualReportView({ report }: { report: ExecutiveReport }) {
+  return <div className="space-y-6" aria-live="polite">
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Students" value={report.executive_summary.total_students} note={report.report_period.sections.population.label} /><Metric label="Attendance Rate" value={display(report.attendance_summary.attendance_rate, "%")} note="OBSERVED class-months" /><Metric label="Late Events" value={display(report.attendance_summary.late_days)} /><Metric label="Known Late Minutes" value={display(report.attendance_summary.late_minutes)} /></section>
+    <AnnualAttendance report={report} />
+    <AnnualTrends report={report} />
+    <AcademicSnapshot report={report} />
+    <Card><CardHeader><CardTitle>Data Quality</CardTitle><p className="text-sm text-muted-foreground">Annual reporting readiness summary.</p></CardHeader><CardContent className="space-y-3"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Not Reported Class-Months" value={report.data_quality.not_reported_class_months} /><Metric label="Observed Class-Months With Gaps" value={report.data_quality.partial_observed_class_months} /><Metric label="Attendance Conflicts" value={report.data_quality.unresolved_conflicts} /><Metric label="Empty Grade Cells" value={report.data_quality.empty_grade_cells} /></div>{report.data_quality.warnings.map((warning) => <p className="text-sm text-muted-foreground" key={warning}>{warning}</p>)}<div className="flex gap-4 text-sm font-semibold"><Link className="text-primary underline" to="/analytics/data-quality">Review Data Quality</Link><Link className="text-primary underline" to="/analytics/recapitulation">Open Population Overview</Link></div></CardContent></Card>
   </div>;
 }
 
-export function ExecutiveSummaryCards({ report }: { report: ExecutiveReport }) {
-  const row = report.executive_summary;
-  return <section aria-labelledby="executive-summary-title">
-    <h2 id="executive-summary-title" className="mb-4 text-lg font-black text-slate-800">Executive Summary</h2>
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <MetricCard label="Total Students" value={row.total_students} icon={Users} tone="bg-indigo-50 text-indigo-600" />
-      <MetricCard label="Attendance Rate" value={displayValue(row.attendance_rate, "%")} icon={CheckCircle2} tone="bg-emerald-50 text-emerald-600" />
-      <MetricCard label="Late Among Present" value={displayValue(row.late_rate, "%")} icon={Clock3} tone="bg-orange-50 text-orange-600" />
-      <MetricCard label="Late Minutes" value={row.late_minutes} icon={Clock3} tone="bg-orange-50 text-orange-600" />
-      <MetricCard label="Below-KKM Count" value={row.below_kkm_count} icon={GraduationCap} tone="bg-rose-50 text-rose-600" />
-      <MetricCard label="Data Completeness" value={displayValue(row.data_completeness_rate, "%")} icon={ShieldAlert} tone="bg-slate-100 text-slate-600" />
-    </div>
-  </section>;
-}
-
-export function AttendanceSection({ report }: { report: ExecutiveReport }) {
-  const a = report.attendance_summary;
-  const chartData = {
-    labels: report.attendance_by_level.map((row) => row.level),
-    datasets: [
-      { label: "Present", data: report.attendance_by_level.map((row) => row.present), backgroundColor: "#10b981" },
-      { label: "Sakit", data: report.attendance_by_level.map((row) => row.sakit), backgroundColor: "#3b82f6" },
-      { label: "Izin", data: report.attendance_by_level.map((row) => row.izin), backgroundColor: "#f59e0b" },
-      { label: "Alfa", data: report.attendance_by_level.map((row) => row.alfa), backgroundColor: "#f43f5e" },
-    ],
-  };
-  return <section className={cardClass} aria-labelledby="attendance-title">
-    <h2 id="attendance-title" className="text-lg font-black text-slate-800">{report.meta.report_type === "monthly" ? "Monthly Attendance" : "Academic-Year Attendance"}</h2>
-    <p className="mt-1 text-sm text-slate-500">{report.report_period.sections.attendance.label}. Attendance Rate is unavailable because this report combines canonical Hadir events with manual monthly Sakit, Izin, and Alfa totals.</p>
-    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {[["Hadir", a.present, "text-emerald-600"], ["Manual Sakit", a.sakit, "text-blue-600"], ["Manual Izin", a.izin, "text-amber-600"], ["Manual Alfa", a.alfa, "text-rose-600"], ["Incomplete", a.incomplete, "text-slate-600"], ["Late Events", a.late_days, "text-orange-600"], ["Late Minutes", a.late_minutes, "text-orange-600"], ["Attendance Rate", displayValue(a.attendance_rate, "%"), "text-emerald-600"], ["Late Among Present", displayValue(a.late_rate, "%"), "text-orange-600"]].map(([label, value, color]) =>
-        <div key={String(label)} className="rounded-2xl bg-slate-50 p-3"><p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className={`mt-1 text-xl font-black ${color}`}>{value}</p></div>)}
-    </div>
-    {report.attendance_by_level.length ? <>
-      <div className="mt-6 h-64" aria-label="Attendance by Level chart"><Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} /></div>
-      <div className="mt-5 overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-400"><th className="p-3">Level</th><th className="p-3">Hadir</th><th className="p-3">Manual Sakit</th><th className="p-3">Manual Izin</th><th className="p-3">Manual Alfa</th><th className="p-3">Incomplete</th><th className="p-3">Attendance Rate</th><th className="p-3">Late Among Present</th></tr></thead><tbody>{report.attendance_by_level.map((row) => <tr key={row.level} className="border-b border-slate-100"><td className="p-3 font-bold text-slate-700">{row.level}</td><td className="p-3 text-emerald-600">{row.present}</td><td className="p-3 text-blue-600">{row.sakit}</td><td className="p-3 text-amber-600">{row.izin}</td><td className="p-3 text-rose-600">{row.alfa}</td><td className="p-3 text-slate-600">{row.incomplete}</td><td className="p-3">{displayValue(row.attendance_rate, "%")}</td><td className="p-3">{displayValue(row.late_rate, "%")}</td></tr>)}</tbody></table></div>
-    </> : <p className="mt-5 rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">No attendance-by-level data is available.</p>}
-  </section>;
-}
-
-function DistributionTable({ title, rows }: { title: string; rows: Array<{ name: string; count: number; percentage: number | null }> }) {
-  return <div><h3 className="text-sm font-black text-slate-700">{title}</h3>{rows.length ? <div className="mt-2 overflow-x-auto"><table className="min-w-full text-sm"><tbody>{rows.map((row) => <tr key={row.name} className="border-b border-slate-100"><td className="py-2 font-semibold text-slate-600">{row.name}</td><td className="py-2 text-right font-black text-slate-800">{row.count}</td><td className="py-2 text-right text-slate-500">{displayValue(row.percentage, "%")}</td></tr>)}</tbody></table></div> : <p className="mt-2 text-sm text-slate-400">Not available</p>}</div>;
-}
-
-export function StudentDistributionSection({ report }: { report: ExecutiveReport }) {
-  const d = report.student_distribution;
-  return <section className={cardClass}><h2 className="text-lg font-black text-slate-800">Academic-Year Enrollment Snapshot</h2><p className="mt-1 text-sm text-slate-500">{report.report_period.sections.population.label}</p><div className="mt-4 grid gap-6 lg:grid-cols-2"><DistributionTable title="By Level" rows={d.by_level} /><DistributionTable title="By Class" rows={d.by_class} /></div>
-    {!d.by_gender.length && !d.by_religion.length && !d.by_domicile.length && <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-600">Gender, religion, and domicile distributions are unavailable in the current student data.</div>}
-  </section>;
-}
-
-export function AcademicSection({ report }: { report: ExecutiveReport }) {
-  const a = report.academic_summary;
-  return <section className={cardClass}><h2 className="text-lg font-black text-slate-800">Available Academic Performance Summary</h2><p className="mt-1 text-sm text-slate-500">{report.report_period.sections.academics.label}</p>{report.meta.report_type === "monthly" && <Alert variant="information" className="mt-4"><AlertDescription>Academic performance figures reflect available records for the selected academic year and are not restricted to the selected calendar month.</AlertDescription></Alert>}{!a.availability ? <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">{a.reason || unavailable}</div> : <>
-    <div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl bg-indigo-50 p-4"><p className="text-xs font-bold text-indigo-500">Sumatif Average</p><p className="text-2xl font-black text-indigo-800">{displayValue(a.sumatif_average)}</p></div><div className="rounded-2xl bg-blue-50 p-4"><p className="text-xs font-bold text-blue-500">Formatif Average</p><p className="text-2xl font-black text-blue-800">{displayValue(a.formatif_average)}</p></div><div className="rounded-2xl bg-rose-50 p-4"><p className="text-xs font-bold text-rose-500">Below KKM</p><p className="text-2xl font-black text-rose-800">{a.below_kkm_count}</p></div></div>
-    <div className="mt-5 overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-slate-400"><th className="p-3">Subject</th><th className="p-3">Level</th><th className="p-3">Sumatif</th><th className="p-3">Formatif</th><th className="p-3">Below KKM</th></tr></thead><tbody>{a.by_subject.map((row) => <tr key={`${row.subject_id}-${row.jenjang}`} className="border-b border-slate-100"><td className="p-3 font-bold">{row.subject_name}</td><td className="p-3">{row.jenjang}</td><td className="p-3">{displayValue(row.sumatif_average)}</td><td className="p-3">{displayValue(row.formatif_average)}</td><td className="p-3 text-rose-600">{row.below_kkm_count}</td></tr>)}</tbody></table></div>
-  </>}</section>;
-}
-
-export function AnnualTrendsSection({ report }: { report: ExecutiveReport }) {
-  const chartData = { labels: report.trends.map((row) => row.label), datasets: [{ label: "Attendance Rate", data: report.trends.map((row) => row.attendance_rate), borderColor: "#10b981", backgroundColor: "#10b981", spanGaps: false }, { label: "Late Minutes", data: report.trends.map((row) => row.late_minutes), borderColor: "#f97316", backgroundColor: "#f97316" }] };
-  const comparisons = report.comparisons || {};
-  const comparisonRows = [["Highest Attendance Month", "highest_attendance_month"], ["Lowest Attendance Month", "lowest_attendance_month"], ["Highest Attendance Level", "highest_attendance_level"], ["Lowest Attendance Level", "lowest_attendance_level"]] as const;
-  return <section className={cardClass}><h2 className="text-lg font-black text-slate-800">Annual Trends</h2><div className="mt-5 h-72" aria-label="Annual attendance trends chart"><Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} /></div>
-    <div className="mt-5 overflow-x-auto"><table className="min-w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase text-slate-400"><th className="p-3">Month</th><th className="p-3">Present</th><th className="p-3">Expected Student-Days</th><th className="p-3">Attendance Rate</th><th className="p-3">Late Events</th><th className="p-3">Late Minutes</th><th className="p-3">Sumatif</th><th className="p-3">Formatif</th></tr></thead><tbody>{report.trends.map((row) => <tr key={row.month} className="border-b border-slate-100"><td className="p-3 font-bold">{row.label}</td><td className="p-3">{row.present}</td><td className="p-3">{row.attendance_denominator ?? unavailable}</td><td className="p-3">{displayValue(row.attendance_rate, "%")}</td><td className="p-3">{row.late_days}</td><td className="p-3">{row.late_minutes}</td><td className="p-3">{displayValue(row.sumatif_average)}</td><td className="p-3">{displayValue(row.formatif_average)}</td></tr>)}</tbody></table></div>
-    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{comparisonRows.map(([label, key]) => { const row = comparisons[key]; return <div key={key} className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-400">{label}</p><p className="mt-1 font-black text-slate-800">{row?.name || unavailable}</p>{row && <p className="text-sm text-slate-500">{row.attendance_rate}%</p>}</div>; })}</div>
-  </section>;
-}
-
-export function DataQualityPanel({ report }: { report: ExecutiveReport }) {
-  const q = report.data_quality;
-  return <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5"><h2 className="flex items-center gap-2 text-lg font-black text-amber-950"><AlertTriangle className="h-5 w-5" />Data Quality</h2><div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-amber-900"><span className="rounded-full bg-white/70 px-3 py-1.5">Incomplete: {q.incomplete_attendance}</span><span className="rounded-full bg-white/70 px-3 py-1.5">Empty grades: {q.empty_grade_cells}</span>{q.unmapped_levels.length > 0 && <span className="rounded-full bg-white/70 px-3 py-1.5">Unmapped: {q.unmapped_levels.join(", ")}</span>}</div><ul className="mt-4 space-y-2 text-sm font-semibold text-amber-900">{q.warnings.map((warning) => <li key={warning} className="flex gap-2"><span aria-hidden="true">•</span><span>{warning}</span></li>)}</ul></section>;
-}
-
-export function ReportFeedback({ loading, error }: { loading: boolean; error: string | null }) {
-  if (loading) return <LoadingState title="Loading report" description="Calculating the selected attendance and academic context." />;
-  if (error) return <ErrorState title="The report could not be generated" description={error} />;
-  return <EmptyState title="Generate an executive report" description="Choose the report context, then select Generate Report." />;
-}
-
-export default function ExecutiveReports({ reportType }: { reportType: ReportType }) {
-  const [academicYearId, setAcademicYearId] = useState<number | null>(null);
-  const [month, setMonth] = useState("");
-  const [scope, setScope] = useState<ReportScope>(DEFAULT_REPORT_SCOPE);
-  const [classId, setClassId] = useState<number | null>(null);
-  const [subjectId, setSubjectId] = useState<number | null>(null);
-  const [generatedQuery, setGeneratedQuery] = useState<ReportQuery | null>(null);
-  const [showGeneratedReport, setShowGeneratedReport] = useState(false);
-  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
-  const [reportError, setReportError] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const filtersQuery = useReportFilters(academicYearId, scope);
-  const filters = filtersQuery.data ?? null;
-  const reportQuery = useExecutiveReport(reportType, generatedQuery);
-  const report = showGeneratedReport ? reportQuery.data ?? null : null;
-  const loadingFilters = filtersQuery.isLoading;
-  const loadingReport = reportQuery.isFetching;
-
-  const clearStale = useCallback(() => { setShowGeneratedReport(false); setReportError(null); }, []);
-  useEffect(() => {
-    if (!filters) return;
-    const defaults = selectFilterDefaults(filters);
-    if (academicYearId === null && defaults.academicYearId !== null) setAcademicYearId(defaults.academicYearId);
-    setMonth((current) => filters.months.some((item) => item.value === current) ? current : defaults.month);
-  }, [academicYearId, filters]);
-  useEffect(() => { clearStale(); }, [reportType, clearStale]);
-
-  const updateYear = (value: number) => { clearStale(); setAcademicYearId(value); };
-  const updateScope = (value: ReportScope) => { clearStale(); setScope(value); setClassId(null); setSubjectId(null); };
-  const query = useMemo<ReportQuery | null>(() => academicYearId && (reportType === "annual" || month) ? { academic_year_id: academicYearId, scope, month: reportType === "monthly" ? month : undefined, class_id: classId ?? undefined, subject_id: subjectId } : null, [academicYearId, classId, month, reportType, scope, subjectId]);
-
-  const generate = async () => {
-    if (!query) return;
-    const normalized = normalizeReportQuery(query);
-    setReportError(null); setExportError(null); setShowGeneratedReport(true);
-    if (generatedQuery && JSON.stringify(normalizeReportQuery(generatedQuery)) === JSON.stringify(normalized)) {
-      await reportQuery.refetch();
-    } else {
-      setGeneratedQuery(normalized);
-    }
-  };
-  const runExport = async (format: "pdf" | "xlsx") => {
-    if (!generatedQuery) return;
-    setExporting(format); setExportError(null);
-    try { const file = reportType === "monthly" ? await exportMonthlyReport(format, generatedQuery) : await exportAnnualReport(format, generatedQuery); downloadReportBlob(file.blob, file.filename); }
-    catch { setExportError(`${format === "pdf" ? "PDF" : "Excel"} export failed. Please try again.`); }
-    finally { setExporting(null); }
-  };
-
-  return <div className="space-y-7 pb-12">
-    <PageHeader title="Executive Reports" description="Monthly and annual leadership reporting from one verified calculation source." actions={<><Button aria-label="Export PDF" variant="secondary" disabled={!generatedQuery || loadingReport || exporting !== null} onClick={() => void runExport("pdf")}><Download className="h-4 w-4" />{exporting === "pdf" ? "Exporting..." : "Export PDF"}</Button><Button aria-label="Export Excel" variant="outline" disabled={!generatedQuery || loadingReport || exporting !== null} onClick={() => void runExport("xlsx")}><Download className="h-4 w-4" />{exporting === "xlsx" ? "Exporting..." : "Export Excel"}</Button></>}/>
-    {exportError && <Alert variant="danger" aria-live="assertive"><AlertTitle>Export unavailable</AlertTitle><AlertDescription>{exportError} The current report remains available.</AlertDescription></Alert>}
-    <div className="flex rounded-2xl border border-slate-200 bg-white p-1.5" role="tablist" aria-label="Report type"><Link role="tab" aria-selected={reportType === "monthly"} to="/reports/monthly" className={`flex-1 rounded-xl px-4 py-2.5 text-center text-sm font-black ${reportType === "monthly" ? "bg-brand text-white" : "text-slate-500"}`}>Monthly</Link><Link role="tab" aria-selected={reportType === "annual"} to="/reports/annual" className={`flex-1 rounded-xl px-4 py-2.5 text-center text-sm font-black ${reportType === "annual" ? "bg-brand text-white" : "text-slate-500"}`}>Annual</Link></div>
-    <FilterBar className="space-y-4"><div className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-slate-400"><CalendarDays className="h-4 w-4" />Report Filters</div>{loadingFilters ? <LoadingState title="Loading report filters" /> : <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"><FormField id="report-academic-year"><FieldLabel>Academic Year</FieldLabel><NativeSelect value={academicYearId || ""} onChange={(e) => void updateYear(Number(e.target.value))}>{filters?.academic_years.map((year) => <option key={year.id} value={year.id}>{year.name}{year.is_default ? " (Default)" : ""}</option>)}</NativeSelect></FormField>{reportType === "monthly" && <FormField id="report-month"><FieldLabel>Month</FieldLabel><NativeSelect value={month} onChange={(e) => { clearStale(); setMonth(e.target.value); }}>{filters?.months.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></FormField>}<FormField id="report-scope"><FieldLabel>Scope</FieldLabel><NativeSelect value={scope} onChange={(e) => void updateScope(e.target.value as ReportScope)}>{filters?.scopes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></FormField><FormField id="report-class"><FieldLabel>Class</FieldLabel><NativeSelect value={classId ?? ""} onChange={(e) => { clearStale(); setClassId(Number(e.target.value) || null); }}><option value="">All Classes</option>{filters?.class_options?.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></FormField><FormField id="report-subject"><FieldLabel>Subject</FieldLabel><NativeSelect value={subjectId || ""} onChange={(e) => { clearStale(); setSubjectId(Number(e.target.value) || null); }}><option value="">All Subjects</option>{filters?.subjects.map((item) => <option key={item.id} value={item.id}>{item.name} - {item.jenjang_name}</option>)}</NativeSelect></FormField></div><Button onClick={() => void generate()} disabled={!query || loadingReport}>{loadingReport ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}Generate Report</Button></>}</FilterBar>
-    {report ? <div className="space-y-7"><Alert variant="information"><AlertTitle>Reporting time bases</AlertTitle><AlertDescription>Attendance: {report.report_period.sections.attendance.label}. Population: {report.report_period.sections.population.label}. Academics: {report.report_period.sections.academics.label}.</AlertDescription></Alert><ExecutiveSummaryCards report={report} /><AttendanceSection report={report} /><div className="grid gap-7 xl:grid-cols-2"><StudentDistributionSection report={report} /><AcademicSection report={report} /></div>{reportType === "annual" && <AnnualTrendsSection report={report} />}<DataQualityPanel report={report} /></div> : <ReportFeedback loading={showGeneratedReport && loadingReport} error={reportError || (filtersQuery.error instanceof Error ? filtersQuery.error.message : reportQuery.error instanceof Error ? "The report could not be generated. Please review the selected filters and try again." : null)} />}
+export default function ExecutiveReports() {
+  const [academicYearId, setAcademicYearId] = useState<number | null>(null); const [scope, setScope] = useState<ReportScope>("combined");
+  const [classId, setClassId] = useState<number | null>(null); const [subjectId, setSubjectId] = useState<number | null>(null);
+  const [generatedQuery, setGeneratedQuery] = useState<ReportQuery | null>(null); const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null); const [exportError, setExportError] = useState("");
+  const filtersQuery = useReportFilters(academicYearId, scope); const filters: ReportFiltersResponse | undefined = filtersQuery.data;
+  const draftQuery = useMemo<ReportQuery | null>(() => academicYearId ? { academic_year_id: academicYearId, scope, class_id: classId ?? undefined, subject_id: subjectId ?? undefined } : null, [academicYearId, classId, scope, subjectId]);
+  const isStale = Boolean(generatedQuery && (!draftQuery || JSON.stringify(normalizeReportQuery(generatedQuery)) !== JSON.stringify(normalizeReportQuery(draftQuery))));
+  const reportQuery = useAnnualReport(generatedQuery); const report = generatedQuery && !isStale ? reportQuery.data : undefined;
+  useEffect(() => { if (!filters) return; const defaults = selectReportFilterDefaults(filters); if (academicYearId === null && defaults.academicYearId) setAcademicYearId(defaults.academicYearId); }, [academicYearId, filters]);
+  useEffect(() => { if (classId !== null && filters && !filters.class_options.some((item) => item.id === classId)) setClassId(null); }, [classId, filters]);
+  useEffect(() => { if (subjectId !== null && filters && !filters.subjects.some((item) => item.id === subjectId)) setSubjectId(null); }, [filters, subjectId]);
+  const changeYear = (id: number) => { setAcademicYearId(id); setClassId(null); setSubjectId(null); };
+  const changeScope = (value: ReportScope) => { setScope(value); setClassId(null); setSubjectId(null); };
+  const generate = async () => { if (!draftQuery) return; const normalized = { ...draftQuery, ...normalizeReportQuery(draftQuery) }; setExportError(""); if (generatedQuery && JSON.stringify(normalizeReportQuery(generatedQuery)) === JSON.stringify(normalizeReportQuery(normalized))) await reportQuery.refetch(); else setGeneratedQuery(normalized); };
+  const runExport = async (format: "pdf" | "xlsx") => { if (!generatedQuery || isStale) return; setExporting(format); setExportError(""); try { const file = await exportAnnualReport(format, generatedQuery); downloadReportBlob(file.blob, file.filename); } catch { setExportError(`${format === "pdf" ? "PDF" : "Excel"} export failed. Please try again.`); } finally { setExporting(null); } };
+  const actions = <div className="flex flex-wrap gap-2 print:hidden"><Button variant="outline" disabled={!report || Boolean(exporting)} onClick={() => window.print()}><Printer className="mr-2 size-4" />Print</Button><Button variant="outline" disabled={!report || Boolean(exporting)} onClick={() => void runExport("pdf")}>{exporting === "pdf" ? "Exporting…" : <><Download className="mr-2 size-4" />PDF</>}</Button><Button disabled={!report || Boolean(exporting)} onClick={() => void runExport("xlsx")}>{exporting === "xlsx" ? "Exporting…" : <><Download className="mr-2 size-4" />Excel</>}</Button></div>;
+  const error = filtersQuery.error ? "Report filters could not be loaded." : reportQuery.error ? "The report could not be generated. Review the selected scope and try again." : null;
+  return <div className="space-y-6 pb-12 print:p-0"><PageHeader title="Annual Report" description="Leadership summary across one selected Academic Year." actions={actions} />
+    {exportError && <Alert variant="danger"><AlertTitle>Export unavailable</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
+    <FilterBar className="space-y-4"><h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">Annual Report Filters</h2>{filtersQuery.isPending ? <LoadingState title="Loading report filters" /> : filtersQuery.error ? <ErrorState title="Report filters unavailable" description="The report scope could not be selected." action={<Button onClick={() => void filtersQuery.refetch()}>Retry</Button>} /> : <>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><FormField id="annual-report-year"><FieldLabel>Academic Year</FieldLabel><NativeSelect value={academicYearId ?? ""} onChange={(event) => changeYear(Number(event.target.value))}>{filters?.academic_years.map((item) => <option key={item.id} value={item.id}>{item.name}{item.is_default ? " (Default)" : ""}</option>)}</NativeSelect></FormField><FormField id="annual-report-scope"><FieldLabel>Scope</FieldLabel><NativeSelect value={scope} onChange={(event) => changeScope(event.target.value as ReportScope)}>{filters?.scopes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</NativeSelect></FormField><FormField id="annual-report-class"><FieldLabel>Class</FieldLabel><NativeSelect value={classId ?? ""} onChange={(event) => setClassId(Number(event.target.value) || null)}><option value="">All Classes</option>{filters?.class_options.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></FormField><FormField id="annual-report-subject"><FieldLabel>Subject</FieldLabel><NativeSelect value={subjectId ?? ""} onChange={(event) => setSubjectId(Number(event.target.value) || null)}><option value="">All Subjects</option>{filters?.subjects.map((item) => <option key={item.id} value={item.id}>{item.name} — {item.jenjang_name}</option>)}</NativeSelect></FormField></div>
+      <Button onClick={() => void generate()} disabled={!draftQuery || reportQuery.isFetching}>{reportQuery.isFetching ? "Generating…" : <><RefreshCw className="mr-2 size-4" />Generate Report</>}</Button>
+    </>}</FilterBar>
+    {isStale && <Alert variant="warning"><AlertTitle>Report scope changed</AlertTitle><AlertDescription>Generate again to update the report and its export scope.</AlertDescription></Alert>}
+    {report && <AnnualReportView report={report} />}
+    {generatedQuery && !isStale && (reportQuery.isPending || reportQuery.isFetching) && <LoadingState title="Generating annual report" description="Calculating the Academic Year attendance and academic summary." />}
+    {!report && !generatedQuery && !filtersQuery.isPending && !error && <EmptyState title="Generate an annual report" description="Select a valid Academic Year and scope, then generate the report." />}
+    {!report && error && <ErrorState title="The report could not be generated" description={error} action={generatedQuery ? <Button onClick={() => void reportQuery.refetch()}>Retry</Button> : undefined} />}
   </div>;
 }
