@@ -90,11 +90,10 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           mkdir -p .runtime/operatoros-ci-elysia
-          python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
-          DATABASE_URL="sqlite:///$PWD/.runtime/operatoros-ci-elysia/ci-test.db" PYTHONPATH=backend/src "$python_tooling" -m core.schema_migrations initialize-fresh --database "$PWD/.runtime/operatoros-ci-elysia/ci-test.db"
+          bun run db:bootstrap --data-dir "$PWD/.runtime/operatoros-ci-elysia"
       - name: Verify Elysia primary runtime
         env:
-          DATABASE_URL: sqlite:///${{ github.workspace }}/.runtime/operatoros-ci-elysia/ci-test.db
+          DATABASE_URL: sqlite:///${{ github.workspace }}/.runtime/operatoros-ci-elysia/operatoros.sqlite
           AUTH_COOKIE_SECRET: ci-elysia-test-secret-at-least-32-characters
           HOST: 127.0.0.1
           PORT: "8090"
