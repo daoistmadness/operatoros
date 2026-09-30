@@ -92,7 +92,9 @@ describe('role-aware sidebar navigation', () => {
     expect(activeNames('/')).toEqual(['Dashboard']);
     expect(activeNames('/students/42')).toEqual(['Student Directory']);
     expect(activeNames('/students/operations')).toEqual(['Operations Audit']);
-    expect(activeNames('/reports/monthly')).toEqual(['Executive Reports']);
+    expect(activeNames('/reports/monthly')).toEqual(['Reports & Reviews']);
+    expect(activeNames('/reports/management/monthly')).toEqual(['Reports & Reviews']);
+    expect(activeNames('/analytics/management-review/student-profile')).toEqual(['Reports & Reviews']);
     expect(activeNames('/analytics/trends')).toEqual(['Student Insights']);
     expect(activeNames('/analytics/indicators')).toEqual(['Student Insights']);
     expect(activeNames('/analytics/attendance')).toEqual(['Attendance']);
@@ -136,7 +138,7 @@ describe('role-aware sidebar navigation', () => {
       ['Dashboard', 'Setup & Readiness'],
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Monthly Recap Input', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
-      ['Management Analytics', 'Student Profile Review', 'Population Overview', 'Data Quality', 'Attendance', 'Academic Analytics', 'Student Insights', 'Executive Reports', 'Monthly Management Report'],
+      ['Management Analytics', 'Population Overview', 'Data Quality', 'Attendance', 'Academic Analytics', 'Student Insights', 'Reports & Reviews'],
       ['Data Import & Export'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Settings'],
     ]);

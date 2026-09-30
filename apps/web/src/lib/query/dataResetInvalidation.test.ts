@@ -18,7 +18,7 @@ describe("data reset query invalidation", () => {
     const keys = invalidateQueries.mock.calls.map(([filters]) => filters.queryKey);
     expect(keys).toEqual(expect.arrayContaining([
       ["academic-masters"], ["grades"], ["attendance"], ["students"], ["classes"], ["analytics"],
-      ["dashboard"], ["uploads"], ["reports"], ["management-reports"], ["operator"], ["staff"], ["teacherClassAssignments"],
+      ["dashboard"], ["uploads"], ["reports"], ["operator"], ["staff"], ["teacherClassAssignments"],
       ["backups"], ["operations-audit"],
     ]));
   });

@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Edit3, FileClock, FileText, GraduationCap, LayoutDashboard,
-  ClipboardList, Layers3, LogOut, PieChart, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
+  ClipboardList, Layers3, LogOut, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
   UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
 } from 'lucide-react';
 
@@ -71,14 +71,12 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
     id: 'insights', title: 'Analytics & Reports',
     items: [
       { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
-      { name: 'Student Profile Review', path: '/analytics/management-review/student-profile', icon: UsersIcon },
       { name: 'Population Overview', path: '/analytics/recapitulation', icon: ClipboardList },
       { name: 'Data Quality', path: '/analytics/data-quality', icon: ShieldCheck },
       { name: 'Attendance', path: '/analytics/attendance', icon: Server },
       { name: 'Academic Analytics', path: '/analytics/academic', icon: BookOpen },
       { name: 'Student Insights', path: '/analytics/student-insights', icon: Activity, matches: ['/analytics/trends', '/analytics/indicators'] },
-      { name: 'Executive Reports', path: '/reports/monthly', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual'] },
-      { name: 'Monthly Management Report', path: '/reports/management/monthly', icon: PieChart },
+      { name: 'Reports & Reviews', path: '/reports', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual', '/reports/management/monthly', '/analytics/management-review/student-profile'] },
     ],
   },
   {

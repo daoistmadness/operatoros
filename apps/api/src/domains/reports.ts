@@ -1,12 +1,15 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
 import { t } from "elysia";
+import { Value } from "@sinclair/typebox/value";
 import {
   AttendanceReportQuerySchema,
   AttendanceReportResponseSchema,
   ManualAbsenceReportResponseSchema,
   ReportScopeSchema,
+  MonthlyReportResponseSchema,
   type ReportFiltersResponse,
+  type MonthlyReportResponse,
   type AttendanceReportQuery,
   type ReportScope,
   type ManualAbsenceReportResponse,
@@ -148,21 +151,12 @@ function averageHalfUp(values: number[]): number | null {
   return values.length ? Math.floor(values.reduce((sum, value) => sum + value, 0) / values.length + 0.5 + 1e-9) : null;
 }
 
-function emptyAttendance(): Row {
-  return { present: 0, sakit: 0, izin: 0, alfa: 0, incomplete: 0, late_days: 0, late_minutes: 0 };
-}
-
-function finalizeAttendance(value: Row): Row {
-  // This report combines canonical attendance events with manual monthly S/I/A totals.
-  return { ...value, attendance_rate: null, late_rate: lateAmongPresentRate(value.late_days, value.present) };
-}
-
 function scopedEnrollments(context: AuthContext, academicYearId: number, scope: Scope, className?: string | null, classId?: number | null): { rows: Row[]; unmapped: string[] } {
   const source = rows(context, `
     SELECT e.*, s.id AS legacy_student_id, s.name AS student_name, s.jenjang AS student_jenjang,
            s.class_name AS student_class_name, j.name AS jenjang_name, j.level AS jenjang_level, c.class_name AS academic_class_name
     FROM student_enrollments e
-    JOIN students s ON s.id = e.student_id
+    LEFT JOIN students s ON s.id = e.student_id
     JOIN jenjangs j ON j.id = e.jenjang_id
     LEFT JOIN academic_classes c ON c.id = e.academic_class_id
     WHERE e.academic_year_id = ?`, [academicYearId]);
@@ -196,18 +190,6 @@ function resolveKkm(context: AuthContext, academicYearId: number, jenjangId: num
   return 85;
 }
 
-function qualitySection(eligible: number, known: number, denominator: string, excluded = 0): Row {
-  const unknown = Math.max(eligible - known, 0);
-  return { eligible_count: eligible, known_count: known, unknown_count: unknown, excluded_count: excluded, denominator_used: denominator, percentage_basis: denominator, exclusion_reasons: [], reconciliation_difference: eligible - known - unknown, reconciles: eligible === known + unknown };
-}
-
-function demographic(values: (string | null)[], eligible: number): Row {
-  const counts = new Map<string, number>();
-  for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
-  const known = [...counts.values()].reduce((sum, value) => sum + value, 0);
-  return { eligible_count: eligible, known_count: known, unknown_count: eligible - known, denominator_used: "known_values", percentage_basis: "known demographic values; eligible-population percentage is also provided", rows: [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count, percentage_of_known: rate(count, known), percentage_of_eligible: rate(count, eligible) })) };
-}
-
 function reportFilters(context: AuthContext, academicYearId: number | null, scope: Scope): ReportFiltersResponse {
   const years = rows(context, "SELECT id, label, start_date, end_date, is_default FROM academic_years ORDER BY start_date, id");
   const selected = academicYearId === null ? years.find((value) => Number(value.is_default) === 1) ?? years.at(-1) : years.find((value) => Number(value.id) === academicYearId);
@@ -225,69 +207,88 @@ function reportFilters(context: AuthContext, academicYearId: number | null, scop
   };
 }
 
-function buildMonthly(context: AuthContext, academicYearId: number, month: string, scope: Scope, className?: string | null, subjectId?: number | null, classId?: number | null): Row {
+function buildMonthlyReport(context: AuthContext, academicYearId: number, month: string, scope: Scope, className?: string | null, subjectId?: number | null, classId?: number | null): MonthlyReportResponse {
   const year = row(context, "SELECT * FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) throw Object.assign(new Error("Academic year not found"), { status: 404 });
-  const [startDate, endDate] = monthPeriod(month);
-  if (startDate < year.start_date || endDate > year.end_date) throw Object.assign(new Error("Selected month falls outside the academic year"), { status: 422 });
+  if (!month) throw Object.assign(new Error("A report month is required"), { status: 422 });
+  const [monthStart, monthEnd] = monthPeriod(month);
+  const startDate = monthStart > year.start_date ? monthStart : year.start_date;
+  const endDate = monthEnd < year.end_date ? monthEnd : year.end_date;
+  if (startDate > endDate) throw Object.assign(new Error("Selected month falls outside the academic year"), { status: 422 });
   if (subjectId !== null && subjectId !== undefined && !row(context, "SELECT id FROM subjects WHERE id = ?", [subjectId])) throw Object.assign(new Error("Subject not found"), { status: 404 });
   const scoped = scopedEnrollments(context, academicYearId, scope, className, classId);
-  const enrollmentByStudent = new Map<number, Row>();
-  const levelCounts = new Map<string, number>();
-  const classCounts = new Map<string, number>();
-  for (const value of scoped.rows) {
-    enrollmentByStudent.set(Number(value.legacy_student_id), value);
-    levelCounts.set(normalized(value.jenjang_name), (levelCounts.get(normalized(value.jenjang_name)) ?? 0) + 1);
-    classCounts.set(value.report_class, (classCounts.get(value.report_class) ?? 0) + 1);
-  }
-  const studentIds = [...enrollmentByStudent.keys()];
-  const byLevel = new Map<string, Row>();
-  for (const level of levelCounts.keys()) byLevel.set(level, emptyAttendance());
-  let unmatchedAbsent = 0;
-  let malformedLateness = 0;
-  if (studentIds.length) {
-    const placeholders = studentIds.map(() => "?").join(",");
-    const attendances = rows(context, `SELECT a.*, COALESCE(o.override_status, a.status) AS effective_status FROM attendance a LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE a.student_id IN (${placeholders}) AND a.date >= ? AND a.date <= ?`, [...studentIds, startDate, endDate]);
-    for (const value of attendances) {
-      const enrollment = enrollmentByStudent.get(Number(value.student_id));
-      if (!enrollment) continue;
-      const bucket = byLevel.get(normalized(enrollment.jenjang_name))!;
-      if (["on-time", "late"].includes(value.effective_status)) bucket.present++;
-      if (value.effective_status === "late") {
-        bucket.late_days++;
-        if (Number.isInteger(value.late_duration) && Number(value.late_duration) >= 0) bucket.late_minutes += Number(value.late_duration);
-        else malformedLateness++;
-      } else if (value.effective_status === "incomplete") bucket.incomplete++;
-      else if (value.effective_status === "absent") unmatchedAbsent++;
-    }
-    const [reportYear, reportMonth] = month.split("-").map(Number);
-    const absences = rows(context, `SELECT * FROM absence_reasons WHERE student_id IN (${placeholders}) AND year = ? AND month = ?`, [...studentIds, reportYear, reportMonth]);
-    for (const value of absences) {
-      const enrollment = enrollmentByStudent.get(Number(value.student_id));
-      if (!enrollment) continue;
-      const bucket = byLevel.get(normalized(enrollment.jenjang_name))!;
-      bucket.sakit += Number(value.sakit ?? 0); bucket.izin += Number(value.izin ?? 0); bucket.alfa += Number(value.alfa ?? 0);
-    }
-  }
-  const overall = emptyAttendance();
-  for (const value of byLevel.values()) for (const key of Object.keys(overall)) overall[key] += Number(value[key] ?? 0);
-  const attendanceByLevel = [...levelCounts.keys()].sort((a, b) => a.localeCompare(b)).map((level) => ({ level, ...finalizeAttendance(byLevel.get(level)!) }));
+  const studentIds = new Set(scoped.rows
+    .map((value) => value.student_master_id ?? value.legacy_student_id)
+    .filter((value) => value !== null && value !== undefined && value !== "")
+    .map(String));
+  const scopedClasses = new Set(scoped.rows.map((value) => {
+    const classId = Number(value.academic_class_id);
+    return classId > 0 ? `id:${classId}` : `name:${normalized(value.report_class)}`;
+  }));
+  const resolvedBasis = resolveAttendanceBasis(context, { academic_year_id: academicYearId, month, ...(classId ? { class_id: String(classId) } : {}) });
+  const monthlyLateness = tallyLatenessRange(context, { startDate, endDate, academicYearId,
+    scope: { jenjang_id: null, program_id: null, grade_id: null, class_id: null } });
+  const attendanceClasses = resolvedBasis.classes
+    .filter((value) => matchesScope(value.jenjang, scope)
+      && (classId !== null && classId !== undefined || !className || normalized(value.class_name) === normalized(className)))
+    .map((value) => {
+      const observed = value.basis === "OBSERVED";
+      const declared = value.basis === "DECLARED";
+      const expected = value.canonical.expected_student_days;
+      const recorded = value.canonical.recorded_student_days;
+      const classLateness = monthlyLateness.byClass.get(`id:${value.class_id}`);
+      return {
+        class_id: value.class_id, class_name: value.class_name, jenjang: value.jenjang, basis: value.basis,
+        expected_student_days: expected,
+        recorded_student_days: observed ? recorded : null,
+        hadir_student_days: observed ? value.canonical.hadir_count : null,
+        presumed_hadir_student_days: declared ? value.presumed_hadir_student_days : null,
+        sakit_student_days: observed ? value.canonical.sakit_count : declared ? value.declared.sakit_student_days : null,
+        izin_student_days: observed ? value.canonical.izin_count : declared ? value.declared.izin_student_days : null,
+        alfa_student_days: observed ? value.canonical.alfa_count : declared ? value.declared.alfa_student_days : null,
+        unrecorded_student_days: observed ? value.canonical.unrecorded_student_days : null,
+        other_status_student_days: observed ? value.canonical.other_status_count : null,
+        attendance_rate: observed ? rate(value.canonical.hadir_count, expected) : null,
+        coverage_rate: observed ? value.canonical.coverage_rate : null,
+        lateness: {
+          availability: value.lateness.availability, late_events: value.lateness.late_events,
+          late_event_rate: value.lateness.availability === "AVAILABLE" ? rate(value.lateness.late_events ?? 0, expected) : null,
+          late_minutes: observed && value.lateness.availability === "AVAILABLE" ? classLateness?.total_late_minutes ?? 0 : null,
+          unknown_duration_events: observed && value.lateness.availability === "AVAILABLE" ? (classLateness?.late_events ?? 0) - (classLateness?.known_minute_events ?? 0) : null,
+        },
+        conflict: value.conflict,
+      };
+    });
+  const observedClasses = attendanceClasses.filter((value) => value.basis === "OBSERVED");
+  const sum = (values: typeof attendanceClasses, key: keyof typeof attendanceClasses[number]) => values.reduce((total, value) => total + Number(value[key] ?? 0), 0);
+  const observedExpected = sum(observedClasses, "expected_student_days");
+  const observedRecorded = sum(observedClasses, "recorded_student_days");
+  const observedHadir = sum(observedClasses, "hadir_student_days");
+  const scopeExpected = sum(attendanceClasses, "expected_student_days");
+  const latenessRows = attendanceClasses.filter((value) => value.lateness.availability === "AVAILABLE");
+  const coveredExpected = sum(latenessRows, "expected_student_days");
+  const latenessAvailability = coveredExpected === 0 ? "UNAVAILABLE" : coveredExpected === scopeExpected ? "AVAILABLE" : "PARTIAL";
+  const lateEvents = latenessRows.reduce((total, value) => total + Number(value.lateness.late_events ?? 0), 0);
+  const lateMinutes = latenessRows.reduce((total, value) => total + Number(value.lateness.late_minutes ?? 0), 0);
+  const unknownDurationEvents = latenessRows.reduce((total, value) => total + Number(value.lateness.unknown_duration_events ?? 0), 0);
+  const availableHadir = latenessRows.reduce((total, value) => total + Number(value.hadir_student_days ?? 0), 0);
+  const conflictCount = attendanceClasses.filter((value) => value.conflict !== null).length;
   const enrollmentIds = scoped.rows.map((value) => Number(value.id));
   const gradeValues: { sumatif: number[]; formatif: number[] } = { sumatif: [], formatif: [] };
   const subjectValues = new Map<string, { id: number; name: string; jenjang: string; sumatif: number[]; formatif: number[] }>();
   let emptyGradeCells = 0;
-  const belowRows: { studentId: number; subjectId: number; type: string }[] = [];
+  const belowRows: { subjectId: number; type: string }[] = [];
   if (enrollmentIds.length) {
     const placeholders = enrollmentIds.map(() => "?").join(",");
     const params: any[] = [...enrollmentIds];
     const subjectClause = subjectId !== null && subjectId !== undefined ? " AND g.subject_id = ?" : "";
     if (subjectId !== null && subjectId !== undefined) params.push(subjectId);
-    const grades = rows(context, `SELECT g.*, ac.assessment_type, s.name AS subject_name, s.jenjang_id, j.name AS jenjang_name, e.student_id FROM student_subject_grades g JOIN assessment_components ac ON ac.id = g.component_id JOIN subjects s ON s.id = g.subject_id JOIN jenjangs j ON j.id = s.jenjang_id JOIN student_enrollments e ON e.id = g.enrollment_id WHERE g.enrollment_id IN (${placeholders})${subjectClause}`, params);
-    const grouped = new Map<string, { values: number[]; studentId: number; subjectId: number; type: string; subjectName: string; jenjang: string }>();
+    const grades = rows(context, `SELECT g.*, ac.assessment_type, s.name AS subject_name, s.jenjang_id, j.name AS jenjang_name, e.jenjang_id AS enrollment_jenjang_id FROM student_subject_grades g JOIN assessment_components ac ON ac.id = g.component_id JOIN subjects s ON s.id = g.subject_id JOIN jenjangs j ON j.id = s.jenjang_id JOIN student_enrollments e ON e.id = g.enrollment_id WHERE g.enrollment_id IN (${placeholders})${subjectClause}`, params);
+    const grouped = new Map<string, { values: number[]; jenjangId: number; subjectId: number; type: string; subjectName: string; jenjang: string }>();
     for (const value of grades) {
       const type = String(value.assessment_type);
-      const key = `${value.student_id}:${value.enrollment_id}:${value.subject_id}:${type}`;
-      if (!grouped.has(key)) grouped.set(key, { values: [], studentId: Number(value.student_id), subjectId: Number(value.subject_id), type, subjectName: value.subject_name, jenjang: value.jenjang_name });
+      const key = `${value.enrollment_id}:${value.subject_id}:${type}`;
+      if (!grouped.has(key)) grouped.set(key, { values: [], jenjangId: Number(value.enrollment_jenjang_id), subjectId: Number(value.subject_id), type, subjectName: value.subject_name, jenjang: value.jenjang_name });
       const group = grouped.get(key)!;
       if (value.score === null || value.score === undefined) { emptyGradeCells++; continue; }
       const score = Number(value.score); group.values.push(score);
@@ -298,55 +299,55 @@ function buildMonthly(context: AuthContext, academicYearId: number, month: strin
     }
     for (const group of grouped.values()) {
       if (!group.values.length) continue;
-      if (average(group.values)! < resolveKkm(context, academicYearId, Number(scoped.rows.find((value) => Number(value.legacy_student_id) === group.studentId)?.jenjang_id ?? 0), group.subjectId, group.type)) belowRows.push({ studentId: group.studentId, subjectId: group.subjectId, type: group.type });
+      if (average(group.values)! < resolveKkm(context, academicYearId, group.jenjangId, group.subjectId, group.type)) belowRows.push({ subjectId: group.subjectId, type: group.type });
     }
   }
   const academicAvailable = gradeValues.sumatif.length > 0 || gradeValues.formatif.length > 0;
   const subjectSummaries = [...subjectValues.values()].sort((a, b) => a.name.localeCompare(b.name) || a.jenjang.localeCompare(b.jenjang)).map((value) => ({ subject_id: value.id, subject_name: value.name, jenjang: value.jenjang, sumatif_average: average(value.sumatif), formatif_average: average(value.formatif), below_kkm_count: belowRows.filter((below) => below.subjectId === value.id).length }));
-  const warnings = [
-    "Student gender, religion, and domicile fields are not available in the current Student master schema.",
-    "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available.",
-    "Attendance Rate and data completeness are unavailable because canonical Hadir events and manual monthly Sakit/Izin/Alfa totals do not share a proven denominator.",
-  ];
-  if (!academicAvailable) warnings.push("Academic data is not available for the selected report context.");
-  if (scoped.unmapped.length) warnings.push(`Unmapped Jenjang values were excluded from report scope calculations: ${scoped.unmapped.join(", ")}.`);
-  if (unmatchedAbsent) warnings.push(`${unmatchedAbsent} effective absent attendance record(s) were not reinterpreted as Sakit, Izin, or Alfa; absence totals use AbsenceReason data.`);
-  if (malformedLateness) warnings.push(`${malformedLateness} malformed lateness duration value(s) were ignored.`);
-  const named = (values: Map<string, number>) => [...values.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([name, count]) => ({ name, count, percentage: rate(count, studentIds.length) }));
   const label = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${startDate}T00:00:00Z`));
-  return {
+  const report: MonthlyReportResponse = {
     meta: { report_type: "monthly", scope, academic_year: { id: Number(year.id), name: year.label }, period: { start: startDate, end: endDate }, generated_at: new Date().toISOString() },
-    report_period: { selected_month: month, academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "calendar_month", month_bound: true, label }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "available_academic_year_records", month_bound: false, label: `Available Academic Records - AY ${year.label}` } } },
-    executive_summary: { total_students: studentIds.length, male_students: 0, female_students: 0, attendance_rate: finalizeAttendance(overall).attendance_rate, late_rate: finalizeAttendance(overall).late_rate, late_minutes: overall.late_minutes, below_kkm_count: belowRows.length, data_completeness_rate: null },
-    student_distribution: { by_level: named(levelCounts), by_class: named(classCounts), by_gender: [], by_religion: [], by_domicile: [] },
-    attendance_summary: finalizeAttendance(overall), attendance_by_level: attendanceByLevel,
+    report_period: { selected_month: month, academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "attendance_basis_resolver_by_class", month_bound: true, label }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "academic_year_records_without_assessment_dates", month_bound: false, label: `Academic Year Records ${year.label} (not month-bound)` } } },
+    population: { total_students: studentIds.size, total_classes: scopedClasses.size },
+    attendance: {
+      classes: attendanceClasses,
+      summary: {
+        basis_counts: {
+          observed: attendanceClasses.filter((value) => value.basis === "OBSERVED").length,
+          declared: attendanceClasses.filter((value) => value.basis === "DECLARED").length,
+          not_reported: attendanceClasses.filter((value) => value.basis === "NOT_REPORTED").length,
+        },
+        observed: {
+          class_count: observedClasses.length, expected_student_days: observedExpected, hadir_student_days: observedHadir,
+          sakit_student_days: sum(observedClasses, "sakit_student_days"), izin_student_days: sum(observedClasses, "izin_student_days"),
+          alfa_student_days: sum(observedClasses, "alfa_student_days"), recorded_student_days: observedRecorded,
+          unrecorded_student_days: sum(observedClasses, "unrecorded_student_days"),
+          other_status_student_days: sum(observedClasses, "other_status_student_days"),
+          attendance_rate: rate(observedHadir, observedExpected), coverage_rate: rate(observedRecorded, observedExpected),
+        },
+        lateness: {
+          availability: latenessAvailability, late_events: coveredExpected ? lateEvents : null,
+          late_minutes: coveredExpected ? lateMinutes : null,
+          unknown_duration_events: coveredExpected ? unknownDurationEvents : null,
+          late_event_rate: latenessAvailability === "AVAILABLE" ? rate(lateEvents, scopeExpected) : null,
+          late_among_present: latenessAvailability === "AVAILABLE" ? rate(lateEvents, availableHadir) : null,
+          covered_expected_student_days: coveredExpected, available_hadir_student_days: availableHadir, scope_expected_student_days: scopeExpected,
+          coverage_rate: rate(coveredExpected, scopeExpected),
+        },
+        conflict_count: conflictCount,
+      },
+    },
     academic_summary: { availability: academicAvailable, reason: academicAvailable ? null : "Academic data is not available for the selected report context.", sumatif_average: average(gradeValues.sumatif), formatif_average: average(gradeValues.formatif), below_kkm_count: belowRows.length, by_subject: subjectSummaries },
-    trends: [], data_quality: { missing_gender: studentIds.length, missing_religion: studentIds.length, missing_domicile: studentIds.length, incomplete_attendance: overall.incomplete, empty_grade_cells: emptyGradeCells, unmapped_levels: scoped.unmapped, warnings },
+    data_quality: {
+      empty_grade_cells: emptyGradeCells, unmapped_levels: scoped.unmapped,
+      not_reported_classes: attendanceClasses.filter((value) => value.basis === "NOT_REPORTED").length,
+      partial_observed_classes: observedClasses.filter((value) => (value.recorded_student_days ?? 0) < value.expected_student_days).length,
+      unresolved_conflicts: conflictCount,
+      warnings: ["Academic values summarize records for the selected Academic Year. They are not restricted to the selected calendar month.", ...(scoped.unmapped.length ? [`Unmapped Jenjang values were excluded: ${scoped.unmapped.join(", ")}.`] : [])],
+    },
   };
-}
-
-function buildManagement(context: AuthContext, academicYearId: number, month: string, scope: Scope, className?: string | null, subjectId?: number | null, classId?: number | null): Row {
-  const executive = buildMonthly(context, academicYearId, month, scope, className, subjectId, classId);
-  const enrollments = scopedEnrollments(context, academicYearId, scope, className, classId).rows;
-  const eligible = enrollments.length;
-  const masterIds = enrollments.map((value) => value.student_master_id).filter(Boolean);
-  const masterMap = new Map(rows(context, masterIds.length ? `SELECT * FROM student_masters WHERE id IN (${masterIds.map(() => "?").join(",")})` : "SELECT * FROM student_masters WHERE 0", masterIds).map((value) => [value.id, value]));
-  const addressMap = new Map(rows(context, masterIds.length ? `SELECT * FROM student_addresses WHERE student_master_id IN (${masterIds.map(() => "?").join(",")})` : "SELECT * FROM student_addresses WHERE 0", masterIds).map((value) => [value.student_master_id, value]));
-  const genders: (string | null)[] = []; const religions: (string | null)[] = []; const locations: (string | null)[] = [];
-  const levelCounts = new Map<string, number>(); const levelClasses = new Map<string, Set<string>>(); const classCounts = new Map<string, number>();
-  for (const value of enrollments) {
-    const level = normalized(value.jenjang_name); levelCounts.set(level, (levelCounts.get(level) ?? 0) + 1); if (!levelClasses.has(level)) levelClasses.set(level, new Set()); levelClasses.get(level)!.add(value.report_class); classCounts.set(`${level}|${value.report_class}`, (classCounts.get(`${level}|${value.report_class}`) ?? 0) + 1);
-    const master = masterMap.get(value.student_master_id); genders.push(master?.gender ? String(master.gender).replace(/^./, (v: string) => v.toUpperCase()) : null); religions.push(master?.religion ?? null); const address = addressMap.get(value.student_master_id); locations.push(address?.kelurahan ? normalized(address.kelurahan).replace(/^./, (v: string) => v.toUpperCase()) : null);
-  }
-  const attendance = executive.attendance_summary;
-  const attendanceStudentIds = new Set(rows(context, enrollments.length ? `SELECT DISTINCT a.student_id FROM attendance a WHERE a.student_id IN (${enrollments.map(() => "?").join(",")}) AND a.date >= ? AND a.date <= ?` : "SELECT student_id FROM attendance WHERE 0", [...enrollments.map((value) => value.legacy_student_id), executive.meta.period.start, executive.meta.period.end]).map((value) => Number(value.student_id)));
-  const academicStudentIds = new Set(rows(context, enrollments.length ? `SELECT DISTINCT enrollment_id FROM student_subject_grades WHERE enrollment_id IN (${enrollments.map(() => "?").join(",")}) AND score IS NOT NULL${subjectId ? " AND subject_id = ?" : ""}` : "SELECT enrollment_id FROM student_subject_grades WHERE 0", [...enrollments.map((value) => value.id), ...(subjectId ? [subjectId] : [])]).map((value) => value.enrollment_id));
-  const populationByLevel = [...levelCounts.entries()].sort().map(([jenjang, count]) => ({ jenjang, student_count: count, percentage_of_eligible: rate(count, eligible), class_count: levelClasses.get(jenjang)?.size ?? 0, classification: "known" }));
-  const populationByClass = [...classCounts.entries()].sort().map(([key, count]) => { const [jenjang = "", name = ""] = key.split("|"); return { jenjang, class_name: name, student_count: count, percentage_within_jenjang: rate(count, levelCounts.get(jenjang) ?? 0), percentage_of_eligible: rate(count, eligible) }; });
-  const gender = demographic(genders, eligible); const religion = demographic(religions, eligible); const location = demographic(locations, eligible);
-  const selectedClassName = classId == null ? className ?? null : enrollments.find((value) => Number(value.academic_class_id) === classId)?.report_class ?? null;
-  const quality = { reconciliation: { population_total: eligible, student_master_linked: masterMap.size, student_master_unlinked: eligible - masterMap.size, religion_known: religion.known_count, religion_unknown: religion.unknown_count, gender_known: gender.known_count, gender_unknown: gender.unknown_count, location_known: location.known_count, location_unknown: location.unknown_count }, sections: { population: qualitySection(eligible, eligible, "selected academic-year enrollments"), religion: qualitySection(eligible, religion.known_count, "known religion values"), gender: qualitySection(eligible, gender.known_count, "known gender values"), residential_area: qualitySection(eligible, location.known_count, "known kelurahan values"), attendance: qualitySection(eligible, attendanceStudentIds.size, "eligible students with selected-month attendance records"), academics: qualitySection(eligible, Math.min(eligible, academicStudentIds.size), "students represented by available academic-year records") }, unmapped_levels: scopedEnrollments(context, academicYearId, scope, className, classId).unmapped, warnings: ["Demographic percentages use their disclosed known-value denominator and are never forced to match another section total.", "Academic figures use available academic-year records and are not restricted to the selected calendar month.", ...executive.data_quality.warnings.map((value: string) => value.replace("Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available.", "Student population is the selected academic year's enrollment snapshot; within-year enrollment history is not available."))] };
-  return { metadata: { report_type: "monthly_management", title: "Monthly Management Report", scope, academic_year: executive.meta.academic_year, generated_at: executive.meta.generated_at, filters: { class_id: classId ?? null, class_name: selectedClassName, subject_id: subjectId ?? null } }, report_period: executive.report_period, executive_summary: { total_students: eligible, total_classes: classCounts.size, attendance_rate: attendance.attendance_rate, present_count: attendance.present, excused_absence_count: attendance.izin, sick_count: attendance.sakit, unexcused_absence_count: attendance.alfa, late_count: attendance.late_days, students_below_kkm: executive.academic_summary.below_kkm_count, data_completeness_rate: executive.executive_summary.data_completeness_rate, attendance_denominator: null }, student_population: { eligible_count: eligible, by_jenjang: populationByLevel, by_class: populationByClass }, attendance: { summary: attendance, by_jenjang: executive.attendance_by_level }, academic_summary: executive.academic_summary, demographics: { religion, gender, residential_area: location }, data_quality: quality };
+  if (!Value.Check(MonthlyReportResponseSchema, report)) throw new Error("Monthly report did not match its canonical contract.");
+  return report;
 }
 
 function comparison(values: Row[], highest: boolean): Row | null {
@@ -361,22 +362,128 @@ function buildAnnual(context: AuthContext, academicYearId: number, scope: Scope,
   const year = row(context, "SELECT * FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) throw Object.assign(new Error("Academic year not found"), { status: 404 });
   const options = monthOptions(year.start_date, year.end_date);
-  const reports = options.map((value) => buildMonthly(context, academicYearId, value.value, scope, className, subjectId, classId));
-  const total = emptyAttendance(); const levelTotals = new Map<string, Row>(); const trends: Row[] = [];
+  const reports = options.map((value) => buildMonthlyReport(context, academicYearId, value.value, scope, className, subjectId, classId));
+  const total = { expected: 0, recorded: 0, hadir: 0, sakit: 0, izin: 0, alfa: 0, other: 0, unrecorded: 0 };
+  const totals = { coveredExpected: 0, scopeExpected: 0, lateEvents: 0, lateMinutes: 0, unknownDurationEvents: 0, availableHadir: 0, conflicts: 0 };
+  const basisCounts = { observed: 0, declared: 0, not_reported: 0 };
+  const levelTotals = new Map<string, Row>();
+  const trends: Row[] = [];
   for (let index = 0; index < reports.length; index++) {
-    const report = reports[index]!; const value = report.attendance_summary;
-    for (const key of Object.keys(total)) total[key] += Number(value[key] ?? 0);
-    trends.push({ month: options[index]!.value, label: options[index]!.label, present: value.present, sakit: value.sakit, izin: value.izin, alfa: value.alfa, incomplete: value.incomplete, attendance_denominator: null, attendance_rate: null, late_days: value.late_days, late_minutes: value.late_minutes, late_rate: lateAmongPresentRate(value.late_days, value.present), sumatif_average: null, formatif_average: null, below_kkm_count: 0 });
-    for (const level of report.attendance_by_level) { if (!levelTotals.has(level.level)) levelTotals.set(level.level, emptyAttendance()); const bucket = levelTotals.get(level.level)!; for (const key of Object.keys(bucket)) bucket[key] += Number(level[key] ?? 0); }
+    const report = reports[index]!;
+    const attendance = report.attendance.summary;
+    const observed = attendance.observed;
+    const lateness = attendance.lateness;
+    total.expected += observed.expected_student_days; total.recorded += observed.recorded_student_days;
+    total.hadir += observed.hadir_student_days; total.sakit += observed.sakit_student_days;
+    total.izin += observed.izin_student_days; total.alfa += observed.alfa_student_days;
+    total.other += observed.other_status_student_days; total.unrecorded += observed.unrecorded_student_days;
+    totals.coveredExpected += lateness.covered_expected_student_days;
+    totals.scopeExpected += lateness.scope_expected_student_days;
+    totals.lateEvents += lateness.late_events ?? 0; totals.lateMinutes += lateness.late_minutes ?? 0;
+    totals.unknownDurationEvents += lateness.unknown_duration_events ?? 0;
+    totals.availableHadir += lateness.available_hadir_student_days; totals.conflicts += attendance.conflict_count;
+    for (const key of Object.keys(basisCounts) as Array<keyof typeof basisCounts>) basisCounts[key] += attendance.basis_counts[key];
+    trends.push({
+      month: options[index]!.value, label: options[index]!.label,
+      present: observed.hadir_student_days, sakit: observed.sakit_student_days, izin: observed.izin_student_days,
+      alfa: observed.alfa_student_days, incomplete: observed.other_status_student_days,
+      attendance_denominator: observed.expected_student_days, attendance_rate: observed.attendance_rate,
+      recorded_student_days: observed.recorded_student_days, unrecorded_student_days: observed.unrecorded_student_days,
+      coverage_rate: observed.coverage_rate, basis_counts: attendance.basis_counts,
+      conflict_count: attendance.conflict_count, late_days: lateness.late_events,
+      late_event_rate: lateness.late_event_rate, lateness_availability: lateness.availability,
+      lateness_coverage_rate: lateness.coverage_rate, late_minutes: lateness.late_minutes,
+      unknown_duration_events: lateness.unknown_duration_events, late_rate: lateness.late_among_present,
+      sumatif_average: null, formatif_average: null, below_kkm_count: 0,
+    });
+    for (const value of report.attendance.classes) {
+      const bucket = levelTotals.get(value.jenjang) ?? {
+        observed_classes: 0, declared_classes: 0, not_reported_classes: 0, expected: 0, recorded: 0,
+        hadir: 0, sakit: 0, izin: 0, alfa: 0, other: 0, unrecorded: 0, coveredExpected: 0,
+        scopeExpected: 0, lateEvents: 0, lateMinutes: 0, unknownDurationEvents: 0, conflicts: 0,
+      };
+      bucket.scopeExpected += value.expected_student_days;
+      if (value.basis === "OBSERVED") {
+        bucket.observed_classes++; bucket.expected += value.expected_student_days;
+        bucket.recorded += value.recorded_student_days ?? 0; bucket.hadir += value.hadir_student_days ?? 0;
+        bucket.sakit += value.sakit_student_days ?? 0; bucket.izin += value.izin_student_days ?? 0;
+        bucket.alfa += value.alfa_student_days ?? 0; bucket.other += value.other_status_student_days ?? 0;
+        bucket.unrecorded += value.unrecorded_student_days ?? 0;
+      } else if (value.basis === "DECLARED") bucket.declared_classes++;
+      else bucket.not_reported_classes++;
+      if (value.lateness.availability === "AVAILABLE") {
+        bucket.coveredExpected += value.expected_student_days;
+        bucket.lateEvents += value.lateness.late_events ?? 0; bucket.lateMinutes += value.lateness.late_minutes ?? 0;
+        bucket.unknownDurationEvents += value.lateness.unknown_duration_events ?? 0;
+      }
+      if (value.conflict) bucket.conflicts++;
+      levelTotals.set(value.jenjang, bucket);
+    }
   }
-  const finalized = finalizeAttendance(total); const annualLevels: Row[] = [...levelTotals.keys()].sort().map((level) => ({ level, ...finalizeAttendance(levelTotals.get(level)!) }));
-  const base = reports[0] ?? buildMonthly(context, academicYearId, `${String(year.start_date).slice(0, 7)}`, scope, className, subjectId, classId);
-  const academicUnavailable = base.data_quality.warnings.find((value: string) => value === "Academic data is not available for the selected report context.");
-  const warnings = [...base.data_quality.warnings.filter((value: string) => !value.includes("Student population") && !value.includes("Academic data is not available") && !value.includes("Monthly academic trends")), "Historical enrollment snapshots are not available; student population represents the selected academic year's enrollment snapshot.", ...(academicUnavailable ? [academicUnavailable] : []), "Monthly academic trends are unavailable because Grade Ledger scores do not have an assessment-month field."];
-  for (const report of reports) for (const warning of report.data_quality.warnings) if (!warnings.includes(warning) && !warning.includes("Student population")) warnings.push(warning);
-  const monthRows = trends.map((value) => ({ name: value.month, attendance_rate: value.attendance_rate, attendance_denominator: null }));
-  const levelRows = annualLevels.map((value) => ({ name: value.level, attendance_rate: value.attendance_rate, attendance_denominator: null }));
-  return { meta: { report_type: "annual", scope, academic_year: { id: Number(year.id), name: year.label }, period: { start: year.start_date, end: year.end_date }, generated_at: new Date().toISOString() }, report_period: { selected_month: "", academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "academic_year", month_bound: false, label: `Academic Year ${year.label}` }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "available_academic_year_records", month_bound: false, label: `Available Academic Records - AY ${year.label}` } } }, executive_summary: { total_students: base.executive_summary.total_students, male_students: 0, female_students: 0, attendance_rate: finalized.attendance_rate, late_rate: finalized.late_rate, late_minutes: total.late_minutes, below_kkm_count: base.academic_summary.below_kkm_count, data_completeness_rate: null }, student_distribution: base.student_distribution, attendance_summary: finalized, attendance_by_level: annualLevels, academic_summary: base.academic_summary, trends, comparisons: { highest_attendance_month: comparison(monthRows, true), lowest_attendance_month: comparison(monthRows, false), highest_attendance_level: comparison(levelRows, true), lowest_attendance_level: comparison(levelRows, false) }, data_quality: { missing_gender: base.executive_summary.total_students, missing_religion: base.executive_summary.total_students, missing_domicile: base.executive_summary.total_students, incomplete_attendance: total.incomplete, empty_grade_cells: base.data_quality.empty_grade_cells, unmapped_levels: base.data_quality.unmapped_levels, warnings } };
+  const allLatenessAvailable = totals.coveredExpected > 0 && totals.coveredExpected === totals.scopeExpected;
+  const annualLevels = [...levelTotals.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([level, value]) => ({
+    level, present: value.hadir, sakit: value.sakit, izin: value.izin, alfa: value.alfa, incomplete: value.other,
+    attendance_denominator: value.expected, attendance_rate: rate(value.hadir, value.expected),
+    recorded_student_days: value.recorded, unrecorded_student_days: value.unrecorded,
+    coverage_rate: rate(value.recorded, value.expected), observed_class_months: value.observed_classes,
+    declared_class_months: value.declared_classes, not_reported_class_months: value.not_reported_classes,
+    late_events: value.coveredExpected ? value.lateEvents : null,
+    late_event_rate: value.coveredExpected === value.scopeExpected && value.scopeExpected ? rate(value.lateEvents, value.scopeExpected) : null,
+    lateness_availability: value.coveredExpected === 0 ? "UNAVAILABLE" : value.coveredExpected === value.scopeExpected ? "AVAILABLE" : "PARTIAL",
+    lateness_coverage_rate: rate(value.coveredExpected, value.scopeExpected), late_minutes: value.coveredExpected ? value.lateMinutes : null,
+    unknown_duration_events: value.coveredExpected ? value.unknownDurationEvents : null, conflict_count: value.conflicts,
+  }));
+  const base = reports[0]!;
+  const selected = scopedEnrollments(context, academicYearId, scope, className, classId);
+  const levelCounts = new Map<string, number>(); const classCounts = new Map<string, number>();
+  for (const value of selected.rows) { levelCounts.set(normalized(value.jenjang_name), (levelCounts.get(normalized(value.jenjang_name)) ?? 0) + 1); classCounts.set(value.report_class, (classCounts.get(value.report_class) ?? 0) + 1); }
+  const named = (values: Map<string, number>) => [...values.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count, percentage: rate(count, selected.rows.length) }));
+  const attendanceRate = rate(total.hadir, total.expected);
+  const coverageRate = rate(total.recorded, total.expected);
+  const lateEventRate = allLatenessAvailable ? rate(totals.lateEvents, totals.scopeExpected) : null;
+  const lateAmongPresent = allLatenessAvailable ? rate(totals.lateEvents, totals.availableHadir) : null;
+  const monthRows = trends.map((value) => ({ name: value.month, attendance_rate: value.attendance_rate, attendance_denominator: value.attendance_denominator }));
+  const levelRows = annualLevels.map((value) => ({ name: value.level, attendance_rate: value.attendance_rate, attendance_denominator: value.attendance_denominator }));
+  const warnings = ["Annual attendance rates and coverage summarize OBSERVED class-months; basis counts disclose DECLARED and NOT_REPORTED class-months.", "Academic values are selected Academic Year records; monthly grade trends are unavailable because grades have no assessment-month field."];
+  if (base.academic_summary.availability === false) warnings.push(base.academic_summary.reason ?? "Academic data is unavailable.");
+  if (base.data_quality.unmapped_levels.length) warnings.push(`Unmapped Jenjang values were excluded: ${base.data_quality.unmapped_levels.join(", ")}.`);
+  return {
+    meta: { report_type: "annual", scope, academic_year: { id: Number(year.id), name: year.label }, period: { start: year.start_date, end: year.end_date }, generated_at: new Date().toISOString() },
+    report_period: { selected_month: "", academic_year_id: Number(year.id), academic_year_label: year.label, sections: { attendance: { basis: "attendance_basis_resolver_by_class_month", month_bound: false, label: `Academic Year ${year.label}` }, population: { basis: "academic_year_enrollment_snapshot", month_bound: false, label: `Academic Year ${year.label}` }, academics: { basis: "academic_year_records_without_assessment_dates", month_bound: false, label: `Academic Year Records ${year.label}` } } },
+    executive_summary: {
+      total_students: base.population.total_students, attendance_rate: attendanceRate, coverage_rate: coverageRate,
+      unrecorded_student_days: total.unrecorded, late_rate: lateAmongPresent, late_event_rate: lateEventRate,
+      late_minutes: totals.coveredExpected ? totals.lateMinutes : null,
+      late_unknown_duration_events: totals.coveredExpected ? totals.unknownDurationEvents : null,
+      lateness_availability: totals.coveredExpected === 0 ? "UNAVAILABLE" : allLatenessAvailable ? "AVAILABLE" : "PARTIAL",
+      lateness_coverage_rate: rate(totals.coveredExpected, totals.scopeExpected),
+      observed_class_months: basisCounts.observed, declared_class_months: basisCounts.declared,
+      not_reported_class_months: basisCounts.not_reported,
+      conflict_count: totals.conflicts, below_kkm_count: base.academic_summary.below_kkm_count, data_completeness_rate: null,
+    },
+    student_distribution: { by_level: named(levelCounts), by_class: named(classCounts), by_gender: [], by_religion: [], by_domicile: [] },
+    attendance_summary: {
+      present: total.hadir, sakit: total.sakit, izin: total.izin, alfa: total.alfa, incomplete: total.other,
+      late_days: totals.coveredExpected ? totals.lateEvents : null, late_minutes: totals.coveredExpected ? totals.lateMinutes : null,
+      attendance_rate: attendanceRate, coverage_rate: coverageRate, expected_student_days: total.expected,
+      recorded_student_days: total.recorded, unrecorded_student_days: total.unrecorded,
+      late_event_rate: lateEventRate, late_among_present: lateAmongPresent,
+      lateness_availability: totals.coveredExpected === 0 ? "UNAVAILABLE" : allLatenessAvailable ? "AVAILABLE" : "PARTIAL",
+      lateness_coverage_rate: rate(totals.coveredExpected, totals.scopeExpected),
+      late_unknown_duration_events: totals.coveredExpected ? totals.unknownDurationEvents : null,
+      basis_counts: basisCounts, conflict_count: totals.conflicts,
+    },
+    attendance_by_level: annualLevels,
+    academic_summary: base.academic_summary,
+    trends,
+    comparisons: { highest_attendance_month: comparison(monthRows, true), lowest_attendance_month: comparison(monthRows, false), highest_attendance_level: comparison(levelRows, true), lowest_attendance_level: comparison(levelRows, false) },
+    data_quality: {
+      not_reported_class_months: basisCounts.not_reported,
+      partial_observed_class_months: reports.reduce((count, report) => count + report.data_quality.partial_observed_classes, 0),
+      unresolved_conflicts: totals.conflicts, empty_grade_cells: base.data_quality.empty_grade_cells,
+      unmapped_levels: base.data_quality.unmapped_levels, warnings,
+    },
+  };
 }
 
 function reportPeriod(month?: number, year?: number, dateFrom?: string, dateTo?: string, term?: number): Row {
@@ -535,24 +642,147 @@ async function reportPdf(title: string, report: Row): Promise<Uint8Array> {
   const document = await PDFDocument.create(); const page = document.addPage([842, 595]); const font = await document.embedFont(StandardFonts.Helvetica); const bold = await document.embedFont(StandardFonts.HelveticaBold); let y = 550;
   page.drawText(schoolName, { x: 32, y, size: 14, font: bold, color: rgb(0.12, 0.23, 0.54) }); y -= 28; page.drawText(title, { x: 32, y, size: 18, font: bold }); y -= 28;
   const summary = report.executive_summary ?? report.totals ?? report.management_summary ?? {};
-  const labels: Record<string, string> = { attendance_rate: "Attendance Rate", late_rate: "Late Among Present (%)", late_days: "Late Events", late_minutes: "Total Late Minutes", below_kkm: "Below KKM", interventions: "Interventions" };
+  const labels: Record<string, string> = { reporting_period: "Reporting Period", expected_student_days: "Expected Student-Days", hadir_student_days: "Hadir", recorded_student_days: "Recorded Student-Days", attendance_rate: "Attendance Rate", coverage_rate: "Coverage", unrecorded_student_days: "Unrecorded Student-Days", late_event_rate: "Late Event Rate", late_events: "Late Events", late_minutes: "Known Late Minutes", late_unknown_duration_events: "Unknown-Duration Late Events", unknown_duration_events: "Unknown-Duration Late Events", late_event_coverage: "Late-Data Coverage", late_availability: "Lateness Availability", lateness_availability: "Lateness Availability", lateness_coverage_rate: "Lateness Coverage", late_rate: "Late Among Present (%)", late_days: "Late Events", below_kkm: "Below KKM", below_kkm_count: "Below KKM", total_students: "Students", total_classes: "Classes", conflict_count: "Attendance Conflicts", observed_classes: "Observed Classes", declared_classes: "Declared Classes", not_reported_classes: "Not Reported Classes", sumatif_average: "Sumatif Average", formatif_average: "Formatif Average" };
   for (const [key, value] of Object.entries(summary)) { if (y < 40) break; page.drawText(`${labels[key] ?? key}: ${value == null ? "Not available" : String(value)}`, { x: 32, y, size: 10, font }); y -= 16; }
-  const attendanceWarning = (report.data_quality?.warnings ?? []).find((value: string) => value.includes("Attendance Rate"));
+  for (const [term, definition] of report.definitions ?? []) { if (y < 40) break; page.drawText(`${term}: ${definition}`, { x: 32, y, size: 9, font }); y -= 13; }
+  const attendanceWarning = (report.data_quality?.warnings ?? []).find((value: string) => /attendance rates?/i.test(value));
   if (attendanceWarning && y >= 40) page.drawText(attendanceWarning.slice(0, 110), { x: 32, y, size: 9, font });
   return document.save();
+}
+
+async function monthlyReportPdf(report: MonthlyReportResponse): Promise<Uint8Array> {
+  const attendance = report.attendance.summary;
+  const observed = attendance.observed;
+  const late = attendance.lateness;
+  return reportPdf("Monthly Management Report", {
+    executive_summary: {
+      reporting_period: `${report.report_period.selected_month} · Academic Year ${report.report_period.academic_year_label}`,
+      total_students: report.population.total_students, total_classes: report.population.total_classes,
+      observed_classes: attendance.basis_counts.observed, declared_classes: attendance.basis_counts.declared,
+      not_reported_classes: attendance.basis_counts.not_reported,
+      expected_student_days: observed.expected_student_days, hadir_student_days: observed.hadir_student_days,
+      attendance_rate: observed.attendance_rate, coverage_rate: observed.coverage_rate,
+      unrecorded_student_days: observed.unrecorded_student_days,
+      late_availability: late.availability, late_events: late.late_events,
+      late_event_rate: late.late_event_rate, late_event_coverage: late.coverage_rate,
+      conflict_count: attendance.conflict_count, sumatif_average: report.academic_summary.sumatif_average,
+      formatif_average: report.academic_summary.formatif_average, below_kkm_count: report.academic_summary.below_kkm_count,
+    },
+    data_quality: { warnings: ["Attendance Rate and Coverage summarize OBSERVED classes only.", "Academic values are Academic Year records and are not month-bound."] },
+    definitions: [
+      ["Attendance Rate", "Hadir / Expected Student-Days; OBSERVED only."],
+      ["Late Event Rate", "Canonical Late Events / Expected Student-Days."],
+      ["Basis", "OBSERVED, DECLARED, or NOT_REPORTED per class-month."],
+      ["Coverage", "Recorded / Expected Student-Days; OBSERVED only."],
+      ["Unrecorded", "Expected Student-Days without a recorded status."],
+      ["Lateness", "Unavailable without canonical arrival evidence."],
+    ],
+  });
+}
+
+async function annualReportPdf(report: Row): Promise<Uint8Array> {
+  return reportPdf("Annual Report", {
+    ...report,
+    executive_summary: {
+      ...report.executive_summary,
+      expected_student_days: report.attendance_summary.expected_student_days,
+      hadir_student_days: report.attendance_summary.present,
+      recorded_student_days: report.attendance_summary.recorded_student_days,
+    },
+    definitions: [
+      ["Attendance Rate", "Hadir / Expected Student-Days; OBSERVED class-months only."],
+      ["Late Event Rate", "Canonical Late Events / Expected Student-Days."],
+      ["Late Among Present", "Canonical Late Events / Hadir; unavailable with partial coverage."],
+      ["Basis", "OBSERVED, DECLARED, or NOT_REPORTED per class-month."],
+      ["Coverage", "Recorded / Expected Student-Days; OBSERVED only."],
+      ["Unrecorded", "Expected Student-Days without a recorded status."],
+      ["Lateness", "Unavailable without canonical arrival evidence."],
+    ],
+  });
 }
 
 function safeName(value: string): string { return normalized(value).replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "report"; }
 
 async function reportWorkbook(report: Row): Promise<Uint8Array> {
   const workbook = createWorkbook({ exportType: "report" }); const executive = report.executive_summary; const add = (name: string, headers: string[], values: any[][]) => { const sheet = addWorksheet(workbook, name); appendRow(sheet, headers); for (const value of values) appendRow(sheet, value); styleHeader(sheet); autoSizeColumns(sheet, 12, 36); };
-  const metricLabels: Record<string, string> = { attendance_rate: "Attendance Rate", late_rate: "Late Among Present (%)", late_minutes: "Total Late Minutes" };
+  const metricLabels: Record<string, string> = { attendance_rate: "Attendance Rate", coverage_rate: "Coverage", unrecorded_student_days: "Unrecorded Student-Days", late_rate: "Late Among Present (%)", late_event_rate: "Late Event Rate", late_minutes: "Known Late Minutes", late_unknown_duration_events: "Unknown-Duration Late Events", lateness_availability: "Lateness Availability", lateness_coverage_rate: "Lateness Coverage", conflict_count: "Attendance Conflicts", below_kkm_count: "Below KKM" };
   add("Executive Summary", ["Metric", "Value"], Object.entries(executive ?? {}).map(([key, value]) => [metricLabels[key] ?? key, value]));
-  add("Attendance", ["Level", "Hadir", "Manual Sakit", "Manual Izin", "Manual Alfa", "Incomplete", "Late Events", "Late Minutes", "Attendance Rate", "Late Among Present"], [report.attendance_summary, ...(report.attendance_by_level ?? [])].map((value: Row, index: number) => [index ? value.level : "Overall", value.present, value.sakit, value.izin, value.alfa, value.incomplete, value.late_days, value.late_minutes, value.attendance_rate, value.late_rate]));
+  add("Attendance", ["Level", "OBSERVED Class-Months", "DECLARED Class-Months", "NOT_REPORTED Class-Months", "Expected Student-Days", "Hadir", "Sakit", "Izin", "Alfa", "Unrecorded", "Attendance Rate", "Coverage", "Lateness Availability", "Late Events", "Late Event Rate", "Lateness Coverage", "Known Late Minutes", "Unknown-Duration Events", "Conflicts"], [report.attendance_summary, ...(report.attendance_by_level ?? [])].map((value: Row, index: number) => [index ? value.level : "Overall", index ? value.observed_class_months : value.basis_counts.observed, index ? value.declared_class_months : value.basis_counts.declared, index ? value.not_reported_class_months : value.basis_counts.not_reported, value.attendance_denominator ?? value.expected_student_days, value.present, value.sakit, value.izin, value.alfa, value.unrecorded_student_days, value.attendance_rate, value.coverage_rate, value.lateness_availability, value.late_days ?? value.late_events, value.late_event_rate, value.lateness_coverage_rate, value.late_minutes, value.late_unknown_duration_events ?? value.unknown_duration_events, value.conflict_count]));
   add("Student Distribution", ["Dimension", "Name", "Count", "Percentage"], Object.entries(report.student_distribution ?? {}).flatMap(([dimension, values]) => (values as Row[]).map((value) => [dimension, value.name, value.count, value.percentage])));
   const academic = report.academic_summary ?? {}; add("Academic Summary", ["Subject", "Level", "Sumatif Average", "Formatif Average", "Below KKM Count", "Available", "Reason"], [["Overall", null, academic.sumatif_average, academic.formatif_average, academic.below_kkm_count, academic.availability, academic.reason], ...(academic.by_subject ?? []).map((value: Row) => [value.subject_name, value.jenjang, value.sumatif_average, value.formatif_average, value.below_kkm_count, true, null])]);
-  if (report.meta?.report_type === "annual") add("Annual Trends", ["Month", "Label", "Present", "Sakit", "Izin", "Alfa", "Incomplete", "Attendance Denominator", "Attendance Rate", "Late Events", "Late Minutes", "Late Among Present", "Sumatif Average", "Formatif Average", "Below KKM Count"], (report.trends ?? []).map((value: Row) => Object.values(value)));
-  const quality = report.data_quality ?? {}; add("Data Quality", ["Metric", "Value"], [["Missing Gender", quality.missing_gender], ["Missing Religion", quality.missing_religion], ["Missing Domicile", quality.missing_domicile], ["Incomplete Attendance", quality.incomplete_attendance], ["Empty Grade Cells", quality.empty_grade_cells], ["Unmapped Levels", (quality.unmapped_levels ?? []).join(", ")], ...(quality.warnings ?? []).map((value: string) => ["Warning", value])]);
+  if (report.meta?.report_type === "annual") add("Annual Trends", ["Month", "Label", "OBSERVED", "DECLARED", "NOT_REPORTED", "Expected Student-Days", "Hadir", "Unrecorded", "Attendance Rate", "Coverage", "Conflicts", "Lateness Availability", "Late Events", "Late Event Rate", "Lateness Coverage", "Known Late Minutes", "Unknown-Duration Events"], (report.trends ?? []).map((value: Row) => [value.month, value.label, value.basis_counts.observed, value.basis_counts.declared, value.basis_counts.not_reported, value.attendance_denominator, value.present, value.unrecorded_student_days, value.attendance_rate, value.coverage_rate, value.conflict_count, value.lateness_availability, value.late_days, value.late_event_rate, value.lateness_coverage_rate, value.late_minutes, value.unknown_duration_events]));
+  const quality = report.data_quality ?? {}; add("Data Quality", ["Metric", "Value"], [["Not Reported Class-Months", quality.not_reported_class_months], ["Partial Observed Class-Months", quality.partial_observed_class_months], ["Attendance Conflicts", quality.unresolved_conflicts], ["Empty Grade Cells", quality.empty_grade_cells], ["Unmapped Levels", (quality.unmapped_levels ?? []).join(", ")], ...(quality.warnings ?? []).map((value: string) => ["Warning", value])]);
+  add("Definitions", ["Term", "Definition"], [["Attendance Rate", "Hadir / Expected Student-Days for OBSERVED class-months."], ["Coverage", "Recorded expected Student-Days / Expected Student-Days for OBSERVED class-months."], ["Unrecorded", "Expected Student-Days without a recorded attendance status."], ["Late Event Rate", "Canonical Late Events / Expected Student-Days; unavailable when lateness coverage is incomplete."], ["Basis", "Each month is classified as OBSERVED, DECLARED, or NOT_REPORTED; basis counts are shown by month and level."]]);
+  return writeXlsxWorkbook(workbook);
+}
+
+async function monthlyReportWorkbook(report: MonthlyReportResponse): Promise<Uint8Array> {
+  const workbook = createWorkbook({ exportType: "report" });
+  const summary = addWorksheet(workbook, "Monthly Summary");
+  const observed = report.attendance.summary.observed;
+  const lateness = report.attendance.summary.lateness;
+  appendRow(summary, ["Monthly Management Report"]);
+  appendRow(summary, ["Academic Year", report.report_period.academic_year_label]);
+  appendRow(summary, ["Month", report.report_period.selected_month]);
+  appendRow(summary, ["Population snapshot scope", "Selected Academic Year enrollments"]);
+  appendRow(summary, ["Students", report.population.total_students]);
+  appendRow(summary, ["Classes", report.population.total_classes]);
+  appendRow(summary, ["OBSERVED classes", report.attendance.summary.basis_counts.observed]);
+  appendRow(summary, ["DECLARED classes", report.attendance.summary.basis_counts.declared]);
+  appendRow(summary, ["NOT_REPORTED classes", report.attendance.summary.basis_counts.not_reported]);
+  appendRow(summary, ["Observed Expected Student-Days", observed.expected_student_days]);
+  appendRow(summary, ["Observed Hadir", observed.hadir_student_days]);
+  appendRow(summary, ["Attendance Rate · OBSERVED classes", observed.attendance_rate]);
+  appendRow(summary, ["Coverage · OBSERVED classes", observed.coverage_rate]);
+  appendRow(summary, ["Unrecorded · OBSERVED classes", observed.unrecorded_student_days]);
+  appendRow(summary, ["Lateness availability", lateness.availability]);
+  appendRow(summary, ["Late Events", lateness.late_events]);
+  appendRow(summary, ["Late Event Rate", lateness.late_event_rate]);
+  appendRow(summary, ["Lateness coverage", lateness.coverage_rate]);
+  appendRow(summary, ["Known late minutes", lateness.late_minutes]);
+  appendRow(summary, ["Unknown-duration late events", lateness.unknown_duration_events]);
+  appendRow(summary, ["Attendance conflicts", report.attendance.summary.conflict_count]);
+  appendRow(summary, ["Academic snapshot", report.report_period.sections.academics.label]);
+  appendRow(summary, ["Sumatif Average", report.academic_summary.sumatif_average]);
+  appendRow(summary, ["Formatif Average", report.academic_summary.formatif_average]);
+  appendRow(summary, ["Below KKM", report.academic_summary.below_kkm_count]);
+  styleHeader(summary);
+  autoSizeColumns(summary, 12, 48);
+
+  const attendance = addWorksheet(workbook, "Attendance by Class");
+  appendRow(attendance, ["Class", "Jenjang", "Basis", "Expected Student-Days", "Recorded", "Hadir", "Presumed Hadir", "Sakit", "Izin", "Alfa", "Unrecorded", "Attendance Rate", "Coverage", "Lateness", "Late Events", "Late Event Rate", "Known Late Minutes", "Unknown-Duration Events", "Conflict", "Conflict Delta"]);
+  for (const value of report.attendance.classes) appendRow(attendance, [
+    value.class_name, value.jenjang, value.basis, value.expected_student_days, value.recorded_student_days,
+    value.hadir_student_days, value.presumed_hadir_student_days, value.sakit_student_days, value.izin_student_days,
+    value.alfa_student_days, value.unrecorded_student_days, value.attendance_rate, value.coverage_rate,
+    value.lateness.availability, value.lateness.late_events,
+    value.lateness.late_event_rate,
+    value.lateness.late_minutes, value.lateness.unknown_duration_events,
+    value.conflict ? "CONFLICT" : "—", value.conflict?.delta_student_days ?? null,
+  ]);
+  styleHeader(attendance);
+  autoSizeColumns(attendance, 12, 42);
+
+  const academics = addWorksheet(workbook, "Academic Snapshot");
+  appendRow(academics, ["Scope", report.report_period.sections.academics.label]);
+  appendRow(academics, ["Subject", "Jenjang", "Sumatif Average", "Formatif Average", "Below KKM"]);
+  for (const value of report.academic_summary.by_subject) appendRow(academics, [value.subject_name, value.jenjang, value.sumatif_average, value.formatif_average, value.below_kkm_count]);
+  styleHeader(academics);
+  autoSizeColumns(academics, 12, 42);
+
+  const definitions = addWorksheet(workbook, "Definitions");
+  appendRow(definitions, ["Term", "Definition"]);
+  for (const definition of [
+    ["Attendance Rate", "Hadir / Expected Student-Days. This sheet reports OBSERVED classes only."],
+    ["Coverage", "Recorded expected Student-Days / Expected Student-Days. Unrecorded days remain visible."],
+    ["Late Event Rate", "Canonical Late Events / Expected Student-Days. Null when unavailable or partially covered."],
+    ["OBSERVED", "Canonical daily attendance evidence exists for this class-month."],
+    ["DECLARED", "Submitted monthly Sakit/Izin/Alfa ledger; lateness is unavailable without canonical arrivals."],
+    ["NOT_REPORTED", "No canonical evidence and no submitted declaration. Attendance values are unavailable."],
+    ["CONFLICT", "Submitted declarations disagree with comparable complete canonical non-Hadir totals."],
+  ]) appendRow(definitions, definition);
+  styleHeader(definitions);
+  autoSizeColumns(definitions, 12, 84);
   return writeXlsxWorkbook(workbook);
 }
 
@@ -1231,13 +1461,14 @@ function analyticsBasicRoutes(app: any, context: AuthContext, prefix: string): v
 export function reportRoutes(app: any, context: AuthContext): any {
   const reportQuery = { query: t.Object({ academic_year_id: t.Optional(t.String()), month: t.Optional(t.String()), scope: t.Optional(ReportScopeSchema), class_id: t.Optional(t.String({ pattern: "^[1-9]\\d*$" })), class_name: t.Optional(t.String()), subject_id: t.Optional(t.String()), format: t.Optional(t.Union([t.Literal("pdf"), t.Literal("xlsx")])) }) };
   app.get("/api/reports/filters", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return reportFilters(context, queryNumber(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope); } catch (error) { return sendError(ctx, error); } }, reportQuery);
-  app.get("/api/reports/monthly", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildMonthly(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), queryNumber(ctx.query.class_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
-  app.get("/api/reports/management/monthly", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; try { return buildManagement(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), queryNumber(ctx.query.class_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  const monthlyResponse = { ...reportQuery, response: MonthlyReportResponseSchema };
+  app.get("/api/reports/monthly", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildMonthlyReport(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), queryNumber(ctx.query.class_id)); } catch (error) { return sendError(ctx, error); } }, monthlyResponse);
+  app.get("/api/reports/management/monthly", (ctx: Context) => { if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" }; try { return buildMonthlyReport(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), queryNumber(ctx.query.class_id)); } catch (error) { return sendError(ctx, error); } }, monthlyResponse);
   app.get("/api/reports/annual", (ctx: Context) => { if (!actor(context, ctx, {})) return { detail: "Authentication required" }; try { return buildAnnual(context, Number(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), queryNumber(ctx.query.class_id)); } catch (error) { return sendError(ctx, error); } }, reportQuery);
-  const exportRoute = (path: string, kind: "monthly" | "annual" | "management") => app.get(path, async (ctx: Context) => { const requirement = kind === "management" ? { role: "admin" as const } : {}; if (!actor(context, ctx, requirement)) return { detail: kind === "management" ? "Insufficient permissions" : "Authentication required" }; try { const format = ctx.query.format; if (format !== "pdf" && format !== "xlsx") return fail(ctx.set, 422, "format must be pdf or xlsx"); const classId = queryNumber(ctx.query.class_id); const report = kind === "monthly" ? buildMonthly(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), classId) : kind === "annual" ? buildAnnual(context, Number(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), classId) : buildManagement(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), classId); const bytes = format === "pdf" ? await reportPdf(kind === "management" ? "Monthly Management Report" : `${kind.charAt(0).toUpperCase()}${kind.slice(1)} Executive Report`, report) : await reportWorkbook(kind === "management" ? { ...report, meta: { report_type: "monthly" }, executive_summary: report.executive_summary, student_distribution: { by_level: [], by_class: [], by_gender: [], by_religion: [], by_domicile: [] }, attendance_summary: report.attendance.summary, attendance_by_level: report.attendance.by_jenjang, academic_summary: report.academic_summary, report_period: report.report_period, data_quality: report.data_quality } : report); return sendFile(bytes, format, `${kind}-report-${ctx.query.scope ?? "combined"}-${ctx.query.month ?? "annual"}`); } catch (error) { return sendError(ctx, error); } }, reportQuery);
+  const exportRoute = (path: string, kind: "monthly" | "annual" | "management") => app.get(path, async (ctx: Context) => { const requirement = kind === "management" ? { role: "admin" as const } : {}; if (!actor(context, ctx, requirement)) return { detail: kind === "management" ? "Insufficient permissions" : "Authentication required" }; try { const format = ctx.query.format; if (format !== "pdf" && format !== "xlsx") return fail(ctx.set, 422, "format must be pdf or xlsx"); const classId = queryNumber(ctx.query.class_id); const monthly = kind !== "annual"; const report = monthly ? buildMonthlyReport(context, Number(ctx.query.academic_year_id), ctx.query.month, (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), classId) : buildAnnual(context, Number(ctx.query.academic_year_id), (ctx.query.scope ?? "combined") as Scope, ctx.query.class_name, queryNumber(ctx.query.subject_id), classId); const bytes = format === "pdf" ? monthly ? await monthlyReportPdf(report as MonthlyReportResponse) : await annualReportPdf(report) : monthly ? await monthlyReportWorkbook(report as MonthlyReportResponse) : await reportWorkbook(report); const filename = monthly ? `operatoros-monthly-management-${ctx.query.scope ?? "combined"}-${ctx.query.month ?? "selected"}` : `operatoros-annual-report-${ctx.query.scope ?? "combined"}`; return sendFile(bytes, format, filename); } catch (error) { return sendError(ctx, error); } }, reportQuery);
   exportRoute("/api/reports/monthly/export", "monthly"); exportRoute("/api/reports/annual/export", "annual"); exportRoute("/api/reports/management/monthly/export", "management");
   for (const prefix of ["/api/analytics", "/analytics"]) analyticsBasicRoutes(app, context, prefix);
   return app;
 }
 
-export { buildAnnual, buildManagement, buildMonthly, buildRekap, buildTardiness, calculateHeb, reportFilters, roundHalfEven, roundHalfUp };
+export { buildAnnual, buildMonthlyReport, buildRekap, buildTardiness, calculateHeb, reportFilters, roundHalfEven, roundHalfUp };

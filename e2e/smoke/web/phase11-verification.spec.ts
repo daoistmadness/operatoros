@@ -115,9 +115,11 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
 test("@phase11 @reports monthly reports export a non-empty workbook", async ({ page }) => {
   await login(page);
   await page.goto("/reports/monthly");
+  await expect(page).toHaveURL(/\/reports\?view=monthly$/);
+  await expect(page.getByRole("heading", { name: "Monthly Report", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Generate Report" }).click();
-  await expect(page.getByText("Reporting time bases")).toBeVisible();
-  await assertDownload(page, () => page.getByRole("button", { name: "Export Excel" }).click(), "xlsx");
+  await expect(page.getByRole("table", { name: "Monthly attendance by class, including source basis, coverage, and conflicts" })).toBeVisible();
+  await assertDownload(page, () => page.getByRole("button", { name: "Excel", exact: true }).click(), "xlsx");
 });
 
 test("@phase11 @safety backup creation, download, and read-only restore preflight work", async ({ page }) => {
