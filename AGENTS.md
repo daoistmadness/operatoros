@@ -1,378 +1,84 @@
 # Agent execution contract
 
-## Purpose and precedence
+This file is the authoritative execution contract. A nested `AGENTS.md` may add
+local refinements but cannot weaken it. Product-audit documents are historical
+evidence unless they state a current procedure. See [docs/README.md](docs/README.md).
+
+## Overview
 
 OperatorOS is an offline-first school attendance and academic analytics system.
-Its active runtime contract is `SQLITE_ONLY_SUPPORTED`,
-`LOCAL_BROWSER_RUNTIME`, `POSTGRESQL_NOT_SUPPORTED`, and
-`CONTAINER_RUNTIME_NOT_REQUIRED`. The experimental Tauri desktop shell was
-removed; the supported normal runtime is a local Elysia backend with the React
-frontend in a browser. The former FastAPI backend is retained only in
-historical migration evidence.
-This file is the authoritative execution contract for coding agents. A nested
-`AGENTS.md` may add local refinements but cannot weaken this contract. Current
-detail lives in [docs/README.md](docs/README.md); product-audit documents are
-historical evidence unless they explicitly identify a current procedure.
+Runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
+`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED`. Supported runtime
+is a local Elysia backend (`apps/api/`) with the React frontend (`apps/web/`)
+in a browser. The Tauri shell was removed; the FastAPI backend is migration
+evidence only. Monorepo: `apps/api/`, `apps/web/`, `packages/db/`,
+`packages/contracts/`, `packages/ui/`, `packages/excel/`, `packages/config/`.
 
-## Environment and dependencies
+## Commands
 
-- Work on the Linux checkout on `oprserver`, reached from Windows through
-  SSH/Tailscale. WSL is retired from the active workflow. Use the external
-  Python tooling environment selected by `OPERATOROS_PYTHON_VENV`; bootstrap it
-  with `mise run python:bootstrap`. Do not require or symlink a worktree-local
-  `backend/.venv`.
-- Use `mise` as toolchain-version authority. `mise.toml` pins Bun 1.4.2, hk 1.56.1, and Python 3.12.3. The root `bun.lock` is the package-manager lockfile authority. Bun remains the package manager; mise installs tools.
-- Run `mise install` to install exact runtimes from `mise.lock`. Run `mise run doctor` to verify.
-- Use `mise run dev`, `mise run check:affected`, `mise run test:fast`, and
-  `mise run check:full` as the developer-facing command surface. These tasks
-  delegate to `start-dev.sh`, Turbo, Make, and Bun without duplicating their
-  implementation logic.
-- Read relevant code and documentation before editing. Prefer the smallest safe
-  change; do not refactor unrelated code or generated artifacts.
+Authorities: `mise.toml` (Bun 1.4.2, hk 1.56.1, Node 24.19.0, Python 3.12.3),
+`package.json`, `Makefile`, [COMMANDS.md](COMMANDS.md); `bun.lock` + `mise.lock`
+are the lockfile authorities; CI runs these directly in `.github/workflows/ci.yml`.
 
-### Linux Bun runtime
+- `mise install`; `mise run doctor` — install exact runtimes; verify checkout.
+- `bun install --frozen-lockfile` — install workspace dependencies (mandatory).
+- `mise run python:bootstrap` — create/refresh the external Python tooling env (`OPERATOROS_PYTHON_VENV`, default `${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`).
+- `mise run dev` (via `./start-dev.sh`) — canonical dev entrypoint; `./start-dev.sh --check` validates without starting.
+- `mise run check:affected` (fetch `origin/main` first) — Turbo typecheck/test/build for affected packages; `bun run turbo:check` — full graph.
+- `mise run test:fast` — changed-path-aware tier; `mise run check:full` (`make test-release`) — release gate, never for Markdown-only edits; `mise run db:fresh` (`make fresh-db-parity`) — bootstrap parity.
+- `bun run check` — root lint + type + architecture + tests. Also `bun run lint`, `typecheck`, `check:typebox`, `check:architecture`, `test:architecture`, `check:contracts`, `check:ui`.
+- `bun run test:security`, `bun run security:audit` — security tests + dependency audit. `bun --filter @operatoros/excel test` — Excel parity.
+- `hk check --all` — fast hooks; install with `mise exec -- hk install --mise`.
+- `python .github/scripts/check_markdown_links.py`, `python .github/scripts/check_current_developer_docs.py` — docs validation.
+- `make dev-db-status`, `make dev-sessions-status` — inspect managed DB/sessions; `make dev-db-reset` needs the repository confirmation token.
+- `make e2e-validate`; local blocking smoke `timeout 300 make e2e-smoke`; `make e2e-full` is GitHub-Actions-only without explicit owner approval; `./scripts/verify-browser.sh` — browser smoke on a live stack.
 
-- Use only the native Linux Bun installation via mise.
-- Before executing Bun commands, inspect `command -v`, `type -P`, and `readlink -f`. Reject candidates that
-  resolve to `/mnt/c`, another `/mnt/<drive>`, `WindowsApps`, `Program Files`,
-  `.exe`, `.cmd`, `.bat`, or UNC-like Windows paths. Never execute a
-  rejected Windows binary.
-- The `validate-wsl-bun.sh` filename and `operatoros_wsl_prepare_bun` symbol are
-  legacy compatibility identifiers retained in the repository; they are not
-  current onboarding requirements.
-- Use the project-local Bun resolved by mise and reject Windows paths such as
-  `/mnt/c`, `WindowsApps`, `.exe`, `.cmd`, `.bat`, or UNC-like paths.
+Use only the native Linux Bun resolved by mise. Before running Bun, inspect
+`command -v`, `type -P`, `readlink -f`; reject `/mnt/c`, `/mnt/<drive>`,
+`WindowsApps`, `Program Files`, `.exe`, `.cmd`, `.bat`, UNC-like paths and
+never execute them. `validate-wsl-bun.sh` / `operatoros_wsl_prepare_bun` are
+legacy compatibility identifiers, not onboarding requirements.
 
-## Git and worktree safety
+## Structure
 
-- Use focused `codex/` branches unless the task specifies another name. Do not
-  amend, rebase, squash, force-push, or push directly to `main`.
-- Accepted Phase 14.8 implementation baseline: `a203617b0a38c57213ceca514581d25bb36f7cf5`.
-  The final Phase 14 audit may add only a narrow signed documentation or hygiene repair.
-- Stage explicit paths only; never use `git add .` or `git add -A`.
-- Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, and, when present,
-  `docs/student-data/dapodik-roster-import-design.md`.
-- In the primary checkout, `PROJECT_CONTEXT.md` is modified and unstaged, and
-  `f22` is untracked. Do not stage or discard either file.
-- Preserve `wip/followups-api-preservation-20260728-013523` at
-  `07b7211b73a59f0032dc33c0c43741d884b38741`: never merge, copy, modify, or
-  delete it.
+- `@operatoros/db` (`packages/db/`) owns Drizzle schema, SQLite lifecycle, and canonical data-path resolution (`packages/db/src/data-dir.ts`). Business services, HTTP, backup/scheduler policy stay in `apps/api/`.
+- `@operatoros/contracts` owns only cross-boundary TypeBox schemas/types; HTTP transport stays in `apps/api/`, DB rows in `@operatoros/db`.
+- `@operatoros/ui` owns reusable domain-neutral primitives and source-owned shadcn (new ones on Base UI). No routes, fetching, business forms, or domain rules. Existing Radix components may remain in `apps/web/`.
+- `@operatoros/excel` (`packages/excel/`) owns Excel infrastructure only. `backend/` is retained migration/fixture/operations tooling, not production runtime; `backend/attendance.db` is never the developer authority.
+- Generated/untouchable: `apps/web/build/`, `node_modules/`, `e2e-results/`, `.runtime/`, local `*.sqlite`, backups, logs, generated Excel/PDF outputs. See [CONVENTIONS.md](CONVENTIONS.md) and [phase-14 architecture](docs/architecture/phase-14-monorepo.md).
 
-## Worktree lifecycle
+## Conventions
 
-- Protect the canonical checkout at `~/code/repos/operatoros`, any intentionally
-  linked worktree under `~/code/worktrees/operatoros/`, and the persistent
-  developer data under
-  `~/.local/share/operatoros/development/`.
-- Before a feature loop, fetch `origin`, verify the previous feature on
-  `origin/main`, audit worktrees, and prune only clean worktrees whose content
-  is integrated into the current default branch. Preserve dirty, unmerged,
-  locked, unknown, audit, archive, recovery, and reference entries.
-- After merged-main verification, run
-  `wt step prune --dry-run --min-age=0s`, independently verify candidates, and
-  then run `wt step prune --min-age=0s --foreground`. Never use force deletion
-  or `wt merge`; never clean a feature worktree before merged-main verification.
+- Never pin `@sinclair/typebox` per-package; use the root `catalog:` entry.
+- Enforced by `bun run check:architecture` (`scripts/check-architecture.ts`): `packages/*` must not import `apps/*`; cross-workspace imports use package exports only; deep `@operatoros/*/src` and relative cross-workspace source imports are forbidden; `packages/contracts` must not import `elysia`, `drizzle-orm`, `react`, or `apps/*`; `packages/ui` must not import `apps/*`, `packages/db`, `@operatoros/contracts`, `@operatoros/api`, `elysia`, or `drizzle-orm`; `apps/api` must not import `@operatoros/ui`; `packages/db`/`packages/contracts` must not import `@operatoros/ui`; `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
+- API: canonical `/api/<domain>/...` through the shared client (`apps/web/src/lib/api/client.ts`); no hardcoded backend domains or double-prefix. Pages consume feature APIs, not generated OpenAPI code directly; OpenAPI contracts are version-controlled and drift-checked. Follow `apps/web/DESIGN.md`; reuse shared primitives; lazy-load routes.
+- Web state: one in-memory TanStack Query client; never persist authenticated query/analytics data to `localStorage`. Query keys include every data filter; mutations use targeted invalidation; logout clears protected data. Use the sanitized API-error foundation; preserve loading, empty, error, conflict, and authorization distinctions.
+- Cross-layer features follow the [Change Safety & Feature Golden Path](docs/architecture/change-safety-golden-path.md): name canonical authority, domain owner, shared TypeBox DTO, explicit internal-to-DTO mapper, authorization scope, query-key owner, and mutation invalidations first. Do not move stable features to satisfy folder conventions.
+- Metrics are server-computed with canonical SQL; definitions live in [docs/analytics/METRICS.md](docs/analytics/METRICS.md). Browser code formats and adapts for Chart.js only. No recomputed business metrics, no persisted rollups without benchmark evidence and review. TanStack Table only for a bounded, justified table. Do not add TanStack Router/Form, Zod, or a new chart library. ExcelJS `4.4.0` is the `.xlsx` authority (`@e965/xlsx` for legacy `.xls`); Excel gets metrics from server DTOs, never computes attendance/grades/KKM/rankings; keep `.xls`/`.xlsx` parity tested; browser never generates authoritative reports — use the API export flow.
+- Auth: `astyx_session` stays an HttpOnly server-side cookie; no JWT or localStorage auth. Forwarded-IP headers are untrusted unless the exact direct peer is in `TRUSTED_PROXY_ADDRESSES`. Cookie-authenticated unsafe requests require the configured exact Origin. New backups require AES-256-GCM encryption with `BACKUP_ENCRYPTION_KEY` differing from `AUTH_COOKIE_SECRET`. See [SECURITY_HARDENING.md](docs/security/SECURITY_HARDENING.md) and [ROTATION_RUNBOOK.md](docs/security/ROTATION_RUNBOOK.md).
+- Data: `OPERATOROS_DATA_DIR` is the canonical data-root override (derives `operatoros.sqlite`, `backups/`, `logs/`); `OPERATOROS_DEV_DATA_DIR` is a deprecated alias. Startup validates but never migrates databases; never select a dev database from ambient `DATABASE_URL`. Tests/E2E use disposable synthetic roots only. Schema: `20260724_s42` fresh baseline, `20260929_s47` current head; protected operational DB stays S4.3 until a separately authorized migration (see [DATABASE_OPERATIONS.md](docs/operations/DATABASE_OPERATIONS.md)). Rollback pairs a restored S4.2 DB with `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`); `b47632c4210720f81804212544452c7c900c928c` is audit-only. New migrations need SQLite compatibility plus current-schema and fresh-parity tests; PostgreSQL reconsideration needs a new ADR.
+- Implementation prompts start with `/plan` (not `/goal`); use short active sentences, one instruction per sentence; keep identifiers exact (`mise.toml`, `mise.lock`, `OPERATOROS_PYTHON_VENV`, `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`, `operatoros_wsl_prepare_bun`, `./start-dev.sh`).
 
-## Protected operational data
+## Workflow
 
-- The authoritative development SQLite database is under
-  `~/.local/share/operatoros/development/<project-id>/operatoros.sqlite`.
-  `backend/attendance.db` is not the current developer database authority.
-- Tests, E2E, development startup, and committed fixtures must never use it.
-  Use explicit disposable databases instead.
-- Ordinary startup validates existing databases; it never migrates them.
-- Do not modify the operational database or rollback backups unless the user
-  explicitly authorizes that exact operation. Do not commit local backup paths,
-  checksums, rows, names, credentials, tokens, or personal data.
-- Controlled operational migrations require the wrapper's explicit preflight,
-  lock, verified fresh backup, and process-local operational context. See
-  [database operations](docs/operations/DATABASE_OPERATIONS.md).
+1. Read the relevant code and scoped instructions first.
+2. Make the smallest safe change; no unrelated refactors or generated-artifact edits.
+3. Update tests when behavior changes; use disposable synthetic data.
+4. Run the most relevant verification (`check:affected`/`test:fast` iterative, `check:full` release-sensitive); verify UI in a real browser when available.
+5. Report files changed, verification actually run, uncertainty, and preserved worktree entries. Never claim unrun checks passed. See [CONTRIBUTING.md](CONTRIBUTING.md) and [e2e/README.md](e2e/README.md).
 
-## Development startup and database
+## Boundaries — stop and ask
 
-- `mise run dev` is the canonical normal development entrypoint. It delegates
-  to `./start-dev.sh`, starts the Elysia backend and React frontend, uses the
-  canonical persistent development database, enforces one managed session,
-  waits for readiness, and performs managed shutdown.
-- Python remains available for disposable schema, fixture, and operations tools.
-- Retained Python tooling uses the external environment selected by
-  `OPERATOROS_PYTHON_VENV` or the deterministic default
-  `${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`. Ordinary commands
-  never install dependencies automatically. Run `mise run python:bootstrap`
-  explicitly when the environment is missing or stale.
-- `backend/.env` or the current shell can define `DATABASE_URL`. Managed
-  development warns about that value and uses the canonical persistent
-  development database instead. Do not select a development database from
-  ambient `DATABASE_URL` or automatically adopt an old database.
-- `OPERATOROS_DATA_DIR` is the canonical local data-root override. It derives
-  `operatoros.sqlite`, `backups/`, and `logs/`. Normal operator data stays
-  outside Git.
-- `OPERATOROS_DEV_DATA_DIR` is a deprecated compatibility alias. The canonical
-  variable takes precedence. Existing legacy data is never moved automatically.
-- An existing legacy development database without the new database fails safe
-  and requires manual operator migration.
-- Use `make dev-db-status`, `make dev-db-reset`, and
-  `make dev-sessions-status` for the existing managed workflows. Use the
-  repository-defined confirmation token for reset operations.
-- Agents must use verified session ownership, PID/process-group ownership,
-  stale-session checks, bounded shutdown, and backend readiness before frontend
-  startup. Do not kill arbitrary port occupants, use `kill -9` on unknown
-  listeners, or remove an unverified stale process automatically.
-- A historical primary-checkout launcher smoke recovered through Linux NVM,
-  reached backend and frontend readiness, completed managed shutdown, and left
-  zero launcher-owned processes. This smoke did not run the full test suites;
-  current runtime authority is mise.
-- The same smoke accessed or modified the protected operational database: no.
+- Baseline `a203617b0a38c57213ceca514581d25bb36f7cf5`: final Phase 14 audit adds only a narrow signed docs/hygiene repair.
+- Git: use focused `codex/` branches unless told otherwise; never amend, rebase, squash, force-push, or push to `main`; stage explicit paths only (never `git add .`/`-A`). Preserve user-owned `PROJECT_CONTEXT.md`, `f22`, `docs/student-data/dapodik-roster-import-design.md` when present, and `wip/followups-api-preservation-20260728-013523` at `07b7211b73a59f0032dc33c0c43741d884b38741` (never merge/copy/modify/delete).
+- Worktrees: protect `~/code/repos/operatoros`, `~/code/worktrees/operatoros/`, `~/.local/share/operatoros/development/`; fetch `origin` and verify merged-main before pruning; prune only clean integrated worktrees (`wt step prune --dry-run --min-age=0s`, verify, then `--foreground`); never force-delete, `wt merge`, or clean before verification.
+- Data/safety: never use, modify, or migrate the protected operational DB or rollback backups without explicit authorization for that exact operation; never commit backup paths, checksums, rows, names, secrets, or personal data. Operational migrations need wrapper preflight, lock, verified fresh backup, and process-local context. Never kill unknown port owners, `kill -9` unknown listeners, or remove unverified stale processes; E2E uses isolated temp data/ports and removes only its artifacts.
+- Stop for unclear/conflicting requirements, missing credentials/data, unrelated failing tests, destructive/broad changes, public API or schema/migration changes, dependency upgrades, file deletes/renames, generated-file edits, security/auth/authz/payment-adjacent changes, or anything weakening database, authorization, audit, or Git safeguards.
 
-## Schema and rollback
+## Decisions and known issues
 
-- `20260724_s42` is the fresh-bootstrap baseline; `20260929_s47` is the
-  current application schema head. The protected operational database remains
-  S4.3 until a separately authorized operational migration. Existing S4.2
-  databases require an explicit controlled migration.
-- Current normal application pairs with S4.7. Rollback pairs a restored S4.2
-  database with `c06a6220c2c0c2059521c1a396d1b914635aacff` from
-  `maintenance/s42-rollback`. The historical
-  `b47632c4210720f81804212544452c7c900c928c` is audit-only and must not run.
-- New migrations require SQLite compatibility, current-schema and fresh-parity
-  tests, and must not bypass schema guards or audit triggers. PostgreSQL
-  reconsideration requires a new ADR and separate authorization.
-
-## Testing and reporting
-
-- `mise run test:fast` is focused and changed-path-aware; use it for docs-only
-  and iterative work. `mise run check:full` delegates to the complete
-  release-sensitive authority. `mise run db:fresh` checks fresh bootstrap
-  parity. The underlying Make targets remain implementation authorities. The
-  classifier decides when duplicate backend runs are required; do not run the
-  release suite for Markdown-only edits.
-- Workspace checks use `bun --filter @operatoros/api test`,
-  `bun --filter @operatoros/web test`, `bun run check:typebox`, and
-  `bun run check`.
-- Verify UI work in a real browser when available. E2E uses isolated temporary
-  data and ports; never kill unknown port owners. Remove temporary artifacts.
-- Final reports state files changed, verification actually run, uncertainty,
-  and any preserved worktree entries. Do not claim unrun checks passed.
-
-## Frontend and API boundaries
-
-- Use TypeScript and the existing feature ownership boundaries; do not perform
-  a big-bang feature reorganization. Route modules are lazy-loaded where
-  established. Reuse shared primitives and follow `apps/web/DESIGN.md`.
-- Use TanStack Query and the sanitized API-error foundation. Pages consume
-  feature APIs, not generated OpenAPI code directly.
-- Browser-visible APIs use canonical `/api/<domain>/...` paths through the
-  shared API abstraction; do not hardcode backend domains or double-prefix.
-- Generated OpenAPI contracts are version-controlled and drift-checked. Run
-  the documented generation/check workflow for API changes.
-
-## Change safety and feature golden path
-
-- For new or substantially changed cross-layer work, follow the [Change Safety
-  & Feature Golden Path](docs/architecture/change-safety-golden-path.md).
-- Name the canonical authority, API/domain owner, shared TypeBox DTO, explicit
-  internal-to-DTO mapper, authorization scope, query-key owner, and mutation
-  invalidations before implementation.
-- Preserve loading, empty, error, conflict, and authorization distinctions.
-- Use disposable synthetic data for tests and E2E. Decide BrowserUse acceptance
-  for operator-facing or cross-feature changes.
-- Use the linked document's concise Feature Definition of Done; do not move
-  stable features only to satisfy folder conventions.
-
-## Phase 14 monorepo modernization
-
-Phase 14.1 established workspace tooling. Phase 14.2 moved the authoritative
-API to `apps/api/`. Phase 14.3 moved the authoritative web application to
-`apps/web/`. Phase 14.4 extracted persistence to `packages/db/`. Phase 14.5
-extracted shared TypeBox contracts to `packages/contracts/`. Phase 14.6
-established the reusable Base UI foundation in `packages/ui/`. Phase 14.7
-mechanically enforces the package boundaries. The post-14.7 data-directory
-insertion keeps that gate valid.
-
-Current physical structure:
-
-- `apps/api/`
-- `apps/web/`
-- `packages/db/`
-- `packages/contracts/`
-- `packages/ui/`
-- `packages/config/`
-
-Read [the Phase 14 architecture](docs/architecture/phase-14-monorepo.md) for
-package ownership and dependency directions.
-
-Never pin `@sinclair/typebox` independently in a workspace package. Use
-`catalog:`. Change the root catalog entry when the OperatorOS TypeBox version
-changes.
-
-Binding dependency rules start in Phase 14.1. Phase 14.7 mechanically enforces
-them:
-
-- `packages/contracts` must not import `elysia`, `drizzle-orm`, `react`, or `apps/*`.
-- `packages/db` must not import `apps/*`.
-- `packages/ui` must not import `apps/*` or `packages/db`.
-- `packages/ui` must not import `@operatoros/contracts`, `@operatoros/api`, `elysia`, or `drizzle-orm`.
-- `apps/api` must not import `@operatoros/ui`.
-- `packages/db` and `packages/contracts` must not import `@operatoros/ui`.
-- `apps/web` must not import `packages/db`, `packages/excel`, or API internals.
-- `packages/*` must not import `apps/*`.
-- Cross-workspace imports must use package exports.
-- Deep `@operatoros/*/src` imports are forbidden.
-- Cross-workspace relative source imports are forbidden.
-
-`@operatoros/contracts` owns only schemas and types that cross an application
-or package boundary. It uses plain `@sinclair/typebox` through `catalog:`.
-It must not import Elysia, Drizzle, React, `@operatoros/db`, or `apps/*`.
-HTTP transport details remain in `apps/api/`. Database rows remain in
-`@operatoros/db`.
-
-`@operatoros/db` owns the Drizzle schema, migrations when present, low-level
-SQLite client lifecycle, persistence representation, and canonical local data
-path resolution. Business services,
-HTTP behavior, and backup or scheduler policy remain in `apps/api/`.
-`apps/web/` must not import `@operatoros/db` or persistence dependencies.
-
-`@operatoros/ui` owns reusable presentation primitives and source-owned shadcn
-components. New shadcn components use Base UI. The package uses package
-exports. It does not own routes, data fetching, business forms, or domain
-components. Existing Radix components may remain in `apps/web/`. Broad UI
-modernization is deferred to Phase 18.
-
-Phase 14.1 through 14.7 validation commands remain available. Use these
-workspace commands for current application checks:
-
-- `bun --filter @operatoros/contracts test`
-- `bun --filter @operatoros/contracts typecheck`
-- `bun --filter @operatoros/db test`
-- `bun --filter @operatoros/db typecheck`
-- `bun --filter @operatoros/ui test`
-- `bun --filter @operatoros/ui typecheck`
-- `bun --filter @operatoros/api test`
-- `bun --filter @operatoros/web test`
-- `bun run check:typebox`
-- `bun run check:contracts`
-- `bun run check:ui`
-- `bun run lint`
-- `bun run check:architecture`
-- `bun run test:architecture`
-- `bun run check`
-
-The semantic architecture checker uses the TypeScript compiler API. It scans
-source imports, type-only imports, re-exports, static dynamic imports, literal
-`require()` calls, package manifests, package exports, cross-workspace relative
-imports, and deep source imports. It reports zero real-tree exceptions. Phase
-14.8 establishes the tooling split. `mise` manages CLI versions. `hk`
-manages Git lifecycle hooks. Bun remains the JavaScript runtime, package
-manager, workspace resolver, and lockfile authority. Turbo 2.10.12 manages the
-dependency-aware task graph and local cache. Turbo is a root-only dependency.
-
-Use `mise run check:affected` for cached typecheck, unit-test, and web-build
-tasks affected since `origin/main`; use `bun run turbo:check` for the full
-Turbo task graph. Use `bun run test:turbo` for invalidation proofs. Do not
-cache E2E, database
-mutation, backup, restore, scheduler, runtime, or development-server tasks.
-Operator data never enters the Turbo or mise caches. Hooks provide early local
-feedback. CI runs the checks directly and does not require installed hooks.
-
-Run `hk check --all` for the configured fast checks. Developers may install
-repository hooks with `mise exec -- hk install --mise`. Repository setup does
-not change global Git configuration automatically.
-
-## Phase 15 security rules
-
-- `astyx_session` remains an HttpOnly, server-side cookie. Do not add JWT or
-  localStorage authentication.
-- Forwarded IP headers are untrusted unless exact direct proxy IPs are listed
-  in `TRUSTED_PROXY_ADDRESSES`.
-- Cookie-authenticated unsafe requests require the configured exact Origin.
-- New application backups require authenticated AES-256-GCM encryption. The
-  `BACKUP_ENCRYPTION_KEY` must differ from `AUTH_COOKIE_SECRET`.
-- Tests use disposable data roots and never use the protected database.
-- Run `bun run test:security` for focused security tests and
-  `bun run security:audit` for the Bun dependency audit.
-- Use [the security hardening document](docs/security/SECURITY_HARDENING.md)
-  and [the rotation runbook](docs/security/ROTATION_RUNBOOK.md) for current
-  operational rules.
-
-The canonical local data resolver is `packages/db/src/data-dir.ts`. It returns
-absolute normalized paths for the data root, database, backups, and logs.
-`OPERATOROS_DATA_DIR` takes precedence over deprecated
-`OPERATOROS_DEV_DATA_DIR`, then the platform/XDG default with repository
-identity. Startup forwards this root and does not migrate an existing database
-automatically. Tests use disposable roots. Provider-managed history cleanup
-remains separately documented as pending.
-
-## Phase 17 Excel rules
-
-- `@operatoros/excel` owns Excel infrastructure only. It lives at
-  `packages/excel/` and may depend on `@operatoros/contracts`.
-- The Excel package must not depend on DB, apps, UI, React, Elysia, or Drizzle.
-  HTTP transport and database access remain outside the package.
-- ExcelJS `4.4.0` remains the `.xlsx` authority. The existing `@e965/xlsx`
-  adapter remains responsible for legacy `.xls` input.
-- Business metrics and formulas come from server DTOs. Excel must not compute
-  attendance, grades, KKM, rankings, or analytics.
-- `.xlsx` and `.xls` import parity must remain tested. Streaming requires
-  benchmark evidence and is not a global default.
-- The browser must not generate authoritative reports. Use the API export
-  flow. Run `bun --filter @operatoros/excel test` for focused package checks.
-
-## Phase 16 analytics rules
-
-- Important business metrics are computed by the API with canonical SQL
-  aggregates. Their definitions live in [the analytics metric reference](docs/analytics/METRICS.md).
-- Analytics DTOs belong in `@operatoros/contracts`. They do not contain SQL,
-  database rows, or Chart.js state.
-- The web application uses one in-memory TanStack Query client. It must not
-  persist authenticated analytics data to `localStorage`.
-- Browser code may format server metrics and adapt them for Chart.js. It must
-  not recompute important business metrics.
-- Persisted analytics rollups require benchmark evidence and explicit review.
-
-## Phase 18 dashboard and CI rules
-
-- Important dashboard metrics remain server-computed. Browser code may format
-  values and adapt them for Chart.js, but it must not recompute business metrics.
-- The web application keeps one in-memory TanStack Query client. It must not
-  persist authenticated query data to `localStorage`.
-- Dashboard query keys must include every data filter. Mutations must use
-  targeted analytics invalidation. Logout must clear protected query data.
-- `@operatoros/ui` owns reusable presentation primitives. Domain dashboard
-  components remain in `apps/web`.
-- TanStack Table is used only for a bounded, justified table. Do not add it to
-  simple dashboard lists without a scale requirement.
-- CI must not remove required security, architecture, OpenAPI, database,
-  analytics, Excel, test, typecheck, build, or docs validation to save time.
-- `bun install --frozen-lockfile` remains mandatory. Cache misses must not
-  affect correctness. E2E and stateful runtime tasks remain uncached.
-- Do not add TanStack Router, TanStack Form, Zod, or a new chart library in
-  Phase 18. Phase 19 has not started.
-
-## Stop and escalate
-
-Stop for unclear or conflicting requirements, missing credentials/data,
-unrelated failing tests, destructive/broad changes, or any request that weakens
-database, authorization, audit, or Git safeguards. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for workflow and
-[docs/README.md](docs/README.md) for detailed current guidance.
-
-## Prompt Writing Standard
-
-- All future repository implementation prompts must start with `/plan`. Do not
-  use `/goal`.
-- Use Simplified Technical English style. Use clear, specific, active-voice
-  instructions. Use short sentences, one instruction per sentence, and one
-  topic per paragraph. Use vertical lists for complex information. Use the
-  same technical term for the same thing. Keep conditions, safety rules, and
-  expected results explicit. Avoid ambiguous or unnecessary words.
-- Prefer 20 words or fewer for procedure sentences and 25 words or fewer for
-  descriptive sentences. Do not remove necessary subjects, verbs, or articles
-  only to shorten a sentence. Do not claim strict ASD-STE100 compliance unless
-  the text was checked against the official controlled vocabulary.
-- Prefer this structure when it fits the task: `/plan`, Purpose, Current State,
-  Required Changes, Safety Rules, Validation, Git Rules, Acceptance Criteria,
-  and Final Report. Use only the sections that the task needs. Do not repeat
-  the same rule in multiple sections.
-- Keep technical identifiers exact, including `mise.toml`, `mise.lock`,
-  `OPERATOROS_PYTHON_VENV`, `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`,
-  `operatoros_wsl_prepare_bun`, and `./start-dev.sh`.
+- [Development index](docs/development/README.md) and [test strategy](docs/testing/TEST_STRATEGY.md) — current workflow tiers.
+- [Frontend architecture](docs/architecture/FRONTEND_ARCHITECTURE.md), [database schema](docs/architecture/DATABASE_SCHEMA_ARCHITECTURE.md), [platform portability](docs/architecture/PLATFORM_PORTABILITY.md) — ownership and runtime limits.
+- [Database operations](docs/operations/DATABASE_OPERATIONS.md) and [data reset](docs/operations/DATA_RESET.md) — protected-DB and reset gates.
+- [Identity/authentication](docs/security/identity-authentication.md), [backup/restore security](docs/security/backup-restore.md) — active model.
+- Historical milestone notes remain in Git history; do not treat them as current procedure.
