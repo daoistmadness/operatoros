@@ -3,7 +3,7 @@ import { rmSync } from "node:fs";
 import { Value } from "@sinclair/typebox/value";
 import { loadXlsxWorkbook } from "@operatoros/excel";
 import { AttendanceBasisResponseSchema } from "@operatoros/contracts/analytics";
-import { ReportFiltersResponseSchema } from "@operatoros/contracts/reports";
+import { MonthlyReportResponseSchema, ReportFiltersResponseSchema } from "@operatoros/contracts/reports";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateHeb, lateAmongPresentRate, roundHalfEven, roundHalfUp } from "../src/domains/reports";
@@ -166,35 +166,15 @@ describe("analytics and report parity", () => {
         expect((await canonicalCohorts.json() as any).cohorts).toEqual(expect.arrayContaining([expect.objectContaining({ label: "7A" })]));
       }
       const monthly = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
-      expect(monthly.status).toBe(200);
-      const monthlyJson = await monthly.json() as any;
-      expect(monthlyJson.executive_summary).toMatchObject({ total_students: 8, attendance_rate: null, late_rate: 27.78, late_minutes: 85, below_kkm_count: 1, data_completeness_rate: null });
-      expect(monthlyJson.data_quality.warnings.some((value: string) => value.includes("Attendance Rate and data completeness are unavailable"))).toBe(true);
-      expect(monthlyJson.attendance_summary).toMatchObject({ present: 18, sakit: 3, izin: 2, alfa: 1, incomplete: 4, late_days: 5, late_minutes: 85 });
-      expect(monthlyJson.student_distribution.by_class).toEqual([{ name: "1A", count: 2, percentage: 25 }, { name: "7A", count: 3, percentage: 37.5 }, { name: "7B", count: 2, percentage: 25 }, { name: "7C", count: 1, percentage: 12.5 }]);
-      expect(monthlyJson.academic_summary).toMatchObject({ availability: true, sumatif_average: 80, formatif_average: null, below_kkm_count: 1 });
-      const monthlyExcel = await app.handle(new Request("http://local/api/reports/monthly/export?academic_year_id=2&month=2026-08&scope=combined&format=xlsx", { headers: { cookie } }));
-      const monthlyWorkbook = await loadXlsxWorkbook(new Uint8Array(await monthlyExcel.arrayBuffer()));
-      const attendanceSheet = monthlyWorkbook.getWorksheet("Attendance")!;
-      expect(attendanceSheet.getRow(1).getCell(9).value).toBe("Attendance Rate");
-      expect(attendanceSheet.getRow(2).getCell(9).value).toBeNull();
-      expect(attendanceSheet.getRow(1).getCell(10).value).toBe("Late Among Present");
-      expect(attendanceSheet.getRow(2).getCell(10).value).toBe(monthlyJson.attendance_summary.late_rate);
-
-      const empty = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-07&scope=combined", { headers: { cookie } }));
-      expect(empty.status).toBe(200);
-      expect((await empty.json() as any).attendance_summary).toMatchObject({ present: 0, sakit: 0, izin: 0, alfa: 0, incomplete: 0, attendance_rate: null });
+      expect(monthly.status).toBe(409);
+      expect(await monthly.json()).toMatchObject({ detail: expect.stringContaining("historical class cannot be resolved") });
 
       const management = await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
-      expect(management.status).toBe(200);
-      expect((await management.json() as any).executive_summary).toMatchObject({ total_students: 8, total_classes: 4, attendance_rate: null, attendance_denominator: null, students_below_kkm: 1 });
+      expect(management.status).toBe(409);
       expect((await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie: staff } }))).status).toBe(403);
 
       const annual = await app.handle(new Request("http://local/api/reports/annual?academic_year_id=2&scope=combined", { headers: { cookie } }));
-      expect(annual.status).toBe(200);
-      const annualJson = await annual.json() as any;
-      expect(annualJson.trends).toHaveLength(12);
-      expect(annualJson.attendance_summary).toMatchObject({ present: 18, sakit: 3, izin: 2, alfa: 1, incomplete: 4, attendance_rate: null, late_rate: 27.78 });
+      expect(annual.status).toBe(409);
 
       const heb = await app.handle(new Request("http://local/api/analytics/heb?month=8&year=2026", { headers: { cookie } }));
       expect(heb.status).toBe(200);
@@ -277,12 +257,14 @@ describe("analytics and report parity", () => {
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-round2-report-scope-audit-${process.pid}` } });
     try {
+      database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=2");
+      seedManualClassInventory(database.client);
       database.client.run("UPDATE jenjangs SET name = 'Round2 SD' WHERE name = 'SD'");
       const cookie = await adminCookie(app);
       const response = await app.handle(new Request("http://local/api/reports/monthly?academic_year_id=2&month=2026-08&scope=primary", { headers: { cookie } }));
       expect(response.status).toBe(200);
       const body = await response.json() as any;
-      expect(body.executive_summary.total_students).toBeGreaterThan(0);
+      expect(body.population.total_students).toBeGreaterThan(0);
       expect(body.data_quality.unmapped_levels).not.toContain("Round2 SD");
     } finally {
       database.close();
@@ -296,6 +278,7 @@ describe("analytics and report parity", () => {
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-report-class-id-audit-${process.pid}` } });
     try {
+      database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=2");
       const { academicYearId, classIds } = seedManualClassInventory(database.client);
       const duplicateId = Number(database.client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, (SELECT id FROM academic_grades WHERE name = 'Grade Two' LIMIT 1), 'P1A', 'A2', 1)", [academicYearId]).lastInsertRowid);
       const enrollmentIds = (database.client.query("SELECT id FROM student_enrollments WHERE academic_year_id = ? AND class_name = '1A' ORDER BY id LIMIT 2").all(academicYearId) as any[]).map((value) => Number(value.id));
@@ -312,13 +295,13 @@ describe("analytics and report parity", () => {
         const result = await app.handle(new Request(`http://local/api/reports/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_id=${classId}&class_name=1A`, { headers: { cookie } }));
         expect(result.status).toBe(200);
         const body = await result.json() as any;
-        expect(body.executive_summary.total_students).toBe(1);
-        expect(body.student_distribution.by_class).toEqual([{ name: "P1A", count: 1, percentage: 100 }]);
+        expect(body.population.total_students).toBe(classId === classIds.P1A ? 4 : 1);
+        expect(body.attendance.classes).toEqual([expect.objectContaining({ class_id: classId, class_name: "P1A" })]);
       }
       const management = await app.handle(new Request(`http://local/api/reports/management/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_id=${duplicateId}`, { headers: { cookie } }));
-      expect((await management.json() as any).metadata.filters).toMatchObject({ class_id: duplicateId, class_name: "P1A" });
+      expect((await management.json() as any).population.total_students).toBe(1);
       const legacy = await app.handle(new Request(`http://local/api/reports/monthly?academic_year_id=${academicYearId}&month=2026-08&scope=primary&class_name=P1A`, { headers: { cookie } }));
-      expect((await legacy.json() as any).executive_summary.total_students).toBe(2);
+      expect((await legacy.json() as any).population.total_students).toBe(5);
     } finally {
       database.close();
       rmSync(path, { force: true });
@@ -361,8 +344,6 @@ describe("analytics and report parity", () => {
       const cookie = await adminCookie(app);
       const before = database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number };
       for (const path of [
-        "/api/reports/monthly/export?academic_year_id=2&month=2026-08&scope=combined&format=xlsx",
-        "/api/reports/monthly/export?academic_year_id=2&month=2026-08&scope=combined&format=pdf",
         "/api/analytics/tardiness-report/export-excel?month=8&year=2026",
         "/api/analytics/v2/rekap-absensi/export-excel?month=8&year=2026",
       ]) {
@@ -588,6 +569,7 @@ describe("analytics and report parity", () => {
       const savedValue = await request(query("2026-10"));
       expect((await savedValue.json() as any).classes.find((value: any) => value.class_name === "P1A")).toMatchObject({ sakit: 9, izin: 8, alfa: 7, state: "OPEN" });
       expect((database.client.query("SELECT actor_id, metadata FROM operations_audit_events WHERE operation = 'SAVE_MANUAL_MONTHLY_ABSENCE_TOTALS' ORDER BY rowid DESC LIMIT 1").get() as any).actor_id).toBe("golden-admin");
+
     } finally {
       database.close();
       rmSync(path, { force: true });
@@ -752,6 +734,36 @@ describe("attendance basis resolver", () => {
       expect(matching).toHaveProperty("month", "2026-08");
       expect(matching.lateness).toHaveProperty("availability", "AVAILABLE");
       expect((await basisFor(classIds.P1A!)).canonical.expected_student_days).toBe(8);
+
+      expect((await save(classIds.P1B!, { sakit: 1, izin: 0, alfa: 0 })).status).toBe(200);
+      expect((await submit(classIds.P1B!)).status).toBe(200);
+      const monthlyResponse = await request(`/api/reports/monthly?academic_year_id=${yearId}&month=2026-08&scope=primary`);
+      expect(monthlyResponse.status, JSON.stringify(await monthlyResponse.clone().json())).toBe(200);
+      const monthly = await monthlyResponse.json() as any;
+      expect(Value.Check(MonthlyReportResponseSchema, monthly)).toBe(true);
+      expect(monthly.attendance.classes).toEqual(expect.arrayContaining([
+        expect.objectContaining({ class_id: classIds.P1A, basis: "OBSERVED", coverage_rate: 100, unrecorded_student_days: 0 }),
+        expect.objectContaining({ class_id: classIds.P1B, basis: "OBSERVED", conflict: expect.objectContaining({ reason_code: "ABSENCE_TOTAL_MISMATCH" }) }),
+        expect.objectContaining({ class_id: classIds.PARTIAL, basis: "OBSERVED", coverage_rate: 50, unrecorded_student_days: 1 }),
+        expect.objectContaining({ class_id: classIds.P2, basis: "DECLARED", lateness: { availability: "UNAVAILABLE", late_events: null, late_event_rate: null, late_minutes: null, unknown_duration_events: null } }),
+        expect.objectContaining({ class_id: classIds.OPEN, basis: "NOT_REPORTED", hadir_student_days: null, attendance_rate: null, lateness: expect.objectContaining({ availability: "UNAVAILABLE", late_events: null }) }),
+      ]));
+      expect(monthly.attendance.summary.lateness).toMatchObject({ availability: "PARTIAL", late_event_rate: null, coverage_rate: 66.7 });
+      const monthlyXlsx = await request(`/api/reports/monthly/export?academic_year_id=${yearId}&month=2026-08&scope=primary&format=xlsx`);
+      expect(monthlyXlsx.status).toBe(200);
+      const monthlyWorkbook = await loadXlsxWorkbook(new Uint8Array(await monthlyXlsx.arrayBuffer()));
+      const attendanceSheet = monthlyWorkbook.getWorksheet("Attendance by Class")!;
+      const classRow = (name: string) => (attendanceSheet.getRows(2, attendanceSheet.rowCount - 1) ?? []).find((value) => value.getCell(1).value === name)!;
+      expect(classRow("P2").getCell(3).value).toBe("DECLARED");
+      expect(classRow("P2").getCell(14).value).toBe("UNAVAILABLE");
+      expect(classRow("P2").getCell(15).value).toBeNull();
+      const monthlyPdf = await request(`/api/reports/management/monthly/export?academic_year_id=${yearId}&month=2026-08&scope=primary&format=pdf`);
+      expect(monthlyPdf.status).toBe(200);
+      expect(new TextDecoder().decode(new Uint8Array(await monthlyPdf.arrayBuffer()).slice(0, 4))).toBe("%PDF");
+
+      const annual = await request(`/api/reports/annual?academic_year_id=${yearId}&scope=primary&class_id=${classIds.P1B}`);
+      expect(annual.status).toBe(200);
+      expect((await annual.json() as any).trends).toHaveLength(12);
 
       const report = await request(`/api/analytics/attendance-report?academic_year_id=${yearId}&period_type=month&period=2026-08`);
       expect(report.status).toBe(200);

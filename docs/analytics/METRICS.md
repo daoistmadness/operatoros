@@ -122,7 +122,7 @@ for the source matrix, effective-dated cutoff contract, and phase requirements.
 
 - `class_id` is the canonical application and API identity when available.
   Class names are display labels and may change or repeat.
-- Executive and Monthly Management report requests use `class_id`. The
+- Monthly and Annual report requests use `class_id`. The
   backend still accepts legacy `class_name` requests at the report boundary.
   If both appear, `class_id` takes precedence.
 - `term_id` identifies an actual configured Academic Term record. It is the
@@ -147,11 +147,15 @@ for the source matrix, effective-dated cutoff contract, and phase requirements.
 - API DTOs are the business-value source for Web, Excel, and PDF output.
   Exports must not independently recompute the same named metric.
 - `GET /api/reports/filters` has one Web query owner in `useReportFilters`.
-  Executive Reports and Monthly Management Report use the same query key.
-- The legacy `management-summary` endpoints remain because the report builder
-  and export routes still call `managementSummary`. They are retained for
-  compatibility, not current metric authority. Retirement requires a separate
-  caller and compatibility review.
+  Monthly and Annual use the same query key. `buildMonthlyReport` supplies the
+  Monthly DTO for Web, PDF, and XLSX. Monthly attendance uses Attendance Basis
+  Resolver output. Academic values are Academic Year records because scores
+  have no assessment-month field. Annual remains Academic Year scoped, and
+  Term Review remains `term_id` scoped.
+- The `management-summary` endpoints remain because historical trends and
+  Management Analytics exports still call `managementSummary`. No current Web
+  page owns the direct endpoint. Keep it `RETIRE_LATER` until internal callers
+  are removed and external compatibility is reviewed.
 
 ## Other metric contracts
 

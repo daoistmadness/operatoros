@@ -34,7 +34,6 @@ export function invalidateDataResetQueries(client: InvalidatingClient, scope: Da
     invalidateAcademicFoundationQueries(client),
     client.invalidateQueries({ queryKey: queryKeys.uploads.all }),
     client.invalidateQueries({ queryKey: queryKeys.reports.all }),
-    client.invalidateQueries({ queryKey: queryKeys.managementReports.all }),
     client.invalidateQueries({ queryKey: queryKeys.operator.all }),
     client.invalidateQueries({ queryKey: queryKeys.staff.all }),
     client.invalidateQueries({ queryKey: queryKeys.teacherClassAssignments.all }),
