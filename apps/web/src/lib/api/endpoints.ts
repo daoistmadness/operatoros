@@ -1,4 +1,5 @@
 import { API_BLOB_TYPES, apiRequest, type ApiResponse, type QueryParams } from './client';
+import type { HebOverrideWriteRequest } from "@operatoros/contracts/config";
 import type { ManualAbsenceReportResponse } from "@operatoros/contracts/reports";
 
 type JsonObject = Record<string, unknown>;
@@ -84,7 +85,6 @@ export type TardinessSummary = JsonObject & {
   rows: TardinessJenjangSummaryRow[];
   period: JsonObject & { label?: string };
 };
-type HebOverridePayload = { heb_value: number; note?: string; set_by?: string };
 type StudentClassAssignmentPayload = { student_id: number | string; class_name: string; jenjang: string };
 export type AbsenceTotalRow = {
   total_sakit?: unknown;
@@ -299,7 +299,7 @@ export async function saveHebOverride(
   jenjang: string,
   year: number,
   month: number,
-  payload: HebOverridePayload,
+  payload: HebOverrideWriteRequest,
 ): Promise<ApiResponse<unknown>> {
   return apiRequest({
     path: `/api/config/heb/${encodeURIComponent(jenjang)}/${year}/${month}`,
