@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -155,11 +156,18 @@ def classify_path(path: str) -> set[str]:
 
 def git_paths(repo: Path, base: str | None, head: str | None) -> list[str]:
     paths: set[str] = set()
+    environment = os.environ.copy()
+    local_variables = subprocess.run(
+        ["git", "rev-parse", "--local-env-vars"],
+        cwd=repo, check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    for name in local_variables:
+        environment.pop(name, None)
     if base:
         comparison = f"{base}...{head or 'HEAD'}"
         result = subprocess.run(
             ["git", "diff", "--name-status", "--find-renames", comparison],
-            cwd=repo, check=True, capture_output=True, text=True,
+            cwd=repo, env=environment, check=True, capture_output=True, text=True,
         )
         paths.update(paths_from_name_status(result.stdout))
     else:
@@ -169,7 +177,7 @@ def git_paths(repo: Path, base: str | None, head: str | None) -> list[str]:
             ["git", "ls-files", "--others", "--exclude-standard"],
         ):
             result = subprocess.run(
-                arguments, cwd=repo, check=True, capture_output=True, text=True,
+                arguments, cwd=repo, env=environment, check=True, capture_output=True, text=True,
             )
             if "--name-status" in arguments:
                 paths.update(paths_from_name_status(result.stdout))
