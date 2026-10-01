@@ -14,6 +14,35 @@ contract is:
 See [AGENTS.md](AGENTS.md), [docs/README.md](docs/README.md), and the current
 architecture and operations documents for detailed procedures.
 
+## Recent completed work — 2026-10-01
+
+- Phase A metric contracts, Phase B Student Insights, Attendance C0-C4, and
+  Analytics Phase C report consolidation are complete. Phase C merged as PR
+  #173 (`caa6b346`) with the card-density follow-up PR #174 (`88dbf97f`).
+- Reports & Reviews is the formal-report destination. Monthly is consolidated;
+  Annual and Term Review remain distinct. Compatibility routes are preserved.
+  `management-summary` remains `RETIRE_LATER` because internal callers and
+  compatibility endpoints remain.
+- Canonical routes are `/reports?view=monthly`, `/reports?view=annual`, and
+  `/reports?view=term-review`. Attendance Rate is Hadir / Expected Student-Days;
+  Late Event Rate is Late Events / Expected Student-Days. Zero denominators are
+  unavailable. Formal reports preserve OBSERVED, DECLARED, NOT_REPORTED,
+  CONFLICT, and coverage; they do not equate declared with observed or
+  fabricate lateness.
+- `packages/db` owns Bun/TypeScript fresh bootstrap, explicit existing-database
+  migration, schema validation, and SQLite lifecycle. The current target is
+  S4.7; migration accepts only the approved S4.6 Variant A and Variant B
+  physical fingerprints. Normal startup validates and never migrates.
+- The persistent development database is distinct from the protected
+  operational database. The latter remains S4.3 and needs a separately
+  authorized controlled migration. Follow the database operations runbook for
+  development database maintenance; normal startup validates and never
+  migrates automatically. Do not access protected operational data without
+  explicit authorization for that operation.
+- Python remains transitional test, fixture, and operations tooling. It is not
+  part of application startup or the Bun/TypeScript bootstrap and migration
+  paths.
+
 ## Repository layout
 
 | Path | Responsibility |
@@ -21,7 +50,7 @@ architecture and operations documents for detailed procedures.
 | `apps/api/` | Elysia API, domain services, authentication, and API transport |
 | `apps/web/` | React browser application and domain UI |
 | `packages/contracts/` | TypeBox DTOs and cross-boundary contracts |
-| `packages/db/` | Drizzle, SQLite access, schema snapshot, and data-path resolution |
+| `packages/db/` | Drizzle, SQLite lifecycle, schema, bootstrap/migration, and data paths |
 | `packages/ui/` | Reusable presentation primitives |
 | `packages/excel/` | Excel import and export infrastructure |
 | `packages/config/` | Shared workspace configuration |
@@ -60,9 +89,9 @@ router. Chart adapters format server DTOs; the browser never recomputes
 canonical business metrics.
 
 `packages/contracts/` owns TypeBox request and response contracts. Zod is not
-used. `packages/db/` owns the Drizzle schema snapshot (`src/schema.ts`), the
-canonical data-path resolver (`src/data-dir.ts`), and read-only startup schema
-validation (`src/connection.ts`). The preferred data-root variable is
+used. `packages/db/` owns the Drizzle schema, SQLite lifecycle, fresh bootstrap,
+explicit migration, schema manifest, canonical data-path resolver
+(`src/data-dir.ts`), and startup validation. The preferred data-root variable is
 `OPERATOROS_DATA_DIR`; the canonical database filename is `operatoros.sqlite`,
 and `OPERATOROS_DEV_DATA_DIR` remains a deprecated alias.
 
@@ -112,15 +141,19 @@ assigned-class export routes). Authorization denials are audited to
 
 ## Data safety
 
-- `backend/attendance.db` is the protected operational database. The Elysia
-  API refuses to open it (`PROTECTED_DATABASE_FORBIDDEN`), and tests, E2E, and
-  normal startup must never touch it.
-- Ordinary startup validates an existing database and **never migrates or
-  creates it**. Fresh databases come from the retained Python bootstrap
-  (`core.schema_migrations`), which produces the full current schema.
+- `backend/attendance.db` is the protected operational S4.3 database, not the
+  developer database authority. The Elysia API refuses to open it
+  (`PROTECTED_DATABASE_FORBIDDEN`). Tests, E2E, and development startup must
+  never use it.
+- Ordinary startup validates an existing database and never creates or
+  migrates it. Use `bun run db:bootstrap --data-dir <empty-directory>` for a
+  fresh S4.7 database. Use `bun run db:migrate-existing --data-dir
+  <directory>` only for an explicitly approved existing source schema. The
+  persistent development database migration uses the locked wrapper in
+  [DATABASE_OPERATIONS.md](docs/operations/DATABASE_OPERATIONS.md).
 - The persistent development database lives under the canonical data root and
-  is reconciled only by an explicit, authorized procedure. Back it up and
-  record checksums before any such mutation.
+  is distinct from `backend/attendance.db`. Never inspect, copy, or mutate
+  protected data outside an explicitly authorized procedure.
 - Tests, fixtures, and E2E use disposable databases and data roots (the
   repository convention is `/tmp` paths combining the process PID and a
   timestamp). Never point `DATABASE_URL` at operator data during tests.
@@ -138,27 +171,32 @@ assigned-class export routes). Authorization denials are audited to
 
 ## Validation
 
-Run before considering a change complete:
+Use focused checks first. Fetch `origin/main` before `mise run check:affected`.
+Run `bun install --frozen-lockfile` when dependency or workspace state requires
+installation. Then run the relevant package tests/typechecks and affected
+checks. Use E2E for changes that affect browser workflows; `make e2e-full` is
+GitHub-Actions-only unless an owner explicitly approves local execution.
+
+Common focused checks include:
 
 ```bash
-bun install --frozen-lockfile
-bun run check        # lint, TypeBox, architecture, contracts, UI, typecheck, all package tests
+mise run check:affected
 bun run test:security
 bun run security:audit
-cd apps/web && bun run api:check   # OpenAPI drift
-cd apps/web && bun run build       # production build
-make fresh-db-parity               # schema/bootstrap work
-make e2e-smoke                     # Playwright regression (isolated data)
+cd apps/web && bun run api:check
+cd apps/web && bun run build
+make fresh-db-parity
+make e2e-smoke
 ```
 
 `bun run test:architecture`, `bun run turbo:check`, and
-`make test-fast|test-pr|test-release` cover deeper or tiered validation.
-Retained Python tests run under `backend/.venv` with a disposable
-`DATABASE_URL` and are part of the gate for schema/tooling work.
-`./start-dev.sh` is the normal local launcher (`--check` for a dry run;
-`stop-dev.sh`, `make dev-db-status`, `make dev-sessions-status` for managed
-sessions). CI runs the same gates with empty caches; do not remove checks to
-obtain green CI.
+`make test-fast|test-pr|test-release` provide deeper or tiered validation.
+Retained Python tests use disposable synthetic databases through the external
+`OPERATOROS_PYTHON_VENV` environment; do not create a worktree-local
+`backend/.venv`. `./start-dev.sh` is the normal Bun/TypeScript launcher
+(`--check` for a dry run; `stop-dev.sh`, `make dev-db-status`, and
+`make dev-sessions-status` manage sessions). CI runs required checks; do not
+remove checks to obtain green CI.
 
 ## API and contract discipline
 
