@@ -1,4 +1,5 @@
 import { t } from "elysia";
+import { HebOverrideWriteRequestSchema } from "@operatoros/contracts/config";
 import { inTransaction } from "@operatoros/db";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
@@ -162,15 +163,15 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
     return rows(context, `SELECT id, jenjang, month, year, heb_value, note, 'manual' AS source, set_by, set_at FROM heb_overrides ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY year DESC, month DESC, jenjang`, params);
   }, { query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()), jenjang: t.Optional(t.String()) }) });
   app.put("/api/config/heb/:jenjang/:year/:month", (ctx: Context) => {
-    if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
-    const jenjang = ctx.params.jenjang.trim(); const year = Number(ctx.params.year); const month = Number(ctx.params.month); const value = Number(ctx.body.heb_value); const setBy = ctx.body.set_by.trim();
+    const user = actor(context, ctx, { role: "admin" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const jenjang = ctx.params.jenjang.trim(); const year = Number(ctx.params.year); const month = Number(ctx.params.month); const value = Number(ctx.body.heb_value);
     if (!jenjang) return fail(ctx.set, 400, "jenjang must be a non-empty string");
     if (month < 1 || month > 12 || year < 2020) return fail(ctx.set, 400, "Invalid reporting period");
     if (value < 1 || value > 31 || !Number.isInteger(value)) return fail(ctx.set, 400, "heb_value must be an integer between 1 and 31");
-    if (!setBy) return fail(ctx.set, 400, "set_by must not be empty");
-    context.database.client.run("INSERT INTO heb_overrides (jenjang, month, year, heb_value, note, set_by, set_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(jenjang, month, year) DO UPDATE SET heb_value = excluded.heb_value, note = excluded.note, set_by = excluded.set_by, set_at = CURRENT_TIMESTAMP", [jenjang, month, year, value, ctx.body.note?.trim() || null, setBy]);
+    context.database.client.run("INSERT INTO heb_overrides (jenjang, month, year, heb_value, note, set_by, set_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(jenjang, month, year) DO UPDATE SET heb_value = excluded.heb_value, note = excluded.note, set_by = excluded.set_by, set_at = CURRENT_TIMESTAMP", [jenjang, month, year, value, ctx.body.note?.trim() || null, user.username]);
     return row(context, "SELECT id, jenjang, month, year, heb_value, note, 'manual' AS source, set_by, set_at FROM heb_overrides WHERE jenjang = ? AND year = ? AND month = ?", [jenjang, year, month]);
-  }, { params: t.Object({ jenjang: t.String({ minLength: 1 }), year: t.String(), month: t.String() }), body: t.Object({ heb_value: t.Number(), note: t.Optional(t.String()), set_by: t.String() }) });
+  }, { params: t.Object({ jenjang: t.String({ minLength: 1 }), year: t.String(), month: t.String() }), body: HebOverrideWriteRequestSchema });
   app.delete("/api/config/heb/:jenjang/:year/:month", (ctx: Context) => {
     if (!actor(context, ctx, { role: "admin" })) return { detail: "Insufficient permissions" };
     const result = context.database.client.run("DELETE FROM heb_overrides WHERE jenjang = ? AND year = ? AND month = ?", [ctx.params.jenjang.trim(), Number(ctx.params.year), Number(ctx.params.month)]);

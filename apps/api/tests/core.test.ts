@@ -267,9 +267,9 @@ describe("core CRUD parity slices", () => {
       const sensitive = await app.handle(new Request(`http://local/api/staff/${staffId}/sensitive`, { headers: auth }));
       expect(sensitive.status).toBe(200); expect(await sensitive.json()).toMatchObject({ id: staffId, contact: null });
       const operations = await app.handle(new Request("http://local/api/students/operations", { headers: auth }));
-      expect(operations.status).toBe(200); expect(await operations.json()).toMatchObject({ total: 0, pages: 0 });
+      expect(operations.status).toBe(200); expect(await operations.json()).toMatchObject({ total: 2, pages: 1 });
       const legacyOperations = await app.handle(new Request("http://local/students/operations", { headers: auth }));
-      expect(legacyOperations.status).toBe(200); expect(await legacyOperations.json()).toMatchObject({ total: 0, pages: 0 });
+      expect(legacyOperations.status).toBe(200); expect(await legacyOperations.json()).toMatchObject({ total: 2, pages: 1 });
       const workQueue = await app.handle(new Request("http://local/api/operator/work-queue", { headers: auth }));
       expect(workQueue.status).toBe(200); expect(await workQueue.json()).toEqual([]);
       const assignments = await app.handle(new Request("http://local/api/teacher-class-assignments", { headers: auth }));
