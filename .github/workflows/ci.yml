@@ -170,8 +170,8 @@ jobs:
       - name: Verify docs toolchain
         run: |
           mise --version
-          python --version
+          bun --version
       - name: Validate relative Markdown links
-        run: python .github/scripts/check_markdown_links.py
+        run: bun .github/scripts/check-markdown-links.ts
       - name: Validate current developer commands
-        run: python .github/scripts/check_current_developer_docs.py
+        run: bun .github/scripts/check-current-developer-docs.ts

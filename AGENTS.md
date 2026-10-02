@@ -29,7 +29,7 @@ are the lockfile authorities; CI runs these directly in `.github/workflows/ci.ym
 - `bun run check` — root lint + type + architecture + tests. Also `bun run lint`, `typecheck`, `check:typebox`, `check:architecture`, `test:architecture`, `check:contracts`, `check:ui`.
 - `bun run test:security`, `bun run security:audit` — security tests + dependency audit. `bun --filter @operatoros/excel test` — Excel parity.
 - `hk check --all` — fast hooks; install with `mise exec -- hk install --mise`.
-- `python .github/scripts/check_markdown_links.py`, `python .github/scripts/check_current_developer_docs.py` — docs validation.
+- `bun .github/scripts/check-markdown-links.ts`, `bun .github/scripts/check-current-developer-docs.ts` — docs validation.
 - `make dev-db-status`, `make dev-sessions-status` — inspect managed DB/sessions; `make dev-db-reset` needs the repository confirmation token.
 - `make e2e-validate`; local blocking smoke `timeout 300 make e2e-smoke`; `make e2e-full` is GitHub-Actions-only without explicit owner approval; `./scripts/verify-browser.sh` — browser smoke on a live stack.
 
