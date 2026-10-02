@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus } from "../test-scope";
+import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, scopeSummary } from "../test-scope";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
@@ -60,6 +60,20 @@ describe("test scope decisions", () => {
   });
   test("every mapped test exists", () => {
     for (const tests of Object.values(FOCUSED_TESTS)) for (const path of tests) expect(existsSync(join(repository, path.startsWith("apps/api/") ? path : `apps/web/${path}`))).toBe(true);
+  });
+  test("tier summary retains machine-consumed lines and ordering", () => {
+    expect(scopeSummary(buildScope(["docs/guide.md"]))).toBe([
+      "changed_paths=docs/guide.md", "risk_categories=DOCUMENTATION_ONLY", "focused_tests=", "browser_scenarios=",
+      "frontend_changed=no", "ui_changed=no", "backend_changed=no", "schema_sensitive=no", "full_backend_required=no",
+      "api_drift_required=no", "frontend_build_required=no", "documentation_only=yes", "backend_full_passes_required=0",
+      "reason=docs/guide.md -> DOCUMENTATION_ONLY",
+    ].join("\n"));
+  });
+  test("release gates, double-run policy, and protected-path isolation remain", () => {
+    const runner = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
+    const release = runner.split("  release)")[1]!;
+    for (const required of ["fresh-db-parity", "backend_full", "bun run test", "bun run build", "e2e-validate", "e2e-smoke", "e2e-clean", "passes=2", "schema_sensitive", "RELEASE_DOUBLE_BACKEND"]) expect(release).toContain(required);
+    expect(runner).toContain("unset PROTECTED_DB_PATH"); expect(runner).not.toContain("protected_db_snapshot.py");
   });
 });
 
