@@ -4153,15 +4153,10 @@
               }
             ],
             "title": "Note"
-          },
-          "set_by": {
-            "title": "Set By",
-            "type": "string"
           }
         },
         "required": [
-          "heb_value",
-          "set_by"
+          "heb_value"
         ],
         "title": "HebOverrideBody",
         "type": "object"

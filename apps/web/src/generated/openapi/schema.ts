@@ -7355,8 +7355,6 @@ export interface components {
             heb_value: number;
             /** Note */
             note?: string | null;
-            /** Set By */
-            set_by: string;
         };
         /** JenjangAssignmentsBody */
         JenjangAssignmentsBody: {
