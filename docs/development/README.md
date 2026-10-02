@@ -60,6 +60,7 @@ old process IDs.
 Secondary worktrees automatically select alternate ports when another active
 worktree session owns the defaults. Use `--fixed-port` to fail instead of
 shifting. Run `./stop-dev.sh` from the worktree shown as the owner. Use
-`python3 scripts/operatoros-worktree-safety.py delete-branch` only for a branch
-already merged into `main`; its `remove-worktree` command accepts clean paths
-only and never uses force deletion.
+`bun scripts/worktree-safety.ts delete-branch` only for a branch already merged
+into `main`. Fetch `origin` and verify merged-main first. Its `remove-worktree`
+command accepts only clean registered secondary paths whose HEAD is merged into
+`main`; it never uses force deletion or removes the primary checkout.

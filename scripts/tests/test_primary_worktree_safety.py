@@ -7,12 +7,10 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME_PATH = ROOT / "scripts/operatoros-dev-runtime.py"
-SAFETY_PATH = ROOT / "scripts/operatoros-worktree-safety.py"
 
 
 def load(path: Path, name: str):
@@ -232,8 +230,6 @@ def test_same_worktree_dead_session_is_cleaned_without_signal(tmp_path: Path, mo
     cleanup = runtime.cleanup_port(argparse.Namespace(runtime=tmp_path / "runtime", repo=repo, port=5197, host="127.0.0.1", timeout=0.1))
     assert cleanup == 0
     assert not (entry / "frontend.pid").exists()
-
-
 def test_removed_worktree_registry_entry_is_pruned_without_signal(tmp_path: Path, monkeypatch):
     repo = create_repo(tmp_path)
     other = tmp_path / "removed"
@@ -274,21 +270,3 @@ def test_stop_session_mirrors_stopped_state_to_shared_registry(tmp_path: Path, m
     assert runtime.stop_session(runtime_dir, repo, "stop-session", 0.1)
     assert json.loads((entry / "session.json").read_text())["status"] == "stopped"
     assert not (entry / "frontend.pid").exists()
-
-
-def test_branch_and_worktree_cleanup_guards(tmp_path: Path):
-    repo = create_repo(tmp_path)
-    other = tmp_path / "other"
-    git(repo, "worktree", "add", str(other), "-b", "task")
-    (other / "dirty.txt").write_text("dirty")
-    git(other, "config", "user.name", "Test")
-    git(other, "config", "user.email", "test@example.invalid")
-    dirty = subprocess.run([sys.executable, str(SAFETY_PATH), "remove-worktree", "--repo", str(repo), "--path", str(other)], text=True, capture_output=True)
-    assert dirty.returncode == 2
-    assert "WORKTREE_REMOVE_DIRTY" in dirty.stdout
-    git(other, "add", "dirty.txt")
-    git(other, "commit", "-m", "unmerged task")
-    unmerged = subprocess.run([sys.executable, str(SAFETY_PATH), "delete-branch", "--repo", str(repo), "--branch", "task"], text=True, capture_output=True)
-    assert unmerged.returncode == 2
-    assert "BRANCH_DELETE_WITHOUT_MERGE_BASE_CHECK" in unmerged.stdout
-    assert subprocess.run([sys.executable, str(SAFETY_PATH), "remove-worktree", "--repo", str(repo), "--path", str(other)], check=False).returncode == 0
