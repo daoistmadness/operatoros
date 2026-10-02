@@ -79,6 +79,14 @@ export function buildScope(paths: string[]) {
   };
 }
 
+export function scopeSummary(scope: ReturnType<typeof buildScope>): string {
+  const lines = (["changed_paths", "risk_categories", "focused_tests", "browser_scenarios"] as const).map((key) => `${key}=${scope[key].join(",")}`);
+  for (const key of ["frontend_changed", "ui_changed", "backend_changed", "schema_sensitive", "full_backend_required", "api_drift_required", "frontend_build_required", "documentation_only"] as const) lines.push(`${key}=${scope[key] ? "yes" : "no"}`);
+  lines.push(`backend_full_passes_required=${scope.backend_full_passes_required}`);
+  for (const item of scope.selection_reasons) lines.push(`reason=${item.path} -> ${item.categories.join(",") || "ignored"}`);
+  return lines.join("\n");
+}
+
 export function pathsFromNameStatus(output: string): string[] {
   return sorted(output.split("\n").flatMap((line) => {
     const [status = "", ...paths] = line.split("\t");
@@ -106,9 +114,14 @@ if (import.meta.main) {
     const { values } = parseArgs({ options: {
       base: { type: "string" }, head: { type: "string" }, repo: { type: "string", default: resolve(import.meta.dir, "..") },
       "changed-file": { type: "string", multiple: true },
+      report: { type: "string" },
     } });
-    const paths = values["changed-file"]?.length ? sorted(values["changed-file"]) : gitPaths(values.repo!, values.base, values.head);
-    console.log(JSON.stringify(buildScope(paths.filter((path) => !PRESERVED.has(path)))));
+    if (values.report) {
+      console.log(scopeSummary(await Bun.file(values.report).json()));
+    } else {
+      const paths = values["changed-file"]?.length ? sorted(values["changed-file"]) : gitPaths(values.repo!, values.base, values.head);
+      console.log(JSON.stringify(buildScope(paths.filter((path) => !PRESERVED.has(path)))));
+    }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 2;

@@ -1,7 +1,7 @@
 .PHONY: e2e-smoke e2e-critical e2e-readiness e2e-release e2e-full e2e-clean e2e-validate fresh-db-parity test-fast test-pr test-release test-scope dev-db-path dev-db-status dev-db-reset dev-db-candidates dev-db-adopt dev-sessions-status
 
 test-scope:
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && "$$python_tooling" scripts/test_scope.py
+	@bun scripts/test-scope.ts
 
 test-fast:
 	@bash scripts/test-tier.sh fast
