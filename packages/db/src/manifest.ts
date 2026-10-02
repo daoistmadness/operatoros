@@ -11,7 +11,11 @@ export const SCHEMA_MIGRATIONS = [
   "20260901_s45",
   "20260901_s46",
   "20260929_s47",
+  "20261002_s48",
 ] as const;
+
+export const S47_SCHEMA_FINGERPRINT =
+  "171c0e5e92d080a3f81931ec8c7f299c07cb153d038bba3dd890de96a6dd4f8d";
 
 export const CURRENT_SCHEMA_VERSION = SCHEMA_MIGRATIONS.at(-1)!;
 
@@ -27,7 +31,7 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "171c0e5e92d080a3f81931ec8c7f299c07cb153d038bba3dd890de96a6dd4f8d";
+  "cdf77fe2cdebf360d57501a9e7ba695d820dcaec8451e832928a04b0679a640c";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",

@@ -1,9 +1,9 @@
 const ADMIN_CAPABILITIES = [
   "approve_attendance_correction", "assign_attendance_followup", "cancel_attendance_correction",
-  "commit_progression_batch", "commit_student_roster", "commit_student_updates", "create_attendance_followup",
-  "create_progression_preview", "create_student", "delete_enrollment_draft", "edit_sensitive_identifiers",
+  "commit_progression_batch", "commit_staff_import", "commit_student_roster", "commit_student_updates", "create_attendance_followup",
+  "create_progression_preview", "create_student", "delete_enrollment_draft", "edit_sensitive_identifiers", "edit_sensitive_staff_fields",
   "edit_student", "end_enrollment", "enter_assigned_class_attendance", "execute_cross_jenjang_transition",
-  "export_assigned_class_attendance", "export_sensitive_student_fields", "export_staff",
+  "export_assigned_class_attendance", "export_sensitive_staff_fields", "export_sensitive_student_fields", "export_staff",
   "export_student_data", "finalize_attendance_period",
   "graduate_students", "import_attendance", "import_staff", "import_student_roster", "import_student_updates",
   "manage_all_attendance", "manage_all_attendance_followups", "manage_attendance", "manage_device_identity",
@@ -17,7 +17,7 @@ const ADMIN_CAPABILITIES = [
   "view_assigned_attendance", "view_attendance", "view_attendance_corrections", "view_attendance_followup_audit",
   "view_attendance_followups", "view_early_departure", "view_early_departure_audit", "view_progression_preview",
   "destructive_data_reset",
-  "view_sensitive_student_fields", "view_staff", "view_staff_audit", "view_staff_sensitive", "view_student",
+  "view_sensitive_student_fields", "view_staff", "view_staff_analytics", "view_staff_audit", "view_staff_sensitive", "view_student",
   "view_student_audit",
 ] as const;
 

@@ -9,6 +9,7 @@ function operationKey(path: string, method: string): string {
 }
 
 function currentContract(): {
+  openapi: "3.1.0";
   info: OpenAPIV3.InfoObject;
   paths: OpenAPIV3.PathsObject;
   components?: OpenAPIV3.ComponentsObject;
@@ -29,7 +30,7 @@ function currentContract(): {
     if (Object.keys(operations).length > 0) paths[path] = operations;
   }
 
-  return { info: source.info, paths: paths as OpenAPIV3.PathsObject, components: source.components };
+  return { openapi: "3.1.0", info: source.info, paths: paths as OpenAPIV3.PathsObject, components: source.components };
 }
 
 /**
@@ -38,6 +39,7 @@ function currentContract(): {
  * The deprecated upload operation stays out of the public document.
  */
 export function openApiDocumentation(): {
+  openapi: "3.1.0";
   info: OpenAPIV3.InfoObject;
   paths: OpenAPIV3.PathsObject;
   components?: OpenAPIV3.ComponentsObject;

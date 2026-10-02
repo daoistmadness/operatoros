@@ -12,7 +12,7 @@
 
 ## Architecture
 
-- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.7 application model.
+- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.8 application model.
 - [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
 - [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — workspace ownership and modernization boundaries.
 - [Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md) — ownership, contracts, query invalidation, state semantics, and feature validation conventions.
@@ -31,6 +31,8 @@
 - [Granular school data reset](operations/DATA_RESET.md) — reset gate, encrypted backup behavior, scopes, and deletion dependencies.
 
 ## Product references
+
+- [Employee management](product/EMPLOYEE_MANAGEMENT.md) — employee directory, workbook preview/commit, history, analytics, permissions, and Excel export.
 
 - **Attendance** (`/analytics/attendance`) contains Overview, Report, Recap, and Tardiness views selected with `?view=overview|report|recap|tardiness`. The old `/reports/attendance`, `/reports/rekap-absensi`, and `/reports/tardiness` paths redirect to their matching view. Monthly Recap Input remains at `/attendance/monthly-recap`.
 - **Population Overview** (`/analytics/recapitulation`) gives school management descriptive, server-computed summaries of canonical student and staff data (gender, religion, jenjang, class/rombel, age bands, enrollment status; staff employment status, job title, education, jenjang assignment). Missing values surface as explicit "Unknown" categories. Excel exports require `export_student_data` / `export_staff` and mirror the active filters.

@@ -35,8 +35,8 @@ function bootstrapDatabase(path: string): void {
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
 }
 
-describe("S4.7 data layer", () => {
-  it("opens and validates a fresh disposable S4.7 database", () => {
+describe("S4.8 data layer", () => {
+  it("opens and validates a fresh disposable S4.8 database", () => {
     const path = disposableDatabasePath("fresh");
     bootstrapDatabase(path);
     try {
@@ -48,7 +48,7 @@ describe("S4.7 data layer", () => {
     }
   }, 30000);
 
-  it("creates every table declared by the S4.7 schema snapshot", () => {
+  it("creates every table declared by the S4.8 schema snapshot", () => {
     const path = disposableDatabasePath("fresh-parity");
     bootstrapDatabase(path);
     try {
@@ -98,7 +98,7 @@ describe("S4.7 data layer", () => {
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
       expect(before.split(",").length).toBe(REQUIRED_TABLES.length - 13);
-      expect(ledgerBefore).toBe("20260929_s47");
+      expect(ledgerBefore).toBe("20261002_s48");
       let error: unknown;
       try {
         openDatabase(path);

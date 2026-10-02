@@ -6,10 +6,16 @@ import StaffManagement from "./StaffManagement";
 import * as staffApi from "../api/staff";
 
 vi.mock("@tanstack/react-query", () => ({
-  useQuery: ({ queryKey }: { queryKey: unknown[] }) => queryKey[1] === "jenjangs"
+  useQuery: ({ queryKey }: { queryKey: unknown[] }) => queryKey[0] === "academic-masters"
     ? { isPending: false, isError: false, data: [{ id: 1, name: "Primary", code: "PRI", level: "Primary", active: true }] }
-    : { isPending: false, isError: false, data: response((queryKey[2] as { status: "ACTIVE" | "FORMER" | "ALL" }).status) },
+    : queryKey[1] === "positions"
+      ? { isPending: false, isError: false, data: [] }
+    : queryKey[1] === "analytics"
+      ? { isPending: false, isError: false, data: { workforce: { total: 3, active: 1, former: 2, teaching: 1, non_teaching: 2 } } }
+      : { isPending: false, isError: false, data: response((queryKey[2] as { status: "ACTIVE" | "FORMER" | "ALL" }).status) },
 }));
+
+vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ can: () => true }) }));
 
 vi.mock("../api/staff", () => ({
   fetchStaff: vi.fn(),
@@ -20,8 +26,8 @@ const response = (status: "ACTIVE" | "FORMER" | "ALL") => ({
   items: [{
     id: "staff-1", source_staff_id: "S-001", full_name: "Synthetic Teacher", employment_status: status,
     job_title: "Teacher", employment_start_date: "2020-01-01", employment_end_date: null,
-    dapodik_status: "ACTIVE", nip: "123", nuptk: null, jenjangs: [{ id: 1, name: "Primary", code: "PRI", level: "Primary", active: true }],
-    age_years: 36, service_years: 6, service_months: 0, service_duration_status: "CALCULATED",
+    dapodik_status: "ACTIVE", nip: "123", has_nuptk: false, jenjangs: [{ id: 1, name: "Primary", code: "PRI", level: "Primary", active: true }],
+    service_years: 6, service_months: 0, service_duration_status: "CALCULATED",
     highest_education_level: "S1", highest_education_institution: "Synthetic University",
   }],
   total: 1, page: 1, page_size: 100, total_pages: 1,
@@ -52,13 +58,13 @@ describe("staff directory", () => {
     });
   }
 
-  it("defaults to active staff and renders status counts, jenjang badges, age, and service", async () => {
+  it("defaults to active staff and renders status counts, jenjang badges, and tenure without age", async () => {
     await renderPage();
     expect(container.textContent).toContain("Synthetic Teacher");
     expect(container.textContent).toContain("Primary");
-    expect(container.textContent).toContain("36y");
     expect(container.textContent).toContain("6y 0m");
     expect(container.textContent).toContain("Former");
+    expect(container.textContent).not.toContain("36y");
   });
 
   it("changes the primary status filter while preserving the directory UI", async () => {
