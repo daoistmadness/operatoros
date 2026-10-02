@@ -6,7 +6,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 type Json = Record<string, any>;
 type ProcessInfo = { pid: number; ppid: number; pgid: number; start_ticks: string; cwd: string; argv: string[]; uid: number; state: string };
-type Decision = { pid?: number; pgid?: number; start_ticks?: string; port: number; ownership_decision: string; session_id?: string; role?: string; candidate_repository?: string };
+type Decision = { pid?: number; pgid?: number; start_ticks?: string; port: number; ownership_decision: string; session_id?: string | null; role?: string | null; candidate_repository?: string; [key: string]: unknown };
 const argv = process.argv.slice(2);
 const action = argv.shift() ?? "";
 const option = (name: string) => { const at = argv.indexOf(`--${name}`); return at < 0 ? undefined : argv[at + 1]; };
@@ -27,11 +27,22 @@ function commonDir(repo: string): string {
   if (!value) throw new Error("SESSION_REGISTRY_UNAVAILABLE");
   return resolve(value);
 }
+function checkoutIdentity(repo: string): Json | undefined {
+  const root = git(repo, "rev-parse", "--show-toplevel");
+  if (!root) return undefined;
+  const commit = git(root, "rev-parse", "HEAD") || "unknown";
+  const upstream = git(root, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}") ?? null;
+  const counts = upstream ? git(root, "rev-list", "--left-right", "--count", "HEAD...@{u}")?.split(/\s+/).map(Number) : undefined;
+  const changes = git(root, "status", "--porcelain", "--untracked-files=normal");
+  return { repository: root, common_dir: commonDir(root), branch: git(root, "branch", "--show-current") || "detached",
+    commit: commit.slice(0, 12), commit_full: commit, upstream,
+    status: changes === undefined ? "unknown" : changes ? "dirty" : "clean", ahead: counts?.[0] ?? null, behind: counts?.[1] ?? null };
+}
 function primaryPath(): string {
   const configured = process.env.OPERATOROS_PRIMARY_CHECKOUT_PATH;
-  const value = configured || join(homedir(), "code/repos/operatoros");
+  const value = configured?.startsWith("~/") ? join(homedir(), configured.slice(2)) : configured || join(homedir(), "code/repos/operatoros");
   if (!isAbsolute(value)) throw new Error("PRIMARY_CHECKOUT_CONFIGURATION_INVALID");
-  return resolve(value);
+  return existsSync(value) ? realpathSync(value) : resolve(value);
 }
 function registry(repo: string): string { return join(commonDir(repo), "operatoros-dev-sessions"); }
 function entry(repo: string, session: string): string {
@@ -138,7 +149,9 @@ async function classify(runtime: string, repo: string, port: number): Promise<De
         candidate_repository = candidate;
       } else decision = "FOREIGN_PROCESS";
     }
-    result.push({ pid, pgid: info?.pgid, start_ticks: info?.start_ticks, port, ownership_decision: decision, session_id, role, candidate_repository });
+    result.push({ pid, ...(info ? { parent_pid: info.ppid, pgid: info.pgid, start_ticks: info.start_ticks, cwd: info.cwd, uid: info.uid, state: info.state } : {}),
+      port, listening_address: `127.0.0.1:${port}`, ownership_decision: decision, session_id: session_id ?? null, role: role ?? null,
+      ...(candidate_repository ? { candidate_repository } : {}) });
   }
   if (!pids.length && !await portFree("127.0.0.1", port)) result.push({ port, ownership_decision: "UNKNOWN_OWNER" });
   return result;
@@ -208,19 +221,25 @@ function finalize(runtime: string, repo: string, session: string): void {
 
 async function main(): Promise<void> {
   if (action === "primary-path") return void console.log(primaryPath());
-  if (action === "worktree-role") return void console.log(resolve(required("repo")) === primaryPath() ? "PRIMARY" : "SECONDARY");
+  if (action === "worktree-role") { const repo = required("repo"); return void console.log((existsSync(repo) ? realpathSync(repo) : resolve(repo)) === primaryPath() ? "PRIMARY" : "SECONDARY"); }
   if (action === "random-secret") return void console.log(randomBytes(48).toString("base64url"));
   if (action === "dotenv-database-url") {
-    const source = readFileSync(required("env-file"), "utf8");
+    const path = required("env-file"), source = existsSync(path) ? readFileSync(path, "utf8") : "";
     return void console.log(source.split("\n").some((line) => /^(?:export\s+)?DATABASE_URL\s*=/.test(line.trim())) ? "true" : "false");
   }
   if (action === "port-free") { if (!await portFree(required("host"), number("port"))) process.exitCode = 1; return; }
   if (action === "allocate") {
-    const host = required("host"), start = number("preferred"), end = flag("auto") ? number("maximum") : start;
+    const host = option("host") ?? "127.0.0.1", start = number("preferred"), maximum = number("maximum"), end = flag("auto") ? maximum : start;
     for (let port = start; port <= end; port++) if (await portFree(host, port)) return void console.log(port);
-    throw new Error("NO_FREE_PORT");
+    console.error(`no free port in ${start}-${maximum}`); process.exitCode = 4; return;
   }
   const repo = resolve(required("repo"));
+  if (action === "checkout-identity") {
+    const identity = checkoutIdentity(repo);
+    console.log(JSON.stringify(identity ?? { error: "CHECKOUT_IDENTITY_UNAVAILABLE", repository: repo }));
+    if (!identity) process.exitCode = 2;
+    return;
+  }
   if (action === "registry-path") return void console.log(registry(repo));
   const runtime = resolve(required("runtime"));
   if (action === "classify-port") {
@@ -228,11 +247,11 @@ async function main(): Promise<void> {
     return void console.log(flag("decision") ? (decisions[0]?.ownership_decision ?? "NO_LISTENER") : JSON.stringify(decisions));
   }
   if (action === "cleanup-port") {
-    const host = required("host"), port = number("port");
+    const host = option("host") ?? "127.0.0.1", port = number("port");
     const decisions = await classify(runtime, repo, port);
     if (!decisions.length && await portFree(host, port)) return;
     if (flag("no-clean") || decisions.some((item) => item.ownership_decision !== "OPERATOROS_STALE")) {
-      for (const item of decisions) console.log((item.ownership_decision === "FOREIGN_PROCESS"
+      for (const item of decisions) if (!flag("human")) console.log(JSON.stringify(item)); else console.log((item.ownership_decision === "FOREIGN_PROCESS"
         ? `Port ${port} is in use by a non-OperatorOS process. No process was terminated.`
         : `Port ${port} has a protected listener (${item.ownership_decision}). No process was terminated.${item.candidate_repository ? ` Running checkout: ${item.candidate_repository}. Use ./start-dev.sh --auto-port or ./stop-dev.sh there.` : ""}`)
         + (item.pid ? `\nPID: ${item.pid}` : "")
@@ -248,12 +267,30 @@ async function main(): Promise<void> {
     if (await stopGroups(owned, Number(option("timeout") ?? 5)) || !await portFree(host, port)) throw new Error("PORT_DID_NOT_RELEASE");
     return;
   }
-  if (action === "require-no-active-session" || action === "status") {
+  if (action === "status") {
+    const activeFile = join(runtime, "active-session");
+    const activeId = existsSync(activeFile) ? readFileSync(activeFile, "utf8").trim() : "";
+    const all = records(runtime, repo);
+    const report = (state: string, session?: Json) => {
+      if (!flag("human")) console.log(JSON.stringify({ state }));
+      else if (state === "ACTIVE_VERIFIED" && session) console.log(`OperatorOS is already running from this checkout.\nFrontend  ${session.frontend_url}\nBackend   ${session.backend_url}\nSession   ${session.session_id}\nDatabase  ${session.database_path}\nRun ./stop-dev.sh from this checkout to stop it.`);
+      else console.log(state);
+    };
+    if (activeId && !all.some(({ session }) => session.session_id === activeId)) return report("STALE_SESSION_UNVERIFIED");
+    const current = all.find(({ session }) => sessionRepo(session, repo) === repo);
+    if (!current) return report("NO_ACTIVE_SESSION");
+    for (const role of ["backend", "frontend"]) {
+      const record = json(join(current.dir, `${role}.pid`));
+      const info = valid(record, repo, role);
+      if (info && (!current.session.worktreePath || matchingService(info, repo, role))) return report("ACTIVE_VERIFIED", current.session);
+    }
+    return report("STALE_VERIFIED");
+  }
+  if (action === "require-no-active-session") {
     const activeFile = join(runtime, "active-session");
     const activeId = existsSync(activeFile) ? readFileSync(activeFile, "utf8").trim() : "";
     const all = records(runtime, repo);
     if (activeId && !all.some(({ session }) => session.session_id === activeId)) {
-      if (action === "status") { console.log("STALE_SESSION_UNVERIFIED"); return; }
       throw new Error("STALE_SESSION_UNVERIFIED");
     }
     for (const { session } of all) {
@@ -264,16 +301,13 @@ async function main(): Promise<void> {
         const info = record ? processInfo(Number(record.pid)) : undefined;
         if (info && info.start_ticks !== String(record?.start_ticks)) throw new Error("STALE_SESSION_UNVERIFIED");
         if (info && ((!session.worktreePath && valid(record, repo, role)) || matchingService(info, repo, role))) {
-          if (action === "status") console.log(`OperatorOS is already running from this checkout.\nFrontend  ${session.frontend_url}\nBackend   ${session.backend_url}\nSession   ${sessionId}\nRun ./stop-dev.sh from this checkout to stop it.`);
-          else { console.log(sessionId); process.exitCode = 3; }
+          console.log(sessionId); process.exitCode = 3;
           return;
         }
         if (info) throw new Error("STALE_SESSION_UNVERIFIED");
       }
-      if (action === "require-no-active-session") finalize(runtime, repo, sessionId);
-      else console.log("STALE_VERIFIED");
+      finalize(runtime, repo, sessionId);
     }
-    if (action === "status" && !all.length) console.log("NO_ACTIVE_SESSION");
     return;
   }
   const selected = option("session") || (action === "stop" && existsSync(join(runtime, "active-session"))
@@ -292,10 +326,10 @@ async function main(): Promise<void> {
     if (!identity || identity.uid !== process.getuid?.() || !contained(identity.cwd, repo)) throw new Error("LAUNCHER_OWNERSHIP_UNVERIFIED");
     const started = now(), frontendPort = number("frontend-port"), backendPort = number("backend-port");
     const common = {
-      session_id: session, backend_runtime: required("backend-runtime"), frontend_port: frontendPort, backend_port: backendPort,
+      session_id: session, backend_runtime: option("backend-runtime") ?? "elysia", frontend_port: frontendPort, backend_port: backendPort,
       frontend_url: `http://${required("frontend-host")}:${frontendPort}`, backend_url: `http://${required("backend-host")}:${backendPort}`,
       started_at: started, startedAt: started, pid: launcher, pids: { launcher }, repoCommonDir: commonDir(repo), repo_common_dir: commonDir(repo),
-      worktreePath: repo, worktree_path: repo, worktreeRole: repo === primaryPath() ? "PRIMARY" : "SECONDARY",
+      worktreePath: repo, worktree_path: repo, worktreeRole: repo === primaryPath() ? "PRIMARY" : "SECONDARY", worktree_role: repo === primaryPath() ? "PRIMARY" : "SECONDARY",
       branch: git(repo, "branch", "--show-current") ?? "detached", commit: git(repo, "rev-parse", "HEAD") ?? "unknown",
       ports: { frontend: frontendPort, backend: backendPort }, launcher: "linux", mode: required("mode"),
       javascript_runtime: required("javascript-runtime"), javascript_runtime_version: required("javascript-runtime-version"),
@@ -323,7 +357,7 @@ async function main(): Promise<void> {
     return;
   }
   if (action === "mark") {
-    for (const path of [join(dir, "session.json"), join(shared, "session.json"), join(runtime, "ports.json")]) {
+    for (const path of [join(dir, "session.json"), join(shared, "session.json"), join(shared, "ports.json"), join(runtime, "ports.json")]) {
       const value = json(path); if (value?.session_id !== session) continue;
       value.status = required("status"); value[`${value.status}_at`] = now(); atomicJson(path, value);
     }
@@ -334,8 +368,15 @@ async function main(): Promise<void> {
     for (const id of sessions) {
       const fallbacks = ["frontend", "backend"].flatMap((role) => option(`${role}-pid`) ? [{ role, pid: Number(option(`${role}-pid`)) }] : []);
       const owned = ownedChildren(runtime, repo, id, fallbacks);
-      const remaining = await stopGroups(owned, Number(option("timeout") ?? 5));
-      console.log(`[cleanup] Owned groups: ${owned.length}; remaining: ${remaining}`);
+      const remaining = await stopGroups(owned, Number(option("timeout") ?? (action === "stop-owned-session" ? 10 : 2)));
+      if (action === "stop-owned-session") console.log(flag("human") ? `[cleanup] Owned groups: ${owned.length}; remaining: ${remaining}` : JSON.stringify({ session: id, owned_groups: owned.length, remaining_groups: remaining, deadline_seconds: Number(option("timeout") ?? 10) }));
+      else if (!remaining) {
+        for (const root of [sessionDir(runtime, id), entry(repo, id)]) {
+          const value = json(join(root, "session.json"));
+          if (value) { value.status = "stopped"; value.stopped_at = now(); atomicJson(join(root, "session.json"), value); }
+          for (const item of owned) rmSync(join(root, `${item.role}.pid`), { force: true });
+        }
+      }
       if (remaining) process.exitCode = 3;
     }
     return;
