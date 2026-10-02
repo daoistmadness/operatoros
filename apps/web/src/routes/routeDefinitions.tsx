@@ -27,6 +27,9 @@ const StudentProfile = lazy(() => import('../pages/StudentProfile'));
 const StudentManagement = lazy(() => import('../pages/StudentManagement'));
 const StaffManagement = lazy(() => import('../pages/StaffManagement'));
 const StaffDetail = lazy(() => import('../pages/StaffDetail'));
+const StaffForm = lazy(() => import('../pages/StaffForm'));
+const StaffImport = lazy(() => import('../pages/StaffImport'));
+const StaffAnalytics = lazy(() => import('../pages/StaffAnalytics'));
 const CanonicalStudentProfile = lazy(() => import('../pages/CanonicalStudentProfile'));
 const GradeLedger = lazy(() => import('../pages/GradeLedger'));
 const AcademicAssessmentOperations = lazy(() => import('../pages/AcademicAssessmentOperations'));
@@ -131,6 +134,10 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/settings/backups', element: <BackupManagement />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: adminOnly() }),
   defineRoute({ path: '/students', element: <StudentManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),
   defineRoute({ path: '/staff', element: <StaffManagement />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_staff') }),
+  defineRoute({ path: '/staff/new', element: <StaffForm />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('manage_staff') }),
+  defineRoute({ path: '/staff/import', element: <StaffImport />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('import_staff') }),
+  defineRoute({ path: '/staff/analytics', element: <StaffAnalytics />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_staff_analytics') }),
+  defineRoute({ path: '/staff/:id/edit', element: <StaffForm />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('manage_staff') }),
   defineRoute({ path: '/staff/:id', element: <StaffDetail />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_staff') }),
   defineRoute({ path: '/students/operations', element: <OperationsAudit />, group: ROUTE_GROUPS.SYSTEM_ADMINISTRATION, authorization: capability('view_student_audit') }),
   defineRoute({ path: '/students/:id', element: <CanonicalStudentProfile />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),

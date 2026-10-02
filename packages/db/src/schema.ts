@@ -1,4 +1,4 @@
-// Accepted S4.7 schema snapshot. Runtime schema is validated by the migration manifest.
+// Accepted S4.8 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -674,6 +674,22 @@ export const staff_education = sqliteTable("staff_education", {
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const staff_employment_history = sqliteTable("staff_employment_history", {
+    "id": integer().primaryKey(),
+    "staff_member_id": text().notNull().references(() => staff_members.id, { onDelete: "restrict" }),
+    "effective_date": text(),
+    "employment_status": text().notNull(),
+    "position_title": text(),
+    "source": text().notNull(),
+    "source_batch_id": text().references(() => staff_import_batches.id, { onDelete: "restrict" }),
+    "created_by": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    index("idx_staff_employment_history_date").on(table.staff_member_id, table.effective_date, table.id),
+    check("ck_staff_history_status", sql`${table.employment_status} IN ('ACTIVE','FORMER','UNKNOWN','REVIEW_REQUIRED')`),
+    check("ck_staff_history_source", sql`${table.source} IN ('MANUAL','IMPORT')`),
+    check("ck_staff_history_date", sql`${table.effective_date} IS NULL OR (length(${table.effective_date}) = 10 AND ${table.effective_date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')`),
+]);
 export const staff_identifiers = sqliteTable("staff_identifiers", {
     "id": integer().primaryKey(),
     "staff_member_id": text().notNull(),
@@ -733,11 +749,17 @@ export const staff_job_title_mappings = sqliteTable("staff_job_title_mappings", 
     "id": integer().primaryKey(),
     "raw_title": text().notNull(),
     "normalized_title": text().notNull(),
+    "position_category": text(),
+    "is_teaching_role": integer(),
     "status": text().notNull().default("PENDING"),
     "approved_by_user_id": integer(),
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+    index("idx_staff_position_classification").on(table.position_category, table.is_teaching_role, table.status),
+    check("ck_staff_position_category", sql`${table.position_category} IS NULL OR ${table.position_category} IN ('LEADERSHIP','TEACHING','TEACHING_SUPPORT','ADMINISTRATION','FINANCE','HR','MARKETING','IT','FACILITIES','SECURITY','GENERAL_SUPPORT','OTHER')`),
+    check("ck_staff_position_teaching_role", sql`${table.is_teaching_role} IS NULL OR ${table.is_teaching_role} IN (0,1)`),
+]);
 export const staff_members = sqliteTable("staff_members", {
     "id": text().primaryKey(),
     "source_staff_id": text(),

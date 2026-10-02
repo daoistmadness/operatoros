@@ -555,3 +555,29 @@ Coverage percentages use the existing round-half-even convention to one
 decimal place and are null for `EMPTY`. The endpoint uses bounded server-side
 aggregation and returns only the requested page. It does not create scores,
 averages, KKM decisions, deadlines, rollups, alerts, or risk classifications.
+
+## Employee management
+
+The employee analytics API is `/api/staff/analytics/summary`. It computes all
+metrics server-side as of the requested date. The accepted workbook supplies
+current state, not a complete historical employment timeline.
+
+| User-facing name | Numerator / calculation | Denominator and zero behavior | Missing data and source limit |
+| --- | --- | --- | --- |
+| Active employees | Employees whose current or effective-dated history state is `ACTIVE` | Employee records; counts are zero when there are none | Before an employee's first known/imported state, historical status is unknown |
+| Former employees | Employees whose current or effective-dated history state is `FORMER` | Employee records; not labeled turnover | A workbook `KELUAR` row has no inferred exit date or reason |
+| Teaching / non-teaching | Active employees with an approved mapping and `is_teaching_role` true / false | Only active employees with known role classification; null when none are classified | No job-title substring classification |
+| Age | Calendar age from `birth_date` on the reporting date; average uses known ages | Employee records for coverage; average is null if no birth dates exist | Missing or future/invalid dates are unknown, never age zero |
+| Tenure | Completed calendar months from start through reporting date for active employees; through recorded end date for former employees | Employee records for coverage; average and median are null without known tenures | Former staff without an end date and records without a start date have unknown tenure |
+| NUPTK coverage | Employees with a nonblank NUPTK | All employee records; percentage is null for zero employees | Metric applies to all employees because the source does not define applicability |
+| DAPODIK coverage | Employees with mapped `AKTIF`, `BELUM`, or `SUDAH` values | All employee records; percentage is null for zero employees | Blank and other source values, including `TIDAK`, remain unknown/unmapped and are shown distinctly |
+| Field completeness | Present values across NIP, NIK, NUPTK, DAPODIK, birth date, start date, email, and phone | `employee_count × 8`; null when there are no employees | Unweighted and transparent; no applicability or quality weighting |
+| Duplicate identity groups | Distinct duplicate `(identifier type, value)` groups for NIP, NIK, or NUPTK | Count, not a percentage | Does not reveal the underlying identifier in analytics |
+| Joining by year | Employees grouped by known employment start year | All employees for percentage | Missing start dates are omitted from year categories and remain visible in coverage |
+
+Age and tenure distributions include an `Unknown` category. Current former
+headcount is distinct from exits during a period; exit analytics require a
+recorded effective date. Position distribution uses source labels. Category
+and teaching metrics use only administrator-approved `staff_job_title_mappings`.
+Organizational-unit and teacher-certification analytics are unavailable until
+an authoritative source is added.

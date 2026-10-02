@@ -58,7 +58,7 @@ it("backs up and restores only an explicit disposable data root", () => {
     handle.close();
     writeFileSync(`${databasePath}-wal`, "");
     writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
-    expect(command("migrate-existing", artifact, source).stdout.toString()).toContain("NOOP 20260929_s47");
+    expect(command("migrate-existing", artifact, source).stdout.toString()).toContain("NOOP 20261002_s48");
     expect(existsSync(`${databasePath}-wal`)).toBe(false);
     expect(existsSync(`${databasePath}-shm`)).toBe(false);
 

@@ -265,11 +265,15 @@ describe("core CRUD parity slices", () => {
       const staffCsv = await app.handle(new Request("http://local/api/staff/export?status=ALL", { headers: auth }));
       expect(staffCsv.status).toBe(200); expect(await staffCsv.text()).toContain("Staff ID,Name,Employment Status");
       const sensitive = await app.handle(new Request(`http://local/api/staff/${staffId}/sensitive`, { headers: auth }));
-      expect(sensitive.status).toBe(200); expect(await sensitive.json()).toMatchObject({ id: staffId, contact: null });
+      expect(sensitive.status).toBe(200); expect(await sensitive.json()).toMatchObject({ birth_date: null, birth_place: null, contact: null, identifiers: [] });
       const operations = await app.handle(new Request("http://local/api/students/operations", { headers: auth }));
-      expect(operations.status).toBe(200); expect(await operations.json()).toMatchObject({ total: 2, pages: 1 });
+      expect(operations.status).toBe(200);
+      const auditPage = await operations.json() as { pages: number; items: Array<{ operation: string }> };
+      expect(auditPage.pages).toBe(1);
+      expect(auditPage.items.map((item) => item.operation)).toContain("STAFF_SENSITIVE_READ");
       const legacyOperations = await app.handle(new Request("http://local/students/operations", { headers: auth }));
-      expect(legacyOperations.status).toBe(200); expect(await legacyOperations.json()).toMatchObject({ total: 2, pages: 1 });
+      expect(legacyOperations.status).toBe(200);
+      expect((await legacyOperations.json() as { pages: number }).pages).toBe(1);
       const workQueue = await app.handle(new Request("http://local/api/operator/work-queue", { headers: auth }));
       expect(workQueue.status).toBe(200); expect(await workQueue.json()).toEqual([]);
       const assignments = await app.handle(new Request("http://local/api/teacher-class-assignments", { headers: auth }));

@@ -5,6 +5,7 @@ import { assertDatabasePath, schemaFingerprint, validateDatabase } from "./conne
 import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION } from "./manifest";
 
 const schemaSql = readFileSync(new URL("./s47-schema.sql", import.meta.url), "utf8");
+const employeeSql = readFileSync(new URL("./s48-migration.sql", import.meta.url), "utf8");
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
 
@@ -14,6 +15,10 @@ export function installS47Schema(client: Database, triggers = true): void {
 
 export function installS47Triggers(client: Database): void {
   client.exec(schemaSql.slice(triggerStart));
+}
+
+export function installS48EmployeeSchema(client: Database): void {
+  client.exec(employeeSql);
 }
 
 export function createFreshDatabase(path: string): void {
@@ -29,6 +34,7 @@ export function createFreshDatabase(path: string): void {
     client.exec("PRAGMA foreign_keys = ON");
     client.transaction(() => {
       installS47Schema(client!);
+      installS48EmployeeSchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +

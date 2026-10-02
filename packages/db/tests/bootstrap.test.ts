@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 
-describe("Bun S4.7 fresh bootstrap", () => {
+describe("Bun S4.8 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -15,6 +15,9 @@ describe("Bun S4.7 fresh bootstrap", () => {
       const db = handle.client;
       try {
         expect(db.query("SELECT version FROM operatoros_schema_migrations").get()).toEqual({ version: CURRENT_SCHEMA_VERSION });
+        expect((db.query("PRAGMA table_info(staff_job_title_mappings)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("is_teaching_role");
+        db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Teacher', 'Teacher', 'TEACHING', 1)");
+        expect(() => db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Invalid', 'Invalid', 'MADE_UP', 1)")).toThrow();
         db.run("INSERT INTO students (id, name) VALUES (1, 'Same Name'), (2, 'Same Name')");
         db.run("INSERT INTO student_masters (id, full_name, normalized_name, nipd) VALUES ('one', 'Same Name', 'same name', 'N001')");
         expect(() => db.run("INSERT INTO student_masters (id, full_name, normalized_name, nipd) VALUES ('two', 'Same Name', 'same name', 'N001')")).toThrow();
