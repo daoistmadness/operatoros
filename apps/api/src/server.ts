@@ -1,4 +1,3 @@
-import type { Subprocess } from "bun";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { assertDatabaseMigrationSafe, ensureOperatorOSDirectories, openDatabase, type OperatorOSPaths } from "@operatoros/db";
@@ -7,7 +6,7 @@ export interface RunningServer {
   port: number;
   hostname: string;
   paths?: OperatorOSPaths;
-  stop(): void;
+  stop(): Promise<void>;
 }
 
 export function startServer(overrides: Partial<import("./config").BackendConfig> = {}): RunningServer {
@@ -21,17 +20,14 @@ export function startServer(overrides: Partial<import("./config").BackendConfig>
   const databaseHandle = config.databaseHandle ?? (config.databasePath ? openDatabase(config.databasePath) : undefined);
   const app = createApp({ ...config, databaseHandle });
   app.listen({ hostname: config.hostname, port: config.port === 0 ? 0 : config.port });
-  const bunServer = app.server as unknown as {
-    port: number;
-    stop(closeActiveConnections?: boolean): Subprocess | undefined;
-  };
+  const bunServer = app.server as unknown as { port: number };
   if (!bunServer) throw new Error("Elysia did not expose a Bun server");
   return {
     port: bunServer.port,
     hostname: config.hostname,
     paths: config.dataPaths,
-    stop: () => {
-      bunServer.stop(true);
+    stop: async () => {
+      await app.stop(true);
       databaseHandle?.close();
     },
   };
@@ -45,6 +41,6 @@ if (import.meta.main) {
   }
   console.log(`OperatorOS security\n  Backup encryption: ${config.backupEncryption ? "configured" : "not configured"}\n  Active backup key ID: ${config.backupEncryption?.activeKeyId ?? "none"}\n  Trusted proxy: ${config.auth?.trustedProxyAddresses?.length ? "enabled" : "disabled"}\n  Allowed origins: ${config.auth?.allowedOrigins?.length ?? 0}`);
   console.log(`operatoros-api listening on 127.0.0.1:${instance.port}`);
-  process.on("SIGINT", () => instance.stop());
-  process.on("SIGTERM", () => instance.stop());
+  process.on("SIGINT", () => { void instance.stop(); });
+  process.on("SIGTERM", () => { void instance.stop(); });
 }

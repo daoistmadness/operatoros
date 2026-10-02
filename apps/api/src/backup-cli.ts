@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Database, constants } from "bun:sqlite";
-import { migrateExistingDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
 import { loadConfig } from "./config";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
 
@@ -107,7 +107,7 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   let current: Uint8Array;
   try { current = database.serialize(); } finally { database.close(); }
   if (backupSha256(current) !== backupSha256(plaintext)) throw new Error("BACKUP_SOURCE_MISMATCH");
-  console.log(`${migrateExistingDatabase(path)} 20260929_s47`);
+  console.log(`${migrateExistingDatabase(path)} ${CURRENT_SCHEMA_VERSION}`);
 }
 
 function nextFilename(directory: string): string {

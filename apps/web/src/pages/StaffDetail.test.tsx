@@ -15,6 +15,7 @@ const staffApi = vi.hoisted(() => ({
   deleteStaffEducation: vi.fn(),
 }));
 vi.mock("../api/staff", () => staffApi);
+vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ can: (capability: string) => capability === "manage_staff" }) }));
 
 import StaffDetail from "./StaffDetail";
 
@@ -25,8 +26,8 @@ const record = {
 const member = {
   id: "synthetic-staff-1", source_staff_id: "S-001", full_name: "Synthetic Teacher", employment_status: "ACTIVE",
   job_title: "Teacher", employment_start_date: "2020-01-01", employment_end_date: null, dapodik_status: "ACTIVE",
-  nip: null, nuptk: null, birth_place: null, birth_date: null, identifiers: [], contact: null, jenjangs: [],
-  age_years: null, service_years: 4, service_months: 0, service_duration_status: "CALCULATED",
+  nip: null, has_nuptk: false, updated_at: "2026-10-02 00:00:00", identifiers: [], jenjangs: [],
+  service_years: 4, service_months: 0, service_duration_status: "CALCULATED",
   highest_education_level: "S1", highest_education_institution: "Synthetic University", education_history: [record],
 };
 

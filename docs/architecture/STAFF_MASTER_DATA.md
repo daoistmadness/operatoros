@@ -1,5 +1,9 @@
 # Employee master data and audited import
 
+> Historical pre-S4.8 implementation audit. The current TypeScript employee
+> directory, import, metrics, permissions, and export contract is documented in
+> [Employee management](../product/EMPLOYEE_MANAGEMENT.md).
+
 Staff master data is intentionally a basic administrative/Dapodik directory,
 not an HR system. It does not own attendance, payroll, leave, contracts,
 recruitment, performance, document storage, or application-account lifecycle.

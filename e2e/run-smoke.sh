@@ -12,24 +12,35 @@ python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" pri
 export OPERATOROS_PYTHON="$python"
 
 if [[ "${1:-}" == "--validate" ]]; then
-  bash -n "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
+  bash -n "$repo_root/e2e/run-smoke.sh" "$repo_root/e2e/runner-cleanup.sh" "$repo_root/e2e/tests/runner-cleanup.sh" "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
+  bash "$repo_root/e2e/tests/runner-cleanup.sh"
   "$python" -m py_compile "$repo_root/e2e/helpers/create-test-workspace.py" "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
   exit 0
 fi
 
 started_at=$SECONDS
 results="$repo_root/e2e-results"
+source "$repo_root/e2e/runner-cleanup.sh"
+stack_started=false
+stack_stopped=false
+
+cleanup() {
+  local exit_status=$?
+  trap - EXIT INT TERM
+  operatoros_e2e_cleanup "$runtime_root" "$stack_started" "$stack_stopped" cleanup_stack || printf '%s\n' "E2E cleanup completed with a task-stack error; temporary root removal was still attempted." >&2
+  exit "$exit_status"
+}
 runtime_root="$(mktemp -d /tmp/operatoros-e2e.XXXXXX)"
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
 workspace="$runtime_root/$run_id"
 database="$workspace/state/operatoros.sqlite"
 logs="$results/logs"
 junit="$results/junit"
 mkdir -p "$workspace/state" "$logs" "$junit"
-
-cleanup_runtime_root() {
-  find "$runtime_root" -depth -delete
-}
 
 export OPERATOROS_E2E_ADMIN_USERNAME="${OPERATOROS_E2E_ADMIN_USERNAME:-operatoros_e2e_admin}"
 export OPERATOROS_E2E_ADMIN_PASSWORD="${OPERATOROS_E2E_ADMIN_PASSWORD:-E2E-Admin-2026-Secure!}"
@@ -53,11 +64,6 @@ export ENABLE_DESTRUCTIVE_OPERATIONS=true
 cleanup_stack() {
   bash "$repo_root/e2e/stop-test-stack.sh" "$workspace"
 }
-cleanup() {
-  cleanup_stack
-  cleanup_runtime_root
-}
-trap cleanup EXIT
 
 export DATABASE_URL="sqlite:///$database"
 "$OPERATOROS_BUN_REALPATH" "$repo_root/packages/db/src/db-cli.ts" bootstrap --data-dir "$OPERATOROS_DATA_DIR" >"$logs/fixture-initialize.log" 2>&1
@@ -94,6 +100,7 @@ json.dump({"disposable_database": database, "disposable_checksum": checksum, "en
 PY
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
+stack_started=true
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
 export OPERATOROS_E2E_BACKEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["backend_url"])' "$workspace/ports.json")"
 export OPERATOROS_E2E_FRONTEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
@@ -122,7 +129,7 @@ fi
 (cd "$repo_root/apps/web" && PATH="$bun_bin:/usr/bin:/bin" "$playwright_node" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
-trap - EXIT
+stack_stopped=true
 
 database_after="$(sha256sum "$database" | awk '{print $1}')"
 "$python" - "$database" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'

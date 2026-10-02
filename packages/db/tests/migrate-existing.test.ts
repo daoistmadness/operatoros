@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
@@ -55,7 +55,7 @@ function academicScope(db: Database): void {
   db.run("INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,1,1,'1A')");
 }
 
-describe("Bun S4.6 to S4.7 migration", () => {
+describe("Bun S4.6 to S4.8 migration", () => {
   it("migrates Variant B without changing its matching target objects", () => withDatabases((_, path, freshPath) => {
     const db = source(path, "B");
     academicScope(db);
@@ -107,6 +107,26 @@ describe("Bun S4.6 to S4.7 migration", () => {
     expect(migrateExistingDatabase(path)).toBe("MIGRATED");
     expect(existsSync(`${path}-wal`)).toBe(false);
     expect(existsSync(`${path}-shm`)).toBe(false);
+  }));
+
+  it("migrates the approved S4.7 schema and preserves its employee directory", () => withDatabases((_, path) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    expect(schemaFingerprint(db)).toBe(S47_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260929_s47','20260901_s46',?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [S47_SCHEMA_FINGERPRINT]);
+    db.run("INSERT INTO staff_members (id,source_staff_id,full_name,normalized_name,employment_status) VALUES ('synthetic-s48-staff','S-48','Synthetic Employee','synthetic employee','ACTIVE')");
+    db.run("INSERT INTO staff_identifiers (staff_member_id,identifier_type,raw_value,normalized_value,verification_status) VALUES ('synthetic-s48-staff','NIP','123456789012345678','123456789012345678','VALIDATED')");
+    db.close();
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    const migrated = openDatabase(path);
+    try {
+      expect(schemaFingerprint(migrated.client)).not.toBe(S47_SCHEMA_FINGERPRINT);
+      expect(migrated.client.query("SELECT id,source_staff_id,full_name FROM staff_members WHERE id='synthetic-s48-staff'").get()).toEqual({ id: "synthetic-s48-staff", source_staff_id: "S-48", full_name: "Synthetic Employee" });
+      expect(migrated.client.query("SELECT normalized_value FROM staff_identifiers WHERE staff_member_id='synthetic-s48-staff' AND identifier_type='NIP'").get()).toEqual({ normalized_value: "123456789012345678" });
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20260929_s47" });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { migrated.close(); }
   }));
 
   it("transforms synthetic attendance, preserves identities, and matches fresh structure", () => withDatabases((_, path, freshPath) => {
