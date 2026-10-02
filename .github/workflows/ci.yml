@@ -173,5 +173,7 @@ jobs:
           bun --version
       - name: Validate relative Markdown links
         run: bun .github/scripts/check-markdown-links.ts
+      - name: Test documentation checker fixtures
+        run: bun test scripts/tests/docs-checkers.test.ts
       - name: Validate current developer commands
         run: bun .github/scripts/check-current-developer-docs.ts
