@@ -21,194 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/analytics/attendance-date-range": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Date Range */
-        get: operations["get_attendance_date_range_analytics_attendance_date_range_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/attendance-rate/jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Rate Per Jenjang */
-        get: operations["get_attendance_rate_per_jenjang_analytics_attendance_rate_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/attendance-rate/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Rate Per Student */
-        get: operations["get_attendance_rate_per_student_analytics_attendance_rate_students_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/attendance-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Report */
-        get: operations["get_attendance_report_analytics_attendance_report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/class-leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Class Leaderboard */
-        get: operations["get_class_leaderboard_analytics_class_leaderboard_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/filters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Analytics Filters */
-        get: operations["get_analytics_filters_analytics_filters_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/frequent-offenders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Frequent Offenders */
-        get: operations["get_frequent_offenders_analytics_frequent_offenders_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/heb": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Heb Visibility */
-        get: operations["get_heb_visibility_analytics_heb_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/historical-trends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Historical Trends */
-        get: operations["get_historical_trends_analytics_historical_trends_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/incomplete-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Incomplete Summary */
-        get: operations["get_incomplete_summary_analytics_incomplete_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/intervention-impact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Intervention Impact */
-        get: operations["get_intervention_impact_analytics_intervention_impact_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/jenjangs": {
+    "/health": {
         parameters: {
             query?: never;
             header?: never;
@@ -216,11 +29,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get All Jenjangs
-         * @description Returns a sorted distinct list of all assigned jenjangs.
-         *     Used for filtering reports.
+         * Health Check
+         * @description Health check endpoint used by the desktop launcher and monitoring.
          */
-        get: operations["get_all_jenjangs_analytics_jenjangs_get"];
+        get: operations["health_check_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -229,454 +41,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/analytics/late-by-class": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Class */
-        get: operations["get_late_by_class_analytics_late_by_class_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/late-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Jenjang */
-        get: operations["get_late_by_jenjang_analytics_late_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/late-by-student": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Student */
-        get: operations["get_late_by_student_analytics_late_by_student_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/management-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Management Summary */
-        get: operations["get_management_summary_analytics_management_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/management-summary/export/excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Management Summary Excel */
-        get: operations["export_management_summary_excel_analytics_management_summary_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/management-summary/export/pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Management Summary Pdf */
-        get: operations["export_management_summary_pdf_analytics_management_summary_export_pdf_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/monthly": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Late Trends */
-        get: operations["get_monthly_late_trends_analytics_monthly_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/monthly-by-class": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Late By Class */
-        get: operations["get_monthly_late_by_class_analytics_monthly_by_class_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/pending-categorization": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Pending Categorization */
-        get: operations["get_pending_categorization_analytics_pending_categorization_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/rekap-absensi": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Rekap Absensi */
-        get: operations["get_rekap_absensi_analytics_rekap_absensi_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/rekap-absensi/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Rekap Absensi Excel */
-        get: operations["export_rekap_absensi_excel_analytics_rekap_absensi_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Analytics Summary */
-        get: operations["get_analytics_summary_analytics_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/tardiness-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Report */
-        get: operations["get_tardiness_report_analytics_tardiness_report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/tardiness-report/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Tardiness Report Excel */
-        get: operations["export_tardiness_report_excel_analytics_tardiness_report_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/tardiness-report/export-management-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Tardiness Management Excel */
-        get: operations["export_tardiness_management_excel_analytics_tardiness_report_export_management_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/tardiness-report/summary-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Summary By Jenjang */
-        get: operations["get_tardiness_summary_by_jenjang_analytics_tardiness_report_summary_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/tardiness/summary-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Summary By Jenjang */
-        get: operations["get_tardiness_summary_by_jenjang_analytics_tardiness_summary_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/v2/rekap-absensi": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get V2 Rekap Absensi */
-        get: operations["get_v2_rekap_absensi_analytics_v2_rekap_absensi_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/v2/rekap-absensi/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export V2 Rekap Absensi Excel */
-        get: operations["export_v2_rekap_absensi_excel_analytics_v2_rekap_absensi_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/kkm-effective": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Effective Kkm */
-        get: operations["get_effective_kkm_api_academic_config_kkm_effective_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/kkm-thresholds": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Kkm Thresholds */
-        get: operations["list_kkm_thresholds_api_academic_config_kkm_thresholds_get"];
-        put?: never;
-        /** Create Kkm Threshold */
-        post: operations["create_kkm_threshold_api_academic_config_kkm_thresholds_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/kkm-thresholds/{threshold_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Kkm Threshold */
-        put: operations["update_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__put"];
-        post?: never;
-        /** Delete Kkm Threshold */
-        delete: operations["delete_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/terms": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Term Configs */
-        get: operations["list_term_configs_api_academic_config_terms_get"];
-        put?: never;
-        /** Create Term Config */
-        post: operations["create_term_config_api_academic_config_terms_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/terms/effective": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Effective Terms */
-        get: operations["get_effective_terms_api_academic_config_terms_effective_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-config/terms/{term_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Term Config */
-        put: operations["update_term_config_api_academic_config_terms__term_id__put"];
-        post?: never;
-        /** Delete Term Config */
-        delete: operations["delete_term_config_api_academic_config_terms__term_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-interventions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Interventions */
-        get: operations["list_interventions_api_academic_interventions_get"];
-        put?: never;
-        /** Create Intervention */
-        post: operations["create_intervention_api_academic_interventions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-interventions/from-alert": {
+    "/api/auth/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -685,31 +50,97 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Intervention From Alert */
-        post: operations["create_intervention_from_alert_api_academic_interventions_from_alert_post"];
+        /** Login */
+        post: operations["login_api_auth_login_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/academic-interventions/{intervention_id}": {
+    "/api/auth/logout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Intervention */
-        get: operations["get_intervention_api_academic_interventions__intervention_id__get"];
+        get?: never;
         put?: never;
-        post?: never;
-        /** Close Intervention */
-        delete: operations["close_intervention_api_academic_interventions__intervention_id__delete"];
+        /** Logout */
+        post: operations["logout_api_auth_logout_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Update Intervention */
-        patch: operations["update_intervention_api_academic_interventions__intervention_id__patch"];
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current User */
+        get: operations["current_user_api_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Setup Status */
+        get: operations["setup_status_api_setup_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bootstrap Setup */
+        post: operations["bootstrap_setup_api_setup_bootstrap_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create First Admin */
+        post: operations["create_first_admin_api_setup_admin_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/academic-masters/academic-years": {
@@ -748,60 +179,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/academic-masters/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Classes */
-        get: operations["list_classes_api_academic_masters_classes_get"];
-        put?: never;
-        /** Create Class */
-        post: operations["create_class_api_academic_masters_classes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-masters/classes/{row_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Class */
-        put: operations["update_class_api_academic_masters_classes__row_id__put"];
-        post?: never;
-        /** Delete Class */
-        delete: operations["delete_class_api_academic_masters_classes__row_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-masters/grades": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Grades */
-        get: operations["list_grades_api_academic_masters_grades_get"];
-        put?: never;
-        /** Create Grade */
-        post: operations["create_grade_api_academic_masters_grades_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/academic-masters/grades/bulk": {
         parameters: {
             query?: never;
@@ -814,24 +191,6 @@ export interface paths {
         /** Create Academic Grades in Bulk */
         post: operations["create_academic_grades_bulk"];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/academic-masters/grades/{row_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Grade */
-        put: operations["update_grade_api_academic_masters_grades__row_id__put"];
-        post?: never;
-        /** Delete Grade */
-        delete: operations["delete_grade_api_academic_masters_grades__row_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -909,94 +268,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/backups": {
+    "/api/academic-masters/grades": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Backups */
-        get: operations["list_backups_api_admin_backups_get"];
+        /** List Grades */
+        get: operations["list_grades_api_academic_masters_grades_get"];
         put?: never;
-        /** Post Backup */
-        post: operations["post_backup_api_admin_backups_post"];
+        /** Create Grade */
+        post: operations["create_grade_api_academic_masters_grades_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/admin/backups/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Backup History */
-        get: operations["backup_history_api_admin_backups_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/backups/recovery-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Recovery History */
-        get: operations["recovery_history_api_admin_backups_recovery_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/backups/scheduler": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Scheduler Config */
-        get: operations["get_scheduler_config_api_admin_backups_scheduler_get"];
-        /** Update Scheduler Config */
-        put: operations["update_scheduler_config_api_admin_backups_scheduler_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/backups/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Backup Status */
-        get: operations["backup_status_api_admin_backups_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/backups/{filename}": {
+    "/api/academic-masters/grades/{row_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1004,33 +294,35 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /** Update Grade */
+        put: operations["update_grade_api_academic_masters_grades__row_id__put"];
         post?: never;
-        /** Delete Backup Endpoint */
-        delete: operations["delete_backup_endpoint_api_admin_backups__filename__delete"];
+        /** Delete Grade */
+        delete: operations["delete_grade_api_academic_masters_grades__row_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/admin/backups/{filename}/download": {
+    "/api/academic-masters/classes": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Download Backup */
-        get: operations["download_backup_api_admin_backups__filename__download_get"];
+        /** List Classes */
+        get: operations["list_classes_api_academic_masters_classes_get"];
         put?: never;
-        post?: never;
+        /** Create Class */
+        post: operations["create_class_api_academic_masters_classes_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/admin/backups/{filename}/restore": {
+    "/api/academic-masters/classes/{row_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1038,252 +330,38 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        /** Post Restore */
-        post: operations["post_restore_api_admin_backups__filename__restore_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/backups/{filename}/restore-preflight": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Restore Preflight */
-        post: operations["post_restore_preflight_api_admin_backups__filename__restore_preflight_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/attendance-date-range": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Date Range */
-        get: operations["get_attendance_date_range_api_analytics_attendance_date_range_get"];
-        put?: never;
+        /** Update Class */
+        put: operations["update_class_api_academic_masters_classes__row_id__put"];
         post?: never;
-        delete?: never;
+        /** Delete Class */
+        delete: operations["delete_class_api_academic_masters_classes__row_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/attendance-rate/jenjang": {
+    "/api/students": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Attendance Rate Per Jenjang */
-        get: operations["get_attendance_rate_per_jenjang_api_analytics_attendance_rate_jenjang_get"];
+        /** Get Students */
+        get: operations["get_students_api_students_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Student
+         * @description Manually creates a student in the master student pool.
+         */
+        post: operations["create_student_api_students_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/attendance-rate/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Rate Per Student */
-        get: operations["get_attendance_rate_per_student_api_analytics_attendance_rate_students_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/attendance-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Attendance Report */
-        get: operations["get_attendance_report_api_analytics_attendance_report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/attendance/term": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiAnalyticsAttendanceTerm"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/attendance/term-lateness": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiAnalyticsAttendanceTerm-lateness"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/class-leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Class Leaderboard */
-        get: operations["get_class_leaderboard_api_analytics_class_leaderboard_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/filters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Analytics Filters */
-        get: operations["get_analytics_filters_api_analytics_filters_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/frequent-offenders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Frequent Offenders */
-        get: operations["get_frequent_offenders_api_analytics_frequent_offenders_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/heb": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Heb Visibility */
-        get: operations["get_heb_visibility_api_analytics_heb_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/historical-trends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Historical Trends */
-        get: operations["get_historical_trends_api_analytics_historical_trends_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/incomplete-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Incomplete Summary */
-        get: operations["get_incomplete_summary_api_analytics_incomplete_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/intervention-impact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Intervention Impact */
-        get: operations["get_intervention_impact_api_analytics_intervention_impact_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/jenjangs": {
+    "/api/students/classes": {
         parameters: {
             query?: never;
             header?: never;
@@ -1291,11 +369,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get All Jenjangs
-         * @description Returns a sorted distinct list of all assigned jenjangs.
-         *     Used for filtering reports.
+         * Get Existing Classes
+         * @description Returns a sorted distinct list of all assigned class names.
+         *     Used to power the class mapping dropdown/autocomplete.
          */
-        get: operations["get_all_jenjangs_api_analytics_jenjangs_get"];
+        get: operations["get_existing_classes_api_students_classes_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1304,518 +382,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/late-by-class": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Class */
-        get: operations["get_late_by_class_api_analytics_late_by_class_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/late-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Jenjang */
-        get: operations["get_late_by_jenjang_api_analytics_late_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/late-by-student": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Late By Student */
-        get: operations["get_late_by_student_api_analytics_late_by_student_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/management-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Management Summary */
-        get: operations["get_management_summary_api_analytics_management_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/management-summary/export/excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Management Summary Excel */
-        get: operations["export_management_summary_excel_api_analytics_management_summary_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/management-summary/export/pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Management Summary Pdf */
-        get: operations["export_management_summary_pdf_api_analytics_management_summary_export_pdf_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/monthly": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Late Trends */
-        get: operations["get_monthly_late_trends_api_analytics_monthly_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/monthly-by-class": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Late By Class */
-        get: operations["get_monthly_late_by_class_api_analytics_monthly_by_class_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/pending-categorization": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Pending Categorization */
-        get: operations["get_pending_categorization_api_analytics_pending_categorization_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/rekap-absensi": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Rekap Absensi */
-        get: operations["get_rekap_absensi_api_analytics_rekap_absensi_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/rekap-absensi/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Rekap Absensi Excel */
-        get: operations["export_rekap_absensi_excel_api_analytics_rekap_absensi_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Analytics Summary */
-        get: operations["get_analytics_summary_api_analytics_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/tardiness-report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Report */
-        get: operations["get_tardiness_report_api_analytics_tardiness_report_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/tardiness-report/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Tardiness Report Excel */
-        get: operations["export_tardiness_report_excel_api_analytics_tardiness_report_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/tardiness-report/export-management-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Tardiness Management Excel */
-        get: operations["export_tardiness_management_excel_api_analytics_tardiness_report_export_management_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/tardiness-report/summary-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Summary By Jenjang */
-        get: operations["get_tardiness_summary_by_jenjang_api_analytics_tardiness_report_summary_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/tardiness/summary-by-jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Tardiness Summary By Jenjang */
-        get: operations["get_tardiness_summary_by_jenjang_api_analytics_tardiness_summary_by_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/v2/rekap-absensi": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get V2 Rekap Absensi */
-        get: operations["get_v2_rekap_absensi_api_analytics_v2_rekap_absensi_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/v2/rekap-absensi/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export V2 Rekap Absensi Excel */
-        get: operations["export_v2_rekap_absensi_excel_api_analytics_v2_rekap_absensi_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Requests */
-        get: operations["list_requests_api_attendance_corrections_get"];
-        put?: never;
-        /** Create Request */
-        post: operations["create_request_api_attendance_corrections_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/periods/finalize": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Finalize */
-        post: operations["finalize_api_attendance_corrections_periods_finalize_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/periods/reopen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reopen */
-        post: operations["reopen_api_attendance_corrections_periods_reopen_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/periods/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Period Status */
-        get: operations["period_status_api_attendance_corrections_periods_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Request */
-        get: operations["get_request_api_attendance_corrections__request_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Approve Request */
-        post: operations["approve_request_api_attendance_corrections__request_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel Request */
-        post: operations["cancel_request_api_attendance_corrections__request_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reject Request */
-        post: operations["reject_request_api_attendance_corrections__request_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}/self-confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Self Confirm Request */
-        post: operations["self_confirm_request_api_attendance_corrections__request_id__self_confirm_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance-corrections/{request_id}/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit Request */
-        post: operations["submit_request_api_attendance_corrections__request_id__submit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/daily-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get daily attendance recording coverage */
-        get: operations["getDailyAttendanceStatus"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/classes/assigned": {
+    "/api/students/all": {
         parameters: {
             query?: never;
             header?: never;
@@ -1823,10 +390,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Assigned Classes
-         * @description Return active classes assigned to the current user (or all active classes for admin).
+         * Get All Students
+         * @description Returns a list of all students with their class mapping.
          */
-        get: operations["get_assigned_classes_api_attendance_classes_assigned_get"];
+        get: operations["get_all_students_api_students_all_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1835,44 +402,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/classes/{class_id}/dates/{date_val}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Class Date Attendance
-         * @description Retrieve date-effective class roster and attendance status for target class and date.
-         */
-        get: operations["get_class_date_attendance_api_attendance_classes__class_id__dates__date_val__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/classes/{class_id}/dates/{date_val}/departures": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Class Date Departures */
-        get: operations["get_class_date_departures_api_attendance_classes__class_id__dates__date_val__departures_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/classes/{class_id}/dates/{date_val}/entries": {
+    "/api/students/set-class": {
         parameters: {
             query?: never;
             header?: never;
@@ -1882,1043 +412,18 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Post Class Date Attendance Entries
-         * @description Submit class/date attendance transactionally for authorized class & date.
+         * Set Class
+         * @description Updates the class and jenjang information for a student.
+         *     Accepts a JSON body: { student_id, class_name, jenjang }.
          */
-        post: operations["post_class_date_attendance_entries_api_attendance_classes__class_id__dates__date_val__entries_post"];
+        post: operations["set_class_api_students_set_class_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/departure-policies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Departure Policies */
-        get: operations["get_departure_policies_api_attendance_departure_policies_get"];
-        put?: never;
-        /** Create Policy Endpoint */
-        post: operations["create_policy_endpoint_api_attendance_departure_policies_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/departure-policies/{policy_id}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Deactivate Policy Endpoint */
-        post: operations["deactivate_policy_endpoint_api_attendance_departure_policies__policy_id__deactivate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Cases */
-        get: operations["list_cases_api_attendance_followups_get"];
-        put?: never;
-        /** Create Case */
-        post: operations["create_case_api_attendance_followups_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/bulk-assign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Bulk Assign */
-        post: operations["bulk_assign_api_attendance_followups_bulk_assign_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/bulk-resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Bulk Resolve */
-        post: operations["bulk_resolve_api_attendance_followups_bulk_resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Candidates */
-        get: operations["get_candidates_api_attendance_followups_candidates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/metrics/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Metrics Summary */
-        get: operations["get_metrics_summary_api_attendance_followups_metrics_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Case Detail */
-        get: operations["get_case_detail_api_attendance_followups__id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update Case */
-        patch: operations["update_case_api_attendance_followups__id__patch"];
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/acknowledge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Acknowledge Case */
-        post: operations["acknowledge_case_api_attendance_followups__id__acknowledge_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/assign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Assign Case */
-        post: operations["assign_case_api_attendance_followups__id__assign_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Dismiss Case */
-        post: operations["dismiss_case_api_attendance_followups__id__dismiss_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Case History */
-        get: operations["get_case_history_api_attendance_followups__id__history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/monitor": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Monitor Case */
-        post: operations["monitor_case_api_attendance_followups__id__monitor_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/notes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add Note */
-        post: operations["add_note_api_attendance_followups__id__notes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/reopen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reopen Case */
-        post: operations["reopen_case_api_attendance_followups__id__reopen_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve Case */
-        post: operations["resolve_case_api_attendance_followups__id__resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/followups/{id}/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Start Case */
-        post: operations["start_case_api_attendance_followups__id__start_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/{attendance_id}/departure-excuses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Record Excuse Endpoint */
-        post: operations["record_excuse_endpoint_api_attendance__attendance_id__departure_excuses_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/{attendance_id}/departure-excuses/{excuse_id}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revoke Excuse Endpoint */
-        post: operations["revoke_excuse_endpoint_api_attendance__attendance_id__departure_excuses__excuse_id__revoke_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/{attendance_id}/departure-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Departure History */
-        get: operations["get_departure_history_api_attendance__attendance_id__departure_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Login */
-        post: operations["login_api_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Logout */
-        post: operations["logout_api_auth_logout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current User */
-        get: operations["current_user_api_auth_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/absence-reasons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Absence Reasons */
-        get: operations["get_absence_reasons_api_config_absence_reasons_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/absence-reasons/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Class Absence Students */
-        get: operations["get_monthly_class_absence_students"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/absence-reasons/legacy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Legacy Absence Reasons */
-        get: operations["get_legacy_absence_reasons"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/absence-reasons/bulk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Bulk Upsert Absence Reasons */
-        post: operations["bulk_upsert_absence_reasons_api_config_absence_reasons_bulk_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/absence-reasons/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Absence Reasons Summary */
-        get: operations["get_absence_reasons_summary_api_config_absence_reasons_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/deployment-mode": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Deployment Mode */
-        get: operations["get_deployment_mode_api_config_deployment_mode_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/heb": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Heb Overrides */
-        get: operations["get_heb_overrides_api_config_heb_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/heb/{jenjang}/{year}/{month}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Upsert Heb Override */
-        put: operations["upsert_heb_override_api_config_heb__jenjang___year___month__put"];
-        post?: never;
-        /** Delete Heb Override */
-        delete: operations["delete_heb_override_api_config_heb__jenjang___year___month__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/jenjang": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Jenjang Configs */
-        get: operations["get_jenjang_configs_api_config_jenjang_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/jenjang/available": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Available Jenjangs */
-        get: operations["get_available_jenjangs_api_config_jenjang_available_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/jenjang/{jenjang}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Upsert Jenjang Config */
-        put: operations["upsert_jenjang_config_api_config_jenjang__jenjang__put"];
-        post?: never;
-        /** Delete Jenjang Config */
-        delete: operations["delete_jenjang_config_api_config_jenjang__jenjang__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Datasets */
-        get: operations["list_datasets_api_data_portability_datasets_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/exports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Export */
-        post: operations["post_export_api_data_portability_exports_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/exports/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Export Preview */
-        post: operations["post_export_preview_api_data_portability_exports_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get History */
-        get: operations["get_history_api_data_portability_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/imports/commit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Import Commit */
-        post: operations["post_import_commit_api_data_portability_imports_commit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/imports/error-file": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Error File */
-        post: operations["post_error_file_api_data_portability_imports_error_file_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/imports/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Post Import Preview */
-        post: operations["post_import_preview_api_data_portability_imports_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/data-portability/templates/{dataset}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Download Template */
-        get: operations["download_template_api_data_portability_templates__dataset__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/academic-years": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Academic Years */
-        get: operations["get_academic_years_api_grades_academic_years_get"];
-        put?: never;
-        /** Create Academic Year */
-        post: operations["create_academic_year_api_grades_academic_years_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/analytics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Grade Analytics */
-        get: operations["get_grade_analytics_api_grades_analytics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/components": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Components */
-        get: operations["get_components_api_grades_components_get"];
-        put?: never;
-        post: operations["postApiGradesComponents"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/components/{component_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["putApiGradesComponentsByComponent_id"];
-        post?: never;
-        delete: operations["deleteApiGradesComponentsByComponent_id"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/enrollment": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Enrollments */
-        get: operations["get_enrollments_api_grades_enrollment_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/enrollment/bulk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Bulk Enroll Students */
-        post: operations["bulk_enroll_students_api_grades_enrollment_bulk_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/enrollment/candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Enrollment Candidates */
-        get: operations["get_enrollment_candidates_api_grades_enrollment_candidates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/enrollment/source-classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Enrollment Source Classes */
-        get: operations["get_enrollment_source_classes_api_grades_enrollment_source_classes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/enrollment/{enrollment_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete Enrollment */
-        delete: operations["delete_enrollment_api_grades_enrollment__enrollment_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/jenjangs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Jenjangs */
-        get: operations["get_jenjangs_api_grades_jenjangs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/assessment-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiGradesAssessment-sessions"];
-        put?: never;
-        post: operations["postApiGradesAssessment-sessions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/ledger": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Grade Ledger */
-        get: operations["get_grade_ledger_api_grades_ledger_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/save": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Save Grade Ledger */
-        post: operations["save_grade_ledger_api_grades_save_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/assessment-operations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get academic assessment operations */
-        get: operations["getAssessmentOperations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/grades/subjects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Subjects */
-        get: operations["get_subjects_api_grades_subjects_get"];
-        put?: never;
-        /** Create Subject */
-        post: operations["create_subject_api_grades_subjects_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operator/work-queue": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Operator Work Queue */
-        get: operations["get_operator_work_queue_api_operator_work_queue_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/readiness": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Readiness */
-        get: operations["get_readiness_api_readiness_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/report-builder/branding": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Branding */
-        get: operations["get_branding_api_report_builder_branding_get"];
-        put?: never;
-        /** Post Branding */
-        post: operations["post_branding_api_report_builder_branding_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/report-builder/branding/{branding_id}": {
+    "/api/students/assign-class": {
         parameters: {
             query?: never;
             header?: never;
@@ -2931,11 +436,129 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Patch Branding */
-        patch: operations["patch_branding_api_report_builder_branding__branding_id__patch"];
+        /** Assign Class Bulk */
+        patch: operations["assign_class_bulk_api_students_assign_class_patch"];
         trace?: never;
     };
-    "/api/report-builder/export/excel": {
+    "/api/students/{no_id}/attendance-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Attendance Summary */
+        get: operations["get_student_attendance_summary_api_students__no_id__attendance_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/{no_id}/monthly-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Student Monthly History
+         * @description Returns per-month aggregated attendance stats for a student,
+         *     sorted ascending by year/month. Used for the trend chart on
+         *     the Attendance Profile page.
+         */
+        get: operations["get_student_monthly_history_api_students__no_id__monthly_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/students/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Operations Audit Logs */
+        get: operations["get_operations_audit_logs_api_students_operations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Students */
+        get: operations["get_students_students_get"];
+        put?: never;
+        /**
+         * Create Student
+         * @description Manually creates a student in the master student pool.
+         */
+        post: operations["create_student_students_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/students/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Existing Classes
+         * @description Returns a sorted distinct list of all assigned class names.
+         *     Used to power the class mapping dropdown/autocomplete.
+         */
+        get: operations["get_existing_classes_students_classes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/students/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Students
+         * @description Returns a list of all students with their class mapping.
+         */
+        get: operations["get_all_students_students_all_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/students/set-class": {
         parameters: {
             query?: never;
             header?: never;
@@ -2944,15 +567,19 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Export Report Excel */
-        post: operations["export_report_excel_api_report_builder_export_excel_post"];
+        /**
+         * Set Class
+         * @description Updates the class and jenjang information for a student.
+         *     Accepts a JSON body: { student_id, class_name, jenjang }.
+         */
+        post: operations["set_class_students_set_class_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/report-builder/export/pdf": {
+    "/students/assign-class": {
         parameters: {
             query?: never;
             header?: never;
@@ -2961,15 +588,106 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Export Report Pdf */
-        post: operations["export_report_pdf_api_report_builder_export_pdf_post"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Assign Class Bulk */
+        patch: operations["assign_class_bulk_students_assign_class_patch"];
+        trace?: never;
+    };
+    "/students/{no_id}/attendance-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Attendance Summary */
+        get: operations["get_student_attendance_summary_students__no_id__attendance_summary_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/report-builder/preview": {
+    "/students/{no_id}/monthly-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Student Monthly History
+         * @description Returns per-month aggregated attendance stats for a student,
+         *     sorted ascending by year/month. Used for the trend chart on
+         *     the Attendance Profile page.
+         */
+        get: operations["get_student_monthly_history_students__no_id__monthly_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/students/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Operations Audit Logs */
+        get: operations["get_operations_audit_logs_students_operations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Student Masters */
+        get: operations["list_student_masters_api_student_masters_get"];
+        put?: never;
+        /** Create Canonical Student */
+        post: operations["create_canonical_student_api_student_masters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/data-quality-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Master Data Quality Summary */
+        get: operations["student_master_data_quality_summary_api_student_masters_data_quality_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/legacy-link/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -2978,205 +696,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Preview Report */
-        post: operations["preview_report_api_report_builder_preview_post"];
+        /** Preview Legacy Student Links */
+        post: operations["preview_legacy_student_links_api_student_masters_legacy_link_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/report-builder/sections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Sections */
-        get: operations["get_sections_api_report_builder_sections_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/report-builder/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Templates */
-        get: operations["get_templates_api_report_builder_templates_get"];
-        put?: never;
-        /** Post Template */
-        post: operations["post_template_api_report_builder_templates_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/report-builder/templates/{template_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Template */
-        get: operations["get_template_api_report_builder_templates__template_id__get"];
-        put?: never;
-        post?: never;
-        /** Remove Template */
-        delete: operations["remove_template_api_report_builder_templates__template_id__delete"];
-        options?: never;
-        head?: never;
-        /** Patch Template */
-        patch: operations["patch_template_api_report_builder_templates__template_id__patch"];
-        trace?: never;
-    };
-    "/api/reports/annual": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Annual Report */
-        get: operations["get_annual_report_api_reports_annual_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/annual/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Annual Report */
-        get: operations["export_annual_report_api_reports_annual_export_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/filters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Report Filters */
-        get: operations["get_report_filters_api_reports_filters_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/management/monthly": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Management Report */
-        get: operations["get_monthly_management_report_api_reports_management_monthly_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/management/monthly/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Monthly Management Report */
-        get: operations["export_monthly_management_report_api_reports_management_monthly_export_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/monthly": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Monthly Report */
-        get: operations["get_monthly_report_api_reports_monthly_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/monthly/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Monthly Report */
-        get: operations["export_monthly_report_api_reports_monthly_export_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/review/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Review Attendance */
-        get: operations["get_review_attendance_api_review_attendance_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/review/attendance/mass-override-incomplete": {
+    "/api/student-masters/legacy-link/commit": {
         parameters: {
             query?: never;
             header?: never;
@@ -3185,32 +713,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mass Override Incomplete */
-        post: operations["mass_override_incomplete_api_review_attendance_mass_override_incomplete_post"];
+        /** Commit Legacy Student Links */
+        post: operations["commit_legacy_student_links_api_student_masters_legacy_link_commit_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/review/attendance/{attendance_id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Override History */
-        get: operations["get_override_history_api_review_attendance__attendance_id__history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/review/attendance/{attendance_id}/override": {
+    "/api/student-masters/legacy-link/{legacy_student_id}/resolve": {
         parameters: {
             query?: never;
             header?: never;
@@ -3219,23 +730,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upsert Attendance Override */
-        post: operations["upsert_attendance_override_api_review_attendance__attendance_id__override_post"];
+        /** Resolve Legacy Student Link */
+        post: operations["resolve_legacy_student_link_api_student_masters_legacy_link__legacy_student_id__resolve_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/review/classes": {
+    "/api/student-masters/management/list": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Review Classes */
-        get: operations["get_review_classes_api_review_classes_get"];
+        /** List Managed Students */
+        get: operations["list_managed_students_api_student_masters_management_list_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3244,51 +755,225 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/setup/admin": {
+    "/api/student-masters/management/quality": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Create First Admin */
-        post: operations["create_first_admin_api_setup_admin_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/setup/bootstrap": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Bootstrap Setup */
-        post: operations["bootstrap_setup_api_setup_bootstrap_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/setup/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Setup Status */
-        get: operations["setup_status_api_setup_status_get"];
+        /** Managed Student Quality */
+        get: operations["managed_student_quality_api_student_masters_management_quality_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Managed Students Csv */
+        get: operations["export_managed_students_csv_api_student_masters_management_export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Master */
+        get: operations["get_student_master_api_student_masters__student_master_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Profile */
+        get: operations["get_student_profile_api_student_masters__student_master_id__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Student Profile */
+        patch: operations["patch_student_profile_api_student_masters__student_master_id__profile_patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Student Health */
+        patch: operations["patch_student_health_api_student_masters__student_master_id__health_patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Student Documents */
+        patch: operations["patch_student_documents_api_student_masters__student_master_id__documents_patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/guardians": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Student Guardian */
+        post: operations["add_student_guardian_api_student_masters__student_master_id__guardians_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/guardians/{guardian_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Student Guardian */
+        delete: operations["delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Student Guardian */
+        patch: operations["update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Student Change History */
+        get: operations["get_student_change_history_api_student_masters__student_master_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/device-identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Student Device Identities */
+        get: operations["list_student_device_identities_api_student_masters__student_master_id__device_identities_get"];
+        put?: never;
+        /** Replace Student Device Identity */
+        post: operations["replace_student_device_identity_api_student_masters__student_master_id__device_identities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/legacy-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Canonical Legacy Link */
+        get: operations["get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get"];
+        put?: never;
+        /** Post Canonical Legacy Link */
+        post: operations["post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/device-identities/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Guarded Reassign Student Device Identity */
+        post: operations["guarded_reassign_student_device_identity_api_student_masters__student_master_id__device_identities_reassign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/device-identities/{identity_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retire Student Device Identity */
+        post: operations["retire_student_device_identity_api_student_masters__student_master_id__device_identities__identity_id__retire_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3381,6 +1066,23 @@ export interface paths {
         patch: operations["update_staff_employment_api_staff__staff_id__patch"];
         trace?: never;
     };
+    "/api/staff/{staff_id}/sensitive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff Sensitive Detail */
+        get: operations["staff_sensitive_detail_api_staff__staff_id__sensitive_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/{staff_id}/education": {
         parameters: {
             query?: never;
@@ -3393,6 +1095,23 @@ export interface paths {
         put?: never;
         /** Create Staff Education */
         post: operations["create_staff_education_api_staff__staff_id__education_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/jenjangs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace Staff Jenjangs */
+        put: operations["replace_staff_jenjangs_api_staff__staff_id__jenjangs_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3417,7 +1136,7 @@ export interface paths {
         patch: operations["update_staff_education_api_staff__staff_id__education__education_id__patch"];
         trace?: never;
     };
-    "/api/staff/{staff_id}/jenjangs": {
+    "/api/staff/{staff_id}/employment-status": {
         parameters: {
             query?: never;
             header?: never;
@@ -3425,24 +1144,22 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Replace Staff Jenjangs */
-        put: operations["replace_staff_jenjangs_api_staff__staff_id__jenjangs_put"];
-        post?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idEmployment-status"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/staff/{staff_id}/sensitive": {
+    "/api/staff/{staff_id}/history": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Staff Sensitive Detail */
-        get: operations["staff_sensitive_detail_api_staff__staff_id__sensitive_get"];
+        get: operations["getApiStaffByStaff_idHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3451,7 +1168,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-enrollments/academic-master-preview": {
+    "/api/staff/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffAnalyticsSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffPositions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/positions/{position_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3460,15 +1209,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Preview Academic Masters */
-        post: operations["preview_academic_masters_api_student_enrollments_academic_master_preview_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["patchApiStaffPositionsByPosition_id"];
         trace?: never;
     };
-    "/api/student-enrollments/mapping-preview": {
+    "/api/staff/import/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -3477,18 +1225,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Preview Academic Mappings
-         * @description Return reviewed academic mappings without mutating students or enrollments.
-         */
-        post: operations["preview_academic_mappings_api_student_enrollments_mapping_preview_post"];
+        post: operations["postApiStaffImportPreview"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-enrollments/populate/commit": {
+    "/api/staff/import/commit": {
         parameters: {
             query?: never;
             header?: never;
@@ -3497,74 +1241,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Commit Enrollment Population */
-        post: operations["commit_enrollment_population_api_student_enrollments_populate_commit_post"];
+        post: operations["postApiStaffImportCommit"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-enrollments/populate/preview": {
+    "/api/staff/export-excel": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Preview Enrollment Population */
-        post: operations["preview_enrollment_population_api_student_enrollments_populate_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-enrollments/roster-commit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Commit Academic Roster */
-        post: operations["commit_academic_roster_api_student_enrollments_roster_commit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-enrollments/roster-preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview Academic Roster */
-        post: operations["preview_academic_roster_api_student_enrollments_roster_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-enrollments/roster-template": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Download Academic Roster Template */
-        get: operations["download_academic_roster_template_api_student_enrollments_roster_template_get"];
+        get: operations["getApiStaffExport-excel"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3591,7 +1282,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-enrollments/{enrollment_id}": {
+    "/api/student-enrollments/mapping-preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -3600,32 +1291,18 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** Delete Unused Draft Enrollment */
-        delete: operations["delete_unused_draft_enrollment_api_student_enrollments__enrollment_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-enrollments/{enrollment_id}/deletion-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Enrollment Deletion Status */
-        get: operations["get_enrollment_deletion_status_api_student_enrollments__enrollment_id__deletion_status_get"];
-        put?: never;
-        post?: never;
+        /**
+         * Preview Academic Mappings
+         * @description Return reviewed academic mappings without mutating students or enrollments.
+         */
+        post: operations["preview_academic_mappings_api_student_enrollments_mapping_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-enrollments/{enrollment_id}/end": {
+    "/api/student-enrollments/populate/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -3634,8 +1311,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** End Student Enrollment */
-        post: operations["end_student_enrollment_api_student_enrollments__enrollment_id__end_post"];
+        /** Preview Enrollment Population */
+        post: operations["preview_enrollment_population_api_student_enrollments_populate_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/populate/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Enrollment Population */
+        post: operations["commit_enrollment_population_api_student_enrollments_populate_commit_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3659,6 +1353,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/student-enrollments/{enrollment_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Student Enrollment */
+        post: operations["end_student_enrollment_api_student_enrollments__enrollment_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/{enrollment_id}/deletion-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Enrollment Deletion Status */
+        get: operations["get_enrollment_deletion_status_api_student_enrollments__enrollment_id__deletion_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/{enrollment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Unused Draft Enrollment */
+        delete: operations["delete_unused_draft_enrollment_api_student_enrollments__enrollment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/student-enrollments/{enrollment_id}/{action}": {
         parameters: {
             query?: never;
@@ -3676,101 +1421,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-exports/download": {
+    "/api/config/jenjang": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Download Export */
-        post: operations["download_export_api_student_exports_download_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-exports/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview Export */
-        post: operations["preview_export_api_student_exports_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-import-sessions/{session_id}/rollback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Commit Rollback */
-        post: operations["commit_rollback_api_student_import_sessions__session_id__rollback_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-import-sessions/{session_id}/rollback-preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview Rollback */
-        post: operations["preview_rollback_api_student_import_sessions__session_id__rollback_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Student Masters */
-        get: operations["list_student_masters_api_student_masters_get"];
-        put?: never;
-        /** Create Canonical Student */
-        post: operations["create_canonical_student_api_student_masters_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/data-quality-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Student Master Data Quality Summary */
-        get: operations["student_master_data_quality_summary_api_student_masters_data_quality_summary_get"];
+        /** Get Jenjang Configs */
+        get: operations["get_jenjang_configs_api_config_jenjang_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3779,7 +1438,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/legacy-link/commit": {
+    "/api/config/jenjang/available": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Available Jenjangs */
+        get: operations["get_available_jenjangs_api_config_jenjang_available_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/jenjang/{jenjang}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert Jenjang Config */
+        put: operations["upsert_jenjang_config_api_config_jenjang__jenjang__put"];
+        post?: never;
+        /** Delete Jenjang Config */
+        delete: operations["delete_jenjang_config_api_config_jenjang__jenjang__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/heb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Heb Overrides */
+        get: operations["get_heb_overrides_api_config_heb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/heb/{jenjang}/{year}/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upsert Heb Override */
+        put: operations["upsert_heb_override_api_config_heb__jenjang___year___month__put"];
+        post?: never;
+        /** Delete Heb Override */
+        delete: operations["delete_heb_override_api_config_heb__jenjang___year___month__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Absence Reasons */
+        get: operations["get_absence_reasons_api_config_absence_reasons_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Class Absence Students */
+        get: operations["get_monthly_class_absence_students"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Legacy Absence Reasons */
+        get: operations["get_legacy_absence_reasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/absence-reasons/bulk": {
         parameters: {
             query?: never;
             header?: never;
@@ -3788,15 +1568,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Commit Legacy Student Links */
-        post: operations["commit_legacy_student_links_api_student_masters_legacy_link_commit_post"];
+        /** Bulk Upsert Absence Reasons */
+        post: operations["bulk_upsert_absence_reasons_api_config_absence_reasons_bulk_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/legacy-link/preview": {
+    "/api/config/absence-reasons/submit": {
         parameters: {
             query?: never;
             header?: never;
@@ -3805,15 +1585,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Preview Legacy Student Links */
-        post: operations["preview_legacy_student_links_api_student_masters_legacy_link_preview_post"];
+        /** Submit Monthly Absence Ledger */
+        post: operations["submit_monthly_absence_ledger"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/legacy-link/{legacy_student_id}/resolve": {
+    "/api/config/absence-reasons/reopen": {
         parameters: {
             query?: never;
             header?: never;
@@ -3822,23 +1602,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Resolve Legacy Student Link */
-        post: operations["resolve_legacy_student_link_api_student_masters_legacy_link__legacy_student_id__resolve_post"];
+        /** Reopen Monthly Absence Ledger */
+        post: operations["reopen_monthly_absence_ledger"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/export-template": {
+    "/api/config/absence-reasons/summary": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Export Managed Students */
-        get: operations["export_managed_students_api_student_masters_management_export_template_get"];
+        /** Get Absence Reasons Summary */
+        get: operations["get_absence_reasons_summary_api_config_absence_reasons_summary_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3847,15 +1627,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/export.csv": {
+    "/api/academic-config/terms": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Export Managed Students Csv */
-        get: operations["export_managed_students_csv_api_student_masters_management_export_csv_get"];
+        /** List Term Configs */
+        get: operations["list_term_configs_api_academic_config_terms_get"];
+        put?: never;
+        /** Create Term Config */
+        post: operations["create_term_config_api_academic_config_terms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-config/terms/{term_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Term Config */
+        put: operations["update_term_config_api_academic_config_terms__term_id__put"];
+        post?: never;
+        /** Delete Term Config */
+        delete: operations["delete_term_config_api_academic_config_terms__term_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-config/kkm-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Kkm Thresholds */
+        get: operations["list_kkm_thresholds_api_academic_config_kkm_thresholds_get"];
+        put?: never;
+        /** Create Kkm Threshold */
+        post: operations["create_kkm_threshold_api_academic_config_kkm_thresholds_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-config/kkm-thresholds/{threshold_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Kkm Threshold */
+        put: operations["update_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__put"];
+        post?: never;
+        /** Delete Kkm Threshold */
+        delete: operations["delete_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-config/kkm-effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Effective Kkm */
+        get: operations["get_effective_kkm_api_academic_config_kkm_effective_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3864,15 +1716,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/import-history": {
+    "/api/academic-config/terms/effective": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Student Update Import History */
-        get: operations["student_update_import_history_api_student_masters_management_import_history_get"];
+        /** Get Effective Terms */
+        get: operations["get_effective_terms_api_academic_config_terms_effective_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3881,15 +1733,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/imports/{batch_id}": {
+    "/api/config/deployment-mode": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Student Update Import Detail */
-        get: operations["student_update_import_detail_api_student_masters_management_imports__batch_id__get"];
+        /** Get Deployment Mode */
+        get: operations["get_deployment_mode_api_config_deployment_mode_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3898,15 +1750,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/imports/{batch_id}/result.xlsx": {
+    "/api/readiness": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Student Update Result Workbook */
-        get: operations["student_update_result_workbook_api_student_masters_management_imports__batch_id__result_xlsx_get"];
+        /** Get Readiness */
+        get: operations["get_readiness_api_readiness_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3915,15 +1767,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/list": {
+    "/api/attendance/override-review": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Managed Students */
-        get: operations["list_managed_students_api_student_masters_management_list_get"];
+        get: operations["getApiAttendanceOverride-review"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3932,15 +1783,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/quality": {
+    "/api/review/classes": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Managed Student Quality */
-        get: operations["managed_student_quality_api_student_masters_management_quality_get"];
+        /** Get Review Classes */
+        get: operations["get_review_classes_api_review_classes_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3949,7 +1800,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/update-commit/{batch_id}": {
+    "/api/review/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Attendance */
+        get: operations["get_review_attendance_api_review_attendance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/review/attendance/{attendance_id}/override": {
         parameters: {
             query?: never;
             header?: never;
@@ -3958,40 +1826,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Commit Student Update Workbook */
-        post: operations["commit_student_update_workbook_api_student_masters_management_update_commit__batch_id__post"];
+        /** Upsert Attendance Override */
+        post: operations["upsert_attendance_override_api_review_attendance__attendance_id__override_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/management/update-preview": {
+    "/api/review/attendance/{attendance_id}/history": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Preview Student Update Workbook */
-        post: operations["preview_student_update_workbook_api_student_masters_management_update_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Student Master */
-        get: operations["get_student_master_api_student_masters__student_master_id__get"];
+        /** Get Override History */
+        get: operations["get_override_history_api_review_attendance__attendance_id__history_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4000,25 +1851,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/{student_master_id}/device-identities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Student Device Identities */
-        get: operations["list_student_device_identities_api_student_masters__student_master_id__device_identities_get"];
-        put?: never;
-        /** Replace Student Device Identity */
-        post: operations["replace_student_device_identity_api_student_masters__student_master_id__device_identities_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/device-identities/reassign": {
+    "/api/review/attendance/mass-override-incomplete": {
         parameters: {
             query?: never;
             header?: never;
@@ -4027,296 +1860,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Guarded Reassign Student Device Identity */
-        post: operations["guarded_reassign_student_device_identity_api_student_masters__student_master_id__device_identities_reassign_post"];
+        /** Mass Override Incomplete */
+        post: operations["mass_override_incomplete_api_review_attendance_mass_override_incomplete_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/{student_master_id}/device-identities/{identity_id}/retire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Retire Student Device Identity */
-        post: operations["retire_student_device_identity_api_student_masters__student_master_id__device_identities__identity_id__retire_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Patch Student Documents */
-        patch: operations["patch_student_documents_api_student_masters__student_master_id__documents_patch"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/guardians": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add Student Guardian */
-        post: operations["add_student_guardian_api_student_masters__student_master_id__guardians_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/guardians/{guardian_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete Student Guardian */
-        delete: operations["delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Student Guardian */
-        patch: operations["update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Patch Student Health */
-        patch: operations["patch_student_health_api_student_masters__student_master_id__health_patch"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Student Change History */
-        get: operations["get_student_change_history_api_student_masters__student_master_id__history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/legacy-link": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Canonical Legacy Link */
-        get: operations["get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get"];
-        put?: never;
-        /** Post Canonical Legacy Link */
-        post: operations["post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Student Profile */
-        get: operations["get_student_profile_api_student_masters__student_master_id__profile_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Patch Student Profile */
-        patch: operations["patch_student_profile_api_student_masters__student_master_id__profile_patch"];
-        trace?: never;
-    };
-    "/api/student-progression/batches/{batch_id}/result": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Result */
-        get: operations["get_result_api_student_progression_batches__batch_id__result_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/mapping-rules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Mapping Rules */
-        get: operations["list_mapping_rules_api_student_progression_mapping_rules_get"];
-        put?: never;
-        /** Create Mapping Rule */
-        post: operations["create_mapping_rule_api_student_progression_mapping_rules_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/previews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Previews */
-        get: operations["list_previews_api_student_progression_previews_get"];
-        put?: never;
-        /** Create Preview */
-        post: operations["create_preview_api_student_progression_previews_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/previews/{batch_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Preview */
-        get: operations["get_preview_api_student_progression_previews__batch_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/previews/{batch_id}/commit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Commit Preview */
-        post: operations["commit_preview_api_student_progression_previews__batch_id__commit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/previews/{batch_id}/revalidate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revalidate Preview */
-        post: operations["revalidate_preview_api_student_progression_previews__batch_id__revalidate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-progression/previews/{batch_id}/rows/{row_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Patch Row */
-        patch: operations["patch_row_api_student_progression_previews__batch_id__rows__row_id__patch"];
-        trace?: never;
-    };
-    "/api/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Students */
-        get: operations["get_students_api_students_get"];
-        put?: never;
-        /**
-         * Create Student
-         * @description Manually creates a student in the master student pool.
-         */
-        post: operations["create_student_api_students_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/all": {
+    "/api/attendance/classes/assigned": {
         parameters: {
             query?: never;
             header?: never;
@@ -4324,10 +1876,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get All Students
-         * @description Returns a list of all students with their class mapping.
+         * Get Assigned Classes
+         * @description Return active classes assigned to the current user (or all active classes for admin).
          */
-        get: operations["get_all_students_api_students_all_get"];
+        get: operations["get_assigned_classes_api_attendance_classes_assigned_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4336,24 +1888,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/students/assign-class": {
+    "/api/attendance/classes/{class_id}/attendance/export-excel": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Export Assigned Class Attendance */
+        get: operations["export_assigned_class_attendance_api_attendance_classes__class_id__attendance_export_excel_get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** Assign Class Bulk */
-        patch: operations["assign_class_bulk_api_students_assign_class_patch"];
+        patch?: never;
         trace?: never;
     };
-    "/api/students/classes": {
+    "/api/attendance/classes/{class_id}/dates/{date_val}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4361,11 +1913,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Existing Classes
-         * @description Returns a sorted distinct list of all assigned class names.
-         *     Used to power the class mapping dropdown/autocomplete.
+         * Get Class Date Attendance
+         * @description Retrieve date-effective class roster and attendance status for target class and date.
          */
-        get: operations["get_existing_classes_api_students_classes_get"];
+        get: operations["get_class_date_attendance_api_attendance_classes__class_id__dates__date_val__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4374,24 +1925,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/students/operations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Operations Audit Logs */
-        get: operations["get_operations_audit_logs_api_students_operations_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/students/set-class": {
+    "/api/attendance/classes/{class_id}/dates/{date_val}/entries": {
         parameters: {
             query?: never;
             header?: never;
@@ -4401,26 +1935,43 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Set Class
-         * @description Updates the class and jenjang information for a student.
-         *     Accepts a JSON body: { student_id, class_name, jenjang }.
+         * Post Class Date Attendance Entries
+         * @description Submit class/date attendance transactionally for authorized class & date.
          */
-        post: operations["set_class_api_students_set_class_post"];
+        post: operations["post_class_date_attendance_entries_api_attendance_classes__class_id__dates__date_val__entries_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/students/{no_id}/attendance-summary": {
+    "/api/attendance-corrections": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Student Attendance Summary */
-        get: operations["get_student_attendance_summary_api_students__no_id__attendance_summary_get"];
+        /** List Requests */
+        get: operations["list_requests_api_attendance_corrections_get"];
+        put?: never;
+        /** Create Request */
+        post: operations["create_request_api_attendance_corrections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance-corrections/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Request */
+        get: operations["get_request_api_attendance_corrections__request_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4429,29 +1980,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/students/{no_id}/monthly-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Student Monthly History
-         * @description Returns per-month aggregated attendance stats for a student,
-         *     sorted ascending by year/month. Used for the trend chart on
-         *     the Attendance Profile page.
-         */
-        get: operations["get_student_monthly_history_api_students__no_id__monthly_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/system/data-reset/preview": {
+    "/api/attendance-corrections/{request_id}/submit": {
         parameters: {
             query?: never;
             header?: never;
@@ -4460,18 +1989,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Preview Data Reset
-         * @description Returns current deletion counts and preserved data for the selected reset scope. This operation is read-only.
-         */
-        post: operations["preview_data_reset_api_system_data_reset_preview_post"];
+        /** Submit Request */
+        post: operations["submit_request_api_attendance_corrections__request_id__submit_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/system/data-reset": {
+    "/api/attendance-corrections/{request_id}/reject": {
         parameters: {
             query?: never;
             header?: never;
@@ -4480,53 +2006,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Commit Data Reset
-         * @description Creates an encrypted pre-reset backup, then deletes the exact selected scope in one SQLite transaction. The confirmation phrase is scope-specific.
-         */
-        post: operations["commit_data_reset_api_system_data_reset_post"];
+        /** Reject Request */
+        post: operations["reject_request_api_attendance_corrections__request_id__reject_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/system/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** System Health */
-        get: operations["system_health_api_system_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/teacher-class-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Assignments */
-        get: operations["list_assignments_api_teacher_class_assignments_get"];
-        put?: never;
-        /** Post Create Assignment */
-        post: operations["post_create_assignment_api_teacher_class_assignments_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/teacher-class-assignments/{assignment_id}": {
+    "/api/attendance-corrections/{request_id}/cancel": {
         parameters: {
             query?: never;
             header?: never;
@@ -4535,15 +2023,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
+        /** Cancel Request */
+        post: operations["cancel_request_api_attendance_corrections__request_id__cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Assignment Endpoint */
-        patch: operations["update_assignment_endpoint_api_teacher_class_assignments__assignment_id__patch"];
+        patch?: never;
         trace?: never;
     };
-    "/api/teacher-class-assignments/{assignment_id}/deactivate": {
+    "/api/attendance-corrections/periods/finalize": {
         parameters: {
             query?: never;
             header?: never;
@@ -4552,15 +2040,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Deactivate Assignment */
-        post: operations["post_deactivate_assignment_api_teacher_class_assignments__assignment_id__deactivate_post"];
+        /** Finalize */
+        post: operations["finalize_api_attendance_corrections_periods_finalize_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/teacher-class-assignments/{assignment_id}/reactivate": {
+    "/api/attendance-corrections/periods/reopen": {
         parameters: {
             query?: never;
             header?: never;
@@ -4569,23 +2057,23 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Post Reactivate Assignment */
-        post: operations["post_reactivate_assignment_api_teacher_class_assignments__assignment_id__reactivate_post"];
+        /** Reopen */
+        post: operations["reopen_api_attendance_corrections_periods_reopen_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts": {
+    "/api/attendance-corrections/periods/status": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Unresolved Queue */
-        get: operations["unresolved_queue_api_upload_conflicts_get"];
+        /** Period Status */
+        get: operations["period_status_api_attendance_corrections_periods_status_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4594,7 +2082,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/retry-commit": {
+    "/api/attendance-corrections/{request_id}/approve": {
         parameters: {
             query?: never;
             header?: never;
@@ -4603,15 +2091,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Retry Commit */
-        post: operations["retry_commit_api_upload_conflicts_retry_commit_post"];
+        /** Approve Request */
+        post: operations["approve_request_api_attendance_corrections__request_id__approve_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/retry-preview": {
+    "/api/attendance-corrections/{request_id}/self-confirm": {
         parameters: {
             query?: never;
             header?: never;
@@ -4620,32 +2108,33 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Retry Preview */
-        post: operations["retry_preview_api_upload_conflicts_retry_preview_post"];
+        /** Self Confirm Request */
+        post: operations["self_confirm_request_api_attendance_corrections__request_id__self_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/{resolution_item_id}": {
+    "/api/attendance/departure-policies": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Conflict Detail */
-        get: operations["conflict_detail_api_upload_conflicts__resolution_item_id__get"];
+        /** Get Departure Policies */
+        get: operations["get_departure_policies_api_attendance_departure_policies_get"];
         put?: never;
-        post?: never;
+        /** Create Policy Endpoint */
+        post: operations["create_policy_endpoint_api_attendance_departure_policies_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/{resolution_item_id}/link-device": {
+    "/api/attendance/departure-policies/{policy_id}/deactivate": {
         parameters: {
             query?: never;
             header?: never;
@@ -4654,15 +2143,32 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Device */
-        post: operations["link_device_api_upload_conflicts__resolution_item_id__link_device_post"];
+        /** Deactivate Policy Endpoint */
+        post: operations["deactivate_policy_endpoint_api_attendance_departure_policies__policy_id__deactivate_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/{resolution_item_id}/resolve-roster": {
+    "/api/attendance/classes/{class_id}/dates/{date_val}/departures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Class Date Departures */
+        get: operations["get_class_date_departures_api_attendance_classes__class_id__dates__date_val__departures_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/{attendance_id}/departure-excuses": {
         parameters: {
             query?: never;
             header?: never;
@@ -4671,159 +2177,40 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Resolve Roster */
-        post: operations["resolve_roster_api_upload_conflicts__resolution_item_id__resolve_roster_post"];
+        /** Record Excuse Endpoint */
+        post: operations["record_excuse_endpoint_api_attendance__attendance_id__departure_excuses_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/{resolution_item_id}/roster-comparison": {
+    "/api/attendance/{attendance_id}/departure-excuses/{excuse_id}/revoke": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Compare Roster Conflict */
-        get: operations["compare_roster_conflict_api_upload_conflicts__resolution_item_id__roster_comparison_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Revoke Excuse Endpoint */
+        post: operations["revoke_excuse_endpoint_api_attendance__attendance_id__departure_excuses__excuse_id__revoke_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/upload-conflicts/{resolution_item_id}/student-candidates": {
+    "/api/attendance/{attendance_id}/departure-history": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Conflict Student Candidates */
-        get: operations["conflict_student_candidates_api_upload_conflicts__resolution_item_id__student_candidates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Upload History */
-        get: operations["get_upload_history_api_uploads_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history/{upload_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Upload History Detail */
-        get: operations["get_upload_history_detail_api_uploads_history__upload_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history/{upload_id}/export.csv": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Upload History Csv */
-        get: operations["export_upload_history_csv_api_uploads_history__upload_id__export_csv_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history/{upload_id}/export.json": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Upload History Json */
-        get: operations["export_upload_history_json_api_uploads_history__upload_id__export_json_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history/{upload_id}/rows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Upload History Rows */
-        get: operations["get_upload_history_rows_api_uploads_history__upload_id__rows_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/history/{upload_id}/timeline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Upload History Timeline */
-        get: operations["get_upload_history_timeline_api_uploads_history__upload_id__timeline_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/uploads/missing-records": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Missing Records */
-        get: operations["get_missing_records_api_uploads_missing_records_get"];
+        /** Get Departure History */
+        get: operations["get_departure_history_api_attendance__attendance_id__departure_history_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4872,18 +2259,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/uploads/sample-template": {
+    "/api/grades/assessment-sessions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Download Sample Template
-         * @description Returns a sample .xlsx matching the required import format.
-         */
-        get: operations["download_sample_template_api_uploads_sample_template_get"];
+        get: operations["getApiGradesAssessment-sessions"];
+        put?: never;
+        post: operations["postApiGradesAssessment-sessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Grade Ledger */
+        get: operations["get_grade_ledger_api_grades_ledger_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4892,7 +2292,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/uploads/upload": {
+    "/api/grades/enrollment/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Enrollment Candidates */
+        get: operations["get_enrollment_candidates_api_grades_enrollment_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/enrollment/source-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Enrollment Source Classes */
+        get: operations["get_enrollment_source_classes_api_grades_enrollment_source_classes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/enrollment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Enrollments */
+        get: operations["get_enrollments_api_grades_enrollment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/enrollment/bulk": {
         parameters: {
             query?: never;
             header?: never;
@@ -4901,29 +2352,57 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Upload File
-         * @deprecated
-         */
-        post: operations["upload_file_api_uploads_upload_post"];
+        /** Bulk Enroll Students */
+        post: operations["bulk_enroll_students_api_grades_enrollment_bulk_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/health": {
+    "/api/grades/enrollment/{enrollment_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Health Check
-         * @description Health check endpoint used by the desktop launcher and monitoring.
-         */
-        get: operations["health_check_health_get"];
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Enrollment */
+        delete: operations["delete_enrollment_api_grades_enrollment__enrollment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Grade Ledger */
+        post: operations["save_grade_ledger_api_grades_save_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Grade Analytics */
+        get: operations["get_grade_analytics_api_grades_analytics_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4932,39 +2411,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/students": {
+    "/api/grades/academic-years": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Students */
-        get: operations["get_students_students_get"];
+        /** Get Academic Years */
+        get: operations["get_academic_years_api_grades_academic_years_get"];
         put?: never;
-        /**
-         * Create Student
-         * @description Manually creates a student in the master student pool.
-         */
-        post: operations["create_student_students_post"];
+        /** Create Academic Year */
+        post: operations["create_academic_year_api_grades_academic_years_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/students/all": {
+    "/api/grades/subjects": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get All Students
-         * @description Returns a list of all students with their class mapping.
-         */
-        get: operations["get_all_students_students_all_get"];
+        /** Get Subjects */
+        get: operations["get_subjects_api_grades_subjects_get"];
+        put?: never;
+        /** Create Subject */
+        post: operations["create_subject_api_grades_subjects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/jenjangs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Jenjangs */
+        get: operations["get_jenjangs_api_grades_jenjangs_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4973,7 +2464,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/students/assign-class": {
+    "/api/grades/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Components */
+        get: operations["get_components_api_grades_components_get"];
+        put?: never;
+        post: operations["postApiGradesComponents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/components/{component_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiGradesComponentsByComponent_id"];
+        post?: never;
+        delete: operations["deleteApiGradesComponentsByComponent_id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grades/assessment-operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get academic assessment operations */
+        get: operations["getAssessmentOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-interventions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Interventions */
+        get: operations["list_interventions_api_academic_interventions_get"];
+        put?: never;
+        /** Create Intervention */
+        post: operations["create_intervention_api_academic_interventions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-interventions/from-alert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Intervention From Alert */
+        post: operations["create_intervention_from_alert_api_academic_interventions_from_alert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/academic-interventions/{intervention_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Intervention */
+        get: operations["get_intervention_api_academic_interventions__intervention_id__get"];
+        put?: never;
+        post?: never;
+        /** Close Intervention */
+        delete: operations["close_intervention_api_academic_interventions__intervention_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Intervention */
+        patch: operations["update_intervention_api_academic_interventions__intervention_id__patch"];
+        trace?: never;
+    };
+    "/api/student-progression/previews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Previews */
+        get: operations["list_previews_api_student_progression_previews_get"];
+        put?: never;
+        /** Create Preview */
+        post: operations["create_preview_api_student_progression_previews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-progression/previews/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Preview */
+        get: operations["get_preview_api_student_progression_previews__batch_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-progression/previews/{batch_id}/rows/{row_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4986,49 +2616,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Assign Class Bulk */
-        patch: operations["assign_class_bulk_students_assign_class_patch"];
+        /** Patch Row */
+        patch: operations["patch_row_api_student_progression_previews__batch_id__rows__row_id__patch"];
         trace?: never;
     };
-    "/students/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Existing Classes
-         * @description Returns a sorted distinct list of all assigned class names.
-         *     Used to power the class mapping dropdown/autocomplete.
-         */
-        get: operations["get_existing_classes_students_classes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/students/operations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Operations Audit Logs */
-        get: operations["get_operations_audit_logs_students_operations_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/students/set-class": {
+    "/api/student-progression/previews/{batch_id}/revalidate": {
         parameters: {
             query?: never;
             header?: never;
@@ -5037,27 +2629,40 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Set Class
-         * @description Updates the class and jenjang information for a student.
-         *     Accepts a JSON body: { student_id, class_name, jenjang }.
-         */
-        post: operations["set_class_students_set_class_post"];
+        /** Revalidate Preview */
+        post: operations["revalidate_preview_api_student_progression_previews__batch_id__revalidate_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/students/{no_id}/attendance-summary": {
+    "/api/student-progression/previews/{batch_id}/commit": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Student Attendance Summary */
-        get: operations["get_student_attendance_summary_students__no_id__attendance_summary_get"];
+        get?: never;
+        put?: never;
+        /** Commit Preview */
+        post: operations["commit_preview_api_student_progression_previews__batch_id__commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-progression/batches/{batch_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Result */
+        get: operations["get_result_api_student_progression_batches__batch_id__result_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5066,7 +2671,144 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/students/{no_id}/monthly-history": {
+    "/api/student-progression/mapping-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Mapping Rules */
+        get: operations["list_mapping_rules_api_student_progression_mapping_rules_get"];
+        put?: never;
+        /** Create Mapping Rule */
+        post: operations["create_mapping_rule_api_student_progression_mapping_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Report Filters */
+        get: operations["get_report_filters_api_reports_filters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Report */
+        get: operations["get_monthly_report_api_reports_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/management/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Management Report */
+        get: operations["get_monthly_management_report_api_reports_management_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/annual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Annual Report */
+        get: operations["get_annual_report_api_reports_annual_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/monthly/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Monthly Report */
+        get: operations["export_monthly_report_api_reports_monthly_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/annual/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Annual Report */
+        get: operations["export_annual_report_api_reports_annual_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/management/monthly/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Monthly Management Report */
+        get: operations["export_monthly_management_report_api_reports_management_monthly_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/jenjangs": {
         parameters: {
             query?: never;
             header?: never;
@@ -5074,12 +2816,1052 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Student Monthly History
-         * @description Returns per-month aggregated attendance stats for a student,
-         *     sorted ascending by year/month. Used for the trend chart on
-         *     the Attendance Profile page.
+         * Get All Jenjangs
+         * @description Returns a sorted distinct list of all assigned jenjangs.
+         *     Used for filtering reports.
          */
-        get: operations["get_student_monthly_history_students__no_id__monthly_history_get"];
+        get: operations["get_all_jenjangs_api_analytics_jenjangs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Analytics Filters */
+        get: operations["get_analytics_filters_api_analytics_filters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/late-by-class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Class */
+        get: operations["get_late_by_class_api_analytics_late_by_class_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/late-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Jenjang */
+        get: operations["get_late_by_jenjang_api_analytics_late_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/late-by-student": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Student */
+        get: operations["get_late_by_student_api_analytics_late_by_student_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance-rate/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Rate Per Student */
+        get: operations["get_attendance_rate_per_student_api_analytics_attendance_rate_students_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance-rate/jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Rate Per Jenjang */
+        get: operations["get_attendance_rate_per_jenjang_api_analytics_attendance_rate_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/monthly-by-class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Late By Class */
+        get: operations["get_monthly_late_by_class_api_analytics_monthly_by_class_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Report */
+        get: operations["get_attendance_report_api_analytics_attendance_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/intervention-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Intervention Impact */
+        get: operations["get_intervention_impact_api_analytics_intervention_impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Management Summary */
+        get: operations["get_management_summary_api_analytics_management_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/historical-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Historical Trends */
+        get: operations["get_historical_trends_api_analytics_historical_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-summary/export/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Management Summary Excel */
+        get: operations["export_management_summary_excel_api_analytics_management_summary_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-summary/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Management Summary Pdf */
+        get: operations["export_management_summary_pdf_api_analytics_management_summary_export_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/heb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Heb Visibility */
+        get: operations["get_heb_visibility_api_analytics_heb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/tardiness-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Report */
+        get: operations["get_tardiness_report_api_analytics_tardiness_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/tardiness/summary-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Summary By Jenjang */
+        get: operations["get_tardiness_summary_by_jenjang_api_analytics_tardiness_summary_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/tardiness-report/summary-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Summary By Jenjang */
+        get: operations["get_tardiness_summary_by_jenjang_api_analytics_tardiness_report_summary_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/v2/rekap-absensi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get V2 Rekap Absensi */
+        get: operations["get_v2_rekap_absensi_api_analytics_v2_rekap_absensi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/rekap-absensi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rekap Absensi */
+        get: operations["get_rekap_absensi_api_analytics_rekap_absensi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Analytics Summary */
+        get: operations["get_analytics_summary_api_analytics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/attendance-date-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Date Range */
+        get: operations["get_attendance_date_range_api_analytics_attendance_date_range_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/incomplete-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incomplete Summary */
+        get: operations["get_incomplete_summary_api_analytics_incomplete_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Late Trends */
+        get: operations["get_monthly_late_trends_api_analytics_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/class-leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Class Leaderboard */
+        get: operations["get_class_leaderboard_api_analytics_class_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/frequent-offenders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Frequent Offenders */
+        get: operations["get_frequent_offenders_api_analytics_frequent_offenders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/pending-categorization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pending Categorization */
+        get: operations["get_pending_categorization_api_analytics_pending_categorization_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/tardiness-report/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Tardiness Report Excel */
+        get: operations["export_tardiness_report_excel_api_analytics_tardiness_report_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/tardiness-report/export-management-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Tardiness Management Excel */
+        get: operations["export_tardiness_management_excel_api_analytics_tardiness_report_export_management_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/v2/rekap-absensi/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export V2 Rekap Absensi Excel */
+        get: operations["export_v2_rekap_absensi_excel_api_analytics_v2_rekap_absensi_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/rekap-absensi/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Rekap Absensi Excel */
+        get: operations["export_rekap_absensi_excel_api_analytics_rekap_absensi_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/jenjangs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Jenjangs
+         * @description Returns a sorted distinct list of all assigned jenjangs.
+         *     Used for filtering reports.
+         */
+        get: operations["get_all_jenjangs_analytics_jenjangs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Analytics Filters */
+        get: operations["get_analytics_filters_analytics_filters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/late-by-class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Class */
+        get: operations["get_late_by_class_analytics_late_by_class_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/late-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Jenjang */
+        get: operations["get_late_by_jenjang_analytics_late_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/late-by-student": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Late By Student */
+        get: operations["get_late_by_student_analytics_late_by_student_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/attendance-rate/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Rate Per Student */
+        get: operations["get_attendance_rate_per_student_analytics_attendance_rate_students_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/attendance-rate/jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Rate Per Jenjang */
+        get: operations["get_attendance_rate_per_jenjang_analytics_attendance_rate_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/monthly-by-class": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Late By Class */
+        get: operations["get_monthly_late_by_class_analytics_monthly_by_class_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/attendance-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Report */
+        get: operations["get_attendance_report_analytics_attendance_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/intervention-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Intervention Impact */
+        get: operations["get_intervention_impact_analytics_intervention_impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/management-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Management Summary */
+        get: operations["get_management_summary_analytics_management_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/historical-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Historical Trends */
+        get: operations["get_historical_trends_analytics_historical_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/management-summary/export/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Management Summary Excel */
+        get: operations["export_management_summary_excel_analytics_management_summary_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/management-summary/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Management Summary Pdf */
+        get: operations["export_management_summary_pdf_analytics_management_summary_export_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/heb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Heb Visibility */
+        get: operations["get_heb_visibility_analytics_heb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/tardiness-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Report */
+        get: operations["get_tardiness_report_analytics_tardiness_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/tardiness/summary-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Summary By Jenjang */
+        get: operations["get_tardiness_summary_by_jenjang_analytics_tardiness_summary_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/tardiness-report/summary-by-jenjang": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tardiness Summary By Jenjang */
+        get: operations["get_tardiness_summary_by_jenjang_analytics_tardiness_report_summary_by_jenjang_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/v2/rekap-absensi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get V2 Rekap Absensi */
+        get: operations["get_v2_rekap_absensi_analytics_v2_rekap_absensi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/rekap-absensi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rekap Absensi */
+        get: operations["get_rekap_absensi_analytics_rekap_absensi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Analytics Summary */
+        get: operations["get_analytics_summary_analytics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/attendance-date-range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Attendance Date Range */
+        get: operations["get_attendance_date_range_analytics_attendance_date_range_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/incomplete-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Incomplete Summary */
+        get: operations["get_incomplete_summary_analytics_incomplete_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Monthly Late Trends */
+        get: operations["get_monthly_late_trends_analytics_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/class-leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Class Leaderboard */
+        get: operations["get_class_leaderboard_analytics_class_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/frequent-offenders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Frequent Offenders */
+        get: operations["get_frequent_offenders_analytics_frequent_offenders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/pending-categorization": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Pending Categorization */
+        get: operations["get_pending_categorization_analytics_pending_categorization_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/tardiness-report/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Tardiness Report Excel */
+        get: operations["export_tardiness_report_excel_analytics_tardiness_report_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/tardiness-report/export-management-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Tardiness Management Excel */
+        get: operations["export_tardiness_management_excel_analytics_tardiness_report_export_management_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/v2/rekap-absensi/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export V2 Rekap Absensi Excel */
+        get: operations["export_v2_rekap_absensi_excel_analytics_v2_rekap_absensi_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/rekap-absensi/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Rekap Absensi Excel */
+        get: operations["export_rekap_absensi_excel_analytics_rekap_absensi_export_excel_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5128,40 +3910,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getApiAnalyticsCohorts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/attendance-history/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Student Attendance History */
-        get: operations["export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/classes/{class_id}/attendance/export-excel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export Assigned Class Attendance */
-        get: operations["export_assigned_class_attendance_api_attendance_classes__class_id__attendance_export_excel_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5476,15 +4224,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/management-overview": {
+    "/api/analytics/attendance/term": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get management analytics overview */
-        get: operations["getManagementAnalyticsOverview"];
+        get: operations["getApiAnalyticsAttendanceTerm"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5493,14 +4240,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/management-review/attendance/export.xlsx": {
+    "/api/analytics/attendance/term-lateness": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiAnalyticsManagement-reviewAttendanceExport.xlsx"];
+        get: operations["getApiAnalyticsAttendanceTerm-lateness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5509,46 +4256,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/management-review/student-profile": {
+    "/api/analytics/attendance/basis": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiAnalyticsManagement-reviewStudent-profile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/management-review/student-profile/export.xlsx": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.xlsx"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/analytics/management-review/student-profile/export.pdf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.pdf"];
+        /** Resolve attendance basis for a class-month */
+        get: operations["getApiAnalyticsAttendanceBasis"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5625,15 +4341,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/student-indicators": {
+    "/api/analytics/management-overview": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get student indicator insights */
-        get: operations["getStudentIndicatorInsights"];
+        /** Get management analytics overview */
+        get: operations["getManagementAnalyticsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/student-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/student-profile/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.xlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/student-profile/export.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewStudent-profileExport.pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/management-review/attendance/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAnalyticsManagement-reviewAttendanceExport.xlsx"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5659,15 +4439,1164 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/classes/{class_id}/overview": {
+    "/api/analytics/student-indicators": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get class overview */
-        get: operations["getClassOverview"];
+        /** Get student indicator insights */
+        get: operations["getStudentIndicatorInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operator/work-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Operator Work Queue */
+        get: operations["get_operator_work_queue_api_operator_work_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher-class-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assignments */
+        get: operations["list_assignments_api_teacher_class_assignments_get"];
+        put?: never;
+        /** Post Create Assignment */
+        post: operations["post_create_assignment_api_teacher_class_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher-class-assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Assignment Endpoint */
+        patch: operations["update_assignment_endpoint_api_teacher_class_assignments__assignment_id__patch"];
+        trace?: never;
+    };
+    "/api/teacher-class-assignments/{assignment_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Deactivate Assignment */
+        post: operations["post_deactivate_assignment_api_teacher_class_assignments__assignment_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/teacher-class-assignments/{assignment_id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Reactivate Assignment */
+        post: operations["post_reactivate_assignment_api_teacher_class_assignments__assignment_id__reactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-exports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Export */
+        post: operations["preview_export_api_student_exports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-exports/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Download Export */
+        post: operations["download_export_api_student_exports_download_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/attendance-history/export-excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Student Attendance History */
+        get: operations["export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/academic-master-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Academic Masters */
+        post: operations["preview_academic_masters_api_student_enrollments_academic_master_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/roster-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Academic Roster */
+        post: operations["preview_academic_roster_api_student_enrollments_roster_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/roster-commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Academic Roster */
+        post: operations["commit_academic_roster_api_student_enrollments_roster_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-enrollments/roster-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Academic Roster Template */
+        get: operations["download_academic_roster_template_api_student_enrollments_roster_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-import-sessions/{session_id}/rollback-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Rollback */
+        post: operations["preview_rollback_api_student_import_sessions__session_id__rollback_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-import-sessions/{session_id}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Rollback */
+        post: operations["commit_rollback_api_student_import_sessions__session_id__rollback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Datasets */
+        get: operations["list_datasets_api_data_portability_datasets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/exports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Export Preview */
+        post: operations["post_export_preview_api_data_portability_exports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Export */
+        post: operations["post_export_api_data_portability_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/templates/{dataset}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Template */
+        get: operations["download_template_api_data_portability_templates__dataset__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Import Preview */
+        post: operations["post_import_preview_api_data_portability_imports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/imports/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Import Commit */
+        post: operations["post_import_commit_api_data_portability_imports_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/imports/error-file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post Error File */
+        post: operations["post_error_file_api_data_portability_imports_error_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-portability/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get History */
+        get: operations["get_history_api_data_portability_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upload History */
+        get: operations["get_upload_history_api_uploads_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history/{upload_id}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Upload History Csv */
+        get: operations["export_upload_history_csv_api_uploads_history__upload_id__export_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history/{upload_id}/export.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Upload History Json */
+        get: operations["export_upload_history_json_api_uploads_history__upload_id__export_json_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history/{upload_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upload History Timeline */
+        get: operations["get_upload_history_timeline_api_uploads_history__upload_id__timeline_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history/{upload_id}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upload History Rows */
+        get: operations["get_upload_history_rows_api_uploads_history__upload_id__rows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/history/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upload History Detail */
+        get: operations["get_upload_history_detail_api_uploads_history__upload_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/missing-records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Missing Records */
+        get: operations["get_missing_records_api_uploads_missing_records_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/sample-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Sample Template
+         * @description Returns a sample .xlsx matching the required import format.
+         */
+        get: operations["download_sample_template_api_uploads_sample_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Candidates */
+        get: operations["get_candidates_api_attendance_followups_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/metrics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Metrics Summary */
+        get: operations["get_metrics_summary_api_attendance_followups_metrics_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Cases */
+        get: operations["list_cases_api_attendance_followups_get"];
+        put?: never;
+        /** Create Case */
+        post: operations["create_case_api_attendance_followups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Case History */
+        get: operations["get_case_history_api_attendance_followups__id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Case Detail */
+        get: operations["get_case_detail_api_attendance_followups__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Case */
+        patch: operations["update_case_api_attendance_followups__id__patch"];
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge Case */
+        post: operations["acknowledge_case_api_attendance_followups__id__acknowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Case */
+        post: operations["start_case_api_attendance_followups__id__start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/monitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Monitor Case */
+        post: operations["monitor_case_api_attendance_followups__id__monitor_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Case */
+        post: operations["resolve_case_api_attendance_followups__id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss Case */
+        post: operations["dismiss_case_api_attendance_followups__id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen Case */
+        post: operations["reopen_case_api_attendance_followups__id__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign Case */
+        post: operations["assign_case_api_attendance_followups__id__assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Note */
+        post: operations["add_note_api_attendance_followups__id__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/bulk-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Assign */
+        post: operations["bulk_assign_api_attendance_followups_bulk_assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/followups/bulk-resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Resolve */
+        post: operations["bulk_resolve_api_attendance_followups_bulk_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/sections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sections */
+        get: operations["get_sections_api_report_builder_sections_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Templates */
+        get: operations["get_templates_api_report_builder_templates_get"];
+        put?: never;
+        /** Post Template */
+        post: operations["post_template_api_report_builder_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template */
+        get: operations["get_template_api_report_builder_templates__template_id__get"];
+        put?: never;
+        post?: never;
+        /** Remove Template */
+        delete: operations["remove_template_api_report_builder_templates__template_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Template */
+        patch: operations["patch_template_api_report_builder_templates__template_id__patch"];
+        trace?: never;
+    };
+    "/api/report-builder/branding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Branding */
+        get: operations["get_branding_api_report_builder_branding_get"];
+        put?: never;
+        /** Post Branding */
+        post: operations["post_branding_api_report_builder_branding_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/branding/{branding_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Branding */
+        patch: operations["patch_branding_api_report_builder_branding__branding_id__patch"];
+        trace?: never;
+    };
+    "/api/report-builder/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Report */
+        post: operations["preview_report_api_report_builder_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/export/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Export Report Excel */
+        post: operations["export_report_excel_api_report_builder_export_excel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report-builder/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Export Report Pdf */
+        post: operations["export_report_pdf_api_report_builder_export_pdf_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unresolved Queue */
+        get: operations["unresolved_queue_api_upload_conflicts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/retry-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Preview */
+        post: operations["retry_preview_api_upload_conflicts_retry_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/retry-commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Commit */
+        post: operations["retry_commit_api_upload_conflicts_retry_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/{resolution_item_id}/student-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conflict Student Candidates */
+        get: operations["conflict_student_candidates_api_upload_conflicts__resolution_item_id__student_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/{resolution_item_id}/roster-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare Roster Conflict */
+        get: operations["compare_roster_conflict_api_upload_conflicts__resolution_item_id__roster_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/{resolution_item_id}/link-device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Device */
+        post: operations["link_device_api_upload_conflicts__resolution_item_id__link_device_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/{resolution_item_id}/resolve-roster": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Roster */
+        post: operations["resolve_roster_api_upload_conflicts__resolution_item_id__resolve_roster_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upload-conflicts/{resolution_item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conflict Detail */
+        get: operations["conflict_detail_api_upload_conflicts__resolution_item_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/export-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Managed Students */
+        get: operations["export_managed_students_api_student_masters_management_export_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/update-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Student Update Workbook */
+        post: operations["preview_student_update_workbook_api_student_masters_management_update_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/update-commit/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Student Update Workbook */
+        post: operations["commit_student_update_workbook_api_student_masters_management_update_commit__batch_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/import-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Update Import History */
+        get: operations["student_update_import_history_api_student_masters_management_import_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/imports/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Update Import Detail */
+        get: operations["student_update_import_detail_api_student_masters_management_imports__batch_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/management/imports/{batch_id}/result.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Update Result Workbook */
+        get: operations["student_update_result_workbook_api_student_masters_management_imports__batch_id__result_xlsx_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5693,6 +5622,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/classes/{class_id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get class overview */
+        get: operations["getClassOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/daily-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get daily attendance recording coverage */
+        get: operations["getDailyAttendanceStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/attendance/calendar": {
         parameters: {
             query?: never;
@@ -5703,6 +5666,56 @@ export interface paths {
         /** Get attendance calendar */
         get: operations["getAttendanceCalendar"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/period/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview attendance calendar period */
+        post: operations["previewAttendanceCalendarPeriod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/period/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply attendance calendar period */
+        post: operations["applyAttendanceCalendarPeriod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/calendar/deadline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiAttendanceCalendarDeadline"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5777,7 +5790,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/calendar/deadline": {
+    "/api/attendance/machine-import/device-identities/link": {
         parameters: {
             query?: never;
             header?: never;
@@ -5785,42 +5798,24 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["putApiAttendanceCalendarDeadline"];
+        put?: never;
+        post: operations["postApiAttendanceMachine-importDevice-identitiesLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/machine-import/student-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiAttendanceMachine-importStudent-search"];
+        put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/calendar/period/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Preview attendance calendar period */
-        post: operations["previewAttendanceCalendarPeriod"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/calendar/period/apply": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Apply attendance calendar period */
-        post: operations["applyAttendanceCalendarPeriod"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5861,30 +5856,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/machine-import/device-identities/link": {
+    "/api/admin/backups/status": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        post: operations["postApiAttendanceMachine-importDevice-identitiesLink"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/machine-import/student-search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiAttendanceMachine-importStudent-search"];
+        /** Backup Status */
+        get: operations["backup_status_api_admin_backups_status_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5893,14 +5873,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/override-review": {
+    "/api/admin/backups": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiAttendanceOverride-review"];
+        /** List Backups */
+        get: operations["list_backups_api_admin_backups_get"];
+        put?: never;
+        /** Post Backup */
+        post: operations["post_backup_api_admin_backups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backups/{filename}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Backup Endpoint */
+        delete: operations["delete_backup_endpoint_api_admin_backups__filename__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backups/{filename}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Backup */
+        get: operations["download_backup_api_admin_backups__filename__download_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5909,7 +5925,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/config/absence-reasons/submit": {
+    "/api/admin/backups/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Backup History */
+        get: operations["backup_history_api_admin_backups_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backups/recovery-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recovery History */
+        get: operations["recovery_history_api_admin_backups_recovery_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backups/scheduler": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scheduler Config */
+        get: operations["get_scheduler_config_api_admin_backups_scheduler_get"];
+        /** Update Scheduler Config */
+        put: operations["update_scheduler_config_api_admin_backups_scheduler_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backups/{filename}/restore-preflight": {
         parameters: {
             query?: never;
             header?: never;
@@ -5918,15 +5986,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Submit Monthly Absence Ledger */
-        post: operations["submit_monthly_absence_ledger"];
+        /** Post Restore Preflight */
+        post: operations["post_restore_preflight_api_admin_backups__filename__restore_preflight_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/config/absence-reasons/reopen": {
+    "/api/admin/backups/{filename}/restore": {
         parameters: {
             query?: never;
             header?: never;
@@ -5935,23 +6003,63 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reopen Monthly Absence Ledger */
-        post: operations["reopen_monthly_absence_ledger"];
+        /** Post Restore */
+        post: operations["post_restore_api_admin_backups__filename__restore_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/attendance/basis": {
+    "/api/system/data-reset/preview": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Resolve attendance basis for a class-month */
-        get: operations["getApiAnalyticsAttendanceBasis"];
+        get?: never;
+        put?: never;
+        /**
+         * Preview Data Reset
+         * @description Returns current deletion counts and preserved data for the selected reset scope. This operation is read-only.
+         */
+        post: operations["preview_data_reset_api_system_data_reset_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/data-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit Data Reset
+         * @description Creates an encrypted pre-reset backup, then deletes the exact selected scope in one SQLite transaction. The confirmation phrase is scope-specific.
+         */
+        post: operations["commit_data_reset_api_system_data_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System Health */
+        get: operations["system_health_api_system_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8843,7 +8951,7 @@ export interface operations {
             };
         };
     };
-    get_attendance_date_range_analytics_attendance_date_range_get: {
+    health_check_health_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -8858,943 +8966,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": Record<string, never>;
                 };
             };
         };
     };
-    get_attendance_rate_per_jenjang_analytics_attendance_rate_jenjang_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_attendance_rate_per_student_analytics_attendance_rate_students_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_attendance_report_analytics_attendance_report_get: {
-        parameters: {
-            query: {
-                start_date: string;
-                end_date: string;
-                jenjang?: string | null;
-                class_name?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_class_leaderboard_analytics_class_leaderboard_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_analytics_filters_analytics_filters_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_frequent_offenders_analytics_frequent_offenders_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_heb_visibility_analytics_heb_get: {
-        parameters: {
-            query: {
-                month: number;
-                year: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_historical_trends_analytics_historical_trends_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                subject_id?: number | null;
-                term?: string | null;
-                from_academic_year_id?: number | null;
-                to_academic_year_id?: number | null;
-                granularity?: string;
-                include_forecast?: boolean;
-                forecast_method?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_incomplete_summary_analytics_incomplete_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_intervention_impact_analytics_intervention_impact_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                student_id?: number | null;
-                subject_id?: number | null;
-                term?: string | null;
-                status?: string | null;
-                priority?: string | null;
-                owner_name?: string | null;
-                risk_level?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_jenjangs_analytics_jenjangs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_class_analytics_late_by_class_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_jenjang_analytics_late_by_jenjang_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_student_analytics_late_by_student_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_management_summary_analytics_management_summary_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_management_summary_excel_analytics_management_summary_export_excel_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
-                mode?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_management_summary_pdf_analytics_management_summary_export_pdf_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_monthly_late_trends_analytics_monthly_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_monthly_late_by_class_analytics_monthly_by_class_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_pending_categorization_analytics_pending_categorization_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_rekap_absensi_analytics_rekap_absensi_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_rekap_absensi_excel_analytics_rekap_absensi_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_analytics_summary_analytics_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_tardiness_report_analytics_tardiness_report_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_tardiness_report_excel_analytics_tardiness_report_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_tardiness_management_excel_analytics_tardiness_report_export_management_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_tardiness_summary_by_jenjang_analytics_tardiness_report_summary_by_jenjang_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_tardiness_summary_by_jenjang_analytics_tardiness_summary_by_jenjang_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_v2_rekap_absensi_analytics_v2_rekap_absensi_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_v2_rekap_absensi_excel_analytics_v2_rekap_absensi_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_effective_kkm_api_academic_config_kkm_effective_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                subject_id?: number | null;
-                assessment_type: "sumatif" | "formatif" | "overall";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_kkm_thresholds_api_academic_config_kkm_thresholds_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_kkm_threshold_api_academic_config_kkm_thresholds_post: {
+    login_api_auth_login_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -9803,7 +8980,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["KkmThresholdRequest"];
+                "application/json": components["schemas"]["LoginRequest"];
             };
         };
         responses: {
@@ -9813,7 +8990,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CurrentUserResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9827,29 +9004,23 @@ export interface operations {
             };
         };
     };
-    update_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__put: {
+    logout_api_auth_logout_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                threshold_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["KkmThresholdUpdateRequest"];
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
             };
         };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -9862,14 +9033,14 @@ export interface operations {
             };
         };
     };
-    delete_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__delete: {
+    current_user_api_auth_me_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                threshold_id: number;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
             };
-            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -9879,7 +9050,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CurrentUserResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9893,11 +9064,9 @@ export interface operations {
             };
         };
     };
-    list_term_configs_api_academic_config_terms_get: {
+    setup_status_api_setup_status_get: {
         parameters: {
-            query?: {
-                academic_year_id?: number | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -9910,21 +9079,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["SetupStatusResponse"];
                 };
             };
         };
     };
-    create_term_config_api_academic_config_terms_post: {
+    bootstrap_setup_api_setup_bootstrap_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_first_admin_api_setup_admin_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -9933,315 +9111,17 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AcademicTermRequest"];
+                "application/json": components["schemas"]["FirstAdminRequest"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_effective_terms_api_academic_config_terms_effective_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_term_config_api_academic_config_terms__term_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                term_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicTermUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_term_config_api_academic_config_terms__term_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                term_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_interventions_api_academic_interventions_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                student_id?: number | null;
-                subject_id?: number | null;
-                term?: string | null;
-                status?: ("open" | "in_progress" | "monitoring" | "resolved" | "closed") | null;
-                priority?: ("low" | "medium" | "high" | "urgent") | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_intervention_api_academic_interventions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicInterventionCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_intervention_from_alert_api_academic_interventions_from_alert_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicInterventionCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_intervention_api_academic_interventions__intervention_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                intervention_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    close_intervention_api_academic_interventions__intervention_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                intervention_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_intervention_api_academic_interventions__intervention_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                intervention_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicInterventionUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FirstAdminResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10389,206 +9269,6 @@ export interface operations {
             };
         };
     };
-    list_classes_api_academic_masters_classes_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_class_api_academic_masters_classes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClassBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_class_api_academic_masters_classes__row_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                row_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClassBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_class_api_academic_masters_classes__row_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                row_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_grades_api_academic_masters_grades_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_grade_api_academic_masters_grades_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GradeBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     create_academic_grades_bulk: {
         parameters: {
             query?: never;
@@ -10661,74 +9341,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    update_grade_api_academic_masters_grades__row_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                row_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GradeBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_grade_api_academic_masters_grades__row_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                row_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
             };
         };
     };
@@ -11000,7 +9612,7 @@ export interface operations {
             };
         };
     };
-    list_backups_api_admin_backups_get: {
+    list_grades_api_academic_masters_grades_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -11031,7 +9643,110 @@ export interface operations {
             };
         };
     };
-    post_backup_api_admin_backups_post: {
+    create_grade_api_academic_masters_grades_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_grade_api_academic_masters_grades__row_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_grade_api_academic_masters_grades__row_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_classes_api_academic_masters_classes_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -11062,370 +9777,117 @@ export interface operations {
             };
         };
     };
-    backup_history_api_admin_backups_history_get: {
+    create_class_api_academic_masters_classes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_class_api_academic_masters_classes__row_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_class_api_academic_masters_classes__row_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                row_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_students_api_students_get: {
         parameters: {
             query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    recovery_history_api_admin_backups_recovery_history_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_scheduler_config_api_admin_backups_scheduler_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_scheduler_config_api_admin_backups_scheduler_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SchedulerConfigRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    backup_status_api_admin_backups_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_backup_endpoint_api_admin_backups__filename__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                filename: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_backup_api_admin_backups__filename__download_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                filename: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_restore_api_admin_backups__filename__restore_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                filename: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RestoreRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_restore_preflight_api_admin_backups__filename__restore_preflight_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                filename: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_attendance_date_range_api_analytics_attendance_date_range_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_attendance_rate_per_jenjang_api_analytics_attendance_rate_jenjang_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_attendance_rate_per_student_api_analytics_attendance_rate_students_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_attendance_report_api_analytics_attendance_report_get: {
-        parameters: {
-            query: {
-                start_date: string;
-                end_date: string;
+                search?: string | null;
                 jenjang?: string | null;
                 class_name?: string | null;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path?: never;
@@ -11453,281 +9915,40 @@ export interface operations {
             };
         };
     };
-    getApiAnalyticsAttendanceTerm: {
+    create_student_api_students_post: {
         parameters: {
-            query: {
-                academic_year_id: string;
-                term_number: string;
-                jenjang_id?: string;
-                program_id?: string;
-                grade_id?: string;
-                class_id?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStudentBody"];
+            };
+        };
         responses: {
-            /** @description Response for status 200 */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        period: {
-                            academic_year_id: number;
-                            academic_year_label: string;
-                            term_id: number | null;
-                            term_number: number;
-                            term_label: string;
-                            start_date: string;
-                            end_date: string;
-                            /** @enum {string} */
-                            source: "custom" | "default";
-                        };
-                        scope: {
-                            jenjang_id: number | null;
-                            program_id: number | null;
-                            grade_id: number | null;
-                            class_id: number | null;
-                        };
-                        totals: {
-                            expected_student_days: number;
-                            recorded_student_days: number;
-                            unrecorded_student_days: number;
-                            hadir_count: number;
-                            sakit_count: number;
-                            izin_count: number;
-                            alfa_count: number;
-                            hadir_rate: number | null;
-                            sakit_rate: number | null;
-                            izin_rate: number | null;
-                            alfa_rate: number | null;
-                            late_count: number;
-                            other_status_count: number;
-                            coverage_rate: number | null;
-                            attendance_rate: number | null;
-                            recorded_attendance_rate: number | null;
-                        };
-                        jenjangs: {
-                            jenjang_id: number | null;
-                            jenjang: string;
-                            totals: {
-                                expected_student_days: number;
-                                recorded_student_days: number;
-                                unrecorded_student_days: number;
-                                hadir_count: number;
-                                sakit_count: number;
-                                izin_count: number;
-                                alfa_count: number;
-                                hadir_rate: number | null;
-                                sakit_rate: number | null;
-                                izin_rate: number | null;
-                                alfa_rate: number | null;
-                                late_count: number;
-                                other_status_count: number;
-                                coverage_rate: number | null;
-                                attendance_rate: number | null;
-                                recorded_attendance_rate: number | null;
-                            };
-                        }[];
-                        programs: {
-                            program_id: number | null;
-                            program: string;
-                            totals: {
-                                expected_student_days: number;
-                                recorded_student_days: number;
-                                unrecorded_student_days: number;
-                                hadir_count: number;
-                                sakit_count: number;
-                                izin_count: number;
-                                alfa_count: number;
-                                hadir_rate: number | null;
-                                sakit_rate: number | null;
-                                izin_rate: number | null;
-                                alfa_rate: number | null;
-                                late_count: number;
-                                other_status_count: number;
-                                coverage_rate: number | null;
-                                attendance_rate: number | null;
-                                recorded_attendance_rate: number | null;
-                            };
-                        }[];
-                        grades: {
-                            grade_id: number | null;
-                            grade: string;
-                            totals: {
-                                expected_student_days: number;
-                                recorded_student_days: number;
-                                unrecorded_student_days: number;
-                                hadir_count: number;
-                                sakit_count: number;
-                                izin_count: number;
-                                alfa_count: number;
-                                hadir_rate: number | null;
-                                sakit_rate: number | null;
-                                izin_rate: number | null;
-                                alfa_rate: number | null;
-                                late_count: number;
-                                other_status_count: number;
-                                coverage_rate: number | null;
-                                attendance_rate: number | null;
-                                recorded_attendance_rate: number | null;
-                            };
-                        }[];
-                        classes: {
-                            class_id: number | null;
-                            class_name: string;
-                            totals: {
-                                expected_student_days: number;
-                                recorded_student_days: number;
-                                unrecorded_student_days: number;
-                                hadir_count: number;
-                                sakit_count: number;
-                                izin_count: number;
-                                alfa_count: number;
-                                hadir_rate: number | null;
-                                sakit_rate: number | null;
-                                izin_rate: number | null;
-                                alfa_rate: number | null;
-                                late_count: number;
-                                other_status_count: number;
-                                coverage_rate: number | null;
-                                attendance_rate: number | null;
-                                recorded_attendance_rate: number | null;
-                            };
-                        }[];
-                        students: {
-                            student_key: string;
-                            totals: {
-                                expected_student_days: number;
-                                recorded_student_days: number;
-                                unrecorded_student_days: number;
-                                hadir_count: number;
-                                sakit_count: number;
-                                izin_count: number;
-                                alfa_count: number;
-                                hadir_rate: number | null;
-                                sakit_rate: number | null;
-                                izin_rate: number | null;
-                                alfa_rate: number | null;
-                                late_count: number;
-                                other_status_count: number;
-                                coverage_rate: number | null;
-                                attendance_rate: number | null;
-                                recorded_attendance_rate: number | null;
-                            };
-                            class_representations: {
-                                class_id: number | null;
-                                class_name: string;
-                            }[];
-                        }[];
-                        quality: {
-                            unknown_calendar_dates: string[];
-                            unknown_calendar_student_days: number;
-                            unresolved_class_student_days: number;
-                            other_status_student_days: number;
-                            report_data_ready: boolean;
-                        };
-                    };
+                    "application/json": unknown;
                 };
             };
-        };
-    };
-    "getApiAnalyticsAttendanceTerm-lateness": {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                term_number: string;
-                jenjang_id?: string;
-                program_id?: string;
-                grade_id?: string;
-                class_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        period: {
-                            academic_year_id: number;
-                            academic_year_label: string;
-                            term_id: number | null;
-                            term_number: number;
-                            term_label: string;
-                            start_date: string;
-                            end_date: string;
-                            /** @enum {string} */
-                            source: "custom" | "default";
-                        };
-                        scope: {
-                            jenjang_id: number | null;
-                            program_id: number | null;
-                            grade_id: number | null;
-                            class_id: number | null;
-                        };
-                        cutoffs: {
-                            jenjang_id: number | null;
-                            jenjang: string;
-                            cutoff_time: string | null;
-                            effective_from: string | null;
-                            /** @enum {string} */
-                            source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED";
-                        }[];
-                        totals: {
-                            expected_student_days: number;
-                            late_events: number;
-                            affected_students: number;
-                            total_late_minutes: number;
-                            average_late_minutes: number | null;
-                            late_event_rate: number | null;
-                        };
-                        classes: {
-                            class_id: number | null;
-                            class_name: string;
-                            totals: {
-                                expected_student_days: number;
-                                late_events: number;
-                                affected_students: number;
-                                total_late_minutes: number;
-                                average_late_minutes: number | null;
-                                late_event_rate: number | null;
-                            };
-                        }[];
-                        students: {
-                            student_key: string;
-                            late_events: number;
-                            total_late_minutes: number;
-                            average_late_minutes: number | null;
-                            class_representations: {
-                                class_id: number | null;
-                                class_name: string;
-                            }[];
-                        }[];
-                        quality: {
-                            unknown_calendar_dates: string[];
-                            unknown_calendar_student_days: number;
-                            unresolved_class_student_days: number;
-                            other_status_student_days: number;
-                            report_data_ready: boolean;
-                            late_events_without_duration: number;
-                        };
-                    };
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    get_class_leaderboard_api_analytics_class_leaderboard_get: {
+    get_existing_classes_api_students_classes_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -11747,39 +9968,7 @@ export interface operations {
             };
         };
     };
-    get_analytics_filters_api_analytics_filters_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_frequent_offenders_api_analytics_frequent_offenders_get: {
+    get_all_students_api_students_all_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -11799,85 +9988,84 @@ export interface operations {
             };
         };
     };
-    get_heb_visibility_api_analytics_heb_get: {
-        parameters: {
-            query: {
-                month: number;
-                year: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_historical_trends_api_analytics_historical_trends_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                subject_id?: number | null;
-                term?: string | null;
-                from_academic_year_id?: number | null;
-                to_academic_year_id?: number | null;
-                granularity?: string;
-                include_forecast?: boolean;
-                forecast_method?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_incomplete_summary_api_analytics_incomplete_summary_get: {
+    set_class_api_students_set_class_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetClassBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_class_bulk_api_students_assign_class_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_student_attendance_summary_api_students__no_id__attendance_summary_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+            };
+            header?: never;
+            path: {
+                no_id: number;
+            };
+            cookie?: never;
+        };
         requestBody?: never;
         responses: {
             /** @description Successful Response */
@@ -11889,25 +10077,71 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    get_intervention_impact_api_analytics_intervention_impact_get: {
+    get_student_monthly_history_api_students__no_id__monthly_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                no_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_operations_audit_logs_api_students_operations_get: {
         parameters: {
             query?: {
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                student_id?: number | null;
-                subject_id?: number | null;
-                term?: string | null;
-                status?: string | null;
-                priority?: string | null;
-                owner_name?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
+                actor?: string | null;
+                operation?: string | null;
+                entity_type?: string | null;
                 risk_level?: string | null;
+                success?: boolean | null;
+                source?: string | null;
+                import_session_id?: string | null;
+                correlation_id?: string | null;
+                rollback_activity?: boolean;
+                high_risk_only?: boolean;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -11931,94 +10165,14 @@ export interface operations {
             };
         };
     };
-    get_all_jenjangs_api_analytics_jenjangs_get: {
+    get_students_students_get: {
         parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_class_api_analytics_late_by_class_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_jenjang_api_analytics_late_by_jenjang_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_late_by_student_api_analytics_late_by_student_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_management_summary_api_analytics_management_summary_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
+            query?: {
+                search?: string | null;
+                jenjang?: string | null;
                 class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path?: never;
@@ -12046,21 +10200,18 @@ export interface operations {
             };
         };
     };
-    export_management_summary_excel_api_analytics_management_summary_export_excel_get: {
+    create_student_students_post: {
         parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
-                mode?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStudentBody"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -12082,42 +10233,7 @@ export interface operations {
             };
         };
     };
-    export_management_summary_pdf_api_analytics_management_summary_export_pdf_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-                class_name?: string | null;
-                term?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_monthly_late_trends_api_analytics_monthly_get: {
+    get_existing_classes_students_classes_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -12137,7 +10253,7 @@ export interface operations {
             };
         };
     };
-    get_monthly_late_by_class_api_analytics_monthly_by_class_get: {
+    get_all_students_students_all_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -12157,40 +10273,18 @@ export interface operations {
             };
         };
     };
-    get_pending_categorization_api_analytics_pending_categorization_get: {
+    set_class_students_set_class_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetClassBody"];
             };
         };
-    };
-    get_rekap_absensi_api_analytics_rekap_absensi_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -12212,49 +10306,18 @@ export interface operations {
             };
         };
     };
-    export_rekap_absensi_excel_api_analytics_rekap_absensi_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_analytics_summary_api_analytics_summary_get: {
+    assign_class_bulk_students_assign_class_patch: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignBody"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -12265,20 +10328,27 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    get_tardiness_report_api_analytics_tardiness_report_get: {
+    get_student_attendance_summary_students__no_id__attendance_summary_get: {
         parameters: {
             query?: {
                 month?: number | null;
                 year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
             };
             header?: never;
-            path?: never;
+            path: {
+                no_id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -12303,18 +10373,13 @@ export interface operations {
             };
         };
     };
-    export_tardiness_report_excel_api_analytics_tardiness_report_export_excel_get: {
+    get_student_monthly_history_students__no_id__monthly_history_get: {
         parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                no_id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -12339,188 +10404,23 @@ export interface operations {
             };
         };
     };
-    export_tardiness_management_excel_api_analytics_tardiness_report_export_management_excel_get: {
+    get_operations_audit_logs_students_operations_get: {
         parameters: {
             query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_tardiness_summary_by_jenjang_api_analytics_tardiness_report_summary_by_jenjang_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_tardiness_summary_by_jenjang_api_analytics_tardiness_summary_by_jenjang_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_v2_rekap_absensi_api_analytics_v2_rekap_absensi_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_v2_rekap_absensi_excel_api_analytics_v2_rekap_absensi_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                date_from?: string | null;
-                date_to?: string | null;
-                term?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_requests_api_attendance_corrections_get: {
-        parameters: {
-            query?: {
-                state?: string | null;
+                start_date?: string | null;
+                end_date?: string | null;
+                actor?: string | null;
+                operation?: string | null;
+                entity_type?: string | null;
+                risk_level?: string | null;
+                success?: boolean | null;
+                source?: string | null;
+                import_session_id?: string | null;
+                correlation_id?: string | null;
+                rollback_activity?: boolean;
+                high_risk_only?: boolean;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path?: never;
@@ -12550,7 +10450,42 @@ export interface operations {
             };
         };
     };
-    create_request_api_attendance_corrections_post: {
+    list_student_masters_api_student_masters_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentMasterListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_canonical_student_api_student_masters_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -12561,562 +10496,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CorrectionCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    finalize_api_attendance_corrections_periods_finalize_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FinalizeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendancePeriodFinalizeResponse"];
-                };
-            };
-            /** @description Ledger warning acknowledgement required */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendancePeriodFinalizeConflict"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reopen_api_attendance_corrections_periods_reopen_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api__attendance_corrections__ReopenRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    period_status_api_attendance_corrections_periods_status_get: {
-        parameters: {
-            query: {
-                attendance_date: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_request_api_attendance_corrections__request_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_request_api_attendance_corrections__request_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Confirmation"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_request_api_attendance_corrections__request_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_request_api_attendance_corrections__request_id__reject_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Rejection"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    self_confirm_request_api_attendance_corrections__request_id__self_confirm_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SelfConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_request_api_attendance_corrections__request_id__submit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    getDailyAttendanceStatus: {
-        parameters: {
-            query: {
-                date: string;
-                academic_year_id?: string;
-                jenjang_id?: string;
-                class_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    get_assigned_classes_api_attendance_classes_assigned_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_class_date_attendance_api_attendance_classes__class_id__dates__date_val__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: number;
-                date_val: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_class_date_departures_api_attendance_classes__class_id__dates__date_val__departures_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: string;
-                date_val: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_class_date_attendance_entries_api_attendance_classes__class_id__dates__date_val__entries_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: number;
-                date_val: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkAttendanceEntryRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_departure_policies_api_attendance_departure_policies_get: {
-        parameters: {
-            query?: {
-                jenjang?: string | null;
-                active_only?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_policy_endpoint_api_attendance_departure_policies_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDismissalPolicyRequest"];
+                "application/json": components["schemas"]["StudentCreateRequest"];
             };
         };
         responses: {
@@ -13140,55 +10520,9 @@ export interface operations {
             };
         };
     };
-    deactivate_policy_endpoint_api_attendance_departure_policies__policy_id__deactivate_post: {
+    student_master_data_quality_summary_api_student_masters_data_quality_summary_get: {
         parameters: {
             query?: never;
-            header?: never;
-            path: {
-                policy_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeactivatePolicyRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_cases_api_attendance_followups_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-                priority?: string | null;
-                exception_kind?: string | null;
-                assigned_to_user_id?: number | null;
-                academic_class_id?: number | null;
-                is_overdue?: boolean | null;
-                unassigned_only?: boolean;
-                my_cases_only?: boolean;
-            };
             header?: never;
             path?: never;
             cookie?: {
@@ -13217,7 +10551,38 @@ export interface operations {
             };
         };
     };
-    create_case_api_attendance_followups_post: {
+    preview_legacy_student_links_api_student_masters_legacy_link_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_legacy_student_links_api_student_masters_legacy_link_commit_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -13228,7 +10593,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateFollowUpRequest"];
+                "application/json": components["schemas"]["LegacyLinkCommitRequest"];
             };
         };
         responses: {
@@ -13252,18 +10617,20 @@ export interface operations {
             };
         };
     };
-    bulk_assign_api_attendance_followups_bulk_assign_post: {
+    resolve_legacy_student_link_api_student_masters_legacy_link__legacy_student_id__resolve_post: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                legacy_student_id: number;
+            };
             cookie?: {
                 astyx_session?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkAssignRequest"];
+                "application/json": components["schemas"]["LegacyLinkResolutionRequest"];
             };
         };
         responses: {
@@ -13287,48 +10654,20 @@ export interface operations {
             };
         };
     };
-    bulk_resolve_api_attendance_followups_bulk_resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkResolveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_candidates_api_attendance_followups_candidates_get: {
+    list_managed_students_api_student_masters_management_list_get: {
         parameters: {
             query?: {
+                search?: string | null;
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
                 class_id?: number | null;
-                status_filter?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
+                program_id?: number | null;
+                grade_id?: number | null;
+                status?: string | null;
+                device_linked?: boolean | null;
+                enrollment_status?: string | null;
+                page?: number;
+                page_size?: number;
             };
             header?: never;
             path?: never;
@@ -13358,7 +10697,7 @@ export interface operations {
             };
         };
     };
-    get_metrics_summary_api_attendance_followups_metrics_summary_get: {
+    managed_student_quality_api_student_masters_management_quality_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -13389,12 +10728,85 @@ export interface operations {
             };
         };
     };
-    get_case_detail_api_attendance_followups__id__get: {
+    export_managed_students_csv_api_student_masters_management_export_csv_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                program_id?: number | null;
+                grade_id?: number | null;
+                class_id?: number | null;
+                status?: string | null;
+                device_linked?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_student_master_api_student_masters__student_master_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentMasterSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_student_profile_api_student_masters__student_master_id__profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -13422,12 +10834,12 @@ export interface operations {
             };
         };
     };
-    update_case_api_attendance_followups__id__patch: {
+    patch_student_profile_api_student_masters__student_master_id__profile_patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -13435,7 +10847,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateFollowUpRequest"];
+                "application/json": components["schemas"]["StudentProfilePatch"];
             };
         };
         responses: {
@@ -13459,45 +10871,12 @@ export interface operations {
             };
         };
     };
-    acknowledge_case_api_attendance_followups__id__acknowledge_post: {
+    patch_student_health_api_student_masters__student_master_id__health_patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    assign_case_api_attendance_followups__id__assign_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -13505,7 +10884,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AssignRequest"];
+                "application/json": Record<string, never>;
             };
         };
         responses: {
@@ -13529,12 +10908,12 @@ export interface operations {
             };
         };
     };
-    dismiss_case_api_attendance_followups__id__dismiss_post: {
+    patch_student_documents_api_student_masters__student_master_id__documents_patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -13542,7 +10921,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DismissRequest"];
+                "application/json": Record<string, never>;
             };
         };
         responses: {
@@ -13566,78 +10945,12 @@ export interface operations {
             };
         };
     };
-    get_case_history_api_attendance_followups__id__history_get: {
+    add_student_guardian_api_student_masters__student_master_id__guardians_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    monitor_case_api_attendance_followups__id__monitor_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_note_api_attendance_followups__id__notes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -13645,151 +10958,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AddNoteRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reopen_case_api_attendance_followups__id__reopen_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api__attendance_followups__ReopenRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_case_api_attendance_followups__id__resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_case_api_attendance_followups__id__start_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    record_excuse_endpoint_api_attendance__attendance_id__departure_excuses_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                attendance_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecordExcuseRequest"];
+                "application/json": Record<string, never>;
             };
         };
         responses: {
@@ -13813,115 +10982,14 @@ export interface operations {
             };
         };
     };
-    revoke_excuse_endpoint_api_attendance__attendance_id__departure_excuses__excuse_id__revoke_post: {
+    delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                attendance_id: number;
-                excuse_id: number;
+                student_master_id: string;
+                guardian_id: number;
             };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RevokeExcuseRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_departure_history_api_attendance__attendance_id__departure_history_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                attendance_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    login_api_auth_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    logout_api_auth_logout_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -13946,301 +11014,13 @@ export interface operations {
             };
         };
     };
-    current_user_api_auth_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CurrentUserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_absence_reasons_api_config_absence_reasons_get: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                month: string;
-                jenjang_id?: string;
-                program_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ManualAbsenceMonthlyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_monthly_class_absence_students: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                month: string;
-                class_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ManualAbsenceStudentTotalsResponse"];
-                };
-            };
-            /** @description Insufficient permissions */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Selected class was not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    get_legacy_absence_reasons: {
-        parameters: {
-            query: {
-                month: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LegacyAbsenceReasonsResponse"];
-                };
-            };
-            /** @description Insufficient permissions */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    bulk_upsert_absence_reasons_api_config_absence_reasons_bulk_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ManualAbsenceSaveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ManualAbsenceSaveResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_absence_reasons_summary_api_config_absence_reasons_summary_get: {
-        parameters: {
-            query: {
-                month: number;
-                year: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_deployment_mode_api_config_deployment_mode_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_heb_overrides_api_config_heb_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-                jenjang?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upsert_heb_override_api_config_heb__jenjang___year___month__put: {
+    update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                jenjang: string;
-                year: number;
-                month: number;
+                student_master_id: string;
+                guardian_id: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -14248,7 +11028,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["HebOverrideBody"];
+                "application/json": Record<string, never>;
             };
         };
         responses: {
@@ -14272,14 +11052,12 @@ export interface operations {
             };
         };
     };
-    delete_heb_override_api_config_heb__jenjang___year___month__delete: {
+    get_student_change_history_api_student_masters__student_master_id__history_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                jenjang: string;
-                year: number;
-                month: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -14307,84 +11085,18 @@ export interface operations {
             };
         };
     };
-    get_jenjang_configs_api_config_jenjang_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JenjangConfigResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_available_jenjangs_api_config_jenjang_available_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upsert_jenjang_config_api_config_jenjang__jenjang__put: {
+    list_student_device_identities_api_student_masters__student_master_id__device_identities_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                jenjang: string;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
             };
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JenjangCutoffPolicyWrite"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -14392,7 +11104,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DeviceIdentitySummary"][];
                 };
             };
             /** @description Validation Error */
@@ -14406,1150 +11118,12 @@ export interface operations {
             };
         };
     };
-    delete_jenjang_config_api_config_jenjang__jenjang__delete: {
+    replace_student_device_identity_api_student_masters__student_master_id__device_identities_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                jenjang: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_datasets_api_data_portability_datasets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_export_api_data_portability_exports_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_export_preview_api_data_portability_exports_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api__data_portability__ExportPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_history_api_data_portability_history_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_import_commit_api_data_portability_imports_commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api__data_portability__ImportCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_error_file_api_data_portability_imports_error_file_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ErrorFileRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_import_preview_api_data_portability_imports_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_post_import_preview_api_data_portability_imports_preview_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_template_api_data_portability_templates__dataset__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_academic_years_api_grades_academic_years_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_academic_year_api_grades_academic_years_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicYearCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_grade_analytics_api_grades_analytics_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_components_api_grades_components_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    postApiGradesComponents: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name: string;
-                    /** @enum {string} */
-                    assessment_type: "sumatif" | "formatif";
-                    subject_id: number | null;
-                };
-                "application/x-www-form-urlencoded": {
-                    name: string;
-                    /** @enum {string} */
-                    assessment_type: "sumatif" | "formatif";
-                    subject_id: number | null;
-                };
-                "multipart/form-data": {
-                    name: string;
-                    /** @enum {string} */
-                    assessment_type: "sumatif" | "formatif";
-                    subject_id: number | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        name: string;
-                        /** @enum {string} */
-                        assessment_type: "sumatif" | "formatif";
-                        subject_id: number | null;
-                    };
-                };
-            };
-        };
-    };
-    putApiGradesComponentsByComponent_id: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                component_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name?: string;
-                    /** @enum {string} */
-                    assessment_type?: "sumatif" | "formatif";
-                    subject_id?: number | null;
-                };
-                "application/x-www-form-urlencoded": {
-                    name?: string;
-                    /** @enum {string} */
-                    assessment_type?: "sumatif" | "formatif";
-                    subject_id?: number | null;
-                };
-                "multipart/form-data": {
-                    name?: string;
-                    /** @enum {string} */
-                    assessment_type?: "sumatif" | "formatif";
-                    subject_id?: number | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        name: string;
-                        /** @enum {string} */
-                        assessment_type: "sumatif" | "formatif";
-                        subject_id: number | null;
-                    };
-                };
-            };
-        };
-    };
-    deleteApiGradesComponentsByComponent_id: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                component_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @constant */
-                        status: "success";
-                        /** @constant */
-                        deleted: 1;
-                        id: number;
-                    };
-                };
-            };
-        };
-    };
-    get_enrollments_api_grades_enrollment_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id: number;
-                class_name?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bulk_enroll_students_api_grades_enrollment_bulk_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnrollmentBulkRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_enrollment_candidates_api_grades_enrollment_candidates_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id: number;
-                source_class?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_enrollment_source_classes_api_grades_enrollment_source_classes_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_enrollment_api_grades_enrollment__enrollment_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                enrollment_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["EnrollmentDeleteRequest"] | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_jenjangs_api_grades_jenjangs_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    "getApiGradesAssessment-sessions": {
-        parameters: {
-            query: {
-                academic_year_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        academic_year_id: number;
-                        term_number: number;
-                        label: string;
-                        assessment_date: string | null;
-                    }[];
-                };
-            };
-        };
-    };
-    "postApiGradesAssessment-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    academic_year_id: number;
-                    term_number: number;
-                    label: string;
-                    assessment_date?: string | null;
-                };
-                "application/x-www-form-urlencoded": {
-                    academic_year_id: number;
-                    term_number: number;
-                    label: string;
-                    assessment_date?: string | null;
-                };
-                "multipart/form-data": {
-                    academic_year_id: number;
-                    term_number: number;
-                    label: string;
-                    assessment_date?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        academic_year_id: number;
-                        term_number: number;
-                        label: string;
-                        assessment_date: string | null;
-                    };
-                };
-            };
-        };
-    };
-    get_grade_ledger_api_grades_ledger_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                jenjang_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    save_grade_ledger_api_grades_save_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GradeGridSaveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    getAssessmentOperations: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                term?: "term_1" | "term_2" | "term_3" | "term_4";
-                class_id?: string;
-                subject_id?: string;
-                coverage_state?: "COMPLETE" | "PARTIAL" | "NONE" | "EMPTY";
-                search?: string;
-                sort?: "assessment_date" | "assessment" | "class" | "subject" | "term" | "applicable" | "recorded" | "unrecorded" | "coverage";
-                order?: "asc" | "desc";
-                page?: string;
-                page_size?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    get_subjects_api_grades_subjects_get: {
-        parameters: {
-            query: {
-                jenjang_id: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_subject_api_grades_subjects_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SubjectCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_operator_work_queue_api_operator_work_queue_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_readiness_api_readiness_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadinessResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_branding_api_report_builder_branding_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_branding_api_report_builder_branding_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportBrandingBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_branding_api_report_builder_branding__branding_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                branding_id: number;
+                student_master_id: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -15557,784 +11131,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReportBrandingUpdateBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_report_excel_api_report_builder_export_excel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExportBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_report_pdf_api_report_builder_export_pdf_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExportBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_report_api_report_builder_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportPreviewBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_sections_api_report_builder_sections_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_templates_api_report_builder_templates_get: {
-        parameters: {
-            query?: {
-                template_type?: ("management_summary" | "academic_review" | "intervention_review" | "attendance_review") | null;
-                output_format?: ("pdf" | "excel" | "both") | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_template_api_report_builder_templates_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportTemplateBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_template_api_report_builder_templates__template_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                template_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_template_api_report_builder_templates__template_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                template_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_template_api_report_builder_templates__template_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                template_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportTemplateUpdateBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_annual_report_api_reports_annual_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AnnualReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_annual_report_api_reports_annual_export_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                format: "pdf" | "xlsx";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_report_filters_api_reports_filters_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-                scope?: "combined" | "early_year" | "primary" | "secondary";
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReportFiltersResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_monthly_management_report_api_reports_management_monthly_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                month: string;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ManagementReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_monthly_management_report_api_reports_management_monthly_export_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                month: string;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                format: "pdf" | "xlsx";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_monthly_report_api_reports_monthly_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                month: string;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MonthlyReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_monthly_report_api_reports_monthly_export_get: {
-        parameters: {
-            query: {
-                academic_year_id: number;
-                month: string;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-                format: "pdf" | "xlsx";
-                class_id?: number;
-                class_name?: string | null;
-                subject_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_review_attendance_api_review_attendance_get: {
-        parameters: {
-            query: {
-                date: string;
-                academic_year_id: number;
-                academic_class_id: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewAttendanceResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    mass_override_incomplete_api_review_attendance_mass_override_incomplete_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MassOverrideRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MassOverrideResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_override_history_api_review_attendance__attendance_id__history_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                attendance_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OverrideHistoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upsert_attendance_override_api_review_attendance__attendance_id__override_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                attendance_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OverrideRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OverrideResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_review_classes_api_review_classes_get: {
-        parameters: {
-            query?: {
-                academic_year_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewClassesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_first_admin_api_setup_admin_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FirstAdminRequest"];
+                "application/json": components["schemas"]["DeviceReplaceRequest"];
             };
         };
         responses: {
@@ -16344,7 +11141,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FirstAdminResponse"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -16358,30 +11155,16 @@ export interface operations {
             };
         };
     };
-    bootstrap_setup_api_setup_bootstrap_post: {
+    get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
+            path: {
+                student_master_id: string;
             };
-        };
-    };
-    setup_status_api_setup_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -16391,7 +11174,128 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetupStatusResponse"];
+                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CanonicalLegacyLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guarded_reassign_student_device_identity_api_student_masters__student_master_id__device_identities_reassign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceReassignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retire_student_device_identity_api_student_masters__student_master_id__device_identities__identity_id__retire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                identity_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceRetireRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -16607,6 +11511,39 @@ export interface operations {
             };
         };
     };
+    staff_sensitive_detail_api_staff__staff_id__sensitive_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_staff_education_api_staff__staff_id__education_get: {
         parameters: {
             query?: never;
@@ -16659,6 +11596,43 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_staff_jenjangs_api_staff__staff_id__jenjangs_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JenjangAssignmentsBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16747,312 +11721,427 @@ export interface operations {
             };
         };
     };
-    replace_staff_jenjangs_api_staff__staff_id__jenjangs_put: {
+    "postApiStaffByStaff_idEmployment-status": {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 staff_id: string;
             };
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["JenjangAssignmentsBody"];
+                "application/json": {
+                    /** @enum {string} */
+                    employment_status: "ACTIVE" | "FORMER";
+                    effective_date: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    employment_status: "ACTIVE" | "FORMER";
+                    effective_date: string;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    employment_status: "ACTIVE" | "FORMER";
+                    effective_date: string;
+                };
             };
         };
         responses: {
-            /** @description Successful Response */
+            /** @description Response for status 200 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": {
+                        staff_id: string;
+                        /** @enum {string} */
+                        employment_status: "ACTIVE" | "FORMER";
+                        employment_end_date: string | null;
+                        effective_date: string;
+                    };
                 };
             };
         };
     };
-    staff_sensitive_detail_api_staff__staff_id__sensitive_get: {
+    getApiStaffByStaff_idHistory: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 staff_id: string;
             };
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Response for status 200 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_academic_masters_api_student_enrollments_academic_master_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicMasterPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": {
+                        id: string;
+                        action: string;
+                        effective_date: string | null;
+                        changed_fields: string[];
+                        metadata: {
+                            [key: string]: unknown;
+                        };
+                        actor: string;
+                        created_at: string;
+                    }[];
                 };
             };
         };
     };
-    preview_academic_mappings_api_student_enrollments_mapping_preview_post: {
+    getApiStaffAnalyticsSummary: {
         parameters: {
-            query?: never;
+            query?: {
+                as_of_date?: string;
+            };
             header?: never;
             path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Response for status 200 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        as_of_date: string;
+                        workforce: {
+                            total: number;
+                            active: number;
+                            former: number;
+                            unknown_status: number;
+                            status_coverage: {
+                                count: number;
+                                percentage: number | null;
+                            };
+                            teaching: number | null;
+                            non_teaching: number | null;
+                            unclassified_positions: number;
+                        };
+                        age: {
+                            average_years: number | null;
+                            coverage: {
+                                count: number;
+                                percentage: number | null;
+                            };
+                            distribution: {
+                                label: string;
+                                count: number;
+                                percentage: number | null;
+                            }[];
+                        };
+                        tenure: {
+                            average_years: number | null;
+                            median_years: number | null;
+                            coverage: {
+                                count: number;
+                                percentage: number | null;
+                            };
+                            distribution: {
+                                label: string;
+                                count: number;
+                                percentage: number | null;
+                            }[];
+                        };
+                        dapodik: {
+                            coverage: {
+                                count: number;
+                                percentage: number | null;
+                            };
+                            distribution: {
+                                label: string;
+                                count: number;
+                                percentage: number | null;
+                            }[];
+                        };
+                        nuptk: {
+                            with_nuptk: number;
+                            without_nuptk: number;
+                            coverage: {
+                                count: number;
+                                percentage: number | null;
+                            };
+                        };
+                        data_quality: {
+                            fields: {
+                                field: string;
+                                present: number;
+                                missing: number;
+                                coverage: number | null;
+                            }[];
+                            duplicate_identity_count: number;
+                            invalid_identifier_count: number;
+                            unmapped_position_count: number;
+                            unresolved_import_conflict_count: number;
+                        };
+                        positions: {
+                            label: string;
+                            count: number;
+                            active_count: number;
+                            percentage: number | null;
+                        }[];
+                        joining: {
+                            label: string;
+                            count: number;
+                            percentage: number | null;
+                        }[];
+                    };
                 };
             };
-            /** @description Validation Error */
+            /** @description Response for status 422 */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": {
+                        detail: string;
+                    };
                 };
             };
         };
     };
-    commit_enrollment_population_api_student_enrollments_populate_commit_post: {
+    getApiStaffPositions: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: "PENDING" | "APPROVED" | "ALL";
+            };
             header?: never;
             path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnrollmentPopulationCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_enrollment_population_api_student_enrollments_populate_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnrollmentPopulationPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_academic_roster_api_student_enrollments_roster_commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcademicRosterCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_academic_roster_api_student_enrollments_roster_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_preview_academic_roster_api_student_enrollments_roster_preview_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_academic_roster_template_api_student_enrollments_roster_template_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Response for status 200 */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        id: number;
+                        raw_title: string;
+                        normalized_title: string;
+                        position_category: ("LEADERSHIP" | "TEACHING" | "TEACHING_SUPPORT" | "ADMINISTRATION" | "FINANCE" | "HR" | "MARKETING" | "IT" | "FACILITIES" | "SECURITY" | "GENERAL_SUPPORT" | "OTHER") | null;
+                        is_teaching_role: boolean | null;
+                        /** @enum {string} */
+                        status: "PENDING" | "APPROVED";
+                        employee_count?: number;
+                    }[];
                 };
             };
-            /** @description Validation Error */
-            422: {
+        };
+    };
+    patchApiStaffPositionsByPosition_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    normalized_title: string;
+                    position_category: ("LEADERSHIP" | "TEACHING" | "TEACHING_SUPPORT" | "ADMINISTRATION" | "FINANCE" | "HR" | "MARKETING" | "IT" | "FACILITIES" | "SECURITY" | "GENERAL_SUPPORT" | "OTHER") | null;
+                    is_teaching_role: boolean | null;
+                    /** @enum {string} */
+                    status: "PENDING" | "APPROVED";
+                };
+                "application/x-www-form-urlencoded": {
+                    normalized_title: string;
+                    position_category: ("LEADERSHIP" | "TEACHING" | "TEACHING_SUPPORT" | "ADMINISTRATION" | "FINANCE" | "HR" | "MARKETING" | "IT" | "FACILITIES" | "SECURITY" | "GENERAL_SUPPORT" | "OTHER") | null;
+                    is_teaching_role: boolean | null;
+                    /** @enum {string} */
+                    status: "PENDING" | "APPROVED";
+                };
+                "multipart/form-data": {
+                    normalized_title: string;
+                    position_category: ("LEADERSHIP" | "TEACHING" | "TEACHING_SUPPORT" | "ADMINISTRATION" | "FINANCE" | "HR" | "MARKETING" | "IT" | "FACILITIES" | "SECURITY" | "GENERAL_SUPPORT" | "OTHER") | null;
+                    is_teaching_role: boolean | null;
+                    /** @enum {string} */
+                    status: "PENDING" | "APPROVED";
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": {
+                        id: number;
+                        raw_title: string;
+                        normalized_title: string;
+                        position_category: ("LEADERSHIP" | "TEACHING" | "TEACHING_SUPPORT" | "ADMINISTRATION" | "FINANCE" | "HR" | "MARKETING" | "IT" | "FACILITIES" | "SECURITY" | "GENERAL_SUPPORT" | "OTHER") | null;
+                        is_teaching_role: boolean | null;
+                        /** @enum {string} */
+                        status: "PENDING" | "APPROVED";
+                        employee_count?: number;
+                    };
                 };
             };
         };
+    };
+    postApiStaffImportPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        batch_id: string;
+                        file_sha256: string;
+                        source_filename: string;
+                        source_sheet: string;
+                        column_mapping: {
+                            [key: string]: string;
+                        };
+                        summary: {
+                            total: number;
+                            valid: number;
+                            new: number;
+                            matched: number;
+                            updates: number;
+                            unchanged: number;
+                            warnings: number;
+                            invalid: number;
+                            conflicts: number;
+                            duplicates: number;
+                        };
+                        rows: {
+                            row_number: number;
+                            state: string;
+                            full_name: string;
+                            employee_code_masked: string | null;
+                            issues: {
+                                field: string;
+                                code: string;
+                                /** @enum {string} */
+                                severity: "INFO" | "WARNING" | "ERROR";
+                                message: string;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    postApiStaffImportCommit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    batch_id: string;
+                    row_numbers: number[];
+                };
+                "application/x-www-form-urlencoded": {
+                    batch_id: string;
+                    row_numbers: number[];
+                };
+                "multipart/form-data": {
+                    batch_id: string;
+                    row_numbers: number[];
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        batch_id: string;
+                        status: string;
+                        summary: {
+                            inserted: number;
+                            updated: number;
+                            unchanged: number;
+                            rejected: number;
+                            failed: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffExport-excel": {
+        parameters: {
+            query?: {
+                status?: string;
+                search?: string;
+                job_title?: string;
+                position_id?: string;
+                joined_from?: string;
+                joined_to?: string;
+                dapodik_status?: string;
+                jenjang_id?: string;
+                has_nuptk?: string;
+                include_sensitive?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
     };
     list_student_enrollment_history_api_student_enrollments_student__student_master_id__get: {
         parameters: {
@@ -17124,20 +12213,49 @@ export interface operations {
             };
         };
     };
-    delete_unused_draft_enrollment_api_student_enrollments__enrollment_id__delete: {
+    preview_academic_mappings_api_student_enrollments_mapping_preview_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                enrollment_id: number;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
             };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_enrollment_population_api_student_enrollments_populate_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EnrollmentDeleteRequest"];
+                "application/json": components["schemas"]["EnrollmentPopulationPreviewRequest"];
             };
         };
         responses: {
@@ -17161,7 +12279,42 @@ export interface operations {
             };
         };
     };
-    get_enrollment_deletion_status_api_student_enrollments__enrollment_id__deletion_status_get: {
+    commit_enrollment_population_api_student_enrollments_populate_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollmentPopulationCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_student_enrollment_api_student_enrollments__enrollment_id__transfer_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -17172,7 +12325,11 @@ export interface operations {
                 astyx_session?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollmentTransferRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -17231,7 +12388,40 @@ export interface operations {
             };
         };
     };
-    transfer_student_enrollment_api_student_enrollments__enrollment_id__transfer_post: {
+    get_enrollment_deletion_status_api_student_enrollments__enrollment_id__deletion_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollment_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_unused_draft_enrollment_api_student_enrollments__enrollment_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -17244,7 +12434,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EnrollmentTransferRequest"];
+                "application/json": components["schemas"]["EnrollmentDeleteRequest"];
             };
         };
         responses: {
@@ -17306,7 +12496,7 @@ export interface operations {
             };
         };
     };
-    download_export_api_student_exports_download_post: {
+    get_jenjang_configs_api_config_jenjang_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -17315,9 +12505,73 @@ export interface operations {
                 astyx_session?: string | null;
             };
         };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JenjangConfigResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_available_jenjangs_api_config_jenjang_available_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upsert_jenjang_config_api_config_jenjang__jenjang__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jenjang: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExportDownloadRequest"];
+                "application/json": components["schemas"]["JenjangCutoffPolicyWrite"];
             };
         };
         responses: {
@@ -17341,84 +12595,12 @@ export interface operations {
             };
         };
     };
-    preview_export_api_student_exports_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api__student_exports__ExportPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_rollback_api_student_import_sessions__session_id__rollback_post: {
+    delete_jenjang_config_api_config_jenjang__jenjang__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                session_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RollbackCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_rollback_api_student_import_sessions__session_id__rollback_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                session_id: string;
+                jenjang: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -17432,7 +12614,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -17446,12 +12628,12 @@ export interface operations {
             };
         };
     };
-    list_student_masters_api_student_masters_get: {
+    get_heb_overrides_api_config_heb_get: {
         parameters: {
             query?: {
-                search?: string | null;
-                page?: number;
-                page_size?: number;
+                month?: number | null;
+                year?: number | null;
+                jenjang?: string | null;
             };
             header?: never;
             path?: never;
@@ -17467,41 +12649,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StudentMasterListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_canonical_student_api_student_masters_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StudentCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
                     "application/json": unknown;
                 };
             };
@@ -17516,109 +12663,14 @@ export interface operations {
             };
         };
     };
-    student_master_data_quality_summary_api_student_masters_data_quality_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_legacy_student_links_api_student_masters_legacy_link_commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LegacyLinkCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_legacy_student_links_api_student_masters_legacy_link_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_legacy_student_link_api_student_masters_legacy_link__legacy_student_id__resolve_post: {
+    upsert_heb_override_api_config_heb__jenjang___year___month__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                legacy_student_id: number;
+                jenjang: string;
+                year: number;
+                month: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -17626,7 +12678,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LegacyLinkResolutionRequest"];
+                "application/json": components["schemas"]["HebOverrideBody"];
             };
         };
         responses: {
@@ -17650,11 +12702,15 @@ export interface operations {
             };
         };
     };
-    export_managed_students_api_student_masters_management_export_template_get: {
+    delete_heb_override_api_config_heb__jenjang___year___month__delete: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                jenjang: string;
+                year: number;
+                month: number;
+            };
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -17681,51 +12737,13 @@ export interface operations {
             };
         };
     };
-    export_managed_students_csv_api_student_masters_management_export_csv_get: {
+    get_absence_reasons_api_config_absence_reasons_get: {
         parameters: {
-            query?: {
-                search?: string | null;
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                program_id?: number | null;
-                grade_id?: number | null;
-                class_id?: number | null;
-                status?: string | null;
-                device_linked?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    student_update_import_history_api_student_masters_management_import_history_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
+            query: {
+                academic_year_id: string;
+                month: string;
+                jenjang_id?: string;
+                program_id?: string;
             };
             header?: never;
             path?: never;
@@ -17741,7 +12759,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ManualAbsenceMonthlyResponse"];
                 };
             };
             /** @description Validation Error */
@@ -17755,86 +12773,12 @@ export interface operations {
             };
         };
     };
-    student_update_import_detail_api_student_masters_management_imports__batch_id__get: {
+    get_monthly_class_absence_students: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                batch_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    student_update_result_workbook_api_student_masters_management_imports__batch_id__result_xlsx_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                batch_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_managed_students_api_student_masters_management_list_get: {
-        parameters: {
-            query?: {
-                search?: string | null;
-                academic_year_id?: number | null;
-                jenjang_id?: number | null;
-                class_id?: number | null;
-                program_id?: number | null;
-                grade_id?: number | null;
-                status?: string | null;
-                device_linked?: boolean | null;
-                enrollment_status?: string | null;
-                page?: number;
-                page_size?: number;
+            query: {
+                academic_year_id: string;
+                month: string;
+                class_id: string;
             };
             header?: never;
             path?: never;
@@ -17850,391 +12794,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ManualAbsenceStudentTotalsResponse"];
                 };
             };
-            /** @description Validation Error */
-            422: {
+            /** @description Insufficient permissions */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
-        };
-    };
-    managed_student_quality_api_student_masters_management_quality_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_student_update_workbook_api_student_masters_management_update_commit__batch_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                batch_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["schemas__student_management__ImportCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_student_update_workbook_api_student_masters_management_update_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_preview_student_update_workbook_api_student_masters_management_update_preview_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_student_master_api_student_masters__student_master_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StudentMasterSummary"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_student_device_identities_api_student_masters__student_master_id__device_identities_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DeviceIdentitySummary"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    replace_student_device_identity_api_student_masters__student_master_id__device_identities_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeviceReplaceRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    guarded_reassign_student_device_identity_api_student_masters__student_master_id__device_identities_reassign_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeviceReassignRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retire_student_device_identity_api_student_masters__student_master_id__device_identities__identity_id__retire_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-                identity_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeviceRetireRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    patch_student_documents_api_student_masters__student_master_id__documents_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_student_guardian_api_student_masters__student_master_id__guardians_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-                guardian_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
+            /** @description Selected class was not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18245,27 +12816,238 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
         };
     };
-    update_student_guardian_api_student_masters__student_master_id__guardians__guardian_id__patch: {
+    get_legacy_absence_reasons: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegacyAbsenceReasonsResponse"];
+                };
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bulk_upsert_absence_reasons_api_config_absence_reasons_bulk_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                student_master_id: string;
-                guardian_id: number;
-            };
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": components["schemas"]["ManualAbsenceSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceSaveResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_monthly_absence_ledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAbsenceLedgerActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
+                };
+            };
+            /** @description Ledger state or period lock conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reopen_monthly_absence_ledger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAbsenceLedgerReopenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
+                };
+            };
+            /** @description Ledger state or period lock conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_absence_reasons_summary_api_config_absence_reasons_summary_get: {
+        parameters: {
+            query: {
+                month: number;
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_term_configs_api_academic_config_terms_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_term_config_api_academic_config_terms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicTermRequest"];
             };
         };
         responses: {
@@ -18289,20 +13071,18 @@ export interface operations {
             };
         };
     };
-    patch_student_health_api_student_masters__student_master_id__health_patch: {
+    update_term_config_api_academic_config_terms__term_id__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                student_master_id: string;
+                term_id: number;
             };
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": components["schemas"]["AcademicTermUpdateRequest"];
             };
         };
         responses: {
@@ -18326,12 +13106,622 @@ export interface operations {
             };
         };
     };
-    get_student_change_history_api_student_masters__student_master_id__history_get: {
+    delete_term_config_api_academic_config_terms__term_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                student_master_id: string;
+                term_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_kkm_thresholds_api_academic_config_kkm_thresholds_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_kkm_threshold_api_academic_config_kkm_thresholds_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KkmThresholdRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threshold_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KkmThresholdUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_kkm_threshold_api_academic_config_kkm_thresholds__threshold_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threshold_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_effective_kkm_api_academic_config_kkm_effective_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                subject_id?: number | null;
+                assessment_type: "sumatif" | "formatif" | "overall";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_effective_terms_api_academic_config_terms_effective_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_deployment_mode_api_config_deployment_mode_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_readiness_api_readiness_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    "getApiAttendanceOverride-review": {
+        parameters: {
+            query?: {
+                academic_year_id?: string;
+                jenjang_id?: string;
+                class_id?: string;
+                date_from?: string;
+                date_to?: string;
+                base_status?: string;
+                effective_status?: string;
+                student_search?: string;
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        scope: {
+                            academicYearId: number;
+                            academicYearLabel: string;
+                            jenjangId: number | null;
+                            classId: number | null;
+                            dateFrom: string;
+                            dateTo: string;
+                        };
+                        summary: {
+                            corrections: number;
+                        };
+                        total: number;
+                        page: number;
+                        pageSize: number;
+                        items: {
+                            attendanceId: number;
+                            studentId: number;
+                            studentMasterId: string | null;
+                            studentName: string;
+                            classId: number | null;
+                            className: string;
+                            jenjang: string | null;
+                            academicYearId: number;
+                            date: string;
+                            baseStatus: string;
+                            effectiveStatus: string;
+                            correction: {
+                                id: number;
+                                note: string;
+                                reviewedBy: string;
+                                reviewedAt: string;
+                                overrideCheckIn: string | null;
+                                overrideCheckOut: string | null;
+                                /** @constant */
+                                active: true;
+                            };
+                            canEdit: boolean;
+                            links: {
+                                correctionReview: string;
+                                editCorrection: string | null;
+                                student360: string;
+                                class360: string | null;
+                                dailyAttendance: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    get_review_classes_api_review_classes_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewClassesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_attendance_api_review_attendance_get: {
+        parameters: {
+            query: {
+                date: string;
+                academic_year_id: number;
+                academic_class_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewAttendanceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upsert_attendance_override_api_review_attendance__attendance_id__override_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendance_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverrideResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_override_history_api_review_attendance__attendance_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendance_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverrideHistoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mass_override_incomplete_api_review_attendance_mass_override_incomplete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MassOverrideRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MassOverrideResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_assigned_classes_api_attendance_classes_assigned_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_assigned_class_attendance_api_attendance_classes__class_id__attendance_export_excel_get: {
+        parameters: {
+            query: {
+                month: string;
+                year: string;
+            };
+            header?: never;
+            path: {
+                class_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_class_date_attendance_api_attendance_classes__class_id__dates__date_val__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: number;
+                date_val: string;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -18359,13 +13749,51 @@ export interface operations {
             };
         };
     };
-    get_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_get: {
+    post_class_date_attendance_entries_api_attendance_classes__class_id__dates__date_val__entries_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                student_master_id: string;
+                class_id: number;
+                date_val: string;
             };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAttendanceEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_requests_api_attendance_corrections_get: {
+        parameters: {
+            query?: {
+                state?: string | null;
+            };
+            header?: never;
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -18378,7 +13806,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -18392,20 +13820,18 @@ export interface operations {
             };
         };
     };
-    post_canonical_legacy_link_api_student_masters__student_master_id__legacy_link_post: {
+    create_request_api_attendance_corrections_post: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                student_master_id: string;
-            };
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CanonicalLegacyLinkRequest"];
+                "application/json": components["schemas"]["CorrectionCreate"];
             };
         };
         responses: {
@@ -18415,7 +13841,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CanonicalLegacyLinkStatus"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -18429,12 +13855,12 @@ export interface operations {
             };
         };
     };
-    get_student_profile_api_student_masters__student_master_id__profile_get: {
+    get_request_api_attendance_corrections__request_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                student_master_id: string;
+                request_id: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -18462,12 +13888,45 @@ export interface operations {
             };
         };
     };
-    patch_student_profile_api_student_masters__student_master_id__profile_patch: {
+    submit_request_api_attendance_corrections__request_id__submit_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                student_master_id: string;
+                request_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_request_api_attendance_corrections__request_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -18475,7 +13934,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StudentProfilePatch"];
+                "application/json": components["schemas"]["Rejection"];
             };
         };
         responses: {
@@ -18499,7 +13958,509 @@ export interface operations {
             };
         };
     };
-    get_result_api_student_progression_batches__batch_id__result_get: {
+    cancel_request_api_attendance_corrections__request_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finalize_api_attendance_corrections_periods_finalize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinalizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendancePeriodFinalizeResponse"];
+                };
+            };
+            /** @description Ledger warning acknowledgement required */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendancePeriodFinalizeConflict"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_api_attendance_corrections_periods_reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__attendance_corrections__ReopenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    period_status_api_attendance_corrections_periods_status_get: {
+        parameters: {
+            query: {
+                attendance_date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_request_api_attendance_corrections__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Confirmation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    self_confirm_request_api_attendance_corrections__request_id__self_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_departure_policies_api_attendance_departure_policies_get: {
+        parameters: {
+            query?: {
+                jenjang?: string | null;
+                active_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_policy_endpoint_api_attendance_departure_policies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDismissalPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_policy_endpoint_api_attendance_departure_policies__policy_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivatePolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_class_date_departures_api_attendance_classes__class_id__dates__date_val__departures_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                class_id: string;
+                date_val: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_excuse_endpoint_api_attendance__attendance_id__departure_excuses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendance_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordExcuseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_excuse_endpoint_api_attendance__attendance_id__departure_excuses__excuse_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendance_id: number;
+                excuse_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeExcuseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_departure_history_api_attendance__attendance_id__departure_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attendance_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_attendance_import_api_uploads_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_preview_attendance_import_api_uploads_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_previewed_attendance_import_api_uploads_preview__batch_id__commit_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -18510,7 +14471,11 @@ export interface operations {
                 astyx_session?: string | null;
             };
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceImportCommitRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -18532,9 +14497,87 @@ export interface operations {
             };
         };
     };
-    list_mapping_rules_api_student_progression_mapping_rules_get: {
+    "getApiGradesAssessment-sessions": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        academic_year_id: number;
+                        term_number: number;
+                        label: string;
+                        assessment_date: string | null;
+                    }[];
+                };
+            };
+        };
+    };
+    "postApiGradesAssessment-sessions": {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+                "multipart/form-data": {
+                    academic_year_id: number;
+                    term_number: number;
+                    label: string;
+                    assessment_date?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        academic_year_id: number;
+                        term_number: number;
+                        label: string;
+                        assessment_date: string | null;
+                    };
+                };
+            };
+        };
+    };
+    get_grade_ledger_api_grades_ledger_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -18563,7 +14606,111 @@ export interface operations {
             };
         };
     };
-    create_mapping_rule_api_student_progression_mapping_rules_post: {
+    get_enrollment_candidates_api_grades_enrollment_candidates_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id: number;
+                source_class?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_enrollment_source_classes_api_grades_enrollment_source_classes_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_enrollments_api_grades_enrollment_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id: number;
+                class_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_enroll_students_api_grades_enrollment_bulk_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -18574,12 +14721,670 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProgressionMappingRuleRequest"];
+                "application/json": components["schemas"]["EnrollmentBulkRequest"];
             };
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_enrollment_api_grades_enrollment__enrollment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enrollment_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EnrollmentDeleteRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_grade_ledger_api_grades_save_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GradeGridSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_grade_analytics_api_grades_analytics_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_academic_years_api_grades_academic_years_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_academic_year_api_grades_academic_years_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicYearCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_subjects_api_grades_subjects_get: {
+        parameters: {
+            query: {
+                jenjang_id: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_subject_api_grades_subjects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_jenjangs_api_grades_jenjangs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_components_api_grades_components_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    postApiGradesComponents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+                "multipart/form-data": {
+                    name: string;
+                    /** @enum {string} */
+                    assessment_type: "sumatif" | "formatif";
+                    subject_id: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        assessment_type: "sumatif" | "formatif";
+                        subject_id: number | null;
+                    };
+                };
+            };
+        };
+    };
+    putApiGradesComponentsByComponent_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+                "multipart/form-data": {
+                    name?: string;
+                    /** @enum {string} */
+                    assessment_type?: "sumatif" | "formatif";
+                    subject_id?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        assessment_type: "sumatif" | "formatif";
+                        subject_id: number | null;
+                    };
+                };
+            };
+        };
+    };
+    deleteApiGradesComponentsByComponent_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        status: "success";
+                        /** @constant */
+                        deleted: 1;
+                        id: number;
+                    };
+                };
+            };
+        };
+    };
+    getAssessmentOperations: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term?: "term_1" | "term_2" | "term_3" | "term_4";
+                class_id?: string;
+                subject_id?: string;
+                coverage_state?: "COMPLETE" | "PARTIAL" | "NONE" | "EMPTY";
+                search?: string;
+                sort?: "assessment_date" | "assessment" | "class" | "subject" | "term" | "applicable" | "recorded" | "unrecorded" | "coverage";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    list_interventions_api_academic_interventions_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                student_id?: number | null;
+                subject_id?: number | null;
+                term?: string | null;
+                status?: ("open" | "in_progress" | "monitoring" | "resolved" | "closed") | null;
+                priority?: ("low" | "medium" | "high" | "urgent") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_intervention_api_academic_interventions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicInterventionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_intervention_from_alert_api_academic_interventions_from_alert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicInterventionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_intervention_api_academic_interventions__intervention_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                intervention_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_intervention_api_academic_interventions__intervention_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                intervention_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_intervention_api_academic_interventions__intervention_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                intervention_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicInterventionUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18711,12 +15516,13 @@ export interface operations {
             };
         };
     };
-    commit_preview_api_student_progression_previews__batch_id__commit_post: {
+    patch_row_api_student_progression_previews__batch_id__rows__row_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 batch_id: string;
+                row_id: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -18724,7 +15530,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProgressionCommitRequest"];
+                "application/json": components["schemas"]["ProgressionRowPatch"];
             };
         };
         responses: {
@@ -18785,13 +15591,12 @@ export interface operations {
             };
         };
     };
-    patch_row_api_student_progression_previews__batch_id__rows__row_id__patch: {
+    commit_preview_api_student_progression_previews__batch_id__commit_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 batch_id: string;
-                row_id: number;
             };
             cookie?: {
                 astyx_session?: string | null;
@@ -18799,7 +15604,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProgressionRowPatch"];
+                "application/json": components["schemas"]["ProgressionCommitRequest"];
             };
         };
         responses: {
@@ -18823,268 +15628,16 @@ export interface operations {
             };
         };
     };
-    get_students_api_students_get: {
-        parameters: {
-            query?: {
-                search?: string | null;
-                jenjang?: string | null;
-                class_name?: string | null;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_student_api_students_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudentBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_students_api_students_all_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    assign_class_bulk_api_students_assign_class_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkAssignBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_existing_classes_api_students_classes_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_operations_audit_logs_api_students_operations_get: {
-        parameters: {
-            query?: {
-                start_date?: string | null;
-                end_date?: string | null;
-                actor?: string | null;
-                operation?: string | null;
-                entity_type?: string | null;
-                risk_level?: string | null;
-                success?: boolean | null;
-                source?: string | null;
-                import_session_id?: string | null;
-                correlation_id?: string | null;
-                rollback_activity?: boolean;
-                high_risk_only?: boolean;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_class_api_students_set_class_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetClassBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_student_attendance_summary_api_students__no_id__attendance_summary_get: {
-        parameters: {
-            query?: {
-                month?: number | null;
-                year?: number | null;
-            };
-            header?: never;
-            path: {
-                no_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_student_monthly_history_api_students__no_id__monthly_history_get: {
+    get_result_api_student_progression_batches__batch_id__result_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                no_id: number;
+                batch_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -19108,7 +15661,7 @@ export interface operations {
             };
         };
     };
-    preview_data_reset_api_system_data_reset_preview_post: {
+    list_mapping_rules_api_student_progression_mapping_rules_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -19116,146 +15669,6 @@ export interface operations {
             cookie?: {
                 astyx_session?: string | null;
             };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DataResetPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Reset preview */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Administrator access or destructive-operation enablement required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_data_reset_api_system_data_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DataResetCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Reset committed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetResult"];
-                };
-            };
-            /** @description Confirmation phrase does not match the selected scope */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Authentication required */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Administrator access or destructive-operation enablement required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Another reset operation is active */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Reset failed and all transactional database changes were rolled back */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-            /** @description Encrypted pre-reset backup could not be created */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DataResetError"];
-                };
-            };
-        };
-    };
-    system_health_api_system_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -19268,15 +15681,57 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    list_assignments_api_teacher_class_assignments_get: {
+    create_mapping_rule_api_student_progression_mapping_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressionMappingRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_filters_api_reports_filters_get: {
         parameters: {
             query?: {
-                user_id?: number | null;
                 academic_year_id?: number | null;
-                academic_class_id?: number | null;
-                active_only?: boolean;
+                scope?: "combined" | "early_year" | "primary" | "secondary";
             };
             header?: never;
             path?: never;
@@ -19292,7 +15747,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ReportFiltersResponse"];
                 };
             };
             /** @description Validation Error */
@@ -19306,407 +15761,18 @@ export interface operations {
             };
         };
     };
-    post_create_assignment_api_teacher_class_assignments_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignmentCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_assignment_endpoint_api_teacher_class_assignments__assignment_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignment_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignmentUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_deactivate_assignment_api_teacher_class_assignments__assignment_id__deactivate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignment_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    post_reactivate_assignment_api_teacher_class_assignments__assignment_id__reactivate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                assignment_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unresolved_queue_api_upload_conflicts_get: {
-        parameters: {
-            query?: {
-                workflow_type?: ("ATTENDANCE" | "ROSTER") | null;
-                technical_code?: string | null;
-                resolution_status?: ("UNRESOLVED" | "RESOLVED_PENDING_RETRY" | "RETRIED_COMMITTED" | "RETRIED_STILL_BLOCKED") | null;
-                source_session_id?: string | null;
-                retry_eligible?: boolean | null;
-                created_from?: string | null;
-                created_to?: string | null;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retry_commit_api_upload_conflicts_retry_commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RetryCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retry_preview_api_upload_conflicts_retry_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RetryPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    conflict_detail_api_upload_conflicts__resolution_item_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                resolution_item_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    link_device_api_upload_conflicts__resolution_item_id__link_device_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                resolution_item_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LinkDeviceRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_roster_api_upload_conflicts__resolution_item_id__resolve_roster_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                resolution_item_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveRosterRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    compare_roster_conflict_api_upload_conflicts__resolution_item_id__roster_comparison_get: {
-        parameters: {
-            query?: {
-                student_master_id?: string | null;
-            };
-            header?: never;
-            path: {
-                resolution_item_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    conflict_student_candidates_api_upload_conflicts__resolution_item_id__student_candidates_get: {
+    get_monthly_report_api_reports_monthly_get: {
         parameters: {
             query: {
-                query: string;
-                limit?: number;
+                academic_year_id: number;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
             };
             header?: never;
-            path: {
-                resolution_item_id: string;
-            };
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -19719,7 +15785,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MonthlyReportResponse"];
                 };
             };
             /** @description Validation Error */
@@ -19733,21 +15799,91 @@ export interface operations {
             };
         };
     };
-    get_upload_history_api_uploads_history_get: {
+    get_monthly_management_report_api_reports_management_monthly_get: {
         parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                workflow_type?: string | null;
-                status?: string | null;
-                reconciliation_state?: string | null;
-                actor?: string | null;
-                filename?: string | null;
-                checksum_prefix?: string | null;
-                unresolved_only?: boolean;
-                retry_activity?: boolean;
-                date_from?: string | null;
-                date_to?: string | null;
+            query: {
+                academic_year_id: number;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagementReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_annual_report_api_reports_annual_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnualReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_monthly_report_api_reports_monthly_export_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                format: "pdf" | "xlsx";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -19777,13 +15913,18 @@ export interface operations {
             };
         };
     };
-    get_upload_history_detail_api_uploads_history__upload_id__get: {
+    export_annual_report_api_reports_annual_export_get: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                upload_id: string;
+            query: {
+                academic_year_id: number;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                format: "pdf" | "xlsx";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
             };
+            header?: never;
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -19810,13 +15951,19 @@ export interface operations {
             };
         };
     };
-    export_upload_history_csv_api_uploads_history__upload_id__export_csv_get: {
+    export_monthly_management_report_api_reports_management_monthly_export_get: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                upload_id: string;
+            query: {
+                academic_year_id: number;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+                format: "pdf" | "xlsx";
+                class_id?: number;
+                class_name?: string | null;
+                subject_id?: number | null;
             };
+            header?: never;
+            path?: never;
             cookie?: {
                 astyx_session?: string | null;
             };
@@ -19843,16 +15990,12 @@ export interface operations {
             };
         };
     };
-    export_upload_history_json_api_uploads_history__upload_id__export_json_get: {
+    get_all_jenjangs_api_analytics_jenjangs_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                upload_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            path?: never;
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -19865,31 +16008,17 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
         };
     };
-    get_upload_history_rows_api_uploads_history__upload_id__rows_get: {
+    get_analytics_filters_api_analytics_filters_get: {
         parameters: {
             query?: {
-                page?: number;
-                page_size?: number;
-                outcome?: string | null;
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
             };
             header?: never;
-            path: {
-                upload_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
+            path?: never;
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -19913,16 +16042,137 @@ export interface operations {
             };
         };
     };
-    get_upload_history_timeline_api_uploads_history__upload_id__timeline_get: {
+    get_late_by_class_api_analytics_late_by_class_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                upload_id: string;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
-            cookie?: {
-                astyx_session?: string | null;
+        };
+    };
+    get_late_by_jenjang_api_analytics_late_by_jenjang_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
+        };
+    };
+    get_late_by_student_api_analytics_late_by_student_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_rate_per_student_api_analytics_attendance_rate_students_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_rate_per_jenjang_api_analytics_attendance_rate_jenjang_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_monthly_late_by_class_api_analytics_monthly_by_class_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_report_api_analytics_attendance_report_get: {
+        parameters: {
+            query: {
+                start_date: string;
+                end_date: string;
+                jenjang?: string | null;
+                class_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -19946,207 +16196,197 @@ export interface operations {
             };
         };
     };
-    get_missing_records_api_uploads_missing_records_get: {
+    get_intervention_impact_api_analytics_intervention_impact_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                student_id?: number | null;
+                subject_id?: number | null;
+                term?: string | null;
+                status?: string | null;
+                priority?: string | null;
+                owner_name?: string | null;
+                risk_level?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_management_summary_api_analytics_management_summary_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_historical_trends_api_analytics_historical_trends_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                subject_id?: number | null;
+                term?: string | null;
+                from_academic_year_id?: number | null;
+                to_academic_year_id?: number | null;
+                granularity?: string;
+                include_forecast?: boolean;
+                forecast_method?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_management_summary_excel_api_analytics_management_summary_export_excel_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+                mode?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_management_summary_pdf_api_analytics_management_summary_export_pdf_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_heb_visibility_api_analytics_heb_get: {
         parameters: {
             query: {
                 month: number;
                 year: number;
-                class_name?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_attendance_import_api_uploads_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_preview_attendance_import_api_uploads_preview_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_previewed_attendance_import_api_uploads_preview__batch_id__commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                batch_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AttendanceImportCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    download_sample_template_api_uploads_sample_template_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    upload_file_api_uploads_upload_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_file_api_uploads_upload_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    health_check_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    get_students_students_get: {
-        parameters: {
-            query?: {
-                search?: string | null;
-                jenjang?: string | null;
-                class_name?: string | null;
-                page?: number;
-                page_size?: number;
             };
             header?: never;
             path?: never;
@@ -20174,201 +16414,18 @@ export interface operations {
             };
         };
     };
-    create_student_students_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateStudentBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_students_students_all_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    assign_class_bulk_students_assign_class_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkAssignBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_existing_classes_students_classes_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_operations_audit_logs_students_operations_get: {
-        parameters: {
-            query?: {
-                start_date?: string | null;
-                end_date?: string | null;
-                actor?: string | null;
-                operation?: string | null;
-                entity_type?: string | null;
-                risk_level?: string | null;
-                success?: boolean | null;
-                source?: string | null;
-                import_session_id?: string | null;
-                correlation_id?: string | null;
-                rollback_activity?: boolean;
-                high_risk_only?: boolean;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_class_students_set_class_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetClassBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_student_attendance_summary_students__no_id__attendance_summary_get: {
+    get_tardiness_report_api_analytics_tardiness_report_get: {
         parameters: {
             query?: {
                 month?: number | null;
                 year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
             };
             header?: never;
-            path: {
-                no_id: number;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -20393,13 +16450,1290 @@ export interface operations {
             };
         };
     };
-    get_student_monthly_history_students__no_id__monthly_history_get: {
+    get_tardiness_summary_by_jenjang_api_analytics_tardiness_summary_by_jenjang_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tardiness_summary_by_jenjang_api_analytics_tardiness_report_summary_by_jenjang_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_v2_rekap_absensi_api_analytics_v2_rekap_absensi_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rekap_absensi_api_analytics_rekap_absensi_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_analytics_summary_api_analytics_summary_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                no_id: number;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
+        };
+    };
+    get_attendance_date_range_api_analytics_attendance_date_range_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_incomplete_summary_api_analytics_incomplete_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_monthly_late_trends_api_analytics_monthly_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_class_leaderboard_api_analytics_class_leaderboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_frequent_offenders_api_analytics_frequent_offenders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_pending_categorization_api_analytics_pending_categorization_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    export_tardiness_report_excel_api_analytics_tardiness_report_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_tardiness_management_excel_api_analytics_tardiness_report_export_management_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_v2_rekap_absensi_excel_api_analytics_v2_rekap_absensi_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_rekap_absensi_excel_api_analytics_rekap_absensi_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_all_jenjangs_analytics_jenjangs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_analytics_filters_analytics_filters_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_late_by_class_analytics_late_by_class_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_late_by_jenjang_analytics_late_by_jenjang_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_late_by_student_analytics_late_by_student_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_rate_per_student_analytics_attendance_rate_students_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_rate_per_jenjang_analytics_attendance_rate_jenjang_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_monthly_late_by_class_analytics_monthly_by_class_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_report_analytics_attendance_report_get: {
+        parameters: {
+            query: {
+                start_date: string;
+                end_date: string;
+                jenjang?: string | null;
+                class_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_intervention_impact_analytics_intervention_impact_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                student_id?: number | null;
+                subject_id?: number | null;
+                term?: string | null;
+                status?: string | null;
+                priority?: string | null;
+                owner_name?: string | null;
+                risk_level?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_management_summary_analytics_management_summary_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_historical_trends_analytics_historical_trends_get: {
+        parameters: {
+            query?: {
+                academic_year_id?: number | null;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                subject_id?: number | null;
+                term?: string | null;
+                from_academic_year_id?: number | null;
+                to_academic_year_id?: number | null;
+                granularity?: string;
+                include_forecast?: boolean;
+                forecast_method?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_management_summary_excel_analytics_management_summary_export_excel_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+                mode?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_management_summary_pdf_analytics_management_summary_export_pdf_get: {
+        parameters: {
+            query: {
+                academic_year_id: number;
+                jenjang_id?: number | null;
+                class_name?: string | null;
+                term?: string | null;
+                subject_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_heb_visibility_analytics_heb_get: {
+        parameters: {
+            query: {
+                month: number;
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tardiness_report_analytics_tardiness_report_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tardiness_summary_by_jenjang_analytics_tardiness_summary_by_jenjang_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tardiness_summary_by_jenjang_analytics_tardiness_report_summary_by_jenjang_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_v2_rekap_absensi_analytics_v2_rekap_absensi_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rekap_absensi_analytics_rekap_absensi_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_analytics_summary_analytics_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_attendance_date_range_analytics_attendance_date_range_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_incomplete_summary_analytics_incomplete_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_monthly_late_trends_analytics_monthly_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_class_leaderboard_analytics_class_leaderboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_frequent_offenders_analytics_frequent_offenders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_pending_categorization_analytics_pending_categorization_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    export_tardiness_report_excel_analytics_tardiness_report_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_tardiness_management_excel_analytics_tardiness_report_export_management_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+                jenjang?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_v2_rekap_absensi_excel_analytics_v2_rekap_absensi_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_rekap_absensi_excel_analytics_rekap_absensi_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: number | null;
+                year?: number | null;
+                date_from?: string | null;
+                date_to?: string | null;
+                term?: number | null;
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -20668,78 +18002,6 @@ export interface operations {
                             };
                         }[];
                     };
-                };
-            };
-        };
-    };
-    export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get: {
-        parameters: {
-            query?: {
-                month?: string | null;
-                year?: string | null;
-            };
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    export_assigned_class_attendance_api_attendance_classes__class_id__attendance_export_excel_get: {
-        parameters: {
-            query: {
-                month: string;
-                year: string;
-            };
-            header?: never;
-            path: {
-                class_id: number;
-            };
-            cookie?: {
-                astyx_session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -21321,6 +18583,413 @@ export interface operations {
             };
         };
     };
+    getApiAnalyticsAttendanceTerm: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_number: string;
+                jenjang_id?: string;
+                program_id?: string;
+                grade_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            term_id: number | null;
+                            term_number: number;
+                            term_label: string;
+                            start_date: string;
+                            end_date: string;
+                            /** @enum {string} */
+                            source: "custom" | "default";
+                        };
+                        scope: {
+                            jenjang_id: number | null;
+                            program_id: number | null;
+                            grade_id: number | null;
+                            class_id: number | null;
+                        };
+                        totals: {
+                            expected_student_days: number;
+                            recorded_student_days: number;
+                            unrecorded_student_days: number;
+                            hadir_count: number;
+                            sakit_count: number;
+                            izin_count: number;
+                            alfa_count: number;
+                            hadir_rate: number | null;
+                            sakit_rate: number | null;
+                            izin_rate: number | null;
+                            alfa_rate: number | null;
+                            late_count: number;
+                            other_status_count: number;
+                            coverage_rate: number | null;
+                            attendance_rate: number | null;
+                            recorded_attendance_rate: number | null;
+                        };
+                        jenjangs: {
+                            jenjang_id: number | null;
+                            jenjang: string;
+                            totals: {
+                                expected_student_days: number;
+                                recorded_student_days: number;
+                                unrecorded_student_days: number;
+                                hadir_count: number;
+                                sakit_count: number;
+                                izin_count: number;
+                                alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
+                                late_count: number;
+                                other_status_count: number;
+                                coverage_rate: number | null;
+                                attendance_rate: number | null;
+                                recorded_attendance_rate: number | null;
+                            };
+                        }[];
+                        programs: {
+                            program_id: number | null;
+                            program: string;
+                            totals: {
+                                expected_student_days: number;
+                                recorded_student_days: number;
+                                unrecorded_student_days: number;
+                                hadir_count: number;
+                                sakit_count: number;
+                                izin_count: number;
+                                alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
+                                late_count: number;
+                                other_status_count: number;
+                                coverage_rate: number | null;
+                                attendance_rate: number | null;
+                                recorded_attendance_rate: number | null;
+                            };
+                        }[];
+                        grades: {
+                            grade_id: number | null;
+                            grade: string;
+                            totals: {
+                                expected_student_days: number;
+                                recorded_student_days: number;
+                                unrecorded_student_days: number;
+                                hadir_count: number;
+                                sakit_count: number;
+                                izin_count: number;
+                                alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
+                                late_count: number;
+                                other_status_count: number;
+                                coverage_rate: number | null;
+                                attendance_rate: number | null;
+                                recorded_attendance_rate: number | null;
+                            };
+                        }[];
+                        classes: {
+                            class_id: number | null;
+                            class_name: string;
+                            totals: {
+                                expected_student_days: number;
+                                recorded_student_days: number;
+                                unrecorded_student_days: number;
+                                hadir_count: number;
+                                sakit_count: number;
+                                izin_count: number;
+                                alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
+                                late_count: number;
+                                other_status_count: number;
+                                coverage_rate: number | null;
+                                attendance_rate: number | null;
+                                recorded_attendance_rate: number | null;
+                            };
+                        }[];
+                        students: {
+                            student_key: string;
+                            totals: {
+                                expected_student_days: number;
+                                recorded_student_days: number;
+                                unrecorded_student_days: number;
+                                hadir_count: number;
+                                sakit_count: number;
+                                izin_count: number;
+                                alfa_count: number;
+                                hadir_rate: number | null;
+                                sakit_rate: number | null;
+                                izin_rate: number | null;
+                                alfa_rate: number | null;
+                                late_count: number;
+                                other_status_count: number;
+                                coverage_rate: number | null;
+                                attendance_rate: number | null;
+                                recorded_attendance_rate: number | null;
+                            };
+                            class_representations: {
+                                class_id: number | null;
+                                class_name: string;
+                            }[];
+                        }[];
+                        quality: {
+                            unknown_calendar_dates: string[];
+                            unknown_calendar_student_days: number;
+                            unresolved_class_student_days: number;
+                            other_status_student_days: number;
+                            report_data_ready: boolean;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiAnalyticsAttendanceTerm-lateness": {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                term_number: string;
+                jenjang_id?: string;
+                program_id?: string;
+                grade_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            academic_year_id: number;
+                            academic_year_label: string;
+                            term_id: number | null;
+                            term_number: number;
+                            term_label: string;
+                            start_date: string;
+                            end_date: string;
+                            /** @enum {string} */
+                            source: "custom" | "default";
+                        };
+                        scope: {
+                            jenjang_id: number | null;
+                            program_id: number | null;
+                            grade_id: number | null;
+                            class_id: number | null;
+                        };
+                        cutoffs: {
+                            jenjang_id: number | null;
+                            jenjang: string;
+                            cutoff_time: string | null;
+                            effective_from: string | null;
+                            /** @enum {string} */
+                            source: "RECORDED" | "BACKFILL_ASSUMED" | "UNCONFIGURED";
+                        }[];
+                        totals: {
+                            expected_student_days: number;
+                            late_events: number;
+                            affected_students: number;
+                            total_late_minutes: number;
+                            average_late_minutes: number | null;
+                            late_event_rate: number | null;
+                        };
+                        classes: {
+                            class_id: number | null;
+                            class_name: string;
+                            totals: {
+                                expected_student_days: number;
+                                late_events: number;
+                                affected_students: number;
+                                total_late_minutes: number;
+                                average_late_minutes: number | null;
+                                late_event_rate: number | null;
+                            };
+                        }[];
+                        students: {
+                            student_key: string;
+                            late_events: number;
+                            total_late_minutes: number;
+                            average_late_minutes: number | null;
+                            class_representations: {
+                                class_id: number | null;
+                                class_name: string;
+                            }[];
+                        }[];
+                        quality: {
+                            unknown_calendar_dates: string[];
+                            unknown_calendar_student_days: number;
+                            unresolved_class_student_days: number;
+                            other_status_student_days: number;
+                            report_data_ready: boolean;
+                            late_events_without_duration: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getApiAnalyticsAttendanceBasis: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                month: string;
+                jenjang_id?: string;
+                program_id?: string;
+                grade_id?: string;
+                class_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceBasisResponse"];
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsOptions: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsOverview: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getAcademicAnalyticsStudents: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
+                search?: string;
+                sort?: "name" | "average" | "formative" | "summative" | "missing";
+                order?: "asc" | "desc";
+                page?: string;
+                page_size?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    exportAcademicAnalyticsExcel: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                jenjang_id?: string;
+                class_id?: string;
+                subject_id?: string;
+                assessment_type?: "sumatif" | "formatif";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+        };
+    };
     getManagementAnalyticsOverview: {
         parameters: {
             query: {
@@ -21346,21 +19015,6 @@ export interface operations {
                 };
             };
         };
-    };
-    "getApiAnalyticsManagement-reviewAttendanceExport.xlsx": {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                term_id: string;
-                jenjang_id: string;
-                program_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
     };
     "getApiAnalyticsManagement-reviewStudent-profile": {
         parameters: {
@@ -21505,65 +19159,31 @@ export interface operations {
         requestBody?: never;
         responses: never;
     };
-    getAcademicAnalyticsOptions: {
+    "getApiAnalyticsManagement-reviewAttendanceExport.xlsx": {
         parameters: {
             query: {
                 academic_year_id: string;
-                jenjang_id?: string;
+                term_id: string;
+                jenjang_id: string;
+                program_id?: string;
             };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-        };
+        responses: never;
     };
-    getAcademicAnalyticsOverview: {
+    getStudentTrendInsights: {
         parameters: {
             query: {
+                window?: "rolling_4w" | "term";
                 academic_year_id: string;
                 jenjang_id?: string;
                 class_id?: string;
-                subject_id?: string;
-                assessment_type?: "sumatif" | "formatif";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    getAcademicAnalyticsStudents: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                jenjang_id?: string;
-                class_id?: string;
-                subject_id?: string;
-                assessment_type?: "sumatif" | "formatif";
+                student_id?: string;
                 search?: string;
-                sort?: "name" | "average" | "formative" | "summative" | "missing";
+                sort?: "name" | "attendance_delta" | "academic_delta" | "tardiness_delta" | "alfa_delta";
                 order?: "asc" | "desc";
                 page?: string;
                 page_size?: string;
@@ -21581,32 +19201,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
-                };
-            };
-        };
-    };
-    exportAcademicAnalyticsExcel: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                jenjang_id?: string;
-                class_id?: string;
-                subject_id?: string;
-                assessment_type?: "sumatif" | "formatif";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                 };
             };
         };
@@ -21642,22 +19236,2583 @@ export interface operations {
             };
         };
     };
-    getStudentTrendInsights: {
+    get_operator_work_queue_api_operator_work_queue_get: {
         parameters: {
-            query: {
-                window?: "rolling_4w" | "term";
-                academic_year_id: string;
-                jenjang_id?: string;
-                class_id?: string;
-                student_id?: string;
-                search?: string;
-                sort?: "name" | "attendance_delta" | "academic_delta" | "tardiness_delta" | "alfa_delta";
-                order?: "asc" | "desc";
-                page?: string;
-                page_size?: string;
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_assignments_api_teacher_class_assignments_get: {
+        parameters: {
+            query?: {
+                user_id?: number | null;
+                academic_year_id?: number | null;
+                academic_class_id?: number | null;
+                active_only?: boolean;
             };
             header?: never;
             path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_create_assignment_api_teacher_class_assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_assignment_endpoint_api_teacher_class_assignments__assignment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_deactivate_assignment_api_teacher_class_assignments__assignment_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_reactivate_assignment_api_teacher_class_assignments__assignment_id__reactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_export_api_student_exports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__student_exports__ExportPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_export_api_student_exports_download_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportDownloadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_student_attendance_history_api_student_masters__student_master_id__attendance_history_export_excel_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                year?: string | null;
+            };
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_academic_masters_api_student_enrollments_academic_master_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicMasterPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_academic_roster_api_student_enrollments_roster_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_preview_academic_roster_api_student_enrollments_roster_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_academic_roster_api_student_enrollments_roster_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademicRosterCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_academic_roster_template_api_student_enrollments_roster_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_rollback_api_student_import_sessions__session_id__rollback_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_rollback_api_student_import_sessions__session_id__rollback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RollbackCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_datasets_api_data_portability_datasets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_export_preview_api_data_portability_exports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__data_portability__ExportPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_export_api_data_portability_exports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_template_api_data_portability_templates__dataset__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dataset: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_import_preview_api_data_portability_imports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_post_import_preview_api_data_portability_imports_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_import_commit_api_data_portability_imports_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__data_portability__ImportCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_error_file_api_data_portability_imports_error_file_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ErrorFileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_history_api_data_portability_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upload_history_api_uploads_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                workflow_type?: string | null;
+                status?: string | null;
+                reconciliation_state?: string | null;
+                actor?: string | null;
+                filename?: string | null;
+                checksum_prefix?: string | null;
+                unresolved_only?: boolean;
+                retry_activity?: boolean;
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_upload_history_csv_api_uploads_history__upload_id__export_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_upload_history_json_api_uploads_history__upload_id__export_json_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upload_history_timeline_api_uploads_history__upload_id__timeline_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upload_history_rows_api_uploads_history__upload_id__rows_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                outcome?: string | null;
+            };
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upload_history_detail_api_uploads_history__upload_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                upload_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_missing_records_api_uploads_missing_records_get: {
+        parameters: {
+            query: {
+                month: number;
+                year: number;
+                class_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_sample_template_api_uploads_sample_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_candidates_api_attendance_followups_candidates_get: {
+        parameters: {
+            query?: {
+                class_id?: number | null;
+                status_filter?: string | null;
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_metrics_summary_api_attendance_followups_metrics_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cases_api_attendance_followups_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                priority?: string | null;
+                exception_kind?: string | null;
+                assigned_to_user_id?: number | null;
+                academic_class_id?: number | null;
+                is_overdue?: boolean | null;
+                unassigned_only?: boolean;
+                my_cases_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_case_api_attendance_followups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFollowUpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_case_history_api_attendance_followups__id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_case_detail_api_attendance_followups__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_case_api_attendance_followups__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFollowUpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    acknowledge_case_api_attendance_followups__id__acknowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_case_api_attendance_followups__id__start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    monitor_case_api_attendance_followups__id__monitor_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_case_api_attendance_followups__id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_case_api_attendance_followups__id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DismissRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_case_api_attendance_followups__id__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__attendance_followups__ReopenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assign_case_api_attendance_followups__id__assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_note_api_attendance_followups__id__notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_assign_api_attendance_followups_bulk_assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_resolve_api_attendance_followups_bulk_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_sections_api_report_builder_sections_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_templates_api_report_builder_templates_get: {
+        parameters: {
+            query?: {
+                template_type?: ("management_summary" | "academic_review" | "intervention_review" | "attendance_review") | null;
+                output_format?: ("pdf" | "excel" | "both") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_template_api_report_builder_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportTemplateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_template_api_report_builder_templates__template_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_template_api_report_builder_templates__template_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_template_api_report_builder_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportTemplateUpdateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_branding_api_report_builder_branding_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_branding_api_report_builder_branding_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportBrandingBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_branding_api_report_builder_branding__branding_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                branding_id: number;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportBrandingUpdateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_report_api_report_builder_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportPreviewBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_report_excel_api_report_builder_export_excel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_report_pdf_api_report_builder_export_pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unresolved_queue_api_upload_conflicts_get: {
+        parameters: {
+            query?: {
+                workflow_type?: ("ATTENDANCE" | "ROSTER") | null;
+                technical_code?: string | null;
+                resolution_status?: ("UNRESOLVED" | "RESOLVED_PENDING_RETRY" | "RETRIED_COMMITTED" | "RETRIED_STILL_BLOCKED") | null;
+                source_session_id?: string | null;
+                retry_eligible?: boolean | null;
+                created_from?: string | null;
+                created_to?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_preview_api_upload_conflicts_retry_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetryPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_commit_api_upload_conflicts_retry_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetryCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conflict_student_candidates_api_upload_conflicts__resolution_item_id__student_candidates_get: {
+        parameters: {
+            query: {
+                query: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                resolution_item_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compare_roster_conflict_api_upload_conflicts__resolution_item_id__roster_comparison_get: {
+        parameters: {
+            query?: {
+                student_master_id?: string | null;
+            };
+            header?: never;
+            path: {
+                resolution_item_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_device_api_upload_conflicts__resolution_item_id__link_device_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resolution_item_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_roster_api_upload_conflicts__resolution_item_id__resolve_roster_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resolution_item_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRosterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conflict_detail_api_upload_conflicts__resolution_item_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resolution_item_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_managed_students_api_student_masters_management_export_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_student_update_workbook_api_student_masters_management_update_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_preview_student_update_workbook_api_student_masters_management_update_preview_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_student_update_workbook_api_student_masters_management_update_commit__batch_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["schemas__student_management__ImportCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    student_update_import_history_api_student_masters_management_import_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    student_update_import_detail_api_student_masters_management_imports__batch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    student_update_result_workbook_api_student_masters_management_imports__batch_id__result_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getStudentOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -21700,13 +21855,16 @@ export interface operations {
             };
         };
     };
-    getStudentOverview: {
+    getDailyAttendanceStatus: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
+            query: {
+                date: string;
+                academic_year_id?: string;
+                jenjang_id?: string;
+                class_id?: string;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -21743,6 +21901,124 @@ export interface operations {
                 };
             };
         };
+    };
+    previewAttendanceCalendarPeriod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    start_date: string;
+                    end_date: string;
+                    /** @enum {string} */
+                    expectation: "EXPECTED" | "NOT_EXPECTED";
+                    /** @enum {string} */
+                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid or out-of-scope period */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    applyAttendanceCalendarPeriod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    start_date: string;
+                    end_date: string;
+                    /** @enum {string} */
+                    expectation: "EXPECTED" | "NOT_EXPECTED";
+                    /** @enum {string} */
+                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
+                    preview_digest: string;
+                    /** @constant */
+                    confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD";
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid or out-of-scope period */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Period preview is stale or application conflicted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putApiAttendanceCalendarDeadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+                "multipart/form-data": {
+                    academic_year_id: number;
+                    jenjang_id: number;
+                    cutoff_time: string | null;
+                };
+            };
+        };
+        responses: never;
     };
     saveAttendanceCalendarWeekday: {
         parameters: {
@@ -21868,7 +22144,7 @@ export interface operations {
             };
         };
     };
-    putApiAttendanceCalendarDeadline: {
+    "postApiAttendanceMachine-importDevice-identitiesLink": {
         parameters: {
             query?: never;
             header?: never;
@@ -21878,113 +22154,40 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    academic_year_id: number;
-                    jenjang_id: number;
-                    cutoff_time: string | null;
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
                 };
                 "application/x-www-form-urlencoded": {
-                    academic_year_id: number;
-                    jenjang_id: number;
-                    cutoff_time: string | null;
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
                 };
                 "multipart/form-data": {
-                    academic_year_id: number;
-                    jenjang_id: number;
-                    cutoff_time: string | null;
+                    device_identifier: string;
+                    student_master_id: string;
+                    effective_from: string;
+                    confirmation: string;
                 };
             };
         };
         responses: never;
     };
-    previewAttendanceCalendarPeriod: {
+    "getApiAttendanceMachine-importStudent-search": {
         parameters: {
-            query?: never;
+            query: {
+                search?: string;
+                academic_year_id: string;
+                jenjang_id: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    academic_year_id: number;
-                    jenjang_id: number;
-                    start_date: string;
-                    end_date: string;
-                    /** @enum {string} */
-                    expectation: "EXPECTED" | "NOT_EXPECTED";
-                    /** @enum {string} */
-                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
-                };
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Invalid or out-of-scope period */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    applyAttendanceCalendarPeriod: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    academic_year_id: number;
-                    jenjang_id: number;
-                    start_date: string;
-                    end_date: string;
-                    /** @enum {string} */
-                    expectation: "EXPECTED" | "NOT_EXPECTED";
-                    /** @enum {string} */
-                    reason: "HOLIDAY" | "SCHOOL_BREAK" | "SCHOOL_CLOSED" | "NON_INSTRUCTIONAL_DAY" | "PROGRAM_NOT_IN_SESSION" | "REPLACEMENT_SCHOOL_DAY" | "SPECIAL_INSTRUCTIONAL_DAY";
-                    preview_digest: string;
-                    /** @constant */
-                    confirmation: "APPLY_ATTENDANCE_CALENDAR_PERIOD";
-                };
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Invalid or out-of-scope period */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Period preview is stale or application conflicted */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+        requestBody?: never;
+        responses: never;
     };
     previewAttendanceMachineImport: {
         parameters: {
@@ -22070,129 +22273,261 @@ export interface operations {
             };
         };
     };
-    "postApiAttendanceMachine-importDevice-identitiesLink": {
+    backup_status_api_admin_backups_status_get: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    device_identifier: string;
-                    student_master_id: string;
-                    effective_from: string;
-                    confirmation: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    device_identifier: string;
-                    student_master_id: string;
-                    effective_from: string;
-                    confirmation: string;
-                };
-                "multipart/form-data": {
-                    device_identifier: string;
-                    student_master_id: string;
-                    effective_from: string;
-                    confirmation: string;
-                };
+            cookie?: {
+                astyx_session?: string | null;
             };
-        };
-        responses: never;
-    };
-    "getApiAttendanceMachine-importStudent-search": {
-        parameters: {
-            query: {
-                search?: string;
-                academic_year_id: string;
-                jenjang_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
         };
         requestBody?: never;
-        responses: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    "getApiAttendanceOverride-review": {
+    list_backups_api_admin_backups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_backup_api_admin_backups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_backup_endpoint_api_admin_backups__filename__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_backup_api_admin_backups__filename__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backup_history_api_admin_backups_history_get: {
         parameters: {
             query?: {
-                academic_year_id?: string;
-                jenjang_id?: string;
-                class_id?: string;
-                date_from?: string;
-                date_to?: string;
-                base_status?: string;
-                effective_status?: string;
-                student_search?: string;
-                page?: string;
-                page_size?: string;
+                limit?: number;
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
-            /** @description Response for status 200 */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        scope: {
-                            academicYearId: number;
-                            academicYearLabel: string;
-                            jenjangId: number | null;
-                            classId: number | null;
-                            dateFrom: string;
-                            dateTo: string;
-                        };
-                        summary: {
-                            corrections: number;
-                        };
-                        total: number;
-                        page: number;
-                        pageSize: number;
-                        items: {
-                            attendanceId: number;
-                            studentId: number;
-                            studentMasterId: string | null;
-                            studentName: string;
-                            classId: number | null;
-                            className: string;
-                            jenjang: string | null;
-                            academicYearId: number;
-                            date: string;
-                            baseStatus: string;
-                            effectiveStatus: string;
-                            correction: {
-                                id: number;
-                                note: string;
-                                reviewedBy: string;
-                                reviewedAt: string;
-                                overrideCheckIn: string | null;
-                                overrideCheckOut: string | null;
-                                /** @constant */
-                                active: true;
-                            };
-                            canEdit: boolean;
-                            links: {
-                                correctionReview: string;
-                                editCorrection: string | null;
-                                student360: string;
-                                class360: string | null;
-                                dailyAttendance: string;
-                            };
-                        }[];
-                    };
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    submit_monthly_absence_ledger: {
+    recovery_history_api_admin_backups_recovery_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scheduler_config_api_admin_backups_scheduler_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_scheduler_config_api_admin_backups_scheduler_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -22203,7 +22538,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ManualAbsenceLedgerActionRequest"];
+                "application/json": components["schemas"]["SchedulerConfigRequest"];
             };
         };
         responses: {
@@ -22213,26 +22548,91 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
+                    "application/json": unknown;
                 };
-            };
-            /** @description Ledger state or period lock conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
-    reopen_monthly_absence_ledger: {
+    post_restore_preflight_api_admin_backups__filename__restore_preflight_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_restore_api_admin_backups__filename__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                filename: string;
+            };
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_data_reset_api_system_data_reset_preview_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -22243,9 +22643,145 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ManualAbsenceLedgerReopenRequest"];
+                "application/json": components["schemas"]["DataResetPreviewRequest"];
             };
         };
+        responses: {
+            /** @description Reset preview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Administrator access or destructive-operation enablement required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_data_reset_api_system_data_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                astyx_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DataResetCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description Reset committed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetResult"];
+                };
+            };
+            /** @description Confirmation phrase does not match the selected scope */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Administrator access or destructive-operation enablement required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Another reset operation is active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Reset failed and all transactional database changes were rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+            /** @description Encrypted pre-reset backup could not be created */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataResetError"];
+                };
+            };
+        };
+    };
+    system_health_api_system_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -22253,48 +22789,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ManualAbsenceLedgerActionResponse"];
-                };
-            };
-            /** @description Ledger state or period lock conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getApiAnalyticsAttendanceBasis: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                month: string;
-                jenjang_id?: string;
-                program_id?: string;
-                grade_id?: string;
-                class_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendanceBasisResponse"];
+                    "application/json": unknown;
                 };
             };
         };

@@ -193,6 +193,8 @@ describe("granular data reset API", () => {
   it("clears school structure but keeps login, backup settings, and a usable API", async () => {
     const value = await setup("all");
     try {
+      value.database.client.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-reset-staff','Synthetic Reset Employee','synthetic reset employee')");
+      value.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,source,created_by) VALUES ('synthetic-reset-staff','2026-10-01','ACTIVE','MANUAL','test')");
       const response = await post(value.enabled, "/api/system/data-reset", { scope: "ALL_SCHOOL_DATA", confirmation: "RESET ALL SCHOOL DATA" }, value.admin);
       const result = await response.json() as any;
       expect(response.status, JSON.stringify(result)).toBe(200);
@@ -201,7 +203,7 @@ describe("granular data reset API", () => {
         "Academic classes and references": 6,
         "School report setup": 3,
       });
-      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings"]) {
+      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings", "staff_employment_history"]) {
         expect(count(value.database.client, table), table).toBe(0);
       }
       expect(count(value.database.client, "users")).toBe(2);

@@ -49,7 +49,7 @@ const STUDENT_PLAN: readonly ResetGroup[] = [
 const SCHOOL_STRUCTURE_PLAN: readonly ResetGroup[] = [
   { domain: "School structure review data", tables: ["academic_master_import_previews"] },
   { domain: "Class assignments", tables: ["teacher_class_assignment_audit", "teacher_class_assignments"] },
-  { domain: "Staff import history", tables: ["staff_import_issues", "staff_import_rows", "staff_import_batches"] },
+  { domain: "Staff import history", tables: ["staff_employment_history", "staff_import_issues", "staff_import_rows", "staff_import_batches"] },
   { domain: "Staff profiles", tables: [
     "staff_jenjang_assignments", "staff_identifiers", "staff_contact_details", "staff_education", "staff_members",
   ] },
