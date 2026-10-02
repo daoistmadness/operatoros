@@ -8,17 +8,19 @@ They preserve checked files, historical exclusions, diagnostic ordering and
 channels, and failure exit `1`. The TOML rules retain Python truthiness for empty
 strings/collections, false, and zero; no parser dependency was added.
 
-`bun test scripts/tests/docs-checkers.test.ts` compares Python and TS CLIs using
+Before retirement, `bun test scripts/tests/docs-checkers.test.ts` compared Python and TS CLIs using
 controlled repositories. Three cases pass with identical exit/stdout/stderr:
 valid inputs; mixed relative/remote/query/fragment/image links with exclusions;
 and developer task/command failures including quoted TOML task names. Both TS
 checkers also pass on this checkout.
 
 The CI docs job now invokes the TS checkers. `AGENTS.md` and `COMMANDS.md` point
-to those commands. Python implementations remain until this job has successfully
-executed the TS commands. The temporary parity test still uses the Python oracle;
-it will become TS-only regression coverage before those implementations are
-removed. Remote CI success is not yet claimed.
+to those commands. The [PR #180 docs job](https://github.com/daoistmadness/operatoros/actions/runs/37059186468/job/111011272344)
+successfully executed both TS commands. A repository-wide caller scan then found
+only the temporary fixture oracle. That oracle is now TS-only regression coverage
+with pinned exit codes, complete stdout/stderr, and diagnostic ordering; the two
+Python checker implementations were removed. CI also runs this Bun test suite.
+No active caller of the removed checkers remains. No parity difference was required.
 
 ## Verification
 
@@ -26,6 +28,8 @@ removed. Remote CI success is not yet claimed.
 - `bun .github/scripts/check-markdown-links.ts`: passed.
 - `bun .github/scripts/check-current-developer-docs.ts`: passed.
 - Targeted TypeScript validation of both scripts: passed.
+- CI docs job on the TS caller cutover: passed; retirement follow-up awaits CI.
+- `git diff --check`: passed.
 
 ## Safety and remaining Python
 
