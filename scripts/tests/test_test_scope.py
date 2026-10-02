@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,25 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 from test_scope import FOCUSED_TESTS, build_scope, classify_path, paths_from_name_status
+
+
+def git_environment_without_repository_state():
+    names = subprocess.run(
+        ["git", "rev-parse", "--local-env-vars"],
+        check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    environment = os.environ.copy()
+    for name in names:
+        environment.pop(name, None)
+    return environment
+
+
+def init_repository(path):
+    subprocess.run(
+        ["git", "init", "-q"], cwd=path,
+        env=git_environment_without_repository_state(), check=True,
+    )
+    assert (path / ".git").is_dir()
 
 
 @pytest.mark.parametrize(
@@ -104,10 +124,16 @@ def test_output_is_deterministic():
 
 
 def test_untracked_source_is_included(tmp_path):
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    init_repository(tmp_path)
     source = tmp_path / "backend/src/new.py"
     source.parent.mkdir(parents=True)
     source.write_text("value = 1\n")
+    status = subprocess.run(
+        ["git", "status", "--short", "--untracked-files=all"], cwd=tmp_path,
+        env=git_environment_without_repository_state(), check=True,
+        capture_output=True, text=True,
+    )
+    assert status.stdout.splitlines() == ["?? backend/src/new.py"]
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts/test_scope.py"), "--repo", str(tmp_path)],
         check=True, capture_output=True, text=True,
@@ -115,6 +141,34 @@ def test_untracked_source_is_included(tmp_path):
     payload = json.loads(result.stdout)
     assert payload["changed_paths"] == ["backend/src/new.py"]
     assert "BACKEND_UNIT" in payload["risk_categories"]
+
+
+def test_explicit_repo_wins_over_inherited_hook_git_environment(tmp_path):
+    repo_a = tmp_path / "repo-a"
+    repo_b = tmp_path / "repo-b"
+    repo_a.mkdir()
+    repo_b.mkdir()
+    init_repository(repo_a)
+    init_repository(repo_b)
+    for repository, name in ((repo_a, "selected.py"), (repo_b, "outer.py")):
+        source = repository / "backend/src" / name
+        source.parent.mkdir(parents=True)
+        source.write_text("value = 1\n")
+
+    environment = git_environment_without_repository_state()
+    environment.update({
+        "GIT_DIR": str(repo_b / ".git"),
+        "GIT_WORK_TREE": str(repo_b),
+        "GIT_COMMON_DIR": str(repo_b / ".git"),
+        "GIT_INDEX_FILE": str(repo_b / ".git" / "index"),
+        "GIT_PREFIX": "",
+    })
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/test_scope.py"), "--repo", str(repo_a)],
+        env=environment, check=True, capture_output=True, text=True,
+    )
+    payload = json.loads(result.stdout)
+    assert payload["changed_paths"] == ["backend/src/selected.py"]
 
 
 def test_every_mapped_test_exists():
