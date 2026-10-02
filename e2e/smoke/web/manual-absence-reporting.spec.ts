@@ -84,6 +84,10 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await saveMonth(page, "2026-08", { "Primary 1A": [2, 0, 0], "Primary 1B": [0, 0, 0] });
   await saveMonth(page, "2026-09", { "Primary 1A": [5, 2, 1], "Primary 1B": [0, 0, 0] });
   await page.reload();
+  const monthSelect = page.getByLabel("Bulan", { exact: true });
+  await expect(monthSelect.locator('option[value="2026-09"]')).toHaveCount(1);
+  await monthSelect.selectOption("2026-09");
+  await expect(monthSelect).toHaveValue("2026-09");
   await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("5");
   await expect(page.getByLabel("izin Primary 1B", { exact: true })).toHaveValue("0");
 
