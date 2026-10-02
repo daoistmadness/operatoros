@@ -37,6 +37,24 @@ export function actor(context: AuthContext, ctx: Context, requirement: { role?: 
   return null;
 }
 
+function staffMutationAudit(
+  client: AuthContext["database"]["client"],
+  user: CurrentUser,
+  operation: "STAFF_UPDATE" | "STAFF_JENJANG_REPLACE" | "STAFF_EDUCATION_CREATE" | "STAFF_EDUCATION_UPDATE" | "STAFF_EDUCATION_DELETE",
+  entityType: "STAFF" | "STAFF_EDUCATION",
+  entityId: string | number,
+  changedFields: string[],
+  metadata: Record<string, unknown> = {},
+): void {
+  client.run(`INSERT INTO operations_audit_events
+    (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation,
+     risk_level, source, success, failure_code, changed_fields, metadata, schema_version)
+    VALUES (?, ?, ?, 'manage_staff', ?, ?, ?, 'MEDIUM', 'API', 1, NULL, ?, ?, '1')`, [
+    randomUUID(), user.username, user.role, entityType, String(entityId), operation,
+    JSON.stringify(changedFields), JSON.stringify(metadata),
+  ]);
+}
+
 function asBool(value: unknown): boolean {
   return value === true || value === 1 || value === "1";
 }
@@ -468,19 +486,100 @@ function registerStaff(app: any, context: AuthContext): void {
     const items = rows(client, "SELECT id, education_level, institution_name, major, graduation_year, notes, created_at, updated_at FROM staff_education WHERE staff_member_id = ? ORDER BY graduation_year DESC, id DESC", [params.staff_id]); const order = ["S3", "S2", "S1", "D4", "D3", "D2", "D1", "SMA", "SMK", "SMP", "SD"]; const highest = items.slice().sort((a, b) => order.indexOf(a.education_level) - order.indexOf(b.education_level))[0] ?? null; return { items, highest_education_level: highest?.education_level ?? null, highest_education_institution: highest?.institution_name ?? null };
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }) });
   app.patch("/api/staff/:staff_id", ({ params, body, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; const value = row(client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]); if (!value) return error(set, 404, "Staff member not found"); const end = body.employment_end_date || null; if (end && value.employment_start_date && end < value.employment_start_date) return error(set, 422, "employment_end_date cannot be earlier than employment_start_date"); try { client.run("UPDATE staff_members SET employment_end_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [end, params.staff_id]); return row(client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]); } catch { return error(set, 409, "Duplicate or referenced staff data"); }
+    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    const value = row(client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]);
+    if (!value) return error(set, 404, "Staff member not found");
+    const end = body.employment_end_date || null;
+    if (end && value.employment_start_date && end < value.employment_start_date) return error(set, 422, "employment_end_date cannot be earlier than employment_start_date");
+    try {
+      return inTransaction(client, () => {
+        const result = client.run("UPDATE staff_members SET employment_end_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [end, params.staff_id]);
+        if (Number(result.changes) !== 1) throw new Error("Staff member was not updated");
+        const updated = row(client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]);
+        if (!updated) throw new Error("Updated staff member could not be read");
+        staffMutationAudit(client, user, "STAFF_UPDATE", "STAFF", params.staff_id, ["employment_end_date"]);
+        return updated;
+      });
+    } catch { return error(set, 409, "Duplicate or referenced staff data"); }
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), body: t.Object({ employment_end_date: t.Optional(t.String()) }) });
   app.put("/api/staff/:staff_id/jenjangs", ({ params, body, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; if (!row(client, "SELECT id FROM staff_members WHERE id = ?", [params.staff_id])) return error(set, 404, "Staff member not found"); const ids = body.jenjang_ids; if (new Set(ids).size !== ids.length) return error(set, 422, "Duplicate jenjang assignment"); const placeholders = ids.map(() => "?").join(","); const canonical = ids.length ? rows(client, `SELECT id, active FROM jenjangs WHERE id IN (${placeholders})`, ids) : []; if (canonical.length !== ids.length) return error(set, 422, "Unknown jenjang"); const existing = rows(client, "SELECT jenjang_id FROM staff_jenjang_assignments WHERE staff_member_id = ?", [params.staff_id]).map((value) => Number(value.jenjang_id)); if (canonical.some((value) => !value.active && !existing.includes(Number(value.id)))) return error(set, 422, "Only active jenjang may be newly assigned"); try { inTransaction(client, () => { client.run("DELETE FROM staff_jenjang_assignments WHERE staff_member_id = ?", [params.staff_id]); for (const id of ids) client.run("INSERT INTO staff_jenjang_assignments (staff_member_id, jenjang_id) VALUES (?, ?)", [params.staff_id, id]); }); return row(client, "SELECT id, full_name FROM staff_members WHERE id = ?", [params.staff_id]); } catch { return error(set, 409, "Duplicate or referenced staff data"); }
+    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    if (!row(client, "SELECT id FROM staff_members WHERE id = ?", [params.staff_id])) return error(set, 404, "Staff member not found");
+    const ids = body.jenjang_ids as number[];
+    if (new Set(ids).size !== ids.length) return error(set, 422, "Duplicate jenjang assignment");
+    const placeholders = ids.map(() => "?").join(",");
+    const canonical = ids.length ? rows(client, `SELECT id, active FROM jenjangs WHERE id IN (${placeholders})`, ids) : [];
+    if (canonical.length !== ids.length) return error(set, 422, "Unknown jenjang");
+    try {
+      const result = inTransaction(client, () => {
+        const previous = rows(client, "SELECT jenjang_id FROM staff_jenjang_assignments WHERE staff_member_id = ?", [params.staff_id])
+          .map((value) => Number(value.jenjang_id)).sort((a, b) => a - b);
+        if (canonical.some((value) => !value.active && !previous.includes(Number(value.id)))) return { error: "inactive" as const };
+        client.run("DELETE FROM staff_jenjang_assignments WHERE staff_member_id = ?", [params.staff_id]);
+        for (const id of ids) client.run("INSERT INTO staff_jenjang_assignments (staff_member_id, jenjang_id) VALUES (?, ?)", [params.staff_id, id]);
+        staffMutationAudit(client, user, "STAFF_JENJANG_REPLACE", "STAFF", params.staff_id, ["jenjang_ids"], {
+          previous_jenjang_ids: previous,
+          resulting_jenjang_ids: [...ids].sort((a, b) => a - b),
+        });
+        return { error: null };
+      });
+      if (result.error === "inactive") return error(set, 422, "Only active jenjang may be newly assigned");
+      return row(client, "SELECT id, full_name FROM staff_members WHERE id = ?", [params.staff_id]);
+    } catch { return error(set, 409, "Duplicate or referenced staff data"); }
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), body: t.Object({ jenjang_ids: t.Array(t.Number({ minimum: 1 }), { maxItems: 32 }) }) });
   app.post("/api/staff/:staff_id/education", ({ params, body, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; if (!row(client, "SELECT id FROM staff_members WHERE id = ?", [params.staff_id])) return error(set, 404, "Staff member not found"); const level = body.education_level.trim().toUpperCase(); if (!["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"].includes(level)) return error(set, 422, "Unsupported education level"); try { const result = client.run("INSERT INTO staff_education (staff_member_id, education_level, institution_name, major, graduation_year, notes) VALUES (?, ?, ?, ?, ?, ?)", [params.staff_id, level, body.institution_name.trim(), body.major?.trim() || null, body.graduation_year ?? null, body.notes?.trim() || null]); set.status = 201; return row(client, "SELECT * FROM staff_education WHERE id = ?", [Number(result.lastInsertRowid)]); } catch { return error(set, 409, "Duplicate or referenced staff data"); }
+    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    if (!row(client, "SELECT id FROM staff_members WHERE id = ?", [params.staff_id])) return error(set, 404, "Staff member not found");
+    const level = body.education_level.trim().toUpperCase();
+    if (!["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"].includes(level)) return error(set, 422, "Unsupported education level");
+    try {
+      const created = inTransaction(client, () => {
+        const result = client.run("INSERT INTO staff_education (staff_member_id, education_level, institution_name, major, graduation_year, notes) VALUES (?, ?, ?, ?, ?, ?)", [params.staff_id, level, body.institution_name.trim(), body.major?.trim() || null, body.graduation_year ?? null, body.notes?.trim() || null]);
+        const educationId = Number(result.lastInsertRowid);
+        const value = row(client, "SELECT * FROM staff_education WHERE id = ?", [educationId]);
+        if (!value) throw new Error("Created education record could not be read");
+        staffMutationAudit(client, user, "STAFF_EDUCATION_CREATE", "STAFF_EDUCATION", educationId, ["education_record"], { staff_id: params.staff_id });
+        return value;
+      });
+      set.status = 201;
+      return created;
+    } catch { return error(set, 409, "Duplicate or referenced staff data"); }
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), body: educationBody });
   app.patch("/api/staff/:staff_id/education/:education_id", ({ params, body, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; const existing = row(client, "SELECT * FROM staff_education WHERE id = ? AND staff_member_id = ?", [params.education_id, params.staff_id]); if (!existing) return error(set, 404, "Education record not found"); const level = body.education_level.trim().toUpperCase(); if (!["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"].includes(level)) return error(set, 422, "Unsupported education level"); try { client.run("UPDATE staff_education SET education_level = ?, institution_name = ?, major = ?, graduation_year = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [level, body.institution_name.trim(), body.major?.trim() || null, body.graduation_year ?? null, body.notes?.trim() || null, existing.id]); return row(client, "SELECT * FROM staff_education WHERE id = ?", [existing.id]); } catch { return error(set, 409, "Duplicate or referenced staff data"); }
+    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    const existing = row(client, "SELECT * FROM staff_education WHERE id = ? AND staff_member_id = ?", [params.education_id, params.staff_id]);
+    if (!existing) return error(set, 404, "Education record not found");
+    const level = body.education_level.trim().toUpperCase();
+    if (!["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"].includes(level)) return error(set, 422, "Unsupported education level");
+    try {
+      return inTransaction(client, () => {
+        const result = client.run("UPDATE staff_education SET education_level = ?, institution_name = ?, major = ?, graduation_year = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND staff_member_id = ?", [level, body.institution_name.trim(), body.major?.trim() || null, body.graduation_year ?? null, body.notes?.trim() || null, existing.id, params.staff_id]);
+        if (Number(result.changes) !== 1) throw new Error("Education record was not updated");
+        const updated = row(client, "SELECT * FROM staff_education WHERE id = ?", [existing.id]);
+        if (!updated) throw new Error("Updated education record could not be read");
+        staffMutationAudit(client, user, "STAFF_EDUCATION_UPDATE", "STAFF_EDUCATION", existing.id,
+          ["education_level", "institution_name", "major", "graduation_year", "notes"], { staff_id: params.staff_id });
+        return updated;
+      });
+    } catch { return error(set, 409, "Duplicate or referenced staff data"); }
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }), education_id: t.Number({ minimum: 1 }) }), body: educationBody });
   app.delete("/api/staff/:staff_id/education/:education_id", ({ params, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" }; const client = context.database.client; if (!row(client, "SELECT id FROM staff_education WHERE id = ? AND staff_member_id = ?", [params.education_id, params.staff_id])) return error(set, 404, "Education record not found"); try { client.run("DELETE FROM staff_education WHERE id = ?", [params.education_id]); set.status = 204; return undefined; } catch { return error(set, 409, "Education record could not be deleted"); }
+    const user = actor(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    if (!row(client, "SELECT id FROM staff_education WHERE id = ? AND staff_member_id = ?", [params.education_id, params.staff_id])) return error(set, 404, "Education record not found");
+    try {
+      inTransaction(client, () => {
+        const result = client.run("DELETE FROM staff_education WHERE id = ? AND staff_member_id = ?", [params.education_id, params.staff_id]);
+        if (Number(result.changes) !== 1) throw new Error("Education record was not deleted");
+        staffMutationAudit(client, user, "STAFF_EDUCATION_DELETE", "STAFF_EDUCATION", params.education_id, ["education_record"], { staff_id: params.staff_id });
+      });
+      set.status = 204;
+      return undefined;
+    } catch { return error(set, 409, "Education record could not be deleted"); }
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }), education_id: t.Number({ minimum: 1 }) }) });
 }
 

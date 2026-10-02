@@ -9,3 +9,4 @@ export * from "./classes";
 export * from "./readiness";
 export * from "./academic-masters";
 export * from "./system";
+export * from "./config";

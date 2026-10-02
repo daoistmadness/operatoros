@@ -81,7 +81,7 @@ function HebConfig() {
   const [rows, setRows] = useState<HebRow[]>([]);
   const [editingKey, setEditingKey] = useState("");
   const [deleteConfirmKey, setDeleteConfirmKey] = useState("");
-  const [form, setForm] = useState({ heb_value: "", note: "", set_by: "" });
+  const [form, setForm] = useState({ heb_value: "", note: "" });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -172,14 +172,13 @@ function HebConfig() {
     setForm({
       heb_value: String(row.override_heb ?? row.heb ?? ""),
       note: row.note || "",
-      set_by: row.override_set_by || "",
     });
   }, []);
 
   const closeForm = useCallback(() => {
     setEditingKey("");
     setDeleteConfirmKey("");
-    setForm({ heb_value: "", note: "", set_by: "" });
+    setForm({ heb_value: "", note: "" });
   }, []);
 
   const handleRefresh = async () => {
@@ -203,11 +202,6 @@ function HebConfig() {
       return;
     }
 
-    if (!form.set_by.trim()) {
-      setError("Kolom Set by wajib diisi.");
-      return;
-    }
-
     setSubmitting(true);
     setMessage("");
     setError("");
@@ -216,7 +210,6 @@ function HebConfig() {
       await api.put(`/api/config/heb/${encodeURIComponent(row.jenjang)}/${row.year}/${row.month}`, {
         heb_value: hebValue,
         note: form.note.trim(),
-        set_by: form.set_by.trim(),
       });
       await loadData(activeYear);
       setMessage(`Override ${row.jenjang} untuk ${getMonthLabel(row.month)} ${row.year} disimpan.`);
@@ -399,23 +392,13 @@ function HebConfig() {
                                   />
                                 </div>
 
-                                <div className="space-y-2">
-                                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Set by</label>
-                                  <input
-                                    type="text"
-                                    value={form.set_by}
-                                    onChange={(event) => setForm((prev) => ({ ...prev, set_by: event.target.value }))}
-                                    placeholder="Nama admin"
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5"
-                                  />
-                                </div>
                               </div>
 
                               <div className="flex flex-wrap gap-2">
                                 <button
                                   type="button"
                                   onClick={() => handleSave(row)}
-                                  disabled={submitting || !form.set_by.trim()}
+                                  disabled={submitting}
                                   className="px-4 py-2.5 rounded-xl bg-brand text-white font-semibold hover:bg-brand-hover disabled:opacity-50"
                                 >
                                   {submitting ? "Menyimpan..." : "Simpan Override"}

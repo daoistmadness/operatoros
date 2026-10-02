@@ -26,6 +26,7 @@
     "./readiness": "./src/readiness/index.ts",
     "./academic-masters": "./src/academic-masters/index.ts",
     "./system": "./src/system/index.ts",
+    "./config": "./src/config/index.ts",
     "./excel": "./src/excel.ts"
   }
 }
