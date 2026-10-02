@@ -1,8 +1,9 @@
 # Python tooling migration: Phase 0 evidence
 
 Phase 0 establishes the Python behavior oracle and TypeScript candidates before
-caller cutover. No active caller has been switched and no active Python
-implementation has been removed in this unit.
+caller cutover. The Ubuntu compatibility workflow's disposable DB bootstrap is
+the only active caller switched in this unit. No active Python implementation
+has been removed.
 
 ## Scope
 
@@ -11,6 +12,7 @@ implementation has been removed in this unit.
 - [Existing TS runtime](../../scripts/operatoros-dev-runtime.ts): restore JSON status/cleanup/owned-stop output, allocation exit `4`, checkout identity, shared port metadata marking, and compatibility worktree-role fields.
 - [Existing DB CLI](../../packages/db/src/dev-db-cli.ts): implement `ensure`, `status`, `path`, `reset`, `candidates`, and `adopt` using canonical bootstrap and schema validation.
 - [DB CLI coverage](../../packages/db/tests/dev-db-cli.test.ts): 12 synthetic tests covering current creation/adoption, reset preconditions, open handles, corrupt state, symlinks, protected-looking paths, and S4.2/S4.3 preservation/refusal.
+- Ubuntu compatibility CI now bootstraps its disposable DB with the TS CLI. Its Python `ensure` step failed with `PERSISTENT_DEVELOPMENT_DATABASE_INITIALIZATION_FAILED`; the TS bootstrap is covered by the focused CLI and canonical DB tests.
 
 The [historical S4.3 wrapper](../migration/legacy-tooling/s43_migration.py) was
 archived byte-for-byte after the owner's clarification. The
@@ -104,12 +106,16 @@ Checks executed for this unit:
 - `bun packages/db/scripts/python-tooling-parity.ts`: passed with the four documented differences above.
 - `bun run typecheck:launcher` and `bun --filter @operatoros/db typecheck`: passed.
 - Targeted `bunx tsc --noEmit --target ESNext --module ESNext --moduleResolution bundler --types bun --typeRoots packages/db/node_modules/@types --strict --skipLibCheck scripts/test-scope.ts scripts/tests/test-scope.test.ts packages/db/scripts/python-tooling-parity.ts`: passed before the latest candidate changes; repeated validation accompanies subsequent units.
-- `bun run check:architecture`: passed before candidate repairs; repeated validation accompanies subsequent units.
+- `bun run check:architecture`: passed with candidate repairs; zero exceptions.
+- `bun run lint`: passed.
+- `git fetch origin main`; `mise run check:affected`: passed, including 268 API tests and all eight selected graph tasks.
 - Retained Python Markdown-link and current developer-doc checks: passed before candidate repairs.
 - `mise run doctor`, with a disposable data-root override: passed.
 - `mise run test:fast`, with the changed candidate paths and disposable data-root override: passed, including canonical DB tests and the 10-test fresh DB parity gate.
-- `git diff --check`: passed before candidate repairs; repeated validation accompanies subsequent units.
+- `git diff --check`: passed, including staged new files.
 
 No protected DB or unrelated worktree was accessed or modified. No architecture,
 authentication, or schema boundary was weakened. Existing `.rtk/` and `CLAUDE.md`
-entries remain untouched. E2E and remote CI have not yet been run for this unit.
+entries remain untouched. E2E has not been run. Remote CI is running on draft
+PR #179; its original Ubuntu bootstrap failure prompted the scoped TS caller
+fix above. Full CI success is not yet established.
