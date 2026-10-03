@@ -20,11 +20,9 @@ test("CLI preserves the selected path, validation diagnostic, and failure status
   const rejected = run(`${runtime}-sibling/operatoros.sqlite`); expect(rejected.exitCode).toBe(2); expect(rejected.stdout.toString()).toBe(""); expect(rejected.stderr.toString()).toContain("E2E database must be inside the disposable E2E runtime root");
 });
 
-// Retained static isolation coverage scans frozen source without opening any DB.
+// Backend Python retired: no backend sources may exist to reference protected paths.
 test("historical backend protected-path references remain restricted to safety evidence", () => {
-  const allowed = new Set(["test_dev_launcher.py", "test_fresh_database_parity.py", "test_operational_migration_access_context.py", "test_protected_database_isolation.py", "test_s310d_schema_safety.py", "test_s39_import_provenance_migration.py", "test_s43_startup_smoke.py"]);
-  const offenders = readdirSync(join(repository, "backend/tests")).filter(name => /^test_.*\.py$/.test(name) && !allowed.has(name) && /backend\/attendance\.db|PROTECTED_DB_PATH/.test(readFileSync(join(repository, "backend/tests", name), "utf8")));
-  expect(offenders).toEqual([]);
+  expect(existsSync(join(repository, "backend"))).toBe(false);
 });
 test("test tiers clear guard-only metadata before starting suites", () => {
   const source = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
