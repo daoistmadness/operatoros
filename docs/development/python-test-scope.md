@@ -1,5 +1,9 @@
 # Python tooling Phase 1D: test scope caller cutover
 
+The subsequent [workspace/scope cutover](python-e2e-workspace.md) completed
+retirement of `test_scope.py`, its Python tests, and the temporary parity runner.
+The evidence below records the earlier caller-only cutover.
+
 `Makefile:test-scope` and `scripts/test-tier.sh` now use `scripts/test-scope.ts`.
 The existing mise tiers delegate to these callers. The classifier preserves the
 Python changed-path decisions; 37 deterministic parity cases passed in Phase 0.

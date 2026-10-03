@@ -65,7 +65,7 @@ backend_full() {
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
 tooling_tests() {
-  bun test "$repo/scripts/tests/test-scope.test.ts" "$repo/scripts/tests/dev-runtime.test.ts" "$repo/scripts/tests/worktree-safety.test.ts" "$repo/scripts/tests/docs-checkers.test.ts"
+  bun test "$repo"/scripts/tests/*.test.ts
 }
 
 case "$tier" in
@@ -111,7 +111,7 @@ case "$tier" in
   release)
     echo "selected_suites=fresh-db-parity,protected-data-safety,api,bun-tests,bun-build,boundaries,api-drift,typecheck,ui-package,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
-    "$python" -m pytest "$repo/scripts/tests/test_backend_protected_database_isolation.py" -q
+    bun test "$repo/scripts/tests/e2e-workspace.test.ts"
     passes=1
     reliable_change_context=no
     [[ -n "${TEST_BASE_REVISION:-}" || -n "${TEST_CHANGED_FILES:-}" ]] && reliable_change_context=yes
