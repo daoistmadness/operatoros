@@ -3,16 +3,13 @@ import { rmSync } from "node:fs";
 import { appendRow, loadXlsxWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
-import { python } from "./python";
+import { createStudentFixture } from "./fixtures/students";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["OperatorOS Student UUID", "Record Version", "Legal Name", "Preferred Name", "NIPD", "NISN", "NIK", "Birth Place", "Birth Date", "Gender", "Religion", "Student Status", "Address", "Kelurahan", "Kecamatan", "City", "Province", "Postal Code", "Phone", "Email", "Guardian Name", "Guardian Phone", "Attendance Device No. ID", "Device Source", "Academic Year ID", "Academic Year", "Academic Class ID", "Class"];
 
 function seed(path: string): void {
-  const script = "from pathlib import Path; import sqlite3, sys, uuid; sys.path.insert(0, 'backend/src'); from core.schema_migrations import bootstrap_fresh_sqlite_database; from argon2 import PasswordHasher; path=Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db=sqlite3.connect(path); ph=PasswordHasher(); db.execute('INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,1)', ('golden-admin',ph.hash('golden-admin-pass-1'),'admin')); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')\", ('11111111-1111-1111-1111-111111111111','Andi','andi')); db.commit(); db.close()";
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createStudentFixture(path, "update");
 }
 
 function cookie(response: Response): string {

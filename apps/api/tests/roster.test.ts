@@ -3,15 +3,12 @@ import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
-import { python } from "./python";
+import { createStudentFixture } from "./fixtures/students";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function seed(path: string): void {
-  const script = "from pathlib import Path; import sqlite3, sys, uuid; sys.path.insert(0, 'backend/src'); from core.schema_migrations import bootstrap_fresh_sqlite_database; from argon2 import PasswordHasher; path=Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db=sqlite3.connect(path); ph=PasswordHasher(); db.execute('INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,1)', ('golden-admin',ph.hash('golden-admin-pass-1'),'admin')); db.execute(\"INSERT INTO academic_years (label,start_date,end_date,is_default,status) VALUES ('2026/2027-roster','2026-07-01','2027-06-30',1,'active')\"); db.execute(\"INSERT INTO jenjangs (name,code,level,active) VALUES ('SMP','SMP','junior',1)\"); db.execute(\"INSERT INTO academic_programs (jenjang_id,name,active) VALUES (1,'Science',1)\"); db.execute(\"INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (1,1,'Grade 7',1,1)\"); db.execute(\"INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,1,'7A','A',1)\"); master=str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?, 'Andi', 'andi', 'active')\", (master,)); db.execute(\"INSERT INTO students (id,name) VALUES (123,'Andi')\"); db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active,created_by) VALUES (?,123,'123','attendance_machine','2026-07-01',1,'seed')\", (master,)); db.commit(); db.close()";
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createStudentFixture(path, "roster");
 }
 
 function cookie(response: Response): string {
