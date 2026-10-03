@@ -35,15 +35,14 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 6. Records disposable database counts, checksum, and a deterministic enrollment fingerprint.
 7. Starts the Elysia backend and frontend through the E2E-owned stack.
 8. Copies the ready launcher state into the invocation workspace and exports its backend and frontend URLs.
-9. Runs the backend smoke tests with the backend virtual environment.
-10. Runs Playwright browser tests with the selected native Linux Node runtime.
-11. Stops only the recorded OperatorOS session and waits for its launcher.
-12. Recomputes the disposable checksum and enrollment fingerprint, failing if the disposable fixture violates its expected boundary.
-13. Writes `e2e-results/summary.txt`; detailed logs, JUnit XML, screenshots, and traces are retained only where configured or needed for diagnosis.
+9. Runs the Bun-native backend smoke suite and Playwright browser tests with the selected native Linux Node runtime.
+10. Stops only the recorded OperatorOS session and waits for its launcher.
+11. Recomputes the disposable checksum and enrollment fingerprint, failing if the disposable fixture violates its expected boundary.
+12. Writes `e2e-results/summary.txt`; detailed logs, JUnit XML, screenshots, and traces are retained only where configured or needed for diagnosis.
 
 ## 4. Runtime responsibilities
 
-The Elysia application stack uses native Linux Bun. Seeding, snapshots, gate cleanup, verification, and port selection are Bun-native. The backend smoke suite (`e2e/smoke/backend/`) remains an isolated pytest gate until its Bun port lands. Playwright 1.55.1 collection uses the installed native Linux Node runtime resolved by mise.
+The Elysia application stack uses native Linux Bun. Seeding, snapshots, gate cleanup, verification, port selection, and the backend smoke suite are Bun-native. Playwright 1.55.1 collection uses the installed native Linux Node runtime resolved by mise.
 
 The smoke runner records the native Node path before narrowing `PATH`. It then invokes the installed Playwright CLI directly. Bun remains the package manager and Elysia runtime for the candidate stack.
 
