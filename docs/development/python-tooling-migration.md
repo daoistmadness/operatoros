@@ -1,5 +1,10 @@
 # Python tooling migration: Phase 0 evidence
 
+This section records the Phase 0 baseline. The subsequent [runtime cutover](python-dev-runtime.md)
+retired the runtime/config Python oracle after live-process comparisons and Bun
+regression coverage. The dedicated gate now runs the remaining 50 DB/scope cases;
+the original 71-case evidence below remains the cutover baseline.
+
 Phase 0 establishes the Python behavior oracle and TypeScript candidates before
 caller cutover. The Ubuntu compatibility workflow's disposable DB bootstrap is
 the only active caller switched in this unit. No active Python implementation

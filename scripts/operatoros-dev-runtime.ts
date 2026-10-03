@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 type Json = Record<string, any>;
-type ProcessInfo = { pid: number; ppid: number; pgid: number; start_ticks: string; cwd: string; argv: string[]; uid: number; state: string };
+export type ProcessInfo = { pid: number; ppid: number; pgid: number; start_ticks: string; cwd: string; argv: string[]; uid: number; state: string };
 type Decision = { pid?: number; pgid?: number; start_ticks?: string; port: number; ownership_decision: string; session_id?: string | null; role?: string | null; candidate_repository?: string; [key: string]: unknown };
 const argv = process.argv.slice(2);
 const action = argv.shift() ?? "";
@@ -16,12 +16,17 @@ const number = (name: string) => { const value = Number(required(name)); if (!Nu
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 const contained = (path: string, root: string) => { const value = relative(root, path); return value === "" || (value !== ".." && !value.startsWith("../") && !isAbsolute(value)); };
 const now = () => new Date().toISOString();
+const canonical = (path: string) => existsSync(path) ? realpathSync(path) : resolve(path);
+const gitEnv = { ...process.env };
+for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete gitEnv[key];
 
-function command(parts: string[]): string | undefined {
-  const result = Bun.spawnSync(parts, { stdout: "pipe", stderr: "pipe" });
-  return result.exitCode === 0 ? result.stdout.toString().trim() : undefined;
+function command(parts: string[], env = process.env): string | undefined {
+  try {
+    const result = Bun.spawnSync(parts, { env, stdout: "pipe", stderr: "pipe" });
+    return result.exitCode === 0 ? result.stdout.toString().trim() : undefined;
+  } catch { return undefined; }
 }
-function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args]); }
+function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args], gitEnv); }
 function commonDir(repo: string): string {
   const value = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir");
   if (!value) throw new Error("SESSION_REGISTRY_UNAVAILABLE");
@@ -38,7 +43,7 @@ function checkoutIdentity(repo: string): Json | undefined {
     commit: commit.slice(0, 12), commit_full: commit, upstream,
     status: changes === undefined ? "unknown" : changes ? "dirty" : "clean", ahead: counts?.[0] ?? null, behind: counts?.[1] ?? null };
 }
-function primaryPath(): string {
+export function primaryPath(): string {
   const configured = process.env.OPERATOROS_PRIMARY_CHECKOUT_PATH;
   const value = configured?.startsWith("~/") ? join(homedir(), configured.slice(2)) : configured || join(homedir(), "code/repos/operatoros");
   if (!isAbsolute(value)) throw new Error("PRIMARY_CHECKOUT_CONFIGURATION_INVALID");
@@ -55,7 +60,7 @@ function entry(repo: string, session: string): string {
 function sessionDir(runtime: string, session: string): string {
   if (!/^[a-zA-Z0-9_-]+$/.test(session)) throw new Error("SESSION_PATH_ESCAPE_REJECTED");
   const path = join(runtime, "sessions", session);
-  if (existsSync(path) && lstatSync(path).isSymbolicLink()) throw new Error("SESSION_PATH_ESCAPE_REJECTED");
+  if ([join(runtime, "sessions"), path].some(value => existsSync(value) && lstatSync(value).isSymbolicLink())) throw new Error("SESSION_PATH_ESCAPE_REJECTED");
   return path;
 }
 function json(path: string): Json | undefined { try { return JSON.parse(readFileSync(path, "utf8")); } catch { return undefined; } }
@@ -83,22 +88,30 @@ function valid(record: Json | undefined, repo: string, role: string): ProcessInf
   if (!contained(info.cwd, repo) && !info.argv.some((word) => word.includes(repo))) return undefined;
   return info;
 }
-function matchingService(info: ProcessInfo, repo: string, role: string): boolean {
+export function matchingService(info: ProcessInfo, repo: string, role: string): boolean {
   const app = join(repo, role === "frontend" ? "apps/web" : "apps/api");
   if (!contained(info.cwd, app)) return false;
   return role === "frontend" ? info.argv.some((word) => ["vite", "vite.js"].includes(basename(word)))
-    : info.argv.some((word) => word.includes("server.ts"));
+    : info.argv.some((word) => resolve(info.cwd, word) === join(app, "src/server.ts"));
 }
 function records(runtime: string, repo: string): { dir: string; session: Json }[] {
   const found: { dir: string; session: Json }[] = [];
   const seen = new Set<string>();
-  for (const root of [registry(repo), join(runtime, "sessions")]) {
+  const shared = registry(repo);
+  for (const root of [shared, join(runtime, "sessions")]) {
     if (!existsSync(root)) continue;
+    if (lstatSync(root).isSymbolicLink()) throw new Error("SESSION_PATH_ESCAPE_REJECTED");
     for (const name of readdirSync(root)) {
       const dir = join(root, name);
       if (lstatSync(dir).isSymbolicLink() || !lstatSync(dir).isDirectory()) continue;
       const session = json(join(dir, "session.json"));
+      if (root === shared && session?.worktreePath && !existsSync(session.worktreePath)) {
+        const owner = json(join(dir, "ownership.json"));
+        if (owner?.application === "OperatorOS" && owner.session_id === session.session_id && session.session_id === name) rmSync(dir, { recursive: true });
+        continue;
+      }
       if (!session || seen.has(String(session.session_id))) continue;
+      session.session_id ||= name;
       seen.add(String(session.session_id)); found.push({ dir, session });
     }
   }
@@ -113,9 +126,14 @@ async function portFree(host: string, port: number): Promise<boolean> {
   });
 }
 function listeners(port: number): number[] {
-  const output = command(["lsof", "-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"])
-    ?? command(["fuser", `${port}/tcp`]) ?? "";
-  return [...new Set(output.split(/\s+/).filter((word) => /^\d+$/.test(word)).map(Number))];
+  for (const args of [["lsof", "-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"], ["fuser", `${port}/tcp`]]) {
+    try {
+      const output = Bun.spawnSync(args, { stdout: "pipe", stderr: "pipe" });
+      const pids = [...new Set(`${output.stdout} ${output.stderr}`.split(/\s+/).filter(word => /^\d+$/.test(word)).map(Number))].sort((a, b) => a - b);
+      if (pids.length) return pids;
+    } catch { /* Try the existing fallback if the executable is unavailable. */ }
+  }
+  return [];
 }
 async function classify(runtime: string, repo: string, port: number): Promise<Decision[]> {
   const pids = listeners(port);
@@ -123,19 +141,25 @@ async function classify(runtime: string, repo: string, port: number): Promise<De
   for (const pid of pids) {
     const info = processInfo(pid);
     let decision = "UNKNOWN_OWNER", session_id: string | undefined, role: string | undefined, candidate_repository: string | undefined;
+    let extra: Json = {};
     for (const { dir, session } of records(runtime, repo)) {
       for (const candidate of ["frontend", "backend"]) {
         const record = json(join(dir, `${candidate}.pid`));
         if (Number(record?.pid) !== pid || Number(record?.port) !== port) continue;
         const worktree = sessionRepo(session, repo);
         session_id = String(session.session_id); role = candidate;
-        if (!info || info.start_ticks !== String(record?.start_ticks)) break;
-        if (!matchingService(info, worktree, candidate) || info.uid !== process.getuid?.()) break;
+        if (!info) { if (worktree === repo) decision = "SAME_WORKTREE_STALE_SESSION"; break; }
+        if (info.start_ticks !== String(record?.start_ticks) || info.state === "Z") break;
+        if (!session.worktreePath && valid(record, repo, candidate)) {
+          decision = worktree === repo ? "OPERATOROS_ACTIVE" : "OTHER_WORKTREE_ACTIVE_SESSION";
+        } else if (!matchingService(info, worktree, candidate) || info.uid !== process.getuid?.()) break;
+        else if (worktree === repo) decision = valid(json(join(dir, "launcher.pid")), repo, "launcher") ? "OPERATOROS_ACTIVE" : "OPERATOROS_STALE";
         if (worktree !== repo) {
           decision = commonDir(worktree) === commonDir(repo) ? "OTHER_WORKTREE_ACTIVE_SESSION" : "OPERATOROS_OTHER_CHECKOUT";
           candidate_repository = worktree;
-        } else {
-          decision = valid(json(join(dir, "launcher.pid")), repo, "launcher") ? "OPERATOROS_ACTIVE" : "OPERATOROS_STALE";
+          const identity = checkoutIdentity(worktree);
+          extra = { candidate_common: session.repoCommonDir || session.repo_common_dir || commonDir(repo), service: candidate,
+            candidate_branch: identity?.branch || session.branch || "detached", candidate_commit: identity?.commit || session.commit || "unknown" };
         }
         break;
       }
@@ -143,29 +167,36 @@ async function classify(runtime: string, repo: string, port: number): Promise<De
     }
     if (decision === "UNKNOWN_OWNER" && info && info.uid === process.getuid?.()) {
       const candidate = git(info.cwd, "rev-parse", "--show-toplevel");
-      if (candidate && ["frontend", "backend"].some((kind) => matchingService(info, candidate, kind))) {
+      const service = candidate && ["frontend", "backend"].find(kind => matchingService(info, candidate, kind));
+      if (candidate && service && ["api", "web"].every(app => json(join(candidate, `apps/${app}/package.json`))?.name === `@operatoros/${app}`)) {
         decision = candidate === repo ? "OPERATOROS_CURRENT_CHECKOUT" :
           commonDir(candidate) === commonDir(repo) ? "OPERATOROS_OTHER_WORKTREE" : "OPERATOROS_OTHER_CHECKOUT";
         candidate_repository = candidate;
+        const identity = checkoutIdentity(candidate);
+        extra = { candidate_common: commonDir(candidate), current_common: commonDir(repo), candidate_branch: identity?.branch, candidate_commit: identity?.commit, service };
+        role ||= service;
       } else decision = "FOREIGN_PROCESS";
     }
     result.push({ pid, ...(info ? { parent_pid: info.ppid, pgid: info.pgid, start_ticks: info.start_ticks, cwd: info.cwd, uid: info.uid, state: info.state } : {}),
       port, listening_address: `127.0.0.1:${port}`, ownership_decision: decision, session_id: session_id ?? null, role: role ?? null,
-      ...(candidate_repository ? { candidate_repository } : {}) });
+      ...(candidate_repository ? { candidate_repository } : {}), ...extra });
   }
-  if (!pids.length && !await portFree("127.0.0.1", port)) result.push({ port, ownership_decision: "UNKNOWN_OWNER" });
+  if (!pids.length && !await portFree("127.0.0.1", port)) result.push({ port, ownership_decision: "UNKNOWN_OWNER", reason: "listener PID unavailable" });
   return result;
 }
 function groupAlive(pgid: number): boolean {
   return readdirSync("/proc").some((name) => /^\d+$/.test(name) && ((info) => info?.pgid === pgid && info.state !== "Z")(processInfo(Number(name))));
 }
 async function stopGroups(owned: { role: string; pid: number }[], timeout: number): Promise<number> {
-  const deadline = Date.now() + timeout * 1000;
+  const identities = new Map(owned.map(item => [item.pid, processInfo(item.pid)?.start_ticks]));
+  const deadline = Date.now() + Math.max(0.1, timeout) * 1000;
   let remaining = owned;
   for (const signal of ["SIGINT", "SIGTERM", "SIGKILL"] as const) {
     for (const item of remaining) {
       if (!groupAlive(item.pid)) continue;
-      process.kill(-item.pid, signal);
+      const leader = processInfo(item.pid);
+      if (leader && (leader.pgid !== item.pid || leader.uid !== process.getuid?.() || leader.start_ticks !== identities.get(item.pid))) throw new Error(`PROCESS_GROUP_OWNERSHIP_UNVERIFIED:${item.role}:${item.pid}`);
+      try { process.kill(-item.pid, signal); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ESRCH") continue; throw error; }
       console.log(`[cleanup] Sent ${signal} to verified ${item.role} group ${item.pid}`);
     }
     const phaseEnd = signal === "SIGKILL" ? deadline : Math.min(deadline, Date.now() + timeout * 1000 / 3);
@@ -187,7 +218,7 @@ function ownedChildren(runtime: string, repo: string, session: string, fallbacks
   for (const item of fallbacks) {
     if (owned.some((value) => value.pid === item.pid)) continue;
     const info = processInfo(item.pid);
-    if (info && info.pgid === info.pid && info.uid === process.getuid?.() && matchingService(info, repo, item.role)) owned.push(item);
+    if (info && info.pgid === info.pid && info.uid === process.getuid?.() && info.argv.some(word => word.includes(repo)) && matchingService(info, repo, item.role)) owned.push(item);
   }
   return owned;
 }
@@ -208,9 +239,10 @@ function finalize(runtime: string, repo: string, session: string): void {
   }
   const ownership = json(join(dir, "ownership.json"));
   if (ownership?.application !== "OperatorOS" || ownership.session_id !== session) throw new Error("CORRUPT_OWNERSHIP_MARKER");
-  if (ownedChildren(runtime, repo, session).length) throw new Error("ACTIVE_OWNED_SESSION");
+  for (const role of ["frontend", "backend"]) if (valid(json(join(dir, `${role}.pid`)), repo, role)) throw new Error(`ACTIVE_OWNED_SESSION:${role}`);
   const value = json(join(dir, "session.json"));
-  if (value?.database_path && contained(resolve(value.database_path), dir)) throw new Error("SESSION_DATABASE_OWNERSHIP_FORBIDDEN");
+  if (!value) return;
+  if (value.database_path && contained(canonical(value.database_path), canonical(dir))) throw new Error("SESSION_DATABASE_OWNERSHIP_FORBIDDEN");
   rmSync(dir, { recursive: true });
   if (verifiedShared) rmSync(shared, { recursive: true });
   const active = join(runtime, "active-session");
@@ -233,7 +265,17 @@ async function main(): Promise<void> {
     for (let port = start; port <= end; port++) if (await portFree(host, port)) return void console.log(port);
     console.error(`no free port in ${start}-${maximum}`); process.exitCode = 4; return;
   }
-  const repo = resolve(required("repo"));
+  if (action === "mark") {
+    const runtime = canonical(required("runtime")), session = required("session"), dir = sessionDir(runtime, session);
+    if (!json(join(dir, "session.json"))) return;
+    const shared = option("repo") ? entry(canonical(required("repo")), session) : undefined;
+    for (const path of [join(dir, "session.json"), ...(shared ? [join(shared, "session.json"), join(shared, "ports.json")] : []), join(runtime, "ports.json")]) {
+      const value = json(path); if (value?.session_id !== session) continue;
+      value.status = required("status"); value[`${value.status}_at`] = now(); atomicJson(path, value);
+    }
+    return;
+  }
+  const repo = canonical(required("repo"));
   if (action === "checkout-identity") {
     const identity = checkoutIdentity(repo);
     console.log(JSON.stringify(identity ?? { error: "CHECKOUT_IDENTITY_UNAVAILABLE", repository: repo }));
@@ -241,7 +283,7 @@ async function main(): Promise<void> {
     return;
   }
   if (action === "registry-path") return void console.log(registry(repo));
-  const runtime = resolve(required("runtime"));
+  const runtime = canonical(required("runtime"));
   if (action === "classify-port") {
     const decisions = await classify(runtime, repo, number("port"));
     return void console.log(flag("decision") ? (decisions[0]?.ownership_decision ?? "NO_LISTENER") : JSON.stringify(decisions));
@@ -250,8 +292,13 @@ async function main(): Promise<void> {
     const host = option("host") ?? "127.0.0.1", port = number("port");
     const decisions = await classify(runtime, repo, port);
     if (!decisions.length && await portFree(host, port)) return;
-    if (flag("no-clean") || decisions.some((item) => item.ownership_decision !== "OPERATOROS_STALE")) {
-      for (const item of decisions) if (!flag("human")) console.log(JSON.stringify(item)); else console.log((item.ownership_decision === "FOREIGN_PROCESS"
+    for (const item of decisions.filter(item => item.ownership_decision === "SAME_WORKTREE_STALE_SESSION")) {
+      if (!item.session_id || !item.role) continue;
+      for (const path of [sessionDir(runtime, item.session_id), entry(repo, item.session_id)]) rmSync(join(path, `${item.role}.pid`), { force: true });
+    }
+    const live = decisions.filter(item => item.ownership_decision !== "SAME_WORKTREE_STALE_SESSION");
+    if (live.some(item => flag("no-clean") || item.ownership_decision !== "OPERATOROS_STALE")) {
+      for (const item of live.filter(item => flag("no-clean") || item.ownership_decision !== "OPERATOROS_STALE")) if (!flag("human")) console.log(JSON.stringify(item)); else console.log((item.ownership_decision === "FOREIGN_PROCESS"
         ? `Port ${port} is in use by a non-OperatorOS process. No process was terminated.`
         : `Port ${port} has a protected listener (${item.ownership_decision}). No process was terminated.${item.candidate_repository ? ` Running checkout: ${item.candidate_repository}. Use ./start-dev.sh --auto-port or ./stop-dev.sh there.` : ""}`)
         + (item.pid ? `\nPID: ${item.pid}` : "")
@@ -259,12 +306,13 @@ async function main(): Promise<void> {
       process.exitCode = 3; return;
     }
     const owned: { role: string; pid: number }[] = [];
-    for (const item of decisions) {
+    for (const item of live) {
       const fresh = (await classify(runtime, repo, port)).find((other) => other.pid === item.pid && other.start_ticks === item.start_ticks && other.pgid === item.pid && other.ownership_decision === "OPERATOROS_STALE");
-      if (!fresh?.pid) throw new Error("PORT_OWNERSHIP_CHANGED");
+      if (!fresh?.pid) { console.log("[blocked] Process ownership changed; no signal sent"); process.exitCode = 3; return; }
       owned.push({ role: item.role ?? "service", pid: fresh.pid });
     }
-    if (await stopGroups(owned, Number(option("timeout") ?? 5)) || !await portFree(host, port)) throw new Error("PORT_DID_NOT_RELEASE");
+    if (await stopGroups(owned, Number(option("timeout") ?? 2)) || !await portFree(host, port)) { console.log(`[blocked] Port ${port} did not release`); process.exitCode = 3; return; }
+    console.log(`[cleanup] Port ${port} released`);
     return;
   }
   if (action === "status") {
@@ -356,18 +404,15 @@ async function main(): Promise<void> {
     }
     return;
   }
-  if (action === "mark") {
-    for (const path of [join(dir, "session.json"), join(shared, "session.json"), join(shared, "ports.json"), join(runtime, "ports.json")]) {
-      const value = json(path); if (value?.session_id !== session) continue;
-      value.status = required("status"); value[`${value.status}_at`] = now(); atomicJson(path, value);
-    }
-    return;
-  }
   if (action === "stop-owned-session" || action === "stop") {
     const sessions = action === "stop" && flag("all") ? records(runtime, repo).filter(({ session }) => sessionRepo(session, repo) === repo).map(({ session }) => String(session.session_id)) : [session];
     for (const id of sessions) {
       const fallbacks = ["frontend", "backend"].flatMap((role) => option(`${role}-pid`) ? [{ role, pid: Number(option(`${role}-pid`)) }] : []);
       const owned = ownedChildren(runtime, repo, id, fallbacks);
+      if (action === "stop") for (const role of ["frontend", "backend"]) {
+        const record = json(join(sessionDir(runtime, id), `${role}.pid`));
+        if (record && !owned.some(item => item.role === role && item.pid === Number(record.pid))) console.log(`[blocked] Refusing to stop unverified ${role} PID record`);
+      }
       const remaining = await stopGroups(owned, Number(option("timeout") ?? (action === "stop-owned-session" ? 10 : 2)));
       if (action === "stop-owned-session") console.log(flag("human") ? `[cleanup] Owned groups: ${owned.length}; remaining: ${remaining}` : JSON.stringify({ session: id, owned_groups: owned.length, remaining_groups: remaining, deadline_seconds: Number(option("timeout") ?? 10) }));
       else if (!remaining) {
@@ -385,4 +430,6 @@ async function main(): Promise<void> {
   throw new Error("UNKNOWN_COMMAND");
 }
 
-try { await main(); } catch (error) { console.error(error instanceof Error ? error.message : "RUNTIME_ERROR"); process.exitCode = 2; }
+if (import.meta.main) {
+  try { await main(); } catch (error) { console.error(error instanceof Error ? error.message : "RUNTIME_ERROR"); process.exitCode = 2; }
+}

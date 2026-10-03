@@ -2,7 +2,6 @@
 /** Temporary cutover gate. Python is deliberately retained as the behavior oracle. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -37,18 +36,17 @@ export function compare(name: string, python: Result, typescript: Result): Compa
       reason = "The canonical TS validator replaces the Python repr-based schema checksum inspector.";
     }
   }
-  if (["runtime:init-session", "db:adopt-current"].includes(name)) {
+  if (name === "db:adopt-current") {
     const tighten = (before: any, after: any): void => {
       if (!before || !after || typeof before !== "object" || typeof after !== "object") return;
       for (const key of Object.keys(before)) {
         if (key === "mode" && typeof before[key] === "number" && typeof after[key] === "number" &&
           (after[key] & before[key]) === after[key] && (after[key] & 0o700) === (before[key] & 0o700)) before[key] = after[key];
-        else if (name === "runtime:init-session" && key === "launcher" && before[key] === "wsl" && after[key] === "linux") before[key] = "linux";
         else tighten(before[key], after[key]);
       }
     };
     tighten(expected.effects, typescript.effects);
-    reason = name === "runtime:init-session" ? "Retain TS owner-only permissions and native Linux launcher metadata." : "Retain TS owner-only permissions on the adopted database.";
+    reason = "Retain TS owner-only permissions on the adopted database.";
   }
   const intentionalDifference = differences.length && reason && isDeepStrictEqual(expected, typescript) ? reason : undefined;
   return { name, matched: !differences.length, ...(intentionalDifference ? { intentionalDifference } : {}), differences, python, typescript };
@@ -98,20 +96,8 @@ export async function runParity(): Promise<Comparison[]> {
   const git = Bun.spawnSync(["git", "init", "-q", repo], { env, stdout: "pipe", stderr: "pipe" });
   if (git.exitCode !== 0) throw new Error(git.stderr.toString());
   const registry = join(repo, ".git/operatoros-dev-sessions");
-  const launcher = Bun.spawn(["sleep", "120"], { cwd: repo, env, stdout: "ignore", stderr: "ignore" });
-  const server = createServer();
-  const livePort = await new Promise<number>((done, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => { const address = server.address(); if (address && typeof address !== "string") done(address.port); });
-  });
-  const freeServer = createServer();
-  const freePort = await new Promise<number>((done, reject) => {
-    freeServer.once("error", reject);
-    freeServer.listen(0, "127.0.0.1", () => { const address = freeServer.address(); if (address && typeof address !== "string") freeServer.close(() => done(address.port)); });
-  });
-  const run = (implementation: Implementation, tool: "runtime" | "db" | "scope", args: string[], effects: () => unknown = () => null): Result => {
+  const run = (implementation: Implementation, tool: "db" | "scope", args: string[], effects: () => unknown = () => null): Result => {
     const paths = {
-      runtime: ["scripts/operatoros-dev-runtime.py", "scripts/operatoros-dev-runtime.ts"],
       db: ["scripts/development_database.py", "packages/db/src/dev-db-cli.ts"],
       scope: ["scripts/test_scope.py", "scripts/test-scope.ts"],
     };
@@ -120,25 +106,17 @@ export async function runParity(): Promise<Comparison[]> {
     return { exitCode: result.exitCode, stdout: output(result.stdout.toString()), stderr: result.stderr.toString().trim(), effects: effects() };
   };
   const reset = () => { for (const path of [runtime, data, registry]) rmSync(path, { recursive: true, force: true }); };
-  const runtimeEffects = () => ({ runtime: snapshot(runtime), registry: snapshot(registry) });
   const dbEffects = () => ({ data: snapshot(data), runtime: snapshot(runtime) });
-  const runtimeArgs = ["--repo", repo, "--runtime", runtime];
   const dbArgs = ["--repo", repo, "--data-dir", data, "--expected-schema", CURRENT_SCHEMA_VERSION];
-  const caseFor = (name: string, tool: "runtime" | "db", args: string[], setup: () => void = () => {}, effects = tool === "runtime" ? runtimeEffects : dbEffects) => {
+  const caseFor = (name: string, tool: "db", args: string[], setup: () => void = () => {}, effects = dbEffects) => {
     const values = (["python", "typescript"] as const).map((implementation) => { reset(); setup(); return run(implementation, tool, args, effects); });
     const expectedExits: Record<string, number> = {
-      "runtime:cleanup-foreign": 3, "runtime:allocate-occupied": 4,
-      "runtime:finalize-bad-owner": 2, "runtime:finalize-session-database": 2,
       "db:adopt-missing-source": 2, "db:adopt-existing-destination": 2,
       "db:reset-no-confirmation": 2, "db:ensure-invalid": 2, "db:ensure-schema-expectation": 2,
     };
     if (values[0]!.exitCode !== (expectedExits[name] ?? 0)) throw new Error(`Python baseline failed for ${name}: ${JSON.stringify(values[0])}`);
     const expectedOutputs: Record<string, unknown> = {
-      "runtime:status-empty": { state: "NO_ACTIVE_SESSION" },
-      "runtime:status-stale-pointer": { state: "STALE_SESSION_UNVERIFIED" },
-      "runtime:status-stopped": { state: "STALE_VERIFIED" },
-      "runtime:classify-free": [], "runtime:classify-foreign-decision": "FOREIGN_PROCESS",
-      "runtime:allocate-free": freePort, "db:candidates-empty": [],
+      "db:candidates-empty": [],
     };
     if (name in expectedOutputs && !isDeepStrictEqual(values[0]!.stdout, expectedOutputs[name])) throw new Error(`Python baseline output changed for ${name}`);
     results.push(compare(name, values[0]!, values[1]!));
@@ -172,27 +150,6 @@ export async function runParity(): Promise<Comparison[]> {
       if (reference.exitCode !== 0) throw new Error(`Python scope baseline failed: ${JSON.stringify(reference)}`);
       results.push(compare(`scope:${changed.length === 1 ? changed[0] : `mixed-${changed.length}`}`, reference, run("typescript", "scope", args)));
     }
-    caseFor("runtime:status-empty", "runtime", ["status", ...runtimeArgs]);
-    caseFor("runtime:status-stale-pointer", "runtime", ["status", ...runtimeArgs], () => { mkdirSync(runtime); writeFileSync(join(runtime, "active-session"), "absent\n"); });
-    caseFor("runtime:status-stopped", "runtime", ["status", ...runtimeArgs], stoppedSession);
-    caseFor("runtime:classify-free", "runtime", ["classify-port", ...runtimeArgs, "--port", String(freePort)]);
-    caseFor("runtime:classify-foreign-decision", "runtime", ["classify-port", ...runtimeArgs, "--port", String(livePort), "--decision"]);
-    caseFor("runtime:cleanup-foreign", "runtime", ["cleanup-port", ...runtimeArgs, "--host", "127.0.0.1", "--port", String(livePort), "--no-clean"]);
-    caseFor("runtime:cleanup-free", "runtime", ["cleanup-port", ...runtimeArgs, "--host", "127.0.0.1", "--port", String(freePort)]);
-    caseFor("runtime:allocate-free", "runtime", ["allocate", "--host", "127.0.0.1", "--preferred", String(freePort), "--maximum", String(freePort)]);
-    caseFor("runtime:allocate-occupied", "runtime", ["allocate", "--host", "127.0.0.1", "--preferred", String(livePort), "--maximum", String(livePort)]);
-    caseFor("runtime:init-session", "runtime", ["init-session", ...runtimeArgs, "--session", "fixture", "--mode", "dev", "--token", "synthetic-token", "--javascript-runtime", "bun", "--javascript-runtime-version", Bun.version, "--launcher-pid", String(launcher.pid), "--frontend-host", "127.0.0.1", "--backend-host", "127.0.0.1", "--frontend-port", "45123", "--backend-port", "45124", "--backend-runtime", "elysia", "--database-path", join(data, "operatoros.sqlite")]);
-    caseFor("runtime:register-dead-process", "runtime", ["register", ...runtimeArgs, "--session", "fixture", "--role", "backend", "--token", "synthetic-token", "--pid", "2147483647", "--port", "45124"], stoppedSession);
-    caseFor("runtime:mark", "runtime", ["mark", ...runtimeArgs, "--session", "fixture", "--status", "ready"], stoppedSession);
-    caseFor("runtime:finalize", "runtime", ["finalize-session", ...runtimeArgs, "--session", "fixture"], stoppedSession);
-    caseFor("runtime:finalize-bad-owner", "runtime", ["finalize-session", ...runtimeArgs, "--session", "fixture"], () => { stoppedSession(); writeFileSync(join(runtime, "sessions/fixture/ownership.json"), "{}"); });
-    caseFor("runtime:finalize-session-database", "runtime", ["finalize-session", ...runtimeArgs, "--session", "fixture"], () => { stoppedSession(); writeFileSync(join(runtime, "sessions/fixture/session.json"), JSON.stringify({ session_id: "fixture", database_path: join(runtime, "sessions/fixture/state/operatoros.sqlite") })); });
-    caseFor("runtime:require-no-active-session", "runtime", ["require-no-active-session", ...runtimeArgs], stoppedSession);
-    caseFor("runtime:stop-empty", "runtime", ["stop", ...runtimeArgs]);
-    caseFor("runtime:stop-stopped-session", "runtime", ["stop", ...runtimeArgs], stoppedSession);
-    caseFor("runtime:stop-owned-empty", "runtime", ["stop-owned-session", ...runtimeArgs, "--session", "fixture", "--timeout", "1"], stoppedSession);
-    caseFor("runtime:checkout-identity", "runtime", ["checkout-identity", "--repo", repo]);
-    caseFor("runtime:registry-path", "runtime", ["registry-path", "--repo", repo]);
     caseFor("db:path", "db", ["path", "--repo", repo, "--data-dir", data]);
     caseFor("db:status-missing", "db", ["status", ...dbArgs]);
     caseFor("db:status-invalid", "db", ["status", ...dbArgs], () => { mkdirSync(data); writeFileSync(join(data, "operatoros.sqlite"), "synthetic invalid sqlite"); });
@@ -214,8 +171,6 @@ export async function runParity(): Promise<Comparison[]> {
     results.push(compare("db:canonical-schema-validity", { exitCode: 0, stdout: { schema_checksum_valid: state.schema_checksum_valid }, stderr: "", effects: null }, { exitCode: 0, stdout: { schema_checksum_valid: true }, stderr: "", effects: null }));
     return results;
   } finally {
-    server.close(); freeServer.close();
-    launcher.kill(); await launcher.exited;
     rmSync(root, { recursive: true, force: true });
   }
 }

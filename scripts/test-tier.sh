@@ -64,6 +64,9 @@ backend_full() {
   (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
+tooling_tests() {
+  bun test "$repo/scripts/tests/test-scope.test.ts" "$repo/scripts/tests/dev-runtime.test.ts" "$repo/scripts/tests/worktree-safety.test.ts" "$repo/scripts/tests/docs-checkers.test.ts"
+}
 
 case "$tier" in
   fast)
@@ -71,7 +74,7 @@ case "$tier" in
       echo "selected_suites=documentation-static-only"
     elif [[ "$schema_sensitive" == yes ]]; then
       echo "selected_suites=classifier-tests,db-package,ui-package,fresh-db-parity"
-      bun test "$repo/scripts/tests/test-scope.test.ts"
+      tooling_tests
       (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun run check:ui && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
       make -C "$repo" fresh-db-parity
     else
@@ -100,7 +103,7 @@ case "$tier" in
     frontend_static
     (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:ui && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
     (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
-    bun test "$repo/scripts/tests/test-scope.test.ts"
+    tooling_tests
     backend_full
     scenario_grep="$(bun -e 'const items=(await Bun.file(process.argv[1]).json()).browser_scenarios; console.log(items.length ? items.map(item=>"@"+item).join("|") : "@release")' "$scope_file")"
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke

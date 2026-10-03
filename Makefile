@@ -46,10 +46,10 @@ dev-db-status:
 	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py status --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
 
 dev-sessions-status:
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && "$$python_tooling" scripts/operatoros-dev-runtime.py status --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
+	@bun scripts/operatoros-dev-runtime.ts status --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
 
 dev-db-reset:
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && "$$python_tooling" scripts/operatoros-dev-runtime.py require-no-active-session --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
+	@bun scripts/operatoros-dev-runtime.ts require-no-active-session --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
 	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA" --confirm "$(CONFIRM)"
 
 dev-db-candidates:
