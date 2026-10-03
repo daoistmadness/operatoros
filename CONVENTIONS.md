@@ -1,10 +1,9 @@
 # Conventions
 
 ## Naming
-- Python modules, variables, and functions use `snake_case`.
 - React components, context providers, hook modules, and page files use `PascalCase` when they represent components or pages.
 - SQL migration files are date-stamped and descriptive, for example `2026_04_02_dashboard_performance_indexes.sql`.
-- Utility scripts use descriptive imperative names, for example `generate_primary_lateness_dashboard.py`.
+- Utility scripts use descriptive imperative names, for example `create-test-workspace.ts`.
 
 ## Organization
 - Backend routes live in `apps/api/src/domains/` and `apps/api/src/auth/`.
@@ -14,7 +13,6 @@
 - Shared UI and API helpers live in `apps/web/src/components/` and `apps/web/src/lib/`.
 
 ## Formatting
-- **Python**: Follow PEP8 standards. Indentation uses 4 spaces.
 - **JavaScript / TypeScript / CSS / HTML / JSON**: Indentation uses 2 spaces. Semicolons are preferred in JavaScript and TypeScript.
 - **Markdown**: Use standard headers and lists. Do not backtick-wrap the display text of links (e.g. write `[link text](README.md)` rather than `[`link text`](README.md)`).
 
