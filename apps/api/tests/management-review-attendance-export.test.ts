@@ -3,57 +3,13 @@ import { rmSync } from "node:fs";
 import { openDatabase } from "@operatoros/db";
 import { loadXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
-import { python } from "./python";
+import { createAttendanceReviewFixture } from "./fixtures/attendance-review";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "operatoros-test-cookie-secret-32-chars";
 const exportPath = "/api/analytics/management-review/attendance/export.xlsx";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import importlib.util, sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_academic(path)",
-    "db = sqlite3.connect(path)",
-    "year_id = db.execute(\"SELECT id FROM academic_years WHERE label = '2026/2027-academic'\").fetchone()[0]",
-    "jenjang_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SMP'\").fetchone()[0]",
-    "program_id = db.execute(\"SELECT id FROM academic_programs WHERE jenjang_id = ?\", (jenjang_id,)).fetchone()[0]",
-    "grade_id = db.execute(\"SELECT id FROM academic_grades WHERE program_id = ?\", (program_id,)).fetchone()[0]",
-    "class_a = db.execute(\"SELECT id FROM academic_classes WHERE academic_year_id = ?\", (year_id,)).fetchone()[0]",
-    "db.execute(\"UPDATE academic_classes SET class_name = '7A' WHERE id = ?\", (class_a,))",
-    "class_b = db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, '7B', '7B', 1)\", (year_id, grade_id)).lastrowid",
-    "term_id = db.execute(\"INSERT INTO academic_term_configs (academic_year_id, term_number, label, start_date, end_date) VALUES (?, 1, 'Term 1', '2026-08-03', '2026-08-13')\", (year_id,)).lastrowid",
-    "enrollment_id = db.execute(\"SELECT id FROM student_enrollments WHERE academic_year_id = ? AND student_master_id = '11111111-1111-1111-1111-111111111111'\", (year_id,)).fetchone()[0]",
-    "db.execute(\"UPDATE student_enrollments SET student_id = 701, academic_class_id = ?, class_name = '7B' WHERE id = ?\", (class_b, enrollment_id))",
-    "db.execute(\"UPDATE student_masters SET nipd = '000123' WHERE id = '11111111-1111-1111-1111-111111111111'\")",
-    "late_only_id = '33333333-3333-3333-3333-333333333333'",
-    "db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, nipd, student_status, created_by, updated_by) VALUES (?, 'Late-only Synthetic', 'late-only synthetic', 'E2E-LATE-ONLY', 'active', 'synthetic-test', 'synthetic-test')\", (late_only_id,))",
-    "late_only_student_id = db.execute(\"INSERT INTO students (name, jenjang, class_name) VALUES ('Late-only Synthetic', 'SMP', '7B')\").lastrowid",
-    "db.execute(\"INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, effective_from, effective_to) VALUES (?, ?, ?, ?, ?, '7B', 1, '2026-08-09', '2026-08-09')\", (late_only_student_id, late_only_id, year_id, jenjang_id, class_b))",
-    "db.executemany(\"INSERT INTO student_enrollment_class_history (enrollment_id, class_name, effective_from, effective_to, changed_by, source) VALUES (?, ?, ?, ?, 'synthetic-test', 'synthetic-test')\", [(enrollment_id, '7A', '2026-08-03', '2026-08-05'), (enrollment_id, '7B', '2026-08-06', None)])",
-    "db.execute(\"INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES ('SMP', '07:30', '2026-08-01')\")",
-    "db.execute(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?, '2026-08-01', '07:30', 'RECORDED', 'synthetic-test', CURRENT_TIMESTAMP, 'Synthetic policy')\", (jenjang_id,))",
-    "db.executemany(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id, jenjang_id, weekday, expectation) VALUES (?, ?, ?, ?)\", [(year_id, jenjang_id, day, 'NOT_EXPECTED' if day in (0, 6) else 'EXPECTED') for day in range(7)])",
-    "attendance = [(701, '2026-08-03', '07:20', 'on-time'), (701, '2026-08-04', None, 'sakit'), (701, '2026-08-05', '08:00', 'late'), (701, '2026-08-06', '07:40', 'late'), (701, '2026-08-07', None, 'sakit'), (701, '2026-08-10', None, 'late'), (701, '2026-08-11', None, 'izin'), (701, '2026-08-12', None, 'alfa')]",
-    "db.executemany(\"INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (?, ?, ?, '16:00', 0, 'synthetic-test', 0, ?)\", attendance)",
-    "db.execute(\"INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (?, '2026-08-09', '08:00', '16:00', 0, 'synthetic-test', 0, 'late')\", (late_only_student_id,))",
-    "corrected_id = db.execute(\"SELECT id FROM attendance WHERE student_id = 701 AND date = '2026-08-04'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, note, reviewed_by, reviewed_at) VALUES (?, 'sakit', 'on-time', '07:25', 'Synthetic correction', 'golden-admin', '2026-08-04T10:00:00Z')\", (corrected_id,))",
-    "checkin_id = db.execute(\"SELECT id FROM attendance WHERE student_id = 701 AND date = '2026-08-06'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, note, reviewed_by, reviewed_at) VALUES (?, 'late', 'late', '07:25', 'Synthetic check-in correction', 'golden-admin', '2026-08-06T10:00:00Z')\", (checkin_id,))",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: {
-    ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret,
-    OPERATOROS_ISOLATED_TEST: "true", BYPASS_STUDENT_LINKING_GATE: "true",
-  } });
-  if (result.exitCode !== 0) {
-    rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true });
-    throw new Error(result.stderr.toString());
-  }
+  createAttendanceReviewFixture(path);
 }
 
 function cookie(response: Response): string {

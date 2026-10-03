@@ -40,29 +40,13 @@ if [[ -n "${TEST_CHANGED_FILES:-}" ]]; then
 elif [[ -n "${TEST_BASE_REVISION:-}" ]]; then
   scope_args+=(--base "$TEST_BASE_REVISION" --head "${TEST_HEAD_REVISION:-HEAD}")
 fi
-"$python" "$repo/scripts/test_scope.py" "${scope_args[@]}" >"$scope_file"
+bun "$repo/scripts/test-scope.ts" "${scope_args[@]}" >"$scope_file"
 
-"$python" - "$scope_file" <<'PY'
-import json, sys
-s=json.load(open(sys.argv[1]))
-print("changed_paths=" + ",".join(s["changed_paths"]))
-print("risk_categories=" + ",".join(s["risk_categories"]))
-print("focused_tests=" + ",".join(s["focused_tests"]))
-print("browser_scenarios=" + ",".join(s["browser_scenarios"]))
-for key in ("frontend_changed","ui_changed","backend_changed","schema_sensitive","full_backend_required","api_drift_required","frontend_build_required","documentation_only"):
-    print(f"{key}={'yes' if s[key] else 'no'}")
-print(f"backend_full_passes_required={s['backend_full_passes_required']}")
-for item in s["selection_reasons"]:
-    print(f"reason={item['path']} -> {','.join(item['categories']) or 'ignored'}")
-PY
+bun "$repo/scripts/test-scope.ts" --report "$scope_file"
 printf 'tier=%s\n' "$tier"
 
 json_value() {
-  "$python" - "$scope_file" "$1" <<'PY'
-import json,sys
-value=json.load(open(sys.argv[1]))[sys.argv[2]]
-print("yes" if value is True else "no" if value is False else value)
-PY
+  bun -e 'const value=(await Bun.file(process.argv[1]).json())[process.argv[2]]; console.log(value===true ? "yes" : value===false ? "no" : value)' "$scope_file" "$1"
 }
 
 frontend_changed="$(json_value frontend_changed)"
@@ -80,6 +64,9 @@ backend_full() {
   (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
   (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
 }
+tooling_tests() {
+  bun test "$repo"/scripts/tests/*.test.ts
+}
 
 case "$tier" in
   fast)
@@ -87,19 +74,13 @@ case "$tier" in
       echo "selected_suites=documentation-static-only"
     elif [[ "$schema_sensitive" == yes ]]; then
       echo "selected_suites=classifier-tests,db-package,ui-package,fresh-db-parity"
-      "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
+      tooling_tests
       (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun run check:ui && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
       make -C "$repo" fresh-db-parity
     else
       if [[ "$frontend_changed" == yes ]]; then
         frontend_static
-        mapfile -t frontend_tests < <("$python" - "$scope_file" <<'PY'
-import json, sys
-for path in json.load(open(sys.argv[1]))["focused_tests"]:
-    if path.startswith("src/"):
-        print(path)
-PY
-)
+        mapfile -t frontend_tests < <(bun -e '(await Bun.file(process.argv[1]).json()).focused_tests.filter(path=>path.startsWith("src/")).forEach(path=>console.log(path))' "$scope_file")
         if ((${#frontend_tests[@]})); then
           (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test "${frontend_tests[@]}")
         fi
@@ -111,13 +92,7 @@ PY
         fi
       fi
       if [[ "$backend_changed" == yes ]]; then
-mapfile -t backend_tests < <("$python" - "$scope_file" <<'PY'
-import json, sys
-for path in json.load(open(sys.argv[1]))["focused_tests"]:
-    if path.startswith(("backend/", "apps/api/")):
-        print(path)
-PY
-)
+        mapfile -t backend_tests < <(bun -e '(await Bun.file(process.argv[1]).json()).focused_tests.filter(path=>path.startsWith("backend/")||path.startsWith("apps/api/")).forEach(path=>console.log(path))' "$scope_file")
         ((${#backend_tests[@]})) || backend_tests=("apps/api/tests/app.test.ts")
         (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test "${backend_tests[@]#apps/api/}")
       fi
@@ -128,20 +103,15 @@ PY
     frontend_static
     (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:ui && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/ui test)
     (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test && bun run build)
-    "$python" -m pytest "$repo/scripts/tests/test_test_scope.py" -q
+    tooling_tests
     backend_full
-    scenario_grep="$("$python" - "$scope_file" <<'PY'
-import json,sys
-items=json.load(open(sys.argv[1]))["browser_scenarios"]
-print("|".join("@" + item for item in items) if items else "@release")
-PY
-)"
+    scenario_grep="$(bun -e 'const items=(await Bun.file(process.argv[1]).json()).browser_scenarios; console.log(items.length ? items.map(item=>"@"+item).join("|") : "@release")' "$scope_file")"
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)
     echo "selected_suites=fresh-db-parity,protected-data-safety,api,bun-tests,bun-build,boundaries,api-drift,typecheck,ui-package,playwright-release,e2e-validation"
     make -C "$repo" fresh-db-parity
-    "$python" -m pytest "$repo/scripts/tests/test_backend_protected_database_isolation.py" -q
+    bun test "$repo/scripts/tests/e2e-workspace.test.ts"
     passes=1
     reliable_change_context=no
     [[ -n "${TEST_BASE_REVISION:-}" || -n "${TEST_CHANGED_FILES:-}" ]] && reliable_change_context=yes

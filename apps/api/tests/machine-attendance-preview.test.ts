@@ -3,40 +3,13 @@ import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
-import { python } from "./python";
+import { createMachinePreviewFixture } from "./fixtures/attendance-imports";
 
-const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-machine-preview-test-cookie-secret-32";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Absent", "Lembur", "Pengecualian", "week"];
 
 function seed(path: string, includeCutoffPolicy = true): void {
-  const script = [
-    "from pathlib import Path", "import sqlite3, sys", "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database", "from argon2 import PasswordHasher", "path=Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db=sqlite3.connect(path); ph=PasswordHasher()",
-    "db.execute(\"INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,1)\", ('preview-admin',ph.hash('preview-admin-pass-1'),'admin'))",
-    "db.execute(\"INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-preview','2026-01-01','2026-12-31','active',1)\")",
-    "db.execute(\"INSERT INTO jenjangs (name,code,level,active) VALUES ('SMP','SMP','junior',1)\")",
-    "program_id=db.execute(\"INSERT INTO academic_programs (jenjang_id,name,active) VALUES (1,'Synthetic Program',1)\").lastrowid; grade_id=db.execute(\"INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (1,?,'Synthetic Grade',1,1)\",(program_id,)).lastrowid",
-    "classes={name:db.execute(\"INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,?,?,?,1)\",(grade_id,name,name)).lastrowid for name in ('7A','7B','7C','P1A','P1B')}",
-    "db.execute(\"INSERT INTO jenjang_config (jenjang,cutoff_time,updated_at) VALUES ('SMP','07:30',CURRENT_TIMESTAMP)\")",
-    "if sys.argv[2] == 'true': db.execute(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-01-01','07:30','BACKFILL_ASSUMED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic test cutoff')\")",
-    "students=[(123,'Synthetic One','SMP','7A'),(456,'Synthetic Two','SMP','7A'),(999,'Synthetic Three','SMP','7B'),(1000,'Synthetic Four','SMP','7C')]",
-    "for sid,name,jenjang,klass in students:", "    db.execute(\"INSERT INTO students (id,name,jenjang,class_name) VALUES (?,?,?,?)\",(sid,name,jenjang,klass)); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')\",(f'master-{sid}',name,name.lower()))",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-123',123,'00123','attendance_machine','2026-01-01',1)\")",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-456',456,'00456','attendance_machine','2026-01-01',1)\")",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-999',999,'00999','attendance_machine','2026-01-01',1)\")",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES ('master-1000',1000,'00999','secondary_machine','2026-01-01',1)\")",
-    "for sid,master,klass in [(123,'master-123','7A'),(456,'master-456','7A'),(999,'master-999','7B'),(1000,'master-1000','7C')]: db.execute(\"INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (?,?,1,1,?,?,1,'2026-01-01','ACTIVE')\",(sid,master,classes[klass],klass))",
-    "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,1,'EXPECTED')\")",
-    "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,5,'EXPECTED')\")",
-    "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,6,'EXPECTED')\")",
-    "for weekday in (2,3,4): db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (1,1,?,'EXPECTED')\", (weekday,))",
-    "db.execute(\"INSERT INTO attendance_calendar_exceptions (academic_year_id,jenjang_id,date,expectation,reason,created_by) VALUES (1,1,'2026-04-06','NOT_EXPECTED','SCHOOL_BREAK','preview-admin')\")",
-    "db.execute(\"INSERT INTO academic_term_configs (academic_year_id,term_number,label,start_date,end_date) VALUES (1,1,'Term 1','2026-04-01','2026-04-30')\")",
-    "db.commit(); db.close()",
-  ].join("\n");
-  const result = Bun.spawnSync([python, "-c", script, path, String(includeCutoffPolicy)], { cwd: root, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createMachinePreviewFixture(path, includeCutoffPolicy);
 }
 
 async function fixture(): Promise<Uint8Array> {

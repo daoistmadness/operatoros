@@ -4,33 +4,12 @@ import { rmSync } from "node:fs";
 import { ClassAttendanceEntriesResponseSchema, ClassAttendanceResponseSchema } from "@operatoros/contracts/attendance";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
-import { python } from "./python";
+import { createAttendancePolicyFixture } from "./fixtures/attendance-policy";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-class-attendance-contract-secret";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from argon2 import PasswordHasher; db = sqlite3.connect(path); ph = PasswordHasher()",
-    "db.executemany(\"INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)\", [('contract-admin', ph.hash('contract-admin-pass-1'), 'admin'), ('contract-staff', ph.hash('contract-staff-pass-1'), 'staff')])",
-    "db.execute(\"INSERT INTO academic_years (label, start_date, end_date, status, is_default) VALUES ('Synthetic 2026/2027', '2026-07-01', '2027-06-30', 'active', 1)\")",
-    "db.execute(\"INSERT INTO jenjangs (name, code, level, active) VALUES ('Synthetic SMP', 'SYN-SMP', 'junior', 1)\")",
-    "db.execute(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (1,'2026-07-01','07:30','RECORDED','TEST_SEED',CURRENT_TIMESTAMP,'Synthetic cutoff')\")",
-    "db.execute(\"INSERT INTO academic_programs (jenjang_id, name, active) VALUES (1, 'Synthetic Program', 1)\")",
-    "db.execute(\"INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number, active) VALUES (1, 1, 'Synthetic Grade', 1, 1)\")",
-    "db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (1, 1, 'Synthetic 7A', 'SYN-A', 1)\")",
-    "db.execute(\"INSERT INTO students (id, name, jenjang, class_name) VALUES (9001, 'Synthetic Attendance Student', 'Synthetic SMP', 'Synthetic 7A')\")",
-    "db.execute(\"INSERT INTO student_enrollments (student_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, effective_from, lifecycle_state) VALUES (9001, 1, 1, 1, 'Synthetic 7A', 1, '2026-07-01', 'ACTIVE')\")",
-    "db.execute(\"INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (9001, '2026-08-03', '07:40:00', '16:00:00', 25, 'calculated', 0, 'late')\")",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAttendancePolicyFixture(path, "contract");
 }
 
 function sessionCookie(response: Response): string {

@@ -24,8 +24,8 @@ describe("employee age and tenure metrics", () => {
     const db = openDatabase(path);
     try {
       db.client.run("INSERT INTO staff_job_title_mappings (raw_title,normalized_title,status,position_category,is_teaching_role) VALUES ('Guru','Teacher','APPROVED','TEACHING',1)");
-      db.client.run("INSERT INTO staff_members (id,full_name,normalized_name,employment_status,birth_date,employment_start_date,job_title_raw,dapodik_status_raw,dapodik_status_normalized) VALUES ('active','Synthetic Active','synthetic active','ACTIVE','2000-10-03','2025-10-03','Guru','AKTIF','ACTIVE')");
-      db.client.run("INSERT INTO staff_members (id,full_name,normalized_name,employment_status,birth_date,employment_start_date,employment_end_date,job_title_raw,dapodik_status_raw,dapodik_status_normalized) VALUES ('former','Synthetic Former','synthetic former','FORMER',NULL,'2010-01-01','2015-01-01','Office','', 'UNKNOWN')");
+      db.client.run("INSERT INTO staff_members (id,full_name,normalized_name,employment_status,birth_date,employment_start_date,job_title_raw,dapodik_status_raw,dapodik_status_normalized,created_at) VALUES ('active','Synthetic Active','synthetic active','ACTIVE','2000-10-03','2025-10-03','Guru','AKTIF','ACTIVE','2025-10-03 00:00:00')");
+      db.client.run("INSERT INTO staff_members (id,full_name,normalized_name,employment_status,birth_date,employment_start_date,employment_end_date,job_title_raw,dapodik_status_raw,dapodik_status_normalized,created_at) VALUES ('former','Synthetic Former','synthetic former','FORMER',NULL,'2010-01-01','2015-01-01','Office','', 'UNKNOWN','2010-01-01 00:00:00')");
       db.client.run("INSERT INTO staff_identifiers (staff_member_id,identifier_type,raw_value,normalized_value,verification_status) VALUES ('active','NUPTK','1234567890123456','1234567890123456','VALIDATED')");
       db.client.run("INSERT INTO staff_contact_details (staff_member_id,email,phone) VALUES ('active','person@example.com','+620000000000')");
       const result = staffAnalytics(db.client, "2026-10-02");
