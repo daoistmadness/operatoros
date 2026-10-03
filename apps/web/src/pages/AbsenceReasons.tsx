@@ -157,7 +157,23 @@ function ManualAbsenceEntry() {
     setStudentLoading(true);
     setStudentError("");
     getMonthlyClassAbsenceStudentTotals(academicYearId, month, selectedStudentClassId)
-      .then((value) => { if (active) setStudents(manualStudentRows(value)); })
+      .then((value) => {
+        if (!active) return;
+        // A background refresh (e.g. after save/submit/reopen) must not clobber
+        // edits the user made while it was in flight; enrollment ids are unique.
+        setStudents((current) => {
+          const pending = new Map<number, ManualStudentRow>();
+          for (const item of current)
+            if (item.sakit !== item.original.sakit || item.izin !== item.original.izin || item.alfa !== item.original.alfa)
+              pending.set(item.enrollment_id, item);
+          const fresh = manualStudentRows(value);
+          if (!pending.size) return fresh;
+          return fresh.map((row) => {
+            const dirty = pending.get(row.enrollment_id);
+            return dirty ? { ...row, sakit: dirty.sakit, izin: dirty.izin, alfa: dirty.alfa } : row;
+          });
+        });
+      })
       .catch((cause) => { if (active) { setStudents([]); setStudentError(getPageApiError(cause, "Gagal memuat daftar siswa kelas ini.")); } })
       .finally(() => { if (active) setStudentLoading(false); });
     return () => { active = false; };

@@ -87,6 +87,8 @@ export function seedTestDatabase(database: string, runtimeRoot: string, username
       for (const [name, section, active] of [["P1A", "A", 1], ["P1B", "B", 1], ["P1D", "D", 0]] as const)
         db.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,?,?,?)", [yid, rosterGradeId, name, section, active]);
       db.run("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?,?,'P2',2,1)", [jenjangId, rosterProgramId]);
+      const ambiguousGradeId = Number((db.query("SELECT id FROM academic_grades WHERE program_id=? AND name='P2'").get(rosterProgramId) as any).id);
+      db.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'p1a','A',1)", [yid, ambiguousGradeId]);
       db.run("INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('E2E Progression Subject',?,1,1)", [jenjangId]);
       const subject = db.query("SELECT id FROM subjects WHERE name='E2E Progression Subject'").get() as any;
       db.run("INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES ('E2E Progression Score','sumatif',?)", [Number(subject.id)]);
