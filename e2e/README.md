@@ -14,7 +14,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `e2e/clean.sh` removes only `.runtime/operatoros-e2e/` and `e2e-results/`.
 - `e2e/helpers/create-test-workspace.ts` defines the isolated database-path contract.
 - `e2e/helpers/seed-test-database.py` creates deterministic synthetic records.
-- `e2e/helpers/write-summary.py` and `e2e/helpers/write-full-summary.py` produce terse summaries.
+- `e2e/helpers/write-summary.ts` and `e2e/helpers/write-full-summary.ts` produce terse summaries.
 - `e2e/fixtures/expected/smoke-fixture.json` records the deterministic fixture contract.
 - `e2e/smoke/backend/` and `e2e/smoke/web/` contain the blocking tests.
 - `e2e/full/` is the expansion point for CI-only coverage.

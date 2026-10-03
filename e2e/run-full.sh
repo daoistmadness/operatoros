@@ -8,7 +8,7 @@ python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" pri
 export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-smoke.sh"
-  "$python" -m py_compile "$repo_root/e2e/helpers/write-full-summary.py"
+  bun test "$repo_root/scripts/tests/e2e-summaries.test.ts"
   exit 0
 fi
 if [[ "${CI:-}" != "true" && "${OPERATOROS_ALLOW_LOCAL_E2E_FULL:-}" != "1" ]]; then
@@ -54,7 +54,7 @@ duration=$((SECONDS - started_at))
 smoke_label=PASS; (( smoke_status == 0 )) || smoke_label=FAIL
 build_label=PASS; (( build_status == 0 )) || build_label=FAIL
 summary_status=0
-"$python" "$repo_root/e2e/helpers/write-full-summary.py" \
+bun "$repo_root/e2e/helpers/write-full-summary.ts" \
   --output "$results/full-summary.txt" \
   --smoke-status "$smoke_label" \
   --backend-junit "$junit/backend-full.xml" \
