@@ -22,7 +22,6 @@ are the lockfile authorities; CI runs these directly in `.github/workflows/ci.ym
 
 - `mise install`; `mise run doctor` — install exact runtimes; verify checkout.
 - `bun install --frozen-lockfile` — install workspace dependencies (mandatory).
-- `mise run python:bootstrap` — create/refresh the external Python tooling env (`OPERATOROS_PYTHON_VENV`, default `${XDG_CACHE_HOME:-$HOME/.cache}/operatoros/python/venv`).
 - `mise run dev` (via `./start-dev.sh`) — canonical dev entrypoint; `./start-dev.sh --check` validates without starting.
 - `mise run check:affected` (fetch `origin/main` first) — Turbo typecheck/test/build for affected packages; `bun run turbo:check` — full graph.
 - `mise run test:fast` — changed-path-aware tier; `mise run check:full` (`make test-release`) — release gate, never for Markdown-only edits; `mise run db:fresh` (`make fresh-db-parity`) — bootstrap parity.

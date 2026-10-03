@@ -60,7 +60,7 @@ Only the backend grants access. Frontend identity and role state are navigation 
 
 ## Stack
 - Primary backend: Bun, TypeScript, Elysia, Drizzle, SQLite, ExcelJS
-- Retained validation tooling: Python 3.12, SQLAlchemy, pandas, openpyxl, pytest
+- Validation: Bun-native suites (the frozen Python backend evidence uses historical SQLAlchemy/pandas/openpyxl/pytest fixtures only)
 - Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Database: SQLite
 - Runtime: local Elysia backend and React browser UI
@@ -121,9 +121,8 @@ historical migration evidence. Containers are not required.
 mise run dev
 ```
 
-The launcher starts Elysia. It validates Bun, locked dependencies, the Python
-environment used for managed database and session state, and ports before
-starting anything.
+The launcher starts Elysia. It validates Bun, locked dependencies, and ports
+before starting anything.
 The launcher displays the ready banner only after both health checks pass and
 stores service logs under `.runtime/operatoros-dev/`. Press `Ctrl+C` to stop
 both process groups cleanly.
@@ -141,12 +140,10 @@ Initial runtime and dependency setup:
 ```bash
 mise install
 bun install --frozen-lockfile
-mise run python:bootstrap
 mise run doctor
 ```
 
-`mise install` uses `mise.lock` for exact versions. `mise run python:bootstrap`
-creates the external retained Python tooling environment. `mise run doctor` checks
+`mise install` uses `mise.lock` for exact versions. `mise run doctor` checks
 the checkout, toolchain, workspace installation, native Linux Bun, and
 `origin/main`. Bun remains the package manager authority; mise owns the
 developer-facing command surface.
