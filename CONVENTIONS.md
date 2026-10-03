@@ -4,7 +4,7 @@
 - Python modules, variables, and functions use `snake_case`.
 - React components, context providers, hook modules, and page files use `PascalCase` when they represent components or pages.
 - SQL migration files are date-stamped and descriptive, for example `2026_04_02_dashboard_performance_indexes.sql`.
-- Utility scripts use descriptive imperative names, for example `generate_primary_lateness_dashboard.py`.
+- Utility scripts use descriptive imperative names, for example `create-test-workspace.ts`.
 
 ## Organization
 - Backend routes live in `apps/api/src/domains/` and `apps/api/src/auth/`.
