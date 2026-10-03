@@ -65,6 +65,9 @@ jobs:
       - name: Security behavior tests
         working-directory: ${{ github.workspace }}
         run: bun run test:security
+      - name: Test active Bun tooling
+        working-directory: ${{ github.workspace }}
+        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
       - name: Verify hk and Turbo toolchain
         working-directory: ${{ github.workspace }}
         env:
@@ -170,8 +173,10 @@ jobs:
       - name: Verify docs toolchain
         run: |
           mise --version
-          python --version
+          bun --version
       - name: Validate relative Markdown links
-        run: python .github/scripts/check_markdown_links.py
+        run: bun .github/scripts/check-markdown-links.ts
+      - name: Test documentation checker fixtures
+        run: bun test scripts/tests/docs-checkers.test.ts
       - name: Validate current developer commands
-        run: python .github/scripts/check_current_developer_docs.py
+        run: bun .github/scripts/check-current-developer-docs.ts

@@ -41,8 +41,8 @@ dual, invalid, busy, and unsupported layouts fail closed. Set
 - `mise run test:fast` — run the changed-path-aware validation tier.
 - `mise run check:full` — run the complete release-sensitive repository gate.
 - `mise run db:fresh` — run fresh SQLite database parity.
-- `python .github/scripts/check_markdown_links.py` — validate Markdown links.
-- `python .github/scripts/check_current_developer_docs.py` — validate current command documentation.
+- `bun .github/scripts/check-markdown-links.ts` — validate Markdown links.
+- `bun .github/scripts/check-current-developer-docs.ts` — validate current command documentation.
 
 The affected check requires a current `origin/main`; run `git fetch origin
 main` first when the remote-tracking ref is stale or missing. Full PR and CI

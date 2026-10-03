@@ -3,42 +3,12 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { loadXlsxWorkbook } from "@operatoros/excel";
-import { python } from "./python";
+import { createAttendanceViewFixture } from "./fixtures/attendance-views";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from core import database as core_database; from sqlalchemy import create_engine; core_database.engine.dispose(); core_database.engine = create_engine(f'sqlite:///{path}'); core_database.SessionLocal.configure(bind=core_database.engine)",
-    "import importlib; from pathlib import Path as P; [importlib.import_module('models.' + f.stem) for f in sorted(P('backend/src/models').glob('*.py')) if f.stem != '__init__']; core_database.init_db()",
-    "core_database.engine.dispose()",
-    "from argon2 import PasswordHasher; ph = PasswordHasher(); db = sqlite3.connect(path)",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('golden-admin', ph.hash('golden-admin-pass-1'), 'admin'), ('golden-staff', ph.hash('golden-staff-pass-1'), 'staff')])",
-    "master = str(uuid.uuid4()); empty_master = str(uuid.uuid4())",
-    "db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, 'E2E Export Student', 'e2e export student', 'active')\", (master,))",
-    "db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, 'E2E Empty Student', 'e2e empty student', 'active')\", (empty_master,))",
-    "db.execute(\"INSERT INTO students (id, name, jenjang, class_name) VALUES (9101, 'E2E Export Student', 'SMP', '7A')\")",
-    "db.execute(\"INSERT INTO students (id, name, jenjang, class_name) VALUES (9102, 'E2E Empty Student', 'SMP', '7B')\")",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active) VALUES (?, 9102, 'EXP-DEV-2', 'TEST', '2026-07-01', 1)\", (empty_master,))",
-    "db.execute(\"INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active) VALUES (?, 9101, 'EXP-DEV-1', 'TEST', '2026-07-01', 1)\", (master,))",
-    "db.executemany('INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [(9101, '2026-08-03', '07:10:00', '16:00:00', 0, 'test', 0, 'on-time'), (9101, '2026-08-04', '07:40:00', '16:00:00', 25, 'test', 0, 'late'), (9101, '2026-08-05', None, None, 0, 'test', 1, 'absent')])",
-    "override_id = db.execute(\"SELECT id FROM attendance WHERE student_id = 9101 AND date = '2026-08-04'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO attendance_overrides (attendance_id, original_status, override_status, note, reviewed_by, reviewed_at) VALUES (?, 'late', 'on-time', 'Device missed scan', 'golden-admin', '2026-08-04T10:00:00Z')\", (override_id,))",
-    "db.execute(\"INSERT INTO absence_reasons (student_id, class_name, month, year, sakit, izin, alfa, entered_by, entered_at, updated_at) VALUES (9101, '7A', 8, 2026, 1, 2, 0, 'golden-admin', '2026-08-29T09:00:00', '2026-08-29T09:00:00')\")",
-    "db.execute(\"INSERT INTO heb_overrides (jenjang, month, year, heb_value, set_by, set_at) VALUES ('SMP', 8, 2026, 20, 'golden-admin', '2026-08-29T09:00:00')\")",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], {
-    cwd: repoRoot,
-    env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" },
-  });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAttendanceViewFixture(path, "student-export");
 }
 
 function cookie(response: Response): string {

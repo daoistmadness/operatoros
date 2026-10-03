@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { createFreshDatabase } from "./bootstrap";
 import { assertDatabasePath, openDatabase, REQUIRED_TABLES, validateDatabase } from "./connection";
-import { assertDatabaseMigrationSafe, resolveOperatorOSPaths, type OperatorOSPaths } from "./data-dir";
+import { assertDatabaseMigrationSafe, repositoryCommonDirectory, resolveOperatorOSPaths, type OperatorOSPaths } from "./data-dir";
 import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS } from "./manifest";
 
 function fail(code: string): never { throw new Error(code); }
@@ -72,9 +72,9 @@ function json(path: string): Record<string, unknown> | undefined {
 }
 function prepare(paths: OperatorOSPaths, repo: string): void {
   mkdirSync(paths.dataDir, { recursive: true, mode: 0o700 }); chmodSync(paths.dataDir, 0o700);
-  const result = Bun.spawnSync(["git", "-C", repo, "rev-parse", "--path-format=absolute", "--git-common-dir"], { stdout: "pipe", stderr: "pipe" });
-  if (result.exitCode !== 0) fail("DEVELOPMENT_DATABASE_REPOSITORY_ID_UNAVAILABLE");
-  const hash = createHash("sha256").update(resolve(result.stdout.toString().trim())).digest("hex");
+  let common: string;
+  try { common = repositoryCommonDirectory(repo); } catch { fail("DEVELOPMENT_DATABASE_REPOSITORY_ID_UNAVAILABLE"); }
+  const hash = createHash("sha256").update(common).digest("hex");
   const path = join(paths.dataDir, "database.json");
   if (kind(path) === "missing") {
     writeFileSync(path, `${JSON.stringify({
@@ -177,8 +177,12 @@ export function devDatabaseCommand(args: string[], env: NodeJS.ProcessEnv = proc
     requireUnused(paths.databasePath);
     if (kind(paths.databasePath) === "file") {
       const client = new Database(paths.databasePath, { readwrite: true, create: false });
-      try { client.exec("PRAGMA busy_timeout=0; BEGIN EXCLUSIVE; ROLLBACK"); }
-      catch { fail("DEVELOPMENT_DATABASE_BUSY"); }
+      try { client.exec("PRAGMA busy_timeout=0"); client.exec("BEGIN EXCLUSIVE"); client.exec("ROLLBACK"); }
+      catch (error) {
+        // Confirmed reset may replace an unreadable managed DB only after the
+        // sidecar/open-handle checks above. A live lock must still fail closed.
+        if (!["SQLITE_NOTADB", "SQLITE_CORRUPT"].includes((error as { code?: string }).code ?? "")) fail("DEVELOPMENT_DATABASE_BUSY");
+      }
       finally { client.close(); }
       rmSync(paths.databasePath);
     }

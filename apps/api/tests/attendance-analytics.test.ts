@@ -3,45 +3,13 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { loadXlsxWorkbook } from "@operatoros/excel";
-import { python } from "./python";
+import { createAttendanceReadFixture } from "./fixtures/attendance-reads";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const RANGE = "?academic_year_id=1&date_from=2026-08-01&date_to=2026-08-31";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from core import database as core_database; from sqlalchemy import create_engine; core_database.engine.dispose(); core_database.engine = create_engine(f'sqlite:///{path}'); core_database.SessionLocal.configure(bind=core_database.engine)",
-    "import importlib; from pathlib import Path as P; [importlib.import_module('models.' + f.stem) for f in sorted(P('backend/src/models').glob('*.py')) if f.stem != '__init__']; core_database.init_db()",
-    "core_database.engine.dispose()",
-    "from argon2 import PasswordHasher; ph = PasswordHasher(); db = sqlite3.connect(path)",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('golden-admin', ph.hash('golden-admin-pass-1'), 'admin'), ('golden-staff', ph.hash('golden-staff-pass-1'), 'staff')])",
-    "year_id = db.execute('SELECT id FROM academic_years WHERE is_default = 1').fetchone()[0]",
-    "jenjang_id = db.execute(\"INSERT INTO jenjangs (name, code, level, active) VALUES ('SMP', 'SMP', 'junior', 1)\").lastrowid",
-    "other_jenjang_id = db.execute(\"INSERT INTO jenjangs (name, code, level, active) VALUES ('SMA', 'SMA', 'senior', 1)\").lastrowid",
-    "program_id = db.execute(\"INSERT INTO academic_programs (jenjang_id, name, active) VALUES (?, 'MAIN', 1)\", (jenjang_id,)).lastrowid",
-    "grade_id = db.execute(\"INSERT INTO academic_grades (jenjang_id, program_id, name, sequence_number, active) VALUES (?, ?, 'Grade 7', 1, 1)\", (jenjang_id, program_id)).lastrowid",
-    "class_id = db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, '7A', 'A', 1)\", (year_id, grade_id)).lastrowid",
-    "other_class_id = db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, '7B', 'B', 1)\", (year_id, grade_id)).lastrowid",
-    "db.executemany('INSERT INTO students (id, name, jenjang, class_name) VALUES (?, ?, ?, ?)', [(9501, 'Alpha Student', 'SMP', '7A'), (9502, 'Beta Student', 'SMP', '7A'), (9503, 'Gamma Student', 'SMA', '7B')])",
-    "master_ids = [str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())]; db.executemany(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'active')\", [(master_ids[0], 'Master 9501', 'master 9501'), (master_ids[1], 'Master 9502', 'master 9502'), (master_ids[2], 'Master 9503', 'master 9503')])",
-    "db.executemany(\"INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, effective_from, lifecycle_state) VALUES (?, ?, ?, ?, ?, ?, 1, '2026-07-01', 'ACTIVE')\", [(9501, master_ids[0], year_id, jenjang_id, class_id, \"7A\"), (9502, master_ids[1], year_id, jenjang_id, class_id, \"7A\"), (9503, master_ids[2], year_id, other_jenjang_id, other_class_id, \"7B\")])",
-    "db.executemany('INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [(9501, '2026-08-03', '07:10:00', '16:00:00', 0, 'test', 0, 'on-time'), (9501, '2026-08-04', '07:40:00', '16:00:00', 25, 'test', 0, 'late'), (9501, '2026-08-05', None, None, 0, 'test', 1, 'absent'), (9502, '2026-08-03', '07:20:00', None, 0, 'test', 0, 'incomplete'), (9502, '2026-08-04', None, None, 0, 'test', 1, 'sakit'), (9502, '2026-08-05', None, None, 0, 'test', 1, 'izin'), (9503, '2026-08-03', None, None, 0, 'test', 1, 'alfa'), (9503, '2026-08-04', '07:15:00', '16:00:00', 0, 'test', 0, 'on-time')])",
-    "late_id = db.execute(\"SELECT id FROM attendance WHERE student_id = 9501 AND date = '2026-08-04'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO attendance_overrides (attendance_id, original_status, override_status, note, reviewed_by, reviewed_at) VALUES (?, 'late', 'on-time', 'Device missed scan', 'golden-admin', '2026-08-04T10:00:00Z')\", (late_id,))",
-    "db.execute(\"INSERT INTO heb_overrides (jenjang, month, year, heb_value, set_by, set_at) VALUES ('SMP', 8, 2026, 20, 'golden-admin', '2026-08-01T00:00:00Z')\")",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], {
-    cwd: repoRoot,
-    env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" },
-  });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAttendanceReadFixture(path, "analytics");
 }
 
 function cookie(response: Response): string {

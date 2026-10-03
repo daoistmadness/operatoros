@@ -1,5 +1,13 @@
 # Python tooling migration: Phase 0 evidence
 
+This section records the Phase 0 baseline. The subsequent [runtime cutover](python-dev-runtime.md)
+retired the runtime/config Python oracle after live-process comparisons and Bun
+regression coverage. The [DB/snapshot cutover](python-dev-db.md) retired those
+Python implementations after controlled comparisons. The subsequent
+[workspace/scope cutover](python-e2e-workspace.md) retired the final 37-case
+test-scope Python oracle and its temporary runner;
+the original 71-case evidence below remains the cutover baseline.
+
 Phase 0 establishes the Python behavior oracle and TypeScript candidates before
 caller cutover. The Ubuntu compatibility workflow's disposable DB bootstrap is
 the only active caller switched in this unit. No active Python implementation
@@ -7,7 +15,7 @@ has been removed.
 
 ## Scope
 
-- [Parity gate](../../packages/db/scripts/python-tooling-parity.ts): controlled Python/TS runtime, DB, and changed-file comparisons.
+- [Historical parity gate](https://github.com/daoistmadness/operatoros/blob/13fe51448bb44740e2971b9147ae3b321bf51074/packages/db/scripts/python-tooling-parity.ts): controlled Python/TS runtime, DB, and changed-file comparisons, retained in Git after retirement.
 - [Test-scope candidate](../../scripts/test-scope.ts) and [Bun coverage](../../scripts/tests/test-scope.test.ts): preserve the existing path map, decisions, rename/deletion handling, and Git hook environment isolation.
 - [Existing TS runtime](../../scripts/operatoros-dev-runtime.ts): restore JSON status/cleanup/owned-stop output, allocation exit `4`, checkout identity, shared port metadata marking, and compatibility worktree-role fields.
 - [Existing DB CLI](../../packages/db/src/dev-db-cli.ts): implement `ensure`, `status`, `path`, `reset`, `candidates`, and `adopt` using canonical bootstrap and schema validation.
@@ -21,7 +29,7 @@ main does not support that completed operation. No replacement command was added
 
 ## Parity
 
-Run from the repository root:
+Historical Phase 0 commands, recorded before the oracle's retirement:
 
 ```sh
 bun test scripts/tests/test-scope.test.ts packages/db/tests/dev-db-cli.test.ts

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
 import { mkdirSync, rmSync } from "node:fs";
-import { openDatabase } from "@operatoros/db";
+import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
@@ -10,22 +10,10 @@ function pathFor(label: string): string {
   return `/tmp/operatoros-e3a-${label}-${process.pid}-${Date.now()}.db`;
 }
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-import { python } from "./python";;
+
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], {
-    cwd: repoRoot,
-    env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" },
-  });
-  if (result.exitCode !== 0) throw new Error(`seed failed: ${result.stderr.toString()}`);
+  createFreshDatabase(path);
 }
 
 function setup(label: string) {

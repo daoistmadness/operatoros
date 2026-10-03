@@ -36,7 +36,7 @@ const IGNORED_DIRECTORY_NAMES = new Set([
 const IGNORED_FILE_PATHS = new Set([
   "scripts/check-node-regressions.mjs",
   "scripts/validate-wsl-bun.sh",
-  "scripts/test_scope.py",
+  "scripts/test-scope.ts",
   "bun.lock",
 ]);
 

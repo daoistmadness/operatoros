@@ -4,21 +4,13 @@ import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { backupScheduler } from "../src/domains/safety";
 import { isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
-import { python } from "./python";
+import { createAccountFixture } from "./fixtures/accounts";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const backupKey = Buffer.alloc(32, 7).toString("base64");
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path", "import sqlite3, sys", "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database", "from argon2 import PasswordHasher",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); ph = PasswordHasher(); db = sqlite3.connect(path)",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('golden-admin', ph.hash('golden-admin-pass-1'), 'admin'), ('golden-staff', ph.hash('golden-staff-pass-1'), 'staff')]); db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAccountFixture(path, "golden-active");
 }
 
 async function login(app: ReturnType<typeof createApp>, username: string, password: string): Promise<string> {
