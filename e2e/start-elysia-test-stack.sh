@@ -9,8 +9,6 @@ logs="${2:?log directory required}"
 database="${OPERATOROS_E2E_DATABASE:?OPERATOROS_E2E_DATABASE is required}"
 source "$repo_root/scripts/validate-wsl-bun.sh"
 operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
-python_bin="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
-export OPERATOROS_PYTHON="$python_bin"
 bun "$repo_root/e2e/helpers/create-test-workspace.ts" \
   --database "$database" \
   --runtime-root "$(dirname -- "$workspace")" \
@@ -22,16 +20,7 @@ case "$database" in "$workspace"/*) ;; *) exit 2 ;; esac
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
 
 choose_port() {
-  "$python_bin" - "$1" "$2" <<'PY'
-import socket, sys
-start, end = map(int, sys.argv[1:])
-for port in range(start, end + 1):
-    with socket.socket() as sock:
-        try: sock.bind(("127.0.0.1", port))
-        except OSError: continue
-        print(port); break
-else: raise SystemExit("no free E2E port")
-PY
+  bun "$repo_root/e2e/helpers/choose-port.ts" "$1" "$2"
 }
 
 backend_port="$(choose_port 8090 8199)"
