@@ -11,7 +11,7 @@ source "$repo_root/scripts/validate-wsl-bun.sh"
 operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
 python_bin="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
 export OPERATOROS_PYTHON="$python_bin"
-"$python_bin" "$repo_root/e2e/helpers/create-test-workspace.py" \
+bun "$repo_root/e2e/helpers/create-test-workspace.ts" \
   --database "$database" \
   --runtime-root "$(dirname -- "$workspace")" \
   --repository-root "$repo_root" >/dev/null

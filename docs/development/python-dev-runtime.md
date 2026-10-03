@@ -57,8 +57,9 @@ Validation executed for this cutover:
 
 The pre-deletion scan found no execution caller after Makefile and test cutovers
 and retirement of the temporary runtime oracle. Remaining mentions are frozen
-Phase 13 documentation. The dedicated parity runner now retains only
-test-scope comparisons after the subsequent [DB cutover](python-dev-db.md);
+Phase 13 documentation. The dedicated parity runner retained only
+test-scope comparisons after the subsequent [DB cutover](python-dev-db.md), then
+was retired at the [workspace/scope cutover](python-e2e-workspace.md);
 the original runtime evidence remains in Phase 0's
 report and Git history. Python DB/snapshot commands, E2E, API/golden fixtures and
 benchmarks, other parity oracles, and runtime infrastructure remain for later units.

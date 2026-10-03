@@ -12,7 +12,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `e2e/start-test-stack.sh` starts an E2E-owned Elysia application stack.
 - `e2e/stop-test-stack.sh` stops only the session recorded for that invocation.
 - `e2e/clean.sh` removes only `.runtime/operatoros-e2e/` and `e2e-results/`.
-- `e2e/helpers/create-test-workspace.py` defines the isolated database-path contract.
+- `e2e/helpers/create-test-workspace.ts` defines the isolated database-path contract.
 - `e2e/helpers/seed-test-database.py` creates deterministic synthetic records.
 - `e2e/helpers/write-summary.py` and `e2e/helpers/write-full-summary.py` produce terse summaries.
 - `e2e/fixtures/expected/smoke-fixture.json` records the deterministic fixture contract.

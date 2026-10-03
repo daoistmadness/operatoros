@@ -14,7 +14,8 @@ export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-smoke.sh" "$repo_root/e2e/runner-cleanup.sh" "$repo_root/e2e/tests/runner-cleanup.sh" "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
   bash "$repo_root/e2e/tests/runner-cleanup.sh"
-  "$python" -m py_compile "$repo_root/e2e/helpers/create-test-workspace.py" "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
+  bun test "$repo_root/scripts/tests/e2e-workspace.test.ts"
+  "$python" -m py_compile "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
   exit 0
 fi
 
@@ -56,7 +57,7 @@ export BACKUP_DIR="$workspace/state/backups"
 # This runner owns a disposable SQLite data root and synthetic admin account.
 export ENABLE_DESTRUCTIVE_OPERATIONS=true
 
-"$python" "$repo_root/e2e/helpers/create-test-workspace.py" \
+bun "$repo_root/e2e/helpers/create-test-workspace.ts" \
   --database "$database" \
   --runtime-root "$runtime_root" \
   --repository-root "$repo_root" >/dev/null

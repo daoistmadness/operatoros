@@ -75,6 +75,13 @@ describe("test scope decisions", () => {
     for (const required of ["fresh-db-parity", "backend_full", "bun run test", "bun run build", "e2e-validate", "e2e-smoke", "e2e-clean", "passes=2", "schema_sensitive", "RELEASE_DOUBLE_BACKEND"]) expect(release).toContain(required);
     expect(runner).toContain("unset PROTECTED_DB_PATH"); expect(runner).not.toContain("protected_db_snapshot.py");
   });
+  test("release scenario manifest matches browser tags without fixed sleeps", () => {
+    const manifest = JSON.parse(readFileSync(join(repository, "e2e/release-scenarios.json"), "utf8")) as { groups: string[] };
+    const specs = [...new Bun.Glob("*.spec.ts").scanSync({ cwd: join(repository, "e2e/smoke/web"), absolute: true })].sort().map(path => readFileSync(path, "utf8")).join("\n");
+    expect(manifest.groups).toHaveLength(10); expect(new Set(manifest.groups).size).toBe(10);
+    for (const group of manifest.groups) expect(specs).toContain(`@${group}`);
+    expect(specs).not.toContain("waitForTimeout");
+  });
 });
 
 describe("Git change discovery", () => {
