@@ -3,10 +3,18 @@ import type { Database } from "bun:sqlite";
 // Fixture data required by current tests that formerly invoked legacy init_db.
 // This installs no schema and is not application startup/migration authority.
 export function seedFixtureDefaults(client: Database): void {
+  seedGradeDefaults(client);
+  seedReportDefaults(client);
+}
+
+export function seedGradeDefaults(client: Database): void {
   for (const [name, type] of [["kuis", "sumatif"], ["tes", "sumatif"], ["total", "sumatif"], ["total", "formatif"]]) client.run("INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES (?,?,NULL)", [name!, type!]);
   const primary = Number(client.run("INSERT INTO jenjangs (name) VALUES ('Primary')").lastInsertRowid);
   client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2025/2026','2025-07-01','2026-06-30','active',1)");
   client.run("INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('Language',?,1,1)", [primary]);
+}
+
+function seedReportDefaults(client: Database): void {
   const allPages = ["executive_summary", "attendance", "lateness", "grade_class", "grade_subject", "grade_student", "below_kkm", "interventions", "historical_trends", "forecast", "intervention_impact", "executive_insights", "data_quality", "metadata"];
   const allCharts = ["attendance", "lateness", "grade_class", "grade_subject", "below_kkm", "interventions", "historical_trends", "forecast", "intervention_impact"];
   const allSheets = ["README", "Config", "Charts", "Attendance_Data", "Lateness_Data", "Grade_Class_Data", "Grade_Subject_Data", "Grade_Student_Data", "Below_KKM_Data", "Interventions_Data", "Insights", "Trend_Attendance_Data", "Trend_Lateness_Data", "Trend_Grades_Data", "Trend_Interventions_Data", "Forecast_Data", "Trend_Insights", "Intervention_Impact_Data", "Intervention_Impact_Summary", "Risk_Students_Data", "Owner_Workload_Data"];

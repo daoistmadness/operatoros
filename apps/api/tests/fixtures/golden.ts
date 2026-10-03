@@ -1,14 +1,15 @@
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import type { Database } from "bun:sqlite";
-import { seedFixtureDefaults } from "./defaults";
+import { seedFixtureDefaults, seedGradeDefaults } from "./defaults";
 
 /** Maintained fixture data used by current API tests, independent of migration evidence. */
-export function createGoldenFixture(path: string, kind: "academic" | "reports" | "academic-with-defaults" | "reports-with-defaults"): void {
+export function createGoldenFixture(path: string, kind: "academic" | "reports" | "academic-with-defaults" | "reports-with-defaults" | "reports-with-grade-defaults"): void {
   createFreshDatabase(path);
   const handle = openDatabase(path);
   try {
     handle.client.transaction(() => {
       if (kind === "academic-with-defaults") seedFixtureDefaults(handle.client);
+      if (kind === "reports-with-grade-defaults") seedGradeDefaults(handle.client);
       for (const [username, password, role, active] of [
         ["golden-admin", "golden-admin-pass-1", "admin", 1],
         ["golden-staff", "golden-staff-pass-1", "staff", 1],
@@ -39,10 +40,9 @@ function academic(client: Database): void {
 }
 
 function reports(client: Database): void {
-  client.exec(`
-    INSERT INTO academic_years (id,label,start_date,end_date,status,is_default) VALUES (1,'2026/2027-reports','2026-07-01','2027-06-30','upcoming',0);
-    INSERT INTO jenjangs (id,name,code,level) VALUES (1,'SMP','SMP','junior'),(2,'SD','SD','primary');
-  `);
+  const year = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-reports','2026-07-01','2027-06-30','upcoming',0)").lastInsertRowid);
+  const smp = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SMP','SMP','junior')").lastInsertRowid);
+  const sd = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SD','SD','primary')").lastInsertRowid);
   const students = [
     ["Alice SMP7A", "101", 1, "SMP", "7A"], ["Bob SMP7A", "102", 1, "SMP", "7A"], ["Charlie SMP7A", "103", 1, "SMP", "7A"],
     ["Dina SMP7B", "104", 1, "SMP", "7B"], ["Eko SMP7B", "105", 1, "SMP", "7B"],
@@ -52,7 +52,7 @@ function reports(client: Database): void {
     const id = index + 1, master = `00000000-0000-0000-0000-${suffix.padStart(12, "0")}`;
     client.run("INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')", [master, name, name.toLowerCase()]);
     client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (?,?,?,?)", [id, name, jenjang, className]);
-    client.run("INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,class_name,class_assigned,lifecycle_state) VALUES (?,?,1,?,?,0,'ACTIVE')", [id, master, jenjangId, className]);
+    client.run("INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,class_name,class_assigned,lifecycle_state) VALUES (?,?,?,?,?,0,'ACTIVE')", [id, master, year, jenjangId === 1 ? smp : sd, className]);
   }
   const attendance = (student: number, day: number, status: "on-time" | "late" | "incomplete", late = 0) => {
     client.run("INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status,week) VALUES (?,?,?,?,?,?,0,?,'31')", [student, `2026-08-${String(day).padStart(2, "0")}`, status === "late" ? "07:45:00.000000" : "07:30:00.000000", status === "incomplete" ? null : "15:00:00.000000", late, status === "late" ? "calculated" : "none", status]);

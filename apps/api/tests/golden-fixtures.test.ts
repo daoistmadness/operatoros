@@ -7,7 +7,7 @@ import { createGoldenFixture } from "./fixtures/golden";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
-test.each(["academic", "reports", "academic-with-defaults", "reports-with-defaults"] as const)("%s fixture preserves canonical schema and synthetic account semantics", (kind) => {
+test.each(["academic", "reports", "academic-with-defaults", "reports-with-defaults", "reports-with-grade-defaults"] as const)("%s fixture preserves canonical schema and synthetic account semantics", (kind) => {
   const root = mkdtempSync(join(tmpdir(), "operatoros-golden-fixture-")); roots.push(root);
   const path = join(root, "operatoros.sqlite"); createGoldenFixture(path, kind); const handle = openDatabase(path, { readonly: true });
   try {
@@ -26,12 +26,19 @@ test.each(["academic", "reports", "academic-with-defaults", "reports-with-defaul
       expect(handle.client.query("SELECT COUNT(*) AS count FROM absence_reason_class_entries").get()).toEqual({ count: 3 });
       expect(handle.client.query("SELECT COUNT(*) AS count FROM absence_reasons").get()).toEqual({ count: 4 });
     }
-    if (kind.endsWith("-with-defaults")) {
+    if (kind.includes("-with-")) {
       expect(handle.client.query("SELECT name,assessment_type FROM assessment_components ORDER BY id").all()).toEqual([{ name: "kuis", assessment_type: "sumatif" }, { name: "tes", assessment_type: "sumatif" }, { name: "total", assessment_type: "sumatif" }, { name: "total", assessment_type: "formatif" }]);
       expect(handle.client.query("SELECT name FROM subjects").all()).toEqual([{ name: "Language" }]);
       expect(handle.client.query("SELECT label FROM academic_years WHERE is_default=1").all()).toEqual([{ label: "2025/2026" }]);
+    }
+    if (kind.endsWith("-with-defaults")) {
       expect(handle.client.query("SELECT name,output_format FROM report_templates ORDER BY id").all()).toEqual([{ name: "Full Management Review", output_format: "both" }, { name: "Attendance & Lateness Review", output_format: "both" }, { name: "Academic Risk Review", output_format: "both" }, { name: "Editable Excel Workbook", output_format: "excel" }]);
       expect(handle.client.query("SELECT prepared_by,is_default FROM report_branding_configs").all()).toEqual([{ prepared_by: "OperatorOS", is_default: 1 }]);
+    }
+    if (kind === "reports-with-grade-defaults") {
+      expect(handle.client.query("SELECT id,name FROM jenjangs ORDER BY id").all()).toEqual([{ id: 1, name: "Primary" }, { id: 2, name: "SMP" }, { id: 3, name: "SD" }]);
+      expect(handle.client.query("SELECT COUNT(*) AS count FROM report_templates").get()).toEqual({ count: 0 });
+      expect(handle.client.query("SELECT COUNT(*) AS count FROM report_branding_configs").get()).toEqual({ count: 0 });
     }
   } finally { handle.close(); }
 });
