@@ -5,6 +5,7 @@
     "": {
       "name": "operatoros",
       "devDependencies": {
+        "@operatoros/db": "workspace:*",
         "@typescript-eslint/parser": "8.68.0",
         "eslint": "10.9.1",
         "saxes": "5.0.1",
