@@ -7,29 +7,12 @@ import { MonthlyReportResponseSchema, ReportFiltersResponseSchema } from "@opera
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateHeb, lateAmongPresentRate, roundHalfEven, roundHalfUp } from "../src/domains/reports";
-import { python } from "./python";
+import { createReportFixture } from "./fixtures/reports";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import importlib.util, sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "from core import database as core_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); core_database.run_grade_ledger_patches(core_database.engine); core_database._seed_grade_ledger_minimum(core_database.engine)",
-    "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_reports(path)",
-    "db = sqlite3.connect(path); year_id = db.execute(\"SELECT id FROM academic_years WHERE label = '2026/2027-reports'\").fetchone()[0]; smp_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SMP'\").fetchone()[0]; sd_id = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SD'\").fetchone()[0]",
-    "db.executemany(\"INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)\", [('SMP', '07:30'), ('SD', '07:25')])",
-    "db.executemany(\"INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?, '2026-08-01', ?, 'BACKFILL_ASSUMED', 'TEST_SEED', CURRENT_TIMESTAMP, 'Synthetic test cutoff backfill')\", [(smp_id, '07:30'), (sd_id, '07:25')])",
-    "db.executemany(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id, jenjang_id, weekday, expectation) VALUES (?, ?, ?, ?)\", [(year_id, j, w, 'EXPECTED' if 1 <= w <= 5 else 'NOT_EXPECTED') for j in (smp_id, sd_id) for w in range(7)])",
-    "master = str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'active')\", (master, 'Hana SMP7C', 'hana smp7c')); db.execute(\"INSERT INTO students (name, jenjang, class_name) VALUES ('Hana SMP7C', 'SMP', '7C')\"); hana_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, class_name, class_assigned, lifecycle_state) VALUES (?, ?, ?, ?, '7C', 1, 'ACTIVE')\", (hana_id, master, year_id, smp_id))",
-    "db.execute(\"INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Matematika', ?, 1, 1)\", (smp_id,)); subject_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]; db.execute(\"INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('UH1', 'sumatif', ?), ('UH2', 'sumatif', ?)\", (subject_id, subject_id)); components = [row[0] for row in db.execute(\"SELECT id FROM assessment_components WHERE subject_id = ? ORDER BY id\", (subject_id,)).fetchall()]; enrollments = [row for row in db.execute(\"SELECT e.id, s.name FROM student_enrollments e JOIN students s ON s.id = e.student_id WHERE e.academic_year_id = ? AND e.jenjang_id = ? ORDER BY e.id\", (year_id, smp_id)).fetchall()]; db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, score) VALUES (?, ?, ?, 80), (?, ?, ?, 90), (?, ?, ?, 70)\", (enrollments[0][0], subject_id, components[0], enrollments[0][0], subject_id, components[1], enrollments[1][0], subject_id, components[0])); db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true", BYPASS_STUDENT_LINKING_GATE: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createReportFixture(path);
 }
 
 function seedManualClassInventory(client: any): { academicYearId: number; previousAcademicYearId: number; classIds: Record<string, number> } {
