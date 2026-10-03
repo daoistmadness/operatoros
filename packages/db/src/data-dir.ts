@@ -46,8 +46,12 @@ function contained(path: string, root: string): boolean {
   return value === "" || (!value.startsWith("..") && !isAbsolute(value));
 }
 
-function repositoryCommonDirectory(repositoryRoot: string): string {
-  const result = Bun.spawnSync(["git", "-C", repositoryRoot, "rev-parse", "--git-common-dir"], { stdout: "pipe", stderr: "pipe" });
+export function repositoryCommonDirectory(repositoryRoot: string): string {
+  const env = { ...process.env };
+  const local = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe", stderr: "pipe" });
+  if (local.exitCode !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
+  for (const key of local.stdout.toString().trim().split("\n")) delete env[key];
+  const result = Bun.spawnSync(["git", "-C", repositoryRoot, "rev-parse", "--git-common-dir"], { env, stdout: "pipe", stderr: "pipe" });
   if (result.exitCode !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
   const output = result.stdout.toString().trim();
   if (!output) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);

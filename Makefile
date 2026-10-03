@@ -43,18 +43,18 @@ dev-db-path:
 	@bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format database
 
 dev-db-status:
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py status --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && bun packages/db/src/dev-db-cli.ts status --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
 
 dev-sessions-status:
 	@bun scripts/operatoros-dev-runtime.ts status --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
 
 dev-db-reset:
 	@bun scripts/operatoros-dev-runtime.ts require-no-active-session --runtime "$(CURDIR)/.runtime/operatoros-dev" --repo "$(CURDIR)"
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA" --confirm "$(CONFIRM)"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && bun packages/db/src/dev-db-cli.ts reset --repo "$(CURDIR)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA" --confirm "$(CONFIRM)"
 
 dev-db-candidates:
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && bun packages/db/src/dev-db-cli.ts candidates --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
 
 dev-db-adopt:
 	@test -n "$(SESSION)" || (echo "SESSION is required" >&2; exit 2)
-	@python_tooling="$$(bun scripts/python-tooling-env.ts --repo "$(CURDIR)" print-executable)" && DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && "$$python_tooling" scripts/development_database.py adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
+	@DATA_DIR="$$(bun packages/db/src/data-dir-cli.ts --repo "$(CURDIR)" --format data-dir)" && SOURCE_SCHEMA="$$(bun packages/db/src/schema-version-cli.ts --format current)" && bun packages/db/src/dev-db-cli.ts adopt --repo "$(CURDIR)" --runtime "$(CURDIR)/.runtime/operatoros-dev" --session "$(SESSION)" --data-dir "$$DATA_DIR" --expected-schema "$$SOURCE_SCHEMA"
