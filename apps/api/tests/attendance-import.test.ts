@@ -6,33 +6,14 @@ import { openDatabase } from "@operatoros/db";
 import { calculateLateMinutes } from "../src/domains/attendance-rules";
 import { parseDuration, parseExcelDate, parseExcelTime } from "@operatoros/excel";
 import { readAttendanceWorkbook } from "../src/import/excel-reader";
-import { python } from "./python";
+import { createAttendanceImportFixture } from "./fixtures/attendance-imports";
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"];
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "from argon2 import PasswordHasher",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db = sqlite3.connect(path); ph = PasswordHasher()",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('golden-admin', ph.hash('golden-admin-pass-1'), 'admin'), ('golden-staff', ph.hash('golden-staff-pass-1'), 'staff')])",
-    "students = [(9001, 'Andi', 'SMP', 'SMP7A'), (9002, 'Beta', 'SMP', 'SMP7A'), (9003, 'Citra', 'SMP', 'SMP7B'), (9101, 'Diana', 'SMA', 'SMA2C')]",
-    "for sid, name, jenjang, class_name in students:",
-    "    master = str(uuid.uuid4())",
-    "    db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'active')\", (master, name, name.lower()))",
-    "    db.execute(\"INSERT INTO students (id, name, jenjang, class_name) VALUES (?, ?, ?, ?)\", (sid, name, jenjang, class_name))",
-    "    db.execute(\"INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active) VALUES (?, ?, ?, 'attendance_device', '2026-01-01', 1)\", (master, sid, str(sid)))",
-    "db.executemany('INSERT INTO jenjang_config (jenjang, cutoff_time, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)', [('SMP', '07:15'), ('SMA', '07:00')])",
-    "db.executemany('INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, overtime, exception, week, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [(9001, '2026-06-15', '07:00:00', '16:00:00', 0, 'none', 0, None, None, '25', 'on-time'), (9002, '2026-06-16', '08:00:00', '16:00:00', 45, 'calculated', 0, None, None, '25', 'late')])",
-    "db.commit(); db.close()",
-  ].join("\n");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAttendanceImportFixture(path);
 }
 
 async function workbook(rows: unknown[][], customHeaders = headers): Promise<Uint8Array> {
