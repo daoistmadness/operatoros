@@ -1,32 +1,32 @@
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import type { Database } from "bun:sqlite";
+import { seedFixtureDefaults } from "./defaults";
 
 /** Maintained fixture data used by current API tests, independent of migration evidence. */
-export function createGoldenFixture(path: string, kind: "academic" | "reports"): void {
+export function createGoldenFixture(path: string, kind: "academic" | "reports" | "academic-with-defaults" | "reports-with-defaults"): void {
   createFreshDatabase(path);
   const handle = openDatabase(path);
   try {
     handle.client.transaction(() => {
+      if (kind === "academic-with-defaults") seedFixtureDefaults(handle.client);
       for (const [username, password, role, active] of [
         ["golden-admin", "golden-admin-pass-1", "admin", 1],
         ["golden-staff", "golden-staff-pass-1", "staff", 1],
         ["golden-inactive", "golden-inactive-pass", "staff", 0],
       ] as const) handle.client.run("INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,?)", [username, Bun.password.hashSync(password, "argon2id"), role, active]);
-      if (kind === "academic") academic(handle.client); else reports(handle.client);
+      if (kind.startsWith("academic")) academic(handle.client); else reports(handle.client);
+      if (kind === "reports-with-defaults") seedFixtureDefaults(handle.client);
     })();
   } finally { handle.close(); }
 }
 
 function academic(client: Database): void {
-  client.exec(`
-    INSERT INTO academic_years (id,label,start_date,end_date,status,is_default) VALUES
-      (1,'2025/2026-academic','2025-07-01','2026-06-30','upcoming',0),
-      (2,'2026/2027-academic','2026-07-01','2027-06-30','upcoming',0);
-    INSERT INTO jenjangs (id,name,code,level) VALUES (1,'SMP','SMP','junior');
-    INSERT INTO academic_programs (id,jenjang_id,name) VALUES (1,1,'SMP Program');
-    INSERT INTO academic_grades (id,jenjang_id,program_id,name,sequence_number) VALUES (1,1,1,'Grade 7',1);
-    INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,2,1,'7A');
-  `);
+  const oldYear = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2025/2026-academic','2025-07-01','2026-06-30','upcoming',0)").lastInsertRowid);
+  const year = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-academic','2026-07-01','2027-06-30','upcoming',0)").lastInsertRowid);
+  const jenjang = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SMP','SMP','junior')").lastInsertRowid);
+  const program = Number(client.run("INSERT INTO academic_programs (jenjang_id,name) VALUES (?,'SMP Program')", [jenjang]).lastInsertRowid);
+  const grade = Number(client.run("INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number) VALUES (?,?,'Grade 7',1)", [jenjang, program]).lastInsertRowid);
+  const academicClass = Number(client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name) VALUES (?,?,'7A')", [year, grade]).lastInsertRowid);
   const masters = ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"];
   for (const id of masters) client.run("INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?,?,?,'active')", [id, `Academic Master ${id.slice(0, 4)}`, `academic master ${id.slice(0, 4)}`]);
   const students = [[701, "Linked Student", masters[0]], [702, "Unlinked Student", null], [703, "Ambiguous Student", masters[1]], [704, "Second Ambiguous Student", null]] as const;
@@ -34,8 +34,8 @@ function academic(client: Database): void {
     client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (?,?,'SMP','7A')", [id, name]);
     if (master) client.run("INSERT INTO student_device_identities (student_master_id,legacy_student_id,device_identifier,device_source,effective_from,is_active) VALUES (?,?,?,'attendance_device','2026-01-01',1)", [master, id, String(id)]);
   }
-  client.run("INSERT INTO student_enrollments (student_master_id,academic_year_id,jenjang_id,class_name,class_assigned,lifecycle_state,effective_from,effective_to) VALUES (?,1,1,'7A-old',0,'ENDED','2025-07-01','2026-06-30')", [masters[0]!]);
-  client.run("INSERT INTO student_enrollments (student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,lifecycle_state,effective_from) VALUES (?,2,1,1,'7A',0,'ACTIVE','2026-07-01')", [masters[0]!]);
+  client.run("INSERT INTO student_enrollments (student_master_id,academic_year_id,jenjang_id,class_name,class_assigned,lifecycle_state,effective_from,effective_to) VALUES (?,?,?,'7A-old',0,'ENDED','2025-07-01','2026-06-30')", [masters[0]!, oldYear, jenjang]);
+  client.run("INSERT INTO student_enrollments (student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,lifecycle_state,effective_from) VALUES (?,?,?,?,'7A',0,'ACTIVE','2026-07-01')", [masters[0]!, year, jenjang, academicClass]);
 }
 
 function reports(client: Database): void {

@@ -2,28 +2,13 @@ import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
-import { python } from "./python";
+import { createGoldenFixture } from "./fixtures/golden";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const staffId = "synthetic-staff-admin";
 
 function seedAcademic(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import importlib.util, sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from core import database as core_database; from sqlalchemy import create_engine; core_database.engine.dispose(); core_database.engine = create_engine(f'sqlite:///{path}'); core_database.SessionLocal.configure(bind=core_database.engine)",
-    "import importlib; from pathlib import Path as P; [importlib.import_module('models.' + f.stem) for f in sorted(P('backend/src/models').glob('*.py')) if f.stem != '__init__']; core_database.init_db()",
-    "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_academic(path)",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], {
-    cwd: repoRoot,
-    env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true", BYPASS_STUDENT_LINKING_GATE: "true" },
-  });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createGoldenFixture(path, "academic-with-defaults");
 }
 
 function sessionCookie(response: Response): string {
