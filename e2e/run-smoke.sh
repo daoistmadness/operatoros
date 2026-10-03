@@ -8,14 +8,13 @@ operatoros_wsl_prepare_bun "$repo_root" || {
   printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
   exit 2
 }
-python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
-export OPERATOROS_PYTHON="$python"
-
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-smoke.sh" "$repo_root/e2e/runner-cleanup.sh" "$repo_root/e2e/tests/runner-cleanup.sh" "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
   bash "$repo_root/e2e/tests/runner-cleanup.sh"
   bun test "$repo_root/scripts/tests/e2e-workspace.test.ts" "$repo_root/scripts/tests/e2e-summaries.test.ts"
-  "$python" -m py_compile "$repo_root/e2e/helpers/seed-test-database.py"
+  for helper in seed-test-database choose-port db-snapshot db-verify db-gate-cleanup; do
+    bun build --target bun --outfile /dev/null "$repo_root/e2e/helpers/$helper.ts" >/dev/null
+  done
   exit 0
 fi
 
@@ -81,7 +80,8 @@ playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
 playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
 [[ -x "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
 export PATH="$bun_bin:/usr/bin:/bin"
-"$python" "$repo_root/e2e/helpers/seed-test-database.py" --database "$database" >"$logs/fixture-seed.log" 2>&1
+bun "$repo_root/e2e/helpers/seed-test-database.ts" \
+  --database "$database" --runtime-root "$runtime_root" >"$logs/fixture-seed.log" 2>&1
 fixture_dir="$workspace/state/frontend-fixtures"
 "$bun_bin/bun" "$repo_root/packages/excel/scripts/create-browser-fixtures.ts" "$fixture_dir" "$(date -u +%d/%m/%Y)" >"$logs/browser-fixtures.log" 2>&1
 export OPERATOROS_E2E_IMPORT_XLSX="$fixture_dir/attendance.xlsx"
@@ -89,16 +89,8 @@ export OPERATOROS_E2E_IMPORT_XLS="$fixture_dir/attendance.xls"
 export OPERATOROS_E2E_MACHINE_IMPORT_XLSX="$fixture_dir/machine-attendance.xlsx"
 export OPERATOROS_E2E_ROSTER_XLSX="$fixture_dir/student-roster.xlsx"
 
-"$python" - "$database" "$results/database-before.json" <<'PY'
-import hashlib, json, sqlite3, sys
-database, output = sys.argv[1:]
-with sqlite3.connect(database) as connection:
-    counts = {name: connection.execute(f"SELECT COUNT(*) FROM {name}").fetchone()[0] for name in ("student_enrollments", "attendance")}
-    enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments ORDER BY id").fetchall()
-checksum = hashlib.sha256(open(database, "rb").read()).hexdigest()
-fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-json.dump({"disposable_database": database, "disposable_checksum": checksum, "enrollment_fingerprint": fingerprint, "enrollments": enrollments, "baseline_enrollment_max_id": max((row[0] for row in enrollments), default=0), **counts}, open(output, "w"), indent=2)
-PY
+bun "$repo_root/e2e/helpers/db-snapshot.ts" \
+  --runtime-root "$runtime_root" "$database" "$results/database-before.json"
 
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
 stack_started=true
@@ -107,20 +99,16 @@ export OPERATOROS_E2E_BACKEND_URL="$(bun -e 'console.log((await Bun.file(process
 export OPERATOROS_E2E_FRONTEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).frontend_url)' "$workspace/ports.json")"
 
 backend_status=0
-(cd "$repo_root/backend" && "$python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
+# Isolated legacy gate: backend smoke still runs on the retained Python
+# venv until its Bun port lands. Seeding/inspection/ports are Bun-native.
+isolated_python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
+(cd "$repo_root/backend" && "$isolated_python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
 
 # These two identities exist solely to make the synthetic fixture valid at
 # process startup. Remove them after readiness so the conflict UI can exercise
 # its intended explicit-link workflow.
-"$python" - "$database" <<'PY'
-import sqlite3
-import sys
-
-with sqlite3.connect(sys.argv[1]) as connection:
-    connection.execute(
-        "DELETE FROM student_device_identities WHERE device_source='E2E_GATE_ONLY'"
-    )
-PY
+bun "$repo_root/e2e/helpers/db-gate-cleanup.ts" \
+  --runtime-root "$runtime_root" "$database"
 
 web_status=0
 playwright_args=(--config "$repo_root/apps/web/playwright.config.ts")
@@ -133,36 +121,8 @@ cleanup_stack
 stack_stopped=true
 
 database_after="$(sha256sum "$database" | awk '{print $1}')"
-"$python" - "$database" "$database_after" "$results/database-before.json" "$results/database-after.json" <<'PY'
-import hashlib, json, sqlite3, sys
-database, database_checksum, before_file, output = sys.argv[1:]
-baseline_max_id = json.load(open(before_file))["baseline_enrollment_max_id"]
-with sqlite3.connect(database) as connection:
-    enrollment_count = connection.execute("SELECT COUNT(*) FROM student_enrollments").fetchone()[0]
-    attendance_count = connection.execute("SELECT COUNT(*) FROM attendance").fetchone()[0]
-    student_count = connection.execute("SELECT COUNT(*) FROM students").fetchone()[0]
-    student_master_count = connection.execute("SELECT COUNT(*) FROM student_masters").fetchone()[0]
-    reset_count = connection.execute("SELECT COUNT(*) FROM operations_audit_events WHERE entity_type='SCHOOL_DATA' AND entity_reference='STUDENTS' AND operation='RESET' AND success=1").fetchone()[0]
-    admin_count = connection.execute("SELECT COUNT(*) FROM users WHERE username='operatoros_e2e_admin' AND is_active=1").fetchone()[0]
-    foreign_key_issues = connection.execute("PRAGMA foreign_key_check").fetchall()
-    enrollments = connection.execute("SELECT id,student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name FROM student_enrollments WHERE id <= ? ORDER BY id", (baseline_max_id,)).fetchall()
-fingerprint = hashlib.sha256(json.dumps(enrollments, separators=(",", ":")).encode()).hexdigest()
-before = json.load(open(before_file))
-before_rows = {tuple(row) for row in before.get("enrollments", [])}
-after_rows = {tuple(row) for row in enrollments}
-expected_onboarding_change = {
-    row for row in after_rows - before_rows
-    if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] == 999999
-}
-expected_onboarding_before = {
-    row for row in before_rows
-    if row[2] == "00000000-0000-4000-8000-000000000004" and row[1] is None
-}
-unexpected_changes = (before_rows - after_rows - expected_onboarding_before) | (after_rows - before_rows - expected_onboarding_change)
-reset_failures = int(reset_count < 1 or admin_count < 1 or bool(foreign_key_issues) or any((student_count, student_master_count, enrollment_count, attendance_count)))
-unexpected_enrollment_changes = 0 if reset_count and reset_failures == 0 else len(unexpected_changes)
-json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": unexpected_enrollment_changes, "reset_verification_failures": reset_failures, "student_enrollments": enrollment_count, "students": student_count, "student_masters": student_master_count, "attendance": attendance_count, "admin_accounts": admin_count, "foreign_key_issues": len(foreign_key_issues)}, open(output, "w"), indent=2)
-PY
+bun "$repo_root/e2e/helpers/db-verify.ts" \
+  --runtime-root "$runtime_root" "$database" "$database_after" "$results/database-before.json" "$results/database-after.json"
 enrollment_before_fingerprint="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).enrollment_fingerprint)' "$results/database-before.json")"
 enrollment_after_fingerprint="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).enrollment_fingerprint)' "$results/database-after.json")"
 

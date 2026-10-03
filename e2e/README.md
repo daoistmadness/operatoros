@@ -13,7 +13,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 - `e2e/stop-test-stack.sh` stops only the session recorded for that invocation.
 - `e2e/clean.sh` removes only `.runtime/operatoros-e2e/` and `e2e-results/`.
 - `e2e/helpers/create-test-workspace.ts` defines the isolated database-path contract.
-- `e2e/helpers/seed-test-database.py` creates deterministic synthetic records.
+- `e2e/helpers/seed-test-database.ts` creates deterministic synthetic records.
 - `e2e/helpers/seed-readiness-database.ts` provisions only the synthetic readiness administrator.
 - `e2e/helpers/db-fingerprint.ts` inspects canonical sorted logical contents in disposable databases.
 - `e2e/helpers/write-summary.ts` and `e2e/helpers/write-full-summary.ts` produce terse summaries.
@@ -43,7 +43,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 
 ## 4. Runtime responsibilities
 
-The Elysia application stack uses native Linux Bun. Python remains only for disposable fixture setup and smoke assertions. Playwright 1.55.1 collection uses the installed native Linux Node runtime resolved by mise.
+The Elysia application stack uses native Linux Bun. Seeding, snapshots, gate cleanup, verification, and port selection are Bun-native. The backend smoke suite (`e2e/smoke/backend/`) remains an isolated pytest gate until its Bun port lands. Playwright 1.55.1 collection uses the installed native Linux Node runtime resolved by mise.
 
 The smoke runner records the native Node path before narrowing `PATH`. It then invokes the installed Playwright CLI directly. Bun remains the package manager and Elysia runtime for the candidate stack.
 
@@ -74,7 +74,7 @@ timeout 300 make e2e-smoke
 make e2e-clean
 ```
 
-`make e2e-validate` performs shell syntax and Python compilation checks without starting the application. `timeout 300 make e2e-smoke` is the local blocking critical-path command. `make e2e-clean` removes only E2E-owned generated state.
+`make e2e-validate` performs shell syntax and Bun helper build checks without starting the application. `timeout 300 make e2e-smoke` is the local blocking critical-path command. `make e2e-clean` removes only E2E-owned generated state.
 
 `make e2e-critical` runs the Fresh School readiness journey and the `@critical` attendance and academic journeys. It uses the same disposable roots, synthetic fixtures, dynamic ports, and cleanup as the existing E2E runners. `make e2e-smoke` remains the broad route and feature smoke suite.
 

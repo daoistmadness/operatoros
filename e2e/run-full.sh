@@ -4,8 +4,6 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$repo_root/scripts/validate-wsl-bun.sh"
 operatoros_wsl_prepare_bun "$repo_root" || { printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2; exit 2; }
-python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
-export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-smoke.sh"
   bun test "$repo_root/scripts/tests/e2e-summaries.test.ts"
