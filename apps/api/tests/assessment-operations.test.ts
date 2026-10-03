@@ -2,60 +2,12 @@ import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import { rm } from "node:fs/promises";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
-import { python } from "./python";
+import { createAssessmentFixture } from "./fixtures/assessments";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
-const migrationRoot = repoRoot;
 const secret = "assessment-operations-test-cookie-secret-32";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import importlib.util, sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "spec = importlib.util.spec_from_file_location('golden_seeds', 'docs/migration/ts-backend/golden/tools/seeds.py'); seeds = importlib.util.module_from_spec(spec); spec.loader.exec_module(seeds); seeds.seed_academic(path)",
-    "db = sqlite3.connect(path)",
-    "year = db.execute(\"SELECT id FROM academic_years WHERE label = '2026/2027-academic'\").fetchone()[0]",
-    "jenjang = db.execute(\"SELECT id FROM jenjangs WHERE name = 'SMP'\").fetchone()[0]",
-    "grade = db.execute(\"SELECT id FROM academic_grades WHERE jenjang_id = ?\", (jenjang,)).fetchone()[0]",
-    "class_a = db.execute(\"SELECT id FROM academic_classes WHERE academic_year_id = ? AND class_name = '7A'\", (year,)).fetchone()[0]",
-    "db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, '7B', 'B', 1)\", (year, grade))",
-    "class_b = db.execute(\"SELECT id FROM academic_classes WHERE academic_year_id = ? AND class_name = '7B'\", (year,)).fetchone()[0]",
-    "db.execute(\"INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) VALUES (?, ?, '7C', 'C', 1)\", (year, grade))",
-    "master_two = '22222222-2222-2222-2222-222222222222'",
-    "master_three = '33333333-3333-3333-3333-333333333333'",
-    "master_four = '44444444-4444-4444-4444-444444444444'",
-    "db.execute(\"UPDATE student_enrollments SET class_assigned = 1 WHERE academic_year_id = ? AND student_master_id = '11111111-1111-1111-1111-111111111111'\", (year,))",
-    "db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, 'Assessment Student Two', 'assessment student two', 'active')\", (master_three,))",
-    "db.execute(\"INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, 'Assessment Student Three', 'assessment student three', 'active')\", (master_four,))",
-    "db.execute(\"INSERT INTO student_enrollments (student_master_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, lifecycle_state, effective_from) VALUES (?, ?, ?, ?, '7A', 1, 'ACTIVE', '2026-07-01')\", (master_two, year, jenjang, class_a))",
-    "db.execute(\"INSERT INTO student_enrollments (student_master_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, lifecycle_state, effective_from) VALUES (?, ?, ?, ?, '7B', 1, 'ACTIVE', '2026-07-01')\", (master_four, year, jenjang, class_b))",
-    "db.execute(\"INSERT INTO student_enrollments (student_master_id, academic_year_id, jenjang_id, academic_class_id, class_name, class_assigned, lifecycle_state, effective_from) VALUES (?, ?, ?, NULL, 'Outside', 1, 'ACTIVE', '2026-07-01')\", (master_three, year, jenjang))",
-    "math = db.execute(\"INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Mathematics', ?, 1, 1)\", (jenjang,)).lastrowid",
-    "science = db.execute(\"INSERT INTO subjects (name, jenjang_id, supports_sumatif, supports_formatif) VALUES ('Science', ?, 1, 1)\", (jenjang,)).lastrowid",
-    "quiz = db.execute(\"INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('Quiz', 'formatif', ?)\", (math,)).lastrowid",
-    "exam = db.execute(\"INSERT INTO assessment_components (name, assessment_type, subject_id) VALUES ('Exam', 'sumatif', ?)\", (science,)).lastrowid",
-    "db.execute(\"INSERT INTO academic_assessment_sessions (academic_year_id, term_number, label, assessment_date) VALUES (?, 1, 'Midterm', '2026-08-15')\", (year,))",
-    "session_one = db.execute(\"SELECT id FROM academic_assessment_sessions WHERE label = 'Midterm'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO academic_assessment_sessions (academic_year_id, term_number, label, assessment_date) VALUES (?, 1, 'Project Review', NULL)\", (year,))",
-    "session_two = db.execute(\"SELECT id FROM academic_assessment_sessions WHERE label = 'Project Review'\").fetchone()[0]",
-    "db.execute(\"INSERT INTO academic_assessment_sessions (academic_year_id, term_number, label, assessment_date) VALUES (?, 2, 'Final', '2027-01-15')\", (year,))",
-    "session_three = db.execute(\"SELECT id FROM academic_assessment_sessions WHERE label = 'Final'\").fetchone()[0]",
-    "enrollment_one = db.execute(\"SELECT id FROM student_enrollments WHERE student_master_id = '11111111-1111-1111-1111-111111111111' AND academic_year_id = ?\", (year,)).fetchone()[0]",
-    "enrollment_two = db.execute(\"SELECT id FROM student_enrollments WHERE student_master_id = ? AND academic_year_id = ? ORDER BY id DESC LIMIT 1\", (master_two, year)).fetchone()[0]",
-    "enrollment_three = db.execute(\"SELECT id FROM student_enrollments WHERE student_master_id = ? AND academic_year_id = ?\", (master_three, year)).fetchone()[0]",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, 0)\", (enrollment_one, math, quiz, session_one))",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, NULL)\", (enrollment_two, math, quiz, session_one))",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, 88)\", (enrollment_one, math, quiz, session_two))",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, 91)\", (enrollment_two, math, quiz, session_two))",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, ?, 73)\", (enrollment_three, math, quiz, session_one))",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id, subject_id, component_id, assessment_session_id, score) VALUES (?, ?, ?, NULL, 99)\", (enrollment_one, science, exam))",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: migrationRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true", BYPASS_STUDENT_LINKING_GATE: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAssessmentFixture(path, "operations");
 }
 
 function cookie(response: Response): string {
