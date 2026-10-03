@@ -99,10 +99,7 @@ export OPERATOROS_E2E_BACKEND_URL="$(bun -e 'console.log((await Bun.file(process
 export OPERATOROS_E2E_FRONTEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).frontend_url)' "$workspace/ports.json")"
 
 backend_status=0
-# Isolated legacy gate: backend smoke still runs on the retained Python
-# venv until its Bun port lands. Seeding/inspection/ports are Bun-native.
-isolated_python="$(bun "$repo_root/scripts/python-tooling-env.ts" --repo "$repo_root" print-executable)"
-(cd "$repo_root/backend" && "$isolated_python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
+(PATH="$bun_bin:/usr/bin:/bin" "$bun_bin/bun" test --reporter=junit --reporter-outfile="$junit/backend.xml" "$repo_root/e2e/smoke/backend/smoke-scenarios.test.ts") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
 
 # These two identities exist solely to make the synthetic fixture valid at
 # process startup. Remove them after readiness so the conflict UI can exercise

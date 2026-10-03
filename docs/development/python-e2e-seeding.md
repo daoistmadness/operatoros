@@ -39,13 +39,15 @@ wall-clock attendance dates vary by design.
 
 ## Active scan and deferred work
 
-No E2E seeder, inspector, verifier, or port picker imports/spawns Python.
-The isolated `e2e/smoke/backend/` pytest gate still runs on the retained
-venv until its Bun port lands; it is the only remaining E2E Python caller.
-Toolchain plumbing (`scripts/python-tooling-env.ts`, `mise run
-python:bootstrap`, test tiers/fresh parity, `turbo.json` passthrough, CI
-bootstrap) remains for the final teardown phase. Backend and golden evidence
-stay frozen; historical retirement is separately authorized.
+No E2E seeder, inspector, verifier, port picker, or backend smoke test
+imports/spawns Python. The `e2e/smoke/backend/` pytest gate is retired;
+`smoke-scenarios.test.ts` runs the same seven scenarios on Bun with native
+fetch, `@operatoros/db`, and ExcelJS-backed `@operatoros/excel` helpers
+(relative `packages/excel` import, matching the existing browser-fixture
+script precedent). Toolchain plumbing (`scripts/python-tooling-env.ts`,
+`mise run python:bootstrap`, test tiers/fresh parity, `turbo.json`
+passthrough, CI bootstrap) remains for the final teardown phase. Backend and
+golden evidence stay frozen; historical retirement is separately authorized.
 
 ## Validation
 
