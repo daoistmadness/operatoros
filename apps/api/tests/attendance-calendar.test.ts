@@ -4,32 +4,12 @@ import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calendarWeekday, resolveAttendanceExpectation } from "../src/domains/attendance-calendar";
 import { resolveAttendanceSubmissionTiming } from "../src/domains/attendance-submission-deadline";
-import { python } from "./python";
+import { createAttendancePolicyFixture } from "./fixtures/attendance-policy";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-attendance-calendar-test-secret-32";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from argon2 import PasswordHasher; ph = PasswordHasher(); db = sqlite3.connect(path)",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('calendar-admin', ph.hash('calendar-admin-pass-1'), 'admin'), ('calendar-staff', ph.hash('calendar-staff-pass-1'), 'staff')])",
-    "year_id = db.execute(\"INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-calendar','2026-07-01','2027-06-30','active',1)\").lastrowid",
-    "jenjang_id = db.execute(\"INSERT INTO jenjangs (name,code,level,active) VALUES ('SMP','SMP','junior',1)\").lastrowid",
-    "program_id = db.execute(\"INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?, 'MAIN', 1)\", (jenjang_id,)).lastrowid",
-    "grade_id = db.execute(\"INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?, ?, 'Grade 7', 1, 1)\", (jenjang_id,program_id)).lastrowid",
-    "class_id = db.execute(\"INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?, ?, '7A','A',1)\", (year_id,grade_id)).lastrowid",
-    "master = str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?, 'Calendar Student', 'calendar student', 'active')\", (master,)); db.execute(\"INSERT INTO students (id,name,jenjang,class_name) VALUES (1001,'Calendar Student','SMP','7A')\")",
-    "db.execute(\"INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (?,?,?,?,?,?,1,'2026-07-01','ACTIVE')\", (1001,master,year_id,jenjang_id,class_id,'7A'))",
-    "db.execute(\"INSERT INTO attendance (student_id,date,check_in,late_duration,late_source,is_absent,status) VALUES (1001,'2026-08-03','07:30:00',0,'test',0,'on-time')\")",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAttendancePolicyFixture(path, "calendar");
 }
 
 function cookie(response: Response): string {
