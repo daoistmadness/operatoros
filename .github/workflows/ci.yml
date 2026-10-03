@@ -67,7 +67,7 @@ jobs:
         run: bun run test:security
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
-        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts
+        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
       - name: Verify hk and Turbo toolchain
         working-directory: ${{ github.workspace }}
         env:
