@@ -24,8 +24,9 @@ difference; benchmark timings are measurements.
 ## Active scan and deferred work
 
 No API test or benchmark file imports/spawns Python after this unit. The
-`apps/api/tests/python.ts` bridge remains only as dead code until its removal
-unit. E2E smoke seeding/inspection/port allocation/backend assertions and
+`apps/api/tests/python.ts` bridge is retired in the follow-up commit on this
+branch (zero callers; `apps/api/package.json` already runs plain `bun test`).
+E2E smoke seeding/inspection/port allocation/backend assertions and
 active Python infrastructure (`scripts/python-tooling-env.ts`, `mise run
 python:bootstrap`, test tiers/fresh parity, `e2e/run-*.sh`) remain. Backend and
 golden evidence stay frozen; historical retirement is separately authorized.
