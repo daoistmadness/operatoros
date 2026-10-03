@@ -3,40 +3,14 @@ import { mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
-import { python } from "./python";
+import { createResetFixture } from "./fixtures/reset";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const backupKey = Buffer.alloc(32, 7).toString("base64");
 const targets = ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions"];
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path; import sqlite3, sys, uuid",
-    "sys.path.insert(0, 'backend/src'); from core.schema_migrations import bootstrap_fresh_sqlite_database; from argon2 import PasswordHasher",
-    "path=Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); db=sqlite3.connect(path); db.execute('PRAGMA foreign_keys=ON'); ph=PasswordHasher()",
-    "db.executemany('INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,1)', [('golden-admin',ph.hash('golden-admin-pass-1'),'admin'),('golden-staff',ph.hash('golden-staff-pass-1'),'staff')])",
-    "year_id=db.execute(\"INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-reset-test','2026-07-01','2027-06-30','active',1)\").lastrowid",
-    "jenjang_id=db.execute(\"INSERT INTO jenjangs (name,code,level,active) VALUES ('SMP','RESET-SMP','junior',1)\").lastrowid",
-    "program_id=db.execute(\"INSERT INTO academic_programs (jenjang_id,name,active) VALUES (?, 'RESET-MAIN', 1)\", (jenjang_id,)).lastrowid",
-    "grade_id=db.execute(\"INSERT INTO academic_grades (jenjang_id,program_id,name,sequence_number,active) VALUES (?, ?, 'Reset Grade 7', 1, 1)\", (jenjang_id,program_id)).lastrowid",
-    "class_id=db.execute(\"INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (?,?,'Reset 7A','A',1)\", (year_id,grade_id)).lastrowid",
-    "master=str(uuid.uuid4()); db.execute(\"INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES (?, 'Synthetic Reset Student', 'synthetic reset student', 'active')\", (master,)); db.execute(\"INSERT INTO students (id,name,jenjang,class_name) VALUES (71001,'Synthetic Reset Student','SMP','Reset 7A')\")",
-    "enrollment_id=db.execute(\"INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (71001,?,?,?,?,?,1,'2026-07-01','ACTIVE')\", (master,year_id,jenjang_id,class_id,'Reset 7A')).lastrowid",
-    "subject_id=db.execute(\"INSERT INTO subjects (name,jenjang_id,supports_sumatif,supports_formatif) VALUES ('Reset Math',?,1,1)\", (jenjang_id,)).lastrowid",
-    "component_id=db.execute(\"INSERT INTO assessment_components (name,assessment_type,subject_id) VALUES ('Reset Exam','sumatif',?)\", (subject_id,)).lastrowid",
-    "db.execute(\"INSERT INTO student_subject_grades (enrollment_id,subject_id,component_id,score) VALUES (?,?,?,88)\", (enrollment_id,subject_id,component_id))",
-    "db.execute(\"INSERT INTO academic_interventions (student_id,enrollment_id,academic_year_id,jenjang_id,subject_id,student_name,subject_name,effective_threshold,threshold_source,status,priority) VALUES (71001,?,?,?,?,?,'Reset Math',75,'test','open','medium')\", (enrollment_id,year_id,jenjang_id,subject_id,'Synthetic Reset Student'))",
-    "db.execute(\"INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (71001,'2026-08-26','07:30:00','15:00:00',0,'test',0,'on-time')\")",
-    "db.execute(\"INSERT INTO attendance_calendar_weekday_rules (academic_year_id,jenjang_id,weekday,expectation) VALUES (?,?,1,'EXPECTED')\", (year_id,jenjang_id))",
-    "db.execute(\"INSERT INTO backup_scheduler_config (updated_at) VALUES (CURRENT_TIMESTAMP)\")",
-    "db.execute(\"INSERT INTO report_branding_configs (school_name,report_header_title,report_subtitle,primary_color,secondary_color,accent_color,footer_text,prepared_by,is_default) VALUES ('Synthetic School','Synthetic Report','Test',' #000000','#111111','#222222','Synthetic footer','Test admin',1)\")",
-    "db.execute(\"INSERT INTO report_templates (name,template_type,output_format,is_default,is_active,page_order_json,section_visibility_json,chart_visibility_json,excel_sheet_visibility_json,default_filters_json,export_options_json) VALUES ('Synthetic template','attendance','pdf',0,1,'[]','{}','{}','{}','{}','{}')\")",
-    "db.execute(\"INSERT INTO staff_job_title_mappings (raw_title,normalized_title,status) VALUES ('Synthetic role','synthetic-role','APPROVED')\")",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createResetFixture(path);
 }
 
 function cookie(response: Response): string {
