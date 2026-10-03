@@ -2,11 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
-import { openDatabase } from "@operatoros/db";
+import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { authorize } from "../src/auth/service";
-import { python } from "./python";
+import { createAccountFixture } from "./fixtures/accounts";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function pathFor(label: string): string {
@@ -14,21 +13,7 @@ function pathFor(label: string): string {
 }
 
 function seedUsers(path: string, includeUsers = true): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "from argon2 import PasswordHasher",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path); ph = PasswordHasher()",
-    "db = sqlite3.connect(path)",
-    "include_users = sys.argv[2] == '1'; db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, ?)', [(\"golden-admin\", ph.hash(\"golden-admin-pass-1\"), \"admin\", 1), (\"golden-staff\", ph.hash(\"golden-staff-pass-1\"), \"staff\", 1), (\"golden-inactive\", ph.hash(\"golden-inactive-pass\"), \"staff\", 0)] if include_users else []); db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path, includeUsers ? "1" : "0"], {
-    cwd: repoRoot,
-    env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" },
-  });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  if (includeUsers) createAccountFixture(path, "golden"); else createFreshDatabase(path);
 }
 
 function setup(label: string, includeUsers = true, authOverrides: Record<string, unknown> = {}) {

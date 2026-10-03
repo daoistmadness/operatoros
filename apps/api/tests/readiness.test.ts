@@ -6,24 +6,12 @@ import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { FEATURE_REQUIREMENTS, mapReadinessToResponse } from "../src/domains/readiness";
-import { python } from "./python";
+import { createAccountFixture } from "./fixtures/accounts";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-readiness-test-secret-32-characters";
 
 function seed(path: string): void {
-  const script = [
-    "from pathlib import Path",
-    "import sqlite3, sys",
-    "sys.path.insert(0, 'backend/src')",
-    "from core.schema_migrations import bootstrap_fresh_sqlite_database",
-    "path = Path(sys.argv[1]); bootstrap_fresh_sqlite_database(path)",
-    "from argon2 import PasswordHasher; db = sqlite3.connect(path); ph = PasswordHasher()",
-    "db.executemany('INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, 1)', [('readiness-admin', ph.hash('readiness-admin-pass-1'), 'admin'), ('readiness-staff', ph.hash('readiness-staff-pass-1'), 'staff')])",
-    "db.commit(); db.close()",
-  ].join("; ");
-  const result = Bun.spawnSync([python, "-c", script, path], { cwd: repoRoot, env: { ...process.env, DATABASE_URL: `sqlite:///${path}`, AUTH_COOKIE_SECRET: secret, OPERATOROS_ISOLATED_TEST: "true" } });
-  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  createAccountFixture(path, "readiness");
 }
 
 function cookie(response: Response): string {
