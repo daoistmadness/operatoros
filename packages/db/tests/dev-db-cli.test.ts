@@ -39,6 +39,19 @@ function fixture() {
 }
 
 describe("development DB CLI canonical authority", () => {
+  test("explicit checkout identity overrides inherited Git hook environment", () => {
+    const f = fixture(), other = fixture(), prior = process.env.GIT_DIR;
+    process.env.GIT_DIR = join(other.repo, ".git");
+    try {
+      f.run("ensure");
+      const metadata = JSON.parse(readFileSync(join(f.data, "database.json"), "utf8"));
+      expect(metadata.git_common_directory_hash).toBe(createHash("sha256").update(join(f.repo, ".git")).digest("hex"));
+      const cleanEnv = { ...f.env, XDG_DATA_HOME: join(f.root, "xdg") };
+      const path = devDatabaseCommand(["path", "--repo", f.repo], cleanEnv);
+      expect(path).toContain(createHash("sha256").update(join(f.repo, ".git")).digest("hex").slice(0, 16));
+      expect(existsSync(other.data)).toBe(false);
+    } finally { if (prior === undefined) delete process.env.GIT_DIR; else process.env.GIT_DIR = prior; }
+  });
   test("path/status do not create missing data and ignore ambient DATABASE_URL", () => {
     const f = fixture(); f.env.DATABASE_URL = "sqlite:///never-open-this-path";
     expect(f.run("path")).toBe(f.database);
@@ -95,6 +108,8 @@ describe("development DB CLI canonical authority", () => {
     const f = fixture(); mkdirSync(f.data); writeFileSync(f.database, "synthetic invalid sqlite"); const before = hash(f.database);
     expect(JSON.parse(f.run("status")).compatibility).toBe("INVALID_SCHEMA_STATE");
     expect(() => f.run("ensure")).toThrow("PERSISTENT_DEVELOPMENT_DATABASE_INCOMPATIBLE"); expect(hash(f.database)).toBe(before);
+    expect(() => f.run("reset")).toThrow("DEVELOPMENT_DATABASE_RESET_CONFIRMATION_REQUIRED"); expect(hash(f.database)).toBe(before);
+    expect(f.run("reset", "--confirm", "RESET")).toBe(f.database); expect(inspectDevelopmentDatabase(f.database).schema_checksum_valid).toBe(true);
   });
   test("symlinked data, files, metadata, and candidate roots fail closed", () => {
     const f = fixture(); mkdirSync(f.data); const other = join(f.root, "other"); mkdirSync(other);
