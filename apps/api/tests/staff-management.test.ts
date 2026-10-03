@@ -93,13 +93,14 @@ describe("employee master data", () => {
       const updated = await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { job_title_raw: "Synthetic Lead", expected_updated_at: profile.updated_at }));
       expect(updated.status).toBe(200);
       expect((await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { full_name: "Stale overwrite", expected_updated_at: profile.updated_at }))).status).toBe(409);
-      const status = await value.app.handle(jsonRequest("POST", `/api/staff/${profile.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: "2026-10-02" }));
+      const statusDate = new Date().toISOString().slice(0, 10);
+      const status = await value.app.handle(jsonRequest("POST", `/api/staff/${profile.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: statusDate }));
       expect(status.status).toBe(200);
-      expect((await status.json() as { employment_end_date: string }).employment_end_date).toBe("2026-10-02");
+      expect((await status.json() as { employment_end_date: string }).employment_end_date).toBe(statusDate);
       const future = await value.app.handle(jsonRequest("POST", `/api/staff/${profile.id}/employment-status`, value.admin, { employment_status: "ACTIVE", effective_date: "2099-01-01" }));
       expect(future.status).toBe(422);
       const history = await value.app.handle(jsonRequest("GET", `/api/staff/${profile.id}/history`, value.admin));
-      expect(await history.json()).toEqual(expect.arrayContaining([expect.objectContaining({ action: "EMPLOYMENT_HISTORY", effective_date: "2026-10-02" })]));
+      expect(await history.json()).toEqual(expect.arrayContaining([expect.objectContaining({ action: "EMPLOYMENT_HISTORY", effective_date: statusDate })]));
       const historic = await value.app.handle(jsonRequest("GET", "/api/staff/analytics/summary?as_of_date=2024-01-01", value.admin));
       expect((await historic.json() as { workforce: Record<string, number> }).workforce).toMatchObject({ total: 1, active: 1, former: 0 });
 
