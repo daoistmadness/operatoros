@@ -37,6 +37,8 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
     data: { academic_year_id: 1, jenjang_id: 1, weekdays: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, expectation: "EXPECTED" })).concat([6, 0].map((weekday) => ({ weekday, expectation: "NOT_EXPECTED" }))) },
   });
   expect(weekdays.status()).toBe(200);
+  // Consume the body so the shared request connection is released for reuse.
+  await weekdays.json();
 
   // Only E2E Ada is enrolled in class 1, so two boundary arrivals are recorded
   // for Ada across expected school days.
@@ -69,6 +71,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
       data: { entries: [{ student_id: adaId, status: "on-time", check_in: checkIn, check_out: "14:00" }] },
     });
     expect(entries.status()).toBe(200);
+    await entries.json();
   }
 
   // Scenarios B, C, E: the report shows the cutoff and canonical class metrics.
@@ -105,6 +108,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
   const exported = await page.request.get(`/api/analytics/tardiness-report/export-excel?date_from=${targetDate}&date_to=${nextDate}`);
   expect(exported.status()).toBe(200);
   expect(exported.headers()["content-type"]).toContain("spreadsheetml");
+  await exported.body();
 
   // Scenario D: a future cutoff applies only to later arrivals.
   await page.goto("/config/jenjang");
@@ -120,6 +124,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
     data: { entries: [{ student_id: adaId, status: "on-time", check_in: "07:32", check_out: "14:00" }] },
   });
   expect(laterEntry.status()).toBe(200);
+  await laterEntry.json();
   const afterFuturePolicy = await (await page.request.get(`/api/analytics/tardiness-report?date_from=${targetDate}&date_to=${laterDate}`)).json();
   expect(afterFuturePolicy.totals).toMatchObject({ late_events: 1, affected_students: 1, total_late_minutes: 1 });
 
