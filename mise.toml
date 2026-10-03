@@ -3,14 +3,10 @@ min_version = "2024.1.0"
 [settings]
 lockfile = true
 
-[settings.python]
-github_attestations = false
-
 [tools]
 bun = "1.4.2"
 hk = "1.56.1"
 node = "24.19.0"
-python = "3.12.3"
 
 [env]
 HK_MISE = "1"
@@ -36,7 +32,7 @@ bash scripts/validate-wsl-bun.sh --probe . >/dev/null || fail "the active Bun is
 for forbidden_lockfile in package-lock.json apps/web/package-lock.json yarn.lock pnpm-lock.yaml; do
   [ ! -e "$forbidden_lockfile" ] || fail "$forbidden_lockfile exists" "remove the obsolete project lockfile and use bun.lock"
 done
-printf 'PASS: toolchain Bun=%s Python=%s hk=%s\n' "$(bun --version)" "$(python --version 2>&1)" "$(hk --version)"
+printf 'PASS: toolchain Bun=%s hk=%s\n' "$(bun --version)" "$(hk --version)"
 printf 'PASS: workspace dependencies and native WSL Bun\n'
 printf 'PASS: origin/main=%s\n' "$(git rev-parse 'origin/main^{commit}')"
 printf 'PASS: checkout=%s branch=%s\n' "$(git rev-parse --show-toplevel)" "$(git branch --show-current)"

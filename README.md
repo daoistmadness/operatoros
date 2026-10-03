@@ -60,7 +60,7 @@ Only the backend grants access. Frontend identity and role state are navigation 
 
 ## Stack
 - Primary backend: Bun, TypeScript, Elysia, Drizzle, SQLite, ExcelJS
-- Validation: Bun-native suites (the frozen Python backend evidence uses historical SQLAlchemy/pandas/openpyxl/pytest fixtures only)
+- Validation: Bun-native suites
 - Frontend: React 19, Vite, React Router, Tailwind CSS 4, Chart.js, Framer Motion, lucide-react
 - Database: SQLite
 - Runtime: local Elysia backend and React browser UI
@@ -102,7 +102,6 @@ are generated and drift-checked through the frontend package scripts. See
 - Turborepo 2.11.4 — root-only task runner for affected checks and workspace graph validation
 - Bun 1.4.2 (installed via `mise install`; the root `bun.lock` is authoritative)
 - hk 1.56.1 and Node 24.19.0 (installed via `mise install`)
-- Python 3.12.3 (installed via `mise install`)
 - Agent Browser on the PATH if you want browser verification
 
 The root `devEngines.packageManager` declares Bun for Turbo. Mise pins Bun, and
@@ -114,7 +113,7 @@ repository does not require a Mise 2026.9.13-only configuration feature.
 Direct Bun/Vite and Bun/Elysia processes are the local-development workflow.
 The supported runtime is a local Elysia backend with the React frontend in a
 browser and a SQLite database. The retired Python backend remains only in
-historical migration evidence. Containers are not required.
+Git history. Containers are not required.
 
 ### Local Development Launcher
 ```bash

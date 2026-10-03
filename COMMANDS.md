@@ -5,13 +5,9 @@ commands; the underlying tools retain their existing responsibilities.
 
 ## Install
 
-- `mise install` — install the pinned Bun, hk, Node, and Python tools.
+- `mise install` — install the pinned Bun, hk, and Node tools.
 - `bun install --frozen-lockfile` — install workspace dependencies from the repository root.
 - `mise run doctor` — verify the active checkout and toolchain.
-
-Doctor and validation commands run entirely on Bun-native tooling. No Python
-virtual environment is required; the retired `mise run python:bootstrap` flow
-and its `OPERATOROS_PYTHON_VENV` override no longer exist.
 
 Optional browser tooling is external to the workspace:
 

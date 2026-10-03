@@ -16,7 +16,7 @@ evidence only. Monorepo: `apps/api/`, `apps/web/`, `packages/db/`,
 
 ## Commands
 
-Authorities: `mise.toml` (Bun 1.4.2, hk 1.56.1, Node 24.19.0, Python 3.12.3),
+Authorities: `mise.toml` (Bun 1.4.2, hk 1.56.1, Node 24.19.0),
 `package.json`, `Makefile`, [COMMANDS.md](COMMANDS.md); `bun.lock` + `mise.lock`
 are the lockfile authorities; CI runs these directly in `.github/workflows/ci.yml`.
 
@@ -56,7 +56,7 @@ legacy compatibility identifiers, not onboarding requirements.
 - Metrics are server-computed with canonical SQL; definitions live in [docs/analytics/METRICS.md](docs/analytics/METRICS.md). Browser code formats and adapts for Chart.js only. No recomputed business metrics, no persisted rollups without benchmark evidence and review. TanStack Table only for a bounded, justified table. Do not add TanStack Router/Form, Zod, or a new chart library. ExcelJS `4.4.0` is the `.xlsx` authority (`@e965/xlsx` for legacy `.xls`); Excel gets metrics from server DTOs, never computes attendance/grades/KKM/rankings; keep `.xls`/`.xlsx` parity tested; browser never generates authoritative reports — use the API export flow.
 - Auth: `astyx_session` stays an HttpOnly server-side cookie; no JWT or localStorage auth. Forwarded-IP headers are untrusted unless the exact direct peer is in `TRUSTED_PROXY_ADDRESSES`. Cookie-authenticated unsafe requests require the configured exact Origin. New backups require AES-256-GCM encryption with `BACKUP_ENCRYPTION_KEY` differing from `AUTH_COOKIE_SECRET`. See [SECURITY_HARDENING.md](docs/security/SECURITY_HARDENING.md) and [ROTATION_RUNBOOK.md](docs/security/ROTATION_RUNBOOK.md).
 - Data: `OPERATOROS_DATA_DIR` is the canonical data-root override (derives `operatoros.sqlite`, `backups/`, `logs/`); `OPERATOROS_DEV_DATA_DIR` is a deprecated alias. Startup validates but never migrates databases; never select a dev database from ambient `DATABASE_URL`. Tests/E2E use disposable synthetic roots only. Schema: `20260724_s42` fresh baseline, `20260929_s47` current head; protected operational DB stays S4.3 until a separately authorized migration (see [DATABASE_OPERATIONS.md](docs/operations/DATABASE_OPERATIONS.md)). Rollback pairs a restored S4.2 DB with `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`); `b47632c4210720f81804212544452c7c900c928c` is audit-only. New migrations need SQLite compatibility plus current-schema and fresh-parity tests; PostgreSQL reconsideration needs a new ADR.
-- Implementation prompts start with `/plan` (not `/goal`); use short active sentences, one instruction per sentence; keep identifiers exact (`mise.toml`, `mise.lock`, `OPERATOROS_PYTHON_VENV`, `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`, `operatoros_wsl_prepare_bun`, `./start-dev.sh`).
+- Implementation prompts start with `/plan` (not `/goal`); use short active sentences, one instruction per sentence; keep identifiers exact (`mise.toml`, `mise.lock`, `DATABASE_URL`, `origin/main`, `PROJECT_CONTEXT.md`, `operatoros_wsl_prepare_bun`, `./start-dev.sh`).
 
 ## Workflow
 

@@ -1,11 +1,6 @@
 # Utility Scripts
 
-This repository includes several one-off scripts for reporting, dashboard generation, and code repair. They are not standard application workflows.
-
-## Reporting and Dashboard Generation
-| Script | Purpose | Inputs | Outputs | Data Changes | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `generate_primary_lateness_dashboard.py` | Builds an Excel lateness dashboard from a CSV or workbook. | Source file path, optional sheet name, `--output`, `--term-days`, `--level-value`, `--default-level` | New `.xlsx` workbook with summary, charts, and detail sheets | No database writes | Safe when writing to a new output file. |
+This repository includes several one-off scripts for code repair. They are not standard application workflows.
 
 The former FastAPI repair scripts were retired with the Python application.
 
@@ -13,8 +8,6 @@ The former FastAPI repair scripts were retired with the Python application.
 | Script | Purpose | Inputs | Outputs | Data Changes | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `scripts/verify-browser.sh` | Runs the Agent Browser smoke test against a live frontend URL. | Frontend URL, Agent Browser installation, browser binaries | Screenshot and text diagnostics under `.artifacts/browser/` | No app data changes | Verification only; does not call the destructive reset endpoint. |
-| `scratch/verify_heb.py` | Prints auto, override, and final HEB values for sample months. | Local database | Console output | Read-only | Useful for quick verification. |
-| `scratch/check_sql.py` | Prints a compiled SQL query for inspection. | Local database | Console output | Read-only | Diagnostic only. |
 
 ## Safe Use Rules
 - Back up code and database files before running repair scripts.
