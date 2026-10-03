@@ -43,9 +43,8 @@ jobs:
           OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/data
         run: |
           mkdir -p "$OPERATOROS_DATA_DIR"
-          python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
           expected_schema="$(bun packages/db/src/schema-version-cli.ts --format current)"
-          "$python_tooling" scripts/development_database.py ensure \
+          bun packages/db/src/dev-db-cli.ts ensure \
             --repo . \
             --data-dir "$OPERATOROS_DATA_DIR" \
             --expected-schema "$expected_schema"
