@@ -21,8 +21,6 @@ jobs:
         working-directory: apps/api
     steps:
       - uses: actions/checkout@v5
-      - name: Select external Python tooling environment
-        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
       - uses: jdx/mise-action@v4
         with:
           cache: true
@@ -33,13 +31,6 @@ jobs:
           key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-1.4.2-
-      - name: Cache Python package downloads
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-python-3.12.3-${{ hashFiles('backend/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-python-3.12.3-
       - name: Cache Turbo task results
         uses: actions/cache@v5
         with:
@@ -51,11 +42,7 @@ jobs:
         run: |
           mise --version
           bun --version | grep -Eq "^1\.4\."
-          python --version
           mise ls --current
-      - name: Bootstrap external fixture-tool virtualenv
-        working-directory: ${{ github.workspace }}
-        run: mise run python:bootstrap
       - name: Install workspace dependencies (frozen lockfile)
         working-directory: ${{ github.workspace }}
         run: bun install --frozen-lockfile

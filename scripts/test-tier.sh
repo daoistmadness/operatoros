@@ -9,8 +9,6 @@ if ! operatoros_wsl_prepare_bun "$repo"; then
   printf '%s\n' "$OPERATOROS_WSL_TOOLCHAIN_ERROR" >&2
   exit 1
 fi
-python="$(bun "$repo/scripts/python-tooling-env.ts" --repo "$repo" print-executable)"
-export OPERATOROS_PYTHON="$python"
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
 native_node="$(command -v node || true)"
 if [[ -n "$native_node" ]]; then

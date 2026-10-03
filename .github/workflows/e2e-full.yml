@@ -19,22 +19,18 @@ concurrency:
 
 jobs:
   e2e-full:
-    name: Ubuntu / Bun 1.4.2 / Python 3.12
+    name: Ubuntu / Bun 1.4.2
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       CI: "true"
-      PYTHONPATH: backend/src
       DATABASE_URL: "sqlite:///:memory:"
       ENABLE_DESTRUCTIVE_OPERATIONS: "false"
       OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
       OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
-      OPERATOROS_TS_BOOTSTRAP_TESTS: "1"
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
-      - name: Select external Python tooling environment
-        run: echo "OPERATOROS_PYTHON_VENV=$RUNNER_TEMP/operatoros/python/venv" >> "$GITHUB_ENV"
 
       - name: Set up mise toolchain
         uses: jdx/mise-action@v4
@@ -47,24 +43,12 @@ jobs:
           key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-1.4.2-
-      - name: Cache Python package downloads
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-python-3.12.3-${{ hashFiles('backend/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-python-3.12.3-
-
       - name: Verify mise toolchain
         run: |
           mise --version
           bun --version | grep -Eq "^1\.4\."
           hk --version | grep -Eq "^hk 1\.56\.1$"
-          python --version
           mise ls --current
-
-      - name: Bootstrap external fixture-tool virtualenv
-        run: mise run python:bootstrap
 
       - name: Install backend TypeScript dependencies
         run: bun install --frozen-lockfile
