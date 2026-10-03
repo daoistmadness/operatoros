@@ -29,7 +29,6 @@ git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/ma
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
 [ "$(bun --version)" = "1.4.2" ] || fail "Bun 1.4.2 is not active" "mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
-[ -x "$(bun scripts/python-tooling-env.ts --repo . print-executable 2>/dev/null || true)" ] || fail "Python tooling environment is missing or stale" "mise run python:bootstrap"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
 [ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"
 [ -d node_modules ] && [ -x node_modules/.bin/turbo ] || fail "workspace dependencies are missing" "bun install --frozen-lockfile"
@@ -49,17 +48,11 @@ printf 'PASS: source schema head=%s\n' "$development_schema_head"
 printf 'PASS: development database=%s\n' "$development_database_status"
 """
 
-[tasks."python:bootstrap"]
-description = "Create or refresh the external retained Python tooling environment"
-run = "bun scripts/python-tooling-env.ts --repo . bootstrap"
-
 [tasks.test]
-description = "Run the Bun and Python automated test suites"
+description = "Run the Bun automated test suites"
 run = """
 bun run test
 bun test scripts/tests/*.test.ts
-python_tooling="$(bun scripts/python-tooling-env.ts --repo . print-executable)"
-"$python_tooling" -m pytest backend/tests scripts/tests -q
 """
 
 [tasks.check]

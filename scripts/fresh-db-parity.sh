@@ -2,11 +2,8 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PYTHON="$(bun "$REPO/scripts/python-tooling-env.ts" --repo "$REPO" print-executable)"
 
 test "$(uname -s)" = "Linux"
-test -x "$PYTHON"
-test -x "$PYTHON"
 
 case "$REPO" in
   /mnt/c/*) echo "BLOCKED: Windows workspace detected" >&2; exit 1 ;;
@@ -22,6 +19,6 @@ export OPERATOROS_ISOLATED_TEST=true
 export DATABASE_URL="sqlite:///$temporary_root/release-command.db"
 export AUTH_COOKIE_SECRET="fresh-parity-test-only-secret-32-chars"
 cd "$REPO/apps/api"
-PATH="${BUN_BIN:-$(dirname "$(command -v bun)")}:$PATH" OPERATOROS_PYTHON="$PYTHON" bun test tests/data-layer.test.ts
+PATH="${BUN_BIN:-$(dirname "$(command -v bun)")}:$PATH" bun test tests/data-layer.test.ts
 
 echo "FRESH_DATABASE_RELEASE_GATE_ESTABLISHED"
