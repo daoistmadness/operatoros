@@ -14,8 +14,8 @@ export OPERATOROS_PYTHON="$python"
 if [[ "${1:-}" == "--validate" ]]; then
   bash -n "$repo_root/e2e/run-smoke.sh" "$repo_root/e2e/runner-cleanup.sh" "$repo_root/e2e/tests/runner-cleanup.sh" "$repo_root/e2e/start-test-stack.sh" "$repo_root/e2e/stop-test-stack.sh" "$repo_root/e2e/clean.sh"
   bash "$repo_root/e2e/tests/runner-cleanup.sh"
-  bun test "$repo_root/scripts/tests/e2e-workspace.test.ts"
-  "$python" -m py_compile "$repo_root/e2e/helpers/seed-test-database.py" "$repo_root/e2e/helpers/write-summary.py"
+  bun test "$repo_root/scripts/tests/e2e-workspace.test.ts" "$repo_root/scripts/tests/e2e-summaries.test.ts"
+  "$python" -m py_compile "$repo_root/e2e/helpers/seed-test-database.py"
   exit 0
 fi
 
@@ -103,8 +103,8 @@ PY
 bash "$repo_root/e2e/start-test-stack.sh" "$workspace" "$logs"
 stack_started=true
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
-export OPERATOROS_E2E_BACKEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["backend_url"])' "$workspace/ports.json")"
-export OPERATOROS_E2E_FRONTEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
+export OPERATOROS_E2E_BACKEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).backend_url)' "$workspace/ports.json")"
+export OPERATOROS_E2E_FRONTEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).frontend_url)' "$workspace/ports.json")"
 
 backend_status=0
 (cd "$repo_root/backend" && "$python" -m pytest -q "$repo_root/e2e/smoke/backend" --junitxml="$junit/backend.xml") >"$logs/backend-smoke.log" 2>&1 || backend_status=$?
@@ -163,14 +163,14 @@ reset_failures = int(reset_count < 1 or admin_count < 1 or bool(foreign_key_issu
 unexpected_enrollment_changes = 0 if reset_count and reset_failures == 0 else len(unexpected_changes)
 json.dump({"disposable_checksum": database_checksum, "enrollment_fingerprint": fingerprint, "unexpected_enrollment_changes": unexpected_enrollment_changes, "reset_verification_failures": reset_failures, "student_enrollments": enrollment_count, "students": student_count, "student_masters": student_master_count, "attendance": attendance_count, "admin_accounts": admin_count, "foreign_key_issues": len(foreign_key_issues)}, open(output, "w"), indent=2)
 PY
-enrollment_before_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-before.json")"
-enrollment_after_fingerprint="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["enrollment_fingerprint"])' "$results/database-after.json")"
+enrollment_before_fingerprint="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).enrollment_fingerprint)' "$results/database-before.json")"
+enrollment_after_fingerprint="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).enrollment_fingerprint)' "$results/database-after.json")"
 
 status=PASS
 failed_args=()
 evidence_args=()
-unexpected_enrollment_changes="$($python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("unexpected_enrollment_changes", 0))' "$results/database-after.json")"
-reset_verification_failures="$($python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("reset_verification_failures", 0))' "$results/database-after.json")"
+unexpected_enrollment_changes="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).unexpected_enrollment_changes ?? 0)' "$results/database-after.json")"
+reset_verification_failures="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).reset_verification_failures ?? 0)' "$results/database-after.json")"
 if (( backend_status != 0 || web_status != 0 || unexpected_enrollment_changes != 0 || reset_verification_failures != 0 )); then
   status=FAIL
   evidence_args+=(--evidence "e2e-results/logs" --evidence "e2e-results/playwright" --evidence "e2e-results/database-after.json")
@@ -178,7 +178,7 @@ fi
 if [[ "$unexpected_enrollment_changes" != "0" ]]; then failed_args+=(--failed-test "Unexpected disposable enrollment changes"); fi
 if [[ "$reset_verification_failures" != "0" ]]; then failed_args+=(--failed-test "Disposable data reset verification failed"); fi
 duration=$((SECONDS - started_at))
-"$python" "$repo_root/e2e/helpers/write-summary.py" \
+bun "$repo_root/e2e/helpers/write-summary.ts" \
   --output "$results/summary.txt" --status "$status" \
   --backend-junit "$junit/backend.xml" --web-junit "$junit/web.xml" \
   --duration "$((duration / 60))m $((duration % 60))s" \

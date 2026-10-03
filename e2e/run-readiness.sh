@@ -39,7 +39,7 @@ mkdir -p "$workspace/state/backups"
 "$python" "$repo_root/e2e/helpers/seed-readiness-database.py" --database "$database" >"$workspace/logs/seed.log" 2>&1
 bash "$repo_root/e2e/start-elysia-test-stack.sh" "$workspace" "$workspace/logs"
 export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
-export OPERATOROS_E2E_FRONTEND_URL="$($python -c 'import json,sys; print(json.load(open(sys.argv[1]))["frontend_url"])' "$workspace/ports.json")"
+export OPERATOROS_E2E_FRONTEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).frontend_url)' "$workspace/ports.json")"
 
 cd "$repo_root/apps/web"
 playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
