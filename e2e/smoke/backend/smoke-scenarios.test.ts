@@ -286,10 +286,12 @@ suite("e2e backend smoke", () => {
     badForm.append("file", new File(["bad"], "bad.txt", { type: "text/plain" }));
     expect((await request("/api/uploads/preview", { method: "POST", cookie: admin, form: badForm })).status).toBe(400);
 
+    // Committed on a past school day: a future date would collide with the
+    // next-Monday cutoff window asserted by the term-lateness web spec.
     const valid = await request("/api/uploads/preview", {
       method: "POST",
       cookie: admin,
-      form: uploadForm("e2e-attendance.xlsx", await attendanceWorkbook([[100002, "E2E Bima", ddmmyyyy(today(2)), "07:20", "14:00", "00:05", "00:00", "", "E2E-WEEK"]])),
+      form: uploadForm("e2e-attendance.xlsx", await attendanceWorkbook([[100002, "E2E Bima", ddmmyyyy(today(-2)), "07:20", "14:00", "00:05", "00:00", "", "E2E-WEEK"]])),
     });
     expect(valid.status).toBe(200);
     const validBody = await valid.json();

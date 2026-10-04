@@ -37,6 +37,8 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
     data: { academic_year_id: 1, jenjang_id: 1, weekdays: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, expectation: "EXPECTED" })).concat([6, 0].map((weekday) => ({ weekday, expectation: "NOT_EXPECTED" }))) },
   });
   expect(weekdays.status()).toBe(200);
+  // Consume the body so the shared request connection is released for reuse.
+  await weekdays.json();
 
   // Only E2E Ada is enrolled in class 1, so two boundary arrivals are recorded
   // for Ada across expected school days.
@@ -59,9 +61,9 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
   await expect(page.getByText("07:30 → On Time")).toBeVisible();
   await expect(page.getByText("07:31 → On Time")).toBeVisible();
   await expect(page.getByText("07:32 → Late (1 min)")).toBeVisible();
-  const saved = page.waitForResponse((response) => response.url().includes("/api/config/jenjang/Primary") && response.request().method() === "PUT" && response.status() === 200);
+  const saved = page.waitForResponse((response) => response.url().includes("/api/config/jenjang/Primary") && response.request().method() === "PUT");
   await page.getByRole("button", { name: "Simpan" }).click();
-  await saved;
+  expect((await saved).status()).toBe(200);
   await expect(page.getByText("Cutoff keterlambatan Primary berhasil disimpan.")).toBeVisible();
 
   for (const [date, checkIn] of [[targetDate, "07:31"], [nextDate, "07:32"]] as const) {
@@ -69,6 +71,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
       data: { entries: [{ student_id: adaId, status: "on-time", check_in: checkIn, check_out: "14:00" }] },
     });
     expect(entries.status()).toBe(200);
+    await entries.json();
   }
 
   // Scenarios B, C, E: the report shows the cutoff and canonical class metrics.
@@ -105,6 +108,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
   const exported = await page.request.get(`/api/analytics/tardiness-report/export-excel?date_from=${targetDate}&date_to=${nextDate}`);
   expect(exported.status()).toBe(200);
   expect(exported.headers()["content-type"]).toContain("spreadsheetml");
+  await exported.body();
 
   // Scenario D: a future cutoff applies only to later arrivals.
   await page.goto("/config/jenjang");
@@ -113,13 +117,14 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
   await page.locator("#cutoff-Primary").fill("07:45");
   await page.locator("#cutoff-date-Primary").fill(laterDate);
   await page.locator("#cutoff-reason-Primary").fill("E2E relaxation verification");
-  const relaxed = page.waitForResponse((response) => response.url().includes("/api/config/jenjang/Primary") && response.request().method() === "PUT" && response.status() === 200);
+  const relaxed = page.waitForResponse((response) => response.url().includes("/api/config/jenjang/Primary") && response.request().method() === "PUT");
   await page.getByRole("button", { name: "Simpan" }).click();
-  await relaxed;
+  expect((await relaxed).status()).toBe(200);
   const laterEntry = await page.request.post(`/api/attendance/classes/1/dates/${laterDate}/entries`, {
     data: { entries: [{ student_id: adaId, status: "on-time", check_in: "07:32", check_out: "14:00" }] },
   });
   expect(laterEntry.status()).toBe(200);
+  await laterEntry.json();
   const afterFuturePolicy = await (await page.request.get(`/api/analytics/tardiness-report?date_from=${targetDate}&date_to=${laterDate}`)).json();
   expect(afterFuturePolicy.totals).toMatchObject({ late_events: 1, affected_students: 1, total_late_minutes: 1 });
 

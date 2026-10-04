@@ -34,7 +34,10 @@ export function writeAfterVerification(database: string, runtimeRoot: string, ch
     let unexpected = 0;
     for (const [k, r] of beforeRows) if (!afterRows.has(k) && !isOnboardingBefore(r as unknown[])) unexpected++;
     for (const [k, r] of afterRows) if (!beforeRows.has(k) && !isOnboardingAfter(r as unknown[])) unexpected++;
-    const resetFailures = resetCount < 1 || adminCount < 1 || fkIssues.length > 0 || studentCount === 0 || masterCount === 0 || enrollmentCount === 0 || attendanceCount === 0 ? 1 : 0;
+    // Parity with the retired Python gate: any remaining rows fail the wiped-state
+    // expectation (int(any(counts))), so a successful suite-ending wipe reports zero
+    // failures instead of flagging its own empty tables.
+    const resetFailures = resetCount < 1 || adminCount < 1 || fkIssues.length > 0 || Boolean(studentCount || masterCount || enrollmentCount || attendanceCount) ? 1 : 0;
     writeFileSync(output, JSON.stringify({
       disposable_checksum: checksum,
       enrollment_fingerprint: fingerprint,
