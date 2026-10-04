@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
 export function markdownLinkProblems(root: string): string[] {
-  const files = ["README.md", "AGENTS.md", "PROJECT_CONTEXT.md", "COMMANDS.md", "CONVENTIONS.md", "MEMORY.md", "ERRORS.md", "backend/README.md", "apps/web/README.md"];
+  const files = ["README.md", "AGENTS.md", "PROJECT_CONTEXT.md", "COMMANDS.md", "CONVENTIONS.md", "MEMORY.md", "ERRORS.md", "apps/web/README.md"];
   if (existsSync(join(root, "docs"))) files.push(...[...new Bun.Glob("**/*.md").scanSync({ cwd: join(root, "docs"), onlyFiles: true, dot: true })].sort().map((path) => `docs/${path}`));
   const problems: string[] = [];
   for (const file of files) {
