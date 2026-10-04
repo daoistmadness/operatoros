@@ -54,9 +54,12 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   expect(primary).toBeTruthy();
   const saveWeekdays = async (weekdays: Array<{ weekday: number; expectation: "EXPECTED" | "NOT_EXPECTED" | null }>) => {
     const response = await page.request.put("/api/attendance/calendar/weekdays", {
+      timeout: 15000,
       data: { academic_year_id: academicYearId, jenjang_id: primary.id, weekdays },
     });
     expect(response.status()).toBe(200);
+    // Consume the body so the shared request connection is released for reuse.
+    await response.json();
   };
   const previousWeekdays = primary.weekdays;
   await saveWeekdays(Array.from({ length: 7 }, (_, weekday) => ({
