@@ -22,7 +22,7 @@ has been removed.
 - [DB CLI coverage](../../packages/db/tests/dev-db-cli.test.ts): 12 synthetic tests covering current creation/adoption, reset preconditions, open handles, corrupt state, symlinks, protected-looking paths, and S4.2/S4.3 preservation/refusal.
 - Ubuntu compatibility CI now bootstraps its disposable DB with the TS CLI. Its Python `ensure` step failed with `PERSISTENT_DEVELOPMENT_DATABASE_INITIALIZATION_FAILED`; the TS bootstrap is covered by the focused CLI and canonical DB tests.
 
-The [historical S4.3 wrapper](../migration/legacy-tooling/s43_migration.py) was
+The [historical S4.3 wrapper](../migration/legacy-tooling/s43_migration.tar.gz) was
 archived byte-for-byte after the owner's clarification. The
 [archive rationale](../migration/legacy-tooling/README.md) records why current
 main does not support that completed operation. No replacement command was added.
