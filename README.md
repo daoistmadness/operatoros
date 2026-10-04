@@ -66,11 +66,8 @@ Only the backend grants access. Frontend identity and role state are navigation 
 - Runtime: local Elysia backend and React browser UI
 
 ## Repository Layout
-- [`backend/`](backend/): schema, migration, fixture, and operations tooling plus raw SQL migrations
 - [`apps/web/`](apps/web/): React pages, shared components, API client, and frontend configuration
 - [`docs/`](docs/): utility script notes, operational references, and historical WSL2 migration guidance
-- [`scratch/`](scratch/): one-off diagnostics and experiments
-- Top-level `*.py`: reporting or repair utilities; several rewrite code or output files
 - [`start-dev.sh`](start-dev.sh): combined dev launcher starting Vite frontend and Elysia backend
 - [`scripts/start-backend.sh`](scripts/start-backend.sh): standalone Elysia launcher
 - [`scripts/verify-browser.sh`](scripts/verify-browser.sh): Agent Browser smoke test
@@ -276,7 +273,6 @@ Implemented security does not include MFA, SSO, OAuth, LDAP, password-reset emai
 6. Document any data migrations or operational caveats in the PR.
 
 ## Further Reading
-- [Backend guide](backend/README.md)
 - [Frontend guide](apps/web/README.md)
 - [Historical WSL2 / DevOps guide](docs/WSL2_DEVOPS.md)
 - [Utility scripts](docs/UTILITY_SCRIPTS.md)
