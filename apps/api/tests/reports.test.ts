@@ -154,7 +154,7 @@ describe("analytics and report parity", () => {
 
       const management = await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie } }));
       expect(management.status).toBe(409);
-      expect((await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie: staff } }))).status).toBe(403);
+      expect((await app.handle(new Request("http://local/api/reports/management/monthly?academic_year_id=2&month=2026-08&scope=combined", { headers: { cookie: staff, origin: "http://localhost:5173" } }))).status).toBe(403);
 
       const annual = await app.handle(new Request("http://local/api/reports/annual?academic_year_id=2&scope=combined", { headers: { cookie } }));
       expect(annual.status).toBe(409);
@@ -414,7 +414,7 @@ describe("analytics and report parity", () => {
       const { academicYearId, previousAcademicYearId, classIds } = seedManualClassInventory(database.client);
       const cookie = await adminCookie(app);
       const staff = await staffCookie(app);
-      const request = (path: string, init: RequestInit = {}) => app.handle(new Request(`http://local${path}`, { ...init, headers: { cookie, ...(init.headers ?? {}) } }));
+      const request = (path: string, init: RequestInit = {}) => app.handle(new Request(`http://local${path}`, { ...init, headers: { cookie, origin: "http://localhost:5173", ...(init.headers ?? {}) } }));
       const query = (month: string) => `/api/config/absence-reasons?academic_year_id=${academicYearId}&month=${month}`;
       const save = async (month: string, classes: Array<{ class_id: number; sakit: number; izin: number; alfa: number }>) => request("/api/config/absence-reasons/bulk", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month, classes }),
@@ -451,7 +451,7 @@ describe("analytics and report parity", () => {
         expect((await submit(month, class_id)).status).toBe(200);
       }
       for (const name of ["P1A", "P1B"]) expect((await submit("2026-09", classIds[name]!)).status).toBe(200);
-      const dashboardSummary = await app.handle(new Request("http://local/api/config/absence-reasons/summary?month=9&year=2026", { headers: { cookie: staff } }));
+      const dashboardSummary = await app.handle(new Request("http://local/api/config/absence-reasons/summary?month=9&year=2026", { headers: { cookie: staff, origin: "http://localhost:5173" } }));
       expect(dashboardSummary.status).toBe(200);
       expect(await dashboardSummary.json()).toEqual(expect.arrayContaining([
         expect.objectContaining({ jenjang: "SD", total_sakit: 8, total_izin: 3, total_alfa: 1, classes_entered: 2 }),
@@ -541,13 +541,13 @@ describe("analytics and report parity", () => {
         month: "2026-10", rows: expect.arrayContaining([expect.objectContaining({ student_name: "Legacy Recap Student", class_name: "P1B", sakit: 2, izin: 1, alfa: 0 })]),
       });
       expect(Number((database.client.query("SELECT COUNT(*) AS count FROM absence_reasons").get() as any).count)).toBe(legacyCount);
-      expect((await app.handle(new Request("http://local/api/config/absence-reasons/legacy?month=2026-10", { headers: { cookie: staff } }))).status).toBe(403);
+      expect((await app.handle(new Request("http://local/api/config/absence-reasons/legacy?month=2026-10", { headers: { cookie: staff, origin: "http://localhost:5173" } }))).status).toBe(403);
 
       const invalidClass = await save("2026-10", [{ class_id: classIds.P1A!, sakit: 10, izin: 10, alfa: 10 }, { class_id: 999999, sakit: 1, izin: 1, alfa: 1 }]);
       expect(invalidClass.status).toBe(422);
       const decimal = await save("2026-10", [{ class_id: classIds.P1A!, sakit: 1.5, izin: 0, alfa: 0 }]);
       expect(decimal.status).toBe(400);
-      const unauthorized = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { cookie: staff, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: academicYearId, month: "2026-10", classes: [{ class_id: classIds.P1A, sakit: 1, izin: 1, alfa: 1 }] }) }));
+      const unauthorized = await app.handle(new Request("http://local/api/config/absence-reasons/bulk", { method: "POST", headers: { cookie: staff, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ academic_year_id: academicYearId, month: "2026-10", classes: [{ class_id: classIds.P1A, sakit: 1, izin: 1, alfa: 1 }] }) }));
       expect(unauthorized.status).toBe(403);
       const savedValue = await request(query("2026-10"));
       expect((await savedValue.json() as any).classes.find((value: any) => value.class_name === "P1A")).toMatchObject({ sakit: 9, izin: 8, alfa: 7, state: "OPEN" });
@@ -569,7 +569,7 @@ describe("attendance basis resolver", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
     try {
       const cookie = await adminCookie(app);
-      const request = (route: string, init: RequestInit = {}) => app.handle(new Request(`http://local${route}`, { ...init, headers: { cookie, ...(init.headers ?? {}) } }));
+      const request = (route: string, init: RequestInit = {}) => app.handle(new Request(`http://local${route}`, { ...init, headers: { cookie, origin: "http://localhost:5173", ...(init.headers ?? {}) } }));
       database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=?", [Number((database.client.query("SELECT id FROM academic_years WHERE label='2026/2027-reports'").get() as any).id)]);
       const inventory = seedManualClassInventory(database.client);
       const yearId = inventory.academicYearId;

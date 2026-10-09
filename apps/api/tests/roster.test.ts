@@ -52,7 +52,7 @@ describe("academic roster candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-30-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: cookie(login) };
+      const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       const before = Object.fromEntries(["student_masters", "student_enrollments", "attendance", "student_import_sessions", "academic_roster_import_batches"].map((table) => [table, (database.client.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as any).count]));
       const result = await previewResponse(app, auth, await rosterWorkbook());
 
@@ -73,7 +73,7 @@ describe("academic roster candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-errors-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: cookie(login) };
+      const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       const missing = await previewResponse(app, auth, await rosterWorkbook(1, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program"]));
       expect(missing.response.status).toBe(400);
       expect(missing.body.detail).toMatchObject({ code: "ROSTER_REQUIRED_COLUMNS_MISSING" });
@@ -105,7 +105,7 @@ describe("academic roster candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: cookie(login) };
+      const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       const workbook = createWorkbook({ exportType: "roster-test" }); const sheet = workbook.addWorksheet("Roster"); appendRow(sheet, ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"]); appendRow(sheet, ["123", "Andi", "2026/2027-roster", "SMP", "7A", "Science", "active"]);
       const bytes = await writeXlsxWorkbook(workbook);
       const invalidForm = new FormData(); invalidForm.append("file", new File([bytes], "roster.xlsx")); invalidForm.append("source_owner", "School Office"); invalidForm.append("date_received", "2026-02-30");
@@ -126,7 +126,7 @@ describe("academic roster candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-class-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: cookie(login) };
+      const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       database.client.run("INSERT INTO academic_years (label,start_date,end_date,is_default,status) VALUES ('2026/2027','2026-07-01','2027-06-30',0,'active'),('2027/2028','2027-07-01','2028-06-30',0,'active')");
       database.client.run("INSERT INTO jenjangs (name,code,level,active) VALUES ('Primary','PRI','primary',1)");
       database.client.run("INSERT INTO academic_programs (jenjang_id,name,active) VALUES (2,'Primary',1)");

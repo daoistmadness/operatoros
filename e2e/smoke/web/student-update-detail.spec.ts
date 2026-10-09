@@ -17,7 +17,7 @@ test("@student-update @critical reviews exact students and keeps the result afte
   const prefix = `E2E Update ${Date.now()}`;
   const names = Array.from({ length: 10 }, (_, index) => `${prefix} Student ${String(index + 1).padStart(2, "0")}`);
   for (const [index, name] of names.entries()) {
-    const created = await page.request.post("/api/student-masters", { data: { identity: { full_name: name, nipd: `UPD-${Date.now()}-${index}` } } });
+    const created = await page.request.post("/api/student-masters", { headers: { origin: new URL(page.url()).origin }, data: { identity: { full_name: name, nipd: `UPD-${Date.now()}-${index}` } } });
     expect(created.status()).toBe(201);
   }
   const template = await page.request.get("/api/student-masters/management/export-template");
