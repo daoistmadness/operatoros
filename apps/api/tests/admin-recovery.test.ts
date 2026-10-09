@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
@@ -36,6 +38,37 @@ function cleanup(value: ReturnType<typeof setup>): void {
 }
 
 describe("admin recovery CLI", () => {
+  it("rejects the protected basename before inspecting or opening the database", () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-admin-recovery-guard-"));
+    const repoRoot = resolve(import.meta.dir, "../../..");
+    const script = resolve(import.meta.dir, "../src/cli/admin-recovery.ts");
+    const run = (databasePath: string) => {
+      const env = { ...process.env };
+      for (const key of ["OPERATOROS_DATA_DIR", "OPERATOROS_DEV_DATA_DIR", "DATABASE_PATH", "BACKUP_DIR"]) delete env[key];
+      env.DATABASE_URL = `sqlite:///${databasePath}`;
+      env.OPERATOROS_REPOSITORY_ROOT = repoRoot;
+      return Bun.spawnSync(["bun", "run", script, "--user", "guard-test"], { cwd: repoRoot, env });
+    };
+    const protectedPath = join(directory, "attendance.db");
+    const ordinaryPath = join(directory, "operatoros.sqlite");
+    try {
+      expect(existsSync(protectedPath)).toBe(false);
+      const rejected = run(protectedPath);
+      expect(rejected.exitCode).not.toBe(0);
+      expect(rejected.stderr.toString()).toContain("Protected database access is forbidden.");
+      expect(rejected.stderr.toString()).not.toContain("Database file not found");
+      expect(existsSync(protectedPath)).toBe(false);
+
+      const accepted = run(ordinaryPath);
+      expect(accepted.exitCode).not.toBe(0);
+      expect(accepted.stderr.toString()).toContain("Database file not found");
+      expect(accepted.stderr.toString()).not.toContain("Protected database access is forbidden");
+      expect(existsSync(ordinaryPath)).toBe(false);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("successful admin recovery clears lock, revokes sessions, updates hash, and audits", async () => {
     const value = setup("success");
     try {

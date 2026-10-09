@@ -47,8 +47,7 @@ export function installHttpSecurity(app: any, options: { allowedOrigins: string[
     }
     if (!UNSAFE_METHODS.has(request.method)) return;
     if (!hasCookie(request)) return;
-    if (origin === null && request.headers.has("sec-fetch-site")) return denied("A valid Origin is required for this request.");
-    if (origin === null) return;
+    if (origin === null) return denied("A valid Origin is required for this request.");
     if (!allowed) return denied("Request origin is not allowed.");
   });
 }
