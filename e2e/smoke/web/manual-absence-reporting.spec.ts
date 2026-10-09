@@ -54,6 +54,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   expect(primary).toBeTruthy();
   const saveWeekdays = async (weekdays: Array<{ weekday: number; expectation: "EXPECTED" | "NOT_EXPECTED" | null }>) => {
     const response = await page.request.put("/api/attendance/calendar/weekdays", {
+      headers: { origin: new URL(page.url()).origin },
       timeout: 15000,
       data: { academic_year_id: academicYearId, jenjang_id: primary.id, weekdays },
     });

@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { isAbsolute, basename, resolve, join } from "node:path";
 import * as readline from "node:readline";
+import { PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { loadConfig } from "../config";
 
 const USAGE = `Usage: bun run admin-recovery --user <username>
@@ -109,9 +110,7 @@ async function main(): Promise<void> {
   const config = loadConfig({ ...process.env, OPERATOROS_REPOSITORY_ROOT: root } as any);
   const dbPath = (config as any).databasePath as string | undefined;
   if (!dbPath || !isAbsolute(dbPath)) fail("DATABASE_URL must use an absolute SQLite path.");
-  if (basename(dbPath) !== "operatoros.sqlite" && basename(dbPath) !== "operatoros.sqlite") {
-    // Allow any, but ensure not protected base
-  }
+  if (basename(dbPath) === PROTECTED_DATABASE_BASENAME) fail("Protected database access is forbidden.");
   try {
     statSync(dbPath);
   } catch {

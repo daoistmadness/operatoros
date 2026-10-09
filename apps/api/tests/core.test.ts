@@ -24,7 +24,7 @@ describe("core CRUD parity slices", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const years = await app.handle(new Request("http://local/api/academic-masters/academic-years", { headers: auth }));
       expect(years.status).toBe(200);
       expect((await years.json()) as unknown[]).toHaveLength(3);
@@ -77,7 +77,7 @@ describe("core CRUD parity slices", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-scope-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const first = database.client.query("SELECT id FROM academic_programs ORDER BY id LIMIT 1").get() as { id: number };
       const secondJenjang = await app.handle(new Request("http://local/api/academic-masters/jenjangs", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ code: "LOWER", name: "Lower", level: "primary", active: true }) }));
       expect(secondJenjang.status).toBe(201);
@@ -106,7 +106,7 @@ describe("core CRUD parity slices", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-batch-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const jenjangId = Number((database.client.query("SELECT id FROM jenjangs ORDER BY id LIMIT 1").get() as any).id);
       const createProgram = (name: string) => Number(database.client.run("INSERT INTO academic_programs (jenjang_id, name, active) VALUES (?, ?, 1)", [jenjangId, name]).lastInsertRowid);
       const post = (program_id: number, grades: unknown[]) => app.handle(new Request("http://local/api/academic-masters/grades/bulk", {
@@ -190,7 +190,7 @@ describe("core CRUD parity slices", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const denied = await app.handle(new Request("http://local/api/academic-masters/academic-years", { headers: auth }));
       expect(denied.status).toBe(403);
       const deniedGradeBatch = await app.handle(new Request("http://local/api/academic-masters/grades/bulk", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ program_id: 1, grades: [{ name: "No Access", sequence_number: 1 }] }) }));
@@ -217,7 +217,7 @@ describe("core CRUD parity slices", () => {
       database.client.run("INSERT INTO staff_import_batches (id, source_filename, source_sheet, file_sha256, actor, total_rows, active_count, former_count, review_count, issue_count, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", ["staff-batch-golden", "staff.xlsx", "Staff", "a".repeat(64), "golden-admin", 2, 1, 1, 0, 1, "APPLIED"]);
       database.client.run("INSERT INTO staff_import_issues (batch_id, issue_code, severity, message) VALUES (?, ?, ?, ?)", ["staff-batch-golden", "MISSING_NIP", "WARNING", "NIP is missing"]);
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as any).id);
       const term = await app.handle(new Request("http://local/api/academic-config/terms", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: yearId, term_number: 1, label: "Semester One", start_date: "2026-07-01", end_date: "2026-09-30" }) }));
       expect(term.status, await term.clone().text()).toBe(200);

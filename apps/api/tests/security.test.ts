@@ -47,6 +47,7 @@ describe("proxy trust and Origin protection", () => {
   it("rejects foreign Origins and protects cookie-authenticated unsafe requests", async () => {
     const app = createApp() as any;
     app.post("/test-mutate", () => ({ ok: true }));
+    app.get("/test-safe", () => ({ ok: true }));
     const allowed = await app.handle(new Request("http://local/test-mutate", { method: "POST", headers: { cookie: "astyx_session=test", origin: "http://localhost:5173" } }));
     expect(allowed.status).toBe(200);
     expect(allowed.headers.get("access-control-allow-credentials")).toBe("true");
@@ -57,7 +58,11 @@ describe("proxy trust and Origin protection", () => {
     const browserWithoutOrigin = await app.handle(new Request("http://local/test-mutate", { method: "POST", headers: { cookie: "astyx_session=test", "sec-fetch-site": "same-origin" } }));
     expect(browserWithoutOrigin.status).toBe(403);
     const nonBrowser = await app.handle(new Request("http://local/test-mutate", { method: "POST", headers: { cookie: "astyx_session=test" } }));
-    expect(nonBrowser.status).toBe(200);
+    expect(nonBrowser.status).toBe(403);
+    const safeWithoutOrigin = await app.handle(new Request("http://local/test-safe", { headers: { cookie: "astyx_session=test" } }));
+    expect(safeWithoutOrigin.status).toBe(200);
+    const unauthenticatedPost = await app.handle(new Request("http://local/test-mutate", { method: "POST" }));
+    expect(unauthenticatedPost.status).toBe(200);
     const options = await app.handle(new Request("http://local/test-mutate", { method: "OPTIONS", headers: { origin: "http://localhost:5173" } }));
     expect(options.status).toBe(204);
   });

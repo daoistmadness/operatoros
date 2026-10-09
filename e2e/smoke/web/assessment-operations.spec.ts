@@ -48,6 +48,7 @@ test("@academic @assessment-operations @critical @release assessment operations 
 
   const label = "E2E Critical Academic Assessment";
   const sessionResponse = await page.request.post("/api/grades/assessment-sessions", {
+    headers: { origin: new URL(page.url()).origin },
     data: { academic_year_id: year.id, term_number: 1, label, assessment_date: "2026-08-14" },
   });
   expect(sessionResponse.status()).toBe(200);
@@ -81,6 +82,7 @@ test("@academic @assessment-operations @critical @release assessment operations 
   expect(enrollments.length).toBeGreaterThan(1);
   for (const enrollment of enrollments as { id: number }[]) {
     const saveResponse = await page.request.post("/api/grades/save", {
+      headers: { origin: new URL(page.url()).origin },
       data: { enrollment_id: enrollment.id, assessment_session_id: session.id, grades: [{ subject_id: subject.id, component_id: component.id, score: 80 }] },
     });
     expect(saveResponse.status()).toBe(200);

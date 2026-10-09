@@ -27,6 +27,7 @@ test("@attendance @daily-attendance @critical @release daily attendance moves fr
   expect(rosterResponse.status()).toBe(200);
   const roster = await rosterResponse.json();
   const partialResponse = await page.request.post(`/api/attendance/classes/1/dates/${partialDate}/entries`, {
+    headers: { origin: new URL(page.url()).origin },
     data: { entries: [{ student_id: roster.items[0].student_id, status: "on-time" }] },
   });
   expect(partialResponse.status()).toBe(200);
