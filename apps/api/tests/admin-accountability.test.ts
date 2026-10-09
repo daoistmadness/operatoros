@@ -17,15 +17,15 @@ function sessionCookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function login(app: ReturnType<typeof createApp>, username: string, password: string): Promise<{ cookie: string }> {
+async function login(app: ReturnType<typeof createApp>, username: string, password: string): Promise<{ cookie: string; origin: string }> {
   const response = await app.handle(new Request("http://local/api/auth/login", {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username, password }),
   }));
   if (response.status !== 200) throw new Error(`login failed for ${username}: ${await response.text()}`);
-  return { cookie: sessionCookie(response) };
+  return { cookie: sessionCookie(response), origin: "http://localhost:5173" };
 }
 
-function jsonRequest(method: string, path: string, auth: { cookie: string } | null, body?: unknown): Request {
+function jsonRequest(method: string, path: string, auth: { cookie: string; origin: string } | null, body?: unknown): Request {
   return new Request(`http://local${path}`, {
     method,
     headers: { ...(auth ?? {}), "content-type": "application/json" },

@@ -24,7 +24,7 @@ describe("CSV data portability candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-portability-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const datasets = await app.handle(new Request("http://local/api/data-portability/datasets", { headers: auth }));
       expect(datasets.status).toBe(200);
       const datasetInfo = await datasets.json() as Array<{ identifier: string; has_sensitive_access: boolean }>;
@@ -41,7 +41,7 @@ describe("CSV data portability candidates", () => {
       expect(new Uint8Array(await templateResponse.arrayBuffer()).slice(0, 2)).toEqual(new Uint8Array([80, 75]));
 
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
-      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}` };
+      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
       const staffDatasets = await app.handle(new Request("http://local/api/data-portability/datasets", { headers: staffAuth }));
       const staffRoster = (await staffDatasets.json() as Array<{ identifier: string; has_sensitive_access: boolean }>).find((dataset) => dataset.identifier === "student_roster");
       expect(staffDatasets.status).toBe(200);
@@ -59,7 +59,7 @@ describe("CSV data portability candidates", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-portability-import-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-      const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const form = new FormData();
       form.append("dataset", "student_roster");
       form.append("file", new File(["student_id,full_name,student_status,gender\nportability-new,Portable Student,ACTIVE,L\n"], "students.csv", { type: "text/csv" }));

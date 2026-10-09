@@ -126,11 +126,11 @@ describe("authentication parity", () => {
         body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
       }));
       const cookie = cookieValue(login.headers.get("set-cookie"));
-      const me = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${cookie}` } }));
+      const me = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" } }));
       expect(me.status).toBe(200);
-      const logout = await value.app.handle(new Request("http://local/api/auth/logout", { method: "POST", headers: { cookie: `astyx_session=${cookie}` } }));
+      const logout = await value.app.handle(new Request("http://local/api/auth/logout", { method: "POST", headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" } }));
       expect(logout.status).toBe(204);
-      const afterLogout = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${cookie}` } }));
+      const afterLogout = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" } }));
       expect(afterLogout.status).toBe(401);
 
       const secondLogin = await value.app.handle(new Request("http://local/api/auth/login", {
@@ -139,7 +139,7 @@ describe("authentication parity", () => {
       }));
       const secondCookie = cookieValue(secondLogin.headers.get("set-cookie"));
       value.database.client.run("UPDATE sessions SET expires_at = datetime('now', '-8 hours'), last_used_at = datetime('now', '-8 hours')");
-      const afterExpiry = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${secondCookie}` } }));
+      const afterExpiry = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${secondCookie}`, origin: "http://localhost:5173" } }));
       expect(afterExpiry.status).toBe(401);
       expect(value.database.client.query<{ revoked_at: string | null }, []>("SELECT revoked_at FROM sessions ORDER BY id DESC LIMIT 1").get()?.revoked_at).not.toBeNull();
     } finally {
@@ -187,7 +187,7 @@ describe("authentication parity", () => {
       const setupCookie = bootstrap.headers.get("set-cookie")?.match(/operatoros_setup_authorization=([^;]+)/)?.[1];
       expect(setupCookie).toBeTruthy();
       const admin = await fetch(`http://127.0.0.1:${port}/api/setup/admin`, {
-        method: "POST", headers: { "content-type": "application/json", cookie: `operatoros_setup_authorization=${setupCookie}` },
+        method: "POST", headers: { "content-type": "application/json", cookie: `operatoros_setup_authorization=${setupCookie}`, origin: "http://localhost:5173" },
         body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password" }),
       });
       expect(admin.status).toBe(201);

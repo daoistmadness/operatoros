@@ -26,14 +26,14 @@ describe("class attendance response contract", () => {
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-contract-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
-      const response = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(login) } }));
+      const response = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(login), origin: "http://localhost:5173" } }));
       expect(response.status).toBe(200);
       const body = await response.json() as Record<string, any>;
       expect(Value.Check(ClassAttendanceResponseSchema, body)).toBe(true);
       expect(body.items[0]).toMatchObject({ student_name: "Synthetic Attendance Student", effective_status: "late", scan_in: "07:40", scan_out: "16:00" });
       expect(body.items[0]).not.toHaveProperty("full_name");
 
-      const submit = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-04/entries", { method: "POST", headers: { cookie: sessionCookie(login), "content-type": "application/json" }, body: JSON.stringify({ entries: [{ student_id: 9001, status: "on-time" }] }) }));
+      const submit = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-04/entries", { method: "POST", headers: { cookie: sessionCookie(login), "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ entries: [{ student_id: 9001, status: "on-time" }] }) }));
       expect(submit.status).toBe(200);
       const submitBody = await submit.json() as Record<string, unknown>;
       expect(Value.Check(ClassAttendanceEntriesResponseSchema, submitBody)).toBe(true);
@@ -41,7 +41,7 @@ describe("class attendance response contract", () => {
       expect(submitBody).not.toHaveProperty("success");
 
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-staff", password: "contract-staff-pass-1" }) }));
-      const unassigned = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(staffLogin) } }));
+      const unassigned = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(staffLogin), origin: "http://localhost:5173" } }));
       expect(unassigned.status).toBe(403);
     } finally {
       database.close();
@@ -84,7 +84,7 @@ describe("class attendance response contract", () => {
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const cookie = sessionCookie(login);
-      const submit = async (date: string, entries: unknown) => app.handle(new Request(`http://local/api/attendance/classes/1/dates/${date}/entries`, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify({ entries }) }));
+      const submit = async (date: string, entries: unknown) => app.handle(new Request(`http://local/api/attendance/classes/1/dates/${date}/entries`, { method: "POST", headers: { cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ entries }) }));
       // An operator-marked on-time arrival after the cutoff is stored late with canonical minutes.
       expect((await submit("2026-08-05", [{ student_id: 9001, status: "on-time", check_in: "07:40", check_out: "16:00" }])).status).toBe(200);
       expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-05'").get()).toMatchObject({ status: "late", late_duration: 10, late_source: "calculated" });

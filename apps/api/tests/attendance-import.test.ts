@@ -40,7 +40,7 @@ async function setup(label: string) {
   const database = openDatabase(path);
   const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase6-audit-${process.pid}` } });
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-  return { path, database, app, cookie: authCookie(login) };
+  return { path, database, app, cookie: authCookie(login), origin: "http://localhost:5173" };
 }
 
 function cleanup(value: Awaited<ReturnType<typeof setup>>): void {
@@ -51,7 +51,7 @@ function cleanup(value: Awaited<ReturnType<typeof setup>>): void {
 async function preview(app: ReturnType<typeof createApp>, cookie: string, bytes: Uint8Array, filename = "test.xlsx", type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
   const form = new FormData();
   form.append("file", new File([bytes], filename, { type }));
-  return app.handle(new Request("http://local/api/uploads/preview", { method: "POST", headers: { cookie }, body: form }));
+  return app.handle(new Request("http://local/api/uploads/preview", { method: "POST", headers: { cookie, origin: "http://localhost:5173" }, body: form }));
 }
 
 describe("Excel attendance import", () => {
@@ -100,11 +100,11 @@ describe("Excel attendance import", () => {
       const response = await preview(value.app, value.cookie, bytes);
       const body = await response.json() as any;
       const rowId = body.rows[0].id as number;
-      const committed = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [rowId], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      const committed = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ selected_row_ids: [rowId], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
       expect(committed.status).toBe(200);
       const result = await committed.json();
       expect(result).toMatchObject({ rows_inserted: 1, rows_updated: 0, rows_unchanged: 0 });
-      const duplicate = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [rowId], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      const duplicate = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ selected_row_ids: [rowId], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
       expect(await duplicate.json()).toEqual(result);
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9003 AND date = '2026-07-01'").get() as any)?.count)).toBe(1);
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM upload_logs").get() as any)?.count)).toBe(1);
@@ -118,15 +118,15 @@ describe("Excel attendance import", () => {
       const previewResponse = await preview(value.app, value.cookie, bytes, "conflict.xlsx");
       const previewBody = await previewResponse.json() as any;
       const reference = `attendance:${previewBody.rows[0].id}`;
-      const queue = await value.app.handle(new Request("http://local/api/upload-conflicts?workflow_type=ATTENDANCE", { headers: { cookie: value.cookie } }));
+      const queue = await value.app.handle(new Request("http://local/api/upload-conflicts?workflow_type=ATTENDANCE", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(queue.status).toBe(200);
       expect((await queue.json() as any).items[0]).toMatchObject({ resolution_item_id: reference, technical_code: "DEVICE_IDENTITY_UNMATCHED", retry_eligible: false });
-      const detail = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}`, { headers: { cookie: value.cookie } }));
+      const detail = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(detail.status).toBe(200);
-      const candidates = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/student-candidates?query=Andi`, { headers: { cookie: value.cookie } }));
+      const candidates = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/student-candidates?query=Andi`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(candidates.status).toBe(200);
       expect((await candidates.json() as any).items[0]).toMatchObject({ full_name: "Andi", student_status: "active" });
-      const retry = await value.app.handle(new Request("http://local/api/upload-conflicts/retry-preview", { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ source_session_id: previewBody.batch_id, source_checksum: previewBody.checksum, resolution_item_ids: [reference], expected_classification: "CONFLICT", retry_mode: "PREVIEW_ONLY" }) }));
+      const retry = await value.app.handle(new Request("http://local/api/upload-conflicts/retry-preview", { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ source_session_id: previewBody.batch_id, source_checksum: previewBody.checksum, resolution_item_ids: [reference], expected_classification: "CONFLICT", retry_mode: "PREVIEW_ONLY" }) }));
       expect(retry.status).toBe(200);
       expect((await retry.json() as any).outcomes[0]).toMatchObject({ resolution_item_id: reference, outcome: "STILL_UNMATCHED", classification: "CONFLICT" });
     } finally { cleanup(value); }
@@ -142,7 +142,7 @@ describe("Excel attendance import", () => {
       const body = await (await preview(value.app, value.cookie, bytes)).json() as any;
       const rows = body.rows as any[];
       value.database.client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (9101, '2026-07-01', '07:00:00', '16:00:00', 0, 'none', 0, 'on-time')");
-      const response = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: rows.map((item) => item.id), confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      const response = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ selected_row_ids: rows.map((item) => item.id), confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
       expect(response.status).toBe(409);
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9003 AND date = '2026-07-01'").get() as any)?.count)).toBe(0);
       expect((value.database.client.query("SELECT status FROM attendance_import_batches WHERE id = ?").get(body.batch_id) as any)?.status).toBe("preview");
@@ -155,23 +155,23 @@ describe("Excel attendance import", () => {
       const bytes = await workbook([[9003, "Citra", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]);
       const previewResponse = await preview(value.app, value.cookie, bytes, "history.xlsx");
       const previewBody = await previewResponse.json() as any;
-      const commitResponse = await value.app.handle(new Request(`http://local/api/uploads/preview/${previewBody.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [previewBody.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: previewBody.checksum }) }));
+      const commitResponse = await value.app.handle(new Request(`http://local/api/uploads/preview/${previewBody.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ selected_row_ids: [previewBody.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: previewBody.checksum }) }));
       expect(commitResponse.status).toBe(200);
 
       const uploadId = `attendance:${previewBody.batch_id}`;
-      const history = await value.app.handle(new Request("http://local/api/uploads/history?page=1&page_size=20", { headers: { cookie: value.cookie } }));
+      const history = await value.app.handle(new Request("http://local/api/uploads/history?page=1&page_size=20", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(history.status).toBe(200);
       expect((await history.json() as any).items).toHaveLength(1);
-      const detail = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}`, { headers: { cookie: value.cookie } }));
+      const detail = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(await detail.json()).toMatchObject({ upload_id: uploadId, status: "COMMITTED", committed_total: 1, unresolved_total: 0 });
-      const timeline = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/timeline`, { headers: { cookie: value.cookie } }));
+      const timeline = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/timeline`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await timeline.json() as any).items.map((item: any) => item.event)).toContain("COMMIT_COMPLETED");
-      const rowsResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/rows?page=1&page_size=25`, { headers: { cookie: value.cookie } }));
+      const rowsResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/rows?page=1&page_size=25`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await rowsResponse.json() as any).items[0]).toMatchObject({ stable_row_reference: expect.stringContaining("attendance:"), commit_outcome: "COMMITTED" });
-      const csvResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.csv`, { headers: { cookie: value.cookie } }));
+      const csvResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.csv`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(csvResponse.status).toBe(200);
       expect(await csvResponse.text()).toContain("reconciliation");
-      const jsonResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.json`, { headers: { cookie: value.cookie } }));
+      const jsonResponse = await value.app.handle(new Request(`http://local/api/uploads/history/${uploadId}/export.json`, { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await jsonResponse.json() as any).manifest.included_sections).toEqual(["reconciliation", "timeline", "row_outcomes"]);
     } finally { cleanup(value); }
   }, 30000);
@@ -192,7 +192,7 @@ describe("Excel attendance import", () => {
       expect(response.status).toBe(200);
       const body = await response.json() as any;
       expect(body.summary).toMatchObject({ total_rows: 1, new_rows: 1, conflicts: 0, invalid_rows: 0 });
-      const commit = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json" }, body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
+      const commit = await value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, { method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: "http://localhost:5173" }, body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }) }));
       expect(commit.status).toBe(200);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9001 AND date = '2026-06-17'").get() as any).count).toBe(1);
     } finally { cleanup(value); }
