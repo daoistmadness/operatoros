@@ -6,7 +6,7 @@ Current developer and operational guidance is indexed in [docs/README.md](docs/R
 
 The prior **`v0.9.0-platform-foundation`** inventory, security review, and release notes remain the historical Phase 9 baseline. The experimental Tauri desktop shell and its Phase 9.6/11 acceptance gates were removed on 2026-08-20.
 
-The current runtime schema is S4.3 (`20260725_s43`); S4.2 is the fresh-bootstrap
+The current runtime schema is S4.8 (`20261002_s48`); S4.2 is the fresh-bootstrap
 baseline. Local development uses a disposable configured database—never
 the persistent developer database at
 `~/.local/share/operatoros/development/<project-id>/operatoros.sqlite`.
@@ -191,7 +191,7 @@ For `./start-dev.sh`, the persistent database path is resolved from the reposito
 
 ## Database and Migrations
 - Database restore requires an authenticated administrator, an identity-compatible backup with an active administrator, exact confirmation, and single-worker runtime. Successful restore revokes every restored session and requires all operators to sign in again. Multi-worker deployments fail closed because the repository has no approved cross-process restore lock.
-- Fresh, absent databases bootstrap through the explicit S4.2-to-S4.3 sequence;
+- Fresh, absent databases bootstrap to the current S4.8 schema (`20261002_s48`);
   existing databases are validated and are never silently migrated at startup.
 - SQLite connections enable foreign keys, WAL mode, and related pragmas in the TypeScript data layer.
 - Historical schema changes, including retired PostgreSQL evaluation artifacts,
