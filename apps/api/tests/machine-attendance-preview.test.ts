@@ -59,7 +59,7 @@ async function setup(label: string, includeCutoffPolicy = true) {
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "preview-admin", password: "preview-admin-pass-1" }) }));
   const cookie = login.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!cookie) throw new Error("session cookie missing");
-  return { path, database, app, cookie: `astyx_session=${cookie}` };
+  return { path, database, app, cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" };
 }
 
 describe("attendance machine preview", () => {
@@ -70,7 +70,7 @@ describe("attendance machine preview", () => {
       const form = new FormData();
       form.append("file", new File([await fixture()], "synthetic-machine.xlsx"));
       form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(response.status).toBe(200);
       const body = await response.json() as any;
       expect(body.previewOnly).toBe(true);
@@ -93,11 +93,11 @@ describe("attendance machine preview", () => {
     try {
       value.database.client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (123, '2026-04-03', '07:00', '15:00', 0, 'manual', 0, 'sakit')");
       const form = new FormData(); form.append("file", new File([await fixture()], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const body = await response.json() as any;
       expect(body.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "CONFLICT_EXISTING_ATTENDANCE", existingAttendance: { baseStatus: "sakit", effectiveStatus: "sakit", hasOverride: false }, resolution: { class: "ATTENDANCE_REVIEW", target: { type: "ATTENDANCE_REVIEW", path: "/attendance/daily?date=2026-04-03&academic_year_id=1&class_id=1" } } });
       value.database.client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, note, reviewed_by, reviewed_at) VALUES ((SELECT id FROM attendance WHERE student_id = 123 AND date = '2026-04-03'), 'sakit', 'izin', 'Synthetic review', 'preview-admin', CURRENT_TIMESTAMP)");
-      const second = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const second = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const secondBody = await second.json() as any;
       expect(secondBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE", existingAttendance: { baseStatus: "sakit", effectiveStatus: "izin", hasOverride: true }, resolution: { class: "ATTENDANCE_CORRECTION", target: { type: "ATTENDANCE_CORRECTION", path: "/attendance/override-review?academic_year_id=1&class_id=1&date_from=2026-04-03&date_to=2026-04-03" } } });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -110,7 +110,7 @@ describe("attendance machine preview", () => {
       const anonymous = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", body: anonymousForm }));
       expect(anonymous.status).toBe(401);
       const form = new FormData(); form.append("file", new File([new Uint8Array([0xd0, 0xcf, 0x11, 0xe0])], "legacy.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ detail: "Only Excel OOXML .xlsx workbooks are supported." });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -121,12 +121,12 @@ describe("attendance machine preview", () => {
     try {
       const source = await rowsFixture([["88888", "Not Mapped", "03/04/2026", "07:10", "14", "", "", "", "", "Friday"]]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-evidence-only.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.summary).toMatchObject({ eligibleCreates: 0, blocked: 1 });
       expect(previewBody.rows[0]).toMatchObject({ matchingState: "UNMAPPED", applyClassification: "BLOCKED_UNMAPPED" });
       const apply = new FormData(); apply.append("file", new File([source], "synthetic-evidence-only.xlsx")); apply.append("academic_year_id", "1"); apply.append("jenjang_id", "1"); apply.append("expected_preview_digest", previewBody.previewDigest); apply.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: apply }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: apply }));
       expect(applied.status).toBe(200);
       expect((await applied.json() as any).summary).toMatchObject({ created: 0, blocked: 1 });
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(0);
@@ -142,14 +142,14 @@ describe("attendance machine preview", () => {
       const source = await fixture();
       const form = new FormData();
       form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(preview.status).toBe(200);
       const previewBody = await preview.json() as any;
       expect(previewBody.summary).toMatchObject({ eligibleCreates: 1, alreadyCanonical: 0, conflicts: 0 });
       expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "ELIGIBLE_CREATE", canonicalStatus: "on-time", canonicalAttendance: "PRESENT", punctuality: "ON_TIME", lateMinutes: 0, qualityWarnings: ["SOURCE_LATENESS_DISAGREEMENT"] });
       const applyForm = new FormData();
       applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
       const appliedBody = await applied.json() as any;
       expect(appliedBody).toMatchObject({ status: "APPLIED", summary: { rowsInspected: 6, created: 1, alreadyCanonical: 0 } });
@@ -165,12 +165,12 @@ describe("attendance machine preview", () => {
 
       const secondPreviewForm = new FormData();
       secondPreviewForm.append("file", new File([source], "synthetic-machine.xlsx")); secondPreviewForm.append("academic_year_id", "1"); secondPreviewForm.append("jenjang_id", "1");
-      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: secondPreviewForm }));
+      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: secondPreviewForm }));
       const secondBody = await secondPreview.json() as any;
       expect(secondBody.summary.alreadyCanonical).toBe(1);
       const secondApplyForm = new FormData();
       secondApplyForm.append("file", new File([source], "synthetic-machine.xlsx")); secondApplyForm.append("academic_year_id", "1"); secondApplyForm.append("jenjang_id", "1"); secondApplyForm.append("expected_preview_digest", secondBody.previewDigest); secondApplyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const secondApplied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: secondApplyForm }));
+      const secondApplied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: secondApplyForm }));
       expect(secondApplied.status).toBe(200);
       expect((await secondApplied.json() as any).summary).toMatchObject({ created: 0, alreadyCanonical: 1 });
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).count).toBe(1);
@@ -184,14 +184,14 @@ describe("attendance machine preview", () => {
       const source = await fixture();
       const form = new FormData();
       form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(preview.status).toBe(200);
       const previewBody = await preview.json() as any;
       // 07:00 arrival against a 06:50 cutoff is 10 minutes late by the canonical rule.
       expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123" && item.date === "2026-04-03")).toMatchObject({ applyClassification: "ELIGIBLE_CREATE", canonicalStatus: "late" });
       const applyForm = new FormData();
       applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
       expect(value.database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "late", late_duration: 10, late_source: "calculated" });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -203,11 +203,11 @@ describe("attendance machine preview", () => {
       value.database.client.run("DELETE FROM jenjang_config WHERE jenjang = 'SMP'");
       const source = await identityFixture("00123", "Synthetic One");
       const form = new FormData(); form.append("file", new File([source], "synthetic-no-cutoff.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.rows[0]).toMatchObject({ applyClassification: "BLOCKED_CUTOFF_UNAVAILABLE", canonicalAttendance: "NOT_COMMITTED", canonicalStatus: null, punctuality: "N/A", qualityWarnings: expect.arrayContaining(["CUTOFF_UNCONFIGURED"]) });
       const apply = new FormData(); apply.append("file", new File([source], "synthetic-no-cutoff.xlsx")); apply.append("academic_year_id", "1"); apply.append("jenjang_id", "1"); apply.append("expected_preview_digest", previewBody.previewDigest); apply.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: apply }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: apply }));
       expect(applied.status).toBe(200);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).count).toBe(0);
       const provenance = value.database.client.query("SELECT proposed_change FROM attendance_import_rows").get() as any;
@@ -221,7 +221,7 @@ describe("attendance machine preview", () => {
       value.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = '2026-04-15' WHERE device_identifier = '00123'");
       const source = await identityFixture("00123", "Synthetic One");
       const form = new FormData(); form.append("file", new File([source], "synthetic-retired-id.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const body = await response.json() as any;
       expect(body.rows[0]).toMatchObject({ matchingState: "MATCHED", student: { id: 123 }, historicalClass: "7A", applyClassification: "ELIGIBLE_CREATE" });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -236,7 +236,7 @@ describe("attendance machine preview", () => {
         ["00456", "Synthetic Two", "03/04/2026", "14", "14:05", "00:03", "", "", "", "Friday"],
       ]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-secondary.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(preview.status).toBe(200);
       const previewBody = await preview.json() as any;
       const goodIn = previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00123");
@@ -245,7 +245,7 @@ describe("attendance machine preview", () => {
       expect(sentinelIn).toMatchObject({ applyClassification: "NOOP_NO_CHECK_IN", canonicalAttendance: "NO_CHECK_IN", punctuality: "N/A", checkIn: null, checkOut: "14:05", qualityWarnings: expect.arrayContaining(["INVALID_SCAN_IN", "MISSING_SCAN_IN"]) });
       expect(previewBody.summary).toMatchObject({ eligibleCreates: 1, blocked: 0 });
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-secondary.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
       expect(value.database.client.query("SELECT status, check_in, check_out, late_duration FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "late", check_in: "07:21", check_out: null, late_duration: 6 });
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 456 AND date = '2026-04-03'").get() as any).count).toBe(0);
@@ -263,11 +263,11 @@ describe("attendance machine preview", () => {
         ["00123", "Synthetic One", "03/04/2026", "07:14", "14:05", "", "", "", "", "Friday"],
       ]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-duplicates.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.rows[0]).toMatchObject({ sourceRows: [2, 3, 4], machineEvidence: "MULTIPLE_SCANS", checkIn: "07:10", checkOut: "14:10", canonicalAttendance: "PRESENT", applyClassification: "ELIGIBLE_CREATE", qualityWarnings: expect.arrayContaining(["DUPLICATE_SOURCE_ROWS_MERGED"]) });
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-duplicates.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
       const batchId = (await applied.json() as any).batchId;
       expect(value.database.client.query("SELECT check_in, check_out FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ check_in: "07:10", check_out: "14:10" });
@@ -283,11 +283,11 @@ describe("attendance machine preview", () => {
     try {
       const source = await rowsFixture([["00123", "Synthetic One", "06/04/2026", "07:10", "14:10", "", "", "", "", "Monday"]]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-non-school.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.rows[0]).toMatchObject({ expectation: { status: "NOT_EXPECTED" }, checkIn: "07:10", canonicalAttendance: "NOT_COMMITTED", applyClassification: "NOOP_NOT_EXPECTED", qualityWarnings: expect.arrayContaining(["NON_EXPECTED_DATE"]) });
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-non-school.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 123 AND date = '2026-04-06'").get() as any).count).toBe(0);
       const retained = value.database.client.query("SELECT proposed_change FROM attendance_import_rows WHERE batch_id = ?").get((await applied.json() as any).batchId) as any;
@@ -309,7 +309,7 @@ describe("attendance machine preview", () => {
         ["00123", "Synthetic One", "20/08/2026", "07:38", "14:10", "", "", "", "", "Thursday"],
       ]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-transfer.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.rows).toEqual(expect.arrayContaining([
         expect.objectContaining({ date: "2026-08-10", historicalClass: "P1A", student: expect.objectContaining({ className: "P1A" }) }),
@@ -324,15 +324,15 @@ describe("attendance machine preview", () => {
     try {
       const source = await rowsFixture([["00123", "Synthetic One", "03/04/2026", "07:45", "14:10", "", "", "", "", "Friday"]]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-correction.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-correction.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       const attendanceId = Number((value.database.client.query("SELECT id FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).id);
       value.database.client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, note, reviewed_by, reviewed_at) VALUES (?, 'late', 'on-time', '07:25', 'Synthetic approved correction', 'preview-admin', CURRENT_TIMESTAMP)", [attendanceId]);
-      const lateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie } }));
+      const lateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await lateness.json() as any).totals).toMatchObject({ late_events: 0, total_late_minutes: 0 });
-      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect((await secondPreview.json() as any).rows[0]).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE", existingAttendance: { hasOverride: true } });
       expect(applied.status).toBe(200);
       expect(value.database.client.query("SELECT check_in FROM attendance WHERE id = ?").get(attendanceId)).toMatchObject({ check_in: "07:45" });
@@ -353,24 +353,24 @@ describe("attendance machine preview", () => {
         ["00456", "Synthetic Two", "10/04/2026", "07:18", "14:10", "00:18", "", "", "", "Friday"],
       ]);
       const form = new FormData(); form.append("file", new File([source], "synthetic-report.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.summary.eligibleCreates).toBe(4);
       expect(previewBody.rows.find((item: any) => item.date === "2026-04-10")).toMatchObject({ checkIn: "07:38", checkOut: null, canonicalAttendance: "PRESENT", punctuality: "LATE", lateMinutes: 8, qualityWarnings: expect.arrayContaining(["INVALID_SCAN_OUT", "SOURCE_LATENESS_DISAGREEMENT"]) });
       expect(previewBody.rows.find((item: any) => item.machineStudentIdentifier === "00456" && item.date === "2026-04-10")).toMatchObject({ canonicalStatus: "on-time", canonicalAttendance: "PRESENT", punctuality: "ON_TIME", lateMinutes: 0, qualityWarnings: expect.arrayContaining(["SOURCE_LATENESS_DISAGREEMENT"]) });
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-report.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(200);
-      const termAttendance = await value.app.handle(new Request("http://local/api/analytics/attendance/term?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie } }));
+      const termAttendance = await value.app.handle(new Request("http://local/api/analytics/attendance/term?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await termAttendance.json() as any).totals).toMatchObject({ late_count: 3, hadir_count: 4 });
-      const termLateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie } }));
+      const termLateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       const termBody = await termLateness.json() as any;
       expect(termBody.totals).toMatchObject({ late_events: 3, total_late_minutes: 69 });
       expect(termBody.classes).toEqual(expect.arrayContaining([
         expect.objectContaining({ class_name: "P1A", totals: expect.objectContaining({ late_events: 2, total_late_minutes: 9 }) }),
         expect.objectContaining({ class_name: "P1B", totals: expect.objectContaining({ late_events: 1, total_late_minutes: 60 }) }),
       ]));
-      const tardiness = await value.app.handle(new Request("http://local/api/analytics/tardiness-report?date_from=2026-04-01&date_to=2026-04-30", { headers: { cookie: value.cookie } }));
+      const tardiness = await value.app.handle(new Request("http://local/api/analytics/tardiness-report?date_from=2026-04-01&date_to=2026-04-30", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       const tardinessBody = await tardiness.json() as any;
       expect(tardinessBody.totals).toMatchObject({ late_events: 3, total_late_minutes: 69, total_late_minutes_str: "01:09" });
       expect(tardinessBody.breakdown_by_class).toEqual(expect.arrayContaining([
@@ -385,11 +385,11 @@ describe("attendance machine preview", () => {
     try {
       const source = await fixture();
       const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       value.database.client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, status) VALUES (123, '2026-04-03', '07:00', '15:00', 0, 'manual', 0, 'sakit')");
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const response = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(response.status).toBe(409);
       expect(await response.json()).toMatchObject({ detail: { code: "PREVIEW_STALE" } });
       expect(value.database.client.query("SELECT status FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get()).toMatchObject({ status: "sakit" });
@@ -403,11 +403,11 @@ describe("attendance machine preview", () => {
       const source = await twoEligibleFixture();
       value.database.client.run("CREATE TRIGGER machine_import_test_failure AFTER INSERT ON attendance WHEN NEW.student_id = 456 BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
       const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       const previewBody = await preview.json() as any;
       expect(previewBody.summary.eligibleCreates).toBe(2);
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-machine.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
-      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie }, body: applyForm }));
+      const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       expect(applied.status).toBe(409);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(0);
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation LIKE 'MACHINE_IMPORT_%'").get() as any).count).toBe(0);
@@ -420,23 +420,23 @@ describe("attendance machine preview", () => {
       value.database.client.run("INSERT INTO students (id, name, jenjang, class_name) VALUES (88888, 'Existing Canonical Student', 'SMP', '7A')");
       value.database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES ('identity-target', 'Existing Canonical Student', 'existing canonical student', 'active')");
       value.database.client.run("INSERT INTO student_enrollments (student_id, student_master_id, academic_year_id, jenjang_id, class_name, class_assigned, effective_from, lifecycle_state) VALUES (88888, 'identity-target', 1, 1, '7A', 1, '2026-01-01', 'ACTIVE')");
-      const search = await value.app.handle(new Request("http://local/api/attendance/machine-import/student-search?search=Existing%20Canonical&academic_year_id=1&jenjang_id=1", { headers: { cookie: value.cookie } }));
+      const search = await value.app.handle(new Request("http://local/api/attendance/machine-import/student-search?search=Existing%20Canonical&academic_year_id=1&jenjang_id=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect(search.status).toBe(200);
       expect(await search.json()).toEqual({ items: [{ id: "identity-target", full_name: "Existing Canonical Student", current_jenjang: "SMP", current_class: "7A" }] });
       const source = await fixture();
       const before = (value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count;
       const previewForm = new FormData(); previewForm.append("file", new File([source], "synthetic-machine.xlsx")); previewForm.append("academic_year_id", "1"); previewForm.append("jenjang_id", "1");
-      const beforePreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: previewForm }));
+      const beforePreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: previewForm }));
       expect((await beforePreview.json() as any).identityReview).toEqual([{ deviceIdentifier: "88888", machineName: "Not Mapped", effectiveFrom: "2026-04-03", occurrences: 1 }]);
-      const linked = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      const linked = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie, origin: "http://localhost:5173" }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
       expect(linked.status).toBe(201);
       expect(await linked.json()).toMatchObject({ status: "LINKED", student: { id: "identity-target", full_name: "Existing Canonical Student" } });
-      const afterPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: previewForm }));
+      const afterPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: previewForm }));
       const afterBody = await afterPreview.json() as any;
       expect(afterBody.identityReview).toEqual([]);
       expect(afterBody.rows.find((item: any) => item.machineStudentIdentifier === "88888")).toMatchObject({ matchingState: "MATCHED", applyClassification: "ELIGIBLE_CREATE" });
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any).count).toBe(before);
-      const repeated = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      const repeated = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie, origin: "http://localhost:5173" }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "88888", student_master_id: "identity-target", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
       expect(repeated.status).toBe(200);
       expect(await repeated.json()).toMatchObject({ status: "NOOP_ALREADY_LINKED" });
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -445,7 +445,7 @@ describe("attendance machine preview", () => {
   it("creates a canonical student and Device ID through the existing transactional authority", async () => {
     const value = await setup("identity-create");
     try {
-      const create = await value.app.handle(new Request("http://local/api/student-masters", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ identity: { full_name: "New Onboarded Student", student_status: "active" }, device_identity: { device_identifier: "77777", device_source: "attendance_machine", effective_from: "2026-04-03", reason: "Machine identity onboarding" }, enrollment: null }) }));
+      const create = await value.app.handle(new Request("http://local/api/student-masters", { method: "POST", headers: { ...{ cookie: value.cookie, origin: "http://localhost:5173" }, "content-type": "application/json" }, body: JSON.stringify({ identity: { full_name: "New Onboarded Student", student_status: "active" }, device_identity: { device_identifier: "77777", device_source: "attendance_machine", effective_from: "2026-04-03", reason: "Machine identity onboarding" }, enrollment: null }) }));
       expect(create.status).toBe(201);
       const created = await create.json() as any;
       expect(created.identity.full_name).toBe("New Onboarded Student");
@@ -454,7 +454,7 @@ describe("attendance machine preview", () => {
       expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 77777").get() as any).count).toBe(0);
       const source = await identityFixture("77777", "New Onboarded Student");
       const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1");
-      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie }, body: form }));
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
       expect(preview.status, JSON.stringify(await preview.clone().json())).toBe(200);
       expect((await preview.json() as any).identityReview).toEqual([]);
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
@@ -466,7 +466,7 @@ describe("attendance machine preview", () => {
       value.database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES ('identity-other', 'Other Canonical Student', 'other canonical student', 'active')");
       value.database.client.run("INSERT INTO students (id, name) VALUES (77776, 'Other Canonical Student')");
       value.database.client.run("INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active) VALUES ('identity-other', 77776, '77776', 'attendance_machine', '2026-01-01', 1)");
-      const conflict = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "77776", student_master_id: "master-123", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
+      const conflict = await value.app.handle(new Request("http://local/api/attendance/machine-import/device-identities/link", { method: "POST", headers: { ...{ cookie: value.cookie, origin: "http://localhost:5173" }, "content-type": "application/json" }, body: JSON.stringify({ device_identifier: "77776", student_master_id: "master-123", effective_from: "2026-04-03", confirmation: "LINK_ATTENDANCE_DEVICE_ID" }) }));
       expect(conflict.status).toBe(409);
       expect(await conflict.json()).toMatchObject({ detail: { code: "DEVICE_IDENTITY_ALREADY_LINKED" } });
       const anonymous = await value.app.handle(new Request("http://local/api/attendance/machine-import/student-search?search=Other&academic_year_id=1&jenjang_id=1"));

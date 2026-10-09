@@ -40,13 +40,13 @@ describe("backup, restore, and scheduler safety", () => {
       database.client.run("INSERT INTO attendance_ledger_student_totals (revision_id,enrollment_id,sakit,izin,alfa) VALUES (?,?,1,0,0)", [revisionId, enrollmentId]);
       database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?,'2026-07-01','07:30','BACKFILL_ASSUMED','backup-test',CURRENT_TIMESTAMP,'Synthetic backup policy')", [jenjangId]);
       const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
-      const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie } }));
+      const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
       expect(created.status).toBe(200);
       const backup = await created.json() as any;
       expect(backup.filename).toMatch(/^backup_.*\.sqlite3$/);
       expect(backup.sha256).toHaveLength(64);
 
-      const download = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/download`, { headers: { cookie } }));
+      const download = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/download`, { headers: { cookie, origin: "http://localhost:5173" } }));
       expect(download.status).toBe(200);
       expect(download.headers.get("content-type")).toBe("application/vnd.operatoros.backup+json");
       expect(download.headers.get("content-disposition")).toContain(backup.filename);
@@ -56,12 +56,12 @@ describe("backup, restore, and scheduler safety", () => {
 
       const wrongKeyApp = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: Buffer.alloc(32, 8).toString("base64"), activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
       const wrongKeyCookie = await login(wrongKeyApp, "golden-admin", "golden-admin-pass-1");
-      const wrongKeyPreflight = await wrongKeyApp.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: wrongKeyCookie } }));
+      const wrongKeyPreflight = await wrongKeyApp.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: wrongKeyCookie, origin: "http://localhost:5173" } }));
       expect(wrongKeyPreflight.status).toBeGreaterThanOrEqual(400);
 
       const plaintextApp = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: null, auth: { authCookieSecret: secret, auditDir: backupDir } });
       const plaintextCookie = await login(plaintextApp, "golden-admin", "golden-admin-pass-1");
-      const plaintextBackup = await plaintextApp.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie: plaintextCookie } }));
+      const plaintextBackup = await plaintextApp.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie: plaintextCookie, origin: "http://localhost:5173" } }));
       expect(plaintextBackup.status).toBe(503);
 
       database.client.run("CREATE TABLE restore_marker (value TEXT NOT NULL)");
@@ -69,11 +69,11 @@ describe("backup, restore, and scheduler safety", () => {
       const laterRevisionId = Number(database.client.run("INSERT INTO attendance_ledger_revisions (class_month_id,revision_no,entry_mode,state,created_by,created_at) VALUES (?,2,'PER_STUDENT','OPEN','backup-test',CURRENT_TIMESTAMP)", [classMonthId]).lastInsertRowid);
       database.client.run("INSERT INTO attendance_ledger_student_totals (revision_id,enrollment_id,sakit,izin,alfa) VALUES (?,?,2,0,0)", [laterRevisionId, enrollmentId]);
       database.client.run("INSERT INTO jenjang_lateness_policy (jenjang_id,effective_from,cutoff_time,source,created_by,created_at,reason) VALUES (?,'2099-01-01','07:45','RECORDED','backup-test',CURRENT_TIMESTAMP,'Future backup policy')", [jenjangId]);
-      const preflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie } }));
+      const preflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
       expect(preflight.status).toBe(200);
       const checked = await preflight.json() as any;
       expect(checked.source.restore_eligible).toBe(true);
-      const restore = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore`, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify({ current_password: "golden-admin-pass-1", confirmation_filename: backup.filename, confirmation_phrase: "RESTORE_DATABASE", acknowledge_complete_replacement: true, acknowledge_session_revocation: true, acknowledge_restart_required: true, acknowledge_safety_backup: true, expected_source_sha256: checked.source.sha256, expected_active_sha256: checked.active.active_sha256 }) }));
+      const restore = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore`, { method: "POST", headers: { cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ current_password: "golden-admin-pass-1", confirmation_filename: backup.filename, confirmation_phrase: "RESTORE_DATABASE", acknowledge_complete_replacement: true, acknowledge_session_revocation: true, acknowledge_restart_required: true, acknowledge_safety_backup: true, expected_source_sha256: checked.source.sha256, expected_active_sha256: checked.active.active_sha256 }) }));
       expect(restore.status).toBe(200);
       expect((await restore.json() as any).sessions_revoked).toBe(true);
       expect(database.client.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'restore_marker'").get()).toBeNull();
@@ -84,9 +84,9 @@ describe("backup, restore, and scheduler safety", () => {
 
       const corrupt = `${backupDir}/${backup.filename}`;
       const bytes = readFileSync(corrupt); bytes[bytes.length - 1] = (bytes[bytes.length - 1] ?? 0) ^ 1; writeFileSync(corrupt, bytes);
-      const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: postRestoreCookie } }));
+      const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
       expect(corruptPreflight.status).toBeGreaterThanOrEqual(400);
-      const deleted = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie } }));
+      const deleted = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
       expect(deleted.status).toBe(200);
       expect(existsSync(corrupt)).toBe(false);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }

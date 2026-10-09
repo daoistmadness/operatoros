@@ -46,7 +46,7 @@ async function setup(label: string) {
 function post(app: ReturnType<typeof createApp>, url: string, body: unknown, session?: string): Promise<Response> {
   return app.handle(new Request(`http://local${url}`, {
     method: "POST",
-    headers: { ...(session ? { cookie: session } : {}), "content-type": "application/json" },
+    headers: { ...(session ? { cookie: session, origin: "http://localhost:5173" } : {}), "content-type": "application/json" },
     body: JSON.stringify(body),
   }));
 }
@@ -159,7 +159,7 @@ describe("granular data reset API", () => {
         "Student identity and profile data": 3,
       });
       expect(count(value.database.client, "users")).toBe(2);
-      expect((await value.enabled.handle(new Request("http://local/api/auth/me", { headers: { cookie: value.admin } }))).status).toBe(200);
+      expect((await value.enabled.handle(new Request("http://local/api/auth/me", { headers: { cookie: value.admin, origin: "http://localhost:5173" } }))).status).toBe(200);
       expectForeignKeysClean(value.database.client);
     } finally { value.cleanup(); }
   }, 30000);
@@ -184,7 +184,7 @@ describe("granular data reset API", () => {
       expect(count(value.database.client, "sessions")).toBe(2);
       expect(count(value.database.client, "backup_scheduler_config")).toBe(1);
       expect(count(value.database.client, "operatoros_schema_migrations")).toBeGreaterThan(0);
-      expect((await value.enabled.handle(new Request("http://local/api/auth/me", { headers: { cookie: value.admin } }))).status).toBe(200);
+      expect((await value.enabled.handle(new Request("http://local/api/auth/me", { headers: { cookie: value.admin, origin: "http://localhost:5173" } }))).status).toBe(200);
       expectForeignKeysClean(value.database.client);
     } finally { value.cleanup(); }
   }, 30000);

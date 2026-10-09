@@ -34,6 +34,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
 
   // Shared-disposable setup through the API: Mon-Fri school days for Primary.
   const weekdays = await page.request.put("/api/attendance/calendar/weekdays", {
+    headers: { origin: new URL(page.url()).origin },
     data: { academic_year_id: 1, jenjang_id: 1, weekdays: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, expectation: "EXPECTED" })).concat([6, 0].map((weekday) => ({ weekday, expectation: "NOT_EXPECTED" }))) },
   });
   expect(weekdays.status()).toBe(200);
@@ -68,6 +69,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
 
   for (const [date, checkIn] of [[targetDate, "07:31"], [nextDate, "07:32"]] as const) {
     const entries = await page.request.post(`/api/attendance/classes/1/dates/${date}/entries`, {
+      headers: { origin: new URL(page.url()).origin },
       data: { entries: [{ student_id: adaId, status: "on-time", check_in: checkIn, check_out: "14:00" }] },
     });
     expect(entries.status()).toBe(200);
@@ -121,6 +123,7 @@ test("@lateness @critical canonical cutoff classifies arrivals and drives the ta
   await page.getByRole("button", { name: "Simpan" }).click();
   expect((await relaxed).status()).toBe(200);
   const laterEntry = await page.request.post(`/api/attendance/classes/1/dates/${laterDate}/entries`, {
+    headers: { origin: new URL(page.url()).origin },
     data: { entries: [{ student_id: adaId, status: "on-time", check_in: "07:32", check_out: "14:00" }] },
   });
   expect(laterEntry.status()).toBe(200);

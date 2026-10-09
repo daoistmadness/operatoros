@@ -10,11 +10,11 @@ function seed(path: string): void {
   createGoldenFixture(path, "academic");
 }
 
-async function adminAuth(app: ReturnType<typeof createApp>): Promise<{ cookie: string }> {
+async function adminAuth(app: ReturnType<typeof createApp>): Promise<{ cookie: string; origin: string }> {
   const response = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   const token = response.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!token) throw new Error("session cookie missing");
-  return { cookie: `astyx_session=${token}` };
+  return { cookie: `astyx_session=${token}`, origin: "http://localhost:5173" };
 }
 
 describe("grades and academic parity slices", () => {

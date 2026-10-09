@@ -20,7 +20,7 @@ describe("attendance parity slices", () => {
   it("records cutoff changes as effective-dated policies with reasons", async () => {
     const path = `/tmp/operatoros-cutoff-policy-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-cutoff-policy-audit-${process.pid}` } });
     try {
-      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const body = { cutoff_time: "07:45", effective_from: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), reason: "Approved school schedule update" };
       const backdated = await app.handle(new Request("http://local/api/config/jenjang/SMP", { method: "PUT", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ ...body, effective_from: "2026-08-10" }) }));
       expect(backdated.status).toBe(400);
@@ -41,7 +41,7 @@ describe("attendance parity slices", () => {
   it("keeps overrides append-only and blocks mutation after finalization", async () => {
     const path = `/tmp/operatoros-attendance-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-audit-${process.pid}` } });
     try {
-      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const override = await app.handle(new Request("http://local/api/review/attendance/1/override", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ override_status: "on-time", note: "Device missed the morning scan." }) }));
       expect(override.status).toBe(200);
       expect(await (await app.handle(new Request("http://local/api/review/attendance/1/history", { headers: auth }))).json()).toMatchObject({ attendance_id: 1, items: [{ new_status: "on-time" }] });
@@ -70,11 +70,11 @@ describe("attendance parity slices", () => {
   it("runs correction draft, submit, approve, and terminal replay", async () => {
     const path = `/tmp/operatoros-correction-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-audit-${process.pid}` } });
     try {
-      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) })); const staff = { cookie: `astyx_session=${cookie(staffLogin)}` };
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) })); const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
       const create = await app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...staff, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 2, proposed_status: "on-time", proposed_check_in: "07:30", proposed_check_out: "16:00", reason_code: "DEVICE_FAULT", explanation: "Device failed to register the departure scan." }) }));
       expect(create.status).toBe(200); const id = (await create.json() as any).id;
       expect((await app.handle(new Request(`http://local/api/attendance-corrections/${id}/submit`, { method: "POST", headers: staff }))).status).toBe(200);
-      const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const admin = { cookie: `astyx_session=${cookie(adminLogin)}` };
+      const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const admin = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
       const approved = await app.handle(new Request(`http://local/api/attendance-corrections/${id}/approve`, { method: "POST", headers: { ...admin, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }) }));
       expect(approved.status).toBe(200); expect((await approved.json() as any).state).toBe("APPROVED");
       const duplicate = await app.handle(new Request(`http://local/api/attendance-corrections/${id}/approve`, { method: "POST", headers: { ...admin, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }) }));
@@ -85,7 +85,7 @@ describe("attendance parity slices", () => {
   it("keeps early-departure policy, excuse, and history behavior", async () => {
     const path = `/tmp/operatoros-departure-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-departure-audit-${process.pid}` } });
     try {
-      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const created = await app.handle(new Request("http://local/api/attendance/departure-policies", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang: "SMP", weekday: 5, dismissal_time: "16:30", grace_period_minutes: 15, effective_from: "2026-07-01", change_reason: "Attendance policy test" }) }));
       expect(created.status).toBe(201); expect((await created.json() as any).dismissal_time).toBe("16:30");
       const departures = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-01/departures", { headers: auth }));
@@ -103,7 +103,7 @@ describe("attendance parity slices", () => {
   it("supports follow-up candidate discovery and case workflow", async () => {
     const path = `/tmp/operatoros-followups-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-followups-audit-${process.pid}` } });
     try {
-      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}` };
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const candidates = await app.handle(new Request("http://local/api/attendance/followups/candidates?date_from=2026-08-01&date_to=2026-08-02", { headers: auth }));
       expect(candidates.status).toBe(200); expect((await candidates.json() as any).items.map((item: any) => item.exception_kind)).toEqual(expect.arrayContaining(["LATE_ARRIVAL", "MISSING_CHECKOUT"]));
       const created = await app.handle(new Request("http://local/api/attendance/followups", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ exception_key: "LATE_ARRIVAL:student:2026-08-01:1", exception_kind: "LATE_ARRIVAL", attendance_id: 1, exception_date: "2026-08-01", source_snapshot: { summary: "Late arrival" } }) }));

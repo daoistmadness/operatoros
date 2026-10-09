@@ -37,7 +37,10 @@ async function request(
   const url = new URL(path, BACKEND_URL);
   for (const [key, value] of Object.entries(options.query ?? {})) url.searchParams.set(key, value);
   const headers: Record<string, string> = {};
-  if (options.cookie) headers.cookie = options.cookie;
+  if (options.cookie) {
+    headers.cookie = options.cookie;
+    headers.origin = process.env.OPERATOROS_E2E_FRONTEND_URL ?? "http://localhost:5173";
+  }
   let body: BodyInit | undefined;
   if (options.form) body = options.form;
   else if (options.json !== undefined) {

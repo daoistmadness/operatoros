@@ -21,7 +21,7 @@ describe("report builder candidates", () => {
   it("supports sections, template CRUD, preview, branding, and exports", async () => {
     const path = `/tmp/operatoros-report-builder-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-report-builder-audit-${process.pid}` } });
     try {
-      const auth = { cookie: await cookie(app) };
+      const auth = { cookie: await cookie(app), origin: "http://localhost:5173" };
       const sections = await app.handle(new Request("http://local/api/report-builder/sections", { headers: auth })); expect(sections.status).toBe(200); expect(Object.keys(await sections.json() as Record<string, unknown>)).toContain("attendance");
       const templates = await app.handle(new Request("http://local/api/report-builder/templates", { headers: auth })); expect(templates.status).toBe(200); expect((await templates.json() as any[]).length).toBeGreaterThan(0);
       const preview = await app.handle(new Request("http://local/api/report-builder/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ filters: { academic_year_id: 2 }, include_trends: true, include_forecast: true, forecast_method: "linear_trend", granularity: "term" }) })); const previewBody = await preview.json() as any; expect(preview.status, JSON.stringify(previewBody)).toBe(200); expect(previewBody.resolved_sections).toContain("attendance");
