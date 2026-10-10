@@ -249,10 +249,10 @@ export function attendancePeriodStudents(context: AuthContext, query: {
 export function attendancePeriodStudentsByRanges(context: AuthContext, query: {
   academic_year_id: number; jenjang_id?: number;
   ranges: Array<{ key: string; start_date: string; end_date: string }>;
-}): Map<string, Map<string, { expectedStudentDays: number; hadir: number; alfa: number }>> {
+}): Map<string, Map<string, { expectedStudentDays: number; recordedStudentDays: number; hadir: number; alfa: number }>> {
   const startDate = query.ranges.reduce((value, range) => range.start_date < value ? range.start_date : value, query.ranges[0]?.start_date ?? "");
   const endDate = query.ranges.reduce((value, range) => range.end_date > value ? range.end_date : value, query.ranges[0]?.end_date ?? "");
-  const result = new Map<string, Map<string, { expectedStudentDays: number; hadir: number; alfa: number }>>();
+  const result = new Map<string, Map<string, { expectedStudentDays: number; recordedStudentDays: number; hadir: number; alfa: number }>>();
   for (const range of query.ranges) result.set(range.key, new Map());
   if (!startDate || !endDate) return result;
   termAttendanceInRange(context, {
@@ -262,8 +262,9 @@ export function attendancePeriodStudentsByRanges(context: AuthContext, query: {
     for (const range of query.ranges) {
       if (date < range.start_date || date > range.end_date) continue;
       const students = result.get(range.key)!;
-      const counts = students.get(studentKey) ?? { expectedStudentDays: 0, hadir: 0, alfa: 0 };
+      const counts = students.get(studentKey) ?? { expectedStudentDays: 0, recordedStudentDays: 0, hadir: 0, alfa: 0 };
       counts.expectedStudentDays++;
+      if (status !== null) counts.recordedStudentDays++;
       if (status === "on-time" || status === "late") counts.hadir++;
       if (status === "alfa") counts.alfa++;
       students.set(studentKey, counts);
