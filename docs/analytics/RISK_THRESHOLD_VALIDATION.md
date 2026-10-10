@@ -54,6 +54,25 @@ measurements because grade rows have no canonical date or term axis.
 | `academic_average` | Academic Analytics: sum of non-null scores / count of non-null scores; current academic year | Null without scored results. A score of zero is included; null scores are excluded. Legacy rows without a selected enrollment are out of scope. Subject mix and grade rows without a time axis limit comparison. | Describes recorded scores in the selected scope; it is not a trend or a measure of student ability. Validate subject/program applicability before comparing cases. |
 | `academic_participation` | Scored result slots / expected result slots; current academic year | Null when no expected slots exist. The response reports scored and expected counts; zero scored slots with expected slots is a recording-coverage zero, not proof that the student did not participate. | Describes score capture against the configured subject/component catalog. Do not interpret it as student engagement or risk without separate school evidence. |
 
+### Calibration factors
+
+Record these factors for each reviewed case; the current calculations do not
+adjust for them. Compare each candidate within its supported school program
+and report coverage rather than pooling unlike populations.
+
+| Candidate indicators | Potential confounders to review |
+| --- | --- |
+| `attendance_rate`, `attendance_delta`, `alfa_rate`, `alfa_delta` | Calendar closures and exceptions, date-effective enrollment and class transfers, changes in status/override practice, and incomplete attendance capture can change expected denominators or recorded meaning. |
+| `tardiness_rate`, `tardiness_delta` | Check-in device availability, arrival routines, cutoff policy changes, effective-status overrides, and late events outside expected days can change event counts or their interpretation. |
+| `academic_average` | Subject and assessment mix, score scale or difficulty, grading-period composition, and which result components were scored can change averages without a change in underlying learning. |
+| `academic_participation` | Curriculum/component catalog differences and score-entry practices can change expected slots or recorded scores; missing score capture must not be interpreted as student nonparticipation. |
+
+SMP and SD remain separate review populations unless school owners approve a
+specific comparable scope. TK/KB is descriptive-only until local attendance
+and academic measures have developmentally appropriate meaning and a separate
+review model. Do not use SMP/SD thresholds for TK/KB or treat program
+differences as correction factors.
+
 All eight values are candidates with `NO_THRESHOLD`. The validation extractor
 preserves attendance coverage, excludes attendance values with no recorded
 expected-day evidence, and treats academic participation with no scored result
