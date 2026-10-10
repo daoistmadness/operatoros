@@ -41,6 +41,7 @@ interface RosterFormState {
     checkOut: string;
     note: string;
     paperBookVerification: boolean;
+    entryTouched?: boolean;
     unsupportedStatus?: string;
   };
 }
@@ -66,6 +67,17 @@ export function toApiAttendanceStatus(status: AttendanceStatus): ApiAttendanceSt
   if (status === "leave") return "izin";
   if (status === "absent") return "absent";
   return status;
+}
+
+export function buildAttendanceEntries(formState: RosterFormState): AttendanceEntryPayload[] {
+  return Object.entries(formState).filter(([, state]) => state.entryTouched && !state.unsupportedStatus).map(([studentId, state]) => ({
+    student_id: Number(studentId),
+    status: toApiAttendanceStatus(state.status),
+    check_in: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkIn || undefined,
+    check_out: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkOut || undefined,
+    notes: state.note || undefined,
+    ...((state.paperBookVerification || ["sick", "leave", "absent"].includes(state.status)) ? { source: "PAPER_BOOK_VERIFICATION" as const } : {}),
+  }));
 }
 
 const STATUS_CONFIG: Record<
@@ -178,6 +190,7 @@ export default function ClassAttendanceEntry() {
           checkOut: st.scan_out || "",
           note: "",
           paperBookVerification: false,
+          entryTouched: false,
         };
       });
       setFormState(initial);
@@ -212,6 +225,7 @@ export default function ClassAttendanceEntry() {
         ...(prev[studentId] || { checkIn: "", checkOut: "", note: "" }),
         status,
         unsupportedStatus: undefined,
+        entryTouched: true,
         paperBookVerification: prev[studentId]?.paperBookVerification || ["sick", "leave", "alfa"].includes(status),
       },
     }));
@@ -220,7 +234,7 @@ export default function ClassAttendanceEntry() {
 
   const handlePaperBookVerificationChange = (studentId: number, verified: boolean) => {
     if (rosterData?.is_finalized) return;
-    setFormState((prev) => ({ ...prev, [studentId]: { ...(prev[studentId] || { status: "on-time", checkIn: "", checkOut: "", note: "" }), paperBookVerification: verified } }));
+    setFormState((prev) => ({ ...prev, [studentId]: { ...(prev[studentId] || { status: "on-time", checkIn: "", checkOut: "", note: "" }), paperBookVerification: verified, entryTouched: true } }));
     setIsDirty(true);
   };
 
@@ -231,6 +245,7 @@ export default function ClassAttendanceEntry() {
       [studentId]: {
         ...(prev[studentId] || { status: "on-time" }),
         [field]: val,
+        entryTouched: prev[studentId]?.entryTouched || field !== "note",
       },
     }));
     setIsDirty(true);
@@ -244,6 +259,7 @@ export default function ClassAttendanceEntry() {
         ...(updated[st.student_id] || { checkIn: "", checkOut: "", note: "" }),
         status: "on-time",
         unsupportedStatus: undefined,
+        entryTouched: true,
       };
     });
     setFormState(updated);
@@ -252,17 +268,10 @@ export default function ClassAttendanceEntry() {
 
   const handleSave = () => {
     if (!classIdNum || !selectedDate || !rosterData) return;
-    const entries: AttendanceEntryPayload[] = Object.entries(formState).filter(([, state]) => !state.unsupportedStatus).map(([sId, state]) => ({
-      student_id: Number(sId),
-      status: toApiAttendanceStatus(state.status),
-      check_in: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkIn || undefined,
-      check_out: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkOut || undefined,
-      notes: state.note || undefined,
-      ...((state.paperBookVerification || ["sick", "leave", "absent"].includes(state.status)) ? { source: "PAPER_BOOK_VERIFICATION" as const } : {}),
-    }));
+    const entries = buildAttendanceEntries(formState);
 
     if (!entries.length) {
-      setSaveError("Choose a supported status for the historical attendance record before saving.");
+      setSaveError("Make an explicit attendance change before saving.");
       return;
     }
     submitMutation.mutate(entries);
