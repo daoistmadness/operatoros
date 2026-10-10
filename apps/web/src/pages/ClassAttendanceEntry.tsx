@@ -22,7 +22,7 @@ import {
   type AssignedClassSummary,
   type AttendanceEntryPayload,
 } from "../api/teacherClassAssignments";
-import type { ClassAttendanceResponse } from "@operatoros/contracts/attendance";
+import type { AttendanceStatus as ApiAttendanceStatus, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
@@ -32,7 +32,7 @@ import { useAuth } from "../context/AuthContext";
 import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 
-type AttendanceStatus = "on-time" | "late" | "sick" | "leave" | "absent";
+type AttendanceStatus = "on-time" | "late" | "incomplete" | "sick" | "leave" | "absent" | "alfa";
 
 interface RosterFormState {
   [studentId: number]: {
@@ -40,27 +40,44 @@ interface RosterFormState {
     checkIn: string;
     checkOut: string;
     note: string;
+    paperBookVerification: boolean;
+    entryTouched?: boolean;
+    unsupportedStatus?: string;
   };
 }
 
-function toFormStatus(status: string): AttendanceStatus {
+export function toFormStatus(status: string): { status: AttendanceStatus; unsupportedStatus?: string } {
   switch (status) {
-    case "late": return "late";
+    case "on-time": return { status: "on-time" };
+    case "late": return { status: "late" };
+    case "incomplete": return { status: "incomplete" };
     case "sakit":
-    case "sick": return "sick";
+    case "sick": return { status: "sick" };
     case "izin":
-    case "leave": return "leave";
-    case "absent":
-    case "alfa": return "absent";
-    default: return "on-time";
+    case "leave": return { status: "leave" };
+    case "absent": return { status: "absent" };
+    case "alfa": return { status: "alfa" };
+    case "unrecorded": return { status: "on-time" };
+    default: return { status: "on-time", unsupportedStatus: status };
   }
 }
 
-export function toApiAttendanceStatus(status: AttendanceStatus): string {
+export function toApiAttendanceStatus(status: AttendanceStatus): ApiAttendanceStatus {
   if (status === "sick") return "sakit";
   if (status === "leave") return "izin";
-  if (status === "absent") return "alfa";
+  if (status === "absent") return "absent";
   return status;
+}
+
+export function buildAttendanceEntries(formState: RosterFormState): AttendanceEntryPayload[] {
+  return Object.entries(formState).filter(([, state]) => state.entryTouched && !state.unsupportedStatus).map(([studentId, state]) => ({
+    student_id: Number(studentId),
+    status: toApiAttendanceStatus(state.status),
+    check_in: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkIn || undefined,
+    check_out: state.paperBookVerification || ["sick", "leave", "alfa"].includes(state.status) ? undefined : state.checkOut || undefined,
+    notes: state.note || undefined,
+    ...((state.paperBookVerification || ["sick", "leave", "absent"].includes(state.status)) ? { source: "PAPER_BOOK_VERIFICATION" as const } : {}),
+  }));
 }
 
 const STATUS_CONFIG: Record<
@@ -81,6 +98,13 @@ const STATUS_CONFIG: Record<
     border: "border-orange-200",
     activeBg: "bg-orange-600 text-white border-orange-600",
   },
+  incomplete: {
+    label: "Tidak lengkap",
+    bg: "bg-orange-50 text-orange-700 hover:bg-orange-100",
+    text: "text-orange-700",
+    border: "border-orange-200",
+    activeBg: "bg-orange-600 text-white border-orange-600",
+  },
   sick: {
     label: "Sakit",
     bg: "bg-blue-50 text-blue-700 hover:bg-blue-100",
@@ -96,6 +120,13 @@ const STATUS_CONFIG: Record<
     activeBg: "bg-amber-600 text-white border-amber-600",
   },
   absent: {
+    label: "Absen",
+    bg: "bg-rose-50 text-rose-700 hover:bg-rose-100",
+    text: "text-rose-700",
+    border: "border-rose-200",
+    activeBg: "bg-rose-600 text-white border-rose-600",
+  },
+  alfa: {
     label: "Alfa",
     bg: "bg-rose-50 text-rose-700 hover:bg-rose-100",
     text: "text-rose-700",
@@ -152,11 +183,14 @@ export default function ClassAttendanceEntry() {
     if (rosterData?.items) {
       const initial: RosterFormState = {};
       rosterData.items.forEach((st) => {
+        const mapped = toFormStatus(st.effective_status);
         initial[st.student_id] = {
-          status: toFormStatus(st.effective_status),
+          ...mapped,
           checkIn: st.scan_in || "",
           checkOut: st.scan_out || "",
           note: "",
+          paperBookVerification: false,
+          entryTouched: false,
         };
       });
       setFormState(initial);
@@ -190,8 +224,17 @@ export default function ClassAttendanceEntry() {
       [studentId]: {
         ...(prev[studentId] || { checkIn: "", checkOut: "", note: "" }),
         status,
+        unsupportedStatus: undefined,
+        entryTouched: true,
+        paperBookVerification: prev[studentId]?.paperBookVerification || ["sick", "leave", "alfa"].includes(status),
       },
     }));
+    setIsDirty(true);
+  };
+
+  const handlePaperBookVerificationChange = (studentId: number, verified: boolean) => {
+    if (rosterData?.is_finalized) return;
+    setFormState((prev) => ({ ...prev, [studentId]: { ...(prev[studentId] || { status: "on-time", checkIn: "", checkOut: "", note: "" }), paperBookVerification: verified, entryTouched: true } }));
     setIsDirty(true);
   };
 
@@ -202,6 +245,7 @@ export default function ClassAttendanceEntry() {
       [studentId]: {
         ...(prev[studentId] || { status: "on-time" }),
         [field]: val,
+        entryTouched: prev[studentId]?.entryTouched || field !== "note",
       },
     }));
     setIsDirty(true);
@@ -214,6 +258,8 @@ export default function ClassAttendanceEntry() {
       updated[st.student_id] = {
         ...(updated[st.student_id] || { checkIn: "", checkOut: "", note: "" }),
         status: "on-time",
+        unsupportedStatus: undefined,
+        entryTouched: true,
       };
     });
     setFormState(updated);
@@ -222,14 +268,12 @@ export default function ClassAttendanceEntry() {
 
   const handleSave = () => {
     if (!classIdNum || !selectedDate || !rosterData) return;
-    const entries: AttendanceEntryPayload[] = Object.entries(formState).map(([sId, state]) => ({
-      student_id: Number(sId),
-      status: toApiAttendanceStatus(state.status),
-      check_in: state.checkIn || undefined,
-      check_out: state.checkOut || undefined,
-      notes: state.note || undefined,
-    }));
+    const entries = buildAttendanceEntries(formState);
 
+    if (!entries.length) {
+      setSaveError("Make an explicit attendance change before saving.");
+      return;
+    }
     submitMutation.mutate(entries);
   };
   const handleExportExcel = async () => {
@@ -434,7 +478,10 @@ export default function ClassAttendanceEntry() {
                       checkIn: "",
                       checkOut: "",
                       note: "",
+                      paperBookVerification: false,
                     };
+                    const paperBookStatus = ["sick", "leave", "alfa"].includes(currentState.status);
+                    const paperBookVerified = paperBookStatus || currentState.paperBookVerification;
 
                     return (
                       <tr key={st.student_id} className="hover:bg-slate-50 transition-colors">
@@ -443,10 +490,11 @@ export default function ClassAttendanceEntry() {
                           <div>{st.student_name}</div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {(["on-time", "late", "sick", "leave", "absent"] as AttendanceStatus[]).map((stKey) => {
+                          {currentState.unsupportedStatus && <p role="alert" className="mb-1 text-xs text-rose-700">Stored status “{currentState.unsupportedStatus}” is unsupported. Choose a replacement explicitly.</p>}
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {(["on-time", "late", "incomplete", "sick", "leave", "absent", "alfa"] as AttendanceStatus[]).map((stKey) => {
                               const cfg = STATUS_CONFIG[stKey];
-                              const isSelected = currentState.status === stKey;
+                              const isSelected = !currentState.unsupportedStatus && currentState.status === stKey;
 
                               return (
                                 <button
@@ -467,7 +515,7 @@ export default function ClassAttendanceEntry() {
                         <td className="px-4 py-3">
                           <Input
                             type="time"
-                            disabled={isFinalized}
+                            disabled={isFinalized || paperBookVerified}
                             value={currentState.checkIn}
                             onChange={(e) => handleInputChange(st.student_id, "checkIn", e.target.value)}
                             className="text-xs h-8"
@@ -476,21 +524,18 @@ export default function ClassAttendanceEntry() {
                         <td className="px-4 py-3">
                           <Input
                             type="time"
-                            disabled={isFinalized}
+                            disabled={isFinalized || paperBookVerified}
                             value={currentState.checkOut}
                             onChange={(e) => handleInputChange(st.student_id, "checkOut", e.target.value)}
                             className="text-xs h-8"
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <Input
-                            type="text"
-                            placeholder="Catatan..."
-                            disabled={isFinalized}
-                            value={currentState.note}
-                            onChange={(e) => handleInputChange(st.student_id, "note", e.target.value)}
-                            className="text-xs h-8"
-                          />
+                          <label className="mb-1 flex items-center gap-1.5 text-[11px] text-slate-600">
+                            <input type="checkbox" checked={paperBookStatus || currentState.paperBookVerification} disabled={isFinalized || paperBookStatus} onChange={(e) => handlePaperBookVerificationChange(st.student_id, e.target.checked)} />
+                            PAPER_BOOK_VERIFICATION
+                          </label>
+                          <Input type="text" placeholder={paperBookStatus || currentState.paperBookVerification ? "Book, month, page (required)" : "Catatan..."} disabled={isFinalized} value={currentState.note} onChange={(e) => handleInputChange(st.student_id, "note", e.target.value)} className="text-xs h-8" />
                         </td>
                       </tr>
                     );
@@ -507,7 +552,10 @@ export default function ClassAttendanceEntry() {
                   checkIn: "",
                   checkOut: "",
                   note: "",
+                  paperBookVerification: false,
                 };
+                const paperBookStatus = ["sick", "leave", "alfa"].includes(currentState.status);
+                const paperBookVerified = paperBookStatus || currentState.paperBookVerification;
 
                 return (
                   <div key={st.student_id} className="p-4 space-y-3 bg-white">
@@ -518,10 +566,11 @@ export default function ClassAttendanceEntry() {
                     <div className="font-semibold text-slate-900 text-sm">{st.student_name}</div>
 
                     {/* Status Button Grid */}
-                    <div className="grid grid-cols-5 gap-1">
-                      {(["on-time", "late", "sick", "leave", "absent"] as AttendanceStatus[]).map((stKey) => {
+                    {currentState.unsupportedStatus && <p role="alert" className="text-xs text-rose-700">Stored status “{currentState.unsupportedStatus}” is unsupported. Choose a replacement explicitly.</p>}
+                    <div className="grid grid-cols-3 gap-1">
+                      {(["on-time", "late", "incomplete", "sick", "leave", "absent", "alfa"] as AttendanceStatus[]).map((stKey) => {
                         const cfg = STATUS_CONFIG[stKey];
-                        const isSelected = currentState.status === stKey;
+                        const isSelected = !currentState.unsupportedStatus && currentState.status === stKey;
 
                         return (
                           <button
@@ -545,7 +594,7 @@ export default function ClassAttendanceEntry() {
                         <FieldLabel className="text-[10px] text-slate-500 mb-0.5">Masuk</FieldLabel>
                         <Input
                           type="time"
-                          disabled={isFinalized}
+                          disabled={isFinalized || paperBookVerified}
                           value={currentState.checkIn}
                           onChange={(e) => handleInputChange(st.student_id, "checkIn", e.target.value)}
                           className="text-xs h-8"
@@ -555,13 +604,18 @@ export default function ClassAttendanceEntry() {
                         <FieldLabel className="text-[10px] text-slate-500 mb-0.5">Pulang</FieldLabel>
                         <Input
                           type="time"
-                          disabled={isFinalized}
+                          disabled={isFinalized || paperBookVerified}
                           value={currentState.checkOut}
                           onChange={(e) => handleInputChange(st.student_id, "checkOut", e.target.value)}
                           className="text-xs h-8"
                         />
                       </div>
                     </div>
+                    <label className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                      <input type="checkbox" checked={paperBookStatus || currentState.paperBookVerification} disabled={isFinalized || paperBookStatus} onChange={(e) => handlePaperBookVerificationChange(st.student_id, e.target.checked)} />
+                      PAPER_BOOK_VERIFICATION
+                    </label>
+                    <Input type="text" placeholder={paperBookStatus || currentState.paperBookVerification ? "Book, month, page (required)" : "Catatan..."} disabled={isFinalized} value={currentState.note} onChange={(e) => handleInputChange(st.student_id, "note", e.target.value)} className="text-xs h-8" />
                   </div>
                 );
               })}

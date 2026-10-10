@@ -330,7 +330,7 @@ describe("attendance machine preview", () => {
       const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       const attendanceId = Number((value.database.client.query("SELECT id FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).id);
       const classId = Number((value.database.client.query("SELECT id FROM academic_classes WHERE class_name = '7A'").get() as any).id);
-      const corrected = await value.app.handle(new Request(`http://local/api/attendance/classes/${classId}/dates/2026-04-03/entries`, { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ entries: [{ student_id: 123, status: "alfa", notes: "Paper class register confirms absence." }] }) }));
+      const corrected = await value.app.handle(new Request(`http://local/api/attendance/classes/${classId}/dates/2026-04-03/entries`, { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ entries: [{ student_id: 123, status: "alfa", source: "PAPER_BOOK_VERIFICATION", notes: "Paper class register confirms absence." }] }) }));
       expect(corrected.status).toBe(200);
       const lateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await lateness.json() as any).totals).toMatchObject({ late_events: 0, total_late_minutes: 0 });

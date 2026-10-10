@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+import { AttendanceStatusSchema } from "./class-attendance";
 export * from "./calendar";
 export * from "./class-attendance";
 export * from "./submission-deadline";
@@ -10,7 +11,7 @@ import { AttendanceSubmissionTimingSchema } from "./submission-deadline";
 
 export const AttendanceCorrectionRequestSchema = Type.Object({
   attendance_id: Type.Number({ minimum: 1 }),
-  proposed_status: Type.String(),
+  proposed_status: AttendanceStatusSchema,
   proposed_check_in: Type.Optional(Type.String()),
   proposed_check_out: Type.Optional(Type.String()),
   reason_code: Type.String({ minLength: 2, maxLength: 64 }),

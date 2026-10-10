@@ -63,7 +63,8 @@ describe("student attendance history export", () => {
       const recap = workbook.getWorksheet("Rekap Bulanan")!;
       expect(recap.getRow(2).getCell(2).value).toBe(2); // both rows effectively on-time (late corrected)
       expect(recap.getRow(2).getCell(3).value).toBe(0); // no late rows after override
-      expect(recap.getRow(2).getCell(6).value).toBe(1); // legacy reason remains available without an explicit effective status
+      expect(recap.getRow(2).getCell(6).value).toBe(0); // verified daily status only
+      expect(recap.getRow(2).getCell(9).value).toBe(1); // reported legacy reason remains separate
       const detail = workbook.getWorksheet("Rincian Harian")!;
       const lateRow = [2, 3, 4].map((r) => detail.getRow(r).getCell(7).value).filter(Boolean).length;
       expect(lateRow).toBe(1); // exactly one override note
@@ -87,6 +88,7 @@ describe("student attendance history export", () => {
       const workbook = await loadXlsxWorkbook(new Uint8Array(await response.arrayBuffer()));
       const recap = workbook.getWorksheet("Rekap Bulanan")!.getRow(2);
       expect([6, 7, 8].map((column) => recap.getCell(column).value)).toEqual([1, 1, 1]);
+      expect([9, 10, 11].map((column) => recap.getCell(column).value)).toEqual([1, 2, 0]);
       const detail = workbook.getWorksheet("Rincian Harian")!;
       expect([4, 5, 6].map((row) => detail.getRow(row).getCell(2).value)).toEqual(["sakit", "izin", "alfa"]);
     } finally {

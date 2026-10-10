@@ -53,8 +53,9 @@ describe("assigned class attendance export", () => {
       expect(recap.getRow(2).getCell(1).value).toBe("Class Student A");
       expect(recap.getRow(2).getCell(2).value).toBe(2); // late corrected to on-time
       expect(recap.getRow(2).getCell(3).value).toBe(0);
-      expect(recap.getRow(2).getCell(6).value).toBe(1); // sakit
-      expect(recap.getRow(2).getCell(9).value).toBe(20); // HEB override
+      expect(recap.getRow(2).getCell(6).value).toBe(0); // verified daily Sakit
+      expect(recap.getRow(2).getCell(9).value).toBe(1); // separate reported ledger Sakit
+      expect(recap.getRow(2).getCell(12).value).toBe(20); // HEB override
       const detail = workbook.getWorksheet("Rincian Harian")!;
       const notes = [2, 3, 4].map((row) => detail.getRow(row).getCell(8).value).filter(Boolean);
       expect(notes).toEqual(["Device missed scan"]);

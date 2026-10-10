@@ -71,14 +71,64 @@ describe("attendance parity slices", () => {
     const path = `/tmp/operatoros-correction-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-audit-${process.pid}` } });
     try {
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) })); const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
-      const create = await app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...staff, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 2, proposed_status: "on-time", proposed_check_in: "07:30", proposed_check_out: "16:00", reason_code: "DEVICE_FAULT", explanation: "Device failed to register the departure scan." }) }));
+      const rawBefore = database.client.query("SELECT status, check_in, check_out FROM attendance WHERE id = 2").get();
+      const fabricatedTime = await app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...staff, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 2, proposed_status: "sakit", proposed_check_in: "07:30", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "P2-B September 2026 attendance book, page 1." }) }));
+      expect(fabricatedTime.status).toBe(400);
+      const create = await app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...staff, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 2, proposed_status: "sakit", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "P2-B September 2026 attendance book, page 1." }) }));
       expect(create.status).toBe(200); const id = (await create.json() as any).id;
       expect((await app.handle(new Request(`http://local/api/attendance-corrections/${id}/submit`, { method: "POST", headers: staff }))).status).toBe(200);
       const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const admin = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
       const approved = await app.handle(new Request(`http://local/api/attendance-corrections/${id}/approve`, { method: "POST", headers: { ...admin, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }) }));
       expect(approved.status).toBe(200); expect((await approved.json() as any).state).toBe("APPROVED");
+      expect(database.client.query("SELECT override_status, reviewed_by, note FROM attendance_overrides WHERE attendance_id = 2").get()).toMatchObject({ override_status: "sakit", reviewed_by: "golden-admin", note: "P2-B September 2026 attendance book, page 1." });
+      expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE id = 2").get()).toEqual(rawBefore);
+      expect(database.client.query("SELECT previous_status, new_status, reviewed_by, note FROM attendance_override_history WHERE attendance_id = 2").get()).toMatchObject({ new_status: "sakit", reviewed_by: "golden-admin", note: "P2-B September 2026 attendance book, page 1." });
       const duplicate = await app.handle(new Request(`http://local/api/attendance-corrections/${id}/approve`, { method: "POST", headers: { ...admin, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }) }));
       expect(duplicate.status).toBe(409);
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
+  it("requires a structured paper-book source and rejects unknown status before writes", async () => {
+    const path = `/tmp/operatoros-paper-book-override-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-override-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      const postOverride = (body: unknown) => app.handle(new Request("http://local/api/review/attendance/1/override", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }));
+      const invalidBefore = Number((database.client.query("SELECT COUNT(*) AS count FROM attendance_overrides").get() as any).count);
+      expect((await postOverride({ override_status: "sakit", note: "P2-B September page 1" })).status).toBe(400);
+      expect((await postOverride({ override_status: "presentish", note: "Unsupported status" })).status).toBe(400);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM attendance_overrides").get() as any).count)).toBe(invalidBefore);
+      database.client.run("CREATE TRIGGER fail_paper_book_override_audit BEFORE INSERT ON operations_audit_events WHEN NEW.operation = 'PAPER_BOOK_ATTENDANCE_OVERRIDE' BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const paperBookOverride = { override_status: "alfa", note: "P2-B September 2026 attendance book, page 1.", source: "PAPER_BOOK_VERIFICATION" };
+      expect((await postOverride(paperBookOverride)).status).toBe(409);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM attendance_overrides").get() as any).count)).toBe(invalidBefore);
+      expect(Number((database.client.query("SELECT COUNT(*) AS count FROM attendance_override_history WHERE attendance_id = 1").get() as any).count)).toBe(0);
+      database.client.run("DROP TRIGGER fail_paper_book_override_audit");
+      const rawBefore = database.client.query("SELECT status, check_in, check_out FROM attendance WHERE id = 1").get();
+      expect((await postOverride(paperBookOverride)).status).toBe(200);
+      expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE id = 1").get()).toEqual(rawBefore);
+      expect(database.client.query("SELECT previous_status, new_status, reviewed_by, note, timestamp FROM attendance_override_history WHERE attendance_id = 1").get()).toMatchObject({ new_status: "alfa", reviewed_by: "golden-admin", note: "P2-B September 2026 attendance book, page 1." });
+      const audit = database.client.query("SELECT actor_id, occurred_at, capability, reason, metadata FROM operations_audit_events WHERE operation = 'PAPER_BOOK_ATTENDANCE_OVERRIDE'").get() as any;
+      expect(audit).toMatchObject({ actor_id: "golden-admin", occurred_at: expect.any(String), capability: "manage_attendance", reason: paperBookOverride.note });
+      expect(JSON.parse(audit.metadata)).toMatchObject({ source_workflow: "PAPER_BOOK_VERIFICATION", attendance_date: "2026-08-04", student_id: 9601, before: { status: "on-time" }, after: { status: "alfa" } });
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
+  it("reports effective dated S/I/A separately from teacher-book ledger totals", async () => {
+    const path = `/tmp/operatoros-paper-book-student-summary-${process.pid}-${Date.now()}.db`;
+    createAttendanceReadFixture(path, "corrections");
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-student-summary-audit-${process.pid}` } });
+    try {
+      database.client.run("UPDATE attendance_overrides SET override_status = 'sakit' WHERE attendance_id = 1");
+      database.client.run("INSERT INTO absence_reasons (student_id,class_name,month,year,sakit,izin,alfa,entered_by,entered_at,updated_at) VALUES (9601,'7A',8,2026,4,2,1,'golden-admin',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      const summary = await app.handle(new Request("http://local/api/students/9601/attendance-summary?month=8&year=2026", { headers: auth }));
+      expect(summary.status).toBe(200);
+      expect(await summary.json()).toMatchObject({ sakit: 1, izin: 0, alfa: 0, reported_sakit: 4, reported_izin: 2, reported_alfa: 1, breakdown: [{ date: "2026-08-04", status: "sakit", scan_masuk: "07:30" }] });
+      const history = await app.handle(new Request("http://local/api/students/9601/monthly-history", { headers: auth }));
+      expect(await history.json()).toMatchObject({ history: [{ present: 0, late: 0, absent: 0, sakit: 1, izin: 0, alfa: 0 }] });
+      expect(database.client.query("SELECT status, check_in FROM attendance WHERE id = 1").get()).toEqual({ status: "late", check_in: "07:30:00" });
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 

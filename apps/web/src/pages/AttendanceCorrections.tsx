@@ -25,6 +25,7 @@ type CorrectionRequest = {
   requester: string;
   original_snapshot: AttendanceSnapshot;
   proposed_status: string;
+  reason_code: string;
   proposed_check_in?: string | null;
   proposed_check_out?: string | null;
   explanation: string;
@@ -99,10 +100,12 @@ export default function AttendanceCorrections() {
   const submitNew = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await run("create", async () => {
+      const { proposed_check_in, proposed_check_out, ...request } = form;
+      const paperBookCorrection = ["sakit", "izin", "alfa"].includes(form.proposed_status);
       const response = await api.post<{ id: number }>("/api/attendance-corrections", {
-        ...form, attendance_id: Number(form.attendance_id),
-        ...(form.proposed_check_in ? { proposed_check_in: form.proposed_check_in } : {}),
-        ...(form.proposed_check_out ? { proposed_check_out: form.proposed_check_out } : {}),
+        ...request, attendance_id: Number(form.attendance_id),
+        ...(!paperBookCorrection && proposed_check_in ? { proposed_check_in } : {}),
+        ...(!paperBookCorrection && proposed_check_out ? { proposed_check_out } : {}),
       });
       await api.post(`/api/attendance-corrections/${response.data.id}/submit`);
       setForm((current) => ({ ...current, attendance_id: "", explanation: "" }));
@@ -146,11 +149,11 @@ export default function AttendanceCorrections() {
             <form onSubmit={submitNew} className="mt-4 grid gap-4">
               <label className="text-sm font-semibold">Attendance record ID<input required inputMode="numeric" value={form.attendance_id} onChange={(e) => setForm({ ...form, attendance_id: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" /></label>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <label className="text-sm font-semibold">Proposed status<select value={form.proposed_status} onChange={(e) => setForm({ ...form, proposed_status: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"><option value="on-time">On-time</option><option value="late">Late</option><option value="absent">Absent</option><option value="incomplete">Incomplete</option></select></label>
-                <label className="text-sm font-semibold">Check-in<input type="time" value={form.proposed_check_in} onChange={(e) => setForm({ ...form, proposed_check_in: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" /></label>
-                <label className="text-sm font-semibold">Check-out<input type="time" value={form.proposed_check_out} onChange={(e) => setForm({ ...form, proposed_check_out: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" /></label>
+                <label className="text-sm font-semibold">Proposed status<select value={form.proposed_status} onChange={(e) => { const proposed_status = e.target.value; const paperBookCorrection = ["sakit", "izin", "alfa"].includes(proposed_status); setForm({ ...form, proposed_status, proposed_check_in: paperBookCorrection ? "" : form.proposed_check_in, proposed_check_out: paperBookCorrection ? "" : form.proposed_check_out, reason_code: paperBookCorrection ? "PAPER_BOOK_VERIFICATION" : "SCAN_REVIEW" }); }} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"><option value="on-time">Hadir</option><option value="late">Terlambat</option><option value="absent">Absen</option><option value="incomplete">Tidak lengkap</option><option value="sakit">Sakit</option><option value="izin">Izin</option><option value="alfa">Alfa</option></select></label>
+                <label className="text-sm font-semibold">Check-in<input type="time" disabled={["sakit", "izin", "alfa"].includes(form.proposed_status)} value={form.proposed_check_in} onChange={(e) => setForm({ ...form, proposed_check_in: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 disabled:bg-slate-100" /></label>
+                <label className="text-sm font-semibold">Check-out<input type="time" disabled={["sakit", "izin", "alfa"].includes(form.proposed_status)} value={form.proposed_check_out} onChange={(e) => setForm({ ...form, proposed_check_out: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 disabled:bg-slate-100" /></label>
               </div>
-              <label className="text-sm font-semibold">Explanation<textarea required minLength={5} value={form.explanation} onChange={(e) => setForm({ ...form, explanation: e.target.value })} className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2" /></label>
+              <label className="text-sm font-semibold">Explanation / verification source<textarea required minLength={5} placeholder={form.reason_code === "PAPER_BOOK_VERIFICATION" ? "Paper-book reference, e.g. P2-B, September 2026, page 1" : "Explain the correction and its source"} value={form.explanation} onChange={(e) => setForm({ ...form, explanation: e.target.value })} className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2" /></label>
               <p className="text-sm text-slate-500">Requester (session): <strong>{user?.username}</strong></p>
               <button disabled={Boolean(busy) || period.status === "FINALIZED"} className="rounded-xl bg-brand px-4 py-2 font-bold text-white disabled:opacity-50">{busy === "create" ? "Submitting…" : "Create and submit"}</button>
             </form>
@@ -166,7 +169,7 @@ export default function AttendanceCorrections() {
                 return <article key={item.id} className="rounded-xl border border-slate-200 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold">Request #{item.id}</h3><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{item.state}</span></div>
                   <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2"><div className="rounded-lg bg-slate-50 p-3"><p className="font-bold text-slate-500">Original effective</p><p>{item.original_snapshot.status} · {item.original_snapshot.check_in || "—"}–{item.original_snapshot.check_out || "—"}</p></div><div className="rounded-lg bg-brand/5 p-3"><p className="font-bold text-slate-500">Proposed</p><p>{item.proposed_status} · {item.proposed_check_in || "—"}–{item.proposed_check_out || "—"}</p></div></div>
-                  <p className="mt-3 text-sm">{item.explanation}</p><p className="mt-1 text-xs text-slate-500">Requested by {item.requester}</p>
+                  <p className="mt-3 text-sm">{item.explanation}</p><p className="mt-1 text-xs text-slate-500">Source: {item.reason_code} · Requested by {item.requester}</p>
                   {self && <p className="mt-3 rounded-lg bg-amber-50 p-2 text-sm text-amber-800"><AlertTriangle className="mr-1 inline" size={15} />Self-approval is unavailable.</p>}
                   {can("approve_attendance_correction") && <div className="mt-3 flex flex-wrap gap-2"><button disabled={self || Boolean(busy)} onClick={() => run(`approve-${item.id}`, () => api.post(`/api/attendance-corrections/${item.id}/approve`, { confirmation: "APPROVE_ATTENDANCE_CORRECTION" }))} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-40"><CheckCircle2 className="mr-1 inline" size={15} />Approve</button><button disabled={Boolean(busy)} onClick={() => setRejecting(item.id)} className="rounded-lg bg-rose-100 px-3 py-2 text-sm font-bold text-rose-800"><XCircle className="mr-1 inline" size={15} />Reject</button></div>}
                 </article>;
