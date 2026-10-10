@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 
 describe("attendance review actor and permission contract", () => {
   const source = fs.readFileSync(path.join(process.cwd(), "src/pages/AttendanceReview.tsx"), "utf8");
+  const corrections = fs.readFileSync(path.join(process.cwd(), "src/pages/AttendanceCorrections.tsx"), "utf8");
+  const classEntry = fs.readFileSync(path.join(process.cwd(), "src/pages/ClassAttendanceEntry.tsx"), "utf8");
+  const studentProfile = fs.readFileSync(path.join(process.cwd(), "src/pages/StudentProfile.tsx"), "utf8");
 
   it("does not send or render an editable reviewer field", () => {
     expect(source).not.toMatch(/reviewed_by\s*:\s*(user|["'])/);
@@ -15,6 +18,22 @@ describe("attendance review actor and permission contract", () => {
   it("guards mutation controls with the attendance capability", () => {
     expect(source).toContain('can("manage_attendance")');
     expect(source).toContain("canManageAttendance ?");
+  });
+
+  it("exposes dated S/I/A corrections with structured paper-book attribution", () => {
+    for (const status of ["sakit", "izin", "alfa"]) {
+      expect(source).toContain(`"${status}"`);
+      expect(corrections).toContain(`value="${status}"`);
+      expect(classEntry).toContain(`"${status === "sakit" ? "sick" : status === "izin" ? "leave" : "alfa"}"`);
+    }
+    expect(source).toContain("PAPER_BOOK_VERIFICATION");
+    expect(corrections).toContain("PAPER_BOOK_VERIFICATION");
+    expect(classEntry).toContain("PAPER_BOOK_VERIFICATION");
+    expect(classEntry).toContain("Book, month, page (required)");
+    expect(classEntry).toContain("const mapped = toFormStatus(st.effective_status)");
+    expect(classEntry).toContain('filter(([, state]) => !state.unsupportedStatus)');
+    expect(studentProfile).toContain("reported_sakit");
+    expect(studentProfile).toContain("row.status === 'sakit'");
   });
 });
 

@@ -34115,12 +34115,28 @@
           },
           "status": {
             "title": "Status",
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "on-time",
+              "late",
+              "absent",
+              "incomplete",
+              "sakit",
+              "izin",
+              "alfa"
+            ]
           },
           "student_id": {
             "exclusiveMinimum": 0,
             "title": "Student Id",
             "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string",
+            "enum": [
+              "PAPER_BOOK_VERIFICATION"
+            ]
           }
         },
         "required": [
@@ -34424,7 +34440,16 @@
           },
           "proposed_status": {
             "title": "Proposed Status",
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "on-time",
+              "late",
+              "absent",
+              "incomplete",
+              "sakit",
+              "izin",
+              "alfa"
+            ]
           },
           "reason_code": {
             "maxLength": 64,
@@ -37086,7 +37111,23 @@
           },
           "override_status": {
             "title": "Override Status",
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "on-time",
+              "late",
+              "absent",
+              "incomplete",
+              "sakit",
+              "izin",
+              "alfa"
+            ]
+          },
+          "source": {
+            "title": "Source",
+            "type": "string",
+            "enum": [
+              "PAPER_BOOK_VERIFICATION"
+            ]
           }
         },
         "required": [

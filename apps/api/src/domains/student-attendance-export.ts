@@ -117,15 +117,17 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
       const attended = present + late;
       const [year, month] = key.split("-").map(Number);
       const heb = Number(calculateHeb(context, jenjang, month!, year!).heb);
-      const legacy = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id IN (" + studentIds.map(() => "?").join(",") + ") AND month = ? AND year = ?", [...studentIds, Number(key.slice(5, 7)), Number(key.slice(0, 4))])[0];
-      const category = (name: "sakit" | "izin" | "alfa") => status((value) => effectiveStatus(value) === name) || Number(legacy?.[name] ?? 0);
+      const reported = rows(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id IN (" + studentIds.map(() => "?").join(",") + ") AND month = ? AND year = ?", [...studentIds, Number(key.slice(5, 7)), Number(key.slice(0, 4))])[0];
       return {
         month_key: key,
         month_label: monthLabel(key),
         present, late, incomplete, absent,
-        sakit: category("sakit"),
-        izin: category("izin"),
-        alfa: category("alfa"),
+        sakit: status((value) => effectiveStatus(value) === "sakit"),
+        izin: status((value) => effectiveStatus(value) === "izin"),
+        alfa: status((value) => effectiveStatus(value) === "alfa"),
+        reported_sakit: Number(reported?.sakit ?? 0),
+        reported_izin: Number(reported?.izin ?? 0),
+        reported_alfa: Number(reported?.alfa ?? 0),
         heb,
         attendance_rate: heb > 0 ? Number(((present + late) / heb).toFixed(3)) : null,
       };
@@ -133,12 +135,12 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
 
     const workbook = createWorkbook({ exportType: "student-attendance-history" });
     const recapSheet = addWorksheet(workbook, "Rekap Bulanan");
-    appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Sakit", "Izin", "Alfa", "HEB", "Recorded Presence / HEB"]);
+    appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Verified Sakit", "Verified Izin", "Verified Alfa", "Reported Sakit", "Reported Izin", "Reported Alfa", "HEB", "Recorded Presence / HEB"]);
     for (const item of recap) {
-      appendRow(recapSheet, [item.month_label, item.present, item.late, item.incomplete, item.absent, item.sakit, item.izin, item.alfa, item.heb, item.attendance_rate ?? ""]);
+      appendRow(recapSheet, [item.month_label, item.present, item.late, item.incomplete, item.absent, item.sakit, item.izin, item.alfa, item.reported_sakit, item.reported_izin, item.reported_alfa, item.heb, item.attendance_rate ?? ""]);
     }
     styleHeader(recapSheet);
-    autoSizeColumns(recapSheet, 10, 22);
+    autoSizeColumns(recapSheet, 13, 22);
 
     if (month !== null && year !== null) {
       const detailSheet = addWorksheet(workbook, "Rincian Harian");
