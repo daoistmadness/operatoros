@@ -31,7 +31,7 @@ describe("attendance review actor and permission contract", () => {
     expect(classEntry).toContain("PAPER_BOOK_VERIFICATION");
     expect(classEntry).toContain("Book, month, page (required)");
     expect(classEntry).toContain("const mapped = toFormStatus(st.effective_status)");
-    expect(classEntry).toContain('filter(([, state]) => !state.unsupportedStatus)');
+    expect(classEntry).toContain('filter(([, state]) => state.entryTouched && !state.unsupportedStatus)');
     expect(studentProfile).toContain("reported_sakit");
     expect(studentProfile).toContain("row.status === 'sakit'");
   });
