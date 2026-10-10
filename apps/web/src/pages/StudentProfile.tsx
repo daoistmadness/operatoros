@@ -63,6 +63,9 @@ type MonthlyHistoryRow = {
   month_label: string;
   attendance_rate: number | null;
   late: number;
+  sakit: number;
+  izin: number;
+  alfa: number;
 };
 
 type StudentMonthlyHistory = {
@@ -83,6 +86,9 @@ type StudentAttendanceSummary = {
   sakit: number;
   izin: number;
   alfa: number;
+  reported_sakit: number;
+  reported_izin: number;
+  reported_alfa: number;
   breakdown: AttendanceBreakdownRow[];
 };
 
@@ -163,6 +169,9 @@ function CalendarHeatmap({
     if (record.status === 'late')      return 'bg-amber-100 text-amber-700';
     if (record.status === 'absent')    return 'bg-rose-100 text-rose-600';
     if (record.status === 'incomplete') return 'bg-orange-100 text-orange-600';
+    if (record.status === 'sakit')     return 'bg-sky-100 text-sky-700';
+    if (record.status === 'izin')      return 'bg-violet-100 text-violet-700';
+    if (record.status === 'alfa')      return 'bg-rose-100 text-rose-700';
     return 'bg-slate-100 text-slate-400';
   }
 
@@ -172,6 +181,9 @@ function CalendarHeatmap({
     if (record.status === 'late')      return '⏱';
     if (record.status === 'absent')    return '✗';
     if (record.status === 'incomplete') return '?';
+    if (record.status === 'sakit')     return 'S';
+    if (record.status === 'izin')      return 'I';
+    if (record.status === 'alfa')      return 'A';
     return '';
   }
 
@@ -210,6 +222,9 @@ function CalendarHeatmap({
           { label: 'Late', cls: 'bg-amber-100 text-amber-700' },
           { label: 'Absent', cls: 'bg-rose-100 text-rose-600' },
           { label: 'Incomplete', cls: 'bg-orange-100 text-orange-600' },
+          { label: 'Sakit', cls: 'bg-sky-100 text-sky-700' },
+          { label: 'Izin', cls: 'bg-violet-100 text-violet-700' },
+          { label: 'Alfa', cls: 'bg-rose-100 text-rose-700' },
           { label: 'No Data', cls: 'bg-slate-100 text-slate-400' },
         ].map(({ label, cls }) => (
           <span key={label} className={cn('px-2 py-0.5 rounded text-[10px] font-semibold', cls)}>{label}</span>
@@ -488,9 +503,9 @@ export default function StudentProfile() {
         />
         <StatCard
           icon={UserX}
-          label="Absent Days"
+          label="Verified S/I/A days"
           value={loadingSummary ? '…' : (summary ? (summary.sakit + summary.izin + summary.alfa) : '—')}
-          sub={loadingSummary ? null : `S:${summary?.sakit ?? 0} I:${summary?.izin ?? 0} A:${summary?.alfa ?? 0}`}
+          sub={loadingSummary ? null : `Verified S:${summary?.sakit ?? 0} I:${summary?.izin ?? 0} A:${summary?.alfa ?? 0} · Reported S:${summary?.reported_sakit ?? 0} I:${summary?.reported_izin ?? 0} A:${summary?.reported_alfa ?? 0}`}
           color="red"
         />
       </div>
@@ -561,6 +576,9 @@ export default function StudentProfile() {
                             row.status === 'late'       && 'bg-amber-100 text-amber-700',
                             row.status === 'absent'     && 'bg-rose-100 text-rose-600',
                             row.status === 'incomplete' && 'bg-orange-100 text-orange-600',
+                            row.status === 'sakit'      && 'bg-sky-100 text-sky-700',
+                            row.status === 'izin'       && 'bg-violet-100 text-violet-700',
+                            row.status === 'alfa'       && 'bg-rose-100 text-rose-700',
                           )}>
                             {row.status}
                           </span>

@@ -86,9 +86,11 @@ describe("canonical term attendance", () => {
       value.attendance("2026-08-05", "alfa", 3);
       value.attendance("2026-08-06", "late", 4);
       value.attendance("2026-08-07", "alfa", 5);
+      value.client.run("INSERT INTO attendance_overrides VALUES (4,'sakit')");
       value.client.run("INSERT INTO attendance_overrides VALUES (5,'on-time')");
       expect(value.get().totals).toMatchObject({ expected_student_days: 5, recorded_student_days: 5, unrecorded_student_days: 0,
-        hadir_count: 2, sakit_count: 1, izin_count: 1, alfa_count: 1, late_count: 1, coverage_rate: 100, attendance_rate: 40 });
+        hadir_count: 1, sakit_count: 2, izin_count: 1, alfa_count: 1, late_count: 0, coverage_rate: 100, attendance_rate: 20 });
+      expect(value.client.query("SELECT status FROM attendance WHERE id = 4").get()).toEqual({ status: "late" });
     } finally { value.close(); }
   });
 

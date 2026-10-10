@@ -6653,10 +6653,18 @@ export interface components {
             check_out?: string | null;
             /** Notes */
             notes?: string | null;
-            /** Status */
-            status: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on-time" | "late" | "absent" | "incomplete" | "sakit" | "izin" | "alfa";
             /** Student Id */
             student_id: number;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source?: "PAPER_BOOK_VERIFICATION";
         };
         /** ClassBody */
         ClassBody: {
@@ -6769,8 +6777,11 @@ export interface components {
             proposed_check_in?: string | null;
             /** Proposed Check Out */
             proposed_check_out?: string | null;
-            /** Proposed Status */
-            proposed_status: string;
+            /**
+             * Proposed Status
+             * @enum {string}
+             */
+            proposed_status: "on-time" | "late" | "absent" | "incomplete" | "sakit" | "izin" | "alfa";
             /** Reason Code */
             reason_code: string;
         };
@@ -7674,8 +7685,16 @@ export interface components {
         OverrideRequest: {
             /** Note */
             note: string;
-            /** Override Status */
-            override_status: string;
+            /**
+             * Override Status
+             * @enum {string}
+             */
+            override_status: "on-time" | "late" | "absent" | "incomplete" | "sakit" | "izin" | "alfa";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source?: "PAPER_BOOK_VERIFICATION";
         };
         /** OverrideResponse */
         OverrideResponse: {
