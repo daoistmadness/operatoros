@@ -1,5 +1,5 @@
 import { apiRequest } from "../lib/api/client";
-import type { ClassAttendanceEntriesResponse, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
+import type { ClassAttendanceEntriesRequest, ClassAttendanceEntriesResponse, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 
 export type { ClassAttendanceEntriesResponse, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 
@@ -55,13 +55,7 @@ export interface AssignedClassSummary {
   effective_to?: string | null;
 }
 
-export interface AttendanceEntryPayload {
-  student_id: number;
-  status: string;
-  check_in?: string | null;
-  check_out?: string | null;
-  notes?: string | null;
-}
+export type AttendanceEntryPayload = ClassAttendanceEntriesRequest["entries"][number];
 
 export async function fetchTeacherClassAssignments(params?: {
   user_id?: number;

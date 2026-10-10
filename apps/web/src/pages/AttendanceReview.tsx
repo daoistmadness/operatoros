@@ -4,15 +4,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import api from "../api";
+import { ATTENDANCE_STATUS_VALUES } from "@operatoros/contracts/attendance";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
 import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
 
-const STATUS_OPTIONS = ["on-time", "late", "incomplete", "absent"];
+const STATUS_OPTIONS = ATTENDANCE_STATUS_VALUES;
+const STATUS_LABELS: Record<(typeof STATUS_OPTIONS)[number], string> = { "on-time": "Hadir", late: "Terlambat", incomplete: "Tidak lengkap", absent: "Absen", sakit: "Sakit", izin: "Izin", alfa: "Alfa" };
 
-type AttendanceStatus = "on-time" | "late" | "incomplete" | "absent";
+type AttendanceStatus = (typeof STATUS_OPTIONS)[number];
 type AcademicYear = { id: number; label: string; is_default?: boolean };
 type AcademicClass = { id: number; name: string };
 type AttendanceReviewRow = {
@@ -20,15 +22,15 @@ type AttendanceReviewRow = {
   student_name: string;
   scan_in?: string | null;
   scan_out?: string | null;
-  original_status: AttendanceStatus;
-  effective_status: AttendanceStatus;
-  override_status?: AttendanceStatus | null;
+  original_status: string;
+  effective_status: string;
+  override_status?: string | null;
   override_note?: string | null;
 };
 type AttendanceHistoryItem = {
   id: number;
-  new_status: AttendanceStatus;
-  previous_status?: AttendanceStatus | null;
+  new_status: string;
+  previous_status?: string | null;
   timestamp: string;
   note?: string | null;
   reviewed_by?: string | null;
@@ -45,20 +47,26 @@ function getAttendanceReviewError(error: unknown, fallback: string): string {
   return typeof detail === "string" && detail ? detail : fallback;
 }
 
-const getStatusBadgeClass = (status: AttendanceStatus, effective = false) => {
+const getStatusBadgeClass = (status: string, effective = false) => {
   const base = "inline-flex items-center px-3 py-1 rounded-[9999px] text-xs font-bold tracking-wide uppercase";
-  const strong = effective
+  const strong: Record<string, string> = effective
     ? {
         "on-time": "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300/60",
         late: "bg-amber-100 text-amber-700 ring-1 ring-amber-300/60",
         incomplete: "bg-amber-100 text-amber-700 ring-1 ring-amber-300/60",
         absent: "bg-rose-100 text-rose-700 ring-1 ring-rose-300/60",
+        sakit: "bg-sky-100 text-sky-700 ring-1 ring-sky-300/60",
+        izin: "bg-violet-100 text-violet-700 ring-1 ring-violet-300/60",
+        alfa: "bg-rose-100 text-rose-700 ring-1 ring-rose-300/60",
       }
     : {
         "on-time": "bg-emerald-50 text-emerald-700",
         late: "bg-amber-50 text-amber-700",
         incomplete: "bg-amber-50 text-amber-700",
         absent: "bg-rose-50 text-rose-700",
+        sakit: "bg-sky-50 text-sky-700",
+        izin: "bg-violet-50 text-violet-700",
+        alfa: "bg-rose-50 text-rose-700",
       };
 
   return cn(base, strong[status] || "bg-slate-100 text-slate-600");
@@ -84,7 +92,7 @@ function AttendanceReview() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeRow, setActiveRow] = useState<AttendanceReviewRow | null>(null);
-  const [overrideStatus, setOverrideStatus] = useState<AttendanceStatus>("on-time");
+  const [overrideStatus, setOverrideStatus] = useState<string>("on-time");
   const [overrideNote, setOverrideNote] = useState("");
 
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -190,6 +198,7 @@ function AttendanceReview() {
       await api.post(`/api/review/attendance/${activeRow.attendance_id}/override`, {
         override_status: overrideStatus,
         note: trimmed,
+        ...(["sakit", "izin", "alfa"].includes(overrideStatus) ? { source: "PAPER_BOOK_VERIFICATION" } : {}),
       });
       closeOverrideModal();
       await Promise.all([loadAttendance(), invalidateAttendanceQueries(queryClient)]);
@@ -454,12 +463,13 @@ function AttendanceReview() {
               <select
                 aria-label="New attendance status"
                 value={overrideStatus}
-                onChange={(e) => setOverrideStatus(e.target.value as AttendanceStatus)}
+                onChange={(e) => setOverrideStatus(e.target.value)}
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
+                {!STATUS_OPTIONS.includes(overrideStatus as AttendanceStatus) && <option value={overrideStatus} disabled>Unsupported existing status: {overrideStatus}</option>}
                 {STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {STATUS_LABELS[status]}
                   </option>
                 ))}
               </select>
@@ -478,7 +488,9 @@ function AttendanceReview() {
                 onChange={(e) => setOverrideNote(e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand/30"
-                placeholder="Explain why this override is necessary..."
+                placeholder={[
+                  "sakit", "izin", "alfa",
+                ].includes(overrideStatus) ? "Paper-book reference, e.g. P2-B, September 2026, page 1" : "Explain why this override is necessary..."}
               />
               <p className={cn("text-xs", overrideNote.trim().length >= 5 ? "text-emerald-600" : "text-amber-600")}>
                 {overrideNote.trim().length >= 5

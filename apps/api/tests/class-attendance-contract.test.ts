@@ -2,7 +2,7 @@ import { Value } from "@sinclair/typebox/value";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { readXlsxWorkbook } from "@operatoros/excel";
-import { ClassAttendanceEntriesResponseSchema, ClassAttendanceResponseSchema } from "@operatoros/contracts/attendance";
+import { ClassAttendanceEntriesRequestSchema, ClassAttendanceEntriesResponseSchema, ClassAttendanceResponseSchema } from "@operatoros/contracts/attendance";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 import { createAttendancePolicyFixture } from "./fixtures/attendance-policy";
@@ -43,7 +43,7 @@ describe("class attendance response contract", () => {
       expect(database.client.query("SELECT check_in, check_out, status FROM attendance WHERE student_id = 9001 AND date = '2026-08-04'").get()).toMatchObject({ check_in: null, check_out: null, status: "on-time" });
       const manualAudit = database.client.query("SELECT actor_id, metadata FROM operations_audit_events WHERE entity_reference = (SELECT 'ATTENDANCE/' || id FROM attendance WHERE student_id = 9001 AND date = '2026-08-04') AND operation = 'MANUAL_CLASS_ATTENDANCE_CREATE'").get() as any;
       expect(manualAudit.actor_id).toBe("contract-admin");
-      expect(JSON.parse(manualAudit.metadata)).toMatchObject({ provenance: "MANUAL", source_workflow: "CLASS_ATTENDANCE_ENTRY", after: { status: "on-time", check_in: null } });
+      expect(JSON.parse(manualAudit.metadata)).toMatchObject({ provenance: "MANUAL", source_workflow: "CLASS_ATTENDANCE_ENTRY", attendance_date: "2026-08-04", class_id: 1, after: { status: "on-time", check_in: null } });
 
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-staff", password: "contract-staff-pass-1" }) }));
       const unassigned = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(staffLogin), origin: "http://localhost:5173" } }));
@@ -97,11 +97,74 @@ describe("class attendance response contract", () => {
       expect((await submit("2026-08-06", [{ student_id: 9001, status: "late", check_in: "07:20", check_out: "16:00" }])).status).toBe(200);
       expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-06'").get()).toMatchObject({ status: "on-time", late_duration: 0, late_source: "calculated" });
       // Explicit Sakit keeps the operator status and never becomes late.
-      expect((await submit("2026-08-07", [{ student_id: 9001, status: "sakit", check_in: "07:40" }])).status).toBe(200);
+      expect(Value.Check(ClassAttendanceEntriesRequestSchema, { entries: [{ student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 1" }] })).toBe(true);
+      expect(Value.Check(ClassAttendanceEntriesRequestSchema, { entries: [{ student_id: 9001, status: "made-up" }] })).toBe(false);
+      expect((await submit("2026-08-07", [{ student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 1" }])).status).toBe(200);
       expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-07'").get()).toMatchObject({ status: "sakit", late_duration: 0, late_source: "none" });
+      expect(database.client.query("SELECT check_in, check_out FROM attendance WHERE student_id = 9001 AND date = '2026-08-07'").get()).toEqual({ check_in: null, check_out: null });
       // Explicit late without an arrival time keeps the operator status with unavailable duration.
       expect((await submit("2026-08-08", [{ student_id: 9001, status: "late" }])).status).toBe(200);
       expect(database.client.query("SELECT status, late_duration, late_source FROM attendance WHERE student_id = 9001 AND date = '2026-08-08'").get()).toMatchObject({ status: "late", late_duration: 0, late_source: "manual" });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(`${path}-wal`, { force: true });
+      rmSync(`${path}-shm`, { force: true });
+    }
+  }, 30000);
+
+  it("records dated paper-book S/I/A with structured provenance and never fabricates scans", async () => {
+    const path = `/tmp/operatoros-paper-book-attendance-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-attendance-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
+      const cookie = sessionCookie(login); const auth = { cookie, origin: "http://localhost:5173" };
+      const submit = (date: string, entry: unknown) => app.handle(new Request(`http://local/api/attendance/classes/1/dates/${date}/entries`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ entries: [entry] }) }));
+      const rawBefore = database.client.query("SELECT status, check_in, check_out FROM attendance WHERE student_id = 9001 AND date = '2026-08-03'").get();
+      expect(await (await submit("2026-08-03", { student_id: 9001, status: "late" })).json()).toMatchObject({ created: 0, updated: 1 });
+      expect(database.client.query("SELECT id FROM attendance_overrides WHERE attendance_id = 1").get()).toBeNull();
+      expect((await submit("2026-08-03", { student_id: 9001, status: "alfa", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 1" })).status).toBe(200);
+      expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE student_id = 9001 AND date = '2026-08-03'").get()).toEqual(rawBefore);
+      expect(database.client.query("SELECT override_status, reviewed_by, note, reviewed_at FROM attendance_overrides WHERE attendance_id = 1").get()).toMatchObject({ override_status: "alfa", reviewed_by: "contract-admin", note: "P2-B August 2026 page 1", reviewed_at: expect.any(String) });
+      expect(database.client.query("SELECT previous_status, new_status, reviewed_by, note, timestamp FROM attendance_override_history WHERE attendance_id = 1 ORDER BY id").get()).toMatchObject({ previous_status: "late", new_status: "alfa", reviewed_by: "contract-admin", note: "P2-B August 2026 page 1", timestamp: expect.any(String) });
+      expect(JSON.parse((database.client.query("SELECT metadata FROM operations_audit_events WHERE operation = 'MANUAL_CLASS_ATTENDANCE_CORRECT'").get() as any).metadata)).toMatchObject({ source_workflow: "PAPER_BOOK_VERIFICATION", attendance_date: "2026-08-03", class_id: 1 });
+      expect((await submit("2026-08-03", { student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 2" })).status).toBe(200);
+      expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE student_id = 9001 AND date = '2026-08-03'").get()).toEqual(rawBefore);
+      expect(database.client.query("SELECT previous_status, new_status, reviewed_by FROM attendance_override_history WHERE attendance_id = 1 ORDER BY id").all()).toEqual([
+        { previous_status: "late", new_status: "alfa", reviewed_by: "contract-admin" },
+        { previous_status: "alfa", new_status: "sakit", reviewed_by: "contract-admin" },
+      ]);
+
+      for (const [date, status] of [["2026-08-07", "sakit"], ["2026-08-08", "izin"], ["2026-08-09", "alfa"]]) {
+        const response = await submit(date!, { student_id: 9001, status, source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 1" });
+        expect(response.status).toBe(200);
+        expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE student_id = 9001 AND date = ?").get(date!)).toEqual({ status, check_in: null, check_out: null });
+      }
+      expect((await submit("2026-08-10", { student_id: 9001, status: "on-time", source: "PAPER_BOOK_VERIFICATION", notes: "Forgot ID card; P2-B August page 1" })).status).toBe(200);
+      expect(database.client.query("SELECT status, check_in, check_out FROM attendance WHERE student_id = 9001 AND date = '2026-08-10'").get()).toEqual({ status: "on-time", check_in: null, check_out: null });
+      const manualPresenceAudit = database.client.query("SELECT actor_id, occurred_at, metadata FROM operations_audit_events WHERE operation = 'MANUAL_CLASS_ATTENDANCE_CREATE' AND entity_reference = (SELECT 'ATTENDANCE/' || id FROM attendance WHERE student_id = 9001 AND date = '2026-08-10')").get() as any;
+      expect(manualPresenceAudit).toMatchObject({ actor_id: "contract-admin", occurred_at: expect.any(String) });
+      expect(JSON.parse(manualPresenceAudit.metadata)).toMatchObject({ source_workflow: "PAPER_BOOK_VERIFICATION", attendance_date: "2026-08-10", class_id: 1, after: { status: "on-time", check_in: null, check_out: null } });
+      expect((await submit("2026-08-11", { student_id: 9001, status: "alfa" })).status).toBe(400);
+      expect((await submit("2026-08-12", { student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION" })).status).toBe(400);
+      expect((await submit("2026-08-13", { student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 2", check_in: "07:30" })).status).toBe(400);
+      expect(database.client.query("SELECT id FROM attendance WHERE student_id = 9001 AND date = '2026-08-13'").get()).toBeNull();
+      database.client.run("UPDATE student_enrollments SET effective_to = '2026-08-12' WHERE student_id = 9001 AND academic_class_id = 1");
+      expect((await submit("2026-08-13", { student_id: 9001, status: "sakit", source: "PAPER_BOOK_VERIFICATION", notes: "P2-B August 2026 page 2" })).status).toBe(400);
+      expect(database.client.query("SELECT id FROM attendance WHERE student_id = 9001 AND date = '2026-08-13'").get()).toBeNull();
+      expect((await submit("2026-08-13", { student_id: 9001, status: "unknown" })).status).toBe(400);
+      expect(database.client.query("SELECT id FROM attendance WHERE student_id = 9001 AND date = '2026-08-11'").get()).toBeNull();
+      expect(database.client.query("SELECT id FROM attendance WHERE student_id = 9001 AND date = '2026-08-12'").get()).toBeNull();
+
+      const overview = await app.handle(new Request("http://local/api/analytics/attendance/overview?academic_year_id=1&date_from=2026-08-01&date_to=2026-08-31", { headers: auth }));
+      expect(await overview.json()).toMatchObject({ counts: { present: 1, sakit: 2, izin: 1, alfa: 1 } });
+      const exported = await app.handle(new Request("http://local/api/attendance/classes/1/attendance/export-excel?month=08&year=2026", { headers: auth }));
+      const workbook = await readXlsxWorkbook(new Uint8Array(await exported.arrayBuffer()));
+      const recap = workbook.sheets.find((sheet) => sheet.name === "Rekap Siswa")!;
+      const studentRow = recap.rows.find((value) => value.values[0] === "Synthetic Attendance Student")!;
+      expect(studentRow.values.slice(5, 11)).toEqual([2, 1, 1, 0, 0, 0]);
     } finally {
       database.close();
       rmSync(path, { force: true });

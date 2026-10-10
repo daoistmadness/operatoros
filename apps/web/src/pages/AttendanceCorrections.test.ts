@@ -28,7 +28,8 @@ describe("attendance correction management safety", () => {
     expect(source).toContain("if (busy) return");
     expect(source).toContain('aria-modal="true"');
     expect(source).toContain("autoFocus");
-    expect(source).toContain("...(form.proposed_check_in ? { proposed_check_in: form.proposed_check_in } : {})");
+    expect(source).toContain("...(!paperBookCorrection && proposed_check_in ? { proposed_check_in } : {})");
+    expect(source).toContain('disabled={["sakit", "izin", "alfa"].includes(form.proposed_status)}');
     expect(source).not.toContain("proposed_check_in: form.proposed_check_in || null");
   });
 

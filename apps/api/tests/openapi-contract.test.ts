@@ -67,6 +67,14 @@ describe("full OpenAPI contract", () => {
       expect(candidateOperations).toEqual(referenceOperations);
       expect(candidate.components?.schemas).toEqual(reference.components?.schemas);
 
+      const schemas = reference.components?.schemas as Record<string, any>;
+      const canonicalStatuses = ["on-time", "late", "absent", "incomplete", "sakit", "izin", "alfa"];
+      expect(schemas.OverrideRequest.properties.override_status.enum).toEqual(canonicalStatuses);
+      expect(schemas.OverrideRequest.properties.source.enum).toEqual(["PAPER_BOOK_VERIFICATION"]);
+      expect(schemas.ClassAttendanceEntryItem.properties.status.enum).toEqual(canonicalStatuses);
+      expect(schemas.ClassAttendanceEntryItem.properties.source.enum).toEqual(["PAPER_BOOK_VERIFICATION"]);
+      expect(schemas.CorrectionCreate.properties.proposed_status.enum).toEqual(canonicalStatuses);
+
       const referencePaths = publicPaths(reference, deprecated);
       const candidatePaths = publicPaths(candidate, candidateOnly);
       expect(candidatePaths.size).toBe(referencePaths.size);
