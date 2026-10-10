@@ -17,6 +17,14 @@ test("@employees @critical @release imports, updates, analyzes, and exports a sy
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   await login(page);
+  await page.goto("/upload?section=employee");
+  const employeeTab = page.getByRole("tab", { name: "Employee Import", exact: true });
+  await expect(employeeTab).toBeVisible();
+  await expect(employeeTab).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("link", { name: "Open employee import", exact: true }).click();
+  await expect(page).toHaveURL(/\/staff\/import$/);
+  await expect(page.getByRole("heading", { name: "Import employees", exact: true })).toBeVisible();
+
   await page.goto("/staff");
   await expect(page.getByRole("heading", { name: "Employees", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Import workbook" }).click();
