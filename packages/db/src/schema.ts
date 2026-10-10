@@ -1,6 +1,6 @@
 // Accepted S4.8 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
-import { sqliteTable, sqliteTableCreator, text, integer, real, blob, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, sqliteTableCreator, text, integer, real, blob, unique, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
 const sqliteTableCustom = sqliteTableCreator((name) => name);
 
@@ -231,6 +231,7 @@ export const attendance = sqliteTable("attendance", {
     "week": text(),
     "status": text().notNull(),
 }, (table) => [
+    unique("_student_date_uc").on(table.student_id, table.date),
     index("idx_attendance_date").on(table.date),
     index("idx_attendance_status").on(table.status),
     index("idx_attendance_student_id").on(table.student_id),
@@ -384,7 +385,9 @@ export const attendance_import_rows = sqliteTable("attendance_import_rows", {
     "validation_error": text(),
     "warning": text(),
     "selected_for_commit": integer().notNull().default(0),
-});
+}, (table) => [
+    unique("uq_attendance_import_batch_key").on(table.batch_id, table.student_identifier, table.attendance_date),
+]);
 export const attendance_override_history = sqliteTable("attendance_override_history", {
     "id": integer().primaryKey(),
     "override_id": integer().notNull(),
@@ -407,7 +410,9 @@ export const attendance_overrides = sqliteTable("attendance_overrides", {
     "note": text().notNull(),
     "reviewed_by": text().notNull(),
     "reviewed_at": text().notNull(),
-});
+}, (table) => [
+    uniqueIndex("ix_attendance_overrides_attendance_id").on(table.attendance_id),
+]);
 export const attendance_period_audit = sqliteTable("attendance_period_audit", {
     "id": integer().primaryKey(),
     "period_id": integer().notNull(),
@@ -430,7 +435,9 @@ export const attendance_periods = sqliteTable("attendance_periods", {
     "version": integer().notNull().default(1),
     "reopened_by": text(),
     "reopened_at": text(),
-});
+}, (table) => [
+    uniqueIndex("ix_attendance_periods_attendance_date").on(table.attendance_date),
+]);
 export const backup_execution_history = sqliteTable("backup_execution_history", {
     "id": integer().primaryKey(),
     "backup_filename": text(),
