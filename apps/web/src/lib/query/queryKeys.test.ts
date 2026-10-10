@@ -44,6 +44,13 @@ describe("query-key conventions", () => {
     expect(first).not.toEqual(second);
   });
 
+  it("isolates reconciliation by academic year, class, month, and program scope", () => {
+    const first = queryKeys.attendance.reconciliation({ academic_year_id: "2", class_id: "7", month: "2026-09", scope: "primary" });
+    expect(first).not.toEqual(queryKeys.attendance.reconciliation({ academic_year_id: "2", class_id: "8", month: "2026-09", scope: "primary" }));
+    expect(first).not.toEqual(queryKeys.attendance.reconciliation({ academic_year_id: "2", class_id: "7", month: "2026-10", scope: "primary" }));
+    expect(first).not.toEqual(queryKeys.attendance.reconciliation({ academic_year_id: "2", class_id: "7", month: "2026-09", scope: "combined" }));
+  });
+
   it("isolates academic analytics by every data filter", () => {
     const first = queryKeys.analytics.academicOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 7, subject_id: 2, assessment_type: "sumatif" });
     const second = queryKeys.analytics.academicOverview({ academic_year_id: 1, jenjang_id: 2, class_id: 7, subject_id: 3, assessment_type: "sumatif" });
