@@ -80,7 +80,10 @@ describe("student trend insights", () => {
       const response = studentTrendInsights(value, { academic_year_id: "1", window: "term", search: "Bima", page: "1", page_size: "1" });
       expect(response.window).toMatchObject({ kind: "term", currentStart: "2026-02-16", currentEnd: "2026-03-15", previousStart: "2026-01-01", previousEnd: "2026-01-28" });
       expect(response.totalStudents).toBe(1);
-      expect(response.rows[0]?.attendance).toMatchObject({ current: 0, previous: null, delta: null, direction: "insufficient_data" });
+      expect(response.rows[0]?.attendance).toMatchObject({ current: 0, previous: null, currentSampleSize: 20, currentRecordedStudentDays: 0, delta: null, direction: "insufficient_data" });
+      value.database.client.run("INSERT INTO attendance VALUES (999, 2, '2026-03-13', NULL, NULL, 'sakit')");
+      const observedZero = studentTrendInsights(value, { academic_year_id: "1", window: "term", search: "Bima", page: "1", page_size: "1" });
+      expect(observedZero.rows[0]?.attendance).toMatchObject({ current: 0, currentSampleSize: 20, currentRecordedStudentDays: 1 });
     } finally { value.database.client.close(); }
   });
 

@@ -6,6 +6,7 @@ import {
   evaluateThresholdGrid,
   summarizeDistribution,
   summarizeCalibrationAgreement,
+  validateValidationRows,
   type ValidationRow,
 } from "../src/analytics/risk-threshold-validation";
 
@@ -17,11 +18,24 @@ function row(caseId: string, humanOutcome: ValidationRow["humanOutcome"], attend
     reviewWindow: { kind: "rolling_4w", anchorDate: "2026-08-30", currentStart: "2026-08-03", currentEnd: "2026-08-30", previousStart: "2026-07-06", previousEnd: "2026-08-02" },
     humanOutcome,
     indicatorDataAvailability: { attendance: "available", comparison: "available", academic: "available" },
+    attendanceCoverage: { currentExpectedStudentDays: attendanceRate === null ? 0 : 10, currentRecordedStudentDays: attendanceRate === null ? 0 : 10, previousExpectedStudentDays: attendanceRate === null ? 0 : 10, previousRecordedStudentDays: attendanceRate === null ? 0 : 10 },
+    academicCoverage: { scoredResults: 0, expectedResultSlots: 0 },
     indicators: { attendance_rate: attendanceRate, attendance_delta: null, tardiness_rate: null, tardiness_delta: null, alfa_rate: alfaRate, alfa_delta: null, academic_average: null, academic_participation: null },
   };
 }
 
 describe("risk threshold validation harness", () => {
+  it("rejects impossible coverage counts", () => {
+    const attendance = row("CASE-001", "FOLLOW_UP_WARRANTED", 80);
+    attendance.attendanceCoverage!.currentRecordedStudentDays = 11;
+    expect(() => validateValidationRows([attendance])).toThrow("recorded attendance days exceed expected Student-Days");
+
+    const academic = row("CASE-002", "FOLLOW_UP_WARRANTED", 80);
+    academic.academicCoverage.scoredResults = 2;
+    academic.academicCoverage.expectedResultSlots = 1;
+    expect(() => validateValidationRows([academic])).toThrow("scored results exceed expected result slots");
+  });
+
   it("strips identity fields while preserving canonical Stage 2 values", () => {
     // SOFTWARE_TEST_ONLY: validates extraction safety; this is not threshold evidence.
     const response = {
@@ -30,10 +44,10 @@ describe("risk threshold validation harness", () => {
       totalStudents: 1, page: 1, pageSize: 25,
       rows: [{
         studentId: "internal-only", studentName: "software-test-only", className: "7A", jenjang: "SMP",
-        attendanceRate: { id: "attendance_rate", label: "Attendance rate", domain: "attendance", unit: "percent", current: 80, previous: 90, delta: -10, direction: "down", currentSampleSize: 10, previousSampleSize: 10, dataStatus: "available" },
+        attendanceRate: { id: "attendance_rate", label: "Attendance rate", domain: "attendance", unit: "percent", current: 80, previous: 90, delta: -10, direction: "down", currentSampleSize: 10, previousSampleSize: 10, currentRecordedStudentDays: 10, previousRecordedStudentDays: 10, dataStatus: "available" },
         tardinessRate: null, alfaRate: null,
-        academicAverage: { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", current: 70, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, dataStatus: "insufficient_data" },
-        academicParticipation: { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", current: 50, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 1, previousSampleSize: 0, dataStatus: "insufficient_data" },
+        academicAverage: { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", current: 70, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 1, previousSampleSize: 0, dataStatus: "insufficient_data" },
+        academicParticipation: { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", current: 50, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2, previousSampleSize: 0, currentObservedSampleSize: 1, dataStatus: "insufficient_data" },
         dataAvailability: { attendance: "available", comparison: "available", academic: "available" },
       }],
       indicatorDefinitions: [], limitations: [],
@@ -43,6 +57,28 @@ describe("risk threshold validation harness", () => {
     expect(rows[0]).toMatchObject({ caseId: "CASE-001", humanOutcome: "FOLLOW_UP_WARRANTED", indicators: { attendance_rate: 80, attendance_delta: -10, academic_average: 70, academic_participation: 50 } });
     expect(JSON.stringify(rows)).not.toContain("studentId");
     expect(JSON.stringify(rows)).not.toContain("software-test-only");
+    expect(rows[0]?.attendanceCoverage).toEqual({ currentExpectedStudentDays: 10, currentRecordedStudentDays: 10, previousExpectedStudentDays: 10, previousRecordedStudentDays: 10 });
+    expect(rows[0]?.academicCoverage).toEqual({ scoredResults: 1, expectedResultSlots: 2 });
+
+    const measuredZero = {
+      ...response,
+      rows: response.rows.map((value) => ({ ...value, attendanceRate: { ...value.attendanceRate!, current: 0, previous: 0, delta: 0 } })),
+    };
+    expect(deidentifyIndicatorResponse(measuredZero, [{ caseId: "CASE-002", reviewDate: "2026-08-31", humanOutcome: "FOLLOW_UP_WARRANTED" }])[0]?.indicators.attendance_rate).toBe(0);
+
+    const noObservedRows: StudentIndicatorInsightsResponse = {
+      ...response,
+      rows: response.rows.map((value) => ({
+        ...value,
+        attendanceRate: { ...value.attendanceRate!, current: 0, previous: 0, delta: 0, currentRecordedStudentDays: 0, previousRecordedStudentDays: 0 },
+        tardinessRate: { id: "tardiness_rate", label: "Late Event Rate", domain: "attendance", unit: "percent", current: 20, previous: 0, delta: 20, direction: "up", currentSampleSize: 10, previousSampleSize: 10, currentRecordedStudentDays: 0, previousRecordedStudentDays: 0, dataStatus: "available" },
+        academicParticipation: { ...value.academicParticipation, current: 0, currentObservedSampleSize: 0 },
+      })),
+    };
+    const unavailable = deidentifyIndicatorResponse(noObservedRows, [{ caseId: "CASE-002", reviewDate: "2026-08-31", humanOutcome: "FOLLOW_UP_WARRANTED" }]);
+    expect(unavailable[0]?.indicators).toMatchObject({ attendance_rate: null, attendance_delta: null, tardiness_rate: 20, tardiness_delta: null, academic_participation: null });
+    expect(unavailable[0]?.attendanceCoverage).toEqual({ currentExpectedStudentDays: 10, currentRecordedStudentDays: 0, previousExpectedStudentDays: 10, previousRecordedStudentDays: 0 });
+    expect(unavailable[0]?.academicCoverage).toEqual({ scoredResults: 0, expectedResultSlots: 2 });
   });
 
   it("evaluates lower-is-concerning thresholds and tracks uncertain or missing cases", () => {
