@@ -6068,6 +6068,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read monthly attendance reconciliation for a class */
+        get: operations["getApiAttendanceReconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8940,6 +8957,134 @@ export interface components {
             classes: components["schemas"]["AttendanceBasisClass"][];
             cutoffs: components["schemas"]["AttendanceBasisCutoff"][];
             quality: components["schemas"]["AttendanceBasisQuality"];
+        };
+        AttendanceReconciliationResponse: {
+            academic_year: {
+                id: number;
+                label: string;
+                start_date: string;
+                end_date: string;
+            };
+            class: {
+                id: number;
+                name: string;
+                grade: string;
+                program: string;
+                jenjang: string;
+            };
+            month: string;
+            scope: "combined" | "early_year" | "primary" | "secondary";
+            period: {
+                start_date: string;
+                end_date: string;
+            };
+            calendar: {
+                expected_school_days: number;
+                non_school_days: number;
+                unknown_dates: string[];
+            };
+            canonical: {
+                expected_student_days: number;
+                recorded_student_days: number;
+                unrecorded_student_days: number;
+                hadir_count: number;
+                sakit_count: number;
+                izin_count: number;
+                alfa_count: number;
+                late_count: number;
+                other_status_count: number;
+                coverage_rate: number | null;
+                hadir_rate: number | null;
+                sakit_rate: number | null;
+                izin_rate: number | null;
+                alfa_rate: number | null;
+                attendance_rate: number | null;
+                recorded_attendance_rate: number | null;
+            };
+            machine_evidence: {
+                /** @constant */
+                coverage_status: "NOT_TRACKED";
+                recorded_student_days: number;
+            };
+            ledger: {
+                state: "MISSING" | "OPEN" | "SUBMITTED";
+                entry_mode: "TOTALS_ONLY" | "PER_STUDENT" | null;
+                reported: {
+                    sakit: number | null;
+                    izin: number | null;
+                    alfa: number | null;
+                };
+                comparison: {
+                    status: "NOT_REPORTED" | "NOT_COMPARABLE" | "MATCH" | "MISMATCH";
+                    reason_code: "LEDGER_NOT_SUBMITTED" | "CLASS_TOTALS_ONLY" | "NO_EXPECTED_STUDENT_DAYS" | "NO_CANONICAL_EVIDENCE" | "CANONICAL_COVERAGE_INCOMPLETE" | "CANONICAL_STATUS_UNRESOLVED" | "CALENDAR_UNKNOWN" | "CANONICAL_CLASS_UNRESOLVED" | "SIA_REASON_MISMATCH" | null;
+                    differences: {
+                        sakit: number | null;
+                        izin: number | null;
+                        alfa: number | null;
+                    };
+                };
+            };
+            evidence: {
+                status: "CLEAR" | "INCOMPLETE" | "CONTRADICTORY";
+                unresolved_student_days: number;
+                contradictory_student_days: number;
+                unresolved_class_evidence: number;
+                unknown_calendar_dates: string[];
+            };
+            summary: {
+                applicable_students: number;
+                students_needing_review: number;
+                matching_students: number;
+                mismatched_students: number;
+                unresolved_student_days: number;
+                missing_book_reports: number;
+                machine_recorded_student_days: number;
+                contradictory_student_days: number;
+            };
+            students: {
+                enrollment_id: number;
+                student_name: string;
+                expected_student_days: number;
+                machine_records: {
+                    date: string;
+                    status: string;
+                    scan_in: string | null;
+                    scan_out: string | null;
+                    source_state: "APPLIED" | "UNCHANGED" | "CONFLICT";
+                }[];
+                daily_evidence: {
+                    date: string;
+                    raw_status: string | null;
+                    override_status: string | null;
+                    effective_status: string | null;
+                    machine_recorded: boolean;
+                }[];
+                effective: {
+                    present: number;
+                    sakit: number;
+                    izin: number;
+                    alfa: number;
+                    unresolved: number;
+                };
+                book_totals: {
+                    sakit: number | null;
+                    izin: number | null;
+                    alfa: number | null;
+                };
+                differences: {
+                    sakit: number | null;
+                    izin: number | null;
+                    alfa: number | null;
+                };
+                comparison: {
+                    status: "NOT_REPORTED" | "NOT_COMPARABLE" | "MATCH" | "MISMATCH";
+                    reason_code: "LEDGER_NOT_SUBMITTED" | "CLASS_TOTALS_ONLY" | "NO_EXPECTED_STUDENT_DAYS" | "NO_CANONICAL_EVIDENCE" | "CANONICAL_COVERAGE_INCOMPLETE" | "CANONICAL_STATUS_UNRESOLVED" | "CALENDAR_UNKNOWN" | "CANONICAL_CLASS_UNRESOLVED" | "SIA_REASON_MISMATCH" | null;
+                };
+                unresolved_dates: string[];
+                unknown_calendar_dates: string[];
+                contradictory_dates: string[];
+                first_review_date: string | null;
+            }[];
         };
     };
     responses: never;
@@ -22809,6 +22954,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    getApiAttendanceReconciliation: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                class_id: string;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monthly attendance reconciliation with source and effective evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
                 };
             };
         };

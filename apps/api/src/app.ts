@@ -23,6 +23,7 @@ import { attendanceAnalyticsRoutes } from "./domains/attendance-analytics";
 import { termAttendanceRoutes } from "./domains/term-attendance";
 import { termLatenessRoutes } from "./domains/term-lateness";
 import { attendanceBasisRoutes } from "./domains/attendance-basis";
+import { attendanceReconciliationRoutes } from "./domains/attendance-reconciliation";
 import { academicAnalyticsRoutes } from "./domains/academic-analytics";
 import { managementOverviewRoutes } from "./domains/management-overview";
 import { managementReviewProfileRoutes } from "./domains/management-review-profile";
@@ -98,6 +99,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     termAttendanceRoutes(app, context);
     termLatenessRoutes(app, context);
     attendanceBasisRoutes(app, context);
+    attendanceReconciliationRoutes(app, context);
     academicAnalyticsRoutes(app, context);
     managementOverviewRoutes(app, context);
     managementReviewProfileRoutes(app, context);

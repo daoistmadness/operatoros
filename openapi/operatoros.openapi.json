@@ -32302,6 +32302,70 @@
           "system"
         ]
       }
+    },
+    "/api/attendance/reconciliation": {
+      "get": {
+        "operationId": "getApiAttendanceReconciliation",
+        "parameters": [
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9]\\d*$"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "combined",
+                "early_year",
+                "primary",
+                "secondary"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Monthly attendance reconciliation with source and effective evidence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReconciliationResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Read monthly attendance reconciliation for a class",
+        "tags": [
+          "attendance"
+        ]
+      }
     }
   },
   "components": {
@@ -41798,6 +41862,962 @@
         ],
         "title": "AttendanceBasisResponse",
         "type": "object"
+      },
+      "AttendanceReconciliationResponse": {
+        "type": "object",
+        "required": [
+          "academic_year",
+          "class",
+          "month",
+          "scope",
+          "period",
+          "calendar",
+          "canonical",
+          "machine_evidence",
+          "ledger",
+          "evidence",
+          "summary",
+          "students"
+        ],
+        "properties": {
+          "academic_year": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "start_date",
+              "end_date"
+            ],
+            "properties": {
+              "id": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "label": {
+                "type": "string"
+              },
+              "start_date": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              },
+              "end_date": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              }
+            }
+          },
+          "class": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "grade",
+              "program",
+              "jenjang"
+            ],
+            "properties": {
+              "id": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "grade": {
+                "type": "string"
+              },
+              "program": {
+                "type": "string"
+              },
+              "jenjang": {
+                "type": "string"
+              }
+            }
+          },
+          "month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "type": "string"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "const": "combined",
+                "type": "string"
+              },
+              {
+                "const": "early_year",
+                "type": "string"
+              },
+              {
+                "const": "primary",
+                "type": "string"
+              },
+              {
+                "const": "secondary",
+                "type": "string"
+              }
+            ]
+          },
+          "period": {
+            "type": "object",
+            "required": [
+              "start_date",
+              "end_date"
+            ],
+            "properties": {
+              "start_date": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              },
+              "end_date": {
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                "type": "string"
+              }
+            }
+          },
+          "calendar": {
+            "type": "object",
+            "required": [
+              "expected_school_days",
+              "non_school_days",
+              "unknown_dates"
+            ],
+            "properties": {
+              "expected_school_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "non_school_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "unknown_dates": {
+                "type": "array",
+                "items": {
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "canonical": {
+            "type": "object",
+            "required": [
+              "expected_student_days",
+              "recorded_student_days",
+              "unrecorded_student_days",
+              "hadir_count",
+              "sakit_count",
+              "izin_count",
+              "alfa_count",
+              "late_count",
+              "other_status_count",
+              "coverage_rate",
+              "hadir_rate",
+              "sakit_rate",
+              "izin_rate",
+              "alfa_rate",
+              "attendance_rate",
+              "recorded_attendance_rate"
+            ],
+            "properties": {
+              "expected_student_days": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "recorded_student_days": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "unrecorded_student_days": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "hadir_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "sakit_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "izin_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "alfa_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "late_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "other_status_count": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "coverage_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "hadir_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sakit_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "izin_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "alfa_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "attendance_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "recorded_attendance_rate": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "maximum": 100,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "machine_evidence": {
+            "type": "object",
+            "required": [
+              "coverage_status",
+              "recorded_student_days"
+            ],
+            "properties": {
+              "coverage_status": {
+                "const": "NOT_TRACKED",
+                "type": "string"
+              },
+              "recorded_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            }
+          },
+          "ledger": {
+            "type": "object",
+            "required": [
+              "state",
+              "entry_mode",
+              "reported",
+              "comparison"
+            ],
+            "properties": {
+              "state": {
+                "anyOf": [
+                  {
+                    "const": "MISSING",
+                    "type": "string"
+                  },
+                  {
+                    "const": "OPEN",
+                    "type": "string"
+                  },
+                  {
+                    "const": "SUBMITTED",
+                    "type": "string"
+                  }
+                ]
+              },
+              "entry_mode": {
+                "anyOf": [
+                  {
+                    "const": "TOTALS_ONLY",
+                    "type": "string"
+                  },
+                  {
+                    "const": "PER_STUDENT",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "reported": {
+                "type": "object",
+                "required": [
+                  "sakit",
+                  "izin",
+                  "alfa"
+                ],
+                "properties": {
+                  "sakit": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "izin": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "alfa": {
+                    "anyOf": [
+                      {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "comparison": {
+                "type": "object",
+                "required": [
+                  "status",
+                  "reason_code",
+                  "differences"
+                ],
+                "properties": {
+                  "status": {
+                    "anyOf": [
+                      {
+                        "const": "NOT_REPORTED",
+                        "type": "string"
+                      },
+                      {
+                        "const": "NOT_COMPARABLE",
+                        "type": "string"
+                      },
+                      {
+                        "const": "MATCH",
+                        "type": "string"
+                      },
+                      {
+                        "const": "MISMATCH",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "reason_code": {
+                    "anyOf": [
+                      {
+                        "const": "LEDGER_NOT_SUBMITTED",
+                        "type": "string"
+                      },
+                      {
+                        "const": "CLASS_TOTALS_ONLY",
+                        "type": "string"
+                      },
+                      {
+                        "const": "NO_EXPECTED_STUDENT_DAYS",
+                        "type": "string"
+                      },
+                      {
+                        "const": "NO_CANONICAL_EVIDENCE",
+                        "type": "string"
+                      },
+                      {
+                        "const": "CANONICAL_COVERAGE_INCOMPLETE",
+                        "type": "string"
+                      },
+                      {
+                        "const": "CANONICAL_STATUS_UNRESOLVED",
+                        "type": "string"
+                      },
+                      {
+                        "const": "CALENDAR_UNKNOWN",
+                        "type": "string"
+                      },
+                      {
+                        "const": "CANONICAL_CLASS_UNRESOLVED",
+                        "type": "string"
+                      },
+                      {
+                        "const": "SIA_REASON_MISMATCH",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "differences": {
+                    "type": "object",
+                    "required": [
+                      "sakit",
+                      "izin",
+                      "alfa"
+                    ],
+                    "properties": {
+                      "sakit": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "izin": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "alfa": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "evidence": {
+            "type": "object",
+            "required": [
+              "status",
+              "unresolved_student_days",
+              "contradictory_student_days",
+              "unresolved_class_evidence",
+              "unknown_calendar_dates"
+            ],
+            "properties": {
+              "status": {
+                "anyOf": [
+                  {
+                    "const": "CLEAR",
+                    "type": "string"
+                  },
+                  {
+                    "const": "INCOMPLETE",
+                    "type": "string"
+                  },
+                  {
+                    "const": "CONTRADICTORY",
+                    "type": "string"
+                  }
+                ]
+              },
+              "unresolved_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "contradictory_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "unresolved_class_evidence": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "unknown_calendar_dates": {
+                "type": "array",
+                "items": {
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "required": [
+              "applicable_students",
+              "students_needing_review",
+              "matching_students",
+              "mismatched_students",
+              "unresolved_student_days",
+              "missing_book_reports",
+              "machine_recorded_student_days",
+              "contradictory_student_days"
+            ],
+            "properties": {
+              "applicable_students": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "students_needing_review": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "matching_students": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "mismatched_students": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "unresolved_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "missing_book_reports": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "machine_recorded_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "contradictory_student_days": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            }
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "enrollment_id",
+                "student_name",
+                "expected_student_days",
+                "machine_records",
+                "daily_evidence",
+                "effective",
+                "book_totals",
+                "differences",
+                "comparison",
+                "unresolved_dates",
+                "unknown_calendar_dates",
+                "contradictory_dates",
+                "first_review_date"
+              ],
+              "properties": {
+                "enrollment_id": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "student_name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "expected_student_days": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "machine_records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "date",
+                      "status",
+                      "scan_in",
+                      "scan_out",
+                      "source_state"
+                    ],
+                    "properties": {
+                      "date": {
+                        "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "scan_in": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "scan_out": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "source_state": {
+                        "anyOf": [
+                          {
+                            "const": "APPLIED",
+                            "type": "string"
+                          },
+                          {
+                            "const": "UNCHANGED",
+                            "type": "string"
+                          },
+                          {
+                            "const": "CONFLICT",
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "daily_evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "date",
+                      "raw_status",
+                      "override_status",
+                      "effective_status",
+                      "machine_recorded"
+                    ],
+                    "properties": {
+                      "date": {
+                        "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                        "type": "string"
+                      },
+                      "raw_status": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "override_status": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "effective_status": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "machine_recorded": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "effective": {
+                  "type": "object",
+                  "required": [
+                    "present",
+                    "sakit",
+                    "izin",
+                    "alfa",
+                    "unresolved"
+                  ],
+                  "properties": {
+                    "present": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "sakit": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "izin": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "alfa": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "unresolved": {
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  }
+                },
+                "book_totals": {
+                  "type": "object",
+                  "required": [
+                    "sakit",
+                    "izin",
+                    "alfa"
+                  ],
+                  "properties": {
+                    "sakit": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "izin": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "alfa": {
+                      "anyOf": [
+                        {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "differences": {
+                  "type": "object",
+                  "required": [
+                    "sakit",
+                    "izin",
+                    "alfa"
+                  ],
+                  "properties": {
+                    "sakit": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "izin": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "alfa": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "comparison": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "reason_code"
+                  ],
+                  "properties": {
+                    "status": {
+                      "anyOf": [
+                        {
+                          "const": "NOT_REPORTED",
+                          "type": "string"
+                        },
+                        {
+                          "const": "NOT_COMPARABLE",
+                          "type": "string"
+                        },
+                        {
+                          "const": "MATCH",
+                          "type": "string"
+                        },
+                        {
+                          "const": "MISMATCH",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "reason_code": {
+                      "anyOf": [
+                        {
+                          "const": "LEDGER_NOT_SUBMITTED",
+                          "type": "string"
+                        },
+                        {
+                          "const": "CLASS_TOTALS_ONLY",
+                          "type": "string"
+                        },
+                        {
+                          "const": "NO_EXPECTED_STUDENT_DAYS",
+                          "type": "string"
+                        },
+                        {
+                          "const": "NO_CANONICAL_EVIDENCE",
+                          "type": "string"
+                        },
+                        {
+                          "const": "CANONICAL_COVERAGE_INCOMPLETE",
+                          "type": "string"
+                        },
+                        {
+                          "const": "CANONICAL_STATUS_UNRESOLVED",
+                          "type": "string"
+                        },
+                        {
+                          "const": "CALENDAR_UNKNOWN",
+                          "type": "string"
+                        },
+                        {
+                          "const": "CANONICAL_CLASS_UNRESOLVED",
+                          "type": "string"
+                        },
+                        {
+                          "const": "SIA_REASON_MISMATCH",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "unresolved_dates": {
+                  "type": "array",
+                  "items": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  }
+                },
+                "unknown_calendar_dates": {
+                  "type": "array",
+                  "items": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  }
+                },
+                "contradictory_dates": {
+                  "type": "array",
+                  "items": {
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                    "type": "string"
+                  }
+                },
+                "first_review_date": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
