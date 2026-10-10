@@ -319,7 +319,7 @@ describe("attendance machine preview", () => {
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 
-  it("keeps approved attendance corrections authoritative over imported check-ins", async () => {
+  it("keeps authorized corrections and raw machine evidence authoritative across reimports", async () => {
     const value = await setup("correction");
     try {
       const source = await rowsFixture([["00123", "Synthetic One", "03/04/2026", "07:45", "14:10", "", "", "", "", "Friday"]]);
@@ -329,13 +329,38 @@ describe("attendance machine preview", () => {
       const applyForm = new FormData(); applyForm.append("file", new File([source], "synthetic-correction.xlsx")); applyForm.append("academic_year_id", "1"); applyForm.append("jenjang_id", "1"); applyForm.append("expected_preview_digest", previewBody.previewDigest); applyForm.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
       const applied = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: applyForm }));
       const attendanceId = Number((value.database.client.query("SELECT id FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).id);
-      value.database.client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, note, reviewed_by, reviewed_at) VALUES (?, 'late', 'on-time', '07:25', 'Synthetic approved correction', 'preview-admin', CURRENT_TIMESTAMP)", [attendanceId]);
+      const classId = Number((value.database.client.query("SELECT id FROM academic_classes WHERE class_name = '7A'").get() as any).id);
+      const corrected = await value.app.handle(new Request(`http://local/api/attendance/classes/${classId}/dates/2026-04-03/entries`, { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ entries: [{ student_id: 123, status: "alfa", notes: "Paper class register confirms absence." }] }) }));
+      expect(corrected.status).toBe(200);
       const lateness = await value.app.handle(new Request("http://local/api/analytics/attendance/term-lateness?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
       expect((await lateness.json() as any).totals).toMatchObject({ late_events: 0, total_late_minutes: 0 });
+      const termAttendance = await value.app.handle(new Request("http://local/api/analytics/attendance/term?academic_year_id=1&term_number=1", { headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
+      expect((await termAttendance.json() as any).totals).toMatchObject({ alfa_count: 1, late_count: 0 });
       const secondPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
-      expect((await secondPreview.json() as any).rows[0]).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE", existingAttendance: { hasOverride: true } });
+      const secondPreviewBody = await secondPreview.json() as any;
+      expect(secondPreviewBody.rows[0]).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE", existingAttendance: { baseStatus: "late", effectiveStatus: "alfa", hasOverride: true } });
+      const sameFileAgain = new FormData(); sameFileAgain.append("file", new File([source], "synthetic-correction.xlsx")); sameFileAgain.append("academic_year_id", "1"); sameFileAgain.append("jenjang_id", "1"); sameFileAgain.append("expected_preview_digest", secondPreviewBody.previewDigest); sameFileAgain.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const repeated = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: sameFileAgain }));
+      expect(repeated.status).toBe(200);
+      expect((await repeated.json() as any).summary).toMatchObject({ created: 0, conflicts: 1 });
+
+      const changedSource = await rowsFixture([["00123", "Synthetic One", "03/04/2026", "07:55", "14:10", "", "", "", "", "Friday"]]);
+      const changedForm = new FormData(); changedForm.append("file", new File([changedSource], "synthetic-correction-changed.xlsx")); changedForm.append("academic_year_id", "1"); changedForm.append("jenjang_id", "1");
+      const changedPreview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: changedForm }));
+      const changedPreviewBody = await changedPreview.json() as any;
+      expect(changedPreviewBody.rows[0]).toMatchObject({ applyClassification: "CONFLICT_EXISTING_OVERRIDE" });
+      const changedApply = new FormData(); changedApply.append("file", new File([changedSource], "synthetic-correction-changed.xlsx")); changedApply.append("academic_year_id", "1"); changedApply.append("jenjang_id", "1"); changedApply.append("expected_preview_digest", changedPreviewBody.previewDigest); changedApply.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+      const changed = await value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: changedApply }));
+      expect(changed.status).toBe(200);
+      expect((await changed.json() as any).summary).toMatchObject({ created: 0, conflicts: 1 });
       expect(applied.status).toBe(200);
-      expect(value.database.client.query("SELECT check_in FROM attendance WHERE id = ?").get(attendanceId)).toMatchObject({ check_in: "07:45" });
+      expect(value.database.client.query("SELECT status, check_in FROM attendance WHERE id = ?").get(attendanceId)).toMatchObject({ status: "late", check_in: "07:45" });
+      expect(value.database.client.query("SELECT override_status FROM attendance_overrides WHERE attendance_id = ?").get(attendanceId)).toMatchObject({ override_status: "alfa" });
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 123 AND date = '2026-04-03'").get() as any).count)).toBe(1);
+      const evidence = value.database.client.query("SELECT proposed_change FROM attendance_import_rows WHERE student_identifier = '00123' AND attendance_date = '2026-04-03' ORDER BY id").all() as any[];
+      expect(evidence).toHaveLength(3);
+      expect(JSON.parse(evidence[0].proposed_change).source_evidence[0].values["Scan Masuk"]).toBe("07:45");
+      expect(JSON.parse(evidence[2].proposed_change).source_evidence[0].values["Scan Masuk"]).toBe("07:55");
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 

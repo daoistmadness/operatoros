@@ -60,7 +60,7 @@ export interface AttendanceEntryPayload {
   status: string;
   check_in?: string | null;
   check_out?: string | null;
-  note?: string | null;
+  notes?: string | null;
 }
 
 export async function fetchTeacherClassAssignments(params?: {

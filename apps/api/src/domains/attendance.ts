@@ -55,7 +55,7 @@ function mapClassAttendanceResponse(
       is_overridden: value.override_status !== null && value.override_status !== undefined,
       scan_in: time(value.check_in),
       scan_out: time(value.check_out),
-      is_absent: Boolean(value.is_absent),
+      is_absent: ["absent", "sakit", "izin", "alfa"].includes(String(value.override_status ?? value.raw_status ?? "")),
       pending_correction: false,
       correction_request_id: null,
     })),
@@ -91,6 +91,15 @@ function ledgerFinalizeWarnings(context: AuthContext, date: string): Row[] {
 function currentStatus(value: Row): string { return value.override_status ?? value.status; }
 function snapshot(value: Row): Row { return { attendance_id: value.id, status: currentStatus(value), check_in: time(value.override_check_in ?? value.check_in), check_out: time(value.override_check_out ?? value.check_out), override_id: value.override_id ?? null, override_reviewed_at: value.reviewed_at ?? null }; }
 function fingerprint(value: Row): string { return createHash("sha256").update(JSON.stringify(value, Object.keys(value).sort())).digest("hex"); }
+function classAttendanceAudit(client: AuthContext["database"]["client"], user: CurrentUser, attendanceId: number, operation: string, reason: string, before: Row | null, after: Row): void {
+  client.run(`INSERT INTO operations_audit_events
+    (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, reason, success, failure_code, changed_fields, metadata, schema_version)
+    VALUES (?, ?, ?, 'enter_assigned_class_attendance', 'ATTENDANCE', ?, ?, 'MEDIUM', 'API', ?, 1, NULL, ?, ?, '1')`, [
+    randomUUID(), user.username, user.role, `ATTENDANCE/${attendanceId}`, operation, reason,
+    JSON.stringify(["status", "check_in", "check_out", "late_duration", "late_source"]),
+    JSON.stringify({ source_workflow: "CLASS_ATTENDANCE_ENTRY", provenance: "MANUAL", before, after }),
+  ]);
+}
 function requestPayload(context: AuthContext, value: Row): Row {
   return { id: value.id, attendance_id: value.attendance_id, original_snapshot: JSON.parse(value.original_snapshot), proposed_status: value.proposed_status, proposed_check_in: time(value.proposed_check_in), proposed_check_out: time(value.proposed_check_out), reason_code: value.reason_code, explanation: value.explanation, requester: value.requester, submitted_at: value.submitted_at, state: value.state, version: value.version, approver: value.approver, decided_at: value.decided_at, rejection_reason: value.rejection_reason, resulting_override_id: value.resulting_override_id, created_at: value.created_at, updated_at: value.updated_at, audit: rows(context, "SELECT action, prior_state, new_state, actor, reason_code, created_at FROM attendance_correction_audit WHERE request_id = ? ORDER BY id", [value.id]) };
 }
@@ -349,7 +358,54 @@ function scopedRoutes(app: any, context: AuthContext): void {
       if (result.late_minutes === null) return fallback;
       return { status: result.is_late ? "late" : "on-time", lateDuration: result.late_minutes, lateSource: "calculated" };
     };
-    try { let created = 0; let updated = 0; inTransaction(client, () => { for (const entry of entries) { const canonical = canonicalEntry(entry); const status = canonical.status; const existing = row(context, "SELECT id FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]); if (existing) { client.run("UPDATE attendance SET status = ?, check_in = ?, check_out = ?, is_absent = ?, late_source = ?, late_duration = ? WHERE id = ?", [status, entry.check_in ?? null, entry.check_out ?? null, ["absent", "sakit", "izin", "alfa"].includes(status) ? 1 : 0, canonical.lateSource, canonical.lateDuration, existing.id]); updated++; } else { insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: canonical.lateDuration, lateSource: canonical.lateSource as "calculated" | "manual" | "none", status }); created++; } } }); const response: ClassAttendanceEntriesResponse = { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username }; return response; } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
+    try {
+      let created = 0; let updated = 0;
+      inTransaction(client, () => {
+        for (const entry of entries) {
+          const canonical = canonicalEntry(entry); const status = canonical.status;
+          const existing = row(context, "SELECT * FROM attendance WHERE student_id = ? AND date = ?", [entry.student_id, ctx.params.date_val]);
+          const existingOverride = existing ? row(context, "SELECT * FROM attendance_overrides WHERE attendance_id = ?", [existing.id]) : null;
+          const reason = String(entry.note ?? entry.notes ?? "").trim() || "Manual class attendance entry";
+          const after = { status, check_in: entry.check_in ?? null, check_out: entry.check_out ?? null, late_duration: canonical.lateDuration, late_source: canonical.lateSource, source: "MANUAL" };
+          if (!existing) {
+            const attendanceId = insertCanonicalAttendanceRecord(client, { studentId: entry.student_id, date: ctx.params.date_val, checkIn: entry.check_in ?? null, checkOut: entry.check_out ?? null, lateDuration: canonical.lateDuration, lateSource: canonical.lateSource as "calculated" | "manual" | "none", status });
+            classAttendanceAudit(client, user, attendanceId, "MANUAL_CLASS_ATTENDANCE_CREATE", reason, null, after);
+            created++;
+            continue;
+          }
+          const before = {
+            status: existingOverride?.override_status ?? existing.status,
+            check_in: time(existingOverride?.override_check_in ?? existing.check_in),
+            check_out: time(existingOverride?.override_check_out ?? existing.check_out),
+            base_status: existing.status,
+            base_check_in: time(existing.check_in),
+            base_check_out: time(existing.check_out),
+            base_late_duration: Number(existing.late_duration ?? 0),
+            base_late_source: existing.late_source,
+          };
+          const overrideCheckIn = entry.check_in ?? existingOverride?.override_check_in ?? null;
+          const overrideCheckOut = entry.check_out ?? existingOverride?.override_check_out ?? null;
+          const effectiveAfter = { ...after, check_in: time(overrideCheckIn ?? existing.check_in), check_out: time(overrideCheckOut ?? existing.check_out) };
+          const changed = before.status !== status || before.check_in !== effectiveAfter.check_in || before.check_out !== effectiveAfter.check_out;
+          if (changed) {
+            const now = new Date().toISOString(); let overrideId: number;
+            if (existingOverride) {
+              overrideId = Number(existingOverride.id);
+              client.run("INSERT INTO attendance_override_history (override_id, attendance_id, previous_status, new_status, previous_values, new_values, note, reviewed_by, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [overrideId, existing.id, before.status, status, JSON.stringify(before), JSON.stringify(effectiveAfter), reason, user.username, now]);
+              client.run("UPDATE attendance_overrides SET override_status = ?, override_check_in = ?, override_check_out = ?, note = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?", [status, overrideCheckIn, overrideCheckOut, reason, user.username, now, overrideId]);
+            } else {
+              const result = client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, override_check_out, note, reviewed_by, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [existing.id, existing.status, status, entry.check_in ?? null, entry.check_out ?? null, reason, user.username, now]);
+              overrideId = Number(result.lastInsertRowid);
+              client.run("INSERT INTO attendance_override_history (override_id, attendance_id, previous_status, new_status, previous_values, new_values, note, reviewed_by, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [overrideId, existing.id, before.status, status, JSON.stringify(before), JSON.stringify(effectiveAfter), reason, user.username, now]);
+            }
+            classAttendanceAudit(client, user, Number(existing.id), "MANUAL_CLASS_ATTENDANCE_CORRECT", reason, before, effectiveAfter);
+          }
+          updated++;
+        }
+      });
+      const response: ClassAttendanceEntriesResponse = { class_id: Number(ctx.params.class_id), date: ctx.params.date_val, total_submitted: entries.length, created, updated, submitted_by: user.username };
+      return response;
+    } catch { return fail(ctx.set, 400, "Failed to save attendance entries transactionally. Operation rolled back."); }
   }, { params: t.Object({ class_id: t.Number({ minimum: 1 }), date_val: t.String() }), body: t.Object({ entries: t.Array(t.Object({ student_id: t.Number({ minimum: 1 }), status: t.String(), check_in: t.Optional(t.String()), check_out: t.Optional(t.String()), notes: t.Optional(t.String()) }), { minItems: 1 }) }), response: ClassAttendanceEntriesResponseSchema });
 }
 
@@ -410,8 +466,31 @@ function selfConfirmRoute(app: any, context: AuthContext): void {
     if (body.confirmation !== "CONFIRM_CORRECTION") return fail(ctx.set, 400, "Exact confirmation phrase is required.");
     const value = row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [ctx.params.request_id]); if (!value || !["DRAFT", "SUBMITTED"].includes(value.state) || value.version !== body.expected_version) return fail(ctx.set, 409, "Correction request is not confirmable.");
     const attendance = row(context, "SELECT * FROM attendance WHERE id = ?", [value.attendance_id]); if (!attendance || !periodOpen(context, attendance.date)) return fail(ctx.set, 409, "Attendance period is finalized.");
-    const note = `${value.explanation}\n\n[Self-Confirmed]: ${body.confirmation_note.trim()}`; const client = context.database.client;
-    inTransaction(client, () => { const created = client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, override_check_out, note, reviewed_by, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(attendance_id) DO UPDATE SET override_status = excluded.override_status, override_check_in = excluded.override_check_in, override_check_out = excluded.override_check_out, note = excluded.note, reviewed_by = excluded.reviewed_by, reviewed_at = excluded.reviewed_at", [attendance.id, attendance.status, value.proposed_status, value.proposed_check_in, value.proposed_check_out, note, user.username]); const override = row(context, "SELECT id FROM attendance_overrides WHERE attendance_id = ?", [attendance.id]); client.run("INSERT INTO attendance_override_history (override_id, attendance_id, previous_status, new_status, note, reviewed_by, timestamp) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)", [override?.id ?? Number(created.lastInsertRowid), attendance.id, attendance.status, value.proposed_status, note, user.username]); client.run("UPDATE attendance_correction_requests SET state = 'APPROVED', active_key = NULL, approver = ?, decided_at = CURRENT_TIMESTAMP, resulting_override_id = ?, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [user.username, override?.id ?? Number(created.lastInsertRowid), value.id]); client.run("INSERT INTO attendance_correction_audit (request_id, action, prior_state, new_state, actor, effective_date, reason_code, explanation_summary, source_workflow, metadata_version, created_at) VALUES (?, 'SELF_CONFIRM', ?, 'APPROVED', ?, ?, ?, ?, 'ATTENDANCE_CORRECTION', 1, CURRENT_TIMESTAMP)", [value.id, value.state, user.username, attendance.date, value.reason_code, note.slice(0, 255)]); });
+    const client = context.database.client;
+    const old = JSON.parse(value.original_snapshot) as Row;
+    const existing = row(context, "SELECT * FROM attendance_overrides WHERE attendance_id = ?", [attendance.id]);
+    const current = snapshot({ ...attendance, override_status: existing?.override_status, override_check_in: existing?.override_check_in,
+      override_check_out: existing?.override_check_out, override_id: existing?.id ?? null, reviewed_at: existing?.reviewed_at ?? null });
+    if (fingerprint(current) !== value.original_fingerprint) {
+      client.run("UPDATE attendance_correction_requests SET state = 'STALE', active_key = NULL, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [value.id]);
+      return fail(ctx.set, 409, "Attendance changed after the request was created.");
+    }
+    const note = `${value.explanation}\n\n[Self-Confirmed]: ${body.confirmation_note.trim()}`;
+    inTransaction(client, () => {
+      const before = { status: old.status, check_in: old.check_in, check_out: old.check_out };
+      const after = { status: value.proposed_status, check_in: time(value.proposed_check_in), check_out: time(value.proposed_check_out) };
+      let overrideId: number;
+      if (existing) {
+        overrideId = Number(existing.id);
+        client.run("UPDATE attendance_overrides SET override_status = ?, override_check_in = ?, override_check_out = ?, note = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?", [value.proposed_status, value.proposed_check_in, value.proposed_check_out, note, user.username, overrideId]);
+      } else {
+        const created = client.run("INSERT INTO attendance_overrides (attendance_id, original_status, override_status, override_check_in, override_check_out, note, reviewed_by, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)", [attendance.id, attendance.status, value.proposed_status, value.proposed_check_in, value.proposed_check_out, note, user.username]);
+        overrideId = Number(created.lastInsertRowid);
+      }
+      client.run("INSERT INTO attendance_override_history (override_id, attendance_id, previous_status, new_status, previous_values, new_values, note, reviewed_by, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)", [overrideId, attendance.id, old.status, value.proposed_status, JSON.stringify(before), JSON.stringify(after), note, user.username]);
+      client.run("UPDATE attendance_correction_requests SET state = 'APPROVED', active_key = NULL, approver = ?, decided_at = CURRENT_TIMESTAMP, resulting_override_id = ?, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [user.username, overrideId, value.id]);
+      client.run("INSERT INTO attendance_correction_audit (request_id, action, prior_state, new_state, actor, effective_date, reason_code, explanation_summary, source_workflow, metadata_version, created_at) VALUES (?, 'SELF_CONFIRM', ?, 'APPROVED', ?, ?, ?, ?, 'ATTENDANCE_CORRECTION', 1, CURRENT_TIMESTAMP)", [value.id, value.state, user.username, attendance.date, value.reason_code, note.slice(0, 255)]);
+    });
     return requestPayload(context, row(context, "SELECT * FROM attendance_correction_requests WHERE id = ?", [value.id]) as Row);
   }, { params: t.Object({ request_id: t.Number({ minimum: 1 }) }), body: t.Any() });
 }
