@@ -8,7 +8,7 @@ import {
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
 import { getMonthlyClassAbsenceTotals } from "./manual-absence";
-import { emptyTermAttendanceCounts, termAttendanceForRange } from "./term-attendance";
+import { emptyTermAttendanceCounts, termAttendanceForRange, type AttendanceDayObserver, type AttendanceEvidenceObserver } from "./term-attendance";
 import { tallyLatenessRange } from "./term-lateness";
 
 type Row = Record<string, any>;
@@ -38,7 +38,16 @@ function emptyReconciliation(status: "NOT_AVAILABLE" | "NOT_COMPARABLE", reason_
   return { status, reason_code };
 }
 
-export function resolveAttendanceBasis(context: AuthContext, query: Omit<AttendanceBasisQuery, "academic_year_id"> & { academic_year_id: number }): AttendanceBasisResponse {
+export function resolveAttendanceBasis(
+  context: AuthContext,
+  query: Omit<AttendanceBasisQuery, "academic_year_id"> & { academic_year_id: number },
+  options: {
+    observeAttendanceDay?: AttendanceDayObserver;
+    observeAttendanceEvidence?: AttendanceEvidenceObserver;
+    allowUnresolvedClassEvidence?: boolean;
+    allowDeclaredExcess?: boolean;
+  } = {},
+): AttendanceBasisResponse {
   const academicYearId = Number(query.academic_year_id);
   const range = monthRange(context, academicYearId, query.month);
   const manual = getMonthlyClassAbsenceTotals(context, academicYearId, query.month, {
@@ -50,9 +59,9 @@ export function resolveAttendanceBasis(context: AuthContext, query: Omit<Attenda
     jenjang_id: query.jenjang_id, program_id: query.program_id,
     grade_id: query.grade_id, class_id: query.class_id,
   };
-  const canonical = termAttendanceForRange(context, termQuery, range);
+  const canonical = termAttendanceForRange(context, termQuery, range, options.observeAttendanceDay, options.observeAttendanceEvidence);
   const unresolvedEvidence = canonical.evidence_by_class.get(null) ?? 0;
-  if (unresolvedEvidence > 0)
+  if (unresolvedEvidence > 0 && !options.allowUnresolvedClassEvidence)
     problem(409, "CANONICAL_CLASS_UNRESOLVED", "Canonical attendance exists in the selected scope, but its historical class cannot be resolved.");
   const lateness = tallyLatenessRange(context, {
     startDate: range.start_date, endDate: range.end_date, academicYearId,
@@ -82,7 +91,7 @@ export function resolveAttendanceBasis(context: AuthContext, query: Omit<Attenda
       alfa_student_days: submitted ? value.alfa : null,
     };
     const declaredTotal = submitted ? value.sakit + value.izin + value.alfa : null;
-    if (declaredTotal !== null && declaredTotal > counts.expected_student_days)
+    if (declaredTotal !== null && declaredTotal > counts.expected_student_days && !options.allowDeclaredExcess)
       problem(409, "DECLARED_ABSENCE_EXCEEDS_EXPECTED_DAYS", `Submitted class S/I/A total ${declaredTotal} exceeds ${counts.expected_student_days} known Expected Student-Days for ${value.class_name} in ${query.month}.`);
     const draft = value.state === "OPEN" ? {
       sakit_student_days: value.sakit, izin_student_days: value.izin, alfa_student_days: value.alfa,

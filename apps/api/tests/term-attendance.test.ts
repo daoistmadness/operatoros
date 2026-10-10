@@ -16,6 +16,8 @@ function fixture() {
   client.run("CREATE TABLE student_enrollment_class_history (id INTEGER PRIMARY KEY, enrollment_id INTEGER, class_name TEXT, effective_from TEXT, effective_to TEXT)");
   client.run("CREATE TABLE attendance (id INTEGER PRIMARY KEY, student_id INTEGER, date TEXT, status TEXT)");
   client.run("CREATE TABLE attendance_overrides (attendance_id INTEGER, override_status TEXT)");
+  client.run("CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT)");
+  client.run("CREATE TABLE student_masters (id TEXT PRIMARY KEY, full_name TEXT)");
   client.run("CREATE TABLE attendance_calendar_weekday_rules (academic_year_id INTEGER, jenjang_id INTEGER, weekday INTEGER, expectation TEXT)");
   client.run("CREATE TABLE attendance_calendar_exceptions (academic_year_id INTEGER, jenjang_id INTEGER, date TEXT, expectation TEXT, reason TEXT)");
   client.run("INSERT INTO academic_years VALUES (1,'2026/2027','2026-07-01','2027-06-30'),(2,'2025/2026','2025-07-01','2026-06-30')");
