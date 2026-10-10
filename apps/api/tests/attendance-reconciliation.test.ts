@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { randomUUID } from "node:crypto";
-import { rmSync } from "node:fs";
+import { copyFileSync, rmSync } from "node:fs";
 import { Value } from "@sinclair/typebox/value";
 import { AttendanceReconciliationResponseSchema } from "@operatoros/contracts/analytics";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 import { resolveAttendanceReconciliation } from "../src/domains/attendance-reconciliation";
-import { submitMonthlyClassAbsenceLedger } from "../src/domains/manual-absence";
+import { reopenMonthlyClassAbsenceLedger, submitMonthlyClassAbsenceLedger } from "../src/domains/manual-absence";
 import { createReportFixture } from "./fixtures/reports";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
@@ -14,8 +14,8 @@ const secret = "astryx-test-only-cookie-secret-32-chars";
 function fixture() {
   const path = `/tmp/operatoros-attendance-reconciliation-${process.pid}-${Date.now()}.sqlite`;
   createReportFixture(path);
-  const database = openDatabase(path);
-  const client = database.client;
+  let database = openDatabase(path);
+  let client = database.client;
   const academicYearId = Number((client.query("SELECT id FROM academic_years WHERE label='2026/2027-reports'").get() as any).id);
   const jenjangId = Number((client.query("SELECT id FROM jenjangs WHERE name='SD'").get() as any).id);
   const programId = Number(client.run("INSERT INTO academic_programs (jenjang_id,name) VALUES (?,'Reconciliation Test Program')", [jenjangId]).lastInsertRowid);
@@ -27,7 +27,7 @@ function fixture() {
   const enrollmentId = Number(client.run(`INSERT INTO student_enrollments
     (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state)
     VALUES (?,?,?,?,?,'P2-B',1,'2026-09-01','ACTIVE')`, [studentId, masterId, academicYearId, jenjangId, classId]).lastInsertRowid);
-  const context = { database } as any;
+  let context = { database } as any;
   const expectedDates: string[] = [];
   for (let day = 1; day <= 30; day++) {
     const date = `2026-09-${String(day).padStart(2, "0")}`;
@@ -77,8 +77,16 @@ function fixture() {
     submitMonthlyClassAbsenceLedger(context, { id: 1, username: "golden-admin", role: "admin" }, { academic_year_id: academicYearId, month, class_id: classId });
   };
   const query = (month: string) => ({ academic_year_id: String(academicYearId), class_id: String(classId), month, scope: "combined" as const });
-  const close = () => { database.close(); rmSync(path, { force: true }); };
-  return { app: createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-reconciliation-audit-${process.pid}` } }), client, context, query, saveLedger, expectedDates, academicYearId, studentId, enrollmentId, classId, close };
+  const appOptions = () => ({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-reconciliation-audit-${process.pid}` } });
+  let app = createApp(appOptions());
+  let databaseOpen = true;
+  const closeDatabase = () => { if (databaseOpen) { database.close(); databaseOpen = false; } };
+  const restart = () => {
+    closeDatabase(); database = openDatabase(path); databaseOpen = true;
+    client = database.client; context = { database } as any; app = createApp(appOptions());
+  };
+  const close = () => { closeDatabase(); rmSync(path, { force: true }); };
+  return { get app() { return app; }, get client() { return client; }, get context() { return context; }, path, restart, closeDatabase, query, saveLedger, expectedDates, academicYearId, studentId, enrollmentId, classId, close };
 }
 
 async function cookie(app: ReturnType<typeof createApp>, username: string, password: string): Promise<string> {
@@ -88,6 +96,12 @@ async function cookie(app: ReturnType<typeof createApp>, username: string, passw
   const value = response.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!value) throw new Error("session cookie missing");
   return `astyx_session=${value}`;
+}
+
+async function reviewRequest(app: ReturnType<typeof createApp>, session: string, path: string, body: unknown): Promise<Response> {
+  return app.handle(new Request(`http://local${path}`, {
+    method: "POST", headers: { cookie: session, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify(body),
+  }));
 }
 
 describe("monthly attendance reconciliation read model", () => {
@@ -254,6 +268,161 @@ describe("monthly attendance reconciliation read model", () => {
       expect(forbidden.status).toBe(403);
       const outOfScope = await value.app.handle(new Request(`http://local${path.replace("scope=combined", "scope=secondary")}`, { headers: { cookie: admin } }));
       expect(outOfScope.status).toBe(404);
+    } finally { value.close(); }
+  });
+
+  it("records an explicit reviewed decision with server attribution and idempotent retries", async () => {
+    const value = fixture();
+    try {
+      value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
+      const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
+      const before = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      expect(before.review).toMatchObject({ status: "NOT_REVIEWED", revision: 0, history: [] });
+      expect(before.evidence.status).toBe("CLEAR");
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(0);
+      const attendanceBefore = Number((value.client.query("SELECT COUNT(*) AS total FROM attendance").get() as any).total);
+      const body = { ...value.query("2026-10"), expected_revision: 0, evidence_version: before.review.evidence_version, decision: "REVIEWED", actor_id: "client-spoof", reviewed_at: "1900-01-01" };
+      const response = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", body);
+      expect(response.status).toBe(200);
+      const reviewed = await response.json() as ReturnType<typeof resolveAttendanceReconciliation>;
+      expect(Value.Check(AttendanceReconciliationResponseSchema, reviewed)).toBe(true);
+      expect(reviewed.review).toMatchObject({ status: "REVIEWED", revision: 1, decision: "REVIEWED", reviewed_by: "golden-admin" });
+      expect(reviewed.canonical).toEqual(before.canonical);
+      expect(reviewed.review.reviewed_at).not.toBe("1900-01-01");
+      expect(reviewed.review.history[0]?.evidence_references.ledger_revision_id).not.toBeNull();
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM attendance").get() as any).total)).toBe(attendanceBefore);
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(1);
+      const retry = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", body);
+      expect(retry.status).toBe(200);
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(1);
+      expect((await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", { ...body, decision: "REVIEWED_WITH_ISSUES", note: "A different tab has new notes." })).status).toBe(409);
+      const backupPath = `${value.path}.review-backup.sqlite`;
+      value.closeDatabase();
+      copyFileSync(value.path, backupPath);
+      const restored = openDatabase(backupPath);
+      expect(Number((restored.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(1);
+      restored.close(); rmSync(backupPath, { force: true });
+      value.restart();
+      const afterRestart = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      expect(afterRestart.review).toMatchObject({ status: "REVIEWED", revision: 1, reviewed_by: "golden-admin", history: [{ action: "REVIEWED" }] });
+    } finally { value.close(); }
+  });
+
+  it("requires issue and reopen notes, preserves review history, and rejects stale revisions", async () => {
+    const value = fixture();
+    try {
+      const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
+      const before = resolveAttendanceReconciliation(value.context, value.query("2026-11"));
+      expect(before.review.status).toBe("NOT_REVIEWED");
+      expect(before.canonical.alfa_count).toBe(0);
+      expect(before.canonical.unrecorded_student_days).toBeGreaterThan(0);
+      const base = { ...value.query("2026-11"), expected_revision: 0, evidence_version: before.review.evidence_version };
+      expect((await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", { ...base, decision: "REVIEWED_WITH_ISSUES" })).status).toBe(422);
+      const withIssuesBody = { ...base, decision: "REVIEWED_WITH_ISSUES", note: "Dates have no verified scan evidence." };
+      const withIssues = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", withIssuesBody);
+      expect(withIssues.status).toBe(200);
+      expect((await withIssues.json() as ReturnType<typeof resolveAttendanceReconciliation>).review.status).toBe("REVIEWED_WITH_ISSUES");
+      expect((await reviewRequest(value.app, admin, "/api/attendance/reconciliation/reopen", { ...base, expected_revision: 1, reason: "     " })).status).toBe(422);
+      const reviewed = resolveAttendanceReconciliation(value.context, value.query("2026-11"));
+      const reopenBody = { ...value.query("2026-11"), expected_revision: reviewed.review.revision, evidence_version: reviewed.review.evidence_version, reason: "Rechecking source dates." };
+      const reopened = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/reopen", reopenBody);
+      expect(reopened.status).toBe(200);
+      const result = await reopened.json() as ReturnType<typeof resolveAttendanceReconciliation>;
+      expect(result.review).toMatchObject({ status: "NOT_REVIEWED", revision: 2, history: [{ action: "REVIEWED_WITH_ISSUES" }, { action: "REOPENED" }] });
+      expect((await reviewRequest(value.app, admin, "/api/attendance/reconciliation/reopen", reopenBody)).status).toBe(200);
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(2);
+      const stale = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", withIssuesBody);
+      expect(stale.status).toBe(409);
+    } finally { value.close(); }
+  });
+
+  it("rejects stale evidence and derives outdated state after attendance, ledger, import, calendar, and enrollment changes", async () => {
+    const value = fixture();
+    try {
+      value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
+      const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
+      const initial = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      const review = async (response = initial) => reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", {
+        ...value.query("2026-10"), expected_revision: response.review.revision,
+        evidence_version: response.review.evidence_version, decision: "REVIEWED",
+      });
+      expect((await review()).status).toBe(200);
+      const current = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      value.client.run("UPDATE attendance SET status='late' WHERE student_id=? AND date='2026-10-01'", [value.studentId]);
+      expect((await review(current)).status).toBe(409);
+      expect(resolveAttendanceReconciliation(value.context, value.query("2026-10")).review.status).toBe("REVIEW_OUTDATED");
+
+      const attendanceId = Number((value.client.query("SELECT id FROM attendance WHERE student_id=? AND date='2026-10-01'").get(value.studentId) as any).id);
+      reopenMonthlyClassAbsenceLedger(value.context, { id: 1, username: "golden-admin", role: "admin" }, {
+        academic_year_id: value.academicYearId, class_id: value.classId, month: "2026-10", reason: "Recheck independent book totals.",
+      });
+      const afterLedger = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      expect(afterLedger.review.status).toBe("REVIEW_OUTDATED");
+      const batchId = `review-machine-${process.pid}`;
+      value.client.run(`INSERT INTO attendance_import_batches (id,filename,checksum,uploaded_by,status,total_rows,logical_rows,committed_at)
+        VALUES (?,'review.xlsx','review-checksum','golden-admin','committed',1,1,CURRENT_TIMESTAMP)`, [batchId]);
+      value.client.run(`INSERT INTO attendance_import_rows
+        (batch_id,student_identifier,student_name,attendance_date,existing_attendance_id,classification,proposed_change,selected_for_commit)
+        VALUES (?,?,?,?,?,'CONFLICT',?,0)`, [batchId, String(value.studentId), "Synthetic Reconciliation Student", "2026-10-01", attendanceId,
+        JSON.stringify({ action: "NO_WRITE", student_id: value.studentId, attendance_date: "2026-10-01", status: "late", check_in: "07:45:00.000000" })]);
+      value.client.run(`INSERT INTO operations_audit_events
+        (event_id,actor_id,actor_role,capability,entity_type,entity_reference,operation,risk_level,source,success,metadata,schema_version)
+        VALUES (?,'golden-admin','admin','import_attendance','MACHINE_IMPORT',?,'MACHINE_IMPORT_APPLY','MEDIUM','API',1,'{}','1')`, [randomUUID(), batchId]);
+      const afterImport = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      expect(afterImport.review.status).toBe("REVIEW_OUTDATED");
+      const jenjangId = Number((value.client.query("SELECT jenjang_id FROM student_enrollments WHERE id=?").get(value.enrollmentId) as any).jenjang_id);
+      value.client.run(`INSERT INTO attendance_calendar_exceptions (academic_year_id,jenjang_id,date,expectation,reason,created_by)
+        VALUES (?, ?, '2026-10-02','NOT_EXPECTED','SCHOOL_CLOSED','golden-admin')`, [value.academicYearId, jenjangId]);
+      expect(resolveAttendanceReconciliation(value.context, value.query("2026-10")).review.status).toBe("REVIEW_OUTDATED");
+      value.client.run("UPDATE student_enrollments SET effective_to='2026-10-15', updated_at=CURRENT_TIMESTAMP WHERE id=?", [value.enrollmentId]);
+      expect(resolveAttendanceReconciliation(value.context, value.query("2026-10")).review.status).toBe("REVIEW_OUTDATED");
+    } finally { value.close(); }
+  });
+
+  it("keeps a review current when only another month changes, blocks invalid and unauthorized writes, and rolls back audit failure", async () => {
+    const value = fixture();
+    try {
+      value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
+      const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
+      const staff = await cookie(value.app, "golden-staff", "golden-staff-pass-1");
+      const before = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      const body = { ...value.query("2026-10"), expected_revision: 0, evidence_version: before.review.evidence_version, decision: "REVIEWED" };
+      const path = "/api/attendance/reconciliation/review";
+      expect((await reviewRequest(value.app, staff, path, body)).status).toBe(403);
+      expect((await reviewRequest(value.app, admin, path, { ...body, decision: "SUSPICIOUS" })).status).toBe(400);
+      expect((await reviewRequest(value.app, admin, path, { ...body, scope: "secondary" })).status).toBe(404);
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(0);
+      value.client.run("UPDATE attendance SET status='late' WHERE student_id=? AND date='2026-09-01'", [value.studentId]);
+      expect((await reviewRequest(value.app, admin, path, body)).status).toBe(200);
+      expect(resolveAttendanceReconciliation(value.context, value.query("2026-10")).review.status).toBe("REVIEWED");
+      const trigger = "CREATE TRIGGER fail_month_review BEFORE INSERT ON operations_audit_events WHEN NEW.entity_type='ATTENDANCE_MONTH_REVIEW' BEGIN SELECT RAISE(ABORT, 'controlled audit failure'); END";
+      value.client.run(trigger);
+      const latest = resolveAttendanceReconciliation(value.context, value.query("2026-10"));
+      const next = { ...value.query("2026-10"), expected_revision: latest.review.revision, evidence_version: latest.review.evidence_version, decision: "REVIEWED" };
+      expect((await reviewRequest(value.app, admin, path, next)).status).toBe(500);
+      expect(Number((value.client.query("SELECT COUNT(*) AS total FROM operations_audit_events WHERE entity_type='ATTENDANCE_MONTH_REVIEW'").get() as any).total)).toBe(1);
+      expect(value.client.query("SELECT status FROM attendance WHERE student_id=? AND date='2026-10-01'").get(value.studentId)).toEqual({ status: "on-time" });
+    } finally { value.close(); }
+  });
+
+  it("records a review without changing a machine scan or canonical attendance", async () => {
+    const value = fixture();
+    try {
+      value.saveLedger("2026-09", { sakit: 0, izin: 1, alfa: 1 });
+      const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
+      const before = resolveAttendanceReconciliation(value.context, value.query("2026-09"));
+      expect(["INCOMPLETE", "CONTRADICTORY"]).toContain(before.evidence.status);
+      const scanBefore = value.client.query("SELECT status,check_in,check_out FROM attendance WHERE student_id=? AND date='2026-09-01'").get(value.studentId);
+      const response = await reviewRequest(value.app, admin, "/api/attendance/reconciliation/review", {
+        ...value.query("2026-09"), expected_revision: 0, evidence_version: before.review.evidence_version,
+        decision: "REVIEWED_WITH_ISSUES", note: "Machine source and book evidence were reviewed.",
+      });
+      expect(response.status).toBe(200);
+      const after = await response.json() as ReturnType<typeof resolveAttendanceReconciliation>;
+      expect(after.review.status).toBe("REVIEWED_WITH_ISSUES");
+      expect(after.machine_evidence).toEqual(before.machine_evidence);
+      expect(after.canonical).toEqual(before.canonical);
+      expect(value.client.query("SELECT status,check_in,check_out FROM attendance WHERE student_id=? AND date='2026-09-01'").get(value.studentId)).toEqual(scanBefore);
     } finally { value.close(); }
   });
 });

@@ -11,7 +11,7 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
-test("@attendance @reconciliation @release loads the read-only class/month worklist", async ({ page }) => {
+test("@attendance @reconciliation @release records and reopens a class/month review", async ({ page }) => {
   await login(page);
   const initialFilters = await page.request.get("/api/reports/filters?scope=combined");
   expect(initialFilters.status()).toBe(200);
@@ -35,4 +35,18 @@ test("@attendance @reconciliation @release loads the read-only class/month workl
   await expect(page.getByText(`${academicClass.name} · ${month}`, { exact: false })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Monthly comparison" })).toBeVisible();
   await expect(page.getByRole("table").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Mark reviewed with issues" }).click();
+  await page.getByLabel("Outstanding issues or missing evidence").fill("Synthetic smoke review: unresolved evidence remains.");
+  const reviewResponse = page.waitForResponse((item) => item.url().endsWith("/api/attendance/reconciliation/review") && item.request().method() === "POST");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Mark reviewed with issues" }).click();
+  expect((await reviewResponse).status()).toBe(200);
+  await expect(page.getByText("Reviewed with issues", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reopen review" }).click();
+  await page.getByLabel("Reason for reopening").fill("Rechecking the synthetic review evidence.");
+  const reopenResponse = page.waitForResponse((item) => item.url().endsWith("/api/attendance/reconciliation/reopen") && item.request().method() === "POST");
+  await page.getByRole("alertdialog").getByRole("button", { name: "Reopen review" }).click();
+  expect((await reopenResponse).status()).toBe(200);
+  await expect(page.getByText("Not reviewed", { exact: true })).toBeVisible();
 });

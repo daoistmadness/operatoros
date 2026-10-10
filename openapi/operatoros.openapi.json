@@ -32366,6 +32366,68 @@
           "attendance"
         ]
       }
+    },
+    "/api/attendance/reconciliation/review": {
+      "post": {
+        "operationId": "postApiAttendanceReconciliationReview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceReviewMutation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monthly reconciliation and operator review state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReconciliationResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Record a monthly attendance review decision",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/api/attendance/reconciliation/reopen": {
+      "post": {
+        "operationId": "postApiAttendanceReconciliationReopen",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceReviewReopen"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monthly reconciliation and operator review state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceReconciliationResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reopen a monthly attendance review",
+        "tags": [
+          "attendance"
+        ]
+      }
     }
   },
   "components": {
@@ -41877,7 +41939,8 @@
           "ledger",
           "evidence",
           "summary",
-          "students"
+          "students",
+          "review"
         ],
         "properties": {
           "academic_year": {
@@ -42816,6 +42879,358 @@
                 }
               }
             }
+          },
+          "review": {
+            "$ref": "#/components/schemas/AttendanceReviewState"
+          }
+        }
+      },
+      "AttendanceReviewEvidenceReferences": {
+        "type": "object",
+        "required": [
+          "attendance_ids",
+          "override_history_ids",
+          "attendance_import_row_ids",
+          "enrollment_ids",
+          "enrollment_class_history_ids",
+          "enrollment_lifecycle_audit_ids",
+          "calendar_rule_ids",
+          "calendar_exception_ids",
+          "ledger_revision_id"
+        ],
+        "properties": {
+          "attendance_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "override_history_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "attendance_import_row_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "enrollment_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "enrollment_class_history_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "enrollment_lifecycle_audit_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "calendar_rule_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "calendar_exception_ids": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "ledger_revision_id": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "AttendanceReviewHistoryEntry": {
+        "type": "object",
+        "required": [
+          "revision",
+          "previous_revision",
+          "action",
+          "actor",
+          "timestamp",
+          "evidence_version",
+          "note",
+          "evidence_references"
+        ],
+        "properties": {
+          "revision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "previous_revision": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "action": {
+            "enum": [
+              "REVIEWED",
+              "REVIEWED_WITH_ISSUES",
+              "REOPENED"
+            ],
+            "type": "string"
+          },
+          "actor": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "timestamp": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "evidence_version": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_references": {
+            "$ref": "#/components/schemas/AttendanceReviewEvidenceReferences"
+          }
+        }
+      },
+      "AttendanceReviewState": {
+        "type": "object",
+        "required": [
+          "status",
+          "revision",
+          "evidence_version",
+          "decision",
+          "reviewed_by",
+          "reviewed_at",
+          "note",
+          "evidence_references",
+          "history"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "NOT_REVIEWED",
+              "REVIEWED",
+              "REVIEWED_WITH_ISSUES",
+              "REVIEW_OUTDATED"
+            ],
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "evidence_version": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "enum": [
+                  "REVIEWED",
+                  "REVIEWED_WITH_ISSUES"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_references": {
+            "$ref": "#/components/schemas/AttendanceReviewEvidenceReferences"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/AttendanceReviewHistoryEntry"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "AttendanceReviewMutation": {
+        "type": "object",
+        "required": [
+          "academic_year_id",
+          "class_id",
+          "month",
+          "scope",
+          "expected_revision",
+          "evidence_version",
+          "decision"
+        ],
+        "properties": {
+          "academic_year_id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          },
+          "class_id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          },
+          "month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "type": "string"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "const": "combined",
+                "type": "string"
+              },
+              {
+                "const": "early_year",
+                "type": "string"
+              },
+              {
+                "const": "primary",
+                "type": "string"
+              },
+              {
+                "const": "secondary",
+                "type": "string"
+              }
+            ]
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "evidence_version": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "REVIEWED",
+              "REVIEWED_WITH_ISSUES"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 1000,
+            "type": "string"
+          }
+        }
+      },
+      "AttendanceReviewReopen": {
+        "type": "object",
+        "required": [
+          "academic_year_id",
+          "class_id",
+          "month",
+          "scope",
+          "expected_revision",
+          "evidence_version",
+          "reason"
+        ],
+        "properties": {
+          "academic_year_id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          },
+          "class_id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          },
+          "month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "type": "string"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "const": "combined",
+                "type": "string"
+              },
+              {
+                "const": "early_year",
+                "type": "string"
+              },
+              {
+                "const": "primary",
+                "type": "string"
+              },
+              {
+                "const": "secondary",
+                "type": "string"
+              }
+            ]
+          },
+          "expected_revision": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "evidence_version": {
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 5,
+            "type": "string"
           }
         }
       }
