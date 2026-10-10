@@ -149,6 +149,45 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("retains legacy import revisions and blocks changed evidence behind an override", async () => {
+    const value = await setup("legacy-revisions");
+    try {
+      const commit = (body: any) => value.app.handle(new Request(`http://local/api/uploads/preview/${body.batch_id}/commit`, {
+        method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+        body: JSON.stringify({ selected_row_ids: [body.rows[0].id], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: body.checksum }),
+      }));
+      const first = await (await preview(value.app, value.cookie, await workbook([[9003, "Citra", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"]]))).json() as any;
+      expect((await commit(first)).status).toBe(200);
+      const second = await (await preview(value.app, value.cookie, await workbook([[9003, "Citra", "01/07/2026", "07:45", "16:00", "", "", "", "Wednesday"]]))).json() as any;
+      expect(second.rows[0].classification).toBe("DIFFERENCE");
+      expect(await (await commit(second)).json()).toMatchObject({ rows_updated: 1 });
+
+      const attendance = value.database.client.query("SELECT * FROM attendance WHERE student_id = 9003 AND date = '2026-07-01'").get() as any;
+      const corrected = await value.app.handle(new Request(`http://local/api/review/attendance/${attendance.id}/override`, {
+        method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+        body: JSON.stringify({ override_status: "absent", note: "Verified against the class record." }),
+      }));
+      expect(corrected.status).toBe(200);
+
+      const third = await (await preview(value.app, value.cookie, await workbook([[9003, "Citra", "01/07/2026", "07:50", "16:00", "", "", "", "Wednesday"]]))).json() as any;
+      expect(third.summary.conflicts).toBe(1);
+      expect(third.rows[0]).toMatchObject({ classification: "CONFLICT", validation_error: expect.stringContaining("authorized attendance override") });
+      const blocked = await commit(third);
+      expect(blocked.status).toBe(409);
+      expect(value.database.client.query("SELECT status, check_in FROM attendance WHERE id = ?").get(attendance.id)).toMatchObject({ status: "late", check_in: "07:45:00.000000" });
+      expect(value.database.client.query("SELECT override_status FROM attendance_overrides WHERE attendance_id = ?").get(attendance.id)).toMatchObject({ override_status: "absent" });
+
+      const sourceRows = value.database.client.query("SELECT b.id AS batch_id, r.existing_record, r.proposed_change FROM attendance_import_rows r JOIN attendance_import_batches b ON b.id = r.batch_id WHERE r.student_identifier = '9003' ORDER BY r.id").all() as any[];
+      expect(JSON.parse(sourceRows[0].proposed_change)).toMatchObject({ check_in: "07:30:00" });
+      expect(JSON.parse(sourceRows[1].existing_record)).toMatchObject({ check_in: "07:30:00" });
+      expect(JSON.parse(sourceRows[1].proposed_change)).toMatchObject({ check_in: "07:45:00" });
+      expect(JSON.parse(sourceRows[2].proposed_change)).toMatchObject({ check_in: "07:50:00" });
+      const audit = value.database.client.query("SELECT actor_id, actor_role, source, operation, import_session_id, metadata FROM operations_audit_events WHERE entity_reference = ? AND operation = 'LEGACY_IMPORT_UPDATE'").get(`ATTENDANCE/${attendance.id}`) as any;
+      expect(audit).toMatchObject({ actor_id: "golden-admin", actor_role: "admin", source: "EXCEL_IMPORT", operation: "LEGACY_IMPORT_UPDATE", import_session_id: second.batch_id });
+      expect(JSON.parse(audit.metadata)).toMatchObject({ before: { check_in: "07:30:00" }, after: { check_in: "07:45:00" } });
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("exposes upload history and sanitized evidence for an attendance preview", async () => {
     const value = await setup("history");
     try {

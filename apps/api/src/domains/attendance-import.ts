@@ -166,10 +166,12 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
       } else {
         const before = attendancePayload(existing);
         const proposed = proposedPayload(entry, student, existing, cutoffMapForEntry(entry, student, cutoffPolicies, legacyCutoffMap, jenjangIds));
-        classification = existing == null ? "NEW" : equalJson(before, proposed) ? "UNCHANGED" : "DIFFERENCE";
-        const finalWarning = row(client, "SELECT id FROM attendance_overrides WHERE attendance_id = ?", [existing?.id]) ? [warning, "Administrative override exists and remains authoritative"].filter(Boolean).join("; ") : warning;
+        const hasOverride = existing != null && Boolean(row(client, "SELECT id FROM attendance_overrides WHERE attendance_id = ?", [existing.id]));
+        classification = existing == null ? "NEW" : equalJson(before, proposed) ? "UNCHANGED" : hasOverride ? "CONFLICT" : "DIFFERENCE";
+        if (classification === "CONFLICT") validationError = "An authorized attendance override exists; changed import evidence requires review.";
+        const finalWarning = hasOverride ? [warning, "Administrative override remains authoritative"].filter(Boolean).join("; ") : warning;
         counts[classification as keyof typeof counts]++;
-        client.run("INSERT INTO attendance_import_rows (batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id, classification, existing_record, proposed_change, validation_error, warning) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(before), json(proposed), null, finalWarning]);
+        client.run("INSERT INTO attendance_import_rows (batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id, classification, existing_record, proposed_change, validation_error, warning) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(before), json(proposed), validationError, finalWarning]);
         continue;
       }
       counts[classification as keyof typeof counts]++;
@@ -186,7 +188,7 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
   return previewPayload(batch, importRows);
 }
 
-export function commitPreview(context: AuthContext, batchId: string, selectedIds: number[], confirmation: string, checksum: string, username: string): Row {
+export function commitPreview(context: AuthContext, batchId: string, selectedIds: number[], confirmation: string, checksum: string, username: string, actorRole: string): Row {
   if (confirmation !== ATTENDANCE_IMPORT_CONFIRMATION) throw new ImportError(400, "Invalid confirmation token");
   const client = context.database.client;
   const batch = row(client, "SELECT * FROM attendance_import_batches WHERE id = ?", [batchId]);
@@ -212,13 +214,16 @@ export function commitPreview(context: AuthContext, batchId: string, selectedIds
         const existing = row(client, "SELECT * FROM attendance WHERE student_id = ? AND date = ?", [student.id, importRow.attendance_date]);
         if (row(client, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [importRow.attendance_date])) throw new ImportError(409, { code: "ATTENDANCE_PERIOD_FINALIZED", message: "Attendance period is finalized and must be reopened." });
         if (!equalJson(attendancePayload(existing), parseJson(importRow.existing_record))) throw new ImportError(409, `Attendance changed after preview row ${importRow.id}`);
+        if (importRow.classification === "DIFFERENCE" && existing && row(client, "SELECT id FROM attendance_overrides WHERE attendance_id = ?", [existing.id])) throw new ImportError(409, { code: "ATTENDANCE_OVERRIDE_CONFLICT", message: "An authorized attendance override was created after preview. Review the changed source evidence." });
         const proposed = parseJson(importRow.proposed_change) as Row;
         const status = String(proposed.status);
         if (importRow.classification === "NEW") {
-          client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, overtime, exception, week, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [student.id, importRow.attendance_date, storageTime(proposed.check_in), storageTime(proposed.check_out), proposed.late_duration, proposed.late_source, proposed.is_absent ? 1 : 0, secondsToTimeText(proposed.overtime_seconds), proposed.exception, proposed.week, status]);
+          const insertedRow = client.run("INSERT INTO attendance (student_id, date, check_in, check_out, late_duration, late_source, is_absent, overtime, exception, week, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [student.id, importRow.attendance_date, storageTime(proposed.check_in), storageTime(proposed.check_out), proposed.late_duration, proposed.late_source, proposed.is_absent ? 1 : 0, secondsToTimeText(proposed.overtime_seconds), proposed.exception, proposed.week, status]);
+          auditImportAttendanceWrite(client, { username, actorRole, batch, importRow, attendanceId: Number(insertedRow.lastInsertRowid), operation: "LEGACY_IMPORT_CREATE", before: null, after: proposed });
           inserted++;
         } else if (importRow.classification === "DIFFERENCE") {
           client.run("UPDATE attendance SET check_in = ?, check_out = ?, late_duration = ?, late_source = ?, is_absent = ?, overtime = ?, exception = ?, week = ?, status = ? WHERE id = ?", [storageTime(proposed.check_in), storageTime(proposed.check_out), proposed.late_duration, proposed.late_source, proposed.is_absent ? 1 : 0, secondsToTimeText(proposed.overtime_seconds), proposed.exception, proposed.week, status, existing?.id]);
+          auditImportAttendanceWrite(client, { username, actorRole, batch, importRow, attendanceId: Number(existing?.id), operation: "LEGACY_IMPORT_UPDATE", before: parseJson(importRow.existing_record), after: proposed });
           updated++;
         } else unchanged++;
         client.run("UPDATE attendance_import_rows SET selected_for_commit = 1 WHERE id = ?", [importRow.id]);
@@ -234,6 +239,19 @@ export function commitPreview(context: AuthContext, batchId: string, selectedIds
     throw new ImportError(409, "Attendance import could not be committed. Operation rolled back.");
   }
   return parseJson(row(client, "SELECT commit_result FROM attendance_import_batches WHERE id = ?", [batchId])?.commit_result) as Row;
+}
+
+function auditImportAttendanceWrite(client: AuthContext["database"]["client"], input: { username: string; actorRole: string; batch: Row; importRow: Row; attendanceId: number; operation: string; before: unknown; after: unknown }): void {
+  client.run(`INSERT INTO operations_audit_events
+    (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, reason, import_session_id, success, failure_code, changed_fields, metadata, schema_version)
+    VALUES (?, ?, ?, 'import_attendance', 'ATTENDANCE', ?, ?, 'MEDIUM', 'EXCEL_IMPORT', ?, ?, 1, NULL, ?, ?, '1')`, [
+    randomUUID(), input.username, input.actorRole, `ATTENDANCE/${input.attendanceId}`, input.operation,
+    "Legacy attendance import commit", input.batch.id,
+    JSON.stringify(["status", "check_in", "check_out", "late_duration", "late_source", "overtime", "exception", "week"]),
+    JSON.stringify({ batch_id: input.batch.id, import_row_id: input.importRow.id, source_row: input.importRow.source_row,
+      attendance_date: input.importRow.attendance_date,
+      before: input.before, after: input.after }),
+  ]);
 }
 
 function validFile(file: File): boolean {
@@ -261,7 +279,7 @@ export function attendanceImportRoutes(app: any, context: AuthContext): void {
     const user = actor(context, ctx, { capability: "import_attendance" });
     if (!user) return { detail: "Insufficient permissions" };
     try {
-      return commitPreview(context, ctx.params.batch_id, ctx.body.selected_row_ids, ctx.body.confirmation, ctx.body.preview_checksum, user.username);
+      return commitPreview(context, ctx.params.batch_id, ctx.body.selected_row_ids, ctx.body.confirmation, ctx.body.preview_checksum, user.username, user.role);
     } catch (error) {
       if (error instanceof ImportError) { ctx.set.status = error.status; return { detail: error.detail }; }
       ctx.set.status = 409;
