@@ -38,6 +38,7 @@ const expectedPaths = [
   '/attendance/daily',
   '/attendance/calendar',
   '/attendance/monthly-recap',
+  '/attendance/reconciliation',
   '/attendance/machine-import',
   '/classes/:id',
   '/attendance/departure-policies',
@@ -89,6 +90,10 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.find(({ path }) => path === '/analytics/student-insights')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
     expect(authenticatedRoutes.find(({ path }) => path === '/analytics/trends')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
     expect(authenticatedRoutes.find(({ path }) => path === '/analytics/indicators')?.authorization).toEqual({ type: 'capability', capability: 'view_student' });
+  });
+
+  it('limits the reconciliation worklist to administrators', () => {
+    expect(authenticatedRoutes.find(({ path }) => path === '/attendance/reconciliation')?.authorization).toEqual({ type: 'role', role: 'admin' });
   });
 
   it('keeps every route behind authentication metadata', () => {

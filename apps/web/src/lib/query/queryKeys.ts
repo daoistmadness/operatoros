@@ -1,4 +1,5 @@
 import type { ReportQuery, ReportScope, ReportType } from "../../api/reports";
+import type { AttendanceReconciliationQuery } from "@operatoros/contracts/analytics";
 
 type QueryPrimitive = string | number | boolean | null;
 type CanonicalQueryValue = QueryPrimitive | readonly QueryPrimitive[];
@@ -91,6 +92,7 @@ export const queryKeys = {
     classRosters: ["classAttendanceRoster"] as const,
     calendar: (academicYearId: number | null) => ["attendance", "calendar", { academicYearId }] as const,
     correctionReview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "correction-review", canonicalizeQueryFilters(filters)] as const,
+    reconciliation: (query: AttendanceReconciliationQuery) => ["attendance", "reconciliation", canonicalizeQueryFilters(query)] as const,
   },
   students: {
     all: ["students"] as const,

@@ -13,6 +13,7 @@ const AttendanceCorrections = lazy(() => import('../pages/AttendanceCorrections'
 const AttendanceCorrectionReview = lazy(() => import('../pages/AttendanceCorrectionReview'));
 const AttendanceFollowUpQueue = lazy(() => import('../pages/AttendanceFollowUpQueue'));
 const AbsenceReasons = lazy(() => import('../pages/AbsenceReasons'));
+const AttendanceReconciliation = lazy(() => import('../pages/AttendanceReconciliation'));
 const HebConfig = lazy(() => import('../pages/HebConfig'));
 const JenjangConfig = lazy(() => import('../features/jenjang-config'));
 const Settings = lazy(() => import('../pages/Settings'));
@@ -120,6 +121,7 @@ export const authenticatedRoutes: readonly AppRouteDefinition[] = [
   defineRoute({ path: '/attendance/daily', element: <DailyAttendanceOperations />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance/calendar', element: <AttendanceCalendar />, group: ROUTE_GROUPS.ATTENDANCE, authorization: capability('view_attendance') }),
   defineRoute({ path: '/attendance/monthly-recap', element: <AbsenceReasons />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
+  defineRoute({ path: '/attendance/reconciliation', element: <AttendanceReconciliation />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),
   defineRoute({ path: '/attendance/machine-import', element: <Navigate to="/upload" replace />, group: ROUTE_GROUPS.ATTENDANCE, redirectTo: '/upload', authorization: capability('import_attendance') }),
   defineRoute({ path: '/classes/:id', element: <ClassOverview />, group: ROUTE_GROUPS.ACADEMIC, authorization: capability('view_student') }),
   defineRoute({ path: '/attendance/departure-policies', element: <DismissalPolicies />, group: ROUTE_GROUPS.ATTENDANCE, authorization: adminOnly() }),

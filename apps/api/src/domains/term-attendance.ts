@@ -9,7 +9,22 @@ type Row = Record<string, any>;
 type Counts = TermAttendanceResponse["totals"];
 type Class = { id: number; class_name: string; grade_id: number; grade: string; program_id: number; program: string; jenjang_id: number; jenjang: string };
 type ExpectedDayObserver = (date: string, studentKey: string, status: string | null, enrollmentId: number, classId: number | null) => void;
-type AttendanceEvidenceObserver = (date: string, enrollmentId: number, classId: number | null) => void;
+export type AttendanceEvidenceObserver = (date: string, enrollmentId: number, classId: number | null) => void;
+export type AttendanceDayDetail = {
+  date: string;
+  student_key: string;
+  student_id: number | null;
+  student_name: string;
+  enrollment_id: number;
+  class_id: number | null;
+  class_name: string | null;
+  expectation: "EXPECTED" | "NOT_EXPECTED" | "UNKNOWN";
+  attendance_id: number | null;
+  raw_status: string | null;
+  override_status: string | null;
+  effective_status: string | null;
+};
+export type AttendanceDayObserver = (value: AttendanceDayDetail) => void;
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
   return context.database.client.query(sql).all(...(params as never[])) as Row[];
@@ -65,7 +80,7 @@ function bucket<K>(map: Map<K, Counts>, key: K, status: string | null): void {
   add(value, status);
 }
 
-function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }, observeExpectedDay?: ExpectedDayObserver, scopeIsValidated = false, observeAttendanceEvidence?: AttendanceEvidenceObserver): TermAttendanceResponse {
+function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery, requestedRange?: { start_date: string; end_date: string }, observeExpectedDay?: ExpectedDayObserver, scopeIsValidated = false, observeAttendanceEvidence?: AttendanceEvidenceObserver, observeAttendanceDay?: AttendanceDayObserver): TermAttendanceResponse {
   const academicYearId = Number(query.academic_year_id);
   const year = one(context, "SELECT id, label, start_date, end_date FROM academic_years WHERE id = ?", [academicYearId]);
   if (!year) problem(404, "ACADEMIC_YEAR_NOT_FOUND", "Academic year not found.");
@@ -109,13 +124,17 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     )
     SELECT dates.day, e.id AS enrollment_id, e.student_id, e.student_master_id,
       e.academic_class_id, e.class_name, e.jenjang_id,
-      a.id AS attendance_id, COALESCE(o.override_status, a.status) AS effective_status
+      COALESCE(NULLIF(TRIM(m.full_name), ''), NULLIF(TRIM(s.name), ''), 'Unknown student') AS student_name,
+      a.id AS attendance_id, a.status AS raw_status,
+      o.override_status, COALESCE(o.override_status, a.status) AS effective_status
     FROM dates JOIN student_enrollments e ON e.academic_year_id = ?
       AND dates.day >= COALESCE(e.effective_from, ?)
       AND dates.day <= COALESCE(e.effective_to, ?)
       AND (e.student_master_id IS NOT NULL OR e.student_id IS NOT NULL)
     LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date = dates.day
     LEFT JOIN attendance_overrides o ON o.attendance_id = a.id
+    LEFT JOIN students s ON s.id = e.student_id
+    LEFT JOIN student_masters m ON m.id = e.student_master_id
     ORDER BY dates.day, e.id`, [startDate, endDate, academicYearId, year.start_date, year.end_date]);
   const dates: string[] = [];
   for (let date = new Date(`${startDate}T00:00:00Z`), end = new Date(`${endDate}T00:00:00Z`); date <= end; date.setUTCDate(date.getUTCDate() + 1)) dates.push(date.toISOString().slice(0, 10));
@@ -157,6 +176,16 @@ function termAttendanceInRange(context: AuthContext, query: TermAttendanceQuery,
     if (scope.program_id !== null && canonicalClass?.program_id !== scope.program_id) continue;
     if (scope.grade_id !== null && canonicalClass?.grade_id !== scope.grade_id) continue;
     if (scope.class_id !== null && canonicalClass?.id !== scope.class_id) continue;
+    observeAttendanceDay?.({
+      date: String(day.day), student_key: studentKey,
+      student_id: day.student_id == null ? null : Number(day.student_id),
+      student_name: String(day.student_name), enrollment_id: Number(day.enrollment_id),
+      class_id: canonicalClass?.id ?? null, class_name: canonicalClass?.class_name ?? (named == null ? null : String(named)),
+      expectation, attendance_id: day.attendance_id == null ? null : Number(day.attendance_id),
+      raw_status: day.raw_status == null ? null : String(day.raw_status),
+      override_status: day.override_status == null ? null : String(day.override_status),
+      effective_status: day.effective_status == null ? null : String(day.effective_status),
+    });
     const represented = studentClasses.get(studentKey) ?? [];
     const classRepresentation = { class_id: canonicalClass?.id ?? null, class_name: canonicalClass?.class_name ?? String(named ?? "Unresolved class") };
     if (!represented.some((value) => value.class_id === classRepresentation.class_id && value.class_name === classRepresentation.class_name)) represented.push(classRepresentation);
@@ -196,14 +225,15 @@ export function termAttendance(context: AuthContext, query: TermAttendanceQuery)
   return termAttendanceInRange(context, query);
 }
 
-export function termAttendanceForRange(context: AuthContext, query: TermAttendanceQuery, range: { start_date: string; end_date: string }): {
+export function termAttendanceForRange(context: AuthContext, query: TermAttendanceQuery, range: { start_date: string; end_date: string }, observeAttendanceDay?: AttendanceDayObserver, observeAttendanceEvidence?: AttendanceEvidenceObserver): {
   attendance: TermAttendanceResponse;
   evidence_by_class: Map<number | null, number>;
 } {
   const evidence_by_class = new Map<number | null, number>();
   const attendance = termAttendanceInRange(context, query, range, undefined, false, (_date, _enrollmentId, classId) => {
     evidence_by_class.set(classId, (evidence_by_class.get(classId) ?? 0) + 1);
-  });
+    observeAttendanceEvidence?.(_date, _enrollmentId, classId);
+  }, observeAttendanceDay);
   return { attendance, evidence_by_class };
 }
 

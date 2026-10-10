@@ -69,10 +69,12 @@ function scopeForLevel(level: string | null | undefined): Scope | null {
   return null;
 }
 
-function matchesScope(level: string | null | undefined, scope: Scope): boolean {
+export function reportScopeIncludesLevel(level: string | null | undefined, scope: ReportScope): boolean {
   const canonical = scopeForLevel(level);
   return scope === "combined" ? canonical !== null : canonical === scope;
 }
+
+const matchesScope = reportScopeIncludesLevel;
 
 function parseDate(value: string): { year: number; month: number; day: number } {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
