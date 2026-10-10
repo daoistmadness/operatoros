@@ -8,12 +8,16 @@ import * as reconciliationQueries from "../hooks/useAttendanceReconciliationQuer
 import type { AttendanceReconciliationResponse } from "@operatoros/contracts/analytics";
 
 vi.mock("../hooks/useReportQueries", () => ({ useReportFilters: vi.fn() }));
-vi.mock("../hooks/useAttendanceReconciliationQuery", () => ({ useAttendanceReconciliationQuery: vi.fn() }));
+vi.mock("../hooks/useAttendanceReconciliationQuery", () => ({ useAttendanceReconciliationQuery: vi.fn(), useAttendanceReviewMutations: vi.fn() }));
 
 const response: AttendanceReconciliationResponse = {
   academic_year: { id: 2, label: "2026/2027", start_date: "2026-07-01", end_date: "2027-06-30" },
   class: { id: 8, name: "P2-B", grade: "Grade 2", program: "Primary", jenjang: "SD" },
   month: "2026-09", scope: "combined", period: { start_date: "2026-09-01", end_date: "2026-09-30" },
+  review: { status: "NOT_REVIEWED", revision: 0, evidence_version: `sha256:${"a".repeat(64)}`, decision: null,
+    reviewed_by: null, reviewed_at: null, note: null,
+    evidence_references: { attendance_ids: [], override_history_ids: [], attendance_import_row_ids: [], enrollment_ids: [],
+      enrollment_class_history_ids: [], enrollment_lifecycle_audit_ids: [], calendar_rule_ids: [], calendar_exception_ids: [], ledger_revision_id: null }, history: [] },
   calendar: { expected_school_days: 22, non_school_days: 8, unknown_dates: [] },
   canonical: { expected_student_days: 22, recorded_student_days: 21, unrecorded_student_days: 1, hadir_count: 18, sakit_count: 1, izin_count: 1, alfa_count: 1, late_count: 0, other_status_count: 0, coverage_rate: 95.45, hadir_rate: 81.8, sakit_rate: 4.5, izin_rate: 4.5, alfa_rate: 4.5, attendance_rate: 81.8, recorded_attendance_rate: 85.7 },
   machine_evidence: { coverage_status: "NOT_TRACKED", recorded_student_days: 1 },
@@ -41,6 +45,10 @@ describe("AttendanceReconciliation", () => {
   beforeEach(() => {
     mocked(reportQueries.useReportFilters).mockReturnValue({ data: reportFilters, isPending: false, error: null });
     mocked(reconciliationQueries.useAttendanceReconciliationQuery).mockReturnValue({ data: response, isPending: false, isFetching: false, error: null, refetch: vi.fn() });
+    mocked(reconciliationQueries.useAttendanceReviewMutations).mockReturnValue({
+      decision: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(response) },
+      reopen: { isPending: false, mutateAsync: vi.fn().mockResolvedValue(response) },
+    });
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
   });
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.clearAllMocks(); });
@@ -71,5 +79,26 @@ describe("AttendanceReconciliation", () => {
     await act(async () => root.render(<MemoryRouter initialEntries={["/attendance/reconciliation?academic_year_id=2&scope=combined&class_id=8&month=2026-09"]}><AttendanceReconciliation /></MemoryRouter>));
     expect(container.textContent).toContain("Monthly totals do not identify a date to correct.");
     expect(container.textContent).not.toContain("Attendance entry");
+  });
+
+  it("requires an explicit confirmation and a note to record unresolved issues", async () => {
+    const decision = vi.fn().mockResolvedValue(response);
+    mocked(reconciliationQueries.useAttendanceReviewMutations).mockReturnValue({
+      decision: { isPending: false, mutateAsync: decision }, reopen: { isPending: false, mutateAsync: vi.fn() },
+    });
+    await act(async () => root.render(<MemoryRouter initialEntries={["/attendance/reconciliation?academic_year_id=2&scope=combined&class_id=8&month=2026-09"]}><AttendanceReconciliation /></MemoryRouter>));
+    const open = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Mark reviewed with issues");
+    expect(open).toBeDefined();
+    await act(async () => open?.click());
+    expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+    const note = document.querySelector<HTMLTextAreaElement>("#attendance-review-note");
+    expect(note).not.toBeNull();
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set?.call(note, "Waiting for two dated marks.");
+      note?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const confirm = Array.from(document.querySelectorAll<HTMLButtonElement>("[role='alertdialog'] button")).find((button) => button.textContent === "Mark reviewed with issues");
+    await act(async () => confirm?.click());
+    expect(decision).toHaveBeenCalledWith(expect.objectContaining({ decision: "REVIEWED_WITH_ISSUES", note: "Waiting for two dated marks.", expected_revision: 0, evidence_version: response.review.evidence_version }));
   });
 });

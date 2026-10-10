@@ -6085,6 +6085,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/reconciliation/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a monthly attendance review decision */
+        post: operations["postApiAttendanceReconciliationReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/reconciliation/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen a monthly attendance review */
+        post: operations["postApiAttendanceReconciliationReopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9085,6 +9119,61 @@ export interface components {
                 contradictory_dates: string[];
                 first_review_date: string | null;
             }[];
+            review: components["schemas"]["AttendanceReviewState"];
+        };
+        AttendanceReviewEvidenceReferences: {
+            attendance_ids: number[];
+            override_history_ids: number[];
+            attendance_import_row_ids: number[];
+            enrollment_ids: number[];
+            enrollment_class_history_ids: number[];
+            enrollment_lifecycle_audit_ids: number[];
+            calendar_rule_ids: number[];
+            calendar_exception_ids: number[];
+            ledger_revision_id: number | null;
+        };
+        AttendanceReviewHistoryEntry: {
+            revision: number;
+            previous_revision: number;
+            /** @enum {string} */
+            action: "REVIEWED" | "REVIEWED_WITH_ISSUES" | "REOPENED";
+            actor: string;
+            timestamp: string;
+            evidence_version: string;
+            note: string | null;
+            evidence_references: components["schemas"]["AttendanceReviewEvidenceReferences"];
+        };
+        AttendanceReviewState: {
+            /** @enum {string} */
+            status: "NOT_REVIEWED" | "REVIEWED" | "REVIEWED_WITH_ISSUES" | "REVIEW_OUTDATED";
+            revision: number;
+            evidence_version: string;
+            decision: ("REVIEWED" | "REVIEWED_WITH_ISSUES") | null;
+            reviewed_by: string | null;
+            reviewed_at: string | null;
+            note: string | null;
+            evidence_references: components["schemas"]["AttendanceReviewEvidenceReferences"];
+            history: components["schemas"]["AttendanceReviewHistoryEntry"][];
+        };
+        AttendanceReviewMutation: {
+            academic_year_id: string;
+            class_id: string;
+            month: string;
+            scope: "combined" | "early_year" | "primary" | "secondary";
+            expected_revision: number;
+            evidence_version: string;
+            /** @enum {string} */
+            decision: "REVIEWED" | "REVIEWED_WITH_ISSUES";
+            note?: string;
+        };
+        AttendanceReviewReopen: {
+            academic_year_id: string;
+            class_id: string;
+            month: string;
+            scope: "combined" | "early_year" | "primary" | "secondary";
+            expected_revision: number;
+            evidence_version: string;
+            reason: string;
         };
     };
     responses: never;
@@ -22973,6 +23062,54 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Monthly attendance reconciliation with source and effective evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
+    postApiAttendanceReconciliationReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceReviewMutation"];
+            };
+        };
+        responses: {
+            /** @description Monthly reconciliation and operator review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
+    postApiAttendanceReconciliationReopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceReviewReopen"];
+            };
+        };
+        responses: {
+            /** @description Monthly reconciliation and operator review state */
             200: {
                 headers: {
                     [name: string]: unknown;
