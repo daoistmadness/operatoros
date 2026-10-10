@@ -21,6 +21,8 @@ test("@indicators @analytics @release student indicators show neutral measuremen
   await expect(page.getByRole("heading", { name: "Current measurements" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Attendance Rate" })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Late Event Rate" })).toBeVisible();
+  await expect(page.getByText(/Attendance rows: \d+\/\d+ expected Student-Days/).first()).toBeVisible();
+  await expect(page.getByText(/Scored results: \d+\/\d+ expected slots/).first()).toBeVisible();
   await expect(page.getByText(/AT_RISK|High Risk|Medium Risk|Low Risk|Alert|Intervention|Warning/)).toHaveCount(0);
 
   const window = page.getByLabel("Comparison window", { exact: true });

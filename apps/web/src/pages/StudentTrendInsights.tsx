@@ -23,6 +23,16 @@ function metricText(metric: StudentTrendMetric | null): string {
   return `${previous} → ${current} (${delta})`;
 }
 
+function attendanceSampleText(metric: StudentTrendMetric | null, hasPreviousWindow: boolean): string | null {
+  if (!metric || metric.currentRecordedStudentDays === undefined || metric.previousRecordedStudentDays === undefined) return null;
+  const previous = hasPreviousWindow ? `${metric.previousRecordedStudentDays}/${metric.previousSampleSize} previous` : "no previous period";
+  return `Attendance rows: ${metric.currentRecordedStudentDays}/${metric.currentSampleSize} expected Student-Days current, ${previous}`;
+}
+
+function academicSampleText(metric: StudentTrendMetric): string {
+  return `Scored results: ${metric.currentSampleSize} current, ${metric.previousSampleSize} previous`;
+}
+
 export default function StudentTrendInsights({ filters, enabled }: Props) {
   const [params, setParams] = useSearchParams();
   const sortValue = params.get("sort") as Sort | null;
@@ -33,6 +43,7 @@ export default function StudentTrendInsights({ filters, enabled }: Props) {
     ...filters, academic_year_id: filters.academic_year_id, sort, order, page, page_size: 25,
   };
   const query = useStudentTrendInsightsQuery(trendFilters, enabled);
+  const hasPreviousWindow = query.data?.window.previousStart !== null && query.data?.window.previousStart !== undefined;
   const setTableState = (next: { sort?: Sort; order?: "asc" | "desc"; page?: number }) => {
     const updated = new URLSearchParams(params);
     if (next.sort) updated.set("sort", next.sort);
@@ -46,11 +57,11 @@ export default function StudentTrendInsights({ filters, enabled }: Props) {
   const columns = useMemo(() => [
     column.accessor("studentName", { header: () => <button onClick={() => toggleSort("name")}>Student</button>, cell: ({ row }) => <Link className="font-bold text-brand hover:underline" to={`/students/${row.original.studentId}`}>{row.original.studentName}</Link> }),
     column.accessor("className", { header: "Class", cell: (info) => info.getValue() ?? "Unassigned" }),
-    column.accessor("attendance", { header: () => <button onClick={() => toggleSort("attendance_delta")}>Attendance Rate change</button>, cell: (info) => metricText(info.getValue()) }),
-    column.accessor("academic", { header: () => <button onClick={() => toggleSort("academic_delta")}>Academic change</button>, cell: (info) => metricText(info.getValue()) }),
-    column.accessor("tardiness", { header: () => <button onClick={() => toggleSort("tardiness_delta")}>Late Event Rate change</button>, cell: (info) => metricText(info.getValue()) }),
-    column.accessor("alfa", { header: () => <button onClick={() => toggleSort("alfa_delta")}>Alfa Rate change</button>, cell: (info) => metricText(info.getValue()) }),
-  ], [order, sort]);
+    column.accessor("attendance", { header: () => <button onClick={() => toggleSort("attendance_delta")}>Attendance Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
+    column.accessor("academic", { header: () => <button onClick={() => toggleSort("academic_delta")}>Academic change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{academicSampleText(info.getValue())}</p></div> }),
+    column.accessor("tardiness", { header: () => <button onClick={() => toggleSort("tardiness_delta")}>Late Event Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
+    column.accessor("alfa", { header: () => <button onClick={() => toggleSort("alfa_delta")}>Alfa Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
+  ], [hasPreviousWindow, order, sort]);
   const table = useReactTable({ data: query.data?.rows ?? [], columns, getCoreRowModel: getCoreRowModel(), manualPagination: true });
 
   if (query.error) return <ErrorState title="Trends could not be loaded" description="The server could not load this period comparison." action={<Button onClick={() => { void query.refetch(); }}>Try again</Button>} />;
@@ -58,7 +69,7 @@ export default function StudentTrendInsights({ filters, enabled }: Props) {
   const data = query.data;
   const pageCount = Math.max(1, Math.ceil(data.totalStudents / data.pageSize));
   return <div aria-busy={query.isFetching} className="space-y-4">
-    <section className="rounded-xl border border-border bg-surface p-4"><h2 className="font-bold">Period comparison</h2><p className="mt-1 text-sm text-muted-foreground">{data.window.currentStart}–{data.window.currentEnd} compared with {data.window.previousStart && data.window.previousEnd ? `${data.window.previousStart}–${data.window.previousEnd}` : "no previous period"}. Deltas are percentage-point changes.</p></section>
+    <section className="rounded-xl border border-border bg-surface p-4"><h2 className="font-bold">Period comparison</h2><p className="mt-1 text-sm text-muted-foreground">{data.window.currentStart}–{data.window.currentEnd} compared with {data.window.previousStart && data.window.previousEnd ? `${data.window.previousStart}–${data.window.previousEnd}` : "no previous period"}. Attendance deltas are percentage-point changes.</p><p className="mt-1 text-sm text-muted-foreground">Academic change compares the latest observed grading period with its preceding period; it is not aligned to these attendance dates.</p></section>
     <div className="overflow-x-auto rounded-xl border border-border bg-surface p-4"><table className="w-full text-left text-sm"><caption className="sr-only">Student trends by period comparison</caption><thead><tr className="border-b border-border text-muted-foreground">{table.getHeaderGroups().flatMap((group) => group.headers).map((header) => <th scope="col" className="py-3 pr-5" key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>)}</tr></thead><tbody>{table.getRowModel().rows.map((row) => <tr className="border-b border-border" key={row.id}>{row.getVisibleCells().map((cell) => <td className="py-3 pr-5" key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}</tr>)}</tbody></table>
       {data.rows.length === 0 && <EmptyState className="mt-4" title="No students match the selected filters" description="Adjust the filters or select another academic year." />}
       <div className="mt-4 flex items-center justify-between gap-3"><span className="text-sm text-muted-foreground">Page {page} of {pageCount} · {data.totalStudents} students</span><div className="flex gap-2"><Button variant="outline" disabled={page <= 1 || query.isFetching} onClick={() => setTableState({ page: page - 1 })}>Previous</Button><Button variant="outline" disabled={page >= pageCount || query.isFetching} onClick={() => setTableState({ page: page + 1 })}>Next</Button></div></div>

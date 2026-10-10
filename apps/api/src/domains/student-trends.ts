@@ -30,6 +30,7 @@ export interface StudentTrendDateWindow {
 
 export interface StudentPeriodAttendance {
   expectedStudentDays: number;
+  recordedStudentDays: number;
   hadir: number;
   alfa: number;
   lateEvents: number;
@@ -152,7 +153,7 @@ export function studentPeriodAttendance(context: AuthContext, scope: StudentTren
       const lateEvents = [...(lateness.byStudent.get(studentKey)?.late_events_by_date ?? [])]
         .reduce((sum, [date, count]) => date >= range.startDate && date <= range.endDate ? sum + count : sum, 0);
       result.set(studentKey, {
-        expectedStudentDays: counts.expectedStudentDays, hadir: counts.hadir, alfa: counts.alfa, lateEvents,
+        expectedStudentDays: counts.expectedStudentDays, recordedStudentDays: counts.recordedStudentDays, hadir: counts.hadir, alfa: counts.alfa, lateEvents,
         attendanceRate: counts.expectedStudentDays ? roundPercent(counts.hadir / counts.expectedStudentDays * 100) : null,
         alfaRate: counts.expectedStudentDays ? roundPercent(counts.alfa / counts.expectedStudentDays * 100) : null,
         lateEventRate: counts.expectedStudentDays ? roundPercent(lateEvents / counts.expectedStudentDays * 100) : null,
@@ -201,12 +202,13 @@ export function resolveStudentTrendWindow(context: AuthContext, scope: StudentTr
   return { anchorDate, currentStart, currentEnd, previousStart, previousEnd };
 }
 
-function metric(unit: StudentTrendMetric["unit"], current: number | null, previous: number | null, currentSampleSize: number, previousSampleSize: number): StudentTrendMetric {
+function metric(unit: StudentTrendMetric["unit"], current: number | null, previous: number | null, currentSampleSize: number, previousSampleSize: number, currentRecordedStudentDays?: number, previousRecordedStudentDays?: number): StudentTrendMetric {
   const delta = current !== null && previous !== null ? roundPercent(current - previous) : null;
   return {
     unit, current, previous, delta,
     direction: delta === null ? "insufficient_data" : delta > 0 ? "up" : delta < 0 ? "down" : "flat",
     currentSampleSize, previousSampleSize,
+    ...(currentRecordedStudentDays === undefined ? {} : { currentRecordedStudentDays, previousRecordedStudentDays: previousRecordedStudentDays ?? 0 }),
   };
 }
 
@@ -263,6 +265,7 @@ export function studentTrendInsights(context: AuthContext, query: Row, canAttend
     const combine = (kind: "attendanceRate" | "lateEventRate" | "alfaRate"): StudentTrendMetric | null => !canAttendance ? null : metric(
       "percent", current?.[kind] ?? null, previous?.[kind] ?? null,
       current?.expectedStudentDays ?? 0, previous?.expectedStudentDays ?? 0,
+      current?.recordedStudentDays ?? 0, previous?.recordedStudentDays ?? 0,
     );
     return {
       studentId: String(value.student_id), studentName: String(value.student_name), className: value.class_name === null ? null : String(value.class_name), jenjang: value.jenjang === null ? null : String(value.jenjang),

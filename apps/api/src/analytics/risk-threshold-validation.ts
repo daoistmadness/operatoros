@@ -37,6 +37,16 @@ export interface ValidationRow {
   reviewWindow: ValidationReviewWindow;
   humanOutcome: HumanOutcome;
   indicatorDataAvailability: IndicatorResponseRow["dataAvailability"];
+  attendanceCoverage: {
+    currentExpectedStudentDays: number;
+    currentRecordedStudentDays: number;
+    previousExpectedStudentDays: number;
+    previousRecordedStudentDays: number;
+  } | null;
+  academicCoverage: {
+    scoredResults: number;
+    expectedResultSlots: number;
+  };
   indicators: ValidationIndicatorValues;
 }
 
@@ -92,15 +102,25 @@ const HUMAN_OUTCOMES = new Set<HumanOutcome>([
   "UNCERTAIN",
 ]);
 
+function hasRecordedAttendance(value: IndicatorResponseRow["attendanceRate"], period: "current" | "previous"): boolean {
+  const recorded = period === "current" ? value?.currentRecordedStudentDays : value?.previousRecordedStudentDays;
+  return recorded !== undefined && recorded > 0;
+}
+
+function hasTardinessEvidence(value: IndicatorResponseRow["tardinessRate"], period: "current" | "previous"): boolean {
+  const rate = period === "current" ? value?.current : value?.previous;
+  return hasRecordedAttendance(value, period) || (rate !== null && rate !== undefined && rate > 0);
+}
+
 const readers: Record<ValidationIndicator, (row: IndicatorResponseRow) => number | null> = {
-  attendance_rate: (row) => row.attendanceRate?.current ?? null,
-  attendance_delta: (row) => row.attendanceRate?.delta ?? null,
-  tardiness_rate: (row) => row.tardinessRate?.current ?? null,
-  tardiness_delta: (row) => row.tardinessRate?.delta ?? null,
-  alfa_rate: (row) => row.alfaRate?.current ?? null,
-  alfa_delta: (row) => row.alfaRate?.delta ?? null,
+  attendance_rate: (row) => hasRecordedAttendance(row.attendanceRate, "current") ? row.attendanceRate?.current ?? null : null,
+  attendance_delta: (row) => hasRecordedAttendance(row.attendanceRate, "current") && hasRecordedAttendance(row.attendanceRate, "previous") ? row.attendanceRate?.delta ?? null : null,
+  tardiness_rate: (row) => hasTardinessEvidence(row.tardinessRate, "current") ? row.tardinessRate?.current ?? null : null,
+  tardiness_delta: (row) => hasTardinessEvidence(row.tardinessRate, "current") && hasTardinessEvidence(row.tardinessRate, "previous") ? row.tardinessRate?.delta ?? null : null,
+  alfa_rate: (row) => hasRecordedAttendance(row.alfaRate, "current") ? row.alfaRate?.current ?? null : null,
+  alfa_delta: (row) => hasRecordedAttendance(row.alfaRate, "current") && hasRecordedAttendance(row.alfaRate, "previous") ? row.alfaRate?.delta ?? null : null,
   academic_average: (row) => row.academicAverage.current,
-  academic_participation: (row) => row.academicParticipation.current,
+  academic_participation: (row) => (row.academicParticipation.currentObservedSampleSize ?? 0) > 0 ? row.academicParticipation.current ?? null : null,
 };
 
 function ratio(numerator: number, denominator: number): number | null {
@@ -153,6 +173,16 @@ export function deidentifyIndicatorResponse(
       },
       humanOutcome: reviewed.humanOutcome,
       indicatorDataAvailability: { ...row.dataAvailability },
+      attendanceCoverage: row.attendanceRate ? {
+        currentExpectedStudentDays: row.attendanceRate.currentSampleSize,
+        currentRecordedStudentDays: row.attendanceRate.currentRecordedStudentDays ?? 0,
+        previousExpectedStudentDays: row.attendanceRate.previousSampleSize,
+        previousRecordedStudentDays: row.attendanceRate.previousRecordedStudentDays ?? 0,
+      } : null,
+      academicCoverage: {
+        scoredResults: row.academicParticipation.currentObservedSampleSize ?? 0,
+        expectedResultSlots: row.academicParticipation.currentSampleSize,
+      },
       indicators,
     };
   });
@@ -165,6 +195,21 @@ export function validateValidationRows(rows: readonly ValidationRow[]): void {
     if (!seen.add(row.caseId)) throw new Error(`Duplicate de-identified case ID: ${row.caseId}`);
     if (!isIsoDate(row.reviewDate)) throw new Error(`Invalid review date for ${row.caseId}`);
     if (!HUMAN_OUTCOMES.has(row.humanOutcome)) throw new Error(`Invalid human outcome for ${row.caseId}`);
+    if (row.attendanceCoverage) {
+      const coverage = row.attendanceCoverage;
+      for (const [label, value] of Object.entries(coverage)) {
+        if (!Number.isInteger(value) || value < 0) throw new Error(`${row.caseId}.${label} must be a non-negative integer`);
+      }
+      if (coverage.currentRecordedStudentDays > coverage.currentExpectedStudentDays || coverage.previousRecordedStudentDays > coverage.previousExpectedStudentDays) {
+        throw new Error(`${row.caseId} recorded attendance days exceed expected Student-Days`);
+      }
+    }
+    for (const [label, value] of Object.entries(row.academicCoverage)) {
+      if (!Number.isInteger(value) || value < 0) throw new Error(`${row.caseId}.${label} must be a non-negative integer`);
+    }
+    if (row.academicCoverage.scoredResults > row.academicCoverage.expectedResultSlots) {
+      throw new Error(`${row.caseId} scored results exceed expected result slots`);
+    }
     for (const indicator of VALIDATION_INDICATORS) assertFiniteOrNull(row.indicators[indicator], `${row.caseId}.${indicator}`);
   }
 }

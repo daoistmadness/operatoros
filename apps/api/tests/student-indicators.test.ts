@@ -80,10 +80,12 @@ describe("student indicator insights", () => {
       const trendAlya = trends.rows.find((student) => student.studentId === "student-a")!;
       const academic = academicOverview(value, { academic_year_id: "1", class_id: "1" })!;
       expect(alya.attendanceRate).toMatchObject({ label: "Attendance Rate", current: 90, previous: 80, delta: 10, currentSampleSize: 20, previousSampleSize: 20, dataStatus: "available" });
+      expect(alya.attendanceRate).toMatchObject({ currentRecordedStudentDays: 18, previousRecordedStudentDays: 20 });
       expect(alya.tardinessRate).toMatchObject({ label: "Late Event Rate", current: 15, previous: 10, delta: 5, currentSampleSize: 20, previousSampleSize: 20 });
       expect(alya.alfaRate).toMatchObject({ label: "Alfa Rate", current: 0, previous: 10, delta: -10 });
       expect(alya.academicAverage).toMatchObject({ current: 75, previous: null, delta: null, direction: "insufficient_data", currentSampleSize: 2 });
       expect(alya.academicParticipation).toMatchObject({ current: 100, previous: null, delta: null, currentSampleSize: 2 });
+      expect(alya.academicParticipation).toMatchObject({ currentObservedSampleSize: 2 });
       expect(alya.dataAvailability).toEqual({ attendance: "available", comparison: "available", academic: "available" });
       expect(alya.attendanceRate?.current).toBe(trendAlya.attendance?.current);
       expect(alya.tardinessRate?.current).toBe(trendAlya.tardiness?.current);
@@ -105,7 +107,15 @@ describe("student indicator insights", () => {
       expect(response.page).toBe(2);
       expect(response.rows[0]?.studentId).toBe("student-b");
       expect(response.rows[0]?.academicAverage).toMatchObject({ current: null, previous: null, delta: null, dataStatus: "not_applicable" });
+      expect(response.rows[0]?.attendanceRate).toMatchObject({ current: 0, currentSampleSize: 20, currentRecordedStudentDays: 0 });
+      expect(response.rows[0]?.dataAvailability.attendance).toBe("unavailable");
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number }).count)).toBe(before);
+      value.database.client.run("INSERT INTO attendance VALUES (999, 2, '2026-03-13', NULL, NULL, 'sakit')");
+      const afterFixtureInsert = Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number }).count);
+      const observedZero = studentIndicatorInsights(value, { academic_year_id: "1", page: "2", page_size: "1" }).rows[0]!;
+      expect(observedZero.attendanceRate).toMatchObject({ current: 0, currentSampleSize: 20, currentRecordedStudentDays: 1 });
+      expect(observedZero.dataAvailability.attendance).toBe("available");
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number }).count)).toBe(afterFixtureInsert);
     } finally { value.database.client.close(); }
   });
 

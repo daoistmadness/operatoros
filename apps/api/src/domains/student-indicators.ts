@@ -15,11 +15,11 @@ type Context = any;
 type IndicatorUnit = StudentIndicatorValue["unit"];
 
 const INDICATOR_DEFINITIONS = [
-  { id: "attendance_rate", label: "Attendance Rate", domain: "attendance", unit: "percent", sourceMetric: "Hadir / Expected Student-Days from date-effective enrollment and the Attendance Calendar", missingData: "Null when Expected Student-Days is zero; Unrecorded expected days remain in the denominator." },
-  { id: "tardiness_rate", label: "Late Event Rate", domain: "attendance", unit: "percent", sourceMetric: "Canonical Late Events / Expected Student-Days", missingData: "Null when Expected Student-Days is zero." },
-  { id: "alfa_rate", label: "Alfa Rate", domain: "attendance", unit: "percent", sourceMetric: "Alfa / Expected Student-Days from date-effective enrollment and the Attendance Calendar", missingData: "Null when Expected Student-Days is zero." },
-  { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", sourceMetric: "Academic Analytics canonical score average", missingData: "Null when the selected student has no scored result." },
-  { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", sourceMetric: "Academic Analytics scored results divided by expected result slots", missingData: "Null when the selected scope has no expected result slots." },
+  { id: "attendance_rate", label: "Attendance Rate", domain: "attendance", unit: "percent", sourceMetric: "Hadir / Expected Student-Days from date-effective enrollment and the Attendance Calendar", missingData: "Null when Expected Student-Days is zero; recorded Student-Days are reported separately and Unrecorded expected days remain in the denominator." },
+  { id: "tardiness_rate", label: "Late Event Rate", domain: "attendance", unit: "percent", sourceMetric: "Canonical Late Events / Expected Student-Days", missingData: "Null when Expected Student-Days is zero; recorded Student-Days are reported separately." },
+  { id: "alfa_rate", label: "Alfa Rate", domain: "attendance", unit: "percent", sourceMetric: "Alfa / Expected Student-Days from date-effective enrollment and the Attendance Calendar", missingData: "Null when Expected Student-Days is zero; recorded Student-Days are reported separately." },
+  { id: "academic_average", label: "Academic average", domain: "academic", unit: "score", sourceMetric: "Academic Analytics canonical score average", missingData: "Null when the selected student has no scored result; zero scores are valid." },
+  { id: "academic_participation", label: "Academic participation", domain: "academic", unit: "percent", sourceMetric: "Academic Analytics scored results divided by expected result slots", missingData: "Null when no result slots are expected; zero scored results indicate a recording gap, not proof of nonparticipation." },
 ] as const;
 
 function rows(context: AuthContext, sql: string, params: unknown[] = []): Row[] {
@@ -40,6 +40,9 @@ function metric(
   currentSampleSize: number,
   previousSampleSize: number,
   comparisonAvailable: boolean,
+  currentRecordedStudentDays?: number,
+  previousRecordedStudentDays?: number,
+  currentObservedSampleSize?: number,
 ): StudentIndicatorValue {
   const delta = comparisonAvailable && current !== null && previous !== null ? roundPercent(current - previous) : null;
   const hasCurrent = current !== null;
@@ -48,6 +51,8 @@ function metric(
     id, label, domain, unit, current, previous, delta,
     direction: delta === null ? "insufficient_data" : delta > 0 ? "up" : delta < 0 ? "down" : "flat",
     currentSampleSize, previousSampleSize,
+    ...(currentRecordedStudentDays === undefined ? {} : { currentRecordedStudentDays, previousRecordedStudentDays: previousRecordedStudentDays ?? 0 }),
+    ...(currentObservedSampleSize === undefined ? {} : { currentObservedSampleSize }),
     dataStatus: !hasCurrent ? "not_applicable" : hasPrevious && comparisonAvailable ? "available" : "insufficient_data",
   };
 }
@@ -92,8 +97,8 @@ export function studentAcademicMeasurements(context: AuthContext, scope: Student
   };
 }
 
-function responseMetric(id: string, label: string, domain: "attendance" | "academic", unit: IndicatorUnit, current: number | null, previous: number | null, currentSampleSize: number, previousSampleSize: number, comparisonAvailable: boolean): StudentIndicatorValue {
-  return metric(id, label, domain, unit, current, previous, currentSampleSize, previousSampleSize, comparisonAvailable);
+function responseMetric(id: string, label: string, domain: "attendance" | "academic", unit: IndicatorUnit, current: number | null, previous: number | null, currentSampleSize: number, previousSampleSize: number, comparisonAvailable: boolean, currentRecordedStudentDays?: number, previousRecordedStudentDays?: number, currentObservedSampleSize?: number): StudentIndicatorValue {
+  return metric(id, label, domain, unit, current, previous, currentSampleSize, previousSampleSize, comparisonAvailable, currentRecordedStudentDays, previousRecordedStudentDays, currentObservedSampleSize);
 }
 
 export function studentIndicatorInsights(context: AuthContext, query: Row, canAttendance = true): StudentIndicatorInsightsResponse {
@@ -122,18 +127,18 @@ export function studentIndicatorInsights(context: AuthContext, query: Row, canAt
     const academics = academicByStudent.get(studentId) ?? {};
     const expected = current?.expectedStudentDays ?? 0;
     const previousExpected = previous?.expectedStudentDays ?? 0;
-    const attendance = canAttendance ? responseMetric("attendance_rate", "Attendance Rate", "attendance", "percent", current?.attendanceRate ?? null, previous?.attendanceRate ?? null, expected, previousExpected, comparisonAvailable) : null;
-    const tardiness = canAttendance ? responseMetric("tardiness_rate", "Late Event Rate", "attendance", "percent", current?.lateEventRate ?? null, previous?.lateEventRate ?? null, expected, previousExpected, comparisonAvailable) : null;
-    const alfa = canAttendance ? responseMetric("alfa_rate", "Alfa Rate", "attendance", "percent", current?.alfaRate ?? null, previous?.alfaRate ?? null, expected, previousExpected, comparisonAvailable) : null;
+    const attendance = canAttendance ? responseMetric("attendance_rate", "Attendance Rate", "attendance", "percent", current?.attendanceRate ?? null, previous?.attendanceRate ?? null, expected, previousExpected, comparisonAvailable, current?.recordedStudentDays ?? 0, previous?.recordedStudentDays ?? 0) : null;
+    const tardiness = canAttendance ? responseMetric("tardiness_rate", "Late Event Rate", "attendance", "percent", current?.lateEventRate ?? null, previous?.lateEventRate ?? null, expected, previousExpected, comparisonAvailable, current?.recordedStudentDays ?? 0, previous?.recordedStudentDays ?? 0) : null;
+    const alfa = canAttendance ? responseMetric("alfa_rate", "Alfa Rate", "attendance", "percent", current?.alfaRate ?? null, previous?.alfaRate ?? null, expected, previousExpected, comparisonAvailable, current?.recordedStudentDays ?? 0, previous?.recordedStudentDays ?? 0) : null;
     const average = academicAverage(academics);
     const participation = academicParticipation(academics);
     return {
       studentId, studentName: String(value.student_name), className: value.class_name === null ? null : String(value.class_name), jenjang: value.jenjang === null ? null : String(value.jenjang),
       attendanceRate: attendance, tardinessRate: tardiness, alfaRate: alfa,
       academicAverage: responseMetric("academic_average", "Academic average", "academic", "score", average, null, Number(academics.academic_scored_results ?? 0), 0, false),
-      academicParticipation: responseMetric("academic_participation", "Academic participation", "academic", "percent", participation, null, Number(academics.academic_expected_results ?? 0), 0, false),
+      academicParticipation: responseMetric("academic_participation", "Academic participation", "academic", "percent", participation, null, Number(academics.academic_expected_results ?? 0), 0, false, undefined, undefined, Number(academics.academic_scored_results ?? 0)),
       dataAvailability: {
-        attendance: expected > 0 ? "available" : "unavailable",
+        attendance: (current?.recordedStudentDays ?? 0) > 0 ? "available" : "unavailable",
         comparison: comparisonAvailable ? "available" : "insufficient_data",
         academic: Number(academics.academic_expected_results ?? 0) > 0 ? "available" : "unavailable",
       } as const,

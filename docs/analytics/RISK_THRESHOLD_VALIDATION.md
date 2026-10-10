@@ -36,21 +36,49 @@ The existing intervention-impact `risk_level` is scoped to already-created
 academic intervention records; it is not an At-Risk student classification and
 is outside this registry.
 
-| Indicator | Unit | Canonical source | Window | Missing value | Threshold provenance | SMP/SD applicability |
-| --- | --- | --- | --- | --- | --- | --- |
-| `attendance_rate` | percent | Present + Late over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `attendance_delta` | percentage points | current attendance rate minus previous attendance rate | current vs previous | null when either denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `tardiness_rate` | percent | Late over Present + Late | current | null when attended count is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `tardiness_delta` | percentage points | current tardiness rate minus previous tardiness rate | current vs previous | null when either attended count is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `alfa_rate` | percent | Alfa over Present + Late + Sakit + Izin + Alfa | current | null when denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `alfa_delta` | percentage points | current Alfa rate minus previous Alfa rate | current vs previous | null when either denominator is zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `academic_average` | score | non-null score sum over non-null score count | academic year | null when no scored result exists | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
-| `academic_participation` | percent | scored result slots over expected result slots | academic year | null when expected slots are zero | `NO_THRESHOLD`; needs real-case validation | technically available; needs domain validation |
+Student rows require a master-linked enrollment in the selected academic year
+and optional jenjang/class filters. Attendance applies date-effective
+enrollment, the Attendance Calendar, and effective status, so an override
+replaces the stored status. Attendance windows are the existing `rolling_4w`
+or configured `term` windows. Academic indicators are current academic-year
+measurements because grade rows have no canonical date or term axis.
 
-Attendance rates use effective status, so an attendance override replaces the
-stored status. Attendance windows are the existing `rolling_4w` or configured
-`term` windows. Academic values are current-only because grade rows have no
-canonical date or term axis.
+| Candidate | Source, formula, and window | Missingness, eligibility, and edge cases | Interpretation and validation requirement |
+| --- | --- | --- | --- |
+| `attendance_rate` | Term Attendance: Hadir / Expected Student-Days; current window | Null when expected days are zero. Late and on-time count as Hadir; Sakit, Izin, Alfa, and unrecorded expected days remain in the denominator. The API reports recorded Student-Days separately; the validation extractor treats zero recorded days as missing. | Describes observed presence over expected days. Higher is more recorded presence; no cutoff. Validate with authorized, date-bounded human-reviewed cases and inspect coverage. |
+| `attendance_delta` | Current attendance rate minus previous attendance rate; percentage points | Null without both rate values. The validation extractor also requires recorded Student-Days in both windows. Different expected-day counts stay visible in the response. | Negative means the current rate is lower; positive means it is higher. Direction is descriptive only; validate the comparison against human outcomes. |
+| `tardiness_rate` | Term Lateness: canonical Late Events / Expected Student-Days; current window | Null when expected days are zero. Events use effective status, check-in, and cutoff rules; a Late event can occur on a date outside the expected-day denominator. The validation extractor excludes a zero-event value with no recorded expected-day rows. | Describes late-event frequency per expected day, not Late among students present. Validate event quality and attendance coverage before exploring any cutoff. |
+| `tardiness_delta` | Current Late Event Rate minus previous Late Event Rate; percentage points | Null without both rate values. Validation requires recorded expected-day rows in both windows unless a nonzero Late event supplies evidence for that window. | Positive means more late events per expected day; negative means fewer. It does not establish harm or follow-up need. |
+| `alfa_rate` | Term Attendance: Alfa / Expected Student-Days; current window | Null when expected days are zero. Unrecorded expected days remain in the denominator; an explicit Alfa row is recorded evidence. Validation treats zero recorded expected-day rows as missing. | Describes Alfa days per expected day. It is not a student risk label; validate date-effective enrollment and calendar coverage. |
+| `alfa_delta` | Current Alfa Rate minus previous Alfa Rate; percentage points | Null without both values. Validation requires recorded Student-Days in both windows. | Positive means more Alfa per expected day; negative means less. No production threshold is defined. |
+| `academic_average` | Academic Analytics: sum of non-null scores / count of non-null scores; current academic year | Null without scored results. A score of zero is included; null scores are excluded. Legacy rows without a selected enrollment are out of scope. Subject mix and grade rows without a time axis limit comparison. | Describes recorded scores in the selected scope; it is not a trend or a measure of student ability. Validate subject/program applicability before comparing cases. |
+| `academic_participation` | Scored result slots / expected result slots; current academic year | Null when no expected slots exist. The response reports scored and expected counts; zero scored slots with expected slots is a recording-coverage zero, not proof that the student did not participate. | Describes score capture against the configured subject/component catalog. Do not interpret it as student engagement or risk without separate school evidence. |
+
+### Calibration factors
+
+Record these factors for each reviewed case; the current calculations do not
+adjust for them. Compare each candidate within its supported school program
+and report coverage rather than pooling unlike populations.
+
+| Candidate indicators | Potential confounders to review |
+| --- | --- |
+| `attendance_rate`, `attendance_delta`, `alfa_rate`, `alfa_delta` | Calendar closures and exceptions, date-effective enrollment and class transfers, changes in status/override practice, and incomplete attendance capture can change expected denominators or recorded meaning. |
+| `tardiness_rate`, `tardiness_delta` | Check-in device availability, arrival routines, cutoff policy changes, effective-status overrides, and late events outside expected days can change event counts or their interpretation. |
+| `academic_average` | Subject and assessment mix, score scale or difficulty, grading-period composition, and which result components were scored can change averages without a change in underlying learning. |
+| `academic_participation` | Curriculum/component catalog differences and score-entry practices can change expected slots or recorded scores; missing score capture must not be interpreted as student nonparticipation. |
+
+SMP and SD remain separate review populations unless school owners approve a
+specific comparable scope. TK/KB is descriptive-only until local attendance
+and academic measures have developmentally appropriate meaning and a separate
+review model. Do not use SMP/SD thresholds for TK/KB or treat program
+differences as correction factors.
+
+All eight values are candidates with `NO_THRESHOLD`. The validation extractor
+preserves attendance coverage, excludes attendance values with no recorded
+expected-day evidence, and treats academic participation with no scored result
+as missing for threshold evaluation. Partial coverage remains visible and must
+be reviewed; synthetic tests validate extraction/math only. No candidate has
+real-case threshold evidence or production applicability approval.
 
 The Stage 2 registry also records Attendance override prevalence as rejected
 diagnostic context, Data-quality issue count as rejected confidence context,
@@ -123,6 +151,16 @@ opaque IDs and the fields needed for review:
     "comparison": "available",
     "academic": "available"
   },
+  "attendanceCoverage": {
+    "currentExpectedStudentDays": 20,
+    "currentRecordedStudentDays": 20,
+    "previousExpectedStudentDays": 20,
+    "previousRecordedStudentDays": 20
+  },
+  "academicCoverage": {
+    "scoredResults": 2,
+    "expectedResultSlots": 4
+  },
   "indicators": {
     "attendance_rate": 80,
     "attendance_delta": -10,
@@ -149,8 +187,9 @@ label-first sheet may contain only these columns:
 case_id,program,jenjang,review_date,review_window,source_type,selection_stratum,reviewer_a_outcome,reviewer_a_reason,reviewer_b_outcome,reviewer_b_reason,consensus_outcome,temporal_integrity,indicator_data_availability
 ```
 
-After labels are locked, attach the canonical indicator values and, for each
-separate evaluation, the candidate threshold and direction. Do not add student
+After labels are locked, attach the canonical indicator values, attendance and
+academic coverage counts, and, for each separate evaluation, the candidate
+threshold and direction. Do not add student
 name, student ID, NIS, NISN, Device ID, address, parent/contact, raw history,
 or unrestricted identifying notes. `CASE-###` is an opaque local identifier;
 the private mapping never enters Git, exports shared with the repository, or
