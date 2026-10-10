@@ -396,6 +396,21 @@ compatible links that open the corresponding view.
 - Percent deltas use percentage points. API sample sizes are Expected
   Student-Days. A trend comparison without both values has `insufficient_data`
   direction and does not invent a zero.
+- Attendance trend metrics also return `currentRecordedStudentDays` and
+  `previousRecordedStudentDays`: expected Student-Days with an attendance row.
+  The page shows these counts beside each rate so an unrecorded period that
+  calculates to `0%` can be distinguished from a recorded period with zero
+  Hadir. The rate formula and its Expected Student-Days denominator do not
+  change. Academic trend sample sizes remain scored-result counts.
+- Indicator attendance values carry the same current/previous recorded-day
+  counts. `dataAvailability.attendance` is unavailable when the current window
+  has no recorded expected-day row, even if the canonical rate formula returns
+  `0%`; the Indicators page shows the row count beside the value. The
+  de-identified threshold harness treats zero-record attendance rates as
+  missing, while a nonzero Late event remains evidence, and retains coverage
+  counts for review. Academic participation
+  includes scored-result and expected-slot counts; zero scored results do not
+  by themselves establish that a student did not participate.
 
 Academic trend is available only when session-attributed scores exist for two
 adjacent grading-period categories. It compares the mean scored result in the

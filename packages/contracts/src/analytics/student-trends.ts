@@ -35,6 +35,8 @@ export const StudentTrendMetricSchema = Type.Object({
   ]),
   currentSampleSize: Type.Number({ minimum: 0 }),
   previousSampleSize: Type.Number({ minimum: 0 }),
+  currentRecordedStudentDays: Type.Optional(Type.Number({ minimum: 0 })),
+  previousRecordedStudentDays: Type.Optional(Type.Number({ minimum: 0 })),
 });
 
 export const StudentTrendWindowSchema = Type.Object({
