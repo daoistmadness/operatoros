@@ -20,6 +20,8 @@ test("@trends @analytics @release student trends compares periods and preserves 
   await expect(page.getByRole("tab", { name: "Trends", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("E2E Ada")).toBeVisible();
   await expect(page.getByText("Not available").first()).toBeVisible();
+  await expect(page.getByText(/Attendance rows: \d+\/\d+ expected Student-Days current/).first()).toBeVisible();
+  await expect(page.getByText(/Academic change compares the latest observed grading period/)).toBeVisible();
 
   const window = page.getByLabel("Comparison window", { exact: true });
   const term = page.waitForResponse((response) => {
