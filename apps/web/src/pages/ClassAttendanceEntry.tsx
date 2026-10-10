@@ -227,7 +227,7 @@ export default function ClassAttendanceEntry() {
       status: toApiAttendanceStatus(state.status),
       check_in: state.checkIn || undefined,
       check_out: state.checkOut || undefined,
-      note: state.note || undefined,
+      notes: state.note || undefined,
     }));
 
     submitMutation.mutate(entries);

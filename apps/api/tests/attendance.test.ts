@@ -82,6 +82,28 @@ describe("attendance parity slices", () => {
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 
+  it("records the prior override on self-confirm and rejects a stale decision", async () => {
+    const path = `/tmp/operatoros-self-confirm-history-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-self-confirm-history-audit-${process.pid}` } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      const create = (status: string) => app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 1, proposed_status: status, reason_code: "VERIFIED_SOURCE", explanation: "Class record verified by the operator." }) }));
+      const selfConfirm = (id: number, version: number) => app.handle(new Request(`http://local/api/attendance-corrections/${id}/self-confirm`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ expected_version: version, confirmation: "CONFIRM_CORRECTION", confirmation_note: "I verified the source record." }) }));
+      const first = await (await create("absent")).json() as any;
+      expect((await selfConfirm(first.id, 1)).status).toBe(200);
+      const firstHistory = database.client.query("SELECT previous_status, new_status, previous_values, new_values, reviewed_by FROM attendance_override_history WHERE attendance_id = 1 ORDER BY id").get() as any;
+      expect(firstHistory).toMatchObject({ previous_status: "on-time", new_status: "absent", reviewed_by: "golden-admin" });
+      expect(JSON.parse(firstHistory.previous_values)).toMatchObject({ status: "on-time", check_in: "07:30" });
+      expect(JSON.parse(firstHistory.new_values)).toMatchObject({ status: "absent" });
+
+      const second = await (await create("late")).json() as any;
+      const changed = await app.handle(new Request("http://local/api/review/attendance/1/override", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ override_status: "on-time", note: "A newer verified correction." }) }));
+      expect(changed.status).toBe(200);
+      expect((await selfConfirm(second.id, 1)).status).toBe(409);
+      expect(database.client.query("SELECT override_status FROM attendance_overrides WHERE attendance_id = 1").get()).toMatchObject({ override_status: "on-time" });
+      expect(database.client.query("SELECT state FROM attendance_correction_requests WHERE id = ?").get(second.id)).toMatchObject({ state: "STALE" });
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
+
   it("keeps early-departure policy, excuse, and history behavior", async () => {
     const path = `/tmp/operatoros-departure-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-departure-audit-${process.pid}` } });
     try {
