@@ -10,6 +10,7 @@ import {
   Loader2,
   Search,
   UploadCloud,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -1332,10 +1333,12 @@ export function StudentUpdatePanel() {
 }
 
 export default function UploadCenter() {
+  const { can } = useAuth();
+  const canImportStaff = can("import_staff");
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedSection = searchParams.get("section");
-  const sections = ["attendance", "roster", "student-update", "attention", "history", "export"] as const;
-  const mode = sections.find((section) => section === requestedSection) ?? "attendance";
+  const sections = ["attendance", "roster", "student-update", "employee", "attention", "history", "export"] as const;
+  const mode = sections.find((section) => section === requestedSection && (section !== "employee" || canImportStaff)) ?? "attendance";
   const modeRef = useRef(mode);
   modeRef.current = mode;
   const setMode = (section: string) => {
@@ -1353,7 +1356,7 @@ export default function UploadCenter() {
     <div className="space-y-6">
       <PageHeader eyebrow="Data Management" title="Data Import & Export" description="Import operational school data, resolve issues, review history, and export supported datasets from one workspace." />
       <Tabs value={mode} onValueChange={setMode}>
-        <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        <TabsList className={`grid h-auto w-full grid-cols-2 md:grid-cols-3 ${canImportStaff ? "xl:grid-cols-7" : "xl:grid-cols-6"}`}>
           <TabsTrigger value="attendance">
             <FileSpreadsheet className="mr-2 inline size-4" />
             Attendance Upload
@@ -1366,6 +1369,10 @@ export default function UploadCenter() {
             <CheckCircle2 className="mr-2 inline size-4" />
             Student Data Update
           </TabsTrigger>
+          {canImportStaff && <TabsTrigger value="employee">
+            <UserRound className="mr-2 inline size-4" />
+            Employee Import
+          </TabsTrigger>}
           <TabsTrigger value="attention">
             <BellRing className="mr-2 inline size-4" />
             Needs Attention
@@ -1394,6 +1401,21 @@ export default function UploadCenter() {
         <TabsContent value="student-update">
           <StudentUpdatePanel key={`student-update-${mode}`} />
         </TabsContent>
+        {canImportStaff && <TabsContent value="employee">
+          <Card>
+            <CardHeader>
+              <CardTitle>Employee Import</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Preview validates the Edelweiss worksheet and stages the source rows. Employee records change only after you commit the accepted rows.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Link className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground" to="/staff/import">
+                <UserRound className="size-4" />Open employee import
+              </Link>
+            </CardContent>
+          </Card>
+        </TabsContent>}
         <TabsContent value="export">
           <DataPortability embedded />
         </TabsContent>

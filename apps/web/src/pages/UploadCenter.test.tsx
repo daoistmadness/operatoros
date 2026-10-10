@@ -34,11 +34,16 @@ const blockedFeature = {
   ],
 };
 
-function renderCenter() {
+function renderCenter(capabilities: string[] = ["import_attendance", "import_staff"], initialEntry = "/upload") {
+  const context: AuthContextValue = {
+    ...auth,
+    user: { ...auth.user!, capabilities },
+    can: (capability) => capabilities.includes(capability),
+  };
   return renderToStaticMarkup(
     <QueryClientProvider client={createTestQueryClient()}>
-      <MemoryRouter>
-        <AuthContext.Provider value={auth}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <AuthContext.Provider value={context}>
           <UploadCenter />
         </AuthContext.Provider>
       </MemoryRouter>
@@ -47,6 +52,27 @@ function renderCenter() {
 }
 
 describe("Data Import & Export workspace", () => {
+  it("shows Employee Import and its route only with the import_staff capability", () => {
+    const html = renderCenter(["import_staff"], "/upload?section=employee");
+    expect(html).toContain("Employee Import");
+    expect(html).toMatch(/role="tab"[^>]*>[\s\S]*?Employee Import[\s\S]*?<\/button>/);
+    expect(html).toContain('href="/staff/import"');
+  });
+
+  it("hides Employee Import without import_staff and keeps existing navigation", () => {
+    vi.mocked(readinessQueries.useReadinessQuery).mockReturnValue({
+      data: { overall: {}, foundation: [], operational: [], features: [readyFeature], overall_status: "READY", steps: [] },
+      isPending: false, isError: false, error: null, refetch: vi.fn(),
+    } as never);
+    vi.mocked(analyticsHooks.useAnalyticsFiltersQuery).mockReturnValue({ data: filters, isPending: false, error: null, refetch: vi.fn() } as never);
+    const html = renderCenter(["import_attendance"], "/upload?section=employee");
+    expect(html).not.toContain("Employee Import");
+    expect(html).not.toContain("/staff/import");
+    expect(html).toContain("Attendance Upload");
+    expect(html).toContain("Student Roster Upload");
+    expect(html).toContain("Export");
+  });
+
   it("presents the canonical workflow tabs with Attendance Upload active", () => {
     vi.mocked(readinessQueries.useReadinessQuery).mockReturnValue({
       data: { overall: {}, foundation: [], operational: [], features: [readyFeature], overall_status: "READY", steps: [] },
