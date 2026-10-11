@@ -1,4 +1,5 @@
 import type { AuthContext } from "../auth/service";
+import { setStudentMasterStatus } from "./student-master-status";
 
 type Row = Record<string, any>;
 
@@ -45,7 +46,9 @@ function restoreFields(context: AuthContext, table: string, id: number | string,
 export function restoreStudentUpdate(context: AuthContext, before: Row, after: Row, user: string, reason: string): void {
   const fields = before.fields as string[];
   const group = (set: Set<string>) => fields.filter((field) => set.has(field));
-  restoreFields(context, "student_masters", before.studentId, [...group(profile), ...(fields.includes("full_name") ? ["normalized_name"] : [])], before.master ?? {}, user);
+  const profileFields = group(profile);
+  restoreFields(context, "student_masters", before.studentId, [...profileFields.filter((field) => field !== "student_status"), ...(fields.includes("full_name") ? ["normalized_name"] : [])], before.master ?? {}, user);
+  if (profileFields.includes("student_status")) setStudentMasterStatus(context.database.client, before.studentId, before.master?.student_status, { username: user }, "student_update_rollback", "profile_restored");
 
   for (const [table, key, changed] of [["student_addresses", "address", group(address)], ["student_contacts", "contact", group(contact)]] as const) {
     if (!changed.length || !after[key]) continue;
