@@ -39,3 +39,17 @@ test("E2E executable fixture sources reserve protected-path literals for the pre
   };
   walk(join(repository, "e2e")); expect(offenders).toEqual([]);
 });
+test("CI preserves successful E2E reset evidence for artifact upload", () => {
+  const smoke = readFileSync(join(repository, "e2e/run-smoke.sh"), "utf8");
+  const workflow = readFileSync(join(repository, ".github/workflows/e2e-full.yml"), "utf8");
+  expect(smoke).toContain('OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS:-');
+  expect(workflow).toContain('OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS: "true"');
+  expect(workflow).toContain("e2e-results/database-before.json");
+  expect(workflow).toContain("e2e-results/database-after.json");
+  expect(workflow).toContain("e2e-results/junit/");
+});
+test("CI setup reads mise's version field and installs dependencies before checking Turbo", () => {
+  const setup = readFileSync(join(repository, ".github/actions/setup-bun/action.yml"), "utf8");
+  expect(setup).toContain("mise --version | awk '{print $1}'");
+  expect(setup.indexOf("bun install --frozen-lockfile")).toBeLessThan(setup.indexOf("bun run turbo:version"));
+});
