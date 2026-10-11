@@ -459,13 +459,12 @@ export default function ClassAttendanceEntry() {
         ) : (
           <div>
             {/* Desktop Table View (>= 768px) */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto" data-testid="class-attendance-roster-scroll">
               <table className="w-full text-left text-sm text-slate-700">
                 <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                   <tr>
-                    <th className="px-4 py-3 w-12">No</th>
-                    <th className="px-4 py-3 min-w-[200px]">Nama Siswa</th>
-                    <th className="px-4 py-3 min-w-[320px]">Status Absensi</th>
+                    <th data-testid="attendance-student-identity-header" className="sticky left-0 z-20 w-[220px] min-w-[220px] max-w-[220px] bg-slate-50 px-4 py-3">Nama Siswa</th>
+                    <th data-testid="attendance-status-header" className="sticky left-[220px] z-20 w-[320px] min-w-[320px] max-w-[320px] bg-slate-50 px-4 py-3">Status Absensi</th>
                     <th className="px-4 py-3 w-28">Scan Masuk</th>
                     <th className="px-4 py-3 w-28">Scan Pulang</th>
                     <th className="px-4 py-3 min-w-[150px]">Catatan</th>
@@ -484,12 +483,12 @@ export default function ClassAttendanceEntry() {
                     const paperBookVerified = paperBookStatus || currentState.paperBookVerification;
 
                     return (
-                      <tr key={st.student_id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-xs text-slate-400 font-mono">{idx + 1}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">
-                          <div>{st.student_name}</div>
+                      <tr key={st.student_id} className="group hover:bg-slate-50 transition-colors">
+                        <td data-testid="attendance-student-identity" className="sticky left-0 z-20 w-[220px] min-w-[220px] max-w-[220px] bg-white px-4 py-3 font-semibold text-slate-900 group-hover:bg-slate-50">
+                          <div className="break-words [overflow-wrap:anywhere]">{st.student_name}</div>
+                          <div className="mt-1 text-[11px] font-normal font-mono text-slate-500">#{idx + 1} · ID {st.student_id}</div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="sticky left-[220px] z-10 w-[320px] min-w-[320px] max-w-[320px] bg-white px-4 py-3 group-hover:bg-slate-50">
                           {currentState.unsupportedStatus && <p role="alert" className="mb-1 text-xs text-rose-700">Stored status “{currentState.unsupportedStatus}” is unsupported. Choose a replacement explicitly.</p>}
                           <div className="flex flex-wrap items-center gap-1.5">
                             {(["on-time", "late", "incomplete", "sick", "leave", "absent", "alfa"] as AttendanceStatus[]).map((stKey) => {
@@ -563,7 +562,10 @@ export default function ClassAttendanceEntry() {
                       <span className="text-xs font-bold text-slate-400">#{idx + 1}</span>
                     </div>
 
-                    <div className="font-semibold text-slate-900 text-sm">{st.student_name}</div>
+                    <div>
+                      <div className="font-semibold text-slate-900 text-sm break-words [overflow-wrap:anywhere]">{st.student_name}</div>
+                      <div className="mt-1 text-[11px] font-normal font-mono text-slate-500">#{idx + 1} · ID {st.student_id}</div>
+                    </div>
 
                     {/* Status Button Grid */}
                     {currentState.unsupportedStatus && <p role="alert" className="text-xs text-rose-700">Stored status “{currentState.unsupportedStatus}” is unsupported. Choose a replacement explicitly.</p>}
