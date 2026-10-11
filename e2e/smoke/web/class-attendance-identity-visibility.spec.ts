@@ -30,7 +30,7 @@ async function login(page: Page) {
 }
 
 test("@attendance @correction-identity @release keeps synthetic roster identity visible while editing", async ({ page }) => {
-  let submitted: SubmittedPayload | null = null;
+  let submittedEntries: SubmittedPayload["entries"] = [];
   await page.setViewportSize({ width: 1280, height: 720 });
   await login(page);
 
@@ -60,7 +60,7 @@ test("@attendance @correction-identity @release keeps synthetic roster identity 
   }));
   await page.route(`**/api/attendance/classes/${classId}/dates/${attendanceDate}/entries`, async (route) => {
     const body = route.request().postDataJSON() as SubmittedPayload;
-    submitted = body;
+    submittedEntries = body.entries;
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -143,7 +143,7 @@ test("@attendance @correction-identity @release keeps synthetic roster identity 
   await page.getByRole("button", { name: "Simpan Absensi" }).click();
   expect((await saveResponse).status()).toBe(200);
   await expect(page.getByText("Berhasil menyimpan 1 data absensi.", { exact: true })).toBeVisible();
-  expect(submitted?.entries).toEqual([{ student_id: 10078, status: "sakit", notes: verificationNote, source: "PAPER_BOOK_VERIFICATION" }]);
+  expect(submittedEntries).toEqual([{ student_id: 10078, status: "sakit", notes: verificationNote, source: "PAPER_BOOK_VERIFICATION" }]);
   const savedUrl = new URL(page.url());
   expect(savedUrl.searchParams.get("class_id")).toBe(String(classId));
   expect(savedUrl.searchParams.get("date")).toBe(attendanceDate);
