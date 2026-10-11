@@ -61,6 +61,16 @@ describe("core CRUD parity slices", () => {
       const enrollment = await app.handle(new Request("http://local/api/student-enrollments/student/11111111-1111-1111-1111-111111111111", { headers: auth }));
       expect(enrollment.status).toBe(200);
       expect(await enrollment.json()).toHaveLength(2);
+      database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES (?, ?, ?, 'graduated')", ["44444444-4444-4444-4444-444444444444", "Reactivation Student", "reactivation student"]);
+      const year = database.client.query("SELECT id, start_date FROM academic_years ORDER BY start_date DESC LIMIT 1").get() as { id: number; start_date: string };
+      const classRow = database.client.query("SELECT id FROM academic_classes WHERE academic_year_id = ? ORDER BY id LIMIT 1").get(year.id) as { id: number };
+      const createEnrollment = () => app.handle(new Request("http://local/api/student-enrollments/student/44444444-4444-4444-4444-444444444444", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ academic_year_id: year.id, academic_class_id: classRow.id, effective_from: year.start_date }) }));
+      expect(await (await createEnrollment()).json()).toMatchObject({ detail: { code: "STUDENT_REACTIVATION_REQUIRED" } });
+      expect((await createEnrollment()).status).toBe(409);
+      const reactivate = await app.handle(new Request("http://local/api/student-masters/44444444-4444-4444-4444-444444444444/profile", { method: "PATCH", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ identity: { full_name: "Reactivation Student", student_status: "active" } }) }));
+      expect(reactivate.status).toBe(200);
+      expect(database.client.query("SELECT old_value, new_value, changed_by FROM student_master_change_history WHERE student_master_id = ? AND field_name = 'student_status'").get("44444444-4444-4444-4444-444444444444")).toMatchObject({ old_value: "graduated", new_value: "active", changed_by: "golden-admin" });
+      expect((await createEnrollment()).status).toBe(201);
       const staff = await app.handle(new Request("http://local/api/staff?status=ALL", { headers: auth }));
       expect(staff.status).toBe(200);
       expect(await staff.json()).toMatchObject({ total: 0, counts: { ALL: 0 } });

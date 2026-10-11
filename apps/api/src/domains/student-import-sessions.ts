@@ -4,6 +4,7 @@ import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
 import { restoreStudentUpdate, studentUpdateState } from "./student-update-rollback";
+import { setStudentMasterStatus } from "./student-master-status";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -130,7 +131,7 @@ function commitRollback(context: AuthContext, session: Row, user: Row, body: Row
           const student = row(context, "SELECT * FROM student_masters WHERE id = ?", [action.entity_id]);
           const device = student ? row(context, "SELECT legacy_student_id FROM student_device_identities WHERE student_master_id = ? LIMIT 1", [student.id]) : null;
           const attendanceCount = device?.legacy_student_id == null ? 0 : Number((row(context, "SELECT COUNT(*) AS count FROM attendance WHERE student_id = ?", [device.legacy_student_id]) as Row).count);
-          if (student && attendanceCount === 0) { const id = appendCompensation(context, session, user, action, "COMPENSATE_CREATE_STUDENT_MASTER", "STUDENT_MASTER", String(student.id), { student_status: student.student_status }, { student_status: "inactive" }, "STATUS_INACTIVE"); context.database.client.run("UPDATE student_masters SET student_status = 'inactive', updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [user.username, student.id]); compensated++; compensationActions.push(id); }
+          if (student && attendanceCount === 0) { const id = appendCompensation(context, session, user, action, "COMPENSATE_CREATE_STUDENT_MASTER", "STUDENT_MASTER", String(student.id), { student_status: student.student_status }, { student_status: "inactive" }, "STATUS_INACTIVE"); setStudentMasterStatus(context.database.client, student.id, "inactive", user, "student_import_rollback", "student_status_changed"); compensated++; compensationActions.push(id); }
         } else if (action.action_type === "UPDATE_STUDENT_PROFILE") {
           const student = row(context, "SELECT * FROM student_masters WHERE id = ?", [action.entity_id]); const before = parse(action.before_state);
           if (student && before) { const after = parse(action.after_state) ?? {}; const id = appendCompensation(context, session, user, action, "COMPENSATE_UPDATE_STUDENT_PROFILE", "STUDENT_MASTER", String(student.id), after, before, "RESTORE_PROFILE"); const updates = ["full_name", "gender", "birth_place", "birth_date"].filter((field) => before[field] !== undefined); if (updates.length) context.database.client.run(`UPDATE student_masters SET ${updates.map((field) => `${field} = ?`).join(", ")}, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...updates.map((field) => before[field]), user.username, student.id]); compensated++; compensationActions.push(id); }
