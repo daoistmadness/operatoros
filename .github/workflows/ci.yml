@@ -7,45 +7,68 @@ on:
       - main
       - master
       - develop
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 3"
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   api:
-    # Keep required CI deterministic while ubuntu-latest migrates to Ubuntu 26.04.
-    runs-on: ubuntu-24.04
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
     defaults:
       run:
-        shell: bash
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v4
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          cache: true
-      - name: Cache Bun package downloads
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-1.4.2-
-      - name: Cache Turbo task results
-        uses: actions/cache@v5
+          persist-credentials: false
+      - name: Fetch main for doctor validation
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Prepare disposable doctor database
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/doctor-data
+        run: |
+          mkdir -p "$OPERATOROS_DATA_DIR"
+          expected_schema="$(bun packages/db/src/schema-version-cli.ts --format current)"
+          bun packages/db/src/dev-db-cli.ts ensure \
+            --repo . \
+            --data-dir "$OPERATOROS_DATA_DIR" \
+            --expected-schema "$expected_schema"
+      - name: Verify canonical toolchain and disposable runtime
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/doctor-data
+        run: mise run doctor
+      - name: Restore Turbo task results
+        id: turbo-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock', 'eslint.config.mjs', 'scripts/check-architecture.ts', 'scripts/check-typebox-resolution.ts') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-turbo-2.11.4-
-      - name: Verify mise toolchain
-        run: |
-          mise --version
-          bun --version | grep -Eq "^1\.4\."
-          mise ls --current
-      - name: Install workspace dependencies (frozen lockfile)
-        working-directory: ${{ github.workspace }}
-        run: bun install --frozen-lockfile
+            ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-
       - name: Dependency security audit
         working-directory: ${{ github.workspace }}
         run: bun run security:audit
@@ -55,14 +78,7 @@ jobs:
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
-      - name: Verify hk and Turbo toolchain
-        working-directory: ${{ github.workspace }}
-        env:
-          HK_MISE: "1"
-        run: |
-          hk --version | grep -Eq "^hk 1\.56\.1$"
-          bun run turbo:version | grep -Eq "^2\.11\.4$"
-      - name: Validate hk checks
+      - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
           HK_MISE: "1"
@@ -72,7 +88,8 @@ jobs:
         run: |
           started_at=$(date +%s)
           bun run turbo:check
-          echo "[CI timing] Turbo check: $(( $(date +%s) - started_at ))s"
+          elapsed=$(( $(date +%s) - started_at ))
+          echo "turbo_check_elapsed_seconds=$elapsed" >> "$GITHUB_STEP_SUMMARY"
       - name: Validate Turbo invalidation proofs
         working-directory: ${{ github.workspace }}
         run: bun run test:turbo
@@ -94,7 +111,7 @@ jobs:
           server_pid=$!
           cleanup() { kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; }
           trap cleanup EXIT
-          for attempt in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl --fail --silent http://127.0.0.1:8090/health >/dev/null && break
             if ! kill -0 "$server_pid" 2>/dev/null; then
               cat "$log_file"
@@ -113,34 +130,34 @@ jobs:
       - name: Contract boundary check
         working-directory: ${{ github.workspace }}
         run: bun run check:contracts
+      - name: Save Turbo task results
+        if: ${{ success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
+      - name: Report Turbo cache result
+        if: always()
+        env:
+          TURBO_CACHE_HIT: ${{ steps.turbo-cache.outputs.cache-hit }}
+        run: |
+          echo "- Turbo task cache exact hit: \`${TURBO_CACHE_HIT:-false}\`" >> "$GITHUB_STEP_SUMMARY"
 
   frontend:
-    runs-on: ubuntu-24.04
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
     defaults:
       run:
-        shell: bash
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v4
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          cache: true
-      - name: Cache Bun package downloads
-        uses: actions/cache@v5
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-1.4.2-
-      - name: Verify Bun runtime and contract
-        run: |
-          mise --version
-          bun --version | grep -Eq "^1\.4\."
-          mise ls --current
-      - name: Install dependencies (frozen lockfile)
-        working-directory: ${{ github.workspace }}
-        run: bun install --frozen-lockfile
-      - name: Dependency deduplication check
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Dependency consistency check
         run: bun --filter @operatoros/web check:dependencies
       - name: UI boundary check
         working-directory: ${{ github.workspace }}
@@ -149,21 +166,79 @@ jobs:
         run: bun --filter @operatoros/web boundaries:test
       - name: OpenAPI contract drift check
         run: bun --filter @operatoros/web api:check
-
-  docs:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v4
-        with:
-          cache: true
-      - name: Verify docs toolchain
-        run: |
-          mise --version
-          bun --version
       - name: Validate relative Markdown links
+        working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-markdown-links.ts
       - name: Test documentation checker fixtures
+        working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/docs-checkers.test.ts
       - name: Validate current developer commands
+        working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
+
+  release:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name: Full release validation
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Fetch main for doctor validation
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Prepare disposable development database
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/data
+        run: |
+          mkdir -p "$OPERATOROS_DATA_DIR"
+          expected_schema="$(bun packages/db/src/schema-version-cli.ts --format current)"
+          bun packages/db/src/dev-db-cli.ts ensure \
+            --repo . \
+            --data-dir "$OPERATOROS_DATA_DIR" \
+            --expected-schema "$expected_schema"
+      - name: Verify canonical toolchain and disposable runtime
+        env:
+          OPERATOROS_DATA_DIR: ${{ runner.temp }}/operatoros/data
+        run: mise run doctor
+      - name: Restore Playwright Chromium
+        id: playwright-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ubuntu-26.04-${{ runner.arch }}-playwright-${{ hashFiles('apps/web/package.json', 'bun.lock') }}
+      - name: Install Playwright Chromium and Ubuntu dependencies
+        working-directory: apps/web
+        run: bun run --bun playwright install --with-deps chromium
+      - name: Save Playwright Chromium
+        if: ${{ success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ubuntu-26.04-${{ runner.arch }}-playwright-${{ hashFiles('apps/web/package.json', 'bun.lock') }}
+      - name: Run full release validation
+        run: mise run check:full
+      - name: Report full validation summary
+        if: always()
+        run: |
+          if [[ -f e2e-results/summary.txt ]]; then
+            cat e2e-results/summary.txt >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "- Playwright browser cache exact hit: \`${PLAYWRIGHT_CACHE_HIT:-false}\`" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PLAYWRIGHT_CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
+      - name: Upload full validation failure evidence
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-full-validation-failure-evidence
+          path: |
+            e2e-results/summary.txt
+            e2e-results/database-before.json
+            e2e-results/database-after.json
+            e2e-results/logs/
+            e2e-results/junit/
+            e2e-results/playwright/
+          if-no-files-found: warn
+          retention-days: 7

@@ -8,28 +8,24 @@ on:
 permissions:
   contents: read
 
+cache-mode: read
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   audit:
-    # Keep required security validation deterministic during the runner migration.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
-      - uses: jdx/mise-action@v4
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          cache: true
-      - name: Cache Bun package downloads
-        uses: actions/cache@v5
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-1.4.2-
-      - name: Verify toolchain
-        run: |
-          mise --version
-          test "$(bun --version)" = "1.4.2"
-          hk --version | grep -Eq "^hk 1\\.56\\.1$"
-      - name: Install workspace dependencies
-        run: bun install --frozen-lockfile
+          cache-write: "false"
       - name: Run dependency security audit
         run: bun run security:audit

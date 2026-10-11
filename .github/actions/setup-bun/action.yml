@@ -1,0 +1,65 @@
+name: Set up OperatorOS toolchain
+description: Install the locked mise tools and workspace dependencies.
+inputs:
+  cache-write:
+    description: Allow trusted runs to save setup caches.
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Restore checksummed mise downloads
+      id: mise-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/mise/downloads-cas
+        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-${{ hashFiles('mise.toml', 'mise.lock') }}
+    - name: Install mise toolchain
+      uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+      with:
+        version: 2026.10.3
+        working_directory: ${{ github.workspace }}
+        cache: false
+    - name: Restore Bun package downloads
+      id: bun-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
+    - name: Verify toolchain and install workspace dependencies
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        set -euo pipefail
+        mise --version
+        test "$(mise --version | awk '{print $2}')" = "2026.10.3"
+        test "$(bun --version)" = "1.4.2"
+        test "$(hk --version)" = "hk 1.56.1"
+        test "$(node --version)" = "v24.19.0"
+        test "$(bun run turbo:version)" = "2.11.4"
+        mise ls --current
+        bun install --frozen-lockfile
+    - name: Save checksummed mise downloads
+      if: ${{ inputs['cache-write'] == 'true' && success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/mise/downloads-cas
+        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-${{ hashFiles('mise.toml', 'mise.lock') }}
+    - name: Save Bun package downloads
+      if: ${{ inputs['cache-write'] == 'true' && success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
+    - name: Report setup cache hits
+      if: always()
+      shell: bash
+      env:
+        MISE_CACHE_HIT: ${{ steps.mise-cache.outputs.cache-hit }}
+        BUN_CACHE_HIT: ${{ steps.bun-cache.outputs.cache-hit }}
+      run: |
+        {
+          echo "### CI setup cache"
+          echo "- mise tool cache exact hit: \`${MISE_CACHE_HIT:-false}\`"
+          echo "- Bun package cache exact hit: \`${BUN_CACHE_HIT:-false}\`"
+        } >> "$GITHUB_STEP_SUMMARY"

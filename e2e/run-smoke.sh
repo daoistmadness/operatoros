@@ -142,8 +142,12 @@ bun "$repo_root/e2e/helpers/write-summary.ts" \
   "${failed_args[@]}" "${evidence_args[@]}"
 cat "$results/summary.txt"
 if [[ "$status" == PASS ]]; then
-  bash "$repo_root/e2e/clean.sh"
-  echo "successful_run_artifacts=removed"
+  if [[ "${OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS:-}" == "true" ]]; then
+    echo "successful_run_artifacts=preserved"
+  else
+    bash "$repo_root/e2e/clean.sh"
+    echo "successful_run_artifacts=removed"
+  fi
 else
   echo "failure_artifacts=$results"
   exit 1
