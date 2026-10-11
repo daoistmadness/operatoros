@@ -32,13 +32,13 @@ runs:
       run: |
         set -euo pipefail
         mise --version
-        test "$(mise --version | awk '{print $2}')" = "2026.10.3"
+        test "$(mise --version | awk '{print $1}')" = "2026.10.3"
         test "$(bun --version)" = "1.4.2"
         test "$(hk --version)" = "hk 1.56.1"
         test "$(node --version)" = "v24.19.0"
-        test "$(bun run turbo:version)" = "2.11.4"
         mise ls --current
         bun install --frozen-lockfile
+        test "$(bun run turbo:version)" = "2.11.4"
     - name: Save checksummed mise downloads
       if: ${{ inputs['cache-write'] == 'true' && success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
