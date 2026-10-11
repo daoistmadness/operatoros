@@ -14,6 +14,7 @@ for (const name of variables.stdout.toString().trim().split("\n")) delete cleanE
 function git(repo: string, ...args: string[]) {
   const result = Bun.spawnSync(["git", "-C", repo, ...args], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+  return result.stdout.toString().trim();
 }
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "operatoros-test-scope-")); roots.push(root);
@@ -106,5 +107,72 @@ describe("Git change discovery", () => {
       env: { ...cleanEnv, GIT_DIR: join(outer, ".git"), GIT_WORK_TREE: outer, GIT_COMMON_DIR: join(outer, ".git"), GIT_INDEX_FILE: join(outer, ".git/index"), GIT_PREFIX: "" }, stdout: "pipe", stderr: "pipe",
     });
     expect(result.exitCode).toBe(0); expect(JSON.parse(result.stdout.toString()).changed_paths).toEqual(["selected.ts"]);
+  });
+});
+
+describe("E2E workflow scope selection", () => {
+  const selector = join(repository, ".github/scripts/select-e2e-scope.sh");
+
+  function runSelector(repo: string, baseSha?: string, event = "pull_request") {
+    const output = join(repo, "github-output");
+    const summary = join(repo, "github-summary");
+    const result = Bun.spawnSync(["bash", selector], {
+      cwd: repo,
+      env: { ...cleanEnv, BASE_SHA: baseSha ?? "", GITHUB_EVENT_NAME: event, GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary },
+      stdout: "pipe", stderr: "pipe",
+    });
+    return { result, output: existsSync(output) ? readFileSync(output, "utf8") : "", summary: existsSync(summary) ? readFileSync(summary, "utf8") : "" };
+  }
+
+  function commitPath(repo: string, path: string, content = "synthetic change\n") {
+    const target = join(repo, path);
+    mkdirSync(join(target, ".."), { recursive: true });
+    writeFileSync(target, content);
+    git(repo, "add", "--", path);
+    git(repo, "-c", "user.name=Synthetic Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", `change ${path}`);
+  }
+
+  test.each([
+    ["apps/api/src/change.ts", true],
+    ["apps/web/src/change.tsx", true],
+    ["packages/contracts/src/change.ts", true],
+    ["bun.lock", true],
+    [".github/workflows/e2e-full.yml", true],
+    [".github/actions/setup-bun/action.yml", true],
+    ["unclassified.input", true],
+    ["docs/example.json", true],
+    ["docs/guide.md", false],
+    [".github/dependabot.yml", false],
+    ["hk.pkl", false],
+  ])("%s selects E2E=%s", (path, expected) => {
+    const repo = fixture();
+    const base = git(repo, "rev-parse", "HEAD");
+    commitPath(repo, path);
+    const selected = runSelector(repo, base);
+    expect(selected.result.exitCode).toBe(0);
+    expect(selected.output).toContain(`run-e2e=${expected}`);
+  });
+
+  test("product-to-documentation rename remains E2E-relevant", () => {
+    const repo = fixture();
+    commitPath(repo, "apps/api/src/behavior.ts", "same synthetic contents\n");
+    const base = git(repo, "rev-parse", "HEAD");
+    mkdirSync(join(repo, "docs"), { recursive: true });
+    git(repo, "mv", "apps/api/src/behavior.ts", "docs/behavior.md");
+    git(repo, "-c", "user.name=Synthetic Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "move behavior to docs");
+    const selected = runSelector(repo, base);
+    expect(selected.result.exitCode).toBe(0);
+    expect(selected.output).toContain("run-e2e=true");
+  });
+
+  test.each([
+    ["missing base", "", "pull_request"],
+    ["invalid base", "deadbeef", "pull_request"],
+    ["manual dispatch", "", "workflow_dispatch"],
+  ])("%s fails closed", (_label, base, event) => {
+    const repo = fixture();
+    const selected = runSelector(repo, base, event);
+    expect(selected.result.exitCode).toBe(0);
+    expect(selected.output).toContain("run-e2e=true");
   });
 });
