@@ -10,6 +10,15 @@ checks against `origin/main`, and `mise run check:full` for the Tier 3
 release-sensitive gate. Use `mise run doctor` for read-only environment
 diagnostics.
 
+For OCI build and runtime verification, use `mise run podman:doctor`,
+`mise run podman:build`, and `mise run podman:smoke`. Containerized development
+is an optional rootless Quadlet mode; `mise run podman:dev:smoke` verifies the
+loopback publication, actual tailnet HTTPS/WSS route, API proxy, host rejection,
+and restart behavior. These checks use the committed `containers/Containerfile`
+and disposable data. Native Bun and Vite remain the interactive development
+workflow and do not require Podman. See [Podman and release integration](../deployment/PODMAN_INTEGRATION.md)
+for host ownership and deployment limits.
+
 ## Identify the running checkout
 
 `./start-dev.sh` prints the repository path, branch, commit, working-tree

@@ -1,0 +1,42 @@
+[Unit]
+Description=OperatorOS development API
+Requires=operatoros-dev-pod.service operatoros-dev-data-volume.service operatoros-dev-node-modules-volume.service
+After=operatoros-dev-pod.service operatoros-dev-data-volume.service operatoros-dev-node-modules-volume.service
+StartLimitIntervalSec=60s
+StartLimitBurst=3
+
+[Container]
+ContainerName=operatoros-dev-api
+Image=operatoros-dev.build
+Pod=operatoros-dev.pod
+StartWithPod=false
+Volume=%h/code/repos/operatoros:/workspace/operatoros:ro
+Volume=operatoros-dev-node-modules.volume:/workspace/operatoros/node_modules:U
+Volume=operatoros-dev-data.volume:/var/lib/operatoros:U
+Environment=HOST=0.0.0.0
+Environment=PORT=8090
+Environment=NODE_ENV=development
+Environment=OPERATOROS_DATA_DIR=/var/lib/operatoros
+Environment=ENABLE_DESTRUCTIVE_OPERATIONS=false
+Environment=ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://oprserver.taile856.ts.net:8444
+EnvironmentFile=%h/.config/operatoros-dev/api.env
+Exec=/usr/local/bin/operatoros-dev-entrypoint api
+HealthCmd=/usr/local/bin/operatoros-dev-healthcheck api
+HealthInterval=10s
+HealthTimeout=3s
+HealthStartPeriod=30s
+HealthRetries=3
+HealthOnFailure=kill
+Notify=healthy
+NoNewPrivileges=true
+ReadOnly=true
+ReadOnlyTmpfs=true
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=180s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=default.target

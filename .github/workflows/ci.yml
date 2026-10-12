@@ -77,7 +77,7 @@ jobs:
         run: bun run test:security
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
-        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
+        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts scripts/tests/podman-contract.test.ts
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
@@ -175,6 +175,119 @@ jobs:
       - name: Validate current developer commands
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
+
+  podman-images:
+    if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event_name == 'merge_group'
+    needs: [api, frontend]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+      - name: Set up locked Bun toolchain and database bootstrap dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Verify rootless Podman
+        id: podman-doctor
+        run: |
+          mise run podman:doctor
+          test "$(podman info --format '{{.Host.Security.Rootless}}')" = true
+      - name: Build production OCI images and run loopback smoke test
+        id: podman-gate
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+          OPERATOROS_DIAGNOSTICS_FILE: ${{ runner.temp }}/operatoros-container-diagnostics.txt
+        run: |
+          mise run podman:build
+          mise run podman:smoke
+      - name: Scan OCI images and generate CycloneDX SBOMs
+        id: podman-security
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+          OPERATOROS_SECURITY_OUTPUT: ${{ runner.temp }}/operatoros-security
+          TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+        run: mise run podman:security
+      - name: Export verified OCI release artifacts
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/operatoros-release"
+          podman save --format oci-archive --output "$RUNNER_TEMP/operatoros-release/operatoros-api.oci" "localhost/operatoros-api:$OPERATOROS_IMAGE_TAG"
+          podman save --format oci-archive --output "$RUNNER_TEMP/operatoros-release/operatoros-web.oci" "localhost/operatoros-web:$OPERATOROS_IMAGE_TAG"
+          cp "$RUNNER_TEMP/operatoros-security/operatoros-api.cdx.json" "$RUNNER_TEMP/operatoros-release/"
+          cp "$RUNNER_TEMP/operatoros-security/operatoros-web.cdx.json" "$RUNNER_TEMP/operatoros-release/"
+          (cd "$RUNNER_TEMP/operatoros-release" && sha256sum operatoros-api.oci operatoros-web.oci operatoros-api.cdx.json operatoros-web.cdx.json > oci-archives.sha256)
+      - name: Upload verified OCI release artifacts
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-oci-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-release/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Collect sanitized Podman diagnostics
+        if: failure()
+        id: podman-diagnostics
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          set +e
+          diagnostics="$RUNNER_TEMP/operatoros-podman-diagnostics.txt"
+          {
+            echo "event=${GITHUB_EVENT_NAME}"
+            echo "sha=${GITHUB_SHA}"
+            echo "doctor=${{ steps.podman-doctor.outcome }}"
+            echo "build_and_smoke=${{ steps.podman-gate.outcome }}"
+            echo "security_scan=${{ steps.podman-security.outcome }}"
+            podman info --format 'version={{.Version.Version}} rootless={{.Host.Security.Rootless}} storage={{.Store.GraphDriverName}} cgroups={{.Host.CgroupsVersion}}'
+            podman ps --all --format '{{.Names}} {{.Status}} {{.Image}}' | grep -E '^operatoros-(api|web)-smoke-' || true
+            if [[ -f "$RUNNER_TEMP/operatoros-container-diagnostics.txt" ]]; then cat "$RUNNER_TEMP/operatoros-container-diagnostics.txt"; fi
+            for image in "localhost/operatoros-api:$OPERATOROS_IMAGE_TAG" "localhost/operatoros-web:$OPERATOROS_IMAGE_TAG"; do
+              if podman image exists "$image"; then
+                podman image inspect "$image" --format '{{.RepoTags}} {{.Digest}}'
+              else
+                echo "image_unavailable=$image"
+              fi
+            done
+          } >"$diagnostics" 2>&1
+          cat "$diagnostics"
+      - name: Upload sanitized Podman diagnostics
+        if: failure() && steps.podman-diagnostics.outcome == 'success'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: podman-ci-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-podman-diagnostics.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report Podman OCI gate result
+        if: always()
+        env:
+          GATE_RESULT: ${{ job.status }}
+          DOCTOR_RESULT: ${{ steps.podman-doctor.outcome }}
+          BUILD_SMOKE_RESULT: ${{ steps.podman-gate.outcome }}
+          SECURITY_RESULT: ${{ steps.podman-security.outcome }}
+        run: |
+          {
+            echo '### Podman OCI build and smoke'
+            echo "- Job result: **${GATE_RESULT}**"
+            echo "- Rootless Podman check: \`${DOCTOR_RESULT:-skipped}\`"
+            echo "- Build and smoke tasks: \`${BUILD_SMOKE_RESULT:-skipped}\`"
+            echo "- Image vulnerability and secret scan: \`${SECURITY_RESULT:-skipped}\`"
+            echo '- Runner: Ubuntu 26.04; Podman is the only container engine.'
+            echo '- Database: disposable bootstrap using canonical SQLite schema `20261002_s48` (S4.8).'
+            echo '- Scan gate: HIGH/CRITICAL image vulnerabilities and embedded secrets fail the job.'
+            echo '- CycloneDX SBOMs are generated; OCI artifacts are exported only for a successful main push.'
+            echo '- PR and merge-group jobs receive no registry write credential and never publish images.'
+            if [[ "$GATE_RESULT" != success ]]; then
+              echo '- Sanitized Podman diagnostics are attached as a workflow artifact when collection succeeds.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   release:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
