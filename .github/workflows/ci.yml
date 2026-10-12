@@ -77,7 +77,7 @@ jobs:
         run: bun run test:security
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
-        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
+        run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts scripts/tests/podman-contract.test.ts
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
@@ -175,6 +175,232 @@ jobs:
       - name: Validate current developer commands
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
+
+  podman-images:
+    if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event_name == 'merge_group'
+    needs: [api, frontend]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+      - name: Set up locked Bun toolchain and database bootstrap dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Verify rootless Podman
+        id: podman-doctor
+        run: |
+          mise run podman:doctor
+          test "$(podman info --format '{{.Host.Security.Rootless}}')" = true
+      - name: Build production OCI images and run loopback smoke test
+        id: podman-gate
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+          OPERATOROS_DIAGNOSTICS_FILE: ${{ runner.temp }}/operatoros-container-diagnostics.txt
+        run: |
+          mise run podman:build
+          mise run podman:smoke
+      - name: Scan OCI images and generate CycloneDX SBOMs
+        id: podman-security
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+          OPERATOROS_SECURITY_OUTPUT: ${{ runner.temp }}/operatoros-security
+          TRIVY_CACHE_DIR: ${{ runner.temp }}/trivy-cache
+        run: mise run podman:security
+      - name: Export verified OCI release artifacts
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/operatoros-release"
+          podman save --format oci-archive --output "$RUNNER_TEMP/operatoros-release/operatoros-api.oci" "localhost/operatoros-api:$OPERATOROS_IMAGE_TAG"
+          podman save --format oci-archive --output "$RUNNER_TEMP/operatoros-release/operatoros-web.oci" "localhost/operatoros-web:$OPERATOROS_IMAGE_TAG"
+          cp "$RUNNER_TEMP/operatoros-security/operatoros-api.cdx.json" "$RUNNER_TEMP/operatoros-release/"
+          cp "$RUNNER_TEMP/operatoros-security/operatoros-web.cdx.json" "$RUNNER_TEMP/operatoros-release/"
+          (cd "$RUNNER_TEMP/operatoros-release" && sha256sum operatoros-api.oci operatoros-web.oci > oci-archives.sha256)
+      - name: Upload verified OCI release artifacts
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-oci-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-release/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Collect sanitized Podman diagnostics
+        if: failure()
+        id: podman-diagnostics
+        env:
+          OPERATOROS_IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          set +e
+          diagnostics="$RUNNER_TEMP/operatoros-podman-diagnostics.txt"
+          {
+            echo "event=${GITHUB_EVENT_NAME}"
+            echo "sha=${GITHUB_SHA}"
+            echo "doctor=${{ steps.podman-doctor.outcome }}"
+            echo "build_and_smoke=${{ steps.podman-gate.outcome }}"
+            echo "security_scan=${{ steps.podman-security.outcome }}"
+            podman info --format 'version={{.Version.Version}} rootless={{.Host.Security.Rootless}} storage={{.Store.GraphDriverName}} cgroups={{.Host.CgroupsVersion}}'
+            podman ps --all --format '{{.Names}} {{.Status}} {{.Image}}' | grep -E '^operatoros-(api|web)-smoke-' || true
+            if [[ -f "$RUNNER_TEMP/operatoros-container-diagnostics.txt" ]]; then cat "$RUNNER_TEMP/operatoros-container-diagnostics.txt"; fi
+            for image in "localhost/operatoros-api:$OPERATOROS_IMAGE_TAG" "localhost/operatoros-web:$OPERATOROS_IMAGE_TAG"; do
+              if podman image exists "$image"; then
+                podman image inspect "$image" --format '{{.RepoTags}} {{.Digest}}'
+              else
+                echo "image_unavailable=$image"
+              fi
+            done
+          } >"$diagnostics" 2>&1
+          cat "$diagnostics"
+      - name: Upload sanitized Podman diagnostics
+        if: failure() && steps.podman-diagnostics.outcome == 'success'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: podman-ci-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-podman-diagnostics.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report Podman OCI gate result
+        if: always()
+        env:
+          GATE_RESULT: ${{ job.status }}
+          DOCTOR_RESULT: ${{ steps.podman-doctor.outcome }}
+          BUILD_SMOKE_RESULT: ${{ steps.podman-gate.outcome }}
+          SECURITY_RESULT: ${{ steps.podman-security.outcome }}
+        run: |
+          {
+            echo '### Podman OCI build and smoke'
+            echo "- Job result: **${GATE_RESULT}**"
+            echo "- Rootless Podman check: \`${DOCTOR_RESULT:-skipped}\`"
+            echo "- Build and smoke tasks: \`${BUILD_SMOKE_RESULT:-skipped}\`"
+            echo "- Image vulnerability and secret scan: \`${SECURITY_RESULT:-skipped}\`"
+            echo '- Runner: Ubuntu 26.04; Podman is the only container engine.'
+            echo '- Database: disposable bootstrap using canonical SQLite schema `20261002_s48` (S4.8).'
+            echo '- Scan gate: HIGH/CRITICAL image vulnerabilities and embedded secrets fail the job.'
+            echo '- CycloneDX SBOMs are generated; OCI artifacts are exported only for a successful main push.'
+            echo '- PR and merge-group jobs receive no registry write credential and never publish images.'
+            if [[ "$GATE_RESULT" != success ]]; then
+              echo '- Sanitized Podman diagnostics are attached as a workflow artifact when collection succeeds.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-ghcr:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.OPERATOROS_ENABLE_GHCR_PUBLISH == 'true'
+    needs: [api, frontend, podman-images]
+    environment: oci-publish
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download verified OCI artifacts
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: operatoros-oci-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-release
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+      - name: Verify artifact checksums and load OCI images
+        working-directory: ${{ runner.temp }}/operatoros-release
+        run: |
+          sha256sum --check oci-archives.sha256
+          podman load --input operatoros-api.oci
+          podman load --input operatoros-web.oci
+          podman info --format 'version={{.Version.Version}} rootless={{.Host.Security.Rootless}} storage={{.Store.GraphDriverName}}'
+          test "$(podman info --format '{{.Host.Security.Rootless}}')" = true
+      - name: Authenticate to GHCR with the job-scoped GITHUB_TOKEN
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: |
+          install -m 0600 /dev/null "$RUNNER_TEMP/operatoros-ghcr-auth.json"
+          printf '%s' "$GH_TOKEN" | podman login --authfile "$RUNNER_TEMP/operatoros-ghcr-auth.json" --username "$REGISTRY_USER" --password-stdin ghcr.io
+      - name: Publish and pull images by registry digest
+        id: publish
+        env:
+          AUTH_FILE: ${{ runner.temp }}/operatoros-ghcr-auth.json
+        run: |
+          api_ref=ghcr.io/daoistmadness/operatoros-api
+          web_ref=ghcr.io/daoistmadness/operatoros-web
+          tag="sha-${GITHUB_SHA}"
+          podman push --authfile "$AUTH_FILE" --digestfile "$RUNNER_TEMP/operatoros-api.digest" "localhost/operatoros-api:ci-${GITHUB_SHA}" "docker://${api_ref}:${tag}"
+          podman push --authfile "$AUTH_FILE" --digestfile "$RUNNER_TEMP/operatoros-web.digest" "localhost/operatoros-web:ci-${GITHUB_SHA}" "docker://${web_ref}:${tag}"
+          api_digest="$(cat "$RUNNER_TEMP/operatoros-api.digest")"
+          web_digest="$(cat "$RUNNER_TEMP/operatoros-web.digest")"
+          [[ "$api_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$web_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          podman pull --authfile "$AUTH_FILE" "${api_ref}@${api_digest}"
+          podman pull --authfile "$AUTH_FILE" "${web_ref}@${web_digest}"
+          podman image exists "${api_ref}@${api_digest}"
+          podman image exists "${web_ref}@${web_digest}"
+          jq -n --arg commit "$GITHUB_SHA" --arg api "${api_ref}@${api_digest}" --arg web "${web_ref}@${web_digest}" \
+            '{schema: "20261002_s48", sourceCommit: $commit, images: {api: $api, web: $web}}' \
+            > "$RUNNER_TEMP/operatoros-release-manifest.json"
+          echo "api-name=$api_ref" >> "$GITHUB_OUTPUT"
+          echo "api-digest=$api_digest" >> "$GITHUB_OUTPUT"
+          echo "web-name=$web_ref" >> "$GITHUB_OUTPUT"
+          echo "web-digest=$web_digest" >> "$GITHUB_OUTPUT"
+          echo "api-ref=${api_ref}@${api_digest}" >> "$GITHUB_OUTPUT"
+          echo "web-ref=${web_ref}@${web_digest}" >> "$GITHUB_OUTPUT"
+      - name: Attest API release provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ steps.publish.outputs.api-name }}
+          subject-digest: ${{ steps.publish.outputs.api-digest }}
+          push-to-registry: true
+      - name: Attest API SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ steps.publish.outputs.api-name }}
+          subject-digest: ${{ steps.publish.outputs.api-digest }}
+          sbom-path: ${{ runner.temp }}/operatoros-release/operatoros-api.cdx.json
+          push-to-registry: true
+      - name: Attest web release provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ steps.publish.outputs.web-name }}
+          subject-digest: ${{ steps.publish.outputs.web-digest }}
+          push-to-registry: true
+      - name: Attest web SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ steps.publish.outputs.web-name }}
+          subject-digest: ${{ steps.publish.outputs.web-digest }}
+          sbom-path: ${{ runner.temp }}/operatoros-release/operatoros-web.cdx.json
+          push-to-registry: true
+      - name: Record immutable digest references
+        if: always()
+        env:
+          API_REF: ${{ steps.publish.outputs.api-ref }}
+          WEB_REF: ${{ steps.publish.outputs.web-ref }}
+          PUBLISH_RESULT: ${{ job.status }}
+        run: |
+          echo '### GHCR publication' >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: **${PUBLISH_RESULT}**" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$PUBLISH_RESULT" == success ]]; then
+            echo "- API: \`${API_REF}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Web: \`${WEB_REF}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo '- Source: this successful `main` push after API, frontend, Podman smoke, and image security gates.' >> "$GITHUB_STEP_SUMMARY"
+            echo '- PRs and merge groups cannot enter this job.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload release manifest
+        if: success()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-release-manifest-${{ github.sha }}
+          path: ${{ runner.temp }}/operatoros-release-manifest.json
+          if-no-files-found: error
+          retention-days: 90
 
   release:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
