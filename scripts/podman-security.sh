@@ -21,18 +21,23 @@ else
 fi
 
 mkdir -p "$cache" "$output"
+temp="$(mktemp -d)"
+trap 'rm -rf -- "$temp"' EXIT
 security_failed=0
 for pair in "api:localhost/operatoros-api:${OPERATOROS_IMAGE_TAG:-worktree}" "web:localhost/operatoros-web:${OPERATOROS_IMAGE_TAG:-worktree}"; do
   name="${pair%%:*}"
   image="${pair#*:}"
   podman image exists "$image" || { echo "Required Podman image is missing: $image" >&2; exit 1; }
-  if ! "$trivy_bin" image --cache-dir "$cache" --image-src podman --scanners vuln,secret \
-    --format cyclonedx --output "$output/operatoros-$name.cdx.json" "$image"; then
+  # Scan an OCI layout export so Trivy never needs a Podman API socket.
+  image_layout="$temp/operatoros-$name"
+  podman save --format oci-dir --output "$image_layout" "$image"
+  if ! "$trivy_bin" image --cache-dir "$cache" --scanners vuln,secret --input "$image_layout" \
+    --format cyclonedx --output "$output/operatoros-$name.cdx.json"; then
     echo "Failed to generate $name CycloneDX SBOM." >&2
     security_failed=1
   fi
-  if ! "$trivy_bin" image --cache-dir "$cache" --image-src podman --scanners vuln,secret \
-    --severity HIGH,CRITICAL --exit-code 1 --format table "$image"; then
+  if ! "$trivy_bin" image --cache-dir "$cache" --scanners vuln,secret --input "$image_layout" \
+    --severity HIGH,CRITICAL --exit-code 1 --format table; then
     echo "Security policy failed for $name image." >&2
     security_failed=1
   fi
