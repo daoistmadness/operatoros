@@ -118,24 +118,10 @@ jobs:
           run-id: ${{ inputs.ci_run_id }}
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/operatoros-release
-      - name: Install Podman
+      - name: Install Podman and Skopeo
         run: |
           sudo apt-get update
-          sudo apt-get install --yes podman
-      - name: Verify artifact checksums and load OCI images
-        working-directory: ${{ runner.temp }}/operatoros-release
-        env:
-          SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: |
-          set -euo pipefail
-          sha256sum --check oci-archives.sha256
-          jq -se 'length == 2 and all(.[]; .bomFormat == "CycloneDX")' operatoros-api.cdx.json operatoros-web.cdx.json >/dev/null
-          podman info --format 'version={{.Version.Version}} rootless={{.Host.Security.Rootless}} storage={{.Store.GraphDriverName}}'
-          test "$(podman info --format '{{.Host.Security.Rootless}}')" = true
-          podman load --input operatoros-api.oci
-          podman load --input operatoros-web.oci
-          podman image exists "localhost/operatoros-api:ci-${SOURCE_COMMIT}"
-          podman image exists "localhost/operatoros-web:ci-${SOURCE_COMMIT}"
+          sudo apt-get install --yes podman skopeo
       - name: Authenticate to GHCR with the job-scoped GITHUB_TOKEN
         env:
           GH_TOKEN: ${{ github.token }}
@@ -144,49 +130,15 @@ jobs:
           set -euo pipefail
           install -m 0600 /dev/null "$RUNNER_TEMP/operatoros-ghcr-auth.json"
           printf '%s' "$GH_TOKEN" | podman login --authfile "$RUNNER_TEMP/operatoros-ghcr-auth.json" --username "$REGISTRY_USER" --password-stdin ghcr.io
-      - name: Publish and verify registry manifest digests
+      - name: Verify artifacts, publish by digest, and create release manifest
         id: publish
-        env:
-          AUTH_FILE: ${{ runner.temp }}/operatoros-ghcr-auth.json
-          SOURCE_COMMIT: ${{ inputs.source_commit }}
-          RELEASE_VERSION: ${{ inputs.release_version }}
         working-directory: ${{ runner.temp }}/operatoros-release
-        run: |
-          set -euo pipefail
-          api_name=ghcr.io/daoistmadness/operatoros-api
-          web_name=ghcr.io/daoistmadness/operatoros-web
-          tag="run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          podman push --quiet --authfile "$AUTH_FILE" --digestfile "$RUNNER_TEMP/operatoros-api.digest" "localhost/operatoros-api:ci-${SOURCE_COMMIT}" "docker://${api_name}:${tag}"
-          podman push --quiet --authfile "$AUTH_FILE" --digestfile "$RUNNER_TEMP/operatoros-web.digest" "localhost/operatoros-web:ci-${SOURCE_COMMIT}" "docker://${web_name}:${tag}"
-          api_digest="$(cat "$RUNNER_TEMP/operatoros-api.digest")"
-          web_digest="$(cat "$RUNNER_TEMP/operatoros-web.digest")"
-          [[ "$api_digest" =~ ^sha256:[a-f0-9]{64}$ ]]
-          [[ "$web_digest" =~ ^sha256:[a-f0-9]{64}$ ]]
-          api_ref="${api_name}@${api_digest}"
-          web_ref="${web_name}@${web_digest}"
-          podman pull --quiet --authfile "$AUTH_FILE" "$api_ref"
-          podman pull --quiet --authfile "$AUTH_FILE" "$web_ref"
-          podman image inspect "$api_ref" --format '{{range .RepoDigests}}{{println .}}{{end}}' > "$RUNNER_TEMP/operatoros-api.repo-digests"
-          podman image inspect "$web_ref" --format '{{range .RepoDigests}}{{println .}}{{end}}' > "$RUNNER_TEMP/operatoros-web.repo-digests"
-          grep -Fqx "$api_ref" "$RUNNER_TEMP/operatoros-api.repo-digests"
-          grep -Fqx "$web_ref" "$RUNNER_TEMP/operatoros-web.repo-digests"
-          api_sbom_sha="$(sha256sum operatoros-api.cdx.json | cut -d' ' -f1)"
-          web_sbom_sha="$(sha256sum operatoros-web.cdx.json | cut -d' ' -f1)"
-          jq -n \
-            --arg version "$RELEASE_VERSION" \
-            --arg source "$SOURCE_COMMIT" \
-            --arg created "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --arg api "$api_ref" --arg web "$web_ref" \
-            --arg api_sbom_sha "$api_sbom_sha" --arg web_sbom_sha "$web_sbom_sha" \
-            '{manifestVersion: 1, releaseVersion: $version, sourceCommit: $source, schema: "20261002_s48", createdAt: $created, images: {api: $api, web: $web}, sbom: {api: {file: "operatoros-api.cdx.json", sha256: $api_sbom_sha}, web: {file: "operatoros-web.cdx.json", sha256: $web_sbom_sha}}}' \
-            > "$RUNNER_TEMP/operatoros-release-manifest.json"
-          jq -e --arg api "$api_ref" --arg web "$web_ref" '.schema == "20261002_s48" and .images.api == $api and .images.web == $web' "$RUNNER_TEMP/operatoros-release-manifest.json" >/dev/null
-          echo "api-name=$api_name" >> "$GITHUB_OUTPUT"
-          echo "api-digest=$api_digest" >> "$GITHUB_OUTPUT"
-          echo "web-name=$web_name" >> "$GITHUB_OUTPUT"
-          echo "web-digest=$web_digest" >> "$GITHUB_OUTPUT"
-          echo "api-ref=$api_ref" >> "$GITHUB_OUTPUT"
-          echo "web-ref=$web_ref" >> "$GITHUB_OUTPUT"
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          AUTH_FILE: ${{ runner.temp }}/operatoros-ghcr-auth.json
+        run: bash "$GITHUB_WORKSPACE/scripts/publish-oci-release.sh"
       - name: Attest API release provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
@@ -242,8 +194,8 @@ jobs:
               echo "- Source commit: \`${SOURCE_COMMIT}\`"
               echo "- API registry manifest: \`${API_REF}\`"
               echo "- Web registry manifest: \`${WEB_REF}\`"
-              echo '- Both digests were pulled back and matched Podman RepoDigests before attestation.'
+              echo '- Archive manifest digests were preserved by Skopeo, then pulled back by digest and matched Podman RepoDigests before attestation.'
               echo '- Provenance and CycloneDX SBOM attestations were pushed for each image digest.'
-              echo '- Registry tags are run-specific; deployment references come only from the digest-pinned manifest.'
+              echo '- Published and deployment references come only from the digest-pinned manifest.'
             fi
           } >> "$GITHUB_STEP_SUMMARY"

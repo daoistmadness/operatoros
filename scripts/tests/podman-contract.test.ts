@@ -93,8 +93,9 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(publish).toContain('artifact-metadata: write');
   expect(publish).toContain('GH_TOKEN: ${{ github.token }}');
   expect(publish).not.toContain('secrets.GHCR');
-  expect(publish).toContain('ghcr.io/daoistmadness/operatoros-api');
-  expect(publish).toContain('ghcr.io/daoistmadness/operatoros-web');
+  const release = read('scripts/publish-oci-release.sh');
+  expect(release).toContain('ghcr.io/daoistmadness/operatoros-api');
+  expect(release).toContain('ghcr.io/daoistmadness/operatoros-web');
   const publisher = publish.split('\n  publish:\n')[1] ?? '';
   expect(publisher).toContain('environment:\n      name: oci-publish');
   expect(publish).toContain('vars.OPERATOROS_ENABLE_GHCR_PUBLISH');
@@ -107,12 +108,23 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(publish).toContain("'Ubuntu / Bun 1.4.2'");
   expect(publish).toContain("'Select E2E scope'");
   expect(publish).toContain('checks: read');
-  expect(publish).toContain('podman push --quiet');
-  expect(publish).toContain('--digestfile');
-  expect(publish).toContain('podman pull --quiet --authfile');
-  expect(publish).toContain('grep -Fqx "$api_ref"');
-  expect(publish).toContain('releaseVersion: $version');
-  expect(publish).toContain('20261002_s48');
+  expect(publish).toContain('sudo apt-get install --yes podman skopeo');
+  expect(publish).toContain('scripts/publish-oci-release.sh');
+  expect(release).toContain('skopeo copy --quiet --preserve-digests');
+  expect(release).toContain('sha256sum --check --strict oci-archives.sha256');
+  expect(release).toContain('podman pull --quiet --authfile "$AUTH_FILE" "$ref"');
+  expect(release).toContain('grep -Fqx "$ref"');
+  const firstCopy = release.indexOf('skopeo copy --quiet --preserve-digests');
+  for (const validation of [
+    'podman load --input operatoros-api.oci',
+    'podman load --input operatoros-web.oci',
+    'podman image exists "localhost/operatoros-api:ci-${SOURCE_COMMIT}"',
+    'podman image exists "localhost/operatoros-web:ci-${SOURCE_COMMIT}"',
+  ]) expect(release.indexOf(validation)).toBeLessThan(firstCopy);
+  expect(release).toContain('manifestVersion: 2');
+  expect(release).toContain('ciRunId: $ci_run_id');
+  expect(release).toContain('20261002_s48');
+  expect(release).not.toContain('podman push');
   expect(publish.match(/uses: actions\/attest@/g)).toHaveLength(4);
   expect(read('.containerignore')).toMatch(/\.env/);
   expect(read('.containerignore')).toMatch(/node_modules/);
