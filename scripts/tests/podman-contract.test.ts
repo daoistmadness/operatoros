@@ -92,6 +92,14 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(read('.containerignore')).toMatch(/node_modules/);
 });
 
+test('OCI security scans build output without a Podman or Docker socket', () => {
+  const scanner = read('scripts/podman-security.sh');
+  expect(scanner).toContain('podman save --format oci-dir');
+  expect(scanner).toContain('--input "$image_layout"');
+  expect(scanner).not.toContain('--image-src podman');
+  expect(scanner).not.toContain('--docker-host');
+});
+
 test('deployment planning requires digest-pinned S4.8 release images and live apply remains gated', () => {
   const deploy = read('scripts/deploy.sh');
   expect(deploy).toContain('OPERATOROS_RELEASE_MANIFEST');
