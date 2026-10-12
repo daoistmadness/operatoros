@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Save } from "lucide-react";
 
 import { getAttendanceBasis } from "../api/attendanceBasis";
@@ -86,6 +86,9 @@ function ManualAbsenceEntry() {
   const [legacyError, setLegacyError] = useState("");
   const [message, setMessage] = useState("");
   const [confirmConflictClassId, setConfirmConflictClassId] = useState<number | null>(null);
+  const monthLoadSequence = useRef(0);
+  const currentMonth = useRef({ academicYearId, month });
+  currentMonth.current = { academicYearId, month };
 
   useEffect(() => {
     getReportFilters().then((value) => {
@@ -107,10 +110,14 @@ function ManualAbsenceEntry() {
   }, [academicYearId, filters]);
 
   const loadMonth = useCallback(async () => {
+    const request = ++monthLoadSequence.current;
     const [monthly, basis] = await Promise.allSettled([
       getMonthlyClassAbsenceTotals(academicYearId, month),
       getAttendanceBasis(academicYearId, month),
     ]);
+    if (request !== monthLoadSequence.current
+      || currentMonth.current.academicYearId !== academicYearId
+      || currentMonth.current.month !== month) return;
     if (monthly.status === "rejected") throw monthly.reason;
     setRows(manualRows(monthly.value));
     setConfirmConflictClassId(null);
@@ -125,12 +132,15 @@ function ManualAbsenceEntry() {
 
   useEffect(() => {
     if (!academicYearId || !month) return;
+    let active = true;
     setLoading(true);
     setError("");
     loadMonth().catch((cause) => {
+      if (!active) return;
       setRows([]);
       setError(getPageApiError(cause, "Gagal memuat rekap bulanan."));
-    }).finally(() => setLoading(false));
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [academicYearId, month, loadMonth]);
 
   const refreshRows = async () => {
@@ -174,7 +184,7 @@ function ManualAbsenceEntry() {
           });
         });
       })
-      .catch((cause) => { if (active) { setStudents([]); setStudentError(getPageApiError(cause, "Gagal memuat daftar siswa kelas ini.")); } })
+      .catch((cause) => { if (active) setStudentError(getPageApiError(cause, "Gagal memuat daftar siswa kelas ini.")); })
       .finally(() => { if (active) setStudentLoading(false); });
     return () => { active = false; };
   }, [academicYearId, month, selectedStudentClassId, studentRefresh]);
@@ -200,6 +210,12 @@ function ManualAbsenceEntry() {
     return !item.has_data || item.class_id === selectedStudentClassId && studentsChanged;
   };
   const canSave = visibleRows.some(rowNeedsSave);
+  const hasUnsavedChanges = rows.some((item) => item.state !== "SUBMITTED" && !item.is_locked && (
+    item.draftMode !== (item.entry_mode ?? "TOTALS_ONLY")
+    || item.draftMode === "TOTALS_ONLY" && changed(item)
+    || item.class_id === selectedStudentClassId && item.draftMode === "PER_STUDENT" && studentsChanged
+  ));
+  const confirmDiscard = () => !hasUnsavedChanges || window.confirm("Ada perubahan rekap yang belum disimpan. Buang perubahan dan lanjutkan?");
 
   const clearFeedback = () => { setMessage(""); setConfirmConflictClassId(null); };
   const update = (id: number, field: keyof Reasons, value: string) => {
@@ -207,6 +223,9 @@ function ManualAbsenceEntry() {
     clearFeedback();
   };
   const updateMode = (item: ManualClassRow, draftMode: EntryMode) => {
+    const nextStudentClassId = draftMode === "PER_STUDENT" ? item.class_id : selectedStudentClassId === item.class_id ? null : selectedStudentClassId;
+    if (nextStudentClassId !== selectedStudentClassId && studentsChanged && !window.confirm("Ada perubahan total siswa yang belum disimpan. Buang perubahan dan lanjutkan?")) return;
+    if (nextStudentClassId !== selectedStudentClassId) setStudents([]);
     setRows((current) => current.map((value) => value.class_id === item.class_id ? { ...value, draftMode } : value));
     if (draftMode === "PER_STUDENT") setClassId(String(item.class_id));
     clearFeedback();
@@ -256,6 +275,25 @@ function ManualAbsenceEntry() {
         program_id: programId === "all" ? undefined : Number(programId),
         classes,
       });
+      const savedByClass = new Map(classes.map((item) => [item.class_id, item]));
+      setRows((current) => current.map((item) => {
+        const saved = savedByClass.get(item.class_id);
+        if (!saved) return item;
+        const totals = saved.entry_mode === "PER_STUDENT"
+          ? saved.student_totals.reduce((sum, student) => ({ sakit: sum.sakit + student.sakit, izin: sum.izin + student.izin, alfa: sum.alfa + student.alfa }), { sakit: 0, izin: 0, alfa: 0 })
+          : { sakit: saved.sakit, izin: saved.izin, alfa: saved.alfa };
+        const original = { sakit: String(totals.sakit), izin: String(totals.izin), alfa: String(totals.alfa) };
+        return { ...item, ...original, original, draftMode: saved.entry_mode, entry_mode: saved.entry_mode, has_data: true, state: "OPEN" };
+      }));
+      const savedStudents = classes.find((item) => item.class_id === selectedStudentClassId && item.entry_mode === "PER_STUDENT")?.student_totals;
+      if (savedStudents) {
+        const savedByEnrollment = new Map(savedStudents.map((student) => [student.enrollment_id, student]));
+        setStudents((current) => current.map((student) => {
+          const value = savedByEnrollment.get(student.enrollment_id) ?? { sakit: 0, izin: 0, alfa: 0 };
+          const original = { sakit: String(value.sakit), izin: String(value.izin), alfa: String(value.alfa) };
+          return { ...student, ...original, original };
+        }));
+      }
       setMessage(`Draf tersimpan: ${result.total} kelas untuk ${month}. Tinjau rekonsiliasi sebelum mengirim.`);
       await refreshRows();
     } catch (cause) {
@@ -309,33 +347,39 @@ function ManualAbsenceEntry() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <label className="space-y-1 text-sm font-medium text-slate-700">
             Tahun Ajaran
-            <select aria-label="Tahun Ajaran" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={academicYearId || ""} onChange={(event) => { setAcademicYearId(Number(event.target.value)); setMonth(""); setJenjangId("all"); setProgramId("all"); setClassId("all"); }}>
+            <select aria-label="Tahun Ajaran" disabled={saving || actionClassId !== null} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={academicYearId || ""} onChange={(event) => { if (!confirmDiscard()) return; setStudents([]); setAcademicYearId(Number(event.target.value)); setMonth(""); setJenjangId("all"); setProgramId("all"); setClassId("all"); }}>
               {filters?.academic_years.map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
             </select>
           </label>
           <label className="space-y-1 text-sm font-medium text-slate-700">
             Bulan
-            <select aria-label="Bulan" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={month} onChange={(event) => { setMonth(event.target.value); setClassId("all"); clearFeedback(); }}>
+            <select aria-label="Bulan" disabled={saving || actionClassId !== null} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={month} onChange={(event) => { if (!confirmDiscard()) return; setStudents([]); setMonth(event.target.value); setClassId("all"); clearFeedback(); }}>
               {months.map((value) => <option key={value.value} value={value.value}>{value.label}</option>)}
             </select>
           </label>
           <label className="space-y-1 text-sm font-medium text-slate-700">
             Jenjang
-            <select aria-label="Jenjang" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setProgramId("all"); setClassId("all"); }}>
+            <select aria-label="Jenjang" disabled={saving || actionClassId !== null} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={jenjangId} onChange={(event) => { if (studentsChanged && !window.confirm("Ada perubahan total siswa yang belum disimpan. Buang perubahan dan lanjutkan?")) return; setStudents([]); setJenjangId(event.target.value); setProgramId("all"); setClassId("all"); }}>
               <option value="all">Semua jenjang</option>
               {jenjangs.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
             </select>
           </label>
           <label className="space-y-1 text-sm font-medium text-slate-700">
             Program
-            <select aria-label="Program" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={programId} onChange={(event) => { setProgramId(event.target.value); setClassId("all"); }}>
+            <select aria-label="Program" disabled={saving || actionClassId !== null} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={programId} onChange={(event) => { if (studentsChanged && !window.confirm("Ada perubahan total siswa yang belum disimpan. Buang perubahan dan lanjutkan?")) return; setStudents([]); setProgramId(event.target.value); setClassId("all"); }}>
               <option value="all">Semua program</option>
               {programs.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
             </select>
           </label>
           <label className="space-y-1 text-sm font-medium text-slate-700">
             Kelas
-            <select aria-label="Kelas" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={classId} onChange={(event) => setClassId(event.target.value)}>
+            <select aria-label="Kelas" disabled={saving || actionClassId !== null} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={classId} onChange={(event) => {
+              const nextClassId = event.target.value;
+              const nextStudentClassId = nextClassId === "all" ? null : rows.find((item) => item.class_id === Number(nextClassId))?.draftMode === "PER_STUDENT" ? Number(nextClassId) : null;
+              if (nextStudentClassId !== selectedStudentClassId && studentsChanged && !window.confirm("Ada perubahan total siswa yang belum disimpan. Buang perubahan dan lanjutkan?")) return;
+              if (nextStudentClassId !== selectedStudentClassId) setStudents([]);
+              setClassId(nextClassId);
+            }}>
               <option value="all">Semua kelas</option>
               {classOptions.map((value) => <option key={value.class_id} value={value.class_id}>{value.class_name}</option>)}
             </select>
@@ -356,7 +400,7 @@ function ManualAbsenceEntry() {
             <p className="text-sm text-slate-500">Simpan membuat draf. Tinjau basis dan selisih sebelum mengirim setiap kelas.</p>
             <p aria-live="polite" className="mt-1 text-xs text-slate-500">{submittedCount} dari {visibleRows.length} kelas terkirim · {visibleRows.length - submittedCount} belum terkirim</p>
           </div>
-          <Button onClick={save} disabled={saving || loading || !canSave}>
+          <Button onClick={save} disabled={saving || loading || studentLoading || studentError !== "" && students.length === 0 || !canSave}>
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Simpan Total Absensi Bulanan
           </Button>
@@ -383,13 +427,13 @@ function ManualAbsenceEntry() {
                     <tr key={item.class_id}>
                       <td className="px-5 py-3"><span className="font-semibold text-slate-900">{item.class_name}</span><span className="ml-2 text-xs text-slate-500">{item.jenjang} · {item.program} · {item.grade}</span></td>
                       <td className="px-4 py-3">
-                        <select aria-label={`Mode input ${item.class_name}`} value={item.draftMode} disabled={item.state === "SUBMITTED" || item.is_locked} onChange={(event) => updateMode(item, event.target.value as EntryMode)} className="rounded-md border border-slate-300 bg-white px-2 py-1.5 disabled:bg-slate-100">
+                        <select aria-label={`Mode input ${item.class_name}`} value={item.draftMode} disabled={saving || actionClassId !== null || item.state === "SUBMITTED" || item.is_locked} onChange={(event) => updateMode(item, event.target.value as EntryMode)} className="rounded-md border border-slate-300 bg-white px-2 py-1.5 disabled:bg-slate-100">
                           <option value="TOTALS_ONLY">Total kelas</option><option value="PER_STUDENT">Per siswa</option>
                         </select>
                         {item.draftMode === "PER_STUDENT" && classId !== String(item.class_id) && <button type="button" onClick={() => setClassId(String(item.class_id))} className="mt-1 block text-xs font-semibold text-brand underline">Input per siswa</button>}
                       </td>
                       {reasonFields.map((field) => <td key={field} className="px-4 py-3 text-center">
-                        {item.draftMode === "TOTALS_ONLY" ? <input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${item.class_name}`} className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-center disabled:bg-slate-100" value={item[field]} disabled={item.state === "SUBMITTED" || item.is_locked} onChange={(event) => update(item.class_id, field, event.target.value)} /> : <span aria-label={`${field} ${item.class_name}`} className="font-semibold text-slate-700">{displayedTotal(field)}</span>}
+                        {item.draftMode === "TOTALS_ONLY" ? <input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${item.class_name}`} className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-center disabled:bg-slate-100" value={item[field]} disabled={saving || actionClassId !== null || item.state === "SUBMITTED" || item.is_locked} onChange={(event) => update(item.class_id, field, event.target.value)} /> : <span aria-label={`${field} ${item.class_name}`} className="font-semibold text-slate-700">{displayedTotal(field)}</span>}
                       </td>)}
                       <td className="px-5 py-3">
                         <span className={item.is_locked ? "text-rose-700" : item.state === "SUBMITTED" ? "text-emerald-700" : "text-amber-700"}>{item.is_locked ? "Dikunci oleh periode finalized" : item.state === "SUBMITTED" ? "Terkirim" : item.state === "OPEN" ? unsaved ? "Draf berubah" : "Draft" : unsaved ? "Belum disimpan" : "Belum diisi"}</span>
@@ -424,14 +468,15 @@ function ManualAbsenceEntry() {
           <h2 className="font-semibold text-slate-900">Sakit, Izin, dan Alfa per siswa — {selectedClass?.class_name}</h2>
           <p className="text-sm text-slate-500">Daftar mengikuti kelas historis pada hari sekolah di bulan ini. Nilai kelas di atas dihitung dari baris siswa.</p>
         </div>
-        {studentLoading ? <div className="p-8 text-center text-sm text-slate-500">Memuat daftar siswa…</div> : studentError ? <div role="alert" className="p-5 text-sm text-rose-700">{studentError}</div> : students.length === 0 ? <div className="p-8 text-center text-sm text-slate-500">Tidak ada Student-Days yang diharapkan untuk kelas ini pada bulan tersebut.</div> : (
+        {studentError && <div role="alert" className="p-5 text-sm text-rose-700">{studentError} Periksa kembali sebelum menyimpan.</div>}
+        {studentLoading ? <div className="p-8 text-center text-sm text-slate-500">Memuat daftar siswa…</div> : students.length === 0 ? !studentError && <div className="p-8 text-center text-sm text-slate-500">Tidak ada Student-Days yang diharapkan untuk kelas ini pada bulan tersebut.</div> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><tr><th scope="col" className="px-5 py-3">Siswa</th><th scope="col" className="px-5 py-3">Expected Student-Days</th><th scope="col" className="px-5 py-3">Sakit</th><th scope="col" className="px-5 py-3">Izin</th><th scope="col" className="px-5 py-3">Alfa</th></tr></thead>
               <tbody className="divide-y divide-slate-100">
                 {students.map((student) => <tr key={student.enrollment_id}>
                   <td className="px-5 py-3 font-semibold text-slate-900">{student.student_name}</td><td className="px-5 py-3">{student.expected_student_days} hari-siswa</td>
-                  {(["sakit", "izin", "alfa"] as const).map((field) => <td key={field} className="px-5 py-3"><input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${student.student_name}`} value={student[field]} disabled={selectedClass?.state === "SUBMITTED" || selectedClass?.is_locked} onChange={(event) => updateStudent(student.enrollment_id, field, event.target.value)} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-center disabled:bg-slate-100" /></td>)}
+                  {(["sakit", "izin", "alfa"] as const).map((field) => <td key={field} className="px-5 py-3"><input type="number" min="0" step="1" inputMode="numeric" aria-label={`${field} ${student.student_name}`} value={student[field]} disabled={saving || actionClassId !== null || selectedClass?.state === "SUBMITTED" || selectedClass?.is_locked} onChange={(event) => updateStudent(student.enrollment_id, field, event.target.value)} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-center disabled:bg-slate-100" /></td>)}
                 </tr>)}
               </tbody>
             </table>
