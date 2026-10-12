@@ -50,6 +50,8 @@ test('OCI health checks are enforced by the runtime that can represent them', ()
   expect(api).toContain('HealthCmd=/usr/local/bin/operatoros-dev-healthcheck api');
   expect(web).toContain('HealthCmd=/usr/local/bin/operatoros-dev-healthcheck web');
   expect(smoke.match(/--health-cmd/g)).toHaveLength(2);
+  expect(smoke).toContain('grep -Eq');
+  expect(smoke).not.toMatch(/\brg\s+-q/);
   expect(smoke).toContain('podman inspect -f \'{{.State.Health.Status}}\' "$api_name")" = healthy ]');
   expect(smoke).toContain('podman inspect -f \'{{.State.Health.Status}}\' "$web_name")" = healthy ]');
 });
