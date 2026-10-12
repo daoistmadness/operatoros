@@ -67,8 +67,8 @@ case "${1:-}" in
     ready=0
     for _ in $(seq 1 30); do
       if podman exec "$web_name" wget --quiet --tries=1 -O - http://127.0.0.1:8080/healthz >/dev/null 2>&1 \
-        && podman exec "$web_name" wget --quiet --tries=1 -O - http://127.0.0.1:8080/health 2>/dev/null | rg -q '"status":"ok"' \
-        && podman exec "$web_name" wget --quiet --tries=1 -O - http://127.0.0.1:8080/api/system/health 2>/dev/null | rg -q '"service":"System API"' \
+        && podman exec "$web_name" wget --quiet --tries=1 -O - http://127.0.0.1:8080/health 2>/dev/null | grep -Eq '"status":"ok"' \
+        && podman exec "$web_name" wget --quiet --tries=1 -O - http://127.0.0.1:8080/api/system/health 2>/dev/null | grep -Eq '"service":"System API"' \
         && [ "$(podman inspect -f '{{.State.Health.Status}}' "$api_name")" = healthy ] \
         && [ "$(podman inspect -f '{{.State.Health.Status}}' "$web_name")" = healthy ]; then
         ready=1
