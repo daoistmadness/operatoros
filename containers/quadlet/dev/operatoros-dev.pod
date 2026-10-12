@@ -1,0 +1,14 @@
+[Unit]
+Description=OperatorOS development network namespace
+
+[Pod]
+PodName=operatoros-dev-pod
+ServiceName=operatoros-dev-pod
+Network=slirp4netns
+PublishPort=127.0.0.1:5173:5173
+ExitPolicy=stop
+StopTimeout=30
+Label=io.operatoros.owner=operatoros
+
+[Install]
+WantedBy=default.target

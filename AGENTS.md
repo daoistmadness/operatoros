@@ -8,10 +8,15 @@ evidence unless they state a current procedure. See [docs/README.md](docs/README
 
 OperatorOS is an offline-first school attendance and academic analytics system.
 Runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
-`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED`. Supported runtime
-is a local Elysia backend (`apps/api/`) with the React frontend (`apps/web/`)
-in a browser. The Tauri shell was removed; the FastAPI backend is migration
-evidence only. Monorepo: `apps/api/`, `apps/web/`, `packages/db/`,
+`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED` for native local
+development and use. This label means Podman is not a prerequisite for the
+offline-first application or native test tiers; it does not prohibit the
+supported OCI build, verification, and deployment path. Podman is the only
+container engine, Quadlet owns persistent containers, and mise is the task
+interface. Docker Engine is not required. Supported native runtime is a local
+Elysia backend (`apps/api/`) with the React frontend (`apps/web/`) in a
+browser. The Tauri shell was removed; the FastAPI backend is migration evidence
+only. Monorepo: `apps/api/`, `apps/web/`, `packages/db/`,
 `packages/contracts/`, `packages/ui/`, `packages/excel/`, `packages/config/`.
 
 ## Commands
@@ -23,6 +28,9 @@ are the lockfile authorities; CI runs these directly in `.github/workflows/ci.ym
 - `mise install`; `mise run doctor` — install exact runtimes; verify checkout.
 - `bun install --frozen-lockfile` — install workspace dependencies (mandatory).
 - `mise run dev` (via `./start-dev.sh`) — canonical dev entrypoint; `./start-dev.sh --check` validates without starting.
+- `mise run podman:doctor`, `mise run podman:build`, `mise run podman:smoke`, `mise run podman:security` — rootless Podman OCI build and image checks.
+- `mise run podman:up`, `down`, `restart`, `rebuild`, `status`, `logs`, `verify`, `quadlet:check` — optional rootless Quadlet development mode; native Bun remains usable without Podman.
+- `mise run deploy:check`, `plan`, `apply`, `verify`, `rollback` — digest-pinned deployment interface; staging and production require configured approved targets.
 - `mise run check:affected` (fetch `origin/main` first) — Turbo typecheck/test/build for affected packages; `bun run turbo:check` — full graph.
 - `mise run test:fast` — changed-path-aware tier; `mise run check:full` (`make test-release`) — release gate, never for Markdown-only edits; `mise run db:fresh` (`make fresh-db-parity`) — bootstrap parity.
 - `bun run check` — root lint + type + architecture + tests. Also `bun run lint`, `typecheck`, `check:typebox`, `check:architecture`, `test:architecture`, `check:contracts`, `check:ui`.
