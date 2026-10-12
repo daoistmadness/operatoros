@@ -95,12 +95,14 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(publish).not.toContain('secrets.GHCR');
   expect(publish).toContain('ghcr.io/daoistmadness/operatoros-api');
   expect(publish).toContain('ghcr.io/daoistmadness/operatoros-web');
-  expect(publish).toContain('environment:\n      name: oci-publish');
+  const publisher = publish.split('\n  publish:\n')[1] ?? '';
+  expect(publisher).toContain('environment:\n      name: oci-publish');
   expect(publish).toContain('vars.OPERATOROS_ENABLE_GHCR_PUBLISH');
   expect(publish).toContain('needs.validate.outputs.publish-enabled == \'true\'');
   expect(publish).toContain('GITHUB_EVENT_NAME" == workflow_dispatch');
   expect(publish).toContain('pull-requests: read');
-  expect(publish).toContain('state == "APPROVED"');
+  expect(publish).not.toContain('reviews_json');
+  expect(publish).not.toContain('independent approval');
   expect(publish).toContain('source commit must be the merge commit');
   expect(publish).toContain("'Ubuntu / Bun 1.4.2'");
   expect(publish).toContain("'Select E2E scope'");

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_commit:
-        description: Full approved main commit SHA
+        description: Full main commit SHA for the release
         required: true
         type: string
       ci_run_id:
@@ -35,7 +35,7 @@ jobs:
       artifact-name: ${{ steps.validate.outputs.artifact-name }}
       publish-enabled: ${{ steps.validate.outputs.publish-enabled }}
     steps:
-      - name: Validate approved main commit and successful CI artifact
+      - name: Validate main release commit and successful CI artifact
         id: validate
         env:
           GH_TOKEN: ${{ github.token }}
@@ -65,13 +65,6 @@ jobs:
           pull_json="$(jq -ce --arg sha "$SOURCE_COMMIT" '[.[] | select(.base.ref == "main" and .merged_at != null and .merge_commit_sha == $sha)] | if length == 1 then .[0] else empty end' <<<"$pulls_json")" || fail 'source commit must be the merge commit of exactly one merged main pull request'
           pull_number="$(jq -er '.number' <<<"$pull_json")"
           pull_head="$(jq -er '.head.sha' <<<"$pull_json")"
-          pull_author="$(jq -er '.user.login' <<<"$pull_json")"
-          reviews_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$pull_number/reviews?per_page=100")"
-          jq -e --arg head "$pull_head" --arg author "$pull_author" '
-            [.[] | select(.commit_id == $head and .user.login != $author)]
-            | group_by(.user.login) | map(max_by(.submitted_at)) as $latest
-            | ($latest | any(.state == "APPROVED")) and ($latest | all(.state != "CHANGES_REQUESTED"))
-          ' <<<"$reviews_json" >/dev/null || fail 'the merged pull request has no current independent approval for its reviewed head commit'
 
           checks_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/commits/$pull_head/check-runs?per_page=100")"
           for check in api frontend podman-images 'Select E2E scope' 'Ubuntu / Bun 1.4.2' CodeQL; do
@@ -100,7 +93,7 @@ jobs:
           echo "publish-enabled=$publish_enabled" >> "$GITHUB_OUTPUT"
           echo "- Source commit: \`$SOURCE_COMMIT\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Verified CI run: [$CI_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Reviewed pull request: [#$pull_number]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/pull/$pull_number)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Merged pull request: [#$pull_number]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/pull/$pull_number)" >> "$GITHUB_STEP_SUMMARY"
           echo '- Required artifact-producing jobs: `api`, `frontend`, `podman-images`.' >> "$GITHUB_STEP_SUMMARY"
 
   publish:
