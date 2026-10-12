@@ -82,7 +82,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await page.goto("/config/absence-reasons");
   await expect(page).toHaveURL(/\/attendance\/monthly-recap$/);
   const academicYear = page.getByLabel("Tahun Ajaran", { exact: true });
-  if (await academicYear.inputValue() !== String(academicYearId)) await academicYear.selectOption(String(academicYearId));
+  await expect(academicYear).toHaveValue(String(academicYearId));
   await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
   await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("0");
@@ -142,7 +142,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
 
   await page.goto("/attendance/monthly-recap");
   const correctionYear = page.getByLabel("Tahun Ajaran", { exact: true });
-  if (await correctionYear.inputValue() !== String(before.academicYearId)) await correctionYear.selectOption(String(before.academicYearId));
+  await expect(correctionYear).toHaveValue(String(before.academicYearId));
   await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
   await page.getByLabel("Bulan", { exact: true }).selectOption("2026-09");
