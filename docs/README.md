@@ -29,6 +29,7 @@
 
 - [Database operations](operations/DATABASE_OPERATIONS.md) — current protected-database, backup, migration, and rollback safeguards.
 - [Granular school data reset](operations/DATA_RESET.md) — reset gate, encrypted backup behavior, scopes, and deletion dependencies.
+- [Podman and release integration](deployment/PODMAN_INTEGRATION.md) — OCI, Quadlet, GHCR, host ownership, and deployment boundaries.
 
 ## Product references
 

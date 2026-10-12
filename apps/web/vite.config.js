@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as vite from 'vite';
 import path from 'node:path';
+import { resolveViteHmrConfig } from './vite-hmr-config.js';
+import { resolveViteRuntimeConfig } from './vite-runtime-config.js';
 
 const rawFrontendPort = process.env.FRONTEND_PORT ?? 5173;
 const rawBackendPort = process.env.BACKEND_PORT ?? 8000;
@@ -14,8 +16,10 @@ if (!Number.isInteger(frontendPort) || frontendPort < 1 || frontendPort > 65535)
 if (!Number.isInteger(backendPort) || backendPort < 1 || backendPort > 65535) {
   throw new Error(`Invalid BACKEND_PORT: ${rawBackendPort}`);
 }
-
 const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
+const hmrConfig = resolveViteHmrConfig(process.env);
+const allowedHost = 'oprserver.taile856.ts.net';
+const runtimeConfig = resolveViteRuntimeConfig(process.env);
 const apiProxy = {
   '/api': {
     target: devApiProxyTarget,
@@ -29,6 +33,8 @@ const apiProxy = {
 // Tech Stack: Vite / React 19 / Vitest
 
 export default defineConfig({
+  envDir: runtimeConfig.envDir,
+  cacheDir: path.resolve(process.cwd(), '../../node_modules/.vite/apps-web'),
   resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
   plugins: [
     react(),
@@ -45,18 +51,19 @@ export default defineConfig({
     },
   ],
   server: {
-    host: '127.0.0.1',
+    host: runtimeConfig.host,
     port: frontendPort,
     strictPort: true,
     clearScreen: false,
+    allowedHosts: [allowedHost],
     hmr: {
-      host: '127.0.0.1',
       port: frontendPort,
+      ...hmrConfig,
     },
     proxy: apiProxy,
   },
   preview: {
-    host: '127.0.0.1',
+    host: runtimeConfig.host,
     port: frontendPort,
     strictPort: true,
     headers: { 'Cache-Control': 'no-store' },
