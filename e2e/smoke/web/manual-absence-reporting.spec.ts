@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { withCleanup } from "../../helpers/with-cleanup";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
@@ -68,7 +69,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
     expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" as const : "EXPECTED" as const,
   })));
 
-  try {
+  await withCleanup(async () => {
   const before = await page.evaluate(async () => {
     const filters = await (await fetch("/api/reports/filters")).json();
     const academicYearId = filters.default_academic_year_id;
@@ -80,7 +81,8 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
 
   await page.goto("/config/absence-reasons");
   await expect(page).toHaveURL(/\/attendance\/monthly-recap$/);
-  await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
+  const academicYear = page.getByLabel("Tahun Ajaran", { exact: true });
+  await expect(academicYear).toHaveValue(String(academicYearId));
   await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
   await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("0");
@@ -139,7 +141,9 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   expect(after).toEqual({ term: before.term, analytics: before.analytics, lateness: before.lateness });
 
   await page.goto("/attendance/monthly-recap");
-  await page.getByLabel("Tahun Ajaran", { exact: true }).selectOption({ label: "2026/2027" });
+  const correctionYear = page.getByLabel("Tahun Ajaran", { exact: true });
+  await expect(correctionYear).toHaveValue(String(before.academicYearId));
+  await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
   await page.getByLabel("Bulan", { exact: true }).selectOption("2026-09");
   await page.getByLabel("Kelas", { exact: true }).selectOption({ label: "Primary 1B" });
@@ -191,7 +195,5 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
     expect.objectContaining({ operation: "REOPEN_MANUAL_MONTHLY_ABSENCE_TOTALS", details: expect.objectContaining({ reason: "Synthetic correction reason" }) }),
   ]));
   expect(browserErrors).toEqual([]);
-  } finally {
-    await saveWeekdays(previousWeekdays);
-  }
+  }, () => saveWeekdays(previousWeekdays));
 });

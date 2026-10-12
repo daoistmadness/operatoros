@@ -2,8 +2,22 @@ import { expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { validateDatabasePath } from "../../e2e/helpers/create-test-workspace";
+import { withCleanup } from "../../e2e/helpers/with-cleanup";
 
 const repository = resolve(import.meta.dir, "../..");
+test("E2E cleanup preserves the primary assertion error and reports cleanup failures", async () => {
+  const primary = new Error("primary assertion failure");
+  const cleanup = new Error("calendar restoration failure");
+  try {
+    await withCleanup(async () => { throw primary; }, async () => { throw cleanup; });
+    throw new Error("expected aggregate failure");
+  } catch (error) {
+    expect(error).toBeInstanceOf(AggregateError);
+    expect((error as AggregateError).errors).toEqual([primary, cleanup]);
+  }
+  await expect(withCleanup(async () => { throw primary; }, async () => {})).rejects.toBe(primary);
+  await expect(withCleanup(async () => "passed", async () => { throw cleanup; })).rejects.toBe(cleanup);
+});
 test("lexical workspace guard rejects escape and protected paths before file access", () => {
   const root = "/tmp/operatoros-e2e-path-only-fixture", runtime = join(root, "runtime"), repo = join(root, "repository");
   expect(existsSync(root)).toBe(false);
