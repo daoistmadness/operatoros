@@ -58,6 +58,19 @@ git -C "$temp/primary" switch --quiet -c codex/primary-after
 
 bash "$root/scripts/podman-ci.sh" build
 
+mkdir -p "$temp/contaminated"
+git clone --quiet --shared --no-checkout "$root" "$temp/contaminated/source"
+git -C "$temp/contaminated/source" checkout --quiet HEAD
+mkdir -p "$temp/contaminated/source/packages/db/node_modules"
+if podman run --rm --userns=keep-id --network=none \
+  --volume "$temp/contaminated/source:/workspace/operatoros:ro" \
+  --volume "$temp/deps-a:/workspace/operatoros/node_modules" \
+  "$image" /usr/local/bin/operatoros-dev-entrypoint api >"$temp/contaminated-entrypoint.log" 2>&1; then
+  fail 'container entrypoint accepted host-generated workspace dependencies'
+fi
+grep -Fq 'Host-generated workspace dependencies exist at packages/db/node_modules' "$temp/contaminated-entrypoint.log" \
+  || fail 'container entrypoint did not identify host-generated workspace dependencies'
+
 podman pod create --name "$pod_a" --userns=keep-id --network slirp4netns --publish "127.0.0.1:$port_a:5173" --label io.operatoros.owner=isolated-smoke >/dev/null
 created_pods+=("$pod_a")
 podman pod create --name "$pod_b" --userns=keep-id --network slirp4netns --publish "127.0.0.1:$port_b:5173" --label io.operatoros.owner=isolated-smoke >/dev/null
@@ -134,4 +147,4 @@ podman start "operatoros-dev-isolated-api-a-$suffix" "operatoros-dev-isolated-we
 wait_ready "$port_a" a || fail 'first synthetic worktree did not recover after restart'
 wait_ready "$port_b" b || fail 'second synthetic worktree did not recover after restart'
 
-printf 'PASS: two rootless temporary worktrees use isolated S4.8 data and ports %s/%s; primary branch changes do not redirect selected checkout; API proxy, unknown-host rejection and restart pass\n' "$port_a" "$port_b"
+printf 'PASS: rootless temporary worktrees use isolated S4.8 data and ports %s/%s; host dependency shadowing is rejected; primary branch changes do not redirect selected checkout; API proxy, unknown-host rejection and restart pass\n' "$port_a" "$port_b"

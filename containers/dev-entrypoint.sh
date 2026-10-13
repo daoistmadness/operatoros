@@ -15,6 +15,14 @@ fi
 image_lock="$(printf '%s\n%s\n' "$dependency_lock" "$OPERATOROS_DEV_DEPENDENCY_LAYOUT" | sha256sum | cut -d ' ' -f 1)"
 cd "$project_root"
 
+for workspace in apps/api apps/web packages/contracts packages/db packages/excel packages/ui; do
+  workspace_modules="$project_root/$workspace/node_modules"
+  if [ -e "$workspace_modules" ] || [ -L "$workspace_modules" ]; then
+    echo "Host-generated workspace dependencies exist at $workspace/node_modules; use a clean container source checkout so the image-owned hoisted dependencies remain authoritative." >&2
+    exit 1
+  fi
+done
+
 case "${1:-}" in
   api)
     if [ ! -f node_modules/.operatoros-image-lock ] \
