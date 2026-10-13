@@ -29,7 +29,7 @@ are the lockfile authorities; CI runs these directly in `.github/workflows/ci.ym
 - `bun install --frozen-lockfile` — install workspace dependencies (mandatory).
 - `mise run dev` (via `./start-dev.sh`) — canonical dev entrypoint; `./start-dev.sh --check` validates without starting.
 - `mise run podman:doctor`, `mise run podman:build`, `mise run podman:smoke`, `mise run podman:security` — rootless Podman OCI build and image checks.
-- `mise run podman:up`, `down`, `restart`, `rebuild`, `status`, `logs`, `verify`, `quadlet:check` — optional rootless Quadlet development mode; native Bun remains usable without Podman.
+- `mise run podman:verify` — build and smoke the production OCI images with rootless Podman; persistent development Quadlets are owned and operated by `daoistmadness/mikhailhomeserver`.
 - `mise run deploy:check`, `plan`, `apply`, `verify`, `rollback` — digest-pinned deployment interface; staging and production require configured approved targets.
 - `mise run check:affected` (fetch `origin/main` first) — Turbo typecheck/test/build for affected packages; `bun run turbo:check` — full graph.
 - `mise run test:fast` — changed-path-aware tier; `mise run check:full` (`make test-release`) — release gate, never for Markdown-only edits; `mise run db:fresh` (`make fresh-db-parity`) — bootstrap parity.

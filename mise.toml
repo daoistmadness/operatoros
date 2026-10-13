@@ -103,45 +103,13 @@ run = "bash scripts/podman-ci.sh smoke"
 description = "Verify rootless containerized development through the live tailnet route"
 run = "bash scripts/podman-dev-smoke.sh"
 
-[tasks."podman:quadlet:check"]
-description = "Generate and verify source-controlled development Quadlets"
-run = "bash scripts/podman-quadlet.sh check"
-
-[tasks."podman:quadlet:plan"]
-description = "Show the exact Quadlet installation diff without changing host files"
-run = "bash scripts/podman-quadlet.sh plan"
-
-[tasks."podman:quadlet:install"]
-description = "Install reviewed Quadlets only with the explicit --apply argument"
-run = "bash scripts/podman-quadlet.sh install"
-
-[tasks."podman:up"]
-description = "Start the rootless Quadlet development API and Vite services"
-run = "bash scripts/podman-quadlet.sh up"
-
-[tasks."podman:down"]
-description = "Stop only OperatorOS development services and keep their data volumes"
-run = "bash scripts/podman-quadlet.sh down"
-
-[tasks."podman:restart"]
-description = "Restart only the OperatorOS development Quadlet services"
-run = "bash scripts/podman-quadlet.sh restart"
-
-[tasks."podman:rebuild"]
-description = "Rebuild the Quadlet-owned development image and restart its services"
-run = "bash scripts/podman-quadlet.sh rebuild"
-
-[tasks."podman:status"]
-description = "Show OperatorOS development service status"
-run = "bash scripts/podman-quadlet.sh status"
-
-[tasks."podman:logs"]
-description = "Follow sanitized OperatorOS development service logs"
-run = "bash scripts/podman-quadlet.sh logs"
+[tasks."podman:dev:isolated-smoke"]
+description = "Run two rootless temporary development worktrees on separate ports and data"
+run = "bash scripts/podman-dev-isolated-smoke.sh"
 
 [tasks."podman:verify"]
-description = "Build and verify production and development OCI modes and Quadlet generation"
-run = "bash scripts/podman-ci.sh build && bash scripts/podman-ci.sh smoke && bash scripts/podman-dev-smoke.sh && bash scripts/podman-quadlet.sh check"
+description = "Build and smoke production OCI images with disposable data"
+run = "bash scripts/podman-ci.sh build && bash scripts/podman-ci.sh smoke"
 
 [tasks."podman:security"]
 description = "Scan local OCI images for secrets and HIGH/CRITICAL vulnerabilities; write SBOMs"
