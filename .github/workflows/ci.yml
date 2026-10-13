@@ -36,7 +36,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
+          persist-credentials: true
       - name: Fetch main for doctor validation
         if: github.event_name == 'pull_request'
         working-directory: ${{ github.workspace }}
