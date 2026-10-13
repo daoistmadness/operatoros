@@ -54,6 +54,8 @@ test('containerized development seeds matching dependencies and keeps S4.8 smoke
   expect(entrypoint).toContain('node_modules/.operatoros-image-lock');
   expect(entrypoint).toContain('OPERATOROS_DEV_DEPENDENCY_LAYOUT');
   expect(entrypoint).toContain('/workspace/operatoros-dependencies/node_modules/.');
+  expect(entrypoint).toContain('Host-generated workspace dependencies exist');
+  expect(entrypoint).toContain('for workspace in apps/api apps/web packages/contracts packages/db packages/excel packages/ui; do');
   expect(entrypoint).toContain('../../node_modules/vite/bin/vite.js');
   expect(entrypoint).toContain('OPERATOROS_DEV_BOOTSTRAP=true only for an explicitly disposable data root');
   expect(entrypoint.indexOf('cp -R /workspace/operatoros-dependencies/node_modules/.')).toBeLessThan(entrypoint.indexOf("exec bun --no-env-file run apps/api/src/server.ts"));
@@ -68,12 +70,18 @@ test('containerized development seeds matching dependencies and keeps S4.8 smoke
   expect(isolated).toContain('codex/primary-after');
   expect(isolated).toContain('synthetic worktrees');
   expect(isolated).toContain('deps-a/.operatoros-image-lock');
+  expect(isolated).toContain('container entrypoint accepted host-generated workspace dependencies');
+  expect(isolated).toContain('Host-generated workspace dependencies exist at packages/db/node_modules');
   expect(isolated).toContain('podman pod rm --force');
   expect(isolated).toContain('podman pod create --name "$pod_a" --userns=keep-id');
   expect(isolated).not.toContain(':U');
   expect(isolated).not.toContain('--pod "$pod" --userns=keep-id');
   expect(isolated).not.toContain('systemctl');
   expect(isolated).not.toContain('tailscale serve');
+  const liveSmoke = read('scripts/podman-dev-smoke.sh');
+  expect(liveSmoke).toContain('git clone --quiet --shared --no-checkout "$root" "$source"');
+  expect(liveSmoke).toContain('git -C "$root" status --porcelain --untracked-files=normal');
+  expect(liveSmoke).toContain('-v "$source:/workspace/operatoros:ro"');
 });
 
 test('OCI health checks are enforced by Podman smoke where the runtime can represent them', () => {

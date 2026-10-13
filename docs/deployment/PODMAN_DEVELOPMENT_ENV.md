@@ -42,6 +42,13 @@ hoisted linker so the API and Vite can share one root `node_modules` volume.
 Its versioned dependency marker forces that volume to refresh if the layout
 changes. Production image installs and runtimes are unchanged.
 
+The selected container source checkout must remain free of host-generated
+workspace `node_modules` directories. Bun may place package-local links that
+shadow the image-owned hoisted dependencies; the container entrypoint rejects
+that state instead of starting with a mixed dependency tree. Keep this
+checkout source-only and use another worktree for native Bun installation or
+foreground development. The entrypoint never deletes host dependency files.
+
 `DATABASE_URL` and `DATABASE_PATH` are intentionally not set. The API resolves
 its SQLite files from `OPERATOROS_DATA_DIR`. Startup validates an existing
 database but does not apply schema migrations. A missing database fails closed

@@ -5,6 +5,7 @@ root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 image=localhost/operatoros-dev:worktree
 host=oprserver.taile856.ts.net
 suffix="$(date +%s)-$$"
+source_commit="$(git -C "$root" rev-parse HEAD)"
 pod="operatoros-dev-smoke-$suffix"
 modules="operatoros-dev-smoke-modules-$suffix"
 api="operatoros-dev-smoke-api-$suffix"
@@ -35,6 +36,10 @@ trap cleanup EXIT
 command -v podman >/dev/null || { echo 'Podman is required.' >&2; exit 1; }
 test "$(podman info --format '{{.Host.Security.Rootless}}')" = true || { echo 'Podman must run rootless.' >&2; exit 1; }
 podman image exists "$image" || { echo 'Build with mise run podman:build first.' >&2; exit 1; }
+[[ -z "$(git -C "$root" status --porcelain --untracked-files=normal)" ]] || { echo 'Commit or preserve source changes before running the live development smoke.' >&2; exit 1; }
+source="$temp/source"
+git clone --quiet --shared --no-checkout "$root" "$source"
+git -C "$source" checkout --quiet --detach "$source_commit"
 command -v tailscale >/dev/null || { echo 'Tailscale CLI unavailable; live HMR is blocked.' >&2; exit 2; }
 serve_status="$(tailscale serve status 2>/dev/null)" || { echo 'Tailscale Serve unavailable; live HMR is blocked.' >&2; exit 2; }
 printf '%s\n' "$serve_status" | grep -Fq "https://$host:8444" || { echo 'Approved Tailscale HTTPS endpoint is not configured.' >&2; exit 2; }
@@ -48,14 +53,14 @@ podman pod create --name "$pod" --network slirp4netns --publish 127.0.0.1:5173:5
   --label io.operatoros.owner=smoke --exit-policy stop >/dev/null
 podman volume create --label io.operatoros.owner=smoke "$modules" >/dev/null
 podman run -d --name "$api" --pod "$pod" \
-  -v "$root:/workspace/operatoros:ro" -v "$modules:/workspace/operatoros/node_modules:U" \
+  -v "$source:/workspace/operatoros:ro" -v "$modules:/workspace/operatoros/node_modules:U" \
   -v "$data:/var/lib/operatoros:U" \
   -e HOST=0.0.0.0 -e PORT=8090 -e NODE_ENV=development -e OPERATOROS_DATA_DIR=/var/lib/operatoros \
   -e OPERATOROS_DEV_BOOTSTRAP=true \
   -e AUTH_COOKIE_SECRET=podman-development-smoke-secret-at-least-thirty-two-chars \
   -e "ALLOWED_ORIGINS=https://$host:8444,http://localhost:5173,http://127.0.0.1:5173" \
   "$image" /usr/local/bin/operatoros-dev-entrypoint api >/dev/null
-podman run -d --name "$web" --pod "$pod" -v "$root:/workspace/operatoros:ro" \
+podman run -d --name "$web" --pod "$pod" -v "$source:/workspace/operatoros:ro" \
   -v "$modules:/workspace/operatoros/node_modules:U" \
   -e FRONTEND_HOST=0.0.0.0 -e FRONTEND_PORT=5173 -e BACKEND_PORT=8090 \
   -e DEV_API_PROXY_TARGET=http://127.0.0.1:8090 -e OPERATOROS_DISABLE_ENV_FILES=true \
