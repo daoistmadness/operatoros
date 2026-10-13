@@ -1,6 +1,0 @@
-[Unit]
-Description=Persistent OperatorOS containerized development database
-
-[Volume]
-VolumeName=operatoros-dev-data
-Label=io.operatoros.owner=operatoros

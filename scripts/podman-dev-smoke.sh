@@ -51,6 +51,7 @@ podman run -d --name "$api" --pod "$pod" \
   -v "$root:/workspace/operatoros:ro" -v "$modules:/workspace/operatoros/node_modules:U" \
   -v "$data:/var/lib/operatoros:U" \
   -e HOST=0.0.0.0 -e PORT=8090 -e NODE_ENV=development -e OPERATOROS_DATA_DIR=/var/lib/operatoros \
+  -e OPERATOROS_DEV_BOOTSTRAP=true \
   -e AUTH_COOKIE_SECRET=podman-development-smoke-secret-at-least-thirty-two-chars \
   -e "ALLOWED_ORIGINS=https://$host:8444,http://localhost:5173,http://127.0.0.1:5173" \
   "$image" /usr/local/bin/operatoros-dev-entrypoint api >/dev/null
