@@ -9,10 +9,11 @@ The supported runtime is a local Elysia backend with the React frontend in a
 browser. The former Python backend is not a runtime dependency.
 `CONTAINER_RUNTIME_NOT_REQUIRED` means native development and local use do not
 require a container runtime. The supported optional container path uses Podman
-for OCI builds and verification, and Quadlet/systemd for persistent container
-lifecycle. Native Bun and Vite remain the interactive development path. The
-production web image serves compiled static assets through unprivileged Nginx;
-it does not run Vite. Docker Engine is not required.
+for OCI builds and verification. Persistent development Quadlets are owned by
+the `daoistmadness/mikhailhomeserver` infrastructure repository and managed by
+rootless Quadlet/systemd. Native Bun and Vite remain the interactive
+development path. The production web image serves compiled static assets
+through unprivileged Nginx; it does not run Vite. Docker Engine is not required.
 
 The current deployment labels are:
 

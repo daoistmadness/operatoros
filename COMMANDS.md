@@ -19,21 +19,19 @@ Optional browser tooling is external to the workspace:
 
 - `mise run dev` — start the managed Elysia and Vite stack through `start-dev.sh`.
 - `mise run podman:doctor` — inspect Podman version, rootless mode, storage, and cgroups.
-- `mise run podman:build` — build production API/static-web OCI images and the optional development image from `containers/Containerfile`.
+- `mise run podman:build` — build production API/static-web OCI images and the isolated development target from `containers/Containerfile`.
 - `mise run podman:smoke` — run production images on a private Podman network with loopback-only publication and disposable S4.8 data.
 - `mise run podman:dev:smoke` — check rootless containerized API/Vite, the real tailnet HTTPS/WSS route, API proxy, host rejection, and restart behavior.
-- `mise run podman:quadlet:check` — validate repository Quadlets through Podman 5.7's generator and `systemd-analyze verify`.
-- `mise run podman:quadlet:plan` — show the complete host installation diff without changing Quadlet files.
-- `mise run podman:quadlet:install -- --apply` — install reviewed Quadlets after host configuration and external secrets are ready; differing installed files are backed up first.
-- `mise run podman:up`, `podman:down`, `podman:restart`, `podman:rebuild`, `podman:status`, and `podman:logs` — manage only the OperatorOS development Quadlet services. `down` and `rebuild` preserve named volumes.
+- `mise run podman:dev:isolated-smoke` — run two temporary rootless development instances with separate synthetic S4.8 SQLite roots and ports; it does not use the live Tailscale route.
 - `mise run podman:security` — scan local API/web images for embedded secrets and HIGH/CRITICAL vulnerabilities and write CycloneDX SBOMs.
-- `mise run podman:verify` — run production image smoke, live development/Tailscale smoke, and Quadlet generation checks.
+- `mise run podman:verify` — build and smoke production OCI images with disposable S4.8 data; it does not start persistent services.
 - `mise run deploy:check` — check rootless Podman and canonical schema prerequisites.
 - `OPERATOROS_DEPLOY_ENV=staging OPERATOROS_RELEASE_MANIFEST=<file> OPERATOROS_DEPLOY_HOST=<host> mise run deploy:plan` — validate a non-mutating digest-pinned release plan.
 - `mise run deploy:apply` — remains blocked until the host infrastructure owner approves a target and adapter.
 - `mise run deploy:verify` — verify built OCI images using disposable S4.8 data.
 - `mise run deploy:rollback` — fault-inject a local digest failure and verify prior-image recovery with disposable data.
 - [Podman and release integration](docs/deployment/PODMAN_INTEGRATION.md) — host configuration ownership, promotion, CI, publication, and deployment limits.
+- [Podman development environment](docs/deployment/PODMAN_DEVELOPMENT_ENV.md) — container entrypoints and environment variable ownership.
 - `./start-dev.sh --check` — validate startup prerequisites without starting services.
 - `make dev-db-status` — inspect the managed development database.
 - `make dev-sessions-status` — inspect managed development sessions.

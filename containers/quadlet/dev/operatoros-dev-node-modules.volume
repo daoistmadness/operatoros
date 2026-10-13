@@ -1,6 +1,0 @@
-[Unit]
-Description=Persistent dependencies for OperatorOS containerized development
-
-[Volume]
-VolumeName=operatoros-dev-node-modules
-Label=io.operatoros.owner=operatoros
