@@ -6,8 +6,8 @@
 | --- | --- |
 | Native interactive development | `mise` tasks, `start-dev.sh`, Bun and Vite |
 | OCI build definitions | `containers/Containerfile`, `containers/nginx.conf`, `.containerignore` |
-| Development Quadlet templates | `containers/quadlet/dev/` in OperatorOS |
-| Installed host Quadlets and secret files | The host infrastructure repository |
+| Containerized development entrypoints and environment names | OperatorOS application repository |
+| Persistent host Quadlet units, host build context, service names, ports, data mounts and secret references | `daoistmadness/mikhailhomeserver` |
 | Persistent container lifecycle | Rootless Podman Quadlet and the user systemd manager |
 | CI verification and publication | `.github/workflows/ci.yml` |
 | Release image identity | CI release manifest containing GHCR digest references |
@@ -18,36 +18,27 @@ Docker Engine and Docker sockets are not used.
 
 ## Host Quadlet ownership and promotion
 
-The installed `operatoros-dev.container` and `operatoros-dev.build` files, and
-the separate host-side development Containerfile, belong to the host
-infrastructure repository. OperatorOS does not overwrite those live files or
-their secret environment file. The host repository must remove its duplicated
-application definitions and promote the reviewed templates from
-`containers/quadlet/dev/` after this change is merged.
+The infrastructure repository is the only source for persistent host units.
+OperatorOS does not install, replace, start, or stop them. Its development
+image target and direct API/Vite entrypoints are application contracts consumed
+by those units. Host installation uses the infrastructure repository's
+`mise run operatoros-dev:quadlet:plan`, `quadlet:check`, and explicitly gated
+`quadlet:install` tasks. That repository compares installed units with its
+source, preserves a restorable copy before changes, and reports drift. No
+installation is authorized by this document.
 
-The host integration change should pin an approved OperatorOS commit, materialize
-its Quadlet source in a stable release directory, and copy the files into the
-user Quadlet directory. It must not point a persistent service at a feature
-worktree. The promotion should:
-
-1. Show `mise run podman:quadlet:plan` output and review every changed unit.
-2. Preserve a restorable copy of the current installed units and their mode.
-3. Apply only after the host infrastructure change is approved.
-4. Run `systemctl --user daemon-reload` and start only the OperatorOS units.
-5. Verify `systemctl --user status` and application readiness separately.
-6. Run the plan again; a non-empty diff is host configuration drift.
-
-`mise run podman:quadlet:install -- --apply` performs the copy and keeps prior
-changed definitions under `$XDG_STATE_HOME/operatoros/quadlet-backups/`. It is
-not run by CI and has not been run against the live host in this migration.
-The host repository still needs an approved integration change; until then,
-the existing host definitions remain externally owned and may drift.
+The selected source checkout is a fixed path in the infrastructure Quadlet;
+it is not a symlink into a feature worktree and does not invoke `start-dev.sh`.
+Changing the checkout path requires a reviewed infrastructure change. The
+existing development SQLite directory remains mounted at its current path; the
+service does not migrate it. Before any live activation, the data owner and
+classification, API environment, and source checkout must be confirmed.
 
 ## Development modes
 
 - Native foreground development remains `mise run dev`, `dev:api`, and
   `dev:web`; it does not require Podman.
-- Containerized development uses the source-controlled Quadlet build and pod.
+- Containerized development uses infrastructure-owned Quadlet build and pod units.
   API and Vite run as separate direct processes, use a lockfile-checked
   dependency volume, and share one rootless `slirp4netns` network namespace.
   Only Vite port 5173 is published, bound to `127.0.0.1`; the host's Tailscale
@@ -58,10 +49,12 @@ the existing host definitions remain externally owned and may drift.
   are defined by Quadlet or by the disposable Podman smoke invocation, where
   the runtime observes health state directly.
 
-The development API uses disposable bootstrap only when its database file is
-absent. The Quadlet data volume is preserved by normal down, restart, and
-rebuild tasks. No development command selects the protected operational
-database.
+The development API bootstraps an absent database only when explicitly enabled
+for disposable smoke tests; the persistent host unit leaves that flag unset and
+fails closed. It never migrates an existing database on startup. The
+infrastructure-owned bind mount preserves the existing development data path.
+Ordinary stop/restart/rebuild tasks do not remove data. No development command
+selects the protected operational database. See [container environment names](PODMAN_DEVELOPMENT_ENV.md).
 
 ## CI, publication, and deployment limits
 
