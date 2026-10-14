@@ -73,14 +73,18 @@ conclusion, expected GitHub App identity, and for Actions checks, the linked
 workflow ID/path and exact successful job ID/name. Missing CodeQL evidence
 remains a hard failure.
 
-On PR #233 head
+On the previously reviewed PR #233 head
 `b6a0b211e8634fec752d1f952d76acb43ff31abd`, API, frontend, Podman, and E2E
-checks passed, but there was no CodeQL check. Full release validation was
-skipped on that PR run by design. A historical successful CodeQL check on an
-older PR proves the check identity, not current-commit coverage. The
-Code-scanning default-setup API returned HTTP 403 with the specific message
-“Code scanning is not enabled for this repository.” No CodeQL workflow or run
-exists for current `main` or the PR #233 head.
+checks passed, but there was no CodeQL check. On the current PR #233 head
+`789ec50607fcf30972e55f3ea4b466736c2da159`, hosted runs `38506673258` (CI)
+and `38506673200` (E2E) also passed their API, frontend, Podman, and E2E jobs;
+`Full release validation` was skipped by design, and the commit's complete
+check-run response contained no CodeQL result. GitHub lists a platform-managed
+dynamic CodeQL workflow, but the code-scanning default-setup API returned HTTP
+403 with the message “Code scanning is not enabled for this repository,” and
+there is no CodeQL run for current `main` or the PR #233 head. A historical
+successful CodeQL check on an older PR proves the check identity, not
+current-commit coverage.
 
 This is a repository capability/setup blocker, not a check-name mismatch.
 Do not remove CodeQL from the publisher's required checks. The account Billing
