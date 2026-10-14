@@ -4,3 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Temporarily pause version PRs during privacy-history remediation.
+    # Security updates remain enabled through repository settings.
+    open-pull-requests-limit: 0
+    rebase-strategy: disabled
