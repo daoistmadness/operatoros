@@ -48,10 +48,12 @@ function fixture() {
     repository: { id: repositoryId, full_name: repository },
   });
   writeJson(paths.ciJobs, {
+    total_count: 3,
     jobs: ['api', 'frontend', 'podman-images'].map((name, index) => ({
       id: index + 1,
       run_id: ciRunId,
       run_attempt: 1,
+      head_sha: sourceCommit,
       name,
       status: 'completed',
       conclusion: 'success',
@@ -86,10 +88,12 @@ function fixture() {
     repository: { id: repositoryId, full_name: repository },
   });
   writeJson(paths.fullJobs, {
+    total_count: 1,
     jobs: [{
       id: 9101,
       run_id: fullReleaseRunId,
       run_attempt: 1,
+      head_sha: sourceCommit,
       name: 'Full release validation',
       status: 'completed',
       conclusion: 'success',
@@ -186,6 +190,36 @@ test('release evidence rejects a skipped or failed artifact-producing CI job', (
   jobs.jobs[2].conclusion = 'skipped';
   writeJson(f.paths.ciJobs, jobs);
   reject(f, 'required artifact build job did not pass: podman-images');
+});
+
+test('release evidence rejects CI job records substituted from another run or commit', () => {
+  for (const [field, value] of [['run_id', ciRunId + 1], ['head_sha', 'e'.repeat(40)]] as const) {
+    const f = fixture();
+    const jobs = JSON.parse(readFileSync(f.paths.ciJobs, 'utf8'));
+    jobs.jobs[0][field] = value;
+    writeJson(f.paths.ciJobs, jobs);
+    reject(f, 'required artifact build job did not pass: api');
+  }
+});
+
+test('release evidence rejects Full release job records substituted from another run or commit', () => {
+  for (const [field, value] of [['run_id', fullReleaseRunId + 1], ['head_sha', 'f'.repeat(40)]] as const) {
+    const f = fixture();
+    const jobs = JSON.parse(readFileSync(f.paths.fullJobs, 'utf8'));
+    jobs.jobs[0][field] = value;
+    writeJson(f.paths.fullJobs, jobs);
+    reject(f, 'Full release validation job did not complete successfully');
+  }
+});
+
+test('release evidence rejects truncated CI and Full release job responses', () => {
+  for (const key of ['ciJobs', 'fullJobs'] as const) {
+    const f = fixture();
+    const jobs = JSON.parse(readFileSync(f.paths[key], 'utf8'));
+    jobs.total_count += 1;
+    writeJson(f.paths[key], jobs);
+    reject(f, 'workflow job evidence is incomplete or malformed');
+  }
 });
 
 test('release evidence rejects a run whose workflow identity is not the repository CI workflow', () => {

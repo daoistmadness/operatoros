@@ -27,6 +27,11 @@ for file in "$@"; do
   jq -e . "$file" >/dev/null 2>&1 || fail 'release evidence JSON is invalid'
 done
 
+for jobs_file in "$ci_jobs_json" "$full_release_jobs_json"; do
+  jq -e '(.total_count | type == "number") and (.jobs | type == "array") and .total_count == (.jobs | length)' "$jobs_file" >/dev/null \
+    || fail 'workflow job evidence is incomplete or malformed'
+done
+
 repo_filter='
   (.id | tostring) == $repo_id and .full_name == $repo_name
 '
@@ -60,8 +65,8 @@ jq -e \
 ci_attempt="$(jq -er '.run_attempt | select(type == "number" and . > 0) | tostring' "$ci_run_json")"
 
 for job in api frontend podman-images; do
-  jq -e --arg name "$job" --arg attempt "$ci_attempt" '
-    [.jobs[] | select(.name == $name and (.run_attempt | tostring) == $attempt)] as $matches
+  jq -e --arg name "$job" --arg run_id "$CI_RUN_ID" --arg attempt "$ci_attempt" --arg source_sha "$SOURCE_COMMIT" '
+    [.jobs[] | select(.name == $name and (.run_id | tostring) == $run_id and (.run_attempt | tostring) == $attempt and .head_sha == $source_sha)] as $matches
     | ($matches | length) == 1 and
       $matches[0].status == "completed" and $matches[0].conclusion == "success"
   ' "$ci_jobs_json" >/dev/null || fail "required artifact build job did not pass: $job"
@@ -97,8 +102,8 @@ jq -e \
   "$run_identity_filter and (.event == \"workflow_dispatch\" or .event == \"schedule\") and .status == \"completed\" and .conclusion == \"success\" and (.run_attempt | type == \"number\" and . > 0)" \
   "$full_release_run_json" >/dev/null || fail 'full_release_run_id is not a successful trusted full-release run for this source commit'
 full_release_attempt="$(jq -er '.run_attempt | select(type == "number" and . > 0) | tostring' "$full_release_run_json")"
-jq -e --arg attempt "$full_release_attempt" '
-  [.jobs[] | select(.name == "Full release validation" and (.run_attempt | tostring) == $attempt)] as $matches
+jq -e --arg run_id "$FULL_RELEASE_RUN_ID" --arg attempt "$full_release_attempt" --arg source_sha "$SOURCE_COMMIT" '
+  [.jobs[] | select(.name == "Full release validation" and (.run_id | tostring) == $run_id and (.run_attempt | tostring) == $attempt and .head_sha == $source_sha)] as $matches
   | ($matches | length) == 1 and
     $matches[0].status == "completed" and $matches[0].conclusion == "success"
 ' "$full_release_jobs_json" >/dev/null || fail 'Full release validation job did not complete successfully for the current run attempt'

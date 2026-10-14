@@ -23,7 +23,10 @@ and `podman-images` jobs. Exactly one unexpired, non-empty OCI artifact must
 match the expected source SHA and run attempt. Artifact metadata must identify
 the same repository, `main` branch, source SHA, and CI run. The validated
 artifact ID is passed to `actions/download-artifact` so the publish job
-downloads that immutable artifact identity rather than resolving by name.
+downloads that immutable artifact identity rather than resolving by name. The
+job-list responses must be complete, and each required job is bound to the
+requested run ID, attempt, and exact source SHA; truncated or substituted job
+evidence is rejected.
 
 The full-release run must come from the same trusted workflow and repository,
 run on `main` at the same SHA, and complete successfully. The current run
@@ -32,7 +35,9 @@ validation` job. A skipped job, failed run, PR run, other workflow, other
 repository, or stale source SHA is rejected. No age cutoff is applied to a
 successful full-release run for the identical source commit; the build artifact
 must still be unexpired. If it has expired, build a fresh artifact from the
-approved source SHA and provide the matching successful CI run ID.
+approved source SHA and provide the matching successful CI run ID. The
+full-release job record is also checked against its run ID, attempt, and source
+SHA in a complete job-list response.
 
 The publishing script independently validates all archive/SBOM files and
 checksums, derives the OCI manifest digests from the verified archives, loads
