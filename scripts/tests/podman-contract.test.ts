@@ -174,6 +174,10 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(publish.match(/uses: actions\/attest@/g)).toHaveLength(4);
   expect(read('.containerignore')).toMatch(/\.env/);
   expect(read('.containerignore')).toMatch(/node_modules/);
+  expect(read('.containerignore')).toContain('*.xls');
+  expect(read('.containerignore')).toContain('*.xlsx');
+  expect(read('.containerignore')).toContain('**/*.xls');
+  expect(read('.containerignore')).toContain('**/*.xlsx');
 });
 
 test('OCI security scans build output without a Podman or Docker socket', () => {
