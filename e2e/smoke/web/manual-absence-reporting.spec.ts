@@ -153,15 +153,52 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await expect(perStudentClassRow).toContainText("Draft");
   await perStudentClassRow.getByLabel("Mode input Primary 1B").selectOption("PER_STUDENT");
   page.once("dialog", (dialog) => dialog.accept("Synthetic switch to per student"));
+  let releaseModeSave!: () => void;
+  let markModeSaveHeld!: () => void;
+  const modeSaveContinue = new Promise<void>((resolve) => { releaseModeSave = resolve; });
+  const modeSaveHeld = new Promise<void>((resolve) => { markModeSaveHeld = resolve; });
+  let holdModeSave = true;
+  await page.route("**/api/config/absence-reasons/bulk", async (route) => {
+    const payload = route.request().postDataJSON() as { classes?: Array<{ entry_mode?: string }> } | null;
+    if (holdModeSave && payload?.classes?.some((item) => item.entry_mode === "PER_STUDENT")) {
+      holdModeSave = false;
+      markModeSaveHeld();
+      await modeSaveContinue;
+    }
+    await route.continue();
+  });
   await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
-  await expect(page.getByRole("heading", { name: "Sakit, Izin, dan Alfa per siswa — Primary 1B" })).toBeVisible();
-  const studentTable = page.locator('[aria-label="Sakit Izin Alfa per siswa Primary 1B"]');
-  await expect(studentTable.locator("tbody tr").first()).toBeVisible();
-  const studentRow = studentTable.locator("tbody tr").first();
-  const studentName = (await studentRow.locator("td").first().innerText()).trim();
-  await studentRow.getByLabel(`sakit ${studentName}`).fill("1");
-  await page.getByRole("button", { name: "Simpan Total Absensi Bulanan" }).click();
-  await expect(page.getByText("Draf tersimpan: 1 kelas untuk 2026-09. Tinjau rekonsiliasi sebelum mengirim.")).toBeVisible();
+  const modeSaveMessage = page.getByText("Draf tersimpan: 1 kelas untuk 2026-09. Tinjau rekonsiliasi sebelum mengirim.", { exact: true });
+  const saveButton = page.getByRole("button", { name: "Simpan Total Absensi Bulanan" });
+  try {
+    await modeSaveHeld;
+    await expect(page.getByRole("heading", { name: "Sakit, Izin, dan Alfa per siswa — Primary 1B" })).toBeVisible();
+    const studentTable = page.locator('[aria-label="Sakit Izin Alfa per siswa Primary 1B"]');
+    await expect(studentTable.locator("tbody tr").first()).toBeVisible();
+    await expect(modeSaveMessage).not.toBeVisible();
+    await expect(saveButton).toBeDisabled();
+
+    const refreshedStudents = page.waitForResponse((response) =>
+      response.url().includes("/api/config/absence-reasons/students") && response.request().method() === "GET");
+    releaseModeSave();
+    await expect(modeSaveMessage).toBeVisible();
+    const refreshedStudentsResponse = await refreshedStudents;
+    expect(refreshedStudentsResponse.status()).toBe(200);
+    await refreshedStudentsResponse.finished();
+    const firstStudentRow = studentTable.locator("tbody tr").first();
+    const studentName = (await firstStudentRow.locator("td").first().innerText()).trim();
+    const sakitInput = firstStudentRow.getByLabel(`sakit ${studentName}`);
+    await expect(sakitInput).toHaveValue("0");
+    await expect(page.getByText("Memuat daftar siswa…", { exact: true })).not.toBeVisible();
+    await expect(saveButton).toBeDisabled();
+    await sakitInput.fill("1");
+    await expect(sakitInput).toHaveValue("1");
+    await expect(saveButton).toBeEnabled();
+  } finally {
+    releaseModeSave();
+  }
+  await saveButton.click();
+  await expect(modeSaveMessage).toBeVisible();
   if (await perStudentClassRow.getByRole("button", { name: "Tinjau selisih" }).count()) {
     await perStudentClassRow.getByRole("button", { name: "Tinjau selisih" }).click();
     await expect(perStudentClassRow.getByRole("button", { name: "Kirim dengan selisih" })).toBeVisible();
