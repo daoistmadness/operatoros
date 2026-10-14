@@ -119,6 +119,12 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(workflow).not.toContain('publish-ghcr:');
   const publish = read('.github/workflows/publish-oci.yml');
   expect(publish).toContain('workflow_dispatch:');
+  expect(publish).toContain('full_release_run_id:');
+  expect(publish).toContain('FULL_RELEASE_RUN_ID: ${{ inputs.full_release_run_id }}');
+  expect(publish).toContain('scripts/validate-oci-release-evidence.sh');
+  expect(publish).toContain('artifact-digest: ${{ steps.validate.outputs.artifact-digest }}');
+  expect(publish).toContain('artifact-ids: ${{ needs.validate.outputs.artifact-id }}');
+  expect(publish).toContain('Verified Full release validation run:');
   expect(publish).not.toMatch(/^\s+(pull_request|push|merge_group):/m);
   expect(publish).toContain('actions: read');
   expect(publish).toContain('packages: write');

@@ -11,6 +11,10 @@ on:
         description: Successful main CI run that produced this commit's OCI artifact
         required: true
         type: string
+      full_release_run_id:
+        description: Successful scheduled or manual Full release validation run for this exact commit
+        required: true
+        type: string
       release_version:
         description: Version recorded in the release manifest (for example 1.2.3)
         required: true
@@ -32,6 +36,8 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
+      artifact-digest: ${{ steps.validate.outputs.artifact-digest }}
+      artifact-id: ${{ steps.validate.outputs.artifact-id }}
       artifact-name: ${{ steps.validate.outputs.artifact-name }}
       publish-enabled: ${{ steps.validate.outputs.publish-enabled }}
     steps:
@@ -41,6 +47,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           CI_RUN_ID: ${{ inputs.ci_run_id }}
+          FULL_RELEASE_RUN_ID: ${{ inputs.full_release_run_id }}
           RELEASE_VERSION: ${{ inputs.release_version }}
           PUBLISH_ENABLED: ${{ vars.OPERATOROS_ENABLE_GHCR_PUBLISH }}
         run: |
@@ -51,15 +58,34 @@ jobs:
           [[ "$SOURCE_COMMIT" == "$GITHUB_SHA" && "$SOURCE_COMMIT" =~ ^[a-f0-9]{40}$ ]] || fail 'source_commit must be the full SHA of this main workflow run'
           [[ "$RELEASE_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] || fail 'release_version must be a semantic version'
           [[ "$CI_RUN_ID" =~ ^[0-9]+$ ]] || fail 'ci_run_id must be numeric'
+          [[ "$FULL_RELEASE_RUN_ID" =~ ^[0-9]+$ ]] || fail 'full_release_run_id must be numeric'
 
-          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID"
-          run_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$api")"
-          jq -e --arg sha "$SOURCE_COMMIT" '
-            .event == "push" and .head_branch == "main" and .head_sha == $sha and
-            .status == "completed" and .conclusion == "success" and
-            .path == ".github/workflows/ci.yml"
-          ' <<<"$run_json" >/dev/null || fail 'ci_run_id is not a successful main push run for this source commit'
-          attempt="$(jq -er '.run_attempt' <<<"$run_json")"
+          evidence_dir="$RUNNER_TEMP/operatoros-release-evidence"
+          mkdir -p "$evidence_dir"
+          api_root="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY"
+          api_get() {
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              "$api_root/$1"
+          }
+          api_get '' > "$evidence_dir/repository.json"
+          api_get 'actions/workflows/ci.yml' > "$evidence_dir/workflow.json"
+          api_get "actions/runs/$CI_RUN_ID" > "$evidence_dir/ci-run.json"
+          api_get "actions/runs/$CI_RUN_ID/jobs?per_page=100" > "$evidence_dir/ci-jobs.json"
+          api_get "actions/runs/$CI_RUN_ID/artifacts?per_page=100" > "$evidence_dir/artifacts.json"
+          api_get "actions/runs/$FULL_RELEASE_RUN_ID" > "$evidence_dir/full-release-run.json"
+          api_get "actions/runs/$FULL_RELEASE_RUN_ID/jobs?per_page=100" > "$evidence_dir/full-release-jobs.json"
+          artifact_evidence="$(bash "$GITHUB_WORKSPACE/scripts/validate-oci-release-evidence.sh" \
+            "$evidence_dir/repository.json" \
+            "$evidence_dir/workflow.json" \
+            "$evidence_dir/ci-run.json" \
+            "$evidence_dir/ci-jobs.json" \
+            "$evidence_dir/artifacts.json" \
+            "$evidence_dir/full-release-run.json" \
+            "$evidence_dir/full-release-jobs.json")"
+          IFS=$'\t' read -r artifact_id artifact_name artifact_digest <<< "$artifact_evidence"
+          [[ "$artifact_id" =~ ^[0-9]+$ && -n "$artifact_name" && "$artifact_digest" =~ ^sha256:[a-f0-9]{64}$ ]] || fail 'validated OCI artifact identity is incomplete'
 
           pulls_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/commits/$SOURCE_COMMIT/pulls?per_page=100")"
           pull_json="$(jq -ce --arg sha "$SOURCE_COMMIT" '[.[] | select(.base.ref == "main" and .merged_at != null and .merge_commit_sha == $sha)] | if length == 1 then .[0] else empty end' <<<"$pulls_json")" || fail 'source commit must be the merge commit of exactly one merged main pull request'
@@ -74,14 +100,6 @@ jobs:
             ' <<<"$checks_json" >/dev/null || fail "required pull request check did not pass: $check"
           done
 
-          jobs_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$api/jobs?per_page=100")"
-          for job in api frontend podman-images; do
-            jq -e --arg name "$job" '[.jobs[] | select(.name == $name and .conclusion == "success")] | length == 1' <<<"$jobs_json" >/dev/null || fail "required CI job did not pass: $job"
-          done
-
-          artifact_name="operatoros-oci-${SOURCE_COMMIT}-${attempt}"
-          artifacts_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "$api/artifacts?per_page=100")"
-          jq -e --arg name "$artifact_name" '[.artifacts[] | select(.name == $name and .expired == false)] | length == 1' <<<"$artifacts_json" >/dev/null || fail 'verified OCI artifact is missing or expired'
           if [[ "$PUBLISH_ENABLED" == true ]]; then
             publish_enabled=true
             echo '- GHCR publication gate: enabled; the `oci-publish` environment must still approve the job.' >> "$GITHUB_STEP_SUMMARY"
@@ -89,10 +107,14 @@ jobs:
             publish_enabled=false
             echo '- GHCR publication gate: **BLOCKED**; repository variable `OPERATOROS_ENABLE_GHCR_PUBLISH` is not `true`.' >> "$GITHUB_STEP_SUMMARY"
           fi
+          echo "artifact-digest=$artifact_digest" >> "$GITHUB_OUTPUT"
+          echo "artifact-id=$artifact_id" >> "$GITHUB_OUTPUT"
           echo "artifact-name=$artifact_name" >> "$GITHUB_OUTPUT"
           echo "publish-enabled=$publish_enabled" >> "$GITHUB_OUTPUT"
           echo "- Source commit: \`$SOURCE_COMMIT\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Verified CI run: [$CI_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verified Full release validation run: [$FULL_RELEASE_RUN_ID]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$FULL_RELEASE_RUN_ID)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verified OCI artifact: `$artifact_name` (ID `$artifact_id`, artifact-service digest `$artifact_digest`; downloaded by immutable ID)." >> "$GITHUB_STEP_SUMMARY"
           echo "- Merged pull request: [#$pull_number]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/pull/$pull_number)" >> "$GITHUB_STEP_SUMMARY"
           echo '- Required artifact-producing jobs: `api`, `frontend`, `podman-images`.' >> "$GITHUB_STEP_SUMMARY"
 
@@ -114,7 +136,7 @@ jobs:
       - name: Download the verified OCI build and SBOMs
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
-          name: ${{ needs.validate.outputs.artifact-name }}
+          artifact-ids: ${{ needs.validate.outputs.artifact-id }}
           run-id: ${{ inputs.ci_run_id }}
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/operatoros-release

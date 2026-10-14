@@ -50,15 +50,18 @@ tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
 publish_and_verify() {
-  local name="$1" archive="$2" digest="$3" digest_file="$tmpdir/$1.digest" ref
+  local name="$1" archive="$2" digest="$3" digest_file="$tmpdir/$1.digest" ref registry_digest
   local image="ghcr.io/daoistmadness/$name"
   ref="$image@$digest"
+  printf 'Verified OCI archive identity: %s\n' "$ref" >&2
   skopeo copy --quiet --preserve-digests --authfile "$AUTH_FILE" --digestfile "$digest_file" "oci-archive:$archive" "docker://$ref"
   [[ -s "$digest_file" ]] || fail "Skopeo did not record the $name registry digest"
-  [[ "$(<"$digest_file")" == "$digest" ]] || fail "$name registry digest differs from the verified OCI archive"
+  registry_digest="$(<"$digest_file")"
+  [[ "$registry_digest" == "$digest" ]] || fail "$name registry digest differs from the verified OCI archive: expected $digest, got $registry_digest"
   podman pull --quiet --authfile "$AUTH_FILE" "$ref"
   podman image inspect "$ref" --format '{{range .RepoDigests}}{{println .}}{{end}}' > "$tmpdir/$name.repo-digests"
   grep -Fqx "$ref" "$tmpdir/$name.repo-digests" || fail "$name pull-by-digest verification failed"
+  printf 'Registry image verified by digest: %s\n' "$ref" >&2
   printf '%s' "$ref"
 }
 

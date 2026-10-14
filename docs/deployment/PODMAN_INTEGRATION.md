@@ -65,15 +65,15 @@ generates CycloneDX SBOMs. Its synthetic database must report schema
 required checks and uses that job's `GITHUB_TOKEN`; pull requests and merge
 groups do not receive package-write permissions.
 
-The repository currently has no GHCR packages. Publication and registry digest
-pull verification remain unverified until an authorized `main` push runs the
-job. The publisher is disabled unless repository variable
-`OPERATOROS_ENABLE_GHCR_PUBLISH=true` is set, and targets the `oci-publish`
-environment. Before enabling it, configure that environment with required
-reviewers and protect `main` with pull request review and the API, frontend,
-and `podman-images` required checks. The branch is currently unprotected, so
-the fail-closed variable is intentionally unset. A local Podman manifest digest
-is not a GHCR release digest.
+The publisher remains disabled while independent approval and pre-publication
+provenance are unresolved. The `oci-publish` environment is restricted to
+`main`, but its current private-repository settings do not enforce required
+reviewers; the configured `main` ruleset is also not enforced on the current
+account plan. Do not treat its branch policy or `can_admins_bypass=false` as an
+approval gate. See [OCI release authorization and evidence](OCI_RELEASE_GOVERNANCE.md)
+for the current evidence, publisher checks, governance options, provenance
+policy, and partial-push recovery. A local Podman manifest digest is not a
+GHCR release digest.
 
 `mise run deploy:check` and `deploy:plan` are non-mutating. Planning requires an
 explicit environment and a CI release manifest whose API and web references

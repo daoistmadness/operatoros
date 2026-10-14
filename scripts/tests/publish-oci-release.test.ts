@@ -167,6 +167,7 @@ test('release manifest is created only after both images pass digest pull verifi
   const result = run(f, { MOCK_SKOPEO_FAIL: 'web' });
   expect(result.exitCode).not.toBe(0);
   expect(existsSync(join(f.runnerTemp, 'operatoros-release-manifest.json'))).toBe(false);
+  expect(`${result.stdout.toString()}${result.stderr.toString()}`).toMatch(/Registry image verified by digest: ghcr\.io\/daoistmadness\/operatoros-api@sha256:[a-f0-9]{64}/);
   const podmanCalls = readFileSync(f.podmanLog, 'utf8');
   expect(podmanCalls).toContain('pull --quiet --authfile');
   expect(readFileSync(f.skopeoLog, 'utf8')).toContain('operatoros-web');
