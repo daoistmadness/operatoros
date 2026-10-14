@@ -25,4 +25,8 @@ e2e-results
 !.env.example
 *.pem
 *.key
+*.xls
+*.xlsx
+**/*.xls
+**/*.xlsx
 backups
