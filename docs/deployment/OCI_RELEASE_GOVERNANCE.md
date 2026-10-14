@@ -47,6 +47,8 @@ As checked on 2026-10-14:
 
 - The repository is private and owned by the personal account
   `daoistmadness`.
+- The personal account's Billing overview showed GitHub Free. This is a
+  read-only plan check; payment information is outside this review.
 - The `oci-publish` environment allows only `main`. Its API protection rules
   contain only `branch_policy`; `can_admins_bypass` is `false`. The settings
   page shows no required-reviewer controls or configured reviewers. Therefore
@@ -61,6 +63,36 @@ As checked on 2026-10-14:
 - `OPERATOROS_ENABLE_GHCR_PUBLISH` is `false`. No GHCR image has been published
   by this workflow.
 
+### CodeQL publication gate status (2026-10-14)
+
+The publisher requires a successful `CodeQL` check on the exact merged pull
+request head. Its observed check identity is `github-advanced-security`;
+API, frontend, Podman, and E2E checks are GitHub Actions checks. The publisher
+now validates the complete check-run response, exact head SHA, latest result,
+conclusion, expected GitHub App identity, and for Actions checks, the linked
+workflow ID/path and exact successful job ID/name. Missing CodeQL evidence
+remains a hard failure.
+
+On PR #233 head
+`b6a0b211e8634fec752d1f952d76acb43ff31abd`, API, frontend, Podman, and E2E
+checks passed, but there was no CodeQL check. Full release validation was
+skipped on that PR run by design. A historical successful CodeQL check on an
+older PR proves the check identity, not current-commit coverage. The
+Code-scanning default-setup API returned HTTP 403 with the specific message
+“Code scanning is not enabled for this repository.” No CodeQL workflow or run
+exists for current `main` or the PR #233 head.
+
+This is a repository capability/setup blocker, not a check-name mismatch.
+Do not remove CodeQL from the publisher's required checks. The account Billing
+overview shows GitHub Free; GitHub requires Team or Enterprise plus GitHub Code
+Security for private-repository code scanning. Because the repository is
+currently under a personal account, CodeQL availability requires an eligible
+organization/subscription and repository enablement. The Code Security price
+and exact active-committer charge have not been obtained. Do not add a local
+workflow that claims GitHub CodeQL coverage as a substitute. Keep publication
+blocked until eligibility is confirmed, the feature is enabled, and a
+successful `CodeQL` check is observed on the exact source PR head.
+
 GitHub documents required environment reviewers for private repositories as
 an Enterprise Cloud feature; on Free, Pro, and Team plans the reviewer rule is
 limited to public repositories. GitHub artifact attestations for private
@@ -69,29 +101,36 @@ application public to obtain those features.
 
 ### Approval options for an owner decision
 
-1. **GitHub-native protection:** move the repository to an organization with
-   an eligible GitHub Enterprise Cloud plan; configure a second trusted human
-   or team as a required reviewer, enable prevent-self-review, keep admin
-   bypass disabled, and restrict the environment to `main`. This has plan and
-   per-user license cost, organization setup, and an ongoing second-reviewer
-   responsibility. GitHub currently lists Enterprise at $21 USD per user/month
-   on its pricing page, but the applicable account quote, eligible seats,
-   discounts, and usage charges must be confirmed before choosing this path.
-   A sole maintainer cannot provide independent human review alone.
-2. **External approval service:** a separately administered GitHub App can
-   implement an environment deployment protection rule and require an
-   independent approver. GitHub's custom protection rules are limited by plan
-   and have service availability/preview constraints. This adds an app or
-   service to operate, monitor, secure, and recover. It must be evaluated for
-   private-repository eligibility before selection.
-3. **Signed release authorization:** a distinct, independently controlled
-   approver signs a canonical authorization binding the source SHA, successful
-   full-release run, artifact ID/digest, and release version. The publisher
-   would verify the signature against a trust root that cannot be changed by
-   the same unprotected repository write path. This requires a key custody,
-   rotation, revocation, recovery, and review procedure. A checkbox, repository
-   variable, tag, or signature produced by the publishing job itself is not an
-   independent approval boundary.
+1. **GitHub-native protection:** move the private repository to an
+   organization on GitHub Enterprise Cloud, purchase/enable GitHub Code
+   Security, and assign a separate trusted human/team as an `oci-publish`
+   reviewer. Enable prevent-self-review, keep admin bypass off, restrict the
+   environment to `main`, and configure enforced branch rules. This is the
+   documented GitHub-native path that covers private-repo environment
+   reviewers and private artifact attestations while enabling CodeQL. The
+   account currently shows GitHub Free. Enterprise lists at $21 USD per
+   user/month for the first 12 months; Code Security is a separate usage-based
+   or subscription SKU measured by unique active committers over 90 days.
+   Exact Code Security price, enterprise quote, seat count, and discounts are
+   not verified. A second independent reviewer also creates an ongoing
+   identity and availability requirement.
+2. **Custom deployment protection rule:** GitHub Apps can supply a separate
+   approval service, but private repositories require GitHub Enterprise and
+   the feature is in public preview. The app needs Actions read-only and
+   Deployments read/write permissions, a protected endpoint, webhook
+   validation, installation-token handling, monitoring, and recovery. It
+   still needs an independent approver. This is unavailable on the current
+   GitHub Free account and is not selected.
+3. **External signed release authorization:** a distinct independent approver
+   signs a canonical authorization binding source SHA, successful full-release
+   run, artifact ID/digest, and release version. The publisher verifies
+   against a trust root outside the same repository write path. This can
+   replace the GitHub environment reviewer only if an independent signer and
+   protected signing key/service exist; neither currently exists. It requires
+   key custody, rotation, revocation, recovery, and reviewer operations. The
+   sole maintainer signing their own release is not independent approval. A
+   checkbox, repository variable, tag, or signature produced by the publishing
+   job itself is not an approval boundary.
 
 No alternative is enabled by this change. The owner must select a governance
 model, confirm an independent reviewer identity, and authorize any plan or
@@ -114,7 +153,8 @@ Options to evaluate:
   workflow. This is the simplest GitHub-native route, but private repositories
   require GitHub Enterprise Cloud. It needs narrowly scoped `id-token: write`
   and `attestations: write` on the trusted artifact-producing job and adds
-  workflow maintenance.
+  workflow maintenance. Current GHCR attestations are created after the
+  registry push; they do not attest the input archives before publication.
 - **Sigstore/Cosign keyless blob signatures:** sign a canonical evidence file
   (including archive/SBOM hashes, source SHA, run and workflow identity) with
   GitHub Actions OIDC, retain the Sigstore bundle beside the artifact, then
@@ -178,6 +218,9 @@ both run records and the artifact; this snapshot is not authorization.
 ## References
 
 - [GitHub deployment environments and reviewer plan limits](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
+- [Code scanning availability for private repositories](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/private-repository-enablement)
+- [GitHub Code Security licensing and active-committer billing](https://docs.github.com/en/billing/concepts/product-billing/github-advanced-security)
+- [Custom deployment protection rule eligibility and requirements](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/create-custom-protection-rules)
 - [GitHub artifact attestations and private-repository plan limits](https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations)
 - [GitHub pricing](https://github.com/pricing)
 - [Sigstore blob signing](https://docs.sigstore.dev/cosign/signing/signing_with_blobs/)

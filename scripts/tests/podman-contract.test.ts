@@ -157,8 +157,13 @@ test('OCI CI builds the reviewed definitions and keeps PR/merge-group jobs crede
   expect(publish).not.toContain('reviews_json');
   expect(publish).not.toContain('independent approval');
   expect(publish).toContain('source commit must be the merge commit');
-  expect(publish).toContain("'Ubuntu / Bun 1.4.2'");
-  expect(publish).toContain("'Select E2E scope'");
+  expect(publish).toContain('bash "$GITHUB_WORKSPACE/scripts/validate-oci-pr-checks.sh"');
+  const prChecks = read('scripts/validate-oci-pr-checks.sh');
+  expect(prChecks).toContain("['Ubuntu / Bun 1.4.2']=github-actions");
+  expect(prChecks).toContain("['Select E2E scope']=github-actions");
+  expect(prChecks).toContain('[CodeQL]=github-advanced-security');
+  expect(prChecks).toContain('.head_sha == $sha');
+  expect(prChecks).toContain('.app.slug == $app');
   expect(publish).toContain('checks: read');
   expect(publish).toContain('sudo apt-get install --yes podman skopeo');
   expect(publish).toContain('scripts/publish-oci-release.sh');
