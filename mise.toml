@@ -63,14 +63,6 @@ run = "bun run build"
 description = "Start the managed local Elysia and Vite development stack"
 run = "./start-dev.sh"
 
-[tasks."dev:api"]
-description = "Run the native foreground Bun API for interactive debugging"
-run = "bun run dev:api"
-
-[tasks."dev:web"]
-description = "Run the native foreground Vite frontend for interactive debugging"
-run = "bun run dev:web"
-
 [tasks."check:affected"]
 description = "Run Turbo checks for packages affected since origin/main"
 run = "bash scripts/check-affected.sh"
@@ -86,51 +78,3 @@ run = "make test-fast"
 [tasks."db:fresh"]
 description = "Run the authoritative fresh SQLite database parity gate"
 run = "make fresh-db-parity"
-
-[tasks."podman:doctor"]
-description = "Inspect the rootless Podman host"
-run = "bash scripts/podman-ci.sh doctor"
-
-[tasks."podman:build"]
-description = "Build the API and production web OCI images"
-run = "bash scripts/podman-ci.sh build"
-
-[tasks."podman:smoke"]
-description = "Run built images on loopback with disposable test data"
-run = "bash scripts/podman-ci.sh smoke"
-
-[tasks."podman:dev:smoke"]
-description = "Verify rootless containerized development through the live tailnet route"
-run = "bash scripts/podman-dev-smoke.sh"
-
-[tasks."podman:dev:isolated-smoke"]
-description = "Run two rootless temporary development worktrees on separate ports and data"
-run = "bash scripts/podman-dev-isolated-smoke.sh"
-
-[tasks."podman:verify"]
-description = "Build and smoke production OCI images with disposable data"
-run = "bash scripts/podman-ci.sh build && bash scripts/podman-ci.sh smoke"
-
-[tasks."podman:security"]
-description = "Scan local OCI images for secrets and HIGH/CRITICAL vulnerabilities; write SBOMs"
-run = "bash scripts/podman-security.sh"
-
-[tasks."deploy:check"]
-description = "Check rootless deployment prerequisites and report external target blockers"
-run = "bash scripts/deploy.sh check"
-
-[tasks."deploy:plan"]
-description = "Validate an approved digest-pinned release manifest without mutation"
-run = "bash scripts/deploy.sh plan"
-
-[tasks."deploy:apply"]
-description = "Apply a release only through an approved remote host adapter"
-run = "bash scripts/deploy.sh apply"
-
-[tasks."deploy:verify"]
-description = "Run production OCI images against disposable canonical-schema data"
-run = "bash scripts/deploy.sh verify"
-
-[tasks."deploy:rollback"]
-description = "Fault-inject and verify local digest-pinned rollback with disposable data"
-run = "bash scripts/deploy.sh rollback"
