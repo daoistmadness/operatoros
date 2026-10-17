@@ -10,7 +10,7 @@ All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the 
 
 ## Toolchain and dependency setup
 
-[`actions/setup-bun`](actions/setup-bun/action.yml) installs the tools from [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.2, Node 24.19.0, hk 1.56.1, and Turbo 2.11.4, then runs `bun install --frozen-lockfile` from the repository root. It works from jobs that set another default working directory.
+[`actions/setup-bun`](actions/setup-bun/action.yml) installs the tools from [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.3, Node 24.19.0, hk 1.56.1, and Turbo 2.11.4, then runs `bun install --frozen-lockfile` from the repository root. It works from jobs that set another default working directory.
 
 External actions use verified full commit SHAs with release comments: checkout v7.0.1, mise-action v5.1.1, cache v6.1.0, and upload-artifact v6.0.0. Dependabot checks GitHub Actions references weekly.
 
@@ -34,6 +34,6 @@ The E2E job keeps its fixed admin credentials scoped to the test job. The runner
 
 ## Security settings and rollback
 
-Workflow files request only `contents: read`. The current main branch has no configured protection or rulesets; repository administrators must configure required status checks separately if merge gating is desired. The stable CI jobs are `api` and `frontend`; the E2E checks are `Select E2E scope` and `Ubuntu / Bun 1.4.2`.
+Workflow files request only `contents: read`. The current main branch has no configured protection or rulesets; repository administrators must configure required status checks separately if merge gating is desired. The stable CI jobs are `api` and `frontend`; the E2E checks are `Select E2E scope` and `Ubuntu / Bun 1.4.3`.
 
 Ubuntu 26.04 is GA, but this configuration still needs successful GitHub-hosted runs before this repository's compatibility is considered validated. If a runner incompatibility is found, revert the CI migration commit in Git history. That restores the previous workflow definitions; do not add an implicit fallback runner.

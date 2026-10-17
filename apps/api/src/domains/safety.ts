@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -11,7 +11,15 @@ import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type Bac
 
 type Row = Record<string, any>;
 type Context = any;
-export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null };
+/** Filesystem capacity probe seam: bytes available to the service user (`availableBytes`) and free bytes (`freeBytes`) for the filesystem hosting the resolved path. */
+export type DiskSpaceProbe = (resolvedPath: string) => { availableBytes: number; freeBytes: number };
+export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null };
+
+/** Stable refusal codes for the backup free-space preflight. The HTTP detail string is `"<CODE>: <message>"`. */
+export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
+export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
+/** Conservative floor for the preflight minimum on small or empty databases (about 2.95 MiB). */
+export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
 
 const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -45,6 +53,19 @@ function dbSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as Row | null)?.version ?? CURRENT_SCHEMA_VERSION);
 }
 
+/** Scheduler next run time for the status payload: null when no schedule row exists, the scheduler is disabled, or no run time has been computed yet. */
+function scheduledNextRunAt(context: AuthContext): string | null {
+  try {
+    const value = row(context, "SELECT enabled, next_run_at FROM backup_scheduler_config WHERE id = 1");
+    return value?.enabled && value.next_run_at ? String(value.next_run_at) : null;
+  } catch { return null; }
+}
+
+/** Live SQLite journal mode of the active connection; fail-safe "unknown" when the pragma cannot be read. */
+function activeJournalMode(context: AuthContext): string {
+  try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
+}
+
 function inspectDatabase(path: string): { integrity: string; quick: string; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean } {
   const database = new Database(path, { readonly: true });
   try {
@@ -75,6 +96,37 @@ function nextFilename(root: string): string {
 }
 function statSafe(path: string): boolean { try { statSync(path); return true; } catch { return false; } }
 
+const defaultDiskSpaceProbe: DiskSpaceProbe = (path) => {
+  const stats = statfsSync(path);
+  return { availableBytes: stats.bsize * stats.bavail, freeBytes: stats.bsize * stats.bfree };
+};
+
+function diskSpaceProbeFor(config: SafetyConfig): DiskSpaceProbe { return config.diskSpaceProbe ?? defaultDiskSpaceProbe; }
+
+/** Minimum free bytes required before a backup may start: twice the active database size (the staging directory holds the plaintext snapshot and its encrypted envelope at the same time) with a conservative floor for small databases. */
+export function minimumRequiredSpaceBytes(activeDatabasePath: string): number {
+  return Math.max(statSafe(activeDatabasePath) ? statSync(activeDatabasePath).size * 2 : 0, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
+}
+
+/** Resolves the nearest existing ancestor of the backup destination so the probe covers the filesystem that will host new output and never an unrelated mount. */
+function diskSpaceProbePath(root: string): string {
+  let candidate = resolve(root);
+  for (;;) {
+    try { return realpathSync(candidate); } catch { /* not created yet: keep walking up */ }
+    const parent = dirname(candidate);
+    if (parent === candidate) throw new Error("Backup destination filesystem could not be resolved.");
+    candidate = parent;
+  }
+}
+
+/** Fails closed (503) when the capacity probe itself fails; refuses (507) when available bytes are below the documented minimum. */
+function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root: string): void {
+  const required = minimumRequiredSpaceBytes(dbPath(context));
+  let probe: { availableBytes: number; freeBytes: number };
+  try { probe = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { throw Object.assign(new Error("Backup free-space probe failed; refusing to create a backup."), { status: 503, code: BACKUP_DISK_SPACE_PROBE_FAILED }); }
+  if (probe.availableBytes < required) throw Object.assign(new Error(`Insufficient free disk space for backup: ${required} bytes required, ${probe.availableBytes} bytes available.`), { status: 507, code: BACKUP_LOW_DISK_SPACE });
+}
+
 function decryptedBackup(config: SafetyConfig, path: string, operation: (path: string, artifact: Buffer) => Row): Row {
   const artifact = readFileSync(path);
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required for backup restore."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
@@ -94,6 +146,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
   const active = dbPath(context);
   if (basename(active) === PROTECTED_DATABASE_BASENAME) throw new Error("Protected database access is forbidden.");
+  assertBackupDiskSpace(context, config, backupRoot(config));
   backupBusy = true;
   let root = "";
   let temporaryDirectory = "";
@@ -166,9 +219,11 @@ function deleteBackup(root: string, filename: string): void {
 
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   const root = backupRoot(config); const active = dbPath(context); const entries = statSafe(root) ? metadata(root) : [];
-  const minimumRequired = Math.max((statSafe(active) ? statSync(active).size : 0) * 2, 3_088_384);
+  const minimumRequired = minimumRequiredSpaceBytes(active);
   const available = statSafe(dirname(root)); const latest = entries[0] ?? null;
-  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: null, backup_count: entries.length, retention_limit: 10, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: null, minimum_required_space_bytes: minimumRequired, low_space: false, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: null, database_basename: basename(active), sqlite_journal_mode: "unknown", destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
+  let probeValues: { availableBytes: number; freeBytes: number } | null = null;
+  try { probeValues = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
+  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: 10, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: probeValues === null || probeValues.availableBytes < minimumRequired, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
@@ -240,7 +295,7 @@ const restoreBody = t.Object({ current_password: t.Optional(t.String()), confirm
 export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfig): void {
   app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } });
   app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; });
-  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
   app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return rows(context, "SELECT id, backup_filename, started_at, completed_at, duration_seconds, status, error_message, trigger_type, size_bytes, checksum, integrity_verified, removed_backups_json FROM backup_execution_history ORDER BY started_at DESC, id DESC LIMIT 200").map((value) => ({ ...value, integrity_verified: Boolean(value.integrity_verified), removed_backups: JSON.parse(String(value.removed_backups_json ?? "[]")) })); });

@@ -1,9 +1,9 @@
 import { expect, it } from "bun:test";
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createFreshDatabase, openDatabase } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const cli = join(root, "apps/api/src/backup-cli.ts");
@@ -41,6 +41,10 @@ it("backs up and restores only an explicit disposable data root", () => {
     expect(existsSync(`${databasePath}-shm`)).toBe(false);
     const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
     expect(artifact).toStartWith(join(source, "backups"));
+    const manifest = JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")) as { schema_version?: string; trigger?: string };
+    expect(manifest.schema_version).toBe(CURRENT_SCHEMA_VERSION);
+    expect(manifest.trigger).toBe("manual");
+    expect(manifest.schema_version).not.toBe("unknown");
 
     writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
     writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
