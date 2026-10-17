@@ -41,8 +41,13 @@ writer.
   by the deployer, readable by the service user.
 - Service account (no login shell):
   `sudo useradd --system --home /var/lib/operatoros --shell /usr/sbin/nologin operatoros`
-  (`/var/lib/operatoros` itself is created and owned by systemd `StateDirectory=`
-  on first service start; do not pre-create it with wrong ownership).
+- Create the service state directory before any database command runs. Systemd
+  `StateDirectory=operatoros` only creates `/var/lib/operatoros` at the first
+  service start, and the section 5 bootstrap runs earlier as `operatoros` (on a
+  pristine host it fails with `EACCES ... mkdir '/var/lib/operatoros'`):
+  `sudo install -d -m 0700 -o operatoros -g operatoros /var/lib/operatoros`
+  (mode `0700` matches `StateDirectoryMode=0700`; systemd reuses an existing
+  state directory and keeps its owner, group, and mode).
 
 ## 3. Paths
 
@@ -96,7 +101,9 @@ retention rules are in `docs/security/ROTATION_RUNBOOK.md`.
 All database commands expect an absolute data directory and are safe to re-run.
 
 ```bash
-# 1) Bootstrap an empty data root (fails if the directory is non-empty):
+# 1) Create the state directory (section 2), then bootstrap an empty data root
+#    (bootstrap fails if the data directory is non-empty):
+sudo install -d -m 0700 -o operatoros -g operatoros /var/lib/operatoros
 cd /opt/operatoros
 sudo -u operatoros OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
   bun run db:bootstrap --data-dir /var/lib/operatoros/data
@@ -205,6 +212,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 | Symptom | First check |
 |---|---|
 | `status=203/EXEC` | `/usr/local/bin/bun` missing or wrong version (`bun --version` must print `1.4.3`). |
+| `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
 | Backup or restore refuses with `*_LSOF_REQUIRED` | Install `lsof`. |
