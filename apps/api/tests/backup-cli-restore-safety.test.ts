@@ -68,6 +68,15 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(completed[0]!.filename).toBe(label);
     expect(completed[0]!.safety_backup_filename).toBe(safety);
 
+    const cliRecovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(cliRecovery).toHaveLength(1);
+    expect(cliRecovery[0]!.event).toBe("restore_completed");
+    expect(cliRecovery[0]!.outcome).toBe("COMPLETED");
+    expect(cliRecovery[0]!.target_filename).toBe(label);
+    expect(cliRecovery[0]!.pre_restore_snapshot_filename).toBe(safety);
+    expect(cliRecovery[0]!.reason).toBeNull();
+    expect(typeof (cliRecovery[0]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
+
     const preserved = readFileSync(databasePath);
     writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
     writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
@@ -90,5 +99,13 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(failures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
     expect(failures[0]!.tool).toBe("backup-cli");
     expect(failures[0]!.filename).toBe(label);
+
+    const cliRecoveryLines = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(cliRecoveryLines).toHaveLength(2);
+    const cliFailures = cliRecoveryLines.filter((entry) => entry.event === "restore_failed");
+    expect(cliFailures).toHaveLength(1);
+    expect(cliFailures[0]!.outcome).toBe("FAILED");
+    expect(cliFailures[0]!.target_filename).toBe(label);
+    expect(cliFailures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });

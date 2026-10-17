@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { appendFileSync, chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
@@ -6,6 +7,7 @@ import { Database, constants } from "bun:sqlite";
 import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
 import { loadConfig } from "./config";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
+import { appendRestoreAudit } from "./domains/restore-audit";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -172,16 +174,17 @@ function restore(selected: string): void {
   const directory = mkdtempSync(join(tmpdir(), "operatoros-restore-cli-")); chmodSync(directory, 0o700);
   const candidate = join(directory, "candidate.sqlite"); const target = `${databasePath}.${process.pid}.restore`;
   let replaced = false;
+  let safety: { filename: string; path: string } | null = null;
   try {
     writeFileSync(candidate, plaintext, { mode: 0o600 }); const database = new Database(candidate, { readonly: true }); database.close();
-    const safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
+    safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
     writeFileSync(target, plaintext, { mode: 0o600 }); renameSync(target, databasePath); replaced = true;
     console.log(`Pre-restore safety snapshot: ${safety ? safety.path : "none (no active database to preserve)"}`);
     console.log(`SQLite restore completed: ${databasePath}`);
-    try { audit(backupDir, "restore_completed", { filename: label, safety_backup_filename: safety ? safety.filename : null }); }
+    try { audit(backupDir, "restore_completed", { filename: label, safety_backup_filename: safety ? safety.filename : null }); appendRestoreAudit(backupDir, { event: "restore_completed", outcome: "COMPLETED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason: null }); }
     catch { console.error("WARN: restore completed but the audit line could not be written."); }
   } catch (error) {
-    if (!replaced) { try { audit(backupDir, "restore_failed", { filename: label, reason: error instanceof Error ? error.message : "Restore failed." }); } catch { /* audit failure must not mask the restore error */ } }
+    if (!replaced) { try { const reason = error instanceof Error ? error.message : "Restore failed."; audit(backupDir, "restore_failed", { filename: label, reason }); appendRestoreAudit(backupDir, { event: "restore_failed", outcome: "FAILED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason }); } catch { /* audit failure must not mask the restore error */ } }
     throw error;
   } finally { rmSync(directory, { recursive: true, force: true }); rmSync(target, { force: true }); }
 }
