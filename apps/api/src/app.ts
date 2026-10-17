@@ -127,6 +127,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
       backupEncryption: _config.backupEncryption ?? null,
+      diskSpaceProbe: _config.diskSpaceProbe ?? null,
     };
     safetyRoutes(app, context, safetyConfig);
     dataResetRoutes(app, context, {

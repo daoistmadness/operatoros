@@ -16,7 +16,7 @@ evidence only. Monorepo: `apps/api/`, `apps/web/`, `packages/db/`,
 
 ## Commands
 
-Authorities: `mise.toml` (Bun 1.4.2, hk 1.56.1, Node 24.19.0),
+Authorities: `mise.toml` (Bun 1.4.3, hk 1.56.1, Node 24.19.0),
 `package.json`, `Makefile`, [COMMANDS.md](COMMANDS.md); `bun.lock` + `mise.lock`
 are the lockfile authorities; CI runs these directly in `.github/workflows/ci.yml`.
 

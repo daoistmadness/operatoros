@@ -38,7 +38,7 @@ jobs:
         run: bash .github/scripts/select-e2e-scope.sh
 
   e2e-full:
-    name: Ubuntu / Bun 1.4.2
+    name: Ubuntu / Bun 1.4.3
     needs: changes
     if: always() && (needs.changes.result == 'failure' || needs.changes.outputs.run-e2e == 'true')
     runs-on: ubuntu-26.04

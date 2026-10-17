@@ -262,7 +262,7 @@ section describe the Phase 14.8 acceptance snapshot. Current versions are in
 the [developer prerequisites](../../README.md#prerequisites).
 
 - `mise 2026.8.14` was the validated Mise CLI at Phase 14.8 acceptance. The
-  committed `mise.toml` and `mise.lock` manage Bun `1.4.2`, hk `1.56.1`, and
+  committed `mise.toml` and `mise.lock` manage Bun `1.4.3`, hk `1.56.1`, and
   Python `3.12.3`.
 - hk `1.56.1` owns the committed `hk.pkl` Git lifecycle hooks. `HK_MISE=1`
   runs hook steps through the Mise environment. Hooks are optional early

@@ -10,7 +10,7 @@ and fast, unified package management with frozen lockfiles (`bun.lock`).
 
 ## Decision
 
-OperatorOS adopts Bun 1.4.2 as its JavaScript runtime, package manager, and
+OperatorOS adopts Bun 1.4.3 as its JavaScript runtime, package manager, and
 scripting execution environment on the Linux checkout on `oprserver`.
 - `bun.lock` at the repository root is the single dependency lockfile authority.
 - Vite and frontend CLI tools run under Bun (`bun run --bun ...`).

@@ -40,7 +40,13 @@ jobs:
       - name: Fetch main for doctor validation
         if: github.event_name == 'pull_request'
         working-directory: ${{ github.workspace }}
-        run: git fetch --no-tags origin main:refs/remotes/origin/main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Checkout removes persisted credentials; authenticate this single fetch for the private repository.
+          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$header" fetch --no-tags origin main:refs/remotes/origin/main
       - name: Set up locked toolchain and dependencies
         uses: ./.github/actions/setup-bun
       - name: Prepare disposable doctor database

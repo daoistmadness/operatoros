@@ -15,6 +15,8 @@ export interface BackendConfig {
   backupDir?: string;
   dataPaths?: OperatorOSPaths;
   backupEncryption?: BackupEncryptionConfig | null;
+  /** Optional capacity-probe override for deterministic tests (see domains/safety). */
+  diskSpaceProbe?: import("./domains/safety").DiskSpaceProbe | null;
   clock?: () => Date;
 }
 

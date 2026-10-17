@@ -27,8 +27,10 @@ SQLite-specific WAL/PRAGMA configuration and `BEGIN IMMEDIATE` serialization
 are intentional. Drizzle is the application data layer. Python SQLAlchemy
 modules remain only for disposable schema and migration tooling.
 
-Existing databases are never migrated by ordinary startup. Current applications
-pair with S4.3; the protected operational database is never a test target.
+Existing databases are never migrated by ordinary startup. The current
+application schema head is S4.8 (`20261002_s48`); the protected operational
+database remains S4.3 (`20260725_s43`) until a separately authorized migration,
+and it is never a test target.
 
 Historical PostgreSQL migrations and the PR #35 evaluation documents remain
 audit evidence only. They are not current deployment or compatibility guidance.

@@ -54,6 +54,17 @@ describe("backup, restore, and scheduler safety", () => {
       expect(artifact.length).toBeGreaterThan(0);
       expect(isEncryptedBackup(artifact)).toBe(true);
 
+      const schedulerUpdate = await app.handle(new Request("http://local/api/admin/backups/scheduler", { method: "PUT", headers: { cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ enabled: true, schedule_type: "interval", interval_minutes: 60, hour_utc: 2, minute_utc: 0, weekday_utc: 1, keep_daily: 7, keep_weekly: 4, keep_monthly: 3 }) }));
+      expect(schedulerUpdate.status).toBe(200);
+      const schedulerRow = await schedulerUpdate.json() as any;
+      expect(schedulerRow.next_run_at).toBeTruthy();
+      const status = await app.handle(new Request("http://local/api/admin/backups/status", { headers: { cookie, origin: "http://localhost:5173" } }));
+      expect(status.status).toBe(200);
+      const statusPayload = await status.json() as any;
+      expect(statusPayload.next_scheduled_backup_at).toBe(schedulerRow.next_run_at);
+      expect(statusPayload.sqlite_journal_mode).not.toBe("unknown");
+      expect(statusPayload.sqlite_journal_mode).toBe(String((database.client.query("PRAGMA journal_mode").get() as any).journal_mode));
+
       const wrongKeyApp = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: Buffer.alloc(32, 8).toString("base64"), activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
       const wrongKeyCookie = await login(wrongKeyApp, "golden-admin", "golden-admin-pass-1");
       const wrongKeyPreflight = await wrongKeyApp.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: wrongKeyCookie, origin: "http://localhost:5173" } }));

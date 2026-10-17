@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -116,8 +116,19 @@ function nextFilename(directory: string): string {
   for (let index = 0; ; index++) { const value = index ? base.replace(".sqlite3", `_${index}.sqlite3`) : base; if (!exists(join(directory, value)) && !exists(join(directory, `${value}.meta.json`))) return value; }
 }
 
-function backup(): void {
-  const value = config();
+function snapshotSchemaVersion(database: Database): string {
+  return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version?: unknown } | null)?.version ?? CURRENT_SCHEMA_VERSION);
+}
+
+function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
+  mkdirSync(root, { recursive: true, mode: 0o700 });
+  const path = `${root}/backup_operations_audit.jsonl`;
+  appendFileSync(path, `${JSON.stringify({ timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), event, tool: "backup-cli", ...values })}\n`, { mode: 0o600 });
+  chmodSync(path, 0o600);
+}
+
+/** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
+function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pre_restore_auto"): { filename: string; path: string } {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled.");
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
@@ -128,14 +139,22 @@ function backup(): void {
   const name = nextFilename(backupDir);
   try {
     clearOrphanedEmptyWal(databasePath);
-    const database = openOfflineSnapshot(databasePath); const plaintext = database.serialize(); database.close();
+    const database = openOfflineSnapshot(databasePath);
+    let plaintext: Uint8Array;
+    let schemaVersion: string;
+    try { schemaVersion = snapshotSchemaVersion(database); plaintext = database.serialize(); } finally { database.close(); }
     const encrypted = encryptBackup(plaintext, value.backupEncryption);
-    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger: "manual", schema_version: "unknown", sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
+    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
     const artifact = join(directory, name); const manifest = join(directory, `${name}.meta.json`);
     writeFileSync(artifact, encrypted, { mode: 0o600 }); writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
-    console.log(`Encrypted backup completed: ${join(backupDir, name)}`);
+    return { filename: name, path: join(backupDir, name) };
   } finally { rmSync(directory, { recursive: true, force: true }); }
+}
+
+function backup(): void {
+  const published = publishBackup(config(), "manual");
+  console.log(`Encrypted backup completed: ${published.path}`);
 }
 
 function restore(selected: string): void {
@@ -147,13 +166,23 @@ function restore(selected: string): void {
   const path = resolve(isAbsolute(selected) ? selected : join(backupDir, selected));
   if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
   if (!backupName.test(basename(path)) || !exists(path)) throw new Error("Invalid encrypted backup file.");
+  const label = basename(path);
   const artifact = readFileSync(path);
   const plaintext = isEncryptedBackup(artifact) ? decryptBackup(artifact, value.backupEncryption) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
   const directory = mkdtempSync(join(tmpdir(), "operatoros-restore-cli-")); chmodSync(directory, 0o700);
   const candidate = join(directory, "candidate.sqlite"); const target = `${databasePath}.${process.pid}.restore`;
+  let replaced = false;
   try {
     writeFileSync(candidate, plaintext, { mode: 0o600 }); const database = new Database(candidate, { readonly: true }); database.close();
-    writeFileSync(target, plaintext, { mode: 0o600 }); renameSync(target, databasePath); console.log(`SQLite restore completed: ${databasePath}`);
+    const safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
+    writeFileSync(target, plaintext, { mode: 0o600 }); renameSync(target, databasePath); replaced = true;
+    console.log(`Pre-restore safety snapshot: ${safety ? safety.path : "none (no active database to preserve)"}`);
+    console.log(`SQLite restore completed: ${databasePath}`);
+    try { audit(backupDir, "restore_completed", { filename: label, safety_backup_filename: safety ? safety.filename : null }); }
+    catch { console.error("WARN: restore completed but the audit line could not be written."); }
+  } catch (error) {
+    if (!replaced) { try { audit(backupDir, "restore_failed", { filename: label, reason: error instanceof Error ? error.message : "Restore failed." }); } catch { /* audit failure must not mask the restore error */ } }
+    throw error;
   } finally { rmSync(directory, { recursive: true, force: true }); rmSync(target, { force: true }); }
 }
 
