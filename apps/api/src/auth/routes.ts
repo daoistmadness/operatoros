@@ -85,7 +85,17 @@ export function authRoutes(app: any, context: AuthContext): any {
     .post("/api/setup/admin", async ({ body, request, set, server }: any) => {
       set.headers["cache-control"] = "no-store";
       try {
-        const setupAuthorization = validateSetupAuthorization(context, readCookie(request, SETUP_COOKIE_NAME));
+        const cookieAuthorization = readCookie(request, SETUP_COOKIE_NAME);
+        let setupAuthorization: string | null;
+        if (cookieAuthorization) {
+          setupAuthorization = validateSetupAuthorization(context, cookieAuthorization);
+        } else if (context.config.setupToken && !context.config.managedDevSetup) {
+          // Production token path: the operator presents ASTRYX_SETUP_TOKEN in the
+          // request body and provisionFirstAdmin compares it in constant time.
+          setupAuthorization = typeof body.setup_token === "string" ? body.setup_token : null;
+        } else {
+          throw { code: "SETUP_AUTHORIZATION_REQUIRED", message: "Initial setup authorization is required.", status: 403 } satisfies ProvisioningErrorShape;
+        }
         const result = await provisionFirstAdmin(context, {
           username: body.username, password: body.password, confirmation: body.password_confirmation,
           setupToken: setupAuthorization, ...requestContext(request, server, context.config.trustedProxyAddresses ?? []),
@@ -101,6 +111,7 @@ export function authRoutes(app: any, context: AuthContext): any {
         username: t.String({ minLength: 1, maxLength: 255 }),
         password: t.String({ minLength: 1, maxLength: 1024 }),
         password_confirmation: t.String({ minLength: 1, maxLength: 1024 }),
+        setup_token: t.Optional(t.String({ minLength: 1, maxLength: 1024 })),
       }),
     });
 }

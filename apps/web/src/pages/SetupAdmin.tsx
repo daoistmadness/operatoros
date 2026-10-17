@@ -10,7 +10,7 @@ import { FieldDescription, FieldLabel, FormField } from "../components/ui/field"
 import { FieldError } from "../components/ui/field-error";
 import { Form } from "../components/ui/form";
 import { Input } from "../components/ui/input";
-import { useProvisionFirstAdminMutation } from "../hooks/useSetupQueries";
+import { useProvisionFirstAdminMutation, useSetupStatusQuery } from "../hooks/useSetupQueries";
 import { queryKeys } from "../lib/query/queryKeys";
 
 function errorCode(error: unknown): string | undefined {
@@ -25,16 +25,21 @@ export default function SetupAdmin() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const mutation = useProvisionFirstAdminMutation();
+  const status = useSetupStatusQuery();
   const usernameRef = useRef<HTMLInputElement>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const [setupToken, setSetupToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSetupToken, setShowSetupToken] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const tokenRequired = status.data?.setup_token_required === true;
   const passwordLongEnough = password.length >= 12;
   const passwordsMatch = confirmation.length > 0 && password === confirmation;
-  const formReady = Boolean(username.trim()) && passwordLongEnough && passwordsMatch;
+  const tokenReady = !tokenRequired || setupToken.trim().length > 0;
+  const formReady = Boolean(username.trim()) && passwordLongEnough && passwordsMatch && tokenReady;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -43,15 +48,21 @@ export default function SetupAdmin() {
     if (!username.trim()) { setValidationError("Enter an administrator username."); usernameRef.current?.focus(); return; }
     if (!passwordLongEnough) { setValidationError("Password must be at least 12 characters long."); return; }
     if (!passwordsMatch) { setValidationError("Password confirmation does not match."); return; }
+    if (tokenRequired && !setupToken.trim()) { setValidationError("Enter the setup token configured on the server."); return; }
     try {
-      await bootstrapSetupAuthorization();
-      await mutation.mutateAsync({ username: username.trim(), password, password_confirmation: confirmation });
-      setPassword(""); setConfirmation("");
+      if (tokenRequired) {
+        await mutation.mutateAsync({ username: username.trim(), password, password_confirmation: confirmation, setup_token: setupToken.trim() });
+      } else {
+        await bootstrapSetupAuthorization();
+        await mutation.mutateAsync({ username: username.trim(), password, password_confirmation: confirmation });
+      }
+      setPassword(""); setConfirmation(""); setSetupToken("");
       window.sessionStorage.setItem("astryx:login-notice", "Administrator created. Sign in with your new account.");
       navigate("/login", { replace: true });
     } catch (error) {
       const code = errorCode(error);
       if (code === "SETUP_ALREADY_COMPLETED") { await client.invalidateQueries({ queryKey: queryKeys.setup.all }); navigate("/login", { replace: true }); return; }
+      if (code === "SETUP_TOKEN_REQUIRED" || code === "SETUP_TOKEN_INVALID") { setValidationError("The setup token is missing or incorrect. Check the configured token and try again."); return; }
       setValidationError(code === "PASSWORD_POLICY_FAILED" ? "Password must be at least 12 characters long." : "Administrator could not be created. Check your details and try again.");
     }
   };
@@ -65,6 +76,7 @@ export default function SetupAdmin() {
           <FormField id="administrator-username" required><FieldLabel>Administrator username</FieldLabel><Input ref={usernameRef} autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} autoFocus /></FormField>
           <FormField id="password" required invalid={password.length > 0 && !passwordLongEnough}><FieldLabel>Password</FieldLabel><PasswordInput id="password" name="administrator password" value={password} onChange={setPassword} visible={showPassword} onToggle={() => setShowPassword((shown) => !shown)} /><FieldDescription>Use at least 12 characters.</FieldDescription><FieldError>{password.length > 0 && !passwordLongEnough ? "Password is too short." : null}</FieldError></FormField>
           <FormField id="confirm-password" required invalid={confirmation.length > 0 && !passwordsMatch}><FieldLabel>Confirm password</FieldLabel><PasswordInput id="confirm-password" name="password confirmation" value={confirmation} onChange={setConfirmation} visible={showConfirmation} onToggle={() => setShowConfirmation((shown) => !shown)} /><div className="min-h-5" aria-live="polite">{passwordsMatch && <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-4" aria-hidden="true" />Passwords match.</p>}<FieldError>{confirmation.length > 0 && !passwordsMatch ? "Passwords do not match." : null}</FieldError></div></FormField>
+          {tokenRequired && <FormField id="setup-token" required><FieldLabel>Setup token</FieldLabel><PasswordInput id="setup-token" name="setup token" value={setupToken} onChange={setSetupToken} visible={showSetupToken} onToggle={() => setShowSetupToken((shown) => !shown)} /><FieldDescription>Enter the ASTRYX_SETUP_TOKEN value configured on the server for first-run setup.</FieldDescription></FormField>}
           <Button type="submit" size="lg" disabled={!formReady || mutation.isPending} aria-busy={mutation.isPending} className="w-full">{mutation.isPending && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}{mutation.isPending ? "Creating administrator…" : "Create administrator"}</Button>
         </Form>
       </CardContent>

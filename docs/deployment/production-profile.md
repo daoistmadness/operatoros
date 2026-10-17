@@ -24,8 +24,12 @@ fail closed when it does not.
 | `OPERATOROS_DATA_DIR` | Recommended; required for explicit layouts | Absolute data root. Derives `operatoros.sqlite`, `backups/`, and `logs/`. When `DATABASE_URL`/`DATABASE_PATH` is also set it must resolve to the derived database path or startup fails; when `BACKUP_DIR` is set it must equal the derived backups path. Ordinary startup validates databases and never migrates them. `OPERATOROS_DEV_DATA_DIR` is a deprecated alias. | `resolveOperatorOSPaths` in `packages/db/src/data-dir.ts`; path checks in `apps/api/src/config.ts` |
 
 Related first-run variable: `ASTRYX_SETUP_TOKEN` protects initial administrator
-provisioning and is optional for direct loopback use. Remove it from deployed
-secrets after provisioning.
+provisioning. When it is set, `POST /api/setup/admin` requires it in the request
+body as `setup_token`, `/api/setup/status` reports `setup_token_required: true`,
+and the first-run screen asks for it. When it is unset outside managed
+development, provisioning stays closed (`SETUP_AUTHORIZATION_UNAVAILABLE` /
+`SETUP_AUTHORIZATION_REQUIRED`). It is required on a fresh production data root
+and should be removed from deployed secrets after provisioning.
 
 ## Exact-origin behavior
 

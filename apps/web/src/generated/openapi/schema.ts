@@ -7389,6 +7389,8 @@ export interface components {
             password: string;
             /** Password Confirmation */
             password_confirmation: string;
+            /** Setup Token */
+            setup_token?: string;
             /** Username */
             username: string;
         };
