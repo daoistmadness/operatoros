@@ -36168,6 +36168,12 @@
             "title": "Password Confirmation",
             "type": "string"
           },
+          "setup_token": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Setup Token",
+            "type": "string"
+          },
           "username": {
             "maxLength": 255,
             "minLength": 1,

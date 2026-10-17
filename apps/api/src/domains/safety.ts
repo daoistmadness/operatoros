@@ -8,6 +8,7 @@ import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
+import { appendRestoreAudit } from "./restore-audit";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -254,10 +255,10 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
 function missingRestoreFields(body: Row): string[] { return ["acknowledge_complete_replacement", "acknowledge_session_revocation", "acknowledge_restart_required", "acknowledge_safety_backup", "expected_source_sha256", "expected_active_sha256"].filter((key) => body[key] === undefined); }
 function restoreValidationError(set: any, fields: string[]): { detail: unknown } { set.status = 422; return { detail: fields.map((field) => ({ loc: ["body", field], msg: "Field required", type: "missing" })) }; }
 
-function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, actorId: number): Row {
+function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, operator: { id: number; username: string }): Row {
   if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
   if (!body.current_password || !body.confirmation_filename || !body.confirmation_phrase) throw Object.assign(new Error("Restore fields are required."), { status: 422 });
-  const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [actorId]);
+  const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [operator.id]);
   if (!user || !Bun.password.verifySync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
   if (body.confirmation_filename !== filename) throw Object.assign(new Error("The confirmation filename does not match."), { status: 400, code: "RESTORE_CONFIRMATION_FILENAME_MISMATCH" });
   if (body.confirmation_phrase !== "RESTORE_DATABASE") throw Object.assign(new Error("The restore confirmation phrase is invalid."), { status: 400, code: "RESTORE_CONFIRMATION_PHRASE_INVALID" });
@@ -265,17 +266,21 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   const checked = preflight(context, config, filename); if (checked.source.sha256 !== body.expected_source_sha256 || checked.active.active_sha256 !== body.expected_active_sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
   if (!checked.source.restore_eligible) throw Object.assign(new Error("The selected backup is not eligible for restore."), { status: 409, code: "RESTORE_SOURCE_INVALID" });
   if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
-  restoreBusy = true; const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let replaced = false; let snapshot: Row | null = null;
+  restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let replaced = false; let snapshot: Row | null = null;
   try {
     snapshot = createBackup(context, config, "pre_restore_auto", filename);
     decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
     context.database.close(); renameSync(active, rollback); renameSync(candidate, active); replaced = true; context.database.reopen(); context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
     const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
-    rmSync(rollback, { force: true }); audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
-    return { operation_id: randomUUID(), status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
+    audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
+    appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot.filename, reason: null });
+    rmSync(rollback, { force: true });
+    return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
   } catch (error) {
     if (replaced) { try { context.database.close(); rmSync(active, { force: true }); renameSync(rollback, active); context.database.reopen(); } catch { /* fail closed below */ } }
     audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error" });
+    try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
+    catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
     throw Object.assign(new Error("Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
   } finally { rmSync(candidate, { force: true }); rmSync(rollback, { force: true }); restoreBusy = false; }
 }
@@ -303,7 +308,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); }, { body: t.Object({ enabled: t.Boolean(), schedule_type: t.Union([t.Literal("daily"), t.Literal("weekly"), t.Literal("interval")]), interval_minutes: t.Number({ minimum: 1, maximum: 525600 }), hour_utc: t.Number({ minimum: 0, maximum: 23 }), minute_utc: t.Number({ minimum: 0, maximum: 59 }), weekday_utc: t.Number({ minimum: 0, maximum: 6 }), keep_daily: t.Number({ minimum: 0, maximum: 365 }), keep_weekly: t.Number({ minimum: 0, maximum: 260 }), keep_monthly: t.Number({ minimum: 0, maximum: 120 }) }) });
   app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
-  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => { const user = auth(context, ctx); if (!user) return denied(ctx); const missing = missingRestoreFields(ctx.body ?? {}); if (missing.length > 0) return restoreValidationError(ctx.set, missing); try { return restore(context, config, ctx.params.filename, ctx.body, user.id); } catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); } }, { body: restoreBody });
+  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => { const user = auth(context, ctx); if (!user) return denied(ctx); const missing = missingRestoreFields(ctx.body ?? {}); if (missing.length > 0) return restoreValidationError(ctx.set, missing); try { return restore(context, config, ctx.params.filename, ctx.body, { id: user.id, username: user.username }); } catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); } }, { body: restoreBody });
   app.onStart(() => backupScheduler.start(context, config));
   app.onStop(() => backupScheduler.stop());
 }

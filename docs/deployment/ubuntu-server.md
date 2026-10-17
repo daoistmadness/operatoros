@@ -41,8 +41,13 @@ writer.
   by the deployer, readable by the service user.
 - Service account (no login shell):
   `sudo useradd --system --home /var/lib/operatoros --shell /usr/sbin/nologin operatoros`
-  (`/var/lib/operatoros` itself is created and owned by systemd `StateDirectory=`
-  on first service start; do not pre-create it with wrong ownership).
+- Create the service state directory before any database command runs. Systemd
+  `StateDirectory=operatoros` only creates `/var/lib/operatoros` at the first
+  service start, and the section 5 bootstrap runs earlier as `operatoros` (on a
+  pristine host it fails with `EACCES ... mkdir '/var/lib/operatoros'`):
+  `sudo install -d -m 0700 -o operatoros -g operatoros /var/lib/operatoros`
+  (mode `0700` matches `StateDirectoryMode=0700`; systemd reuses an existing
+  state directory and keeps its owner, group, and mode).
 
 ## 3. Paths
 
@@ -72,6 +77,10 @@ PORT=8090
 ENABLE_DESTRUCTIVE_OPERATIONS=false
 AUTH_COOKIE_SECRET=<paste generated value>
 
+# First-run only: protects first-administrator creation (section 5). Generate it
+# like the cookie secret, then remove the line after the administrator exists:
+# ASTRYX_SETUP_TOKEN=<paste generated value>
+
 # Optional, when backups must be created on first start:
 # BACKUP_ENCRYPTION_KEY=<generated Base64 32-byte key>
 # BACKUP_ENCRYPTION_KEY_ID=<short label>
@@ -96,7 +105,9 @@ retention rules are in `docs/security/ROTATION_RUNBOOK.md`.
 All database commands expect an absolute data directory and are safe to re-run.
 
 ```bash
-# 1) Bootstrap an empty data root (fails if the directory is non-empty):
+# 1) Create the state directory (section 2), then bootstrap an empty data root
+#    (bootstrap fails if the data directory is non-empty):
+sudo install -d -m 0700 -o operatoros -g operatoros /var/lib/operatoros
 cd /opt/operatoros
 sudo -u operatoros OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
   bun run db:bootstrap --data-dir /var/lib/operatoros/data
@@ -106,10 +117,25 @@ sudo cp docs/deployment/systemd/operatoros-api.service /etc/systemd/system/opera
 sudo systemctl daemon-reload
 sudo systemctl enable --now operatoros-api
 
-# 3) Health check (documented, public endpoint):
+# 3) Create the first administrator (first run only; token from section 4).
+#    The setup screen asks for the token once the frontend runs (section 6).
+#    Headless API equivalent (the values are read from the request body; replace
+#    the placeholders and never pass the password as a command argument):
+curl -fsS -X POST http://127.0.0.1:8090/api/setup/admin \
+  -H 'content-type: application/json' --data @- <<'JSON'
+{"username":"admin","password":"REPLACE-12-CHARS-MINIMUM","password_confirmation":"REPLACE-12-CHARS-MINIMUM","setup_token":"REPLACE-WITH-SECTION-4-TOKEN"}
+JSON
+#    A missing or wrong token is refused with 403
+#    (SETUP_TOKEN_REQUIRED / SETUP_TOKEN_INVALID); without a configured token on
+#    a fresh root, first-run provisioning stays closed. After the administrator
+#    exists, remove the ASTRYX_SETUP_TOKEN line from /etc/operatoros/api.env and
+#    restart: sudo systemctl restart operatoros-api
+#    (once a user exists, the setup endpoints stay closed permanently.)
+
+# 4) Health check (documented, public endpoint):
 curl -fsS http://127.0.0.1:8090/health     # -> {"status":"ok"}
 
-# 4) Validate the database (read-only):
+# 5) Validate the database (read-only):
 sudo -u operatoros bun run db:validate --data-dir /var/lib/operatoros/data
 # -> VALID 20261002_s48
 ```
@@ -205,6 +231,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 | Symptom | First check |
 |---|---|
 | `status=203/EXEC` | `/usr/local/bin/bun` missing or wrong version (`bun --version` must print `1.4.3`). |
+| `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
 | Backup or restore refuses with `*_LSOF_REQUIRED` | Install `lsof`. |

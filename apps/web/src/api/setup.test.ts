@@ -27,4 +27,11 @@ describe("setup API", () => {
     expect(mocked).toHaveBeenCalledWith({ path: "/api/setup/admin", method: "POST", body: input });
     expect(JSON.stringify(mocked.mock.calls)).not.toContain("setup_token");
   });
+
+  it("includes the setup token only when the caller supplies one", async () => {
+    mocked.mockResolvedValue({ data: { id: 1, username: "admin", role: "admin" } } as never);
+    const input = { username: "admin", password: "correct horse battery", password_confirmation: "correct horse battery", setup_token: "synthetic-setup-token" };
+    await provisionFirstAdmin(input);
+    expect(mocked).toHaveBeenCalledWith({ path: "/api/setup/admin", method: "POST", body: input });
+  });
 });

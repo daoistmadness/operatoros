@@ -93,6 +93,20 @@ describe("backup, restore, and scheduler safety", () => {
       expect(database.client.query("SELECT effective_from,cutoff_time,source FROM jenjang_lateness_policy WHERE jenjang_id=?").all(jenjangId)).toEqual([{ effective_from: "2026-07-01", cutoff_time: "07:30", source: "BACKFILL_ASSUMED" }]);
       const postRestoreCookie = await login(app, "golden-admin", "golden-admin-pass-1");
 
+      const unauthorizedRecovery = await app.handle(new Request("http://local/api/admin/backups/recovery-history"));
+      expect(unauthorizedRecovery.status).toBe(401);
+      const recovery = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
+      expect(recovery.status).toBe(200);
+      const recoveryHistory = await recovery.json() as any[];
+      expect(recoveryHistory).toHaveLength(1);
+      expect(recoveryHistory[0]).toMatchObject({ filename: backup.filename, event: "restore_completed", actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
+      expect(recoveryHistory[0].operation_reference_id).toBeTruthy();
+      expect(recoveryHistory[0].safety_backup_filename).toMatch(/^backup_.*\.sqlite3$/);
+      expect(recoveryHistory[0].timestamp).toBeTruthy();
+      expect(readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n")).toHaveLength(1);
+      const repeatedRecovery = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
+      expect(await repeatedRecovery.json()).toEqual(recoveryHistory);
+
       const corrupt = `${backupDir}/${backup.filename}`;
       const bytes = readFileSync(corrupt); bytes[bytes.length - 1] = (bytes[bytes.length - 1] ?? 0) ^ 1; writeFileSync(corrupt, bytes);
       const corruptPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
@@ -100,6 +114,22 @@ describe("backup, restore, and scheduler safety", () => {
       const deleted = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
       expect(deleted.status).toBe(200);
       expect(existsSync(corrupt)).toBe(false);
+    } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
+  }, 30000);
+
+  it("maps historical recovery-history records and skips malformed lines", async () => {
+    const path = `/tmp/operatoros-phase9-recovery-${process.pid}-${Date.now()}.db`;
+    const backupDir = `/tmp/operatoros-phase9-recovery-backups-${process.pid}-${Date.now()}`;
+    seed(path); mkdirSync(backupDir, { recursive: true });
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
+    try {
+      const legacy = { timestamp: "2026-01-02T03:04:05Z", event: "restore_completed", target_filename: "backup_legacy.sqlite3", authenticated_username: "legacy-admin", outcome: "COMPLETED", reason: null, request_context: { operation_id: "legacy-operation" }, pre_restore_snapshot_filename: "backup_snapshot.sqlite3" };
+      writeFileSync(`${backupDir}/backup_restore_audit.jsonl`, `${JSON.stringify(legacy)}\nnot-json\n`, { mode: 0o600 });
+      const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
+      const response = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie, origin: "http://localhost:5173" } }));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual([{ timestamp: "2026-01-02T03:04:05Z", filename: "backup_legacy.sqlite3", event: "restore_completed", actor_display: "legacy-admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "legacy-operation", safety_backup_filename: "backup_snapshot.sqlite3" }]);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 
