@@ -272,13 +272,15 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
     context.database.close(); renameSync(active, rollback); renameSync(candidate, active); replaced = true; context.database.reopen(); context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
     const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
-    rmSync(rollback, { force: true }); audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
+    audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
     appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot.filename, reason: null });
+    rmSync(rollback, { force: true });
     return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
   } catch (error) {
     if (replaced) { try { context.database.close(); rmSync(active, { force: true }); renameSync(rollback, active); context.database.reopen(); } catch { /* fail closed below */ } }
     audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error" });
-    appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" });
+    try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
+    catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
     throw Object.assign(new Error("Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
   } finally { rmSync(candidate, { force: true }); rmSync(rollback, { force: true }); restoreBusy = false; }
 }
