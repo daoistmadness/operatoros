@@ -228,12 +228,14 @@ flowchart TD
 - A sample template is available at `GET /api/uploads/sample-template`.
 
 ## Surface URLs
-| Surface | Local development | Docker |
+| Surface | Local development | Supervised host (systemd) |
 | --- | --- | --- |
-| Frontend | `http://127.0.0.1:5173` | `http://localhost` |
-| Backend API | `http://127.0.0.1:8000` | `http://localhost:8000` |
-| OpenAPI docs | `http://127.0.0.1:8000/docs` | `http://localhost:8000/docs` |
-| Redoc | `http://127.0.0.1:8000/redoc` | `http://localhost:8000/redoc` |
+| Frontend | `http://127.0.0.1:5173` | `http://<host>:5173` (interim Vite preview) |
+| Backend API | `http://127.0.0.1:8000` | `http://127.0.0.1:8090` (runbook default; loopback) |
+| OpenAPI UI | `http://127.0.0.1:8000/openapi` | `http://127.0.0.1:8090/openapi` |
+
+Docker/Compose and PostgreSQL are not supported runtimes. See
+[`docs/deployment/ubuntu-server.md`](docs/deployment/ubuntu-server.md).
 
 ## Validation and Testing
 
