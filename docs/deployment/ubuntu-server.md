@@ -20,10 +20,10 @@ This runbook covers a single-host Ubuntu deployment of the supported runtime:
 | Frontend (`apps/web`) | Built once, served by the Vite preview server (section 6). Interim: started by the operator; a second unit template is a tracked follow-up (P3-01b). |
 | Backups/recovery | Via the API admin path or `scripts/backup.sh` / guarded restore (section 9). |
 
-Do not run more than one API instance against the same data root. Restore fails
-closed when the process count is greater than one
-(`RESTORE_SINGLE_WORKER_REQUIRED`), and SQLite WAL serialization assumes a single
-writer.
+Do not run more than one API instance against the same data root. Backup,
+restore, and scheduler guards are process-local and do not coordinate separate
+processes; the runtime reports `single_process_only` but cannot detect a second
+process. SQLite WAL serialization also assumes a single writer.
 
 ## 2. Prerequisites
 
@@ -190,13 +190,23 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 - Create backups through the admin path (`POST /api/admin/backups` or the Backup
   Management page) or the operator tool: `OPERATOROS_DATA_DIR=/var/lib/operatoros/data
   /opt/operatoros/scripts/backup.sh backup` (encrypted AES-256-GCM envelope,
-  manifest checksum, count-based retention, append-only audit).
-- The scheduler inside the API owns scheduled backups (`/api/admin/backups/scheduler`).
-  Keep the single-worker rule; backups fail closed on low disk and missing `lsof`.
-- Restore: use the guarded admin restore (12 safeguards including typed
-  confirmation, schema/identity validation, a pre-restore safety snapshot, and
-  session revocation). The legacy CLI restore is an operator tool with fewer
-  safeguards — prefer the admin path; CLI hardening is tracked as P3-06.
+  manifest checksum, append-only audit).
+- The API applies count-based retention after each successful backup: it keeps the
+  newest 10 complete generations, never evicts the newest backup or a restore
+  source, and writes one `backup_evicted` audit line per removed generation.
+  Incomplete pairs and files that cannot be removed are skipped. Manual
+  `DELETE /api/admin/backups/:filename` remains available. The scheduler's
+  `keep_daily`/`keep_weekly`/`keep_monthly` fields do not drive current eviction.
+- The scheduler inside the API owns scheduled backups (`/api/admin/backups/scheduler`);
+  it is disabled by default. Keep the single-process rule; backups fail closed on
+  low disk and a failed capacity probe. Monitor `/api/admin/backups/status`
+  (`health_state`, `backup_count`, `retention_limit`, `low_space`) and copy
+  encrypted backups off-host.
+- Restore: use the guarded admin restore (typed confirmation, schema/identity
+  validation, a pre-restore safety snapshot, and session revocation). The legacy
+  CLI restore is an operator tool with fewer safeguards — prefer the admin path;
+  CLI hardening is tracked as P3-06. After a restore, restart the service and sign
+  in again.
 - Rollback: restore the pre-upgrade backup, restart the service, re-run the health
   check and `db:validate`, and retain the previous revision until smoke checks pass.
 
