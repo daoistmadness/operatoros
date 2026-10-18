@@ -21,6 +21,8 @@ export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
 export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 /** Conservative floor for the preflight minimum on small or empty databases (about 2.95 MiB). */
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
+/** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
+export const BACKUP_RETENTION_LIMIT = 10;
 
 const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -93,7 +95,15 @@ function validateSnapshot(path: string, sourceTables: Set<string>): void {
 function nextFilename(root: string): string {
   const stamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z").replace(/:/g, "-");
   const base = `backup_${stamp}.sqlite3`;
-  for (let index = 0; ; index++) { const name = index ? base.replace(".sqlite3", `_${index}.sqlite3`) : base; if (!statSafe(`${root}/${name}`) && !statSafe(`${root}/${name}.meta.json`)) return name; }
+  const prefix = `backup_${stamp}`;
+  let next = 0;
+  for (const name of readdirSync(root)) {
+    if (name === base || name === `${base}.meta.json`) { next = Math.max(next, 1); continue; }
+    if (!name.startsWith(prefix)) continue;
+    const suffix = /^_(\d+)\.sqlite3(?:\.meta\.json)?$/.exec(name.slice(prefix.length));
+    if (suffix) next = Math.max(next, Number(suffix[1]) + 1);
+  }
+  return next === 0 ? base : base.replace(".sqlite3", `_${next}.sqlite3`);
 }
 function statSafe(path: string): boolean { try { statSync(path); return true; } catch { return false; } }
 
@@ -174,6 +184,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
     audit(root, "backup_succeeded", { filename, trigger });
+    try { evictBeyondRetention(root, filename, preserve); } catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     return metadata;
   } catch (error) {
     if (root) audit(root, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error" });
@@ -191,8 +202,19 @@ export function createPreResetBackup(context: AuthContext, config: SafetyConfig)
   return String(createBackup(context, config, "manual").filename);
 }
 
+function backupSequence(filename: string): number {
+  const match = /_(\d+)\.sqlite3$/.exec(filename);
+  return match ? Number(match[1]) : 0;
+}
+/** Newest first. Same-second generations are ordered by their `_N` filename suffix, which `nextFilename` assigns monotonically. */
+function compareBackupDescending(a: Row, b: Row): number {
+  const byCreatedAt = String(b.created_at).localeCompare(String(a.created_at));
+  if (byCreatedAt !== 0) return byCreatedAt;
+  const bySequence = backupSequence(String(b.filename)) - backupSequence(String(a.filename));
+  return bySequence !== 0 ? bySequence : String(b.filename).localeCompare(String(a.filename));
+}
 function metadata(root: string): Row[] {
-  return rowsFromFiles(root).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  return rowsFromFiles(root).sort(compareBackupDescending);
 }
 function rowsFromFiles(root: string): Row[] {
   const result: Row[] = [];
@@ -218,13 +240,41 @@ function deleteBackup(root: string, filename: string): void {
   audit(root, "backup_deleted", { filename });
 }
 
+/**
+ * Best-effort cleanup after a backup pair is published. Only complete, visible
+ * pairs beyond the newest `BACKUP_RETENTION_LIMIT` are candidates. The newest
+ * backup, an explicitly preserved restore source, and any file that cannot be
+ * removed are skipped. Cleanup never turns a verified backup into a failure.
+ */
+function evictBeyondRetention(root: string, newest: string, preserve?: string): void {
+  const entries = metadata(root);
+  if (entries.length <= BACKUP_RETENTION_LIMIT) return;
+  const keep = new Set(entries.slice(0, BACKUP_RETENTION_LIMIT).map((entry) => String(entry.filename)));
+  keep.add(newest);
+  if (preserve) keep.add(preserve);
+  for (const entry of entries.slice(BACKUP_RETENTION_LIMIT)) {
+    const filename = String(entry.filename);
+    if (keep.has(filename)) continue;
+    const path = `${root}/${filename}`;
+    if (!statSafe(path) || !statSafe(`${path}.meta.json`)) continue;
+    try {
+      rmSync(path);
+      rmSync(`${path}.meta.json`, { force: true });
+    } catch (error) {
+      try { audit(root, "backup_eviction_skipped", { filename, reason: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
+      continue;
+    }
+    try { audit(root, "backup_evicted", { filename, trigger: entry.trigger ?? null, size_bytes: entry.size ?? null, reason: "retention_limit", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
+  }
+}
+
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   const root = backupRoot(config); const active = dbPath(context); const entries = statSafe(root) ? metadata(root) : [];
   const minimumRequired = minimumRequiredSpaceBytes(active);
   const available = statSafe(dirname(root)); const latest = entries[0] ?? null;
   let probeValues: { availableBytes: number; freeBytes: number } | null = null;
   try { probeValues = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
-  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: 10, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: probeValues === null || probeValues.availableBytes < minimumRequired, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
+  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: probeValues === null || probeValues.availableBytes < minimumRequired, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
