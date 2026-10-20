@@ -90,6 +90,36 @@ The profile is enforced by the API test suite. Relevant tests by name:
   from the canonical root"; "fails fast when DATABASE_URL disagrees with the
   canonical root"; "two apps use their own config values".
 
+## Deployment-specific Podman inspection
+
+Podman is not required by the supported runtime, and this repository does not
+define an OperatorOS Podman or Quadlet deployment. Treat Podman commands as
+deployment-specific inspection examples, not as proof of a supported runtime
+or of the configuration on a particular host. Verify the host identity,
+service account, container names, image digests, network, endpoints, TLS route,
+log source, and backup-status source against the approved deployment inventory
+before inspection. Do not guess a port, hostname, unit, or container name.
+
+For an authorized, non-invasive review, use the designated rootless account to
+list container names, states, and published ports; inspect only explicitly
+selected metadata fields; and compare observed listeners and routes with the
+approved exposure plan. A read-only `GET` to the verified health URL may confirm
+service response; the direct OperatorOS API `/health` contract is HTTP 200 with
+`{"status":"ok"}`. This does not establish host-firewall or upstream
+reachability. Inspect TLS certificate subject, issuer, validity, and fingerprint
+without exporting private keys. If logs are needed, review only a bounded time
+window locally and sanitize before recording. Read backup-status metadata only
+through the verified status mechanism; do not initiate a backup.
+
+Do not run a health-check trigger, login or other state-changing request, copy,
+hash, snapshot, or run integrity checks on a production database, restart a
+container, or perform a backup/restore drill without separate authorization for
+that exact operation. Never place credentials, cookies, student data, database
+material, or unredacted logs in evidence. Record only sanitized results and
+SHA-256 hashes of permitted evidence artifacts. These checks do not qualify a
+Podman deployment or replace the repository's supported local Bun/Elysia
+runtime.
+
 ## Related
 
 - [Ubuntu server deployment and supervision](ubuntu-server.md) (Phase 3 candidate, P3-01).
