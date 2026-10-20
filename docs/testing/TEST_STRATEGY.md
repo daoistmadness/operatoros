@@ -47,6 +47,34 @@ protected S4.3 database.
 
 Historical orchestration evidence remains in Git history.
 
+## Staging SSH VM boundary
+
+Staging is a deployment-specific target; no staging SSH host, account, endpoint,
+service unit, or remote E2E command is defined by this repository. Before using
+one, verify the VM host key against a separately trusted inventory, confirm the
+authorized account and test scope, and match the deployed commit and artifact
+SHA-256 to the approved release receipt. Confirm the service configuration and
+data path point to a disposable synthetic S4.8 database, with no protected or
+production database mounted. Obtain an approved restart window before any
+service restart.
+
+Within that verified scope, tests may cover read-only health, authentication
+and logout using a synthetic account, browser E2E, security tests, SQLite
+bootstrap/validation, and restore of a synthetic fixture to a separate
+disposable destination. A disposable fresh database should report
+`BOOTSTRAPPED 20261002_s48` and `VALID 20261002_s48`. Never restore an
+operational snapshot to staging or use real student data. Do not infer a remote
+test command from the local suite: `make e2e-smoke` creates and owns its own
+local stack, temporary database, credentials, ports, and cleanup; it is not a
+remote staging runner. A staging browser test needs an independently reviewed
+harness and synthetic test account scoped to that VM.
+
+Keep evidence to sanitized command results, the approved source/artifact
+identifiers, and SHA-256 manifests of permitted evidence files. Do not export
+credentials, cookies, student data, database copies or hashes, or unredacted
+logs. Staging access does not authorize production checks, migration, or
+restart outside the approved window.
+
 ## Audit execution policy
 
 For direct Bun runs by an agent, use `AGENT=1`, `--dots`, and `--parallel` for

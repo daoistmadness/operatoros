@@ -59,6 +59,14 @@ process. SQLite WAL serialization also assumes a single writer.
 | Bun | `/usr/local/bin/bun` | symlink to the pinned 1.4.3 binary |
 | Unit | `/etc/systemd/system/operatoros-api.service` | from `docs/deployment/systemd/` |
 
+The example API port `8090` is not a reservation or a claim that the port is
+free on a target host. At the 2026-10-20 read-only inspection, `oprserver`'s
+existing rootless Beszel container already published `127.0.0.1:8090`; this
+template cannot be applied there unchanged. Do not stop or reconfigure Beszel
+to make room. For any target, verify the listener and proxy inventory first;
+selecting another port requires a coordinated, separately reviewed update to
+the API environment, health check, and frontend proxy.
+
 ## 4. Environment file
 
 Create the directory and file with restrictive permissions:
