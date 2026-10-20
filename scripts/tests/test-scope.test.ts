@@ -243,13 +243,13 @@ describe("E2E workflow scope selection", () => {
     [".github/actions/setup-bun/action.yml", true],
     ["unclassified.input", true],
     ["docs/example.json", true],
-    ["docs/guide.md", false],
-    [".github/dependabot.yml", false],
-    ["hk.pkl", false],
-    ["scripts/test-scope.ts", false],
-    ["scripts/test-tier.sh", false],
-    ["scripts/test-tier-environment.sh", false],
-    ["scripts/tests/test-scope.test.ts", false],
+    ["docs/guide.md", true],
+    [".github/dependabot.yml", true],
+    ["hk.pkl", true],
+    ["scripts/test-scope.ts", true],
+    ["scripts/test-tier.sh", true],
+    ["scripts/test-tier-environment.sh", true],
+    ["scripts/tests/test-scope.test.ts", true],
     [".github/scripts/select-e2e-scope.sh", true],
     [".github/scripts/validate-e2e-result.sh", true],
   ])("%s selects E2E=%s", (path, expected) => {
@@ -273,21 +273,37 @@ describe("E2E workflow scope selection", () => {
     expect(selected.output).toContain("run-e2e=true");
   });
 
-  test("E2E aggregate accepts only successful selected or intentionally skipped runs", () => {
+  test("E2E aggregate rejects skipped, failed, cancelled, and missing runs", () => {
     const aggregate = join(repository, ".github/scripts/validate-e2e-result.sh");
     const run = (scope: string, selected: string, e2e: string) => Bun.spawnSync(["bash", aggregate], {
       env: { ...cleanEnv, E2E_SCOPE_RESULT: scope, E2E_SELECTED: selected, E2E_JOB_RESULT: e2e },
       stdout: "pipe", stderr: "pipe",
     });
     expect(run("success", "true", "success").exitCode).toBe(0);
-    expect(run("success", "false", "skipped").exitCode).toBe(0);
     for (const result of [
       run("failure", "true", "success"),
       run("success", "true", "failure"),
+      run("success", "true", "cancelled"),
+      run("success", "true", ""),
+      run("success", "false", "skipped"),
       run("success", "true", "skipped"),
       run("success", "false", "success"),
       run("success", "unknown", "skipped"),
     ]) expect(result.exitCode).toBe(1);
+  });
+
+  test("mandatory E2E runs for main pushes and cannot skip by path selection", () => {
+    const workflow = Bun.YAML.parse(readFileSync(join(repository, ".github/workflows/e2e-full.yml"), "utf8")) as {
+      on: { push: { branches: string[] }; pull_request: { branches: string[] }; merge_group: unknown };
+      jobs: Record<string, { name?: string; if?: string; needs?: string[] }>;
+    };
+    expect(workflow.on.push.branches).toContain("main");
+    expect(workflow.on.pull_request.branches).toContain("main");
+    expect(workflow.on.merge_group).toBeDefined();
+    expect(workflow.jobs["e2e-full"]?.name).toBe("E2E full regression");
+    expect(workflow.jobs["e2e-full"]?.if).toBe("always()");
+    expect(workflow.jobs.result?.if).toBe("always()");
+    expect(workflow.jobs.result?.needs).toEqual(["changes", "e2e-full"]);
   });
 
   test("workflow concurrency cancels only superseded pull-request runs", () => {
