@@ -7,13 +7,15 @@ This document describes the authenticated Phase 6/7 backup path for local, file-
 Administrators use the canonical `/api/admin/backups` API or Backup Management page. Backup creation:
 
 1. resolves the configured SQLite database to a canonical absolute path;
-2. creates a consistent snapshot with SQLite's online backup API, including WAL state;
-3. runs `PRAGMA integrity_check` and verifies required operational tables;
+2. runs `PRAGMA wal_checkpoint(TRUNCATE)` and serializes the open database into a temporary snapshot;
+3. runs `PRAGMA integrity_check` and `PRAGMA quick_check`, and verifies required operational tables;
 4. encrypts the snapshot with the configured AES-256-GCM backup key;
 5. calculates SHA-256 over the final encrypted artifact;
 6. writes protected metadata containing timestamp, trigger, size, checksum, schema version, source basename, encryption version, algorithm, key ID, and tool version;
-7. publishes the database/metadata pair atomically; and
-8. applies count-based retention.
+7. publishes the encrypted artifact and writes metadata last, so incomplete pairs are not listed; and
+8. applies count-based retention after the successful publication.
+
+The connection layer sets `PRAGMA foreign_keys = ON` and does not configure WAL. A freshly bootstrapped database therefore uses SQLite's default rollback journal; an existing database may still be in WAL mode. Backup uses the checkpoint-then-serialize path, not the separate SQLite online-backup API. That path is supported only with the single API process described below.
 
 Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
 
@@ -26,17 +28,19 @@ Restore requires all of the following:
 1. `ENABLE_DESTRUCTIVE_OPERATIONS=true`;
 2. a validated `astyx_session`;
 3. an active database user whose role is `admin`;
-4. exact typed filename confirmation;
-5. filename/path validation;
-6. metadata and SHA-256 validation;
-7. SQLite integrity, operational-table, and schema validation;
-8. compatible `users` and `sessions` tables with required columns;
-9. compatible `users` and `sessions` tables with required columns (the backup is not required to contain an active administrator);
+4. re-entry of the current password;
+5. exact typed filename confirmation and the `RESTORE_DATABASE` phrase;
+6. filename/path validation;
+7. metadata, SHA-256, and expected source/active checksum validation;
+8. SQLite integrity, quick-check, required-table, and schema compatibility validation;
+9. compatible `users` and `sessions` tables with required columns;
 10. a pre-restore safety snapshot;
-11. isolated replacement with rollback copy; and
-12. post-replacement database reopen and integrity validation.
+11. isolated replacement with a rollback copy; and
+12. post-replacement database reopen and restored-session revocation, followed by integrity/quick-check and row-count inspection.
 
-Backups created before Phase 7.1 are rejected by the authenticated runtime. Legacy recovery requires a separately reviewed offline procedure; it is not silently performed by the API.
+The preflight validates `users`/`sessions` column compatibility but does not verify that the backup contains an active administrator row. Confirm an active administrator exists in the backup before restoring; otherwise the restored database can lock operators out.
+
+Legacy plaintext backups are refused unless `ALLOW_LEGACY_PLAINTEXT_BACKUPS=true`. Recovery outside the authenticated API requires a separately reviewed offline procedure; it is not silently performed by the API.
 
 ## Recovery objectives and limitations (P4-08)
 
@@ -49,7 +53,7 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 | Recovery time objective (RTO) | No fixed guarantee. It depends on database size, disk speed, key availability, and operator action. The disposable-VM release-rollback drill (backup, upgrade, rollback, restore) completed in 146 seconds end to end on synthetic data; treat that only as a drill measurement. |
 | Retention | Newest 10 complete generations; the newest backup and a restore source are protected; one audit line per eviction; manual deletion remains available. |
 | Backup durability | Backups are written under the configured data root on the same host. Copy encrypted backups off-host to survive host or disk loss. |
-| Verification | Every created backup is integrity-checked and encrypted; restore preflight re-verifies checksum, schema, identity tables, and an active administrator. Periodic restore rehearsal remains an operator responsibility. |
+| Verification | Every created backup is integrity-checked and encrypted; API restore preflight re-verifies checksum, schema, and identity columns, but not an active administrator. Periodic restore rehearsal remains an operator responsibility. |
 
 Limitations:
 
@@ -72,6 +76,10 @@ Limitations:
   identity columns but not whether the restored database contains a usable
   administrator account. Keep a reviewed recovery procedure and a known-good
   administrator path before relying on an old snapshot.
+- **Some restore impact fields are placeholders.** The preflight reports
+  `foreign_key_violation_count: 0`, `source_is_older: false`, and
+  `possible_data_loss: false` without deriving those values. Do not treat them
+  as an authoritative impact assessment.
 - **The live SQLite database is not encrypted at rest.** Only backup artifacts are.
   Protect host and filesystem access.
 - **Audit rotation is operator-managed.** Losing an audit file does not invalidate
@@ -82,21 +90,21 @@ Limitations:
 
 ```mermaid
 flowchart TD
-  Request["Restore request"] --> Auth["Session and admin authorization"]
-  Auth --> Validate["Checksum, schema, identity, and admin authorization"]
+  Request["Restore request"] --> Auth["Session and current-user admin authorization"]
+  Auth --> Validate["Checksum, schema, and identity compatibility"]
   Validate --> Snapshot["Pre-restore safety snapshot"]
-  Snapshot --> Replace["Dispose engine and replace SQLite database"]
-  Replace --> Verify["Integrity and application-access validation"]
-  Verify --> Revoke["Revoke all restored sessions"]
-  Revoke --> Login["Clear cookie and require sign-in"]
+  Snapshot --> Replace["Close database handle and replace SQLite file"]
+  Replace --> Revoke["Revoke all restored sessions"]
+  Revoke --> Verify["Integrity, quick-check, and row-count inspection"]
+  Verify --> Login["Require browser reauthentication"]
   Verify -->|"failure"| Rollback["Restore safety copy and verify original"]
 ```
 
-A restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, and restored sessions are revoked. The response reports the post-restore protected-table counts. Post-replacement failure enters rollback and emits a failure audit event.
+An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, and restored sessions are revoked. The response reports the post-restore protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
 
 ## Audit lifecycle
 
-The append-only restore audit records `restore_completed` and `restore_failed` with the authenticated database username, target filename, operation ID, pre-restore snapshot filename, outcome, and a controlled reason category. Attribution comes only from the authenticated database user. Failure reasons are controlled categories rather than raw exceptions or filesystem paths.
+The canonical recovery-history audit is `backup_restore_audit.jsonl`. The API writes `restore_completed` and `restore_failed` with the authenticated database username, target filename, operation ID, pre-restore snapshot filename, outcome, and a controlled reason category (the error class name). The CLI writes the same event names with the OS user (`SUDO_USER` or `USER`) and records the CLI error message. The operations audit can contain a `restore_completed` line before a later failure that triggers rollback; use the canonical recovery-history outcome for the final result. Neither path currently emits `restore_requested`, `restore_denied`, `restore_started`, or `restore_rolled_back`; those remain requirements for a complete audit trail.
 
 ## Concurrency and deployment restriction
 
@@ -107,6 +115,9 @@ The supported runtime is a single local API process. Docker/Compose and PostgreS
 ## Legacy scripts
 
 `scripts/backup.sh` and `scripts/restore.sh`, where present, use the same
-versioned encrypted backup envelope but remain separate operator tools. They
-do not replace the authenticated API chain, identity compatibility checks,
-browser sign-out, or Phase 7 restore audit lifecycle.
+versioned encrypted backup envelope but remain separate operator tools. The CLI
+restore path creates a pre-restore safety snapshot and writes restore audit
+lines, but it does not verify the manifest, integrity, schema, or an active
+administrator, and it does not revoke restored sessions or provide browser
+sign-out. Use it only with all writers stopped and an approved recovery
+procedure.

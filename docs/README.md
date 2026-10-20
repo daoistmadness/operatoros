@@ -12,9 +12,9 @@
 
 ## Architecture
 
-- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.8 application model.
+- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.7 bootstrap base and S4.8 application model.
 - [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
-- [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — workspace ownership and modernization boundaries.
+- [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — Phase 14.8 acceptance record for workspace ownership and modernization boundaries; see Platform portability for the current runtime contract.
 - [Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md) — ownership, contracts, query invalidation, state semantics, and feature validation conventions.
 - [Platform portability](architecture/PLATFORM_PORTABILITY.md) — current SQLite-only local runtime contract.
 - [SQLite-only desktop ADR](architecture/decisions/SQLITE_ONLY_DESKTOP_RUNTIME.md) — accepted database and deployment decision.

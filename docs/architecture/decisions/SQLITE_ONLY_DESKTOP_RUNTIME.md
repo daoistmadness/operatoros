@@ -8,6 +8,10 @@
   the React frontend in a browser and a SQLite database. The former Python
   backend is retired. The SQLite-only
   decision is unchanged.
+- Update 2026-10-20: the current application head is S4.8 (`20261002_s48`);
+  fresh bootstrap installs the S4.7 base and applies S4.8. The protected
+  operational database remains S4.3 (`20260725_s43`). The S4.2/S4.3 wording
+  below records the 2026-07-29 baseline.
 
 ## Context
 
@@ -22,7 +26,9 @@ and safety scope without an active deployment owner.
 OperatorOS is standardized on SQLite as its sole supported database for local
 deployment. Drizzle is the application persistence layer.
 PostgreSQL and containerized hosted-server deployment are removed from active
-support. PostgreSQL URLs fail explicitly with a sanitized SQLite-only error.
+support. PostgreSQL URLs fail at database open or configuration validation.
+Configuration errors can include the configured database string, so credentials
+must never be embedded in `DATABASE_URL`.
 
 Supported deployment is `LOCAL_BROWSER_RUNTIME` with a local Elysia backend,
 the React frontend in a browser, and a SQLite database. PostgreSQL, Docker
@@ -41,8 +47,9 @@ not current operating guidance.
 
 ## Operational safeguards
 
-S4.2 remains the fresh-bootstrap baseline and S4.3 remains the current runtime
-head. Existing outdated databases are rejected and never silently migrated.
+At the accepted baseline, S4.2 was the fresh-bootstrap baseline and S4.3 was
+the current runtime head. Existing outdated databases are rejected and never
+silently migrated.
 Foreign keys, bounded SQLite locking, atomic transactions, append-only audit
 triggers, protected-path guards, and run-relative protected-database snapshots
 remain mandatory.

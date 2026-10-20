@@ -29,9 +29,8 @@ process. SQLite WAL serialization also assumes a single writer.
 
 - Ubuntu 24.04/26.04 server or VM with systemd (validated against systemd 259).
 - Packages: `curl`, `lsof` (required by backup/restore handle checks — a missing
-  `lsof` fails those checks closed), `python3` (documented secret generation).
-  `git` only when the checkout is updated from a remote; offline hosts use a staged
-  bundle instead.
+  `lsof` fails those checks closed). `git` only when the checkout is updated from
+  a remote; offline hosts use a staged bundle instead.
 - Native Bun `1.4.3` on Linux:
   - Install with mise (`mise install`) and verify: `bun --version` prints `1.4.3`.
   - Expose it at a stable path for the service:
@@ -79,7 +78,6 @@ sudo install -m 0640 -o root -g operatoros /dev/null /etc/operatoros/api.env
 Content (edit values; the cookie secret must be at least 32 characters):
 
 ```ini
-OPERATOROS_BACKEND=elysia
 HOST=127.0.0.1
 PORT=8090
 ENABLE_DESTRUCTIVE_OPERATIONS=false
@@ -102,7 +100,7 @@ Generate the cookie secret with the documented command (output is the value; nev
 paste it into the unit file, logs, or chat):
 
 ```bash
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+bun -e 'console.log(require("node:crypto").randomBytes(48).toString("base64url"))'
 ```
 
 The backup encryption key must differ from the cookie secret; rotation and
@@ -252,7 +250,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 | `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
-| Backup or restore refuses with `*_LSOF_REQUIRED` | Install `lsof`. |
+| Backup or restore refuses with `ENOENT` for `lsof` or `DATABASE_OPEN_HANDLE_CHECK_FAILED` | Install or repair `lsof`; the handle check cannot run. |
 | Restore refused | Single-worker guard, `ENABLE_DESTRUCTIVE_OPERATIONS=false`, or validation failure — see `docs/security/backup-restore.md`. |
 | Restart loop | `journalctl -u operatoros-api`; note `StartLimitBurst=5`/60 s backoff policy. |
 | `Read-only file system` errors at runtime | A write escaped the state directory; keep all writable state under `/var/lib/operatoros`. |

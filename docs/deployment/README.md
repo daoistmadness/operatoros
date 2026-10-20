@@ -34,7 +34,6 @@ predates the bundle's integration.
 - `curl` for health checks.
 - `lsof` for the backup/restore handle checks; a missing `lsof` fails those
   checks closed.
-- `python3` for the documented secret generation command.
 - Native Linux Bun 1.4.3, installed through mise or exposed on a stable path;
   never a Windows/WSL-interop binary.
 

@@ -20,7 +20,7 @@
 - Keep imports grouped by standard library, third-party, then local modules.
 - Prefer small helper functions over deeply nested logic.
 - Keep route registration explicit in `apps/api/src/app.ts`.
-- Keep frontend route definitions explicit in `apps/web/src/App.tsx`.
+- Keep frontend route definitions explicit in `apps/web/src/routes/routeDefinitions.tsx`; `apps/web/src/App.tsx` composes the router and renders those definitions.
 - Keep API URL construction centralized in `apps/web/src/lib/api/client.ts` rather than scattering backend URLs across pages.
 - Keep development routing centralized in `apps/web/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
 - Keep destructive request payloads typed with Elysia schemas rather than accepting unstructured JSON.
