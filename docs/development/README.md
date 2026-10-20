@@ -2,7 +2,7 @@
 
 Use `mise run dev` for normal development. The task delegates process
 supervision to `./start-dev.sh`. Verified commands are maintained in
-[`COMMANDS.md`](../../COMMANDS.md); stable decisions are maintained in
+[`COMMANDS.md`](../../COMMANDS.md); architecture and operations authorities are indexed in
 [`MEMORY.md`](../../MEMORY.md).
 
 Use `mise run test:fast` for Tier 1, `mise run check:affected` for Tier 2 Turbo
@@ -64,3 +64,18 @@ shifting. Run `./stop-dev.sh` from the worktree shown as the owner. Use
 into `main`. Fetch `origin` and verify merged-main first. Its `remove-worktree`
 command accepts only clean registered secondary paths whose HEAD is merged into
 `main`; it never uses force deletion or removes the primary checkout.
+
+## Backend skill workflow
+
+Load the `elysiajs` skill before Elysia backend implementation, debugging,
+review, or migration work. Read only the references the task needs. Inspect
+`apps/api/package.json`, `bun.lock`, existing routes, and installed types first.
+The current backend uses Elysia 1.4.29; the local skill describes v2, so use
+[v1 documentation](https://elysiajs.com/llms.txt) and v1-compatible examples.
+A skill's new-project defaults do not authorize dependency, schema, transport,
+authentication, or runtime migrations. See [AGENTS.md](../../AGENTS.md).
+
+Local skill installations may be untracked and absent in another worktree.
+Resolve the skill from the session's available-skills catalog; report a missing
+skill before backend implementation. Preserve user-owned skill directories and
+lockfiles instead of copying them into unrelated commits.

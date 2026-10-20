@@ -8,7 +8,8 @@ The Monday schedule runs the dependency audit. The Wednesday schedule and manual
 
 The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus typechecks and the production build. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter: every browser scenario, API smoke checks, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
 
-The previous merged-main E2E run `39458747765` measured `6m22s` inside the regression command, including `4m06s` for the complete smoke suite. The remaining `2m16s` repeated tests and a build already covered by the required `api` job. This establishes the duplication removed; new hosted timings must be measured rather than inferred.
+The previous merged-main E2E run `39458747765` measured `6m22s` inside the regression command, including `4m06s` for the complete smoke suite. The remaining `2m16s` repeated tests and a build already covered by the required `api` job. PR #252 measured `4m02s` for the smoke command after consolidation. See [CI performance](../docs/operations/CI_PERFORMANCE.md) for measured job durations and queue-time limits.
+
 All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the disposable development database through `mise run doctor`; the full release tier also runs doctor weekly or by manual request.
 
 ## Toolchain and dependency setup
