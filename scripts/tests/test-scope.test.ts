@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, scopeSummary } from "../test-scope";
@@ -89,6 +89,18 @@ describe("test scope decisions", () => {
     ].join("; "), "test", root], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
     expect(result.exitCode).toBe(1);
   });
+  test("a second test tier acquires the worktree lock after the first exits", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-lock-release-")); roots.push(root);
+    mkdirSync(join(root, ".git"));
+    const first = Bun.spawnSync(["bash", "-c", 'exec {lock_fd}<"$1/.git"; flock -n -x "$lock_fd"', "test", root], {
+      env: cleanEnv, stdout: "pipe", stderr: "pipe",
+    });
+    expect(first.exitCode).toBe(0);
+    const second = Bun.spawnSync(["bash", "-c", 'exec {lock_fd}<"$1/.git"; flock -n -x "$lock_fd"', "test", root], {
+      env: cleanEnv, stdout: "pipe", stderr: "pipe",
+    });
+    expect(second.exitCode).toBe(0);
+  });
   test("test-tier isolation removes inherited data paths and redirects fallback data", () => {
     const helper = join(repository, "scripts/test-tier-environment.sh");
     const result = Bun.spawnSync(["bash", "-c", [
@@ -148,6 +160,23 @@ describe("test scope decisions", () => {
     expect(rejected.exitCode).toBe(1);
     expect(rejected.stderr.toString()).toContain("Refusing unexpected test-tier cleanup path.");
     expect(readFileSync(join(outside, "preserve-canary"), "utf8")).toBe("outside synthetic\n");
+  });
+  test("test-tier cleanup rejects directory symlinks without deleting their target", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-symlink-")); roots.push(root);
+    const parent = join(root, "tmp"); mkdirSync(parent);
+    const external = mkdtempSync(join(tmpdir(), "operatoros-test-tier-external.")); roots.push(external);
+    writeFileSync(join(external, "preserve-canary"), "external synthetic\n");
+    const link = join(parent, "operatoros-test-tier.symlink"); symlinkSync(external, link, "dir");
+    const helper = join(repository, "scripts/test-tier-environment.sh");
+    const rejected = Bun.spawnSync(["bash", "-c", [
+      'source "$1"',
+      'operatoros_test_tier_cleanup "$2" "$3" 23',
+    ].join("; "), "test", helper, link, parent], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
+    expect(rejected.exitCode).toBe(1);
+    expect(rejected.stderr.toString()).toContain("Refusing unexpected test-tier cleanup path.");
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    expect(existsSync(external)).toBe(true);
+    expect(readFileSync(join(external, "preserve-canary"), "utf8")).toBe("external synthetic\n");
   });
   test("release scenario manifest matches browser tags without fixed sleeps", () => {
     const manifest = JSON.parse(readFileSync(join(repository, "e2e/release-scenarios.json"), "utf8")) as { groups: string[] };
