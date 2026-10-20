@@ -3,8 +3,6 @@
 > Offline-first school attendance and academic analytics system engineered for local, self-contained school infrastructure.
 
 [![CI](https://github.com/daoistmadness/operatoros/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/ci.yml)
-[![E2E Full Regression](https://github.com/daoistmadness/operatoros/actions/workflows/e2e-full.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/e2e-full.yml)
-[![Security Audit](https://github.com/daoistmadness/operatoros/actions/workflows/security-audit.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/security-audit.yml)
 
 ---
 
@@ -315,9 +313,7 @@ The repository enforces strict continuous integration workflows on GitHub Action
 
 | Workflow | Trigger Events | Primary Jobs & Objectives |
 | --- | --- | --- |
-| **CI**<br/>([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) | Pull Requests, push to `main`/`master`/`develop`, merge groups | - **`api`**: Locked toolchain setup, disposable database validation (`mise run doctor`), dependency security audit, security behavior tests, active Bun script tests, `hk check --all`, Turbo orchestration & invalidation tests, launcher typecheck, Elysia runtime bootstrap & health checks, TypeBox resolution check, architecture tests, and contract boundary verification.<br/>- **`frontend`**: Dependency consistency, package-manager regression checks, UI boundary checks, OpenAPI drift verification (`api:check`), relative Markdown link validation, and developer command documentation verification.<br/>- **`release`** *(Conditional Skip)*: Full release tier (`mise run check:full`). Conditionally skipped on ordinary PRs/pushes; runs automatically on weekly schedule (Wednesdays 04:17 UTC) and manual `workflow_dispatch`. |
-| **E2E Full Regression**<br/>([`.github/workflows/e2e-full.yml`](.github/workflows/e2e-full.yml)) | Pull Requests, push to `main`, merge groups, manual dispatch | - **`changes` (`Select E2E scope`)**: Scope evaluator that mandates full E2E execution (`run-e2e=true`) across all PRs and main pushes.<br/>- **`e2e-full` (`E2E full regression`)**: Complete Playwright browser and API regression against disposable in-memory SQLite instances using synthetic credentials (`operatoros_e2e_admin`).<br/>- **`result` (`E2E regression result`)**: Aggregate validator executing `.github/scripts/validate-e2e-result.sh`. Fails closed if any scope selection, browser test, or teardown step is skipped, cancelled, or failed. |
-| **Scheduled Security Audit**<br/>([`.github/workflows/security-audit.yml`](.github/workflows/security-audit.yml)) | Weekly schedule (Mondays 03:17 UTC), manual dispatch | - **`audit`**: Runs `bun run security:audit` in read-only cache mode to detect dependency vulnerabilities. |
+| **CI**<br/>([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) | Pull Requests, pushes, merge groups, schedules, manual dispatch | **`api`** runs all package tests (including security), typechecks, the production build, audit, lint, architecture, and runtime checks. **`frontend`** runs dependency, boundary, OpenAPI, and documentation checks. **`e2e-full`** runs every browser scenario and API smoke/reset/enrollment checks in parallel, without repeating package tests or the build. **`changes`** and **`result`** retain the mandatory E2E gates. **`audit`** runs Mondays at 03:17 UTC; **`release`** runs full release validation Wednesdays at 04:17 UTC and on manual dispatch. |
 
 ### Mandatory Status Checks for Autonomous Merging
 

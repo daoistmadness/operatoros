@@ -181,3 +181,18 @@ Intentional repeats are kept and named: per-runner installs and Python
 bootstraps (runner isolation), unit re-runs inside the full E2E regression
 (release evidence), layered boundary enforcement (Phase 14.7 design), and the
 checker plus its fixture tests. No test retries were found or added.
+
+## Consolidated autonomous CI
+
+The current workflow authority is [`.github/README.md`](../../.github/README.md).
+Three repository-owned workflows are consolidated into `ci.yml`; GitHub-managed
+CodeQL and dependency workflows remain separate. Required check names and
+unconditional PR validation are preserved.
+
+The merged-main E2E run `39458747765` measured `6m22s` for `make e2e-full`,
+including `4m06s` for its complete browser/API smoke suite. The extra `2m16s`
+repeated API unit tests, web unit tests, and a production build already run by
+`api` through Turbo. CI now runs `make e2e-smoke` without a scenario filter in
+parallel with `api` and `frontend`. API security/auth/backup tests stay in the
+full API suite instead of also running through a separate preliminary step.
+The Monday security audit and Wednesday full release schedule remain intact.

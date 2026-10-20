@@ -56,7 +56,7 @@ test("E2E executable fixture sources reserve protected-path literals for the pre
 });
 test("CI preserves successful E2E reset evidence for artifact upload", () => {
   const smoke = readFileSync(join(repository, "e2e/run-smoke.sh"), "utf8");
-  const workflow = readFileSync(join(repository, ".github/workflows/e2e-full.yml"), "utf8");
+  const workflow = readFileSync(join(repository, ".github/workflows/ci.yml"), "utf8");
   expect(smoke).toContain('OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS:-');
   expect(workflow).toContain('OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS: "true"');
   expect(workflow).toContain("e2e-results/database-before.json");
