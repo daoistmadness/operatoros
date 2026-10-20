@@ -24,9 +24,11 @@ Optional browser tooling is external to the workspace:
 
 The default development root is resolved under `XDG_DATA_HOME` (or
 `~/.local/share`) and uses `operatoros.sqlite`. A legacy-only
-`operatoros-development.db` is migrated safely by startup after validation;
-dual, invalid, busy, and unsupported layouts fail closed. Set
-`OPERATOROS_DATA_DIR` only when an approved absolute override is intentional.
+`operatoros-development.db`, older schema, dual layout, invalid state, or busy
+database fails closed; startup does not migrate or rename existing data.
+Use the separately authorized procedure in
+[database operations](docs/operations/DATABASE_OPERATIONS.md).
+Set `OPERATOROS_DATA_DIR` only when an approved absolute override is intentional.
 
 ## Validation
 
@@ -51,5 +53,6 @@ validation remains authoritative even when affected checks pass.
 - `make test-release` — release, startup, script, and test-infrastructure gate.
 - `./scripts/verify-browser.sh` — run the browser smoke test against a live local stack.
 
-Git policy remains owned by hk. Worktree lifecycle remains owned by Worktrunk
-and Git. Normal application startup remains owned by `start-dev.sh`.
+Git and merge policy is owned by [AGENTS.md](AGENTS.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md); hk provides local feedback. Worktree
+lifecycle remains owned by Worktrunk and Git. Normal application startup remains owned by `start-dev.sh`.

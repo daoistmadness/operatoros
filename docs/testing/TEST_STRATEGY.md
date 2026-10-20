@@ -16,15 +16,16 @@ current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
 replace the classifier or the full PR/release gate. Use
 `mise run check:affected -- --dry=json` to inspect selection without running.
 
-CI keeps the API and frontend jobs on every PR. Full browser E2E runs for
-application/package changes, E2E or workflow changes, unknown paths, and
-unclassifiable comparisons. It skips only documentation, Dependabot config,
-`hk.pkl`, and the exact test-tier scope/runner files; those changes remain
-covered by the always-running test-tier tooling tests. The E2E workflow also
-publishes an always-running aggregate result that fails if selection fails, a
-selected browser run fails, or an unselected browser run was not skipped.
-Concurrency cancels superseded PR runs only; push, scheduled, and manual runs
-are not canceled.
+The single repository-owned CI workflow runs API, frontend, and complete
+browser/API smoke checks on every PR, merge group, and supported branch push.
+There are no documentation or tooling path exclusions. The browser job runs
+`make e2e-smoke` without a scenario filter; Turbo in `api` owns all package
+unit/integration/security/migration tests, typechecks, and the production build.
+The always-running PR aggregate rejects failed, cancelled, skipped, or missing
+E2E results. The same suites are not replayed through `make e2e-full` afterward.
+Monday runs the dependency audit; Wednesday and manual dispatch run the full
+release tier. See [CI operations](../../.github/CI.md) for exact checks and
+schedules. Concurrency cancels superseded PR runs only.
 
 The classifier fails safe for unknown paths. It marks database, contract,
 migration, bootstrap, fixture, E2E, and test-infrastructure paths as

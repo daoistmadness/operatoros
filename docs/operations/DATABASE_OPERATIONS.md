@@ -26,8 +26,8 @@ database remains unavailable to the current application until it is separately
 migrated under the controlled procedure. Rollback pairs a restored S4.2
 database with application `c06a6220c2c0c2059521c1a396d1b914635aacff` on
 `maintenance/s42-rollback`; `b47632c4210720f81804212544452c7c900c928c` is a
-historical, unusable rollback base. See the completed migration record in
-root execution contract ([AGENTS.md](../../AGENTS.md)).
+historical, unusable rollback base. See [schema architecture](../architecture/DATABASE_SCHEMA_ARCHITECTURE.md)
+for the model and [AGENTS.md](../../AGENTS.md) for execution safeguards.
 
 For an approved existing development database, stop all writers and create a
 verified encrypted backup with `OPERATOROS_DATA_DIR=<absolute-development-data-dir>
