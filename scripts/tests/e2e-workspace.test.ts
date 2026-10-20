@@ -40,7 +40,8 @@ test("historical backend protected-path references remain restricted to safety e
 });
 test("test tiers clear guard-only metadata before starting suites", () => {
   const source = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
-  expect(source).toContain("unset PROTECTED_DB_PATH"); expect(source.indexOf("unset PROTECTED_DB_PATH")).toBeLessThan(source.indexOf("backend_full()"));
+  expect(source).toContain("operatoros_test_tier_isolate_environment");
+  expect(source.indexOf("operatoros_test_tier_isolate_environment")).toBeLessThan(source.indexOf("backend_full()"));
 });
 test("E2E executable fixture sources reserve protected-path literals for the pre-open guard", () => {
   const offenders: string[] = [];

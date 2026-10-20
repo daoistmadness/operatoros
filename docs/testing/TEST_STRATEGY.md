@@ -16,15 +16,26 @@ current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
 replace the classifier or the full PR/release gate. Use
 `mise run check:affected -- --dry=json` to inspect selection without running.
 
-The classifier fails safe for unknown paths and automatically escalates schema,
-migration, startup, and test-infrastructure work. All tests are not run after
-every small edit because selection preserves feedback speed without weakening
-release coverage. Playwright uses disposable databases and dynamic ports; it
-uses observable readiness rather than arbitrary sleeps and removes successful
-run artifacts. Each tier snapshots the protected S4.3 database before and after
-the run using immutable read-only SQLite; it rejects handles, sidecars, invalid
-schema state, or any mutation during that run without treating a live checksum
-as a permanent repository constant. Historical orchestration evidence remains in Git history.
+The classifier fails safe for unknown paths. It marks database, contract,
+migration, bootstrap, fixture, E2E, and test-infrastructure paths as
+schema-sensitive; mapped application paths use their focused selections. The
+schema-sensitive fast path runs the relevant safety and database checks,
+including fresh-schema parity on a disposable database; it does not
+automatically run the PR or release tier. All tests are not run after every
+small edit because selection preserves feedback speed without weakening release
+coverage.
+
+Every test tier clears inherited database and backup path overrides and points
+`XDG_DATA_HOME` at a unique temporary directory. The tier removes that directory
+on success and failure. Database, startup, path-safety, and schema tests must use
+disposable synthetic SQLite fixtures. Fresh-schema parity and Playwright create
+their own temporary databases; Playwright also generates its XLSX fixtures,
+uses dynamic ports and readiness checks, and removes successful run artifacts.
+Failure artifacts are retained for diagnosis. Protected-path guards are tested
+with synthetic path strings; no tier reads, hashes, snapshots, or copies the
+protected S4.3 database.
+
+Historical orchestration evidence remains in Git history.
 
 ## Audit execution policy
 
@@ -88,6 +99,11 @@ Turbo check, a full API suite, a production build, and Playwright
 simultaneously on the modest development host. Full API stays serial;
 lightweight independent package tests (contracts, DB, Excel, UI, architecture
 and boundary checks) keep their proven file-level parallelism.
+
+`make test-fast`, `make test-pr`, and `make test-release` take a nonblocking
+per-worktree lock and fail with exit 75 if another tier is already running in
+that worktree. Direct E2E or Turbo commands do not take this lock and must still
+follow the one-heavyweight-lane policy.
 
 `turbo run typecheck test build` accepts an `OPERATOROS_TURBO_CONCURRENCY`
 override and defaults to `4`, which CI keeps. Forced full-graph measurement on
