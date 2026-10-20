@@ -12,11 +12,11 @@ if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request" && -n "${BASE_SHA:-}" ]]; then
     run_e2e=false
     while IFS= read -r -d '' path; do
       case "$path" in
-        *.md|.github/dependabot.yml|hk.pkl) ;;
+        *.md|.github/dependabot.yml|hk.pkl|scripts/test-scope.ts|scripts/test-tier.sh|scripts/test-tier-environment.sh|scripts/tests/test-scope.test.ts) ;;
         *) run_e2e=true; break ;;
       esac
     done <"$changed_paths"
-    reason="Only documentation or dependency-update configuration changed; full E2E is skipped."
+    reason="Only documentation, dependency-update configuration, hk config, or isolated test-tier tooling changed; full E2E is skipped."
     [[ "$run_e2e" == true ]] && reason="E2E-relevant or unclassified changes found; full E2E is selected."
   else
     reason="Git comparison failed; full E2E is selected."

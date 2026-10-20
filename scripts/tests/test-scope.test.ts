@@ -246,6 +246,12 @@ describe("E2E workflow scope selection", () => {
     ["docs/guide.md", false],
     [".github/dependabot.yml", false],
     ["hk.pkl", false],
+    ["scripts/test-scope.ts", false],
+    ["scripts/test-tier.sh", false],
+    ["scripts/test-tier-environment.sh", false],
+    ["scripts/tests/test-scope.test.ts", false],
+    [".github/scripts/select-e2e-scope.sh", true],
+    [".github/scripts/validate-e2e-result.sh", true],
   ])("%s selects E2E=%s", (path, expected) => {
     const repo = fixture();
     const base = git(repo, "rev-parse", "HEAD");
@@ -265,6 +271,31 @@ describe("E2E workflow scope selection", () => {
     const selected = runSelector(repo, base);
     expect(selected.result.exitCode).toBe(0);
     expect(selected.output).toContain("run-e2e=true");
+  });
+
+  test("E2E aggregate accepts only successful selected or intentionally skipped runs", () => {
+    const aggregate = join(repository, ".github/scripts/validate-e2e-result.sh");
+    const run = (scope: string, selected: string, e2e: string) => Bun.spawnSync(["bash", aggregate], {
+      env: { ...cleanEnv, E2E_SCOPE_RESULT: scope, E2E_SELECTED: selected, E2E_JOB_RESULT: e2e },
+      stdout: "pipe", stderr: "pipe",
+    });
+    expect(run("success", "true", "success").exitCode).toBe(0);
+    expect(run("success", "false", "skipped").exitCode).toBe(0);
+    for (const result of [
+      run("failure", "true", "success"),
+      run("success", "true", "failure"),
+      run("success", "true", "skipped"),
+      run("success", "false", "success"),
+      run("success", "unknown", "skipped"),
+    ]) expect(result.exitCode).toBe(1);
+  });
+
+  test("workflow concurrency cancels only superseded pull-request runs", () => {
+    for (const workflow of ["ci.yml", "e2e-full.yml"]) {
+      const source = readFileSync(join(repository, ".github/workflows", workflow), "utf8");
+      expect(source).toContain("group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}");
+      expect(source).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
+    }
   });
 
   test.each([
