@@ -3,7 +3,7 @@
 ## Workflows
 
 - [`ci.yml`](workflows/ci.yml) runs API, frontend, and documentation checks on pull requests, merge queues, and pushes to `main`, `master`, or `develop`. A weekly Wednesday run and manual dispatch run the full release tier instead of repeating the fast jobs.
-- [`e2e-full.yml`](workflows/e2e-full.yml) runs the full synthetic regression for pull requests targeting `main`, `master`, or `develop`, merge queues, and manual dispatch. Its scope job skips only documentation/Markdown, Dependabot configuration, and `hk.pkl`; changes to the E2E workflow and shared setup action run full E2E. A missing base or Git comparison error selects full E2E.
+- [`e2e-full.yml`](workflows/e2e-full.yml) runs the full synthetic regression for every pull request targeting `main`, `master`, or `develop`, every push to `main`, merge groups, and manual dispatch. No path exclusions apply. `Select E2E scope` always selects the full run; `E2E full regression` always executes, and `E2E regression result` rejects skipped, cancelled, failed, or missing results.
 - [`security-audit.yml`](workflows/security-audit.yml) runs the lockfile audit every Monday and on manual dispatch.
 
 All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the disposable development database through `mise run doctor`; the full release tier also runs doctor weekly or by manual request.
@@ -34,6 +34,18 @@ The E2E job keeps its fixed admin credentials scoped to the test job. The runner
 
 ## Security settings and rollback
 
-Workflow files request only `contents: read`. The current main branch has no configured protection or rulesets; repository administrators must configure required status checks separately if merge gating is desired. The stable CI jobs are `api` and `frontend`; the E2E checks are `Select E2E scope` and `Ubuntu / Bun 1.4.3`.
+Workflow files request only `contents: read`. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
 
-Ubuntu 26.04 is GA, but this configuration still needs successful GitHub-hosted runs before this repository's compatibility is considered validated. If a runner incompatibility is found, revert the CI migration commit in Git history. That restores the previous workflow definitions; do not add an implicit fallback runner.
+The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires a PR, up-to-date status checks, zero approving reviews, and no code-owner or last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
+
+The autonomous configuration requires these exact checks from their trusted GitHub integrations:
+
+- `api` and `frontend` (GitHub Actions, app ID `15368`);
+- `Select E2E scope`, `E2E full regression`, and `E2E regression result` (GitHub Actions, app ID `15368`);
+- `CodeQL` (GitHub Code Scanning, app ID `57789`).
+
+`api` covers frozen installation, the security audit and behavior tests, hk lint/architecture, Turbo workspace typechecks/tests/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, and documentation validation. No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
+
+Enable repository auto-merge only after effective protection enforces all checks. Allow only squash merges and automatic deletion of merged feature branches; the ruleset protects `main` from deletion. No merge queue is configured; strict up-to-date validation serializes changes against the latest base. Reinspect live repository settings and `/rules/branches/main` before merging; checked-in documentation is not proof of effective protection.
+
+Use the [contributor PR procedure](../CONTRIBUTING.md) for merge and recovery. A failed check blocks merging. Keep evidence in Actions and the PR, allow at most two focused correction attempts, and leave unresolved PRs open. Reverting a workflow change uses a new protected PR; never disable a rule to recover.
