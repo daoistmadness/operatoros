@@ -1,7 +1,8 @@
 # Phase 14 monorepo architecture
 
-Status: `Phase 14.8` complete after merge. The post-14.7 data directory
-insertion and architecture revalidation are complete.
+Status: Phase 14.8 acceptance record. The post-14.7 data directory insertion and
+architecture revalidation were complete at that milestone. See
+[Platform portability](PLATFORM_PORTABILITY.md) for the current runtime contract.
 
 This document defines the locked modernization boundary. Phase 14.1 changes
 workspace and tooling structure. It does not move application source or change
@@ -28,7 +29,8 @@ The API application lives in `apps/api/`. The web application lives in
 Phase 14.1 creates no active future application package. `packages/config`
 contains configuration skeletons. Phase 14.4 makes `packages/db` active.
 Phase 14.5 makes `packages/contracts` active. Phase 14.6 makes `packages/ui`
-active. `packages/excel` remains deferred.
+active. `packages/excel` was deferred at Phase 14 acceptance; it is now active
+and consumed by `apps/api`.
 
 ## Workspace ownership
 
@@ -110,8 +112,8 @@ focused PR.
 8. Post-14.7 insertion: canonical local data directory. Complete after merge.
 9. 14.8: Turborepo, mise, and hk. Complete after merge.
 
-Turbo is deferred to Phase 14.8. Excel consolidation is deferred to Phase 17.
-Zod is not part of this architecture.
+Turbo, mise, and hk are part of the completed Phase 14.8 toolchain.
+`packages/excel` is active. Zod is not part of this architecture.
 
 ## Phase 15 security ownership
 
@@ -169,10 +171,11 @@ business services, route handlers, auth transport, report calculations,
 attendance rules, import orchestration, backup and restore policy, and
 scheduler orchestration.
 
-This repository has no TypeScript migration directory or migration runner.
-Python schema and fixture tooling remains retained tooling. It is not part of
-the Elysia runtime package. The accepted schema fingerprint and migration
-manifest remain unchanged.
+The TypeScript migration runner lives in
+`packages/db/src/migrate-existing.ts` and is exposed as `db:migrate-existing`. It
+is an explicit controlled path, not an ordinary startup migration. No Python
+schema, fixture, or lifecycle tooling is present in the current tree. The
+accepted schema fingerprint and migration manifest remain authoritative.
 
 ## Phase 14.5 contracts boundary
 
@@ -186,8 +189,9 @@ multipart parsing, file handling, headers, and other Elysia transport details.
 
 Database rows and persistence types remain in `packages/db`. Business mapping,
 calculations, authorization, backup policy, scheduler policy, and file parsing
-remain in `apps/api`. UI state remains in `apps/web`. The Excel implementation
-package and full architecture enforcement remain pending.
+remain in `apps/api`. UI state remains in `apps/web`. At Phase 14.5, the Excel
+implementation package and full architecture enforcement remained pending; both
+are now active.
 
 Database row types stay in `@operatoros/db`. API business logic and mapping stay
 in `apps/api/`. Other report, attendance, import, and safety types remain in
@@ -245,10 +249,10 @@ a conflicting database URL fail fast. An existing
 manual migration. No operator data moves automatically.
 
 The API backup and restore services consume the canonical backup directory.
-The API logger consumes the canonical log directory. Python lifecycle tooling
-accepts the resolved root for compatibility. Tests create disposable roots and
-never use the protected operational database. Startup diagnostics report paths
-only and do not report secrets.
+The API logger consumes the canonical log directory. No Python lifecycle tooling
+is present in the current tree. Tests create disposable roots and never use the
+protected operational database. Startup diagnostics report paths only and do not
+report secrets.
 
 History remediation removed confirmed runtime database artifacts before this
 insertion. Normal retained refs are clean. GitHub-managed pull refs remain a
@@ -263,7 +267,7 @@ the [developer prerequisites](../../README.md#prerequisites).
 
 - `mise 2026.8.14` was the validated Mise CLI at Phase 14.8 acceptance. The
   committed `mise.toml` and `mise.lock` manage Bun `1.4.3`, hk `1.56.1`, and
-  Python `3.12.3`.
+  Node `24.19.0`; Python is not a runtime or toolchain requirement.
 - hk `1.56.1` owns the committed `hk.pkl` Git lifecycle hooks. `HK_MISE=1`
   runs hook steps through the Mise environment. Hooks are optional early
   feedback. CI does not depend on installed hooks.
@@ -288,5 +292,5 @@ configuration and `bun.lock` invalidate all cached tasks. CI uses
 
 The provider-managed history cleanup remains `PROVIDER_HISTORY_CLEANUP_PENDING`
 for 72 pull references. Provider garbage collection is unverified. Broad UI
-modernization remains deferred to Phase 18. Excel consolidation remains
-deferred to Phase 17. Phase 15 has not started.
+modernization is outside this acceptance record. `packages/excel` is active.
+Phase 15 security ownership builds on this foundation.

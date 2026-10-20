@@ -78,7 +78,7 @@ repository. This sequence uses only local state.
 3. Start the API directly:
 
    ```bash
-   export AUTH_COOKIE_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+   export AUTH_COOKIE_SECRET="$(bun -e 'console.log(require("node:crypto").randomBytes(48).toString("base64url"))')"
    export HOST=127.0.0.1
    export PORT=8090
    bun --filter @operatoros/api start

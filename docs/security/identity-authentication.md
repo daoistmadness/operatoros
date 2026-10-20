@@ -45,7 +45,7 @@ Session lifecycle:
 create → validate → refresh idle expiry → expire/revoke → logout
 ```
 
-Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. A successful database restore revokes every restored session and clears the operator cookie; reauthentication is mandatory.
+Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. A successful API restore revokes every restored session; reauthentication is mandatory. CLI restore does not revoke sessions.
 
 No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented.
 
@@ -58,7 +58,7 @@ Anonymous protected requests return `401`. Client-side role guards improve navig
 
 ## Audit evidence
 
-Authentication, authorization denial, and restore lifecycle events are written to protected append-only JSONL audit files in the configured backup directory. Audit records may contain a safe session digest and request context, but never raw cookies, tokens, passwords, password hashes, or `AUTH_COOKIE_SECRET`.
+Authentication and authorization-denial events are written to `authentication_audit.jsonl` in the configured log directory. Restore writes `restore_completed` and `restore_failed` to the recovery-history and operations audit files; API restores record the authenticated username, while CLI restores record the OS user. See [Backup and Restore Security](backup-restore.md#audit-lifecycle). Audit records may contain a safe session digest and request context, but never raw cookies, tokens, passwords, password hashes, or `AUTH_COOKIE_SECRET`.
 
 ## Current limitations
 
