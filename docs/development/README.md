@@ -79,3 +79,15 @@ Local skill installations may be untracked and absent in another worktree.
 Resolve the skill from the session's available-skills catalog; report a missing
 skill before backend implementation. Preserve user-owned skill directories and
 lockfiles instead of copying them into unrelated commits.
+
+## HTTPS development proxy
+
+Keep Vite and the API on loopback behind an existing trusted HTTPS proxy.
+Set `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` to the exact hostname you control;
+do not set `allowedHosts: true`. For browser hot reload through that proxy,
+set `VITE_HMR_HOST` to its hostname, `VITE_HMR_PROTOCOL=wss`, and
+`VITE_HMR_CLIENT_PORT` to its external HTTPS port. These settings change the
+browser's websocket address, not the local frontend/backend listening ports.
+Without overrides, local hot reload remains on `127.0.0.1` and the frontend port.
+The API still needs its exact HTTPS origin in `ALLOWED_ORIGINS` and secure
+cookies; proxy configuration does not grant authentication or data access.

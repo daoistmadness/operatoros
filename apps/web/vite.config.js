@@ -15,6 +15,17 @@ if (!Number.isInteger(backendPort) || backendPort < 1 || backendPort > 65535) {
   throw new Error(`Invalid BACKEND_PORT: ${rawBackendPort}`);
 }
 
+const hmrHost = process.env.VITE_HMR_HOST?.trim() || '127.0.0.1';
+const hmrProtocol = process.env.VITE_HMR_PROTOCOL?.trim() || undefined;
+const rawHmrClientPort = process.env.VITE_HMR_CLIENT_PORT?.trim();
+const hmrClientPort = rawHmrClientPort ? Number(rawHmrClientPort) : undefined;
+if (hmrProtocol && !['ws', 'wss'].includes(hmrProtocol)) {
+  throw new Error('VITE_HMR_PROTOCOL must be ws or wss');
+}
+if (hmrClientPort !== undefined && (!Number.isInteger(hmrClientPort) || hmrClientPort < 1 || hmrClientPort > 65535)) {
+  throw new Error('VITE_HMR_CLIENT_PORT must be an integer from 1 to 65535');
+}
+
 const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
 const apiProxy = {
   '/api': {
@@ -50,8 +61,10 @@ export default defineConfig({
     strictPort: true,
     clearScreen: false,
     hmr: {
-      host: '127.0.0.1',
+      host: hmrHost,
       port: frontendPort,
+      protocol: hmrProtocol,
+      clientPort: hmrClientPort,
     },
     proxy: apiProxy,
   },
