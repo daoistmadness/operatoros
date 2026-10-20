@@ -1,110 +1,178 @@
 # OperatorOS
 
-OperatorOS is an offline-first school attendance and academic analytics system for a
-local installation. The supported runtime is a local Elysia/TypeScript backend
-with the React frontend in a browser, backed by SQLite. PostgreSQL and containerized
-hosted deployment are not supported.
+> Offline-first school attendance and academic analytics system engineered for local, self-contained school infrastructure.
 
-Current developer and operational guidance is indexed in [docs/README.md](docs/README.md);
-[AGENTS.md](AGENTS.md) is the authoritative execution contract.
+[![CI](https://github.com/daoistmadness/operatoros/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/ci.yml)
+[![E2E Full Regression](https://github.com/daoistmadness/operatoros/actions/workflows/e2e-full.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/e2e-full.yml)
+[![Security Audit](https://github.com/daoistmadness/operatoros/actions/workflows/security-audit.yml/badge.svg?branch=main)](https://github.com/daoistmadness/operatoros/actions/workflows/security-audit.yml)
 
-## What It Does
+---
 
-Implemented:
+OperatorOS delivers school attendance processing, automated Hari Efektif Belajar (HEB) calculations, academic performance tracking against Kriteria Ketuntasan Minimal (KKM), and administrative analytics directly on local hardware without depending on external cloud services or persistent internet connectivity.
 
-- Imports attendance workbooks (`.xlsx`, plus legacy `.xls`) through a non-mutating
-  preview followed by an explicit commit.
-- Resolves attendance-import rows against existing students; an unresolved identifier stays a
-  conflict and does not create a student.
-- Tracks students, enrollments and class mappings, attendance, HEB calculations,
-  absence reasons, upload history, attendance overrides, and correction workflows.
-- Generates dashboard, attendance, rekap absensi, tardiness, and term attendance and
-  lateness reports.
-- Provides Management Analytics for attendance, lateness, grades, and Below-KKM
-  counts.
-- Supports database-backed KKM thresholds, custom academic term date ranges, and
-  Attendance Calendar rules.
-- Exposes academic intervention records and intervention-impact analytics through
-  canonical APIs; the current browser UI does not expose a create/update workflow from
-  Below-KKM alerts.
-- Provides descriptive Student Indicator and Student Trend views.
-- Exports Excel workbooks and PDF reports. The Management Analytics PDF is an executive
-  summary; the Excel workbook carries the detailed sections.
-- Provides student-roster import preview/commit and attendance reconciliation workflows.
+The supported runtime is a local Elysia/TypeScript backend paired with a React frontend accessed via a local browser, backed by SQLite (`bun:sqlite` via Drizzle ORM). Containerized hosted deployments (Docker/Podman) and PostgreSQL are unsupported.
 
-Not implemented: an At-Risk student classification, risk score, production risk cutoff,
-or persisted risk state. The descriptive indicators are not a risk label. See
-[Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md).
+Current developer and operational guidance is indexed in [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) is the authoritative execution contract.
 
-## Architecture
+---
+
+## Table of Contents
+
+- [Overview & Architecture](#overview--architecture)
+- [Capability & Feature Matrix](#capability--feature-matrix)
+- [Core Workflows](#core-workflows)
+  - [Attendance Import & Ingestion Pipeline](#attendance-import--ingestion-pipeline)
+  - [Management Analytics & Academic Configuration](#management-analytics--academic-configuration)
+- [Technology Stack](#technology-stack)
+- [Repository Layout](#repository-layout)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Data & Security Boundaries](#data--security-boundaries)
+- [Continuous Integration & Quality Safeguards](#continuous-integration--quality-safeguards)
+- [Troubleshooting & Contribution](#troubleshooting--contribution)
+- [Historical Context](#historical-context)
+- [Documentation Navigation](#documentation-navigation)
+
+---
+
+## Overview & Architecture
+
+OperatorOS follows a strict local-first architecture where the backend API remains the sole authority for business rules, identity, and analytics computations. The browser serves strictly as a rendering and input interface.
 
 ```mermaid
 flowchart LR
-  Browser["Browser / staff user"]
-  FE["React frontend<br/>Vite + React Router"]
-  API["Elysia backend<br/>Bun + TypeScript"]
-  DB[("SQLite via Drizzle")]
-  Contracts["TypeBox contracts"]
-  Excel["Excel import and reporting services"]
+  subgraph Client ["Client Interface"]
+    Browser["Browser / Staff User"]
+    FE["React Frontend<br/>(Vite 6 + React Router 7)"]
+  end
+
+  subgraph Server ["Backend API Authority"]
+    API["Elysia HTTP API<br/>(Bun 1.4.3 + TypeScript 5.9)"]
+    Excel["Excel & PDF Engines<br/>(ExcelJS 4.4 + pdf-lib 1.17)"]
+    DB[("SQLite Database<br/>(Drizzle ORM 0.45)")]
+  end
+
+  Contracts["Shared TypeBox Contracts<br/>(@operatoros/contracts)"]
 
   Browser --> FE
-  FE -->|"/api/*"| API
+  FE -->|"/api/* (HTTP/JSON)"| API
   API --> DB
   API --> Excel
   FE -.-> Contracts
   API -.-> Contracts
 ```
 
-The API is the authority for authentication, authorization, validation, and analytics.
-The frontend renders server DTOs and formats chart data; it does not recompute business
-metrics. Shared TypeBox contracts own only cross-boundary schemas and types.
+### Architectural Principles
 
-## Stack
+- **Server-Owned Computation**: The API server is the sole authority for authentication, role authorization, attendance processing, HEB derivation, and academic metrics. The frontend renders server DTOs and formats charts via Chart.js; it never recomputes business metrics or generates authoritative reports.
+- **Contract Boundary Integrity**: Monorepo packages enforce strict dependency boundaries via automated architectural tests (`bun run check:architecture`). Shared TypeBox schemas in `packages/contracts/` define cross-boundary DTOs without leaking database or framework internals.
+- **Transactional Ingestion**: Attendance data enters through non-mutating preview endpoints (`/api/uploads/preview`) before being confirmed in an explicit transactional commit. Unresolved student identifiers are flagged as conflicts and never create unverified student records.
 
-- Runtime and package manager: Bun 1.4.3, driven through mise.
-- API: TypeScript 5.9, Elysia 1.4, Drizzle 0.45, SQLite (`bun:sqlite`), ExcelJS 4.4,
-  `@e965/xlsx` 0.20, and pdf-lib 1.17.
-- Contracts: TypeBox from the root Bun catalog.
-- Frontend: React 19, Vite 6, React Router 7, TanStack Query 5, TanStack Table 8,
-  Tailwind CSS 4, Chart.js 4, Framer Motion, and lucide-react.
-- Tests: Bun test for the API and packages, Vitest for the web application, and
-  Playwright for end-to-end coverage.
-- Monorepo: Bun workspaces, Turborepo 2.11.4, and mise task definitions.
+---
+
+## Capability & Feature Matrix
+
+The table below delineates verified system capabilities, bounded partial features, and explicitly excluded/planned capabilities.
+
+| Capability Area | Status | Contract & Scope |
+| --- | :---: | --- |
+| **Attendance Ingestion** | **Implemented** | Non-mutating preview (`POST /api/uploads/preview`) and transactional commit (`POST /api/uploads/preview/:batch_id/commit`). Accepts `.xlsx` and legacy `.xls`. Validates required columns (`No. ID`, `Nama`, `Tanggal`, `Scan Masuk`, `Scan Pulang`, `Terlambat`, `Lembur`, `Pengecualian`, `week`). |
+| **Student Resolution Safeguard** | **Implemented** | Matches attendance rows against enrolled students by machine device identity (`No. ID`). Unresolved identifiers become conflicts; attendance import never creates new student records. |
+| **Academic Calendar & HEB Engine** | **Implemented** | Automated Hari Efektif Belajar (HEB) calculations, Attendance Calendar rules (expected/not-expected dates, cutoffs per jenjang), tardiness tracking, and term reports. |
+| **Management Analytics & KKM** | **Implemented** | Overview dashboard (`/analytics`), attendance/tardiness breakdowns, grade distribution, and Below-KKM alert generation with customizable term date ranges and KKM thresholds (legacy fallback `85.0`). |
+| **Academic Interventions (API)** | **Implemented** | Canonical API support for intervention tracking and intervention-impact analytics (`/api/academic-interventions/...`, `/api/analytics/intervention-impact`). *(Note: current UI does not expose a create/update workflow from Below-KKM alerts).* |
+| **Report Generation** | **Implemented** | Server-generated executive PDF summaries and comprehensive multi-sheet Excel `.xlsx` workbooks. The browser never generates authoritative files locally. |
+| **Student Descriptive Views** | **Implemented** | Descriptive Student Indicator and Student Trend views. |
+| **Student Roster Import** | **Implemented** | Roster `.xlsx` import preview/commit and attendance reconciliation workflows. |
+| **Security & Authentication** | **Implemented** | HttpOnly `astyx_session` cookies (SameSite=Lax), server-side revocable sessions, Argon2id password hashing, and role-based backend authorization (`admin` and `staff`) with server-derived capabilities. |
+| **Backup Integrity** | **Implemented** | AES-256-GCM encrypted backup envelopes (`BACKUP_ENCRYPTION_KEY`), SHA-256 checksums, and retention of the newest 10 complete generations. |
+| **Guarded Database Restore** | **Implemented** | Admin-authenticated API restore with mandatory password re-entry, identity-compatible backup validation, exact phrase confirmation, pre-restore safety snapshot, and automatic rollback on failure. Revokes all active sessions upon success. |
+| **Guarded Data Reset** | **Implemented** | Guarded reset routes (`/api/system/data-reset`) disabled by default (`ENABLE_DESTRUCTIVE_OPERATIONS=true`). Requires admin role, `destructive_data_reset` capability, exact phrase confirmation, and mandatory encrypted pre-reset backup. Never deletes database files, users, sessions, or backups. |
+| **User Administration** | **Partial** | Account provisioning is strictly limited to first-run setup plus a local operator CLI (`apps/api/src/user-recovery-cli.ts`). No web-based user management interface exists. |
+| **Restore Concurrency** | **Partial** | API restore and reset rely on process-local locks and enforce single-worker execution (`BACKEND_WORKERS=1`). Multi-worker deployments fail closed. |
+| **CLI Restore Utility** | **Partial** | `scripts/restore.sh` creates a safety snapshot and logs audit records, but does not verify backup manifests, database integrity, schema compatibility, or active administrator presence, and does not revoke existing sessions. |
+| **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)). |
+| **Enterprise / Cloud Auth** | **Not Implemented** | No MFA, SSO, OAuth, LDAP, password-reset emails, or cloud identity integrations. |
+| **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is unencrypted; encryption applies solely to backup envelopes via `BACKUP_ENCRYPTION_KEY`. |
+| **Distributed / Cloud Hosting** | **Not Implemented** | PostgreSQL and containerized deployments (Docker/Podman/Quadlet) are unsupported. |
+
+---
+
+## Core Workflows
+
+### Attendance Import & Ingestion Pipeline
+
+```mermaid
+flowchart TD
+  A["Upload Attendance Workbook (.xlsx or legacy .xls)"] --> B["POST /api/uploads/preview"]
+  B --> C["Validate required columns on first worksheet"]
+  C --> D["Resolve existing students by device identity (No. ID)"]
+  D --> E["Classify rows: new, update, unchanged, conflict, or invalid"]
+  E --> F["Review preview table & validation summary in UI"]
+  F --> G["POST /api/uploads/preview/:batch_id/commit"]
+  G --> H["Insert or update attendance records in one transaction"]
+  H --> I["Write immutable upload audit log & return summary"]
+```
+
+- **Supported Formats**: The preview endpoint accepts modern `.xlsx` workbooks and legacy `.xls` files. Student roster imports accept `.xlsx` only.
+- **Required Columns**: The first worksheet must provide: `No. ID`, `Nama`, `Tanggal`, `Scan Masuk`, `Scan Pulang`, `Terlambat`, `Lembur`, `Pengecualian`, and `week`.
+- **Sample Template**: Downloadable via `GET /api/uploads/sample-template`.
+- **Conflict Prevention**: Unresolved student identifiers remain in conflict state; attendance import never creates student entities implicitly.
+
+### Management Analytics & Academic Configuration
+
+- **Overview Dashboard**: Accessible at `/analytics` powered by `GET /api/analytics/management-overview`.
+- **Export Endpoints**:
+  - Executive PDF summary: `GET /api/analytics/management-summary/export/pdf`
+  - Comprehensive Excel report: `GET /api/analytics/management-summary/export/excel`
+- **Academic Configuration**: Configured under `/academic-management` (`KKM & Term Settings`) and backed by `/api/academic-config/...`.
+- **Fallback Metrics**: Analytics preserves the legacy fallback KKM threshold of `85.0` if no custom rule applies, and uses standard Term 1–4 date mappings when custom terms are unset.
+- **Interventions**: Canonical APIs under `/api/academic-interventions/...` and `/api/analytics/intervention-impact` record academic interventions and evaluate impact.
+
+---
+
+## Technology Stack
+
+| Layer | Technologies & Dependencies | Version Authority |
+| --- | --- | --- |
+| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.3`, Node `24.19.0`, hk `1.56.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
+| **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `5.9`, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
+| **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
+| **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
+| **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19`, Vite `6`, React Router `7`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |
+| **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
+
+---
 
 ## Repository Layout
 
-- [`apps/api/`](apps/api/): Elysia HTTP API, domain services, authentication, security,
-  and backup tooling.
-- [`apps/web/`](apps/web/): React pages, shared components, API client, query hooks, and
-  frontend configuration.
-- [`packages/db/`](packages/db/): Drizzle schema, SQLite lifecycle, schema manifest,
-  migrations, and canonical data-path resolution.
-- [`packages/contracts/`](packages/contracts/): shared TypeBox schemas and types.
-- [`packages/ui/`](packages/ui/): domain-neutral UI primitives and source-owned shadcn
-  components.
+- [`apps/api/`](apps/api/): Elysia HTTP API, domain services, authentication, security, and backup tooling.
+- [`apps/web/`](apps/web/): React pages, shared components, API client, query hooks, and frontend configuration.
+- [`packages/db/`](packages/db/): Drizzle schema, SQLite lifecycle, schema manifest, migrations, and canonical data-path resolution.
+- [`packages/contracts/`](packages/contracts/): Shared TypeBox schemas and types.
+- [`packages/ui/`](packages/ui/): Domain-neutral UI primitives and source-owned shadcn components.
 - [`packages/excel/`](packages/excel/): Excel infrastructure and workbook handling.
-- [`packages/config/`](packages/config/): shared ESLint and TypeScript configuration.
-- [`docs/`](docs/): architecture, security, operations, testing, and product references.
-- [`e2e/`](e2e/): Playwright and Bun end-to-end infrastructure.
-- [`scripts/`](scripts/): validation, launcher helpers, and the browser smoke test.
-- [`start-dev.sh`](start-dev.sh) and [`stop-dev.sh`](stop-dev.sh): managed local
-  development launcher and owner-aware stop command.
-- [`openapi/operatoros.openapi.json`](openapi/operatoros.openapi.json): version-controlled
-  OpenAPI contract.
+- [`packages/config/`](packages/config/): Shared ESLint and TypeScript configurations.
+- [`docs/`](docs/): Canonical architecture, security, operations, testing, and product references.
+- [`e2e/`](e2e/): Playwright and Bun end-to-end infrastructure and synthetic suites.
+- [`scripts/`](scripts/): Validation, launcher helpers, and browser smoke test.
+- [`start-dev.sh`](start-dev.sh) and [`stop-dev.sh`](stop-dev.sh): Managed local development launcher and owner-aware stop command.
+- [`openapi/operatoros.openapi.json`](openapi/operatoros.openapi.json): Version-controlled OpenAPI specification.
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- A native Linux Bun toolchain, with Bun pinned to 1.4.3 by `mise.toml` and `mise.lock`.
-  Do not use Windows executables, `/mnt/c`, or a Windows-mounted checkout.
-- mise with at least the `mise.toml` minimum (`2024.1.0`). CI pins mise `2026.10.3`.
-- Node 24.19.0 and hk 1.56.1, installed by `mise install`.
-- Turborepo 2.11.4, installed as a root dev dependency.
-- Agent Browser on the `PATH` only if you want the browser smoke test. Installation
-  guidance is in [COMMANDS.md](COMMANDS.md).
+- **Native Linux Bun Toolchain**: Bun `1.4.3` installed natively on Linux.
+  > [!WARNING]
+  > Do not use Windows binaries, `/mnt/c`, or Windows-mounted checkouts.
+- **mise-en-place**: Version `2024.1.0` or higher (CI uses `2026.10.3`).
+- **Installed via mise**: Node.js `24.19.0` and hk `1.56.1` (managed automatically by `mise install`).
+- **Browser Smoke Test (Optional)**: Agent Browser installed on the system `PATH` if executing UI smoke verification. Guidance is documented in [COMMANDS.md](COMMANDS.md).
 
-### Install the toolchain and dependencies
+### 1. Install Toolchain and Dependencies
 
 ```bash
 mise install
@@ -112,373 +180,238 @@ bun install --frozen-lockfile
 mise run doctor
 ```
 
-`mise install` installs the exact Bun, Node, and hk versions from `mise.lock`. Install
-workspace dependencies from the repository root only; nested workspace installs are
-not authoritative. `mise run doctor` checks the checkout, toolchain, native Linux Bun,
-workspace installation, `origin/main`, the development data directory, the canonical
-schema head, and development database status without starting services. Run
-`git fetch origin main` first if `origin/main` is missing or stale.
+- `mise install`: Installs exact runtime versions from `mise.lock`.
+- `bun install --frozen-lockfile`: Installs all monorepo workspace dependencies from the repository root. Nested workspace installs are forbidden.
+- `mise run doctor`: Validates checkout hygiene, toolchain versions, native Linux Bun, workspace packages, `origin/main` alignment, development data directory, schema head, and development database state without launching services. (Run `git fetch origin main` first if `origin/main` is stale or missing).
 
-### Start the development stack
+### 2. Start the Development Stack
 
 ```bash
 mise run dev
 ```
 
-`mise run dev` delegates to [`./start-dev.sh`](start-dev.sh). The launcher validates Bun,
-locked dependencies, and ports; creates or validates the managed development database;
-starts Elysia, then Vite; and shows the ready banner only after both health checks pass.
-Service logs are stored under `.runtime/operatoros-dev/`. Press `Ctrl+C` to stop both
-process groups cleanly.
+`mise run dev` delegates to [`./start-dev.sh`](start-dev.sh). The launcher:
+1. Validates Bun version, dependency locks, and required ports (`8000` API, `5173` Web).
+2. Initializes or validates the managed development database in the canonical data root.
+3. Launches the Elysia backend, then the Vite frontend.
+4. Displays the ready banner once both health check endpoints respond successfully. Logs are persisted to `.runtime/operatoros-dev/`.
 
-On a fresh database, open the frontend and create the first administrator on the setup
-screen. OperatorOS then closes setup permanently and redirects to normal login. There
-are no default credentials.
-
-| Surface | Local development (default) | Supervised host (systemd) |
+| Surface | URL | Description |
 | --- | --- | --- |
-| Frontend | `http://127.0.0.1:5173` | `http://<host>:5173` (interim Vite preview) |
-| Backend API | `http://127.0.0.1:8000` | `http://127.0.0.1:8090` (runbook default; loopback) |
-| OpenAPI UI | `http://127.0.0.1:8000/openapi` | `http://127.0.0.1:8090/openapi` |
+| **Frontend UI** | `http://127.0.0.1:5173` | Local React application |
+| **Backend API** | `http://127.0.0.1:8000` | Elysia HTTP API |
+| **OpenAPI Docs** | `http://127.0.0.1:8000/openapi` | Interactive Swagger / OpenAPI documentation |
 
-The launcher can use `--auto-port` when the defaults are occupied; the ready banner
-reports the selected URLs. Docker/Compose and PostgreSQL are not supported runtimes.
-The supervised-host rows come from the review-candidate
-[Ubuntu server deployment](docs/deployment/ubuntu-server.md) runbook; its frontend is
-an interim Vite preview, not production static hosting, and its API port is an example
-that must be verified as free on the target host.
+> [!NOTE]
+> On a fresh database, open `http://127.0.0.1:5173` to initialize the first administrator account. The setup form permanently closes upon creation. There are no default credentials.
 
-Validate startup prerequisites without starting services:
+### Diagnostic & Operational Commands
 
-```bash
-./start-dev.sh --check
-```
+- **Preflight check without starting**:
+  ```bash
+  ./start-dev.sh --check
+  ```
+- **Clean shutdown**:
+  Press `Ctrl+C` in the running launcher terminal, or run:
+  ```bash
+  ./stop-dev.sh
+  ```
+- **Browser UI smoke test** (runs against a live stack):
+  ```bash
+  ./scripts/verify-browser.sh
+  ```
 
-Stop a managed session from the checkout that owns it:
+### Advanced: Direct Backend and Frontend Execution
 
-```bash
-./stop-dev.sh
-```
-
-### Browser smoke test
-
-```bash
-./scripts/verify-browser.sh
-```
-
-The script does not launch the application. Run it against a live local stack at
-`http://127.0.0.1:5173` (or pass another frontend URL) with Agent Browser installed. It
-drives the UI and checks same-origin API responses.
-
-### Direct backend and frontend processes (advanced)
-
-The managed launcher is the normal workflow. To run the API directly, bootstrap a
-disposable data root first, because the API server never creates or migrates a
-database:
+For isolated testing without `start-dev.sh`, bootstrap a disposable data directory first (the API server never creates or auto-migrates databases):
 
 ```bash
-bun packages/db/src/db-cli.ts bootstrap --data-dir /absolute/empty/disposable-data-dir
-```
+# 1. Bootstrap a disposable SQLite database
+bun packages/db/src/db-cli.ts bootstrap --data-dir /tmp/disposable-operatoros-data
 
-```bash
+# 2. Launch Elysia API directly
 cd apps/api
-OPERATOROS_DATA_DIR=/absolute/empty/disposable-data-dir \
-AUTH_COOKIE_SECRET='use-a-local-secret-with-at-least-32-characters' \
-ASTRYX_SETUP_TOKEN='use-a-separate-local-setup-token' \
+OPERATOROS_DATA_DIR=/tmp/disposable-operatoros-data \
+AUTH_COOKIE_SECRET='local-dev-secret-must-be-at-least-32-chars-long' \
 PORT=8000 \
 bun run src/server.ts
 ```
 
 ```bash
+# 3. Launch Vite Frontend directly (proxies /api to BACKEND_PORT)
 cd apps/web
 BACKEND_PORT=8000 bun run dev
 ```
 
-First-run setup outside the managed launcher requires `ASTRYX_SETUP_TOKEN`; enter the
-same value in the setup form. The API binds `127.0.0.1:8090` by default outside the
-managed launcher; set `PORT` to change it. Vite proxies `/api` to `BACKEND_PORT`
-(default `8000`), so the direct example sets both to `8000`. Do not point this workflow
-at real student data.
+---
 
-## Environment Variables
+## Environment Configuration
 
-The managed launcher resolves the persistent development data root from the repository
-identity and `XDG_DATA_HOME` (or `~/.local/share`), using `operatoros.sqlite` inside
-`operatoros/development/<repository-id>/`. It exports that canonical SQLite URL for every
-managed session, warns when inherited `DATABASE_URL` or the deprecated
-`OPERATOROS_DEV_DATA_DIR` could drift, and creates one persistent local authentication
-secret. Outside managed development, explicit `DATABASE_URL` and `AUTH_COOKIE_SECRET`
-values retain their established behavior. The table covers the variables an operator
-normally sets; [`apps/api/src/config.ts`](apps/api/src/config.ts) is the parsing authority.
+The managed launcher automatically sets the development data root derived from repository identity and `XDG_DATA_HOME` (`~/.local/share/operatoros/development/<repo-id>/operatoros.sqlite`). For standalone execution, configuration parameters are parsed by [`apps/api/src/config.ts`](apps/api/src/config.ts).
 
-| Variable | Service | Required | Default | Description | Example |
-| --- | --- | ---: | --- | --- | --- |
-| `OPERATOROS_DATA_DIR` | Backend | No | derived data root | Canonical absolute data-root override. Derives `operatoros.sqlite`, `backups/`, and `logs/`. `OPERATOROS_DEV_DATA_DIR` is a deprecated alias. | `/var/lib/operatoros` |
-| `DATABASE_URL` | Backend | No | derived from the data root | SQLite database URL. SQLite is the only supported database; a non-SQLite value fails at database open or configuration validation. Configuration errors can include the configured database string, so never embed credentials in `DATABASE_URL`. When set together with `OPERATOROS_DATA_DIR`, both must resolve to the same database. `DATABASE_PATH` is accepted as an alias. | `sqlite:////var/lib/operatoros/operatoros.sqlite` |
-| `ENABLE_DESTRUCTIVE_OPERATIONS` | Backend | No | `false` | Enables guarded API restore and the reset preview/commit routes under `/api/system/data-reset`. Keep false outside a controlled restore or maintenance window. | `true` |
-| `AUTH_COOKIE_SECRET` | Backend | Yes | unset | Persistent secret used to derive server-side session token digests. Must contain at least 32 characters; the authentication service rejects shorter values. Store only in protected backend configuration. | *(secret value)* |
-| `ASTRYX_SETUP_TOKEN` | Setup API | Yes for first-run outside managed development | unset | High-entropy token authorizing first-run web provisioning. The managed launcher generates one per session. When unset outside managed development, setup authorization is unavailable. | *(secret value)* |
-| `COOKIE_SECURE` | Backend | No | `false` | Sets the authentication cookie `Secure` attribute. Use `false` for localhost HTTP and `true` for HTTPS. | `true` |
-| `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS and unsafe-request Origin allowlist. | `http://localhost:5173,http://127.0.0.1:5173` |
-| `TRUSTED_PROXY_ADDRESSES` | Backend | No | unset | Exact direct peer IPs allowed to supply forwarded client IPs. Other peers cannot influence client identity through headers. | `127.0.0.1` |
-| `HOST` | Backend | No | `127.0.0.1` | API bind host. | `127.0.0.1` |
-| `PORT` | Backend | No | `8090` | API bind port. The managed launcher defaults to `8000`; `--auto-port` can select another free port. | `8000` |
-| `BACKUP_ENCRYPTION_KEY` | Backend | Yes for new backups and restore | unset | Canonical Base64 for 32 bytes. Encrypts new backups and must differ from `AUTH_COOKIE_SECRET`. | *(secret value)* |
-| `BACKUP_ENCRYPTION_KEY_ID` | Backend | Yes when a backup key is set | unset | Short identifier stored in the authenticated backup envelope. | `local-1` |
-| `VITE_API_BASE_URL` | Frontend | No | unset | Build-time API base URL used by the Vite client. If empty, the browser uses same-origin `/api` through the Vite proxy. | `http://localhost:8000` |
+| Variable | Target | Required | Default | Purpose & Constraints | Example |
+| --- | --- | :---: | --- | --- | --- |
+| `OPERATOROS_DATA_DIR` | Backend | No | Derived data root | Absolute directory path for application storage. Derives `operatoros.sqlite`, `backups/`, and `logs/`. (`OPERATOROS_DEV_DATA_DIR` is a deprecated alias). | `/var/lib/operatoros` |
+| `DATABASE_URL` | Backend | No | Derived SQLite URL | Explicit SQLite URL. Only SQLite is supported; non-SQLite URLs fail immediately. Must resolve to the same database file if `OPERATOROS_DATA_DIR` is also specified. | `sqlite:////var/lib/operatoros/operatoros.sqlite` |
+| `ENABLE_DESTRUCTIVE_OPERATIONS` | Backend | No | `false` | Enables guarded API restore and reset endpoints (`/api/system/data-reset`). Must remain `false` during standard operations. | `true` |
+| `AUTH_COOKIE_SECRET` | Backend | **Yes** | Unset | Secret used to derive HMAC digests of server-side session tokens. Must be at least 32 characters. | *(secret value)* |
+| `ASTRYX_SETUP_TOKEN` | Backend | No | Unset | Optional external token authorizing first-run admin provisioning. Automatically generated per-session by `./start-dev.sh`. | *(secret value)* |
+| `COOKIE_SECURE` | Backend | No | `false` | Sets `Secure` flag on session cookies. Use `false` for localhost HTTP; set to `true` for HTTPS reverse-proxy setups. | `true` |
+| `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated Origin allowlist for CORS and unsafe state-changing requests. | `http://127.0.0.1:5173` |
+| `TRUSTED_PROXY_ADDRESSES` | Backend | No | Unset | Comma-separated IP allowlist for upstream reverse proxies. Forwarded-IP headers from unlisted peers are ignored. | `127.0.0.1` |
+| `HOST` | Backend | No | `127.0.0.1` | IP address bound by the Elysia backend HTTP server. | `127.0.0.1` |
+| `PORT` | Backend | No | `8090` | HTTP port bound by the standalone API server (launcher defaults to `8000`). | `8000` |
+| `BACKUP_ENCRYPTION_KEY` | Backend | **Yes** (for backup/restore) | Unset | Canonical Base64-encoded 32-byte key used to encrypt and decrypt AES-256-GCM backup archives. Must differ from `AUTH_COOKIE_SECRET`. | *(secret value)* |
+| `BACKUP_ENCRYPTION_KEY_ID` | Backend | **Yes** (if key set) | Unset | Identifier tag stored in the backup envelope header for key identification. | `local-1` |
+| `VITE_API_BASE_URL` | Frontend | No | Unset | Build-time API base URL. When unset, Vite routes `/api` calls through its internal development proxy. | `http://127.0.0.1:8000` |
 
-Session idle and absolute timeouts default to 6 and 24 hours, and account lockout
-defaults to 5 failed attempts for 30 minutes. Those values are not currently exposed as
-environment variables.
+> [!NOTE]
+> Session timeout parameters (idle session: 6 hours; absolute session: 24 hours) and account lockout policy (5 consecutive failed attempts triggering a 30-minute lock) are enforced by constant configuration in the authentication domain service.
 
-## Data and Security Boundaries
+---
 
-### Security model
+## Data & Security Boundaries
 
-1. Encrypted backup envelopes with integrity checks.
-2. Guarded API restore with a safety snapshot and rollback.
-3. Database-backed user identity and server-side sessions.
-4. Role- and capability-based backend authorization.
-5. Authentication, authorization-denial, restore, and destructive-reset audit logging.
+### Layered Security Architecture
 
 ```mermaid
 flowchart TD
-  Browser["Browser"] -->|"HttpOnly astyx_session cookie<br/>SameSite=Lax"| API["Elysia backend"]
-  API --> Session["Validated database session"]
-  Session --> User["Active database user"]
-  User --> Role["Database role: admin or staff"]
-  Role --> Cap["Server-derived capabilities"]
-  Cap --> Protected["Protected operation"]
+  UserBrowser["Staff Browser"] -->|"HttpOnly astyx_session cookie<br/>(SameSite=Lax, Path=/)"| APIGate["API Gateway"]
+  APIGate --> SessionAuth["Validated Database Session"]
+  SessionAuth --> DBUser["Active Database User"]
+  DBUser --> DBRole["Assigned Role<br/>(admin | staff)"]
+  DBRole --> CapCheck["Server-Derived Capabilities"]
+  CapCheck --> Action["Authorized Operation"]
 ```
 
-Only the backend grants access. Frontend identity and role state are navigation
-conveniences. Client fields such as `request.role`, `reviewed_by`, `entered_by`, and
-`uploaded_by` are untrusted metadata, not authorization evidence.
+- **Authentication Contracts**: Session state is managed strictly via server-side session tables and HttpOnly, `SameSite=Lax` cookies named `astyx_session`. No JSON Web Tokens (JWT), browser `localStorage` credentials, or token-reading client scripts are permitted. First-run setup cookies use `SameSite=Strict`.
+- **Authorization**: Backend roles are limited to `admin` and `staff`. Request authorization is evaluated solely from database-backed sessions and server-derived capabilities. Client-supplied headers or body fields (`request.role`, `reviewed_by`, `uploaded_by`) are untrusted audit metadata, never authorization proofs.
+- **Database Schema Management**:
+  - The current active application schema head is **S4.8** (`20261002_s48`).
+  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql) and the S4.8 migration from [`packages/db/src/s48-migration.sql`](packages/db/src/s48-migration.sql).
+  - Historical baseline and rollback target is **S4.2** (`20260724_s42`).
+  - The protected operational database remains **S4.3** (`20260725_s43`) until a separately authorized migration.
+  - The API server opens databases with `create: false`, validates integrity and schema version on startup, and never automatically applies migrations.
+- **Backup & Restore Lifecycle**:
+  - Backups are encrypted with AES-256-GCM envelopes containing authenticated headers and SHA-256 integrity digests. Unencrypted plaintext backups are rejected unless explicit legacy opt-in is enabled.
+  - API restore requires `ENABLE_DESTRUCTIVE_OPERATIONS=true`, an authenticated admin session, password re-entry, identity-compatible backup validation, exact confirmation phrase (`RESTORE_DATABASE`), and creates a pre-restore safety snapshot before writing. If schema or integrity validation fails post-copy, the safety snapshot is restored automatically.
+  - A successful restore immediately revokes all active database sessions, requiring re-authentication.
+  - Restore operations require single-worker execution (`BACKEND_WORKERS=1`); there is no approved cross-process restore lock.
+  - CLI restore (`scripts/restore.sh` / `apps/api/src/backup-cli.ts`) creates a safety snapshot and audit entries, but does not perform manifest verification, schema checks, active administrator validation, or session revocation.
+- **Guarded Data Reset**:
+  - `/api/system/data-reset` is disabled by default. When enabled via `ENABLE_DESTRUCTIVE_OPERATIONS=true`, execution requires the `destructive_data_reset` capability, an exact confirmation phrase, and a verified pre-reset encrypted backup.
+  - Data reset wipes application tables but never deletes database files, user accounts, active sessions, schema version metadata, or existing backup files.
+- **Data Privacy & Operational Safety**:
+  - Spreadsheets, SQLite databases, and exported reports contain sensitive student personal identifiable information (PII).
+  - Never commit real school data, backup archives, or environment secrets to version control.
 
-The `astyx_session` cookie is HttpOnly, uses `Path=/` and `SameSite=Lax`, and adds
-`Secure` when `COOKIE_SECURE=true`. Setup authorization uses `SameSite=Strict`. There is
-no JWT, localStorage authentication, remember-me function, or frontend session-token
-access. See [Identity and Authentication](docs/security/identity-authentication.md) and
-[Security Hardening](docs/security/SECURITY_HARDENING.md).
+---
 
-### Database and migrations
+## Continuous Integration & Quality Safeguards
 
-- The current application schema head is S4.8 (`20261002_s48`). A fresh TypeScript
-  bootstrap installs the approved S4.7 base from `packages/db/src/s47-schema.sql` and
-  applies the S4.8 extension from `packages/db/src/s48-migration.sql`. S4.2
-  (`20260724_s42`) is the historical baseline and rollback target, not the
-  fresh-bootstrap target.
-- The managed launcher and
-  `bun run db:bootstrap -- --data-dir <absolute-directory>` create fresh databases. The API server
-  opens an existing database with `create: false`, validates it, and never creates or
-  silently migrates it.
-- Existing outdated databases are rejected and require the controlled migration path in
-  [Database Operations](docs/operations/DATABASE_OPERATIONS.md). Ordinary startup does
-  not upgrade a database.
-- The SQLite data layer enables foreign keys and runs integrity and schema validation at
-  open. Drizzle is the application persistence layer.
-- The protected operational database remains S4.3 (`20260725_s43`) until a separately
-  authorized migration. It is never a development, test, fixture, or E2E target.
-- PostgreSQL evaluation artifacts remain historical migration evidence only.
+The repository enforces strict continuous integration workflows on GitHub Actions running on `ubuntu-26.04`. Merges into `main` are governed by a repository ruleset requiring automated check completion.
 
-### Backup and restore
+### Workflows Overview
 
-- Administrators use the Backup Management page (`/settings/backups`) or the
-  `/api/admin/backups` API. Operator scripts are `scripts/backup.sh` and
-  `scripts/restore.sh`; the underlying CLI is `apps/api/src/backup-cli.ts`.
-- New application backups use an AES-256-GCM envelope keyed by
-  `BACKUP_ENCRYPTION_KEY` and `BACKUP_ENCRYPTION_KEY_ID`. The live SQLite database
-  remains unencrypted. Legacy plaintext backups require explicit operator opt-in.
-- Authenticated API restore requires `ENABLE_DESTRUCTIVE_OPERATIONS=true`, an active
-  administrator session, re-entry of the current password, an identity-compatible
-  backup, exact filename and `RESTORE_DATABASE` phrase confirmation, the safety
-  acknowledgements, checksum/integrity/schema validation, and a pre-restore safety
-  snapshot. A failed replacement restores the prior active database; the safety snapshot
-  remains as a recovery backup.
-- The API preflight validates `users`/`sessions` column compatibility but does not
-  verify that the backup contains an active administrator. Confirm an active
-  administrator exists in the backup before restoring.
-- API restore and reset use process-local operation locks. Restore is not safe with
-  multiple API processes; there is no approved cross-process restore lock.
-- A successful API restore revokes every restored session and requires all operators to
-  sign in again.
-- The CLI restore path creates a pre-restore safety snapshot when an active database
-  exists and writes restore audit lines, but it does not verify the backup manifest,
-  database integrity, schema, or an active administrator, does not perform
-  post-replacement checks, and does not revoke sessions. Use it only with all writers
-  stopped and an approved recovery procedure.
-- Retention keeps the newest 10 complete backup generations. The canonical retention,
-  eviction, and restore-audit rules, including current audit gaps, are in
-  [Backup and Restore Security](docs/security/backup-restore.md); this README does not
-  duplicate those procedures.
+| Workflow | Trigger Events | Primary Jobs & Objectives |
+| --- | --- | --- |
+| **CI**<br/>([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) | Pull Requests, push to `main`/`master`/`develop`, merge groups | - **`api`**: Locked toolchain setup, disposable database validation (`mise run doctor`), dependency security audit, security behavior tests, active Bun script tests, `hk check --all`, Turbo orchestration & invalidation tests, launcher typecheck, Elysia runtime bootstrap & health checks, TypeBox resolution check, architecture tests, and contract boundary verification.<br/>- **`frontend`**: Dependency consistency, package-manager regression checks, UI boundary checks, OpenAPI drift verification (`api:check`), relative Markdown link validation, and developer command documentation verification.<br/>- **`release`** *(Conditional Skip)*: Full release tier (`mise run check:full`). Conditionally skipped on ordinary PRs/pushes; runs automatically on weekly schedule (Wednesdays 04:17 UTC) and manual `workflow_dispatch`. |
+| **E2E Full Regression**<br/>([`.github/workflows/e2e-full.yml`](.github/workflows/e2e-full.yml)) | Pull Requests, push to `main`, merge groups, manual dispatch | - **`changes` (`Select E2E scope`)**: Scope evaluator that mandates full E2E execution (`run-e2e=true`) across all PRs and main pushes.<br/>- **`e2e-full` (`E2E full regression`)**: Complete Playwright browser and API regression against disposable in-memory SQLite instances using synthetic credentials (`operatoros_e2e_admin`).<br/>- **`result` (`E2E regression result`)**: Aggregate validator executing `.github/scripts/validate-e2e-result.sh`. Fails closed if any scope selection, browser test, or teardown step is skipped, cancelled, or failed. |
+| **Scheduled Security Audit**<br/>([`.github/workflows/security-audit.yml`](.github/workflows/security-audit.yml)) | Weekly schedule (Mondays 03:17 UTC), manual dispatch | - **`audit`**: Runs `bun run security:audit` in read-only cache mode to detect dependency vulnerabilities. |
 
-See [Backup and Restore Security](docs/security/backup-restore.md),
-[Database Operations](docs/operations/DATABASE_OPERATIONS.md), and
-[Data Reset](docs/operations/DATA_RESET.md).
+### Mandatory Status Checks for Autonomous Merging
 
-### Security and data handling
+Per the active branch protection ruleset for `main`, merging requires all of the following checks to report success from trusted GitHub integrations:
+1. `api` (GitHub Actions CI)
+2. `frontend` (GitHub Actions CI)
+3. `Select E2E scope` (GitHub Actions E2E)
+4. `E2E full regression` (GitHub Actions E2E)
+5. `E2E regression result` (GitHub Actions E2E)
+6. `CodeQL` (GitHub Code Scanning)
 
-- OperatorOS uses database-backed users, revocable server-side sessions, an HttpOnly
-  cookie, and Argon2id password hashes.
-- Backend roles are `admin` and `staff`. Capabilities are derived from the role on the
-  server; client-provided roles never authorize a request.
-- `/api/system/data-reset` is disabled by default. When enabled, it requires an
-  authenticated administrator, the `destructive_data_reset` capability, an exact
-  confirmation phrase, and a successful encrypted backup before deletion. No reset
-  deletes the database, users, sessions, schema metadata, or backup files.
-- Treat imported spreadsheets, SQLite databases, browser artifacts, backups, and
-  generated Excel or PDF outputs as sensitive operational data.
-- Never commit backup paths, checksums, rows, names, secrets, or personal data.
+### Local Quality & Verification Commands
 
-Implemented security does not include MFA, SSO, OAuth, LDAP, password-reset email,
-cloud identity, SQLCipher or live-database encryption, distributed restore locking, or a
-general user-management interface. Account provisioning is limited to first-run setup
-plus a local operator recovery CLI; see
-[User Administration](docs/security/user-administration.md).
-
-## Management Analytics and Academic Config
-
-- Management Analytics is available at `/analytics`.
-- The `/analytics` overview uses `GET /api/analytics/management-overview`; filtered
-  management exports use the `management-summary` endpoints below.
-- Filtered management reports can be downloaded from:
-  - `GET /api/analytics/management-summary/export/pdf`
-  - `GET /api/analytics/management-summary/export/excel`
-- KKM thresholds and term date ranges are configured in `/academic-management` under
-  `KKM & Term Settings`.
-- Academic config APIs are canonical under `/api/academic-config/...`.
-- Academic intervention records and intervention-impact analytics are exposed through
-  canonical APIs, including `/api/academic-interventions/...` and
-  `/api/analytics/intervention-impact`; the current browser UI does not expose a
-  create/update workflow from Below-KKM alerts.
-- If no custom KKM threshold applies, analytics preserves the legacy fallback threshold
-  `85`.
-- If no custom term range exists, analytics preserves the default Term 1-4 date mapping.
-
-## Excel Import Workflow
-
-```mermaid
-flowchart TD
-  A["Upload .xlsx or .xls"] --> B["POST /api/uploads/preview"]
-  B --> C["Validate required columns on the first worksheet"]
-  C --> D["Resolve existing students by device identity"]
-  D --> E["Classify rows: new, update, unchanged, conflict, or invalid"]
-  E --> F["Review preview and select rows"]
-  F --> G["POST /api/uploads/preview/:batch_id/commit"]
-  G --> H["Insert or update attendance rows in one transaction"]
-  H --> I["Write upload log and return summary"]
-```
-
-- The import expects the first worksheet to contain the required attendance columns:
-  `No. ID`, `Nama`, `Tanggal`, `Scan Masuk`, `Scan Pulang`, `Terlambat`, `Lembur`,
-  `Pengecualian`, and `week`.
-- The preview endpoint accepts `.xlsx` and legacy `.xls`. Student roster imports accept
-  `.xlsx` only.
-- A sample template is available at `GET /api/uploads/sample-template`.
-- An unresolved student identifier is a conflict; the attendance import does not create
-  students.
-
-## Validation and Testing
-
-`mise run check:affected` runs Turbo `typecheck`, `test`, and `build` for packages
-affected since `origin/main`; run `git fetch origin main` first when the remote-tracking
-ref is stale or missing. `mise run test:fast` is the changed-path-aware iterative tier.
-`mise run check:full` delegates to `make test-release`, the complete release-sensitive
-authority. See [COMMANDS.md](COMMANDS.md) for the full command index.
+Contributors must run corresponding local commands before submitting changes:
 
 ```bash
-# Root quality authority: lint, contracts, architecture, typecheck, and tests
+# Complete quality check: lint, formatting, architecture, typecheck, tests
 mise run check
 
-# Bun suites and repository script tests
+# Execute automated test suites
 mise run test
 
-# Production web build
+# Compile production web application build
 mise run build
 
-# Specialized checks and data-safe validation
+# Targeted checks for packages modified since origin/main
 mise run check:affected
+
+# Fast iterative changed-path validation tier
 mise run test:fast
+
+# Full release validation suite (incorporates E2E and fresh DB parity)
 mise run check:full
+
+# Authoritative fresh SQLite bootstrap parity gate
 mise run db:fresh
-```
 
-OpenAPI contracts are generated and drift-checked with the frontend package scripts:
-
-```bash
+# Verify OpenAPI contract synchronization
 bun --filter @operatoros/web api:check
-bun --filter @operatoros/web api:generate
 ```
 
-The standardized E2E workflow uses isolated synthetic data and runtime-selected ports;
-[`e2e/README.md`](e2e/README.md) is the authoritative guide.
+---
 
-- E2E infrastructure validation: `make e2e-validate`
-- Local blocking smoke: `timeout 300 make e2e-smoke`
-- Do not run `make e2e-full` locally without explicit owner approval; it is guarded for
-  GitHub Actions.
-- Backend tests: `bun --filter @operatoros/api test`
-- Frontend build: `bun --filter @operatoros/web build`
-- Security tests: `bun run test:security`
-- Dependency audit: `bun run security:audit`
-- Browser smoke: `./scripts/verify-browser.sh`
-- Markdown links: `bun .github/scripts/check-markdown-links.ts`
-- Current developer docs: `bun .github/scripts/check-current-developer-docs.ts`
+## Troubleshooting & Contribution
 
-See [Contributing](CONTRIBUTING.md), [test strategy](docs/testing/TEST_STRATEGY.md),
-[frontend architecture](docs/architecture/FRONTEND_ARCHITECTURE.md), and
-[database operations](docs/operations/DATABASE_OPERATIONS.md).
+### Common Troubleshooting Scenarios
 
-## Troubleshooting
+- **Vite dev server fails to launch**: Verify all workspace dependencies are installed. Run `bun install --frozen-lockfile` from the repository root.
+- **Upload fails during preview**: Confirm the workbook is an `.xlsx` or `.xls` file and that the required columns exist on the first sheet.
+- **Database URL conflicts**: If startup reports that `DATABASE_URL` conflicts with `OPERATOROS_DATA_DIR`, unset the inherited `DATABASE_URL` or ensure it points to the resolved canonical database.
+- **Filesystem & WSL2 performance**: Ensure the repository checkout is located on the native Linux filesystem. Do not use `/mnt/c` or Windows-mounted checkouts.
 
-- If the Vite dev server fails, verify workspace dependencies exist. Run
-  `bun install --frozen-lockfile` from the repository root if needed.
-- If uploads fail, confirm the workbook is `.xlsx` or `.xls` and that the required
-  columns exist on the first sheet.
-- If startup reports that `DATABASE_URL` conflicts with `OPERATOROS_DATA_DIR`, unset the
-  inherited `DATABASE_URL` or point it at the resolved canonical database.
-- The canonical checkout is on the Linux filesystem. Connect from Windows through
-  SSH/Tailscale; do not use `/mnt/c` or a Windows-mounted checkout.
+### Contribution Rules
 
-## Contribution Workflow
-
-1. Read the relevant application, package, and docs files first.
+1. Read the relevant application, package, and documentation files first.
 2. Make the smallest safe change.
-3. Update or add tests when behavior changes.
-4. Run the most relevant verification command.
-5. For user-visible frontend changes, run the browser smoke test when Agent Browser is
-   available.
-6. Document data migrations or operational caveats in the pull request.
-7. Stage named paths only. Do not commit secrets, backups, or real student data.
+3. Update or add automated tests when behavior changes.
+4. Run `mise run check` and `mise run test:fast` before opening a pull request.
+5. For user-visible frontend changes, run `./scripts/verify-browser.sh` when Agent Browser is available.
+6. Document data migrations or operational caveats in the pull request description.
+7. Stage named paths only. Never commit credentials, backups, or real student personal data.
+
+---
 
 ## Historical Context
 
-- The **`v0.9.0-platform-foundation`** inventory, security review, and release notes
-  remain the historical Phase 9 baseline.
-- The experimental Tauri desktop shell and its Phase 9.6/11 acceptance gates were removed
-  on 2026-08-20. The retired Python/FastAPI backend remains only in Git history and
-  migration evidence.
-- The protected operational database remains S4.3 until a separately authorized
-  migration. A restored S4.2 database pairs with the documented rollback application.
-- The [historical WSL2 and DevOps guide](docs/WSL2_DEVOPS.md) is retained for migration
-  reference, not current onboarding.
+- **Phase 9 Platform Baseline**: The `v0.9.0-platform-foundation` release inventory, security review, and release notes remain the authoritative Phase 9 architectural baseline.
+- **Desktop Shell Retirement**: The experimental Tauri desktop wrapper and its Phase 9.6/11 acceptance gates were deprecated and completely removed on 2026-08-20. The application runs exclusively as a local web service in standard modern browsers.
+- **Python / FastAPI Backend Retirement**: The legacy Python backend was replaced by the Bun/Elysia TypeScript implementation. Legacy migrations and scripts in `backend/` are preserved strictly as migration history and audit evidence.
+- **Operational Database Compatibility**: The live operational database remains pinned at schema **S4.3** (`20260725_s43`) until an authorized migration window. Restoring an S4.2 database pairs with the documented rollback commit `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`).
+- **Legacy WSL2 Documentation**: The [historical WSL2 / DevOps guide](docs/WSL2_DEVOPS.md) is retained for migration reference and does not represent current onboarding instructions.
+
+---
 
 ## Further Reading
 
-- [Documentation index](docs/README.md)
-- [Commands](COMMANDS.md)
-- [Contributing](CONTRIBUTING.md)
-- [Conventions](CONVENTIONS.md)
-- [Frontend guide](apps/web/README.md)
-- [Frontend architecture](docs/architecture/FRONTEND_ARCHITECTURE.md)
-- [Database schema architecture](docs/architecture/DATABASE_SCHEMA_ARCHITECTURE.md)
-- [Database operations](docs/operations/DATABASE_OPERATIONS.md)
-- [Data reset](docs/operations/DATA_RESET.md)
-- [Test strategy](docs/testing/TEST_STRATEGY.md)
-- [E2E guide](e2e/README.md)
-- [Identity and authentication](docs/security/identity-authentication.md)
-- [Security hardening](docs/security/SECURITY_HARDENING.md)
-- [Backup and restore security](docs/security/backup-restore.md)
-- [User administration status](docs/security/user-administration.md)
-- [Utility scripts](docs/UTILITY_SCRIPTS.md)
-- [Agent instructions](AGENTS.md)
+- [Documentation Index](docs/README.md)
+- [Commands Reference](COMMANDS.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Conventions Guide](CONVENTIONS.md)
+- [Agent Execution Contract](AGENTS.md)
+- [Frontend Guide](apps/web/README.md)
+- [Frontend Architecture](docs/architecture/FRONTEND_ARCHITECTURE.md)
+- [Database Schema Architecture](docs/architecture/DATABASE_SCHEMA_ARCHITECTURE.md)
+- [Platform Portability](docs/architecture/PLATFORM_PORTABILITY.md)
+- [Identity & Authentication](docs/security/identity-authentication.md)
+- [Security Hardening](docs/security/SECURITY_HARDENING.md)
+- [Backup & Restore Security](docs/security/backup-restore.md)
+- [User Administration Status](docs/security/user-administration.md)
+- [Database Operations](docs/operations/DATABASE_OPERATIONS.md)
+- [Data Reset Procedures](docs/operations/DATA_RESET.md)
+- [Utility Scripts Manual](docs/UTILITY_SCRIPTS.md)
+- [Test Strategy](docs/testing/TEST_STRATEGY.md)
+- [E2E Testing Guide](e2e/README.md)
+- [GitHub Actions Infrastructure](.github/README.md)
+- [Metrics & Analytics Definitions](docs/analytics/METRICS.md)
+- [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)
