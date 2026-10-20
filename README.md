@@ -408,6 +408,6 @@ bun --filter @operatoros/web api:check
 - [Utility Scripts Manual](docs/UTILITY_SCRIPTS.md)
 - [Test Strategy](docs/testing/TEST_STRATEGY.md)
 - [E2E Testing Guide](e2e/README.md)
-- [GitHub Actions Infrastructure](.github/README.md)
+- [GitHub Actions Infrastructure](.github/CI.md)
 - [Metrics & Analytics Definitions](docs/analytics/METRICS.md)
 - [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)
