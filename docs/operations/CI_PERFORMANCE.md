@@ -184,7 +184,7 @@ checker plus its fixture tests. No test retries were found or added.
 
 ## Consolidated autonomous CI
 
-The current workflow authority is [`.github/README.md`](../../.github/README.md).
+The current workflow authority is [`.github/CI.md`](../../.github/CI.md).
 Three repository-owned workflows are consolidated into `ci.yml`; GitHub-managed
 CodeQL and dependency workflows remain separate. Required check names and
 unconditional PR validation are preserved.

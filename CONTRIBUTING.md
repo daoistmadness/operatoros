@@ -46,7 +46,7 @@ Implement the smallest change, update relevant tests and existing documentation,
 and run the applicable local gates above. Commit named paths with a conventional
 commit message, push the feature branch, and open a PR describing behavior,
 verification, risks, and rollback. Confirm the live protection and repository
-settings described in [.github/README.md](.github/README.md); human approval is
+settings described in [.github/CI.md](.github/CI.md); human approval is
 not a merge requirement, but every technical gate is mandatory.
 
 Inspect the PR's exact head SHA and required checks. Use
