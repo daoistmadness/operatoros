@@ -2,10 +2,13 @@
 
 ## Workflows
 
-- [`ci.yml`](workflows/ci.yml) runs API, frontend, and documentation checks on pull requests, merge queues, and pushes to `main`, `master`, or `develop`. A weekly Wednesday run and manual dispatch run the full release tier instead of repeating the fast jobs.
-- [`e2e-full.yml`](workflows/e2e-full.yml) runs the full synthetic regression for every pull request targeting `main`, `master`, or `develop`, every push to `main`, merge groups, and manual dispatch. No path exclusions apply. `Select E2E scope` always selects the full run; `E2E full regression` always executes, and `E2E regression result` rejects skipped, cancelled, failed, or missing results.
-- [`security-audit.yml`](workflows/security-audit.yml) runs the lockfile audit every Monday and on manual dispatch.
+[`ci.yml`](workflows/ci.yml) is the single repository-owned workflow. It runs package checks and the complete browser/API smoke suite in parallel on every PR, merge group, and push to `main`, `master`, or `develop`. No path exclusions apply. All six required check names remain unchanged.
 
+The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs the complete browser/API smoke suite. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
+
+The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus typechecks and the production build. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter: every browser scenario, API smoke checks, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
+
+The previous merged-main E2E run `39458747765` measured `6m22s` inside the regression command, including `4m06s` for the complete smoke suite. The remaining `2m16s` repeated tests and a build already covered by the required `api` job. This establishes the duplication removed; new hosted timings must be measured rather than inferred.
 All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the disposable development database through `mise run doctor`; the full release tier also runs doctor weekly or by manual request.
 
 ## Toolchain and dependency setup
@@ -20,13 +23,13 @@ External actions use verified full commit SHAs with release comments: checkout v
 - Bun downloads use an exact key containing OS, architecture, Bun version, and `bun.lock`; there are no stale restore prefixes.
 - The API job caches `.turbo` by runner, Turbo version, lock/toolchain inputs, and commit. Restore prefixes can reuse older task outputs because Turbo validates its own content hashes. Cache hit and check duration appear in the job summary.
 - Playwright is pinned to 1.61.1 because the previous 1.55.1 package had no Ubuntu 26.04 browser mapping. Chromium uses an exact cache key from Ubuntu version, architecture, the web manifest, and `bun.lock`. `playwright install --with-deps chromium` still runs so the runner installs required system libraries even on a browser-cache hit.
-- Setup, Turbo, and browser caches are saved only on trusted push, schedule, or manual runs. Pull requests and merge groups restore without saving. The security audit sets `cache-mode: read`.
+- Setup, Turbo, and browser caches are saved only on trusted push, schedule, or manual runs. Pull requests and merge groups restore without saving. The Monday audit restores setup caches without saving them.
 
 No cache contains application data, credentials, or database files. PR code uses `pull_request` with `contents: read`; no privileged `pull_request_target` execution is used.
 
 ## Running and debugging
 
-Use GitHub Actions **Run workflow** for `CI` to run full validation, `E2E Full Regression` to run the complete browser/API regression, or `Scheduled dependency security audit` to rerun `bun run security:audit`.
+Use GitHub Actions **Run workflow** for `CI` to run full validation. Run `bun run security:audit` locally for an isolated lockfile audit. The former E2E and security-audit workflow files are consolidated into CI; older runs can remain visible in GitHub history.
 
 CI summaries report cache hits and Turbo duration. E2E uploads summaries, synthetic database before/after metadata, and JUnit XML for 14 days; failures also upload logs, screenshots, and traces for 7 days. The full release job uploads its E2E evidence on failure. These artifacts do not contain SQLite database files.
 
@@ -44,7 +47,7 @@ The autonomous configuration requires these exact checks from their trusted GitH
 - `Select E2E scope`, `E2E full regression`, and `E2E regression result` (GitHub Actions, app ID `15368`);
 - `CodeQL` (GitHub Code Scanning, app ID `57789`).
 
-`api` covers frozen installation, the security audit and behavior tests, hk lint/architecture, Turbo workspace typechecks/tests/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, and documentation validation. No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
+`api` covers frozen installation, the security audit, hk lint/architecture, Turbo workspace typechecks/tests (including security behavior)/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, and documentation validation. No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
 
 Enable repository auto-merge only after effective protection enforces all checks. Allow only squash merges and automatic deletion of merged feature branches; the ruleset protects `main` from deletion. No merge queue is configured; strict up-to-date validation serializes changes against the latest base. Reinspect live repository settings and `/rules/branches/main` before merging; checked-in documentation is not proof of effective protection.
 

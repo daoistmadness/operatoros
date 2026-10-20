@@ -239,7 +239,7 @@ describe("E2E workflow scope selection", () => {
     ["apps/web/src/change.tsx", true],
     ["packages/contracts/src/change.ts", true],
     ["bun.lock", true],
-    [".github/workflows/e2e-full.yml", true],
+    [".github/workflows/ci.yml", true],
     [".github/actions/setup-bun/action.yml", true],
     ["unclassified.input", true],
     ["docs/example.json", true],
@@ -293,21 +293,26 @@ describe("E2E workflow scope selection", () => {
   });
 
   test("mandatory E2E runs for main pushes and cannot skip by path selection", () => {
-    const workflow = Bun.YAML.parse(readFileSync(join(repository, ".github/workflows/e2e-full.yml"), "utf8")) as {
+    const workflow = Bun.YAML.parse(readFileSync(join(repository, ".github/workflows/ci.yml"), "utf8")) as {
       on: { push: { branches: string[] }; pull_request: { branches: string[] }; merge_group: unknown };
-      jobs: Record<string, { name?: string; if?: string; needs?: string[] }>;
+      jobs: Record<string, { name?: string; if?: string; needs?: string[]; steps?: { run?: string }[] }>;
     };
     expect(workflow.on.push.branches).toContain("main");
-    expect(workflow.on.pull_request.branches).toContain("main");
+    expect(workflow.on.pull_request).toBeDefined();
     expect(workflow.on.merge_group).toBeDefined();
     expect(workflow.jobs["e2e-full"]?.name).toBe("E2E full regression");
-    expect(workflow.jobs["e2e-full"]?.if).toBe("always()");
-    expect(workflow.jobs.result?.if).toBe("always()");
+    expect(workflow.jobs["e2e-full"]?.if).toBe("github.event_name != 'schedule'");
+    expect(workflow.jobs["e2e-full"]?.needs).toBeUndefined();
+    expect(workflow.jobs["e2e-full"]?.steps?.some((step) => step.run === "timeout 900 make e2e-smoke")).toBe(true);
+    expect(workflow.jobs.api?.steps?.some((step) => step.run?.includes("bun run turbo:check"))).toBe(true);
+    expect(workflow.jobs.api?.steps?.some((step) => step.run === "bun run test:security")).toBe(false);
+    expect(workflow.jobs.audit?.if).toBe("github.event.schedule == '17 3 * * 1'");
+    expect(workflow.jobs.result?.if).toBe("always() && github.event_name != 'schedule'");
     expect(workflow.jobs.result?.needs).toEqual(["changes", "e2e-full"]);
   });
 
   test("workflow concurrency cancels only superseded pull-request runs", () => {
-    for (const workflow of ["ci.yml", "e2e-full.yml"]) {
+    for (const workflow of ["ci.yml"]) {
       const source = readFileSync(join(repository, ".github/workflows", workflow), "utf8");
       expect(source).toContain("group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}");
       expect(source).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
