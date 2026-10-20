@@ -112,3 +112,21 @@ jobs:
             e2e-results/playwright/
           if-no-files-found: warn
           retention-days: 7
+
+  result:
+    name: E2E regression result
+    if: always()
+    needs: [changes, e2e-full]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require the selected E2E result
+        env:
+          E2E_SCOPE_RESULT: ${{ needs.changes.result }}
+          E2E_SELECTED: ${{ needs.changes.outputs.run-e2e }}
+          E2E_JOB_RESULT: ${{ needs.e2e-full.result }}
+        run: bash .github/scripts/validate-e2e-result.sh
