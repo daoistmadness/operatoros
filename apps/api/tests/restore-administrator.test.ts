@@ -11,7 +11,7 @@ import type { RestoreFileSystem } from "../src/domains/restore-transaction";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const backupKey = Buffer.alloc(32, 103).toString("base64");
-type CandidateState = "missing" | "inactive" | "malformed" | "noncanonical_active" | "first_run" | "eligible" | "malformed_password_hash" | "different_password";
+type CandidateState = "missing" | "inactive" | "malformed" | "noncanonical_active" | "first_run" | "eligible" | "malformed_password_hash" | "locked_active" | "expired_lock" | "different_password";
 
 async function prepare(restoreFileSystem?: RestoreFileSystem) {
   const root = mkdtempSync(join(tmpdir(), "operatoros-restore-admin-"));
@@ -80,6 +80,10 @@ async function setCandidate(value: Awaited<ReturnType<typeof prepare>>, state: C
       candidate.client.run("INSERT INTO first_admin_setup_state (id, completed, completed_at, created_user_id, normalized_username, provisioning_source) VALUES (1, 0, NULL, NULL, NULL, NULL) ON CONFLICT(id) DO UPDATE SET completed = 0, completed_at = NULL, created_user_id = NULL, normalized_username = NULL, provisioning_source = NULL");
     } else if (state === "malformed_password_hash") {
       candidate.client.run("UPDATE users SET password_hash = 'synthetic-unverified-hash' WHERE role = 'admin'");
+    } else if (state === "locked_active") {
+      candidate.client.run("UPDATE users SET locked_until = ? WHERE role = 'admin'", [new Date(Date.now() + 60_000).toISOString().replace("T", " ").replace("Z", "")]);
+    } else if (state === "expired_lock") {
+      candidate.client.run("UPDATE users SET locked_until = ? WHERE role = 'admin'", [new Date(Date.now() - 60_000).toISOString().replace("T", " ").replace("Z", "")]);
     } else if (state === "different_password") {
       candidate.client.run("UPDATE users SET password_hash = ? WHERE role = 'admin'", [Bun.password.hashSync("synthetic-backup-admin-password", "argon2id")]);
     }
@@ -137,11 +141,12 @@ describe("restore administrator eligibility", () => {
   it("blocks missing, inactive, malformed, or noncanonical administrators before replacement", async () => {
     const value = await prepare();
     try {
-      for (const state of ["missing", "inactive", "malformed", "noncanonical_active", "malformed_password_hash"] as const) {
+      for (const state of ["missing", "inactive", "malformed", "noncanonical_active", "malformed_password_hash", "locked_active"] as const) {
         await setCandidate(value, state);
         const checked = await preflight(value);
         expect(checked.source.restore_eligible).toBe(false);
-        expect(checked.source.blocking_reasons).toContain(state === "malformed_password_hash" ? "active_administrator_password_hash_invalid" : "active_administrator_missing");
+        const reason = state === "malformed_password_hash" ? "active_administrator_password_hash_invalid" : state === "locked_active" ? "active_administrator_locked" : "active_administrator_missing";
+        expect(checked.source.blocking_reasons).toContain(reason);
         const response = await restore(value, checked);
         expect(response.status).toBe(409);
         expect((await response.json() as any).detail.code).toBe("RESTORE_SOURCE_INVALID");
@@ -166,6 +171,20 @@ describe("restore administrator eligibility", () => {
       const completed = await restore(value, differentPassword, { username: "golden-admin", password: "synthetic-backup-admin-password" });
       expect(completed.status).toBe(200);
       expect(value.database.client.query("SELECT id FROM users WHERE username = 'golden-admin' AND role = 'admin' AND is_active = 1").get()).toBeDefined();
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("allows an expired administrator lock using the login eligibility rule", async () => {
+    const value = await prepare();
+    try {
+      await setCandidate(value, "expired_lock");
+      const checked = await preflight(value);
+      expect(checked.source.restore_eligible).toBe(true);
+      const response = await restore(value, checked);
+      expect(response.status).toBe(200);
+      expect(value.database.client.query("SELECT locked_until FROM users WHERE username = 'golden-admin'").get()).not.toBeNull();
     } finally {
       cleanup(value);
     }

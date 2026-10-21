@@ -329,6 +329,36 @@ it("installs an administrator-backed backup when no active database exists", () 
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
+it("refuses a locked administrator backup before creating the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-locked-admin-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const database = openDatabase(databasePath);
+    database.client.run("UPDATE users SET locked_until = ? WHERE username = 'golden-admin'", [new Date(Date.now() + 60_000).toISOString().replace("T", " ").replace("Z", "")]);
+    database.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const active = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env), undefined, { username: "golden-admin", password: "golden-admin-pass-1" })).toThrow("RESTORE_ADMINISTRATOR_REQUIRED");
+    expect(readFileSync(databasePath).equals(active)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
 it("supports credential recovery on an isolated candidate before re-encrypted restore", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-"));
   const candidateRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-candidate-"));

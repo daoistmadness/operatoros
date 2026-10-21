@@ -71,7 +71,7 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean; restoreIdentityBlockingReason: string | null } {
+function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null } {
   const database = new Database(path, { readonly: true });
   try {
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
@@ -86,13 +86,13 @@ function inspectDatabase(path: string): { integrity: string; quick: string; fore
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
-    const restoreIdentity = restoreIdentityState(database);
-    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity.eligible, restoreIdentityBlockingReason: restoreIdentity.blockingReason };
+    const restoreIdentity = checkRestoreIdentity ? restoreIdentityState(database) : null;
+    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
   } finally { database.close(); }
 }
 
-function validateSnapshot(path: string, sourceTables: Set<string>): ReturnType<typeof inspectDatabase> {
-  const value = inspectDatabase(path);
+function validateSnapshot(path: string, sourceTables: Set<string>, checkRestoreIdentity = true): ReturnType<typeof inspectDatabase> {
+  const value = inspectDatabase(path, checkRestoreIdentity);
   if (value.integrity !== "ok" || value.quick !== "ok") throw new Error("Backup integrity validation failed.");
   const missing = REQUIRED_TABLES.filter((table) => !value.tables.has(table));
   if (missing.length > 0 || (sourceTables.has("student_subject_grades") && !value.tables.has("student_subject_grades"))) throw new Error(`Backup is missing required operational tables: ${missing.join(", ")}`);
@@ -181,7 +181,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     writeFileSync(temporary, bytes);
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
-    validateSnapshot(temporary, sourceTables);
+    validateSnapshot(temporary, sourceTables, false);
     const encrypted = encryptBackup(readFileSync(temporary), config.backupEncryption);
     writeFileSync(encryptedTemporary, encrypted, { mode: 0o600 });
     chmodSync(encryptedTemporary, 0o600);
@@ -213,10 +213,15 @@ function backupSequence(filename: string): number {
   const match = /_(\d+)\.sqlite3$/.exec(filename);
   return match ? Number(match[1]) : 0;
 }
-/** Newest first. Same-second generations are ordered by their `_N` filename suffix, which `nextFilename` assigns monotonically. */
+function backupTimestamp(filename: string): string {
+  return /^backup_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)(?:_\d+)?\.sqlite3$/.exec(filename)?.[1] ?? "";
+}
+/** Newest first. Filename timestamp and suffix break ties when metadata timestamps have second precision. */
 function compareBackupDescending(a: Row, b: Row): number {
   const byCreatedAt = String(b.created_at).localeCompare(String(a.created_at));
   if (byCreatedAt !== 0) return byCreatedAt;
+  const byFilenameTimestamp = backupTimestamp(String(b.filename)).localeCompare(backupTimestamp(String(a.filename)));
+  if (byFilenameTimestamp !== 0) return byFilenameTimestamp;
   const bySequence = backupSequence(String(b.filename)) - backupSequence(String(a.filename));
   return bySequence !== 0 ? bySequence : String(b.filename).localeCompare(String(a.filename));
 }
@@ -330,7 +335,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
       if (manifest.encrypted !== true || manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
-    const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context)); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
+    const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
     const same = plaintextChecksum === activeChecksum; const compatible = source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
@@ -381,7 +386,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
-        if (!candidateInspection.restoreIdentityEligible) throw new Error("Restore candidate has no active administrator and first-run setup is closed.");
+        if (candidateInspection.restoreIdentityEligible !== true) throw new Error("Restore candidate has no eligible active administrator and first-run setup is closed.");
         if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
         const candidateDatabase = new Database(candidate, { readonly: true });
         try {
