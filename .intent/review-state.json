@@ -233,15 +233,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "3d0015852ec01845f9037d85104ceb934e2a2ed233795d4f0b3ec3d5324b76f2",
+      "fingerprint": "88a800a9911526123b6619bc74c2e82bf6efce5e289e4717375b3695507fee80",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "d2ad4d01df65ce1c0469bdca79e8720732954aff7cb57ae3068a16b0223c29f7"
+        "apps/api/src/domains/safety.ts": "9b545b52309efc178622735758e7494ac7d5cd48fc06fbafe387e789beef987f"
       },
-      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
       "outcome": "no-change",
-      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+        "Changed: apps/api/src/domains/safety.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "3138efae33ddf8315161843ba277375eec3ae76bf3f8013d79f5845e24005eea",
+      "fingerprint": "af3cb5ad725c518c79278422b2cf7062e9fe761b851fd5be81e0beadf8f1e438",
       "snapshot": {
-        "docs/security/backup-restore.md": "bf48775fafda91f1325659f2945ed05445e4453df950791bbfd6bf7681016c3b"
+        "docs/security/backup-restore.md": "457ab94ae685109a5c6231657f02b09091484eaa4d517e0c00188e56f8c9863c"
       },
-      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
       "outcome": "no-change",
-      "reason": "Reviewed final CLI restore implementation, its synthetic failure tests, and the existing backup/restore security guide; no agent-skill guidance or Elysia usage changed, and verified restore behavior is documented in the existing security guide.",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 2b39c982215cc388d01dba195c3d630003c497f3"
+        "Changed: docs/security/backup-restore.md at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -380,27 +380,63 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "8f9f11255858de6822980328cda4966023095bf61310a018c5d603a24547a92e",
+      "fingerprint": "8b48aad43927438f3c28dce5e58563cb233f537bd07c9439f967ddd67c4fbe11",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "904eff61eaa3da120779b57a9fa25c506a0906ee03f3c8c1ec3ca4c9c732f794"
+        "apps/api/src/backup-cli.ts": "1ccd33776b3557d17956faaa11442b133b04deb540c08f6e9490f081cf917d91"
       },
-      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
       "outcome": "no-change",
-      "reason": "Reviewed CLI restore code, regression tests, and the existing backup/restore security guide; none changes agent-skill guidance or Elysia usage, and the existing backup/restore document was updated in place.",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 2b39c982215cc388d01dba195c3d630003c497f3"
+        "Changed: apps/api/src/backup-cli.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "58f287a814390ec15871926d32960f8de42d78f2eaf7a1c4a8008df18a8e83eb",
+      "fingerprint": "4f4593849a36dfdee5ecd7af82e64042a62f062feb0c3b9f837dbfe7408eac0b",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "2004535426fafd7cac9d43be3e9f73c889b2a5a9287055ff5a894435f9acb1c6"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "2689099b6901309f30271226cb587f3c759ec1ac15bf797e329e2feaf50123e6"
       },
-      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
       "outcome": "no-change",
-      "reason": "Reviewed final CLI restore implementation, its synthetic failure tests, and the existing backup/restore security guide; no agent-skill guidance or Elysia usage changed, and verified restore behavior is documented in the existing security guide.",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 2b39c982215cc388d01dba195c3d630003c497f3"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+      ]
+    },
+    "source:apps/api/src/auth/admin-state.ts": {
+      "fingerprint": "12cdf874d1a21aff4e22d05f580b00b0a0fb4550074c82143c984caaa4371486",
+      "snapshot": {
+        "apps/api/src/auth/admin-state.ts": "8608662fe654d927924c32ab2ddf22494c73e90592c9eb5db8776ac62c4324b4"
+      },
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "outcome": "no-change",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "evidence": [
+        "Changed: apps/api/src/auth/admin-state.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+      ]
+    },
+    "source:apps/api/src/auth/service.ts": {
+      "fingerprint": "426016cf86b70293d7906dcab8cc6b3f61d96e4a324f4ec2799542390927fb6f",
+      "snapshot": {
+        "apps/api/src/auth/service.ts": "645f790f2dfaced9f73b930d853693a4aea2fa5222089c66af052c4ab358e2f3"
+      },
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "outcome": "no-change",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "evidence": [
+        "Changed: apps/api/src/auth/service.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+      ]
+    },
+    "source:apps/api/tests/restore-administrator.test.ts": {
+      "fingerprint": "91712fdff037039ba243ba40f1b07f483b3fe995bed4462db4033896e882049e",
+      "snapshot": {
+        "apps/api/tests/restore-administrator.test.ts": "b174a3dd273d57698d3f5352d02c6ffc9c114e99f435d2a0af50c58b9d85f128"
+      },
+      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "outcome": "no-change",
+      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/restore-administrator.test.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
       ]
     }
   }
