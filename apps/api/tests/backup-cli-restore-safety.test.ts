@@ -9,6 +9,7 @@ import { loadConfig } from "../src/config";
 import { restore as restoreCli } from "../src/backup-cli";
 import type { RestoreFileSystem } from "../src/domains/restore-transaction";
 import { backupSha256, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { createAccountFixture } from "./fixtures/accounts";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const cli = join(root, "apps/api/src/backup-cli.ts");
@@ -178,6 +179,76 @@ it("rejects authenticated SQLite candidates with integrity, foreign-key, or sche
 
     rejectCandidate(Buffer.from("authenticated but not a SQLite database"));
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("rejects an admin-less candidate with closed setup before making the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("DELETE FROM sessions");
+    candidate.client.run("DELETE FROM users WHERE role = 'admin'");
+    candidate.client.run("INSERT INTO first_admin_setup_state (id, completed) VALUES (1, 1) ON CONFLICT(id) DO UPDATE SET completed = 1");
+    candidate.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    writeFileSync(databasePath, original);
+    const activeBefore = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env))).toThrow("RESTORE_ADMINISTRATOR_REQUIRED");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("restores an empty CLI candidate while first-admin setup is still open", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-first-run-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("DELETE FROM sessions");
+    candidate.client.run("DELETE FROM users");
+    candidate.client.run("INSERT INTO first_admin_setup_state (id, completed) VALUES (1, 0) ON CONFLICT(id) DO UPDATE SET completed = 0");
+    candidate.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    writeFileSync(databasePath, original);
+    restoreCli(filename, loadConfig(env));
+
+    const restored = openDatabase(databasePath, { readonly: true });
+    expect(restored.client.query("SELECT id FROM users LIMIT 1").get()).toBeNull();
+    expect(restored.client.query("SELECT completed FROM first_admin_setup_state WHERE id = 1").get()).toEqual({ completed: 0 });
+    restored.close();
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
