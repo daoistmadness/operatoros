@@ -39,10 +39,28 @@ The UI package provides `Button`, `Card`, `Dialog`, and `Input` with Base UI
 components where applicable. Dashboard-specific layout and data components
 remain in `apps/web`.
 
-`@tanstack/react-table` `8.21.3` remains available for the existing bounded
-student management table. Phase 18 does not add a dashboard grid. The
-dashboard uses the existing accessible table primitives because its lists are
-small and bounded.
+### Tables
+
+`@tanstack/react-table` `9.3.1`, migrated from `8.21.3`, backs the bounded
+Student Management and Student Trend Insights tables. Both use the native v9
+`useTable` API with a stable module-level `tableFeatures()` configuration
+that registers `rowPaginationFeature` and `columnVisibilityFeature`.
+`getCoreRowModel()` is no longer configured because v9 includes the core row
+model automatically.
+
+Column definitions use `createColumnHelper<typeof features, TData>()` and
+`column.columns([...])`. Rendering keeps `flexRender` and
+`row.getVisibleCells()`. `rowPaginationFeature` preserves the
+`manualPagination`/`pageCount` contract, but no client-side paginated or
+sorted row model is registered: Student Trend Insights sorting is driven by
+URL and query state, and both tables render server-provided pages exactly
+once. Phase 18 does not add a dashboard grid. The dashboard uses the existing
+accessible table primitives because its lists are small and bounded.
+
+The migration preserved the existing UI, accessibility, API requests, and
+query keys; no backend or database migration was required. Verification
+covers web typecheck, unit and regression tests, the production build, lint,
+architecture checks, and the Playwright smoke suite.
 
 ## States and access
 

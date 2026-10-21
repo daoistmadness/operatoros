@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StudentTrendInsights from "./StudentTrendInsights";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
@@ -26,6 +26,27 @@ let container: HTMLDivElement;
 let root: Root;
 const mocked = (value: unknown) => value as { mockReturnValue: (result: unknown) => void };
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.search}</output>;
+}
+
+const renderTrends = async (initialEntries: string[]) => {
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+  await act(async () => {
+    root.render(
+      <MemoryRouter initialEntries={initialEntries}>
+        <AuthContext.Provider value={auth}>
+          <StudentTrendInsights filters={{ academic_year_id: 1, jenjang_id: null, class_id: null, window: "rolling_4w", search: "" }} enabled />
+          <LocationProbe />
+        </AuthContext.Provider>
+      </MemoryRouter>,
+    );
+  });
+};
+
 describe("StudentTrendInsights", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,5 +68,28 @@ describe("StudentTrendInsights", () => {
     expect(container.textContent).toContain("Scored results: 0 current, 0 previous");
     expect(container.textContent).toContain("Not available");
     expect(container.textContent).not.toMatch(/at.?risk|alert|intervention|warning severity/i);
+  });
+
+  it("keeps server sorting in the URL when a v9-rendered header is activated", async () => {
+    await renderTrends(["/?sort=name&order=asc"]);
+
+    const studentHeader = Array.from(container.querySelectorAll<HTMLButtonElement>("th button")).find((button) => button.textContent === "Student");
+    expect(studentHeader).toBeDefined();
+    await act(async () => studentHeader?.click());
+
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe("?sort=name&order=desc");
+    expect(analyticsHooks.useStudentTrendInsightsQuery).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "name", order: "desc", page: 1 }), true);
+  });
+
+  it("keeps server pagination working through the rendered table controls", async () => {
+    mocked(analyticsHooks.useStudentTrendInsightsQuery).mockReturnValue({ data: { ...response, totalStudents: 50 }, isPending: false, isFetching: false, error: null, refetch: vi.fn() });
+    await renderTrends(["/"]);
+
+    const next = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Next");
+    expect(next).toBeDefined();
+    await act(async () => next?.click());
+
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe("?page=2");
+    expect(analyticsHooks.useStudentTrendInsightsQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, page_size: 25 }), true);
   });
 });

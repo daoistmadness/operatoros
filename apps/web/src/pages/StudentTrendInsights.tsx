@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from "@tanstack/react-table";
+import { useTable, flexRender, createColumnHelper, rowPaginationFeature, columnVisibilityFeature, tableFeatures } from "@tanstack/react-table";
 import type { StudentTrendInsightsResponse, StudentTrendMetric } from "@operatoros/contracts/analytics";
 import { Button } from "../components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
@@ -11,7 +11,8 @@ import type { StudentTrendFilters } from "../api/studentTrends";
 type Props = { filters: StudentInsightsScopeFilters; enabled: boolean };
 type Sort = NonNullable<StudentTrendFilters["sort"]>;
 type Row = StudentTrendInsightsResponse["rows"][number];
-const column = createColumnHelper<Row>();
+const features = tableFeatures({ rowPaginationFeature, columnVisibilityFeature });
+const column = createColumnHelper<typeof features, Row>();
 
 function metricText(metric: StudentTrendMetric | null): string {
   if (!metric) return "Unavailable";
@@ -54,15 +55,15 @@ export default function StudentTrendInsights({ filters, enabled }: Props) {
     setParams(updated, { replace: true });
   };
   const toggleSort = (next: Sort) => setTableState({ sort: next, order: sort === next && order === "asc" ? "desc" : "asc", page: 1 });
-  const columns = useMemo(() => [
+  const columns = useMemo(() => column.columns([
     column.accessor("studentName", { header: () => <button onClick={() => toggleSort("name")}>Student</button>, cell: ({ row }) => <Link className="font-bold text-brand hover:underline" to={`/students/${row.original.studentId}`}>{row.original.studentName}</Link> }),
     column.accessor("className", { header: "Class", cell: (info) => info.getValue() ?? "Unassigned" }),
     column.accessor("attendance", { header: () => <button onClick={() => toggleSort("attendance_delta")}>Attendance Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
     column.accessor("academic", { header: () => <button onClick={() => toggleSort("academic_delta")}>Academic change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{academicSampleText(info.getValue())}</p></div> }),
     column.accessor("tardiness", { header: () => <button onClick={() => toggleSort("tardiness_delta")}>Late Event Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
     column.accessor("alfa", { header: () => <button onClick={() => toggleSort("alfa_delta")}>Alfa Rate change</button>, cell: (info) => <div>{metricText(info.getValue())}<p className="text-xs text-muted-foreground">{attendanceSampleText(info.getValue(), hasPreviousWindow)}</p></div> }),
-  ], [hasPreviousWindow, order, sort]);
-  const table = useReactTable({ data: query.data?.rows ?? [], columns, getCoreRowModel: getCoreRowModel(), manualPagination: true });
+  ]), [hasPreviousWindow, order, sort]);
+  const table = useTable({ features, data: query.data?.rows ?? [], columns, manualPagination: true });
 
   if (query.error) return <ErrorState title="Trends could not be loaded" description="The server could not load this period comparison." action={<Button onClick={() => { void query.refetch(); }}>Try again</Button>} />;
   if (query.isPending || !query.data) return <LoadingState title="Loading trends" description="Comparing the selected periods." />;

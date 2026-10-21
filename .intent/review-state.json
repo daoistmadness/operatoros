@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "852812fdbc35633a09ee46ddccb619d4854fd089b4cb01b91e5de6fd1bb0f958",
+      "fingerprint": "7d08dfefcbdda525f8bc181305ba7aca6fc217d5736e8280c37fc828aca09a6f",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
         "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "7fbf5f1e003bde08dce45036f1216ee17b2317b8f13919941c293a47d7746075",
+        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -44,18 +44,16 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
-      "outcome": "updated",
-      "reason": "Added the TypeScript package entry to root lint and typecheck plus the workspace ESLint boundary map, so the public package surface is checked by the same repository gates that package the skill.",
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "no-change",
+      "reason": "The PR updates TanStack React Table for the web UI; it does not affect Elysia skill guidance or examples.",
       "evidence": [
-        "OperatorOS baseline 4c855d2d14a1211a2c9d80488630da6fcaa3df7b: apps/api/package.json reports Elysia 1.4.29; AGENTS.md and backend development docs constrain use of the separate generic v2 guidance.",
-        "Package-specific typecheck, root frozen install, workspace architecture check, lint, hk, Intent validation, and base-aware maintainer check passed locally.",
-        "Bun tarball and disposable-consumer checks passed with lifecycle scripts disabled; only the explicit allowlisted skill was discovered and task-scoped load resolved it.",
-        "An independent fresh-agent task and behavioral discovery evaluation remain unverified."
+        "The PR diff updates apps/web and the TanStack packages in bun.lock; the Elysia skill files are unchanged.",
+        "The CI skills:validate step passed on this PR head."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "de1033e5eeecc49a1a596effa8c6ba4e308302fbf286ba3d8b9234afc3f8a9ce",
+      "fingerprint": "223624995f1b2c06d9daa14a484e64c1bc13856bcddf96284a7aec9100cc42e1",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
@@ -65,7 +63,7 @@
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "7fbf5f1e003bde08dce45036f1216ee17b2317b8f13919941c293a47d7746075",
+        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -99,13 +97,12 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
-      "outcome": "updated",
-      "reason": "Updated the cumulative skill package record to include TypeScript lint/typecheck integration and the final package-consumer checks.",
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "no-change",
+      "reason": "The lockfile update is limited to TanStack React Table and its store dependencies; planning artifacts remain accurate.",
       "evidence": [
-        "_artifacts/domain_map.yaml and _artifacts/skill_tree.yaml parse with js-yaml 4.3.2; _artifacts/skill_spec.md records scope, package version, sources, checks, and remaining limits.",
-        "Intent maintainer sync and maintainer check passed with zero stale generated files, authoring issues, or pending reviews.",
-        "mise run test:fast, hk lint/architecture, dependency audit, TypeScript package check, documentation checks, and tarball consumer list/load checks passed."
+        "The bun.lock diff changes @tanstack/react-table and adds @tanstack/react-store and @tanstack/store.",
+        "No _artifacts files are changed by the PR."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -132,6 +129,71 @@
       "evidence": [
         "The new package entry has no imports; scripts/check-architecture.ts and hk architecture checks pass with 2,845 source edges and zero exceptions.",
         "The package-specific typecheck and ESLint checks pass."
+      ]
+    },
+    "source:apps/web/src/pages/StudentManagement.test.tsx": {
+      "fingerprint": "444c4e8db23bf501421304d0f2a97c9794be995e7bb0a2bb918fcf9b29d254aa",
+      "snapshot": {
+        "apps/web/src/pages/StudentManagement.test.tsx": "2081fbeab89d02e558c85e264d08ce89ea5acbf3cea3baf93d3de1ef743eabae"
+      },
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "out-of-scope",
+      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "evidence": [
+        "Reviewed apps/web/src/pages/StudentManagement.test.tsx; it covers the web table migration only.",
+        "The Elysia skill package and planning artifacts are not changed by this file."
+      ]
+    },
+    "source:apps/web/src/pages/StudentManagement.tsx": {
+      "fingerprint": "09599cfa8501b83ff26305fd9fb7dea1afe18edcd574629c8c0b441bd0b1aa6f",
+      "snapshot": {
+        "apps/web/src/pages/StudentManagement.tsx": "b416e9b04e44d27a39035a442a82e57401dc8045b59f5dbd606ad96b6ee1b8b4"
+      },
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "out-of-scope",
+      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "evidence": [
+        "Reviewed apps/web/src/pages/StudentManagement.tsx; it covers the web table migration only.",
+        "The Elysia skill package and planning artifacts are not changed by this file."
+      ]
+    },
+    "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
+      "fingerprint": "9dae0bcded5481c784d8f414130f4d2471481177701e2982c7ddb303557826d2",
+      "snapshot": {
+        "apps/web/src/pages/StudentTrendInsights.test.tsx": "234b131e64586c4a9f5b093b403beb73b0b5e9ff831d6dcfdc049e825afd07b2"
+      },
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "out-of-scope",
+      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "evidence": [
+        "Reviewed apps/web/src/pages/StudentTrendInsights.test.tsx; it covers the web table migration only.",
+        "The Elysia skill package and planning artifacts are not changed by this file."
+      ]
+    },
+    "source:apps/web/src/pages/StudentTrendInsights.tsx": {
+      "fingerprint": "172239fbf7293462a62e200c89df2d284c97e1096a947a20b33512374d1f5f35",
+      "snapshot": {
+        "apps/web/src/pages/StudentTrendInsights.tsx": "3e148cb592b755a551bfab02e452400eea0a9f42d70dacfe3a37e53d147432dc"
+      },
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "out-of-scope",
+      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "evidence": [
+        "Reviewed apps/web/src/pages/StudentTrendInsights.tsx; it covers the web table migration only.",
+        "The Elysia skill package and planning artifacts are not changed by this file."
+      ]
+    },
+    "source:docs/ui/UI_ARCHITECTURE.md": {
+      "fingerprint": "cc7522031d82529de3d60029139ff5aa26b51a50e3927d801951e14c706f5f09",
+      "snapshot": {
+        "docs/ui/UI_ARCHITECTURE.md": "07b90dc6022aa53abc73f769932607115de31f4ad2de2c1ccf89a370960d9502"
+      },
+      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "outcome": "out-of-scope",
+      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "evidence": [
+        "Reviewed docs/ui/UI_ARCHITECTURE.md; it covers the web table migration only.",
+        "The Elysia skill package and planning artifacts are not changed by this file."
       ]
     }
   }
