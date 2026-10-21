@@ -2,13 +2,21 @@
 
 Use `mise run dev` for normal development. The task delegates process
 supervision to `./start-dev.sh`. Verified commands are maintained in
-[`COMMANDS.md`](../../COMMANDS.md); stable decisions are maintained in
+[`COMMANDS.md`](../../COMMANDS.md); architecture and operations authorities are indexed in
 [`MEMORY.md`](../../MEMORY.md).
 
 Use `mise run test:fast` for Tier 1, `mise run check:affected` for Tier 2 Turbo
 checks against `origin/main`, and `mise run check:full` for the Tier 3
 release-sensitive gate. Use `mise run doctor` for read-only environment
 diagnostics.
+
+Linux developers may optionally run `./scripts/podman-dev.sh` with rootless
+Podman. It uses the same `start-dev.sh` launcher, binds only the frontend to
+host loopback (default port 5174), keeps the API inside the container, and
+stores isolated development data in the `operatoros-podman-dev-data` volume.
+Set `OPERATOROS_PODMAN_PORT` to use another host port from 1024 to 65535.
+`Ctrl+C` stops the container while retaining that volume. This is a local
+development convenience, not a production or hosted deployment profile.
 
 ## Identify the running checkout
 
@@ -64,3 +72,33 @@ shifting. Run `./stop-dev.sh` from the worktree shown as the owner. Use
 into `main`. Fetch `origin` and verify merged-main first. Its `remove-worktree`
 command accepts only clean registered secondary paths whose HEAD is merged into
 `main`; it never uses force deletion or removes the primary checkout.
+
+## Backend skill workflow
+
+Load the `elysiajs` skill before Elysia backend implementation, debugging,
+review, or explicitly requested migration work with
+`bun run skills:load @operatoros/agent-skills#elysiajs`. Read only the
+references the task needs.
+Inspect `apps/api/package.json`, `bun.lock`, existing routes, and installed
+types first. The current backend uses Elysia 1.4.29; the generic skill
+describes v2, so use
+[v1 documentation](https://elysiajs.com/llms.txt) and v1-compatible examples.
+A skill's new-project defaults do not authorize dependency, schema, transport,
+authentication, or runtime migrations. See [AGENTS.md](../../AGENTS.md).
+
+The workspace Intent config explicitly allowlists this package and excludes
+`@tanstack/intent` guidance. Its scanner reads installed package metadata and
+static Markdown without executing package code. Editor hooks are optional
+convenience signals, not a security boundary.
+
+## HTTPS development proxy
+
+Keep Vite and the API on loopback behind an existing trusted HTTPS proxy.
+Set `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` to the exact hostname you control;
+do not set `allowedHosts: true`. For browser hot reload through that proxy,
+set `VITE_HMR_HOST` to its hostname, `VITE_HMR_PROTOCOL=wss`, and
+`VITE_HMR_CLIENT_PORT` to its external HTTPS port. These settings change the
+browser's websocket address, not the local frontend/backend listening ports.
+Without overrides, local hot reload remains on `127.0.0.1` and the frontend port.
+The API still needs its exact HTTPS origin in `ALLOWED_ORIGINS` and secure
+cookies; proxy configuration does not grant authentication or data access.

@@ -39,7 +39,8 @@ apps/web/
 │   ├── components/   # Shared UI and navigation
 │   ├── lib/          # API client and helpers
 │   ├── pages/        # Route-level screens
-│   ├── App.tsx       # Router definition
+│   ├── App.tsx       # Router composition
+│   ├── routes/       # Route definitions and redirects
 │   ├── main.tsx
 │   ├── index.css     # Tailwind source
 │   └── vite-env.d.ts
@@ -49,12 +50,13 @@ apps/web/
 
 ## Requirements
 - mise-en-place controls runtime versions (see root `mise.toml`)
-- Bun 1.4.2 (installed via `mise install` at repo root)
+- Bun 1.4.3 (installed via `mise install` at repo root)
 
 ## Setup
+From the repository root:
 ```bash
-cd apps/web
-bun install
+mise install
+bun install --frozen-lockfile
 ```
 
 ## Run
@@ -88,7 +90,7 @@ The production bundle is served from `apps/web/build/`.
 - Authentication uses the backend's HttpOnly session cookie rather than browser-stored bearer tokens.
 
 ## Routes and Pages
-Routes are defined in [`src/App.tsx`](src/App.tsx):
+Routes are defined in [`src/routes/routeDefinitions.tsx`](src/routes/routeDefinitions.tsx) and rendered by [`src/App.tsx`](src/App.tsx):
 - `/` Dashboard
 - `/upload` Data Import & Export workspace
 - `/upload-center` Legacy redirect to Attendance Upload

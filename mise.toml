@@ -4,7 +4,7 @@ min_version = "2024.1.0"
 lockfile = true
 
 [tools]
-bun = "1.4.2"
+bun = "1.4.3"
 hk = "1.56.1"
 node = "24.19.0"
 
@@ -23,12 +23,13 @@ fail() {
 git rev-parse --show-toplevel >/dev/null 2>&1 || fail "not inside a Git checkout" "cd to the repository root"
 git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/main is unavailable" "git fetch origin main"
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
-[ "$(bun --version)" = "1.4.2" ] || fail "Bun 1.4.2 is not active" "mise install"
+[ "$(bun --version)" = "1.4.3" ] || fail "Bun 1.4.3 is not active" "mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
 [ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"
 [ -d node_modules ] && [ -x node_modules/.bin/turbo ] || fail "workspace dependencies are missing" "bun install --frozen-lockfile"
 bash scripts/validate-wsl-bun.sh --probe . >/dev/null || fail "the active Bun is not a native WSL runtime" "mise install"
+bash scripts/check-prerequisites.sh
 for forbidden_lockfile in package-lock.json apps/web/package-lock.json yarn.lock pnpm-lock.yaml; do
   [ ! -e "$forbidden_lockfile" ] || fail "$forbidden_lockfile exists" "remove the obsolete project lockfile and use bun.lock"
 done

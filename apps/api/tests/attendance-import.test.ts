@@ -8,7 +8,6 @@ import { parseDuration, parseExcelDate, parseExcelTime } from "@operatoros/excel
 import { readAttendanceWorkbook } from "../src/import/excel-reader";
 import { createAttendanceImportFixture } from "./fixtures/attendance-imports";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"];
 
@@ -70,18 +69,33 @@ describe("Excel attendance import", () => {
     expect(calculateLateMinutes("07:40", "00:00", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
   });
 
-  it("matches the Phase 0 workbook rows and keeps preview non-mutating", async () => {
+  it("matches generated synthetic workbook rows and keeps preview non-mutating", async () => {
     const value = await setup("preview");
     try {
-      const bytes = new Uint8Array(await Bun.file(`${repoRoot}/docs/migration/ts-backend/golden/attendance-import/normal-preview.xlsx`).arrayBuffer());
+      const bytes = await workbook([
+        [9002, "Beta", "16/06/2026", "08:15", "16:00", "01:00", "", "", "25"],
+        [9001, "Andi", "15/06/2026", "07:05", "16:00", "00:00", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "18/06/2026", "07:05", "16:00", "00:00", "", "", "25"],
+        [9003, "Citra", "19/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "20/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9999, "Unknown One", "21/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9998, "Unknown Two", "22/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9997, "Unknown Three", "23/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "24/06/2026", "00:00", "16:00", "", "", "", "25"],
+        [9003, "Citra", "25/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "31/02/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+      ]);
       const before = Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any)?.count);
       const response = await preview(value.app, value.cookie, bytes, "normal-preview.xlsx");
       expect(response.status).toBe(200);
       const body = await response.json() as any;
       expect(body.summary).toEqual({ total_rows: 15, logical_rows: 11, new_rows: 6, update_rows: 2, unchanged_rows: 0, conflicts: 3, invalid_rows: 1, new_students: 0 });
       expect(body.rows.map((item: any) => item.classification)).toEqual(["DIFFERENCE", "DIFFERENCE", "NEW", "NEW", "NEW", "NEW", "CONFLICT", "CONFLICT", "CONFLICT", "NEW", "NEW", "INVALID"]);
-      // The configured SMP cutoff (07:15) is the authority: a 07:05 arrival is
-      // on-time even though the workbook asserts a Terlambat duration.
+      // The configured SMP cutoff (07:15) is the authority for synthetic rows.
       expect(body.rows[3].proposed_record).toMatchObject({ status: "on-time", late_duration: 0, late_source: "calculated" });
       expect(body.rows[9].proposed_record).toMatchObject({ check_in: "00:00:00", late_duration: 0, late_source: "calculated" });
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any)?.count)).toBe(before);

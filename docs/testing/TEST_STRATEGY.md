@@ -16,15 +16,65 @@ current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
 replace the classifier or the full PR/release gate. Use
 `mise run check:affected -- --dry=json` to inspect selection without running.
 
-The classifier fails safe for unknown paths and automatically escalates schema,
-migration, startup, and test-infrastructure work. All tests are not run after
-every small edit because selection preserves feedback speed without weakening
-release coverage. Playwright uses disposable databases and dynamic ports; it
-uses observable readiness rather than arbitrary sleeps and removes successful
-run artifacts. Each tier snapshots the protected S4.3 database before and after
-the run using immutable read-only SQLite; it rejects handles, sidecars, invalid
-schema state, or any mutation during that run without treating a live checksum
-as a permanent repository constant. Historical orchestration evidence remains in Git history.
+The single repository-owned CI workflow runs API, frontend, and complete
+browser/API smoke checks on every PR, merge group, and supported branch push.
+There are no documentation or tooling path exclusions. The browser job runs
+`make e2e-smoke` without a scenario filter; Turbo in `api` owns all package
+unit/integration/security/migration tests, typechecks, and the production build.
+The always-running PR aggregate rejects failed, cancelled, skipped, or missing
+E2E results. The same suites are not replayed through `make e2e-full` afterward.
+Monday runs the dependency audit; Wednesday and manual dispatch run the full
+release tier. See [CI operations](../../.github/CI.md) for exact checks and
+schedules. Concurrency cancels superseded PR runs only.
+
+The classifier fails safe for unknown paths. It marks database, contract,
+migration, bootstrap, fixture, E2E, and test-infrastructure paths as
+schema-sensitive; mapped application paths use their focused selections. The
+schema-sensitive fast path runs the relevant safety and database checks,
+including fresh-schema parity on a disposable database; it does not
+automatically run the PR or release tier. All tests are not run after every
+small edit because selection preserves feedback speed without weakening release
+coverage.
+
+Every test tier clears inherited database and backup path overrides and points
+`XDG_DATA_HOME` at a unique temporary directory. The tier removes that directory
+on success and failure. Database, startup, path-safety, and schema tests must use
+disposable synthetic SQLite fixtures. Fresh-schema parity and Playwright create
+their own temporary databases; Playwright also generates its XLSX fixtures,
+uses dynamic ports and readiness checks, and removes successful run artifacts.
+Failure artifacts are retained for diagnosis. Protected-path guards are tested
+with synthetic path strings; no tier reads, hashes, snapshots, or copies the
+protected S4.3 database.
+
+Historical orchestration evidence remains in Git history.
+
+## Staging SSH VM boundary
+
+Staging is a deployment-specific target; no staging SSH host, account, endpoint,
+service unit, or remote E2E command is defined by this repository. Before using
+one, verify the VM host key against a separately trusted inventory, confirm the
+authorized account and test scope, and match the deployed commit and artifact
+SHA-256 to the approved release receipt. Confirm the service configuration and
+data path point to a disposable synthetic S4.8 database, with no protected or
+production database mounted. Obtain an approved restart window before any
+service restart.
+
+Within that verified scope, tests may cover read-only health, authentication
+and logout using a synthetic account, browser E2E, security tests, SQLite
+bootstrap/validation, and restore of a synthetic fixture to a separate
+disposable destination. A disposable fresh database should report
+`BOOTSTRAPPED 20261002_s48` and `VALID 20261002_s48`. Never restore an
+operational snapshot to staging or use real student data. Do not infer a remote
+test command from the local suite: `make e2e-smoke` creates and owns its own
+local stack, temporary database, credentials, ports, and cleanup; it is not a
+remote staging runner. A staging browser test needs an independently reviewed
+harness and synthetic test account scoped to that VM.
+
+Keep evidence to sanitized command results, the approved source/artifact
+identifiers, and SHA-256 manifests of permitted evidence files. Do not export
+credentials, cookies, student data, database copies or hashes, or unredacted
+logs. Staging access does not authorize production checks, migration, or
+restart outside the approved window.
 
 ## Audit execution policy
 
@@ -88,6 +138,11 @@ Turbo check, a full API suite, a production build, and Playwright
 simultaneously on the modest development host. Full API stays serial;
 lightweight independent package tests (contracts, DB, Excel, UI, architecture
 and boundary checks) keep their proven file-level parallelism.
+
+`make test-fast`, `make test-pr`, and `make test-release` take a nonblocking
+per-worktree lock and fail with exit 75 if another tier is already running in
+that worktree. Direct E2E or Turbo commands do not take this lock and must still
+follow the one-heavyweight-lane policy.
 
 `turbo run typecheck test build` accepts an `OPERATOROS_TURBO_CONCURRENCY`
 override and defaults to `4`, which CI keeps. Forced full-graph measurement on

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
@@ -197,6 +198,86 @@ describe("authentication parity", () => {
       expect(await status.json()).toEqual({ setup_required: false, setup_token_required: false });
     } finally {
       listener.stop(true);
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("provisions the first administrator with the configured setup token outside managed development", async () => {
+    const value = setup("setup-token-production", false, { setupToken: "synthetic-production-setup-token" });
+    try {
+      const initial = await value.app.handle(new Request("http://local/api/setup/status"));
+      expect(await initial.json()).toEqual({ setup_required: true, setup_token_required: true });
+
+      const withoutToken = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password" }),
+      }));
+      expect(withoutToken.status).toBe(403);
+      expect(((await withoutToken.json()) as any).detail.code).toBe("SETUP_TOKEN_REQUIRED");
+
+      const wrongToken = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password", setup_token: "wrong-synthetic-token" }),
+      }));
+      expect(wrongToken.status).toBe(403);
+      expect(((await wrongToken.json()) as any).detail.code).toBe("SETUP_TOKEN_INVALID");
+
+      const created = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password", setup_token: "synthetic-production-setup-token" }),
+      }));
+      expect(created.status).toBe(201);
+      expect(await created.json()).toEqual({ id: 1, username: "first-admin", role: "admin" });
+
+      const repeated = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "second-admin", password: "second-admin-password", password_confirmation: "second-admin-password", setup_token: "synthetic-production-setup-token" }),
+      }));
+      expect(repeated.status).toBe(409);
+      expect(((await repeated.json()) as any).detail.code).toBe("SETUP_ALREADY_COMPLETED");
+
+      const after = await value.app.handle(new Request("http://local/api/setup/status"));
+      expect(await after.json()).toEqual({ setup_required: false, setup_token_required: false });
+      expect(value.database.client.query("SELECT username FROM users ORDER BY id").all()).toEqual([{ username: "first-admin" }]);
+      for (const file of readdirSync(value.auditDir, { withFileTypes: true }).filter((entry) => entry.isFile())) {
+        expect(readFileSync(join(value.auditDir, file.name), "utf8")).not.toContain("synthetic-production-setup-token");
+      }
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("keeps first-run provisioning closed when no setup token is configured", async () => {
+    const value = setup("setup-closed", false);
+    try {
+      const status = await value.app.handle(new Request("http://local/api/setup/status"));
+      expect(await status.json()).toEqual({ setup_required: true, setup_token_required: false });
+      const admin = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password" }),
+      }));
+      expect(admin.status).toBe(403);
+      expect(((await admin.json()) as any).detail.code).toBe("SETUP_AUTHORIZATION_REQUIRED");
+      const bootstrap = await value.app.handle(new Request("http://local/api/setup/bootstrap", { method: "POST" }));
+      expect(bootstrap.status).toBe(403);
+      expect(((await bootstrap.json()) as any).detail.code).toBe("SETUP_AUTHORIZATION_UNAVAILABLE");
+      expect(value.database.client.query("SELECT COUNT(*) AS count FROM users").get()).toEqual({ count: 0 });
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("does not accept a raw setup token in managed development without the setup cookie", async () => {
+    const value = setup("setup-managed-raw", false, { managedDevSetup: true, setupToken: "managed-synthetic-token" });
+    try {
+      const admin = await value.app.handle(new Request("http://local/api/setup/admin", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "first-admin", password: "first-admin-password", password_confirmation: "first-admin-password", setup_token: "managed-synthetic-token" }),
+      }));
+      expect(admin.status).toBe(403);
+      expect(((await admin.json()) as any).detail.code).toBe("SETUP_AUTHORIZATION_REQUIRED");
+      expect(value.database.client.query("SELECT COUNT(*) AS count FROM users").get()).toEqual({ count: 0 });
+    } finally {
       cleanup(value);
     }
   }, 30000);

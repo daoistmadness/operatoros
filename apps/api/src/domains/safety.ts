@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -8,10 +8,21 @@ import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
+import { appendRestoreAudit } from "./restore-audit";
 
 type Row = Record<string, any>;
 type Context = any;
-export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null };
+/** Filesystem capacity probe seam: bytes available to the service user (`availableBytes`) and free bytes (`freeBytes`) for the filesystem hosting the resolved path. */
+export type DiskSpaceProbe = (resolvedPath: string) => { availableBytes: number; freeBytes: number };
+export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null };
+
+/** Stable refusal codes for the backup free-space preflight. The HTTP detail string is `"<CODE>: <message>"`. */
+export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
+export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
+/** Conservative floor for the preflight minimum on small or empty databases (about 2.95 MiB). */
+export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
+/** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
+export const BACKUP_RETENTION_LIMIT = 10;
 
 const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -45,6 +56,19 @@ function dbSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as Row | null)?.version ?? CURRENT_SCHEMA_VERSION);
 }
 
+/** Scheduler next run time for the status payload: null when no schedule row exists, the scheduler is disabled, or no run time has been computed yet. */
+function scheduledNextRunAt(context: AuthContext): string | null {
+  try {
+    const value = row(context, "SELECT enabled, next_run_at FROM backup_scheduler_config WHERE id = 1");
+    return value?.enabled && value.next_run_at ? String(value.next_run_at) : null;
+  } catch { return null; }
+}
+
+/** Live SQLite journal mode of the active connection; fail-safe "unknown" when the pragma cannot be read. */
+function activeJournalMode(context: AuthContext): string {
+  try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
+}
+
 function inspectDatabase(path: string): { integrity: string; quick: string; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean } {
   const database = new Database(path, { readonly: true });
   try {
@@ -71,9 +95,48 @@ function validateSnapshot(path: string, sourceTables: Set<string>): void {
 function nextFilename(root: string): string {
   const stamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z").replace(/:/g, "-");
   const base = `backup_${stamp}.sqlite3`;
-  for (let index = 0; ; index++) { const name = index ? base.replace(".sqlite3", `_${index}.sqlite3`) : base; if (!statSafe(`${root}/${name}`) && !statSafe(`${root}/${name}.meta.json`)) return name; }
+  const prefix = `backup_${stamp}`;
+  let next = 0;
+  for (const name of readdirSync(root)) {
+    if (name === base || name === `${base}.meta.json`) { next = Math.max(next, 1); continue; }
+    if (!name.startsWith(prefix)) continue;
+    const suffix = /^_(\d+)\.sqlite3(?:\.meta\.json)?$/.exec(name.slice(prefix.length));
+    if (suffix) next = Math.max(next, Number(suffix[1]) + 1);
+  }
+  return next === 0 ? base : base.replace(".sqlite3", `_${next}.sqlite3`);
 }
 function statSafe(path: string): boolean { try { statSync(path); return true; } catch { return false; } }
+
+const defaultDiskSpaceProbe: DiskSpaceProbe = (path) => {
+  const stats = statfsSync(path);
+  return { availableBytes: stats.bsize * stats.bavail, freeBytes: stats.bsize * stats.bfree };
+};
+
+function diskSpaceProbeFor(config: SafetyConfig): DiskSpaceProbe { return config.diskSpaceProbe ?? defaultDiskSpaceProbe; }
+
+/** Minimum free bytes required before a backup may start: twice the active database size (the staging directory holds the plaintext snapshot and its encrypted envelope at the same time) with a conservative floor for small databases. */
+export function minimumRequiredSpaceBytes(activeDatabasePath: string): number {
+  return Math.max(statSafe(activeDatabasePath) ? statSync(activeDatabasePath).size * 2 : 0, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
+}
+
+/** Resolves the nearest existing ancestor of the backup destination so the probe covers the filesystem that will host new output and never an unrelated mount. */
+function diskSpaceProbePath(root: string): string {
+  let candidate = resolve(root);
+  for (;;) {
+    try { return realpathSync(candidate); } catch { /* not created yet: keep walking up */ }
+    const parent = dirname(candidate);
+    if (parent === candidate) throw new Error("Backup destination filesystem could not be resolved.");
+    candidate = parent;
+  }
+}
+
+/** Fails closed (503) when the capacity probe itself fails; refuses (507) when available bytes are below the documented minimum. */
+function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root: string): void {
+  const required = minimumRequiredSpaceBytes(dbPath(context));
+  let probe: { availableBytes: number; freeBytes: number };
+  try { probe = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { throw Object.assign(new Error("Backup free-space probe failed; refusing to create a backup."), { status: 503, code: BACKUP_DISK_SPACE_PROBE_FAILED }); }
+  if (probe.availableBytes < required) throw Object.assign(new Error(`Insufficient free disk space for backup: ${required} bytes required, ${probe.availableBytes} bytes available.`), { status: 507, code: BACKUP_LOW_DISK_SPACE });
+}
 
 function decryptedBackup(config: SafetyConfig, path: string, operation: (path: string, artifact: Buffer) => Row): Row {
   const artifact = readFileSync(path);
@@ -94,6 +157,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
   const active = dbPath(context);
   if (basename(active) === PROTECTED_DATABASE_BASENAME) throw new Error("Protected database access is forbidden.");
+  assertBackupDiskSpace(context, config, backupRoot(config));
   backupBusy = true;
   let root = "";
   let temporaryDirectory = "";
@@ -120,6 +184,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
     audit(root, "backup_succeeded", { filename, trigger });
+    try { evictBeyondRetention(root, filename, preserve); } catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     return metadata;
   } catch (error) {
     if (root) audit(root, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error" });
@@ -137,8 +202,19 @@ export function createPreResetBackup(context: AuthContext, config: SafetyConfig)
   return String(createBackup(context, config, "manual").filename);
 }
 
+function backupSequence(filename: string): number {
+  const match = /_(\d+)\.sqlite3$/.exec(filename);
+  return match ? Number(match[1]) : 0;
+}
+/** Newest first. Same-second generations are ordered by their `_N` filename suffix, which `nextFilename` assigns monotonically. */
+function compareBackupDescending(a: Row, b: Row): number {
+  const byCreatedAt = String(b.created_at).localeCompare(String(a.created_at));
+  if (byCreatedAt !== 0) return byCreatedAt;
+  const bySequence = backupSequence(String(b.filename)) - backupSequence(String(a.filename));
+  return bySequence !== 0 ? bySequence : String(b.filename).localeCompare(String(a.filename));
+}
 function metadata(root: string): Row[] {
-  return rowsFromFiles(root).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  return rowsFromFiles(root).sort(compareBackupDescending);
 }
 function rowsFromFiles(root: string): Row[] {
   const result: Row[] = [];
@@ -164,11 +240,41 @@ function deleteBackup(root: string, filename: string): void {
   audit(root, "backup_deleted", { filename });
 }
 
+/**
+ * Best-effort cleanup after a backup pair is published. Only complete, visible
+ * pairs beyond the newest `BACKUP_RETENTION_LIMIT` are candidates. The newest
+ * backup, an explicitly preserved restore source, and any file that cannot be
+ * removed are skipped. Cleanup never turns a verified backup into a failure.
+ */
+function evictBeyondRetention(root: string, newest: string, preserve?: string): void {
+  const entries = metadata(root);
+  if (entries.length <= BACKUP_RETENTION_LIMIT) return;
+  const keep = new Set(entries.slice(0, BACKUP_RETENTION_LIMIT).map((entry) => String(entry.filename)));
+  keep.add(newest);
+  if (preserve) keep.add(preserve);
+  for (const entry of entries.slice(BACKUP_RETENTION_LIMIT)) {
+    const filename = String(entry.filename);
+    if (keep.has(filename)) continue;
+    const path = `${root}/${filename}`;
+    if (!statSafe(path) || !statSafe(`${path}.meta.json`)) continue;
+    try {
+      rmSync(path);
+      rmSync(`${path}.meta.json`, { force: true });
+    } catch (error) {
+      try { audit(root, "backup_eviction_skipped", { filename, reason: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
+      continue;
+    }
+    try { audit(root, "backup_evicted", { filename, trigger: entry.trigger ?? null, size_bytes: entry.size ?? null, reason: "retention_limit", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
+  }
+}
+
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   const root = backupRoot(config); const active = dbPath(context); const entries = statSafe(root) ? metadata(root) : [];
-  const minimumRequired = Math.max((statSafe(active) ? statSync(active).size : 0) * 2, 3_088_384);
+  const minimumRequired = minimumRequiredSpaceBytes(active);
   const available = statSafe(dirname(root)); const latest = entries[0] ?? null;
-  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: null, backup_count: entries.length, retention_limit: 10, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: null, minimum_required_space_bytes: minimumRequired, low_space: false, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: null, database_basename: basename(active), sqlite_journal_mode: "unknown", destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
+  let probeValues: { availableBytes: number; freeBytes: number } | null = null;
+  try { probeValues = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
+  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: probeValues === null || probeValues.availableBytes < minimumRequired, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
@@ -199,10 +305,10 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
 function missingRestoreFields(body: Row): string[] { return ["acknowledge_complete_replacement", "acknowledge_session_revocation", "acknowledge_restart_required", "acknowledge_safety_backup", "expected_source_sha256", "expected_active_sha256"].filter((key) => body[key] === undefined); }
 function restoreValidationError(set: any, fields: string[]): { detail: unknown } { set.status = 422; return { detail: fields.map((field) => ({ loc: ["body", field], msg: "Field required", type: "missing" })) }; }
 
-function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, actorId: number): Row {
+function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, operator: { id: number; username: string }): Row {
   if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
   if (!body.current_password || !body.confirmation_filename || !body.confirmation_phrase) throw Object.assign(new Error("Restore fields are required."), { status: 422 });
-  const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [actorId]);
+  const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [operator.id]);
   if (!user || !Bun.password.verifySync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
   if (body.confirmation_filename !== filename) throw Object.assign(new Error("The confirmation filename does not match."), { status: 400, code: "RESTORE_CONFIRMATION_FILENAME_MISMATCH" });
   if (body.confirmation_phrase !== "RESTORE_DATABASE") throw Object.assign(new Error("The restore confirmation phrase is invalid."), { status: 400, code: "RESTORE_CONFIRMATION_PHRASE_INVALID" });
@@ -210,17 +316,21 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   const checked = preflight(context, config, filename); if (checked.source.sha256 !== body.expected_source_sha256 || checked.active.active_sha256 !== body.expected_active_sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
   if (!checked.source.restore_eligible) throw Object.assign(new Error("The selected backup is not eligible for restore."), { status: 409, code: "RESTORE_SOURCE_INVALID" });
   if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
-  restoreBusy = true; const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let replaced = false; let snapshot: Row | null = null;
+  restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let replaced = false; let snapshot: Row | null = null;
   try {
     snapshot = createBackup(context, config, "pre_restore_auto", filename);
     decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
     context.database.close(); renameSync(active, rollback); renameSync(candidate, active); replaced = true; context.database.reopen(); context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
     const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
-    rmSync(rollback, { force: true }); audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
-    return { operation_id: randomUUID(), status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
+    audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
+    appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot.filename, reason: null });
+    rmSync(rollback, { force: true });
+    return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
   } catch (error) {
     if (replaced) { try { context.database.close(); rmSync(active, { force: true }); renameSync(rollback, active); context.database.reopen(); } catch { /* fail closed below */ } }
     audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error" });
+    try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
+    catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
     throw Object.assign(new Error("Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
   } finally { rmSync(candidate, { force: true }); rmSync(rollback, { force: true }); restoreBusy = false; }
 }
@@ -240,7 +350,7 @@ const restoreBody = t.Object({ current_password: t.Optional(t.String()), confirm
 export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfig): void {
   app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } });
   app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; });
-  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
   app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return rows(context, "SELECT id, backup_filename, started_at, completed_at, duration_seconds, status, error_message, trigger_type, size_bytes, checksum, integrity_verified, removed_backups_json FROM backup_execution_history ORDER BY started_at DESC, id DESC LIMIT 200").map((value) => ({ ...value, integrity_verified: Boolean(value.integrity_verified), removed_backups: JSON.parse(String(value.removed_backups_json ?? "[]")) })); });
@@ -248,7 +358,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); }, { body: t.Object({ enabled: t.Boolean(), schedule_type: t.Union([t.Literal("daily"), t.Literal("weekly"), t.Literal("interval")]), interval_minutes: t.Number({ minimum: 1, maximum: 525600 }), hour_utc: t.Number({ minimum: 0, maximum: 23 }), minute_utc: t.Number({ minimum: 0, maximum: 59 }), weekday_utc: t.Number({ minimum: 0, maximum: 6 }), keep_daily: t.Number({ minimum: 0, maximum: 365 }), keep_weekly: t.Number({ minimum: 0, maximum: 260 }), keep_monthly: t.Number({ minimum: 0, maximum: 120 }) }) });
   app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
-  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => { const user = auth(context, ctx); if (!user) return denied(ctx); const missing = missingRestoreFields(ctx.body ?? {}); if (missing.length > 0) return restoreValidationError(ctx.set, missing); try { return restore(context, config, ctx.params.filename, ctx.body, user.id); } catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); } }, { body: restoreBody });
+  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => { const user = auth(context, ctx); if (!user) return denied(ctx); const missing = missingRestoreFields(ctx.body ?? {}); if (missing.length > 0) return restoreValidationError(ctx.set, missing); try { return restore(context, config, ctx.params.filename, ctx.body, { id: user.id, username: user.username }); } catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); } }, { body: restoreBody });
   app.onStart(() => backupScheduler.start(context, config));
   app.onStop(() => backupScheduler.stop());
 }

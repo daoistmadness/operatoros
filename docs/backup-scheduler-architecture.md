@@ -1,31 +1,73 @@
 # Backup Scheduler Architecture
 
-## Existing lifecycle
+Status: current implementation in `apps/api/src/domains/safety.ts`. This document
+describes the supported single-host, single-process SQLite runtime.
 
-Manual `POST /api/admin/backups` calls `services.backup_service.create_backup()`. Under the shared backup lock, the service resolves the file-backed SQLite database and protected backup directory, checks free space, uses SQLite's online backup API to write a temporary snapshot, runs `PRAGMA integrity_check`, verifies required operational tables, calculates SHA-256, writes metadata, atomically publishes the database/metadata pair, and applies retention. Restore reuses the same lock and independently validates filename, metadata, checksum, schema, identity tables, active administrator, required table counts, and post-replacement database access. It creates a pre-restore safety snapshot, revokes restored sessions, rolls back on failure, and appends restore audit events.
+## Backup creation path
 
-Backups are currently discovered from `backup_*.sqlite3.meta.json`; there is no backup ORM record. Phase 9 keeps this artifact format so all existing restore targets remain compatible.
+Manual `POST /api/admin/backups` and a due scheduled run both call the same
+`createBackup` function. Under the process-local `backupBusy` guard it:
 
-## Scheduler design
+1. checks free space against twice the active database size (with a small floor);
+2. writes a consistent SQLite snapshot;
+3. runs `PRAGMA integrity_check` and verifies required operational tables;
+4. encrypts the snapshot and writes the metadata pair atomically;
+5. appends `backup_succeeded` to `backup_operations_audit.jsonl`; and
+6. applies count-based retention.
 
-`BackupSchedulerConfig` is a singleton persistent row containing enabled state, schedule type (`daily`, `weekly`, or `interval`), interval value, UTC execution time/day, and daily/weekly/monthly retention counts. `BackupExecutionHistory` is append-only operational history with trigger, lifecycle status, timestamps, duration, filename, size, verification state, removed filenames, and a bounded error message.
+A concurrent backup attempt is rejected with `409`; the scheduler catches the
+rejection so its timer keeps running. Restore uses a separate process-local
+`restoreBusy` guard and creates a pre-restore safety snapshot through the same
+creator.
 
-The Elysia startup lifecycle loads the row and starts one in-process scheduler loop only when the configured backend worker count is one. Shutdown signals the loop, waits for an active execution, and releases its task. The persisted `next_run_at` survives application restart. This is intentionally an offline, single-process scheduler; it is not a distributed lock or queue.
+## Scheduler configuration
 
-The supported Compose backend intentionally runs one worker and stores scheduler configuration/history in the persistent PostgreSQL volume. Application-created backup and audit artifacts use the separate persistent `backend_data` volume. Scheduled snapshot creation remains restricted to file-backed SQLite, so a PostgreSQL Compose deployment records scheduler state but does not claim PostgreSQL scheduled snapshots; `scripts/backup.sh` and `scripts/restore.sh` remain the separate PostgreSQL operational path.
+`backup_scheduler_config` is a singleton row containing `enabled`, `schedule_type`
+(`daily`, `weekly`, or `interval`), `interval_minutes`, UTC time/day fields, and
+`next_run_at`. The scheduler is **disabled by default**; administrators enable it
+through `/api/admin/backups/scheduler`.
 
-## Lifecycle states
+The in-process timer polls every 30 seconds, computes the next UTC run when a run
+is due, persists `next_run_at`, and calls the backup creator. `next_run_at` survives
+an application restart. This is an offline, single-process scheduler; it is not a
+distributed lock or queue, and multiple API processes would each run their own
+timer.
 
-An execution is inserted as `PENDING`, transitions to `RUNNING`, and finishes as `SUCCESS` or `FAILED`. Shutdown before work begins may mark a pending execution `CANCELLED`. A non-blocking scheduler execution lock prevents overlapping manual/scheduled engine runs; a rejected overlap is recorded as failed rather than starting a second snapshot.
-
-Scheduled and manual jobs both call the existing backup creator. Successful history is written only after snapshot validation, checksum calculation, metadata publication, and automatic retention. Failed jobs retain their history row and audit event but never advertise a partial backup because the existing temporary-file cleanup remains authoritative.
+`keep_daily`, `keep_weekly`, and `keep_monthly` are persisted configuration fields
+reserved for planned tiered retention. They are not used by the current count-based
+eviction policy.
 
 ## Retention
 
-Scheduled artifacts are classified in UTC buckets. The newest configured number of daily, weekly (ISO week), and monthly buckets are retained; an artifact kept by any tier survives. Manual backups continue to use the existing count policy, the newest pre-restore safety snapshot is preserved, the active filename is excluded, and incomplete/invalid artifacts are never selected for tier deletion. Every scheduled cleanup records removed filenames in execution history and the append-only operations audit.
+After a successful backup is published, the runtime keeps the newest 10 complete
+artifact/metadata pairs (`BACKUP_RETENTION_LIMIT`). The count covers every trigger
+(manual, scheduled, pre-restore). The newest backup and a backup selected as the
+restore source are never eviction candidates. Incomplete pairs are ignored, and a
+file that cannot be removed is skipped. Each removal appends a `backup_evicted`
+line to the operations audit; a retention failure never invalidates the newly
+published backup. Operators can still remove a specific backup through
+`DELETE /api/admin/backups/:filename`.
 
-## Failure and audit handling
+A protected restore source can leave 11 visible generations until the next
+successful backup re-applies the limit.
 
-Execution failures store a sanitized error class/message, completion time, and duration. `backup_operations_audit.jsonl` receives start, success, failure, lock-rejection, configuration-change, and retention events. Audit append failures do not turn a verified backup into an invalid snapshot, but are surfaced in server logs/history where possible. Integrity failures remain `FAILED`, and no metadata pair is published.
+## History and audit
 
-Scheduler configuration and history APIs require the existing administrator role. Restore endpoints, destructive-operation flags, exact confirmation, compatibility checks, and session revocation are unchanged.
+`backup_operations_audit.jsonl` is the authoritative append-only operational audit
+for the current path (`backup_succeeded`, `backup_failed`, `backup_deleted`,
+`backup_evicted`, `backup_eviction_skipped`, `backup_retention_failed`). The
+`backup_execution_history` table and its read API exist for compatibility, but the
+current Elysia creation path does not insert execution rows, so its
+`removed_backups_json` column is not populated by retention. Do not use it as the
+primary operational record.
+
+Restore events are recorded separately in `backup_restore_audit.jsonl` and the
+restore-history API. Audit append failures never turn a verified backup into an
+invalid snapshot.
+
+## Deployment restriction
+
+The supported runtime is one local API process against one SQLite data root.
+PostgreSQL and Docker/Compose are not supported runtimes. Backup, restore, and
+scheduler guards are process-local module state; no component coordinates multiple
+processes or claims multi-worker restore safety.

@@ -4,6 +4,7 @@ const internalPackages = [
   "@operatoros/contracts",
   "@operatoros/db",
   "@operatoros/excel",
+  "@operatoros/agent-skills",
   "@operatoros/ui",
   "@operatoros/web",
 ];
@@ -64,6 +65,7 @@ const forbiddenByWorkspace = {
     "elysia",
   ],
   "@operatoros/config": internalPackages,
+  "@operatoros/agent-skills": [],
 };
 
 export function boundaryRulesFor(packageName) {
@@ -87,6 +89,7 @@ const workspacePaths = {
   "@operatoros/contracts": "packages/contracts",
   "@operatoros/db": "packages/db",
   "@operatoros/excel": "packages/excel",
+  "@operatoros/agent-skills": "packages/agent-skills",
   "@operatoros/ui": "packages/ui",
   "@operatoros/config": "packages/config",
 };

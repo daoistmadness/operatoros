@@ -3,6 +3,16 @@ set -euo pipefail
 
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 tier="${1:?tier required}"
+case "$tier" in fast|pr|release) ;; *) printf 'unknown tier: %s\n' "$tier" >&2; exit 2 ;; esac
+if ! command -v flock >/dev/null 2>&1; then
+  printf '%s\n' "flock is required to serialize test tiers in this worktree." >&2
+  exit 2
+fi
+exec {tier_lock_fd}<"$repo/.git"
+if ! flock -n -x "$tier_lock_fd"; then
+  printf '%s\n' "Another test tier is already running in this worktree." >&2
+  exit 75
+fi
 source "$repo/scripts/validate-wsl-bun.sh"
 if ! operatoros_wsl_prepare_bun "$repo"; then
   printf '%s\n' "Bun toolchain validation failed" >&2
@@ -19,18 +29,17 @@ unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHEL
 export SHELL=/bin/bash
 hash -r
 started=$SECONDS
-scope_file="$(mktemp /tmp/operatoros-test-scope.XXXXXX.json)"
-
-# The selected protected path is guard-only metadata.  Child test and runtime
-# processes must never inherit it as an application configuration value.
-unset PROTECTED_DB_PATH
+source "$repo/scripts/test-tier-environment.sh"
+test_parent="$(cd -- "${TMPDIR:-/tmp}" && pwd -P)"
+test_root="$(mktemp -d "$test_parent/operatoros-test-tier.XXXXXX")"
+scope_file="$test_root/scope.json"
 
 cleanup() {
-  local status=$?
-  rm -f -- "$scope_file"
-  exit "$status"
+  operatoros_test_tier_cleanup "$test_root" "$test_parent" "$?"
 }
 trap cleanup EXIT
+
+operatoros_test_tier_isolate_environment "$test_root/xdg-data"
 
 scope_args=()
 if [[ -n "${TEST_CHANGED_FILES:-}" ]]; then

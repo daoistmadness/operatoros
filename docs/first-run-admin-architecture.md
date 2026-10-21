@@ -15,8 +15,9 @@ The service transitions a singleton `first_admin_setup_state` row in the same da
 - Setup is required only when no user exists and the singleton state is not completed.
 - Any existing user closes setup, including installations upgraded from before Phase 9.3.
 - Successful provisioning permanently marks the singleton state complete.
-- A configured `ASTRYX_SETUP_TOKEN` makes the web endpoint require that token.
-- Docker Compose requires an externally supplied setup token. Direct loopback development may leave it unset.
+- A configured `ASTRYX_SETUP_TOKEN` makes `POST /api/setup/admin` require that
+  token in the request body (`setup_token`).
+- Supply the setup token externally for a supervised server deployment. Direct loopback development may leave it unset.
 - The trusted interactive CLI bypasses the web token because it already requires local shell and database access; it still cannot run after setup closes.
 
 ## API contract

@@ -2,7 +2,7 @@
 
 ## Naming
 - React components, context providers, hook modules, and page files use `PascalCase` when they represent components or pages.
-- SQL migration files are date-stamped and descriptive, for example `2026_04_02_dashboard_performance_indexes.sql`.
+- Follow the existing schema/migration naming in `packages/db/src/` and canonical version order in `manifest.ts`; retained Python migration SQL is historical tooling.
 - Utility scripts use descriptive imperative names, for example `create-test-workspace.ts`.
 
 ## Organization
@@ -20,26 +20,26 @@
 - Keep imports grouped by standard library, third-party, then local modules.
 - Prefer small helper functions over deeply nested logic.
 - Keep route registration explicit in `apps/api/src/app.ts`.
-- Keep frontend route definitions explicit in `apps/web/src/App.tsx`.
+- Keep frontend route definitions explicit in `apps/web/src/routes/routeDefinitions.tsx`; `apps/web/src/App.tsx` composes the router and renders those definitions.
 - Keep API URL construction centralized in `apps/web/src/lib/api/client.ts` rather than scattering backend URLs across pages.
 - Keep development routing centralized in `apps/web/vite.config.js` and `start-dev.sh`; browser requests should use `/api` exactly once.
-- Keep destructive request payloads typed with Elysia schemas rather than accepting unstructured JSON.
+- Validate boundary payloads with the shared TypeBox DTOs and existing Elysia route schemas; do not accept unstructured privileged input. Load the `elysiajs` skill for backend work and follow the installed major version.
 
 ## Error Handling
 - Backend routes return sanitized Elysia error envelopes for client-facing validation errors.
 - Upload and report endpoints return structured payloads rather than plain strings where practical.
-- Frontend API calls surface backend `detail` messages when available.
+- Frontend API calls use the shared sanitized API-error handling and preserve authorization, conflict, and validation distinctions.
 - Destructive or privileged actions should log requests, rejections, and completion without logging sensitive payload values.
 
 ## Logging
-- Backend uses simple logging and `print(...)` timing in some analytics endpoints.
+- Use existing Bun/Elysia logging patterns and keep timing evidence separate from sensitive payloads.
 - Avoid introducing noisy logging unless it helps diagnose a known issue.
 
 ## Testing Style
 - Backend behavioral tests live under `apps/api/tests/` and use Bun.
 - Frontend tests live under `apps/web/src/` (e.g. `*.test.js` or `*.test.ts`) and use `Vitest`.
 - Validate behavior with startup checks, smoke requests, backend tests, and frontend build checks.
-- For user-visible frontend changes, run the Agent Browser smoke test when the tool is available.
+- Verify user-visible frontend changes in a real browser. The documented live-stack smoke workflow is `scripts/verify-browser.sh`.
 
 ## Review Standards
 - Preserve existing API shapes unless the task explicitly changes them.

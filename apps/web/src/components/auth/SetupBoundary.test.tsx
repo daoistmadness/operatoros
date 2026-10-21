@@ -30,6 +30,19 @@ describe("setup bootstrap boundary", () => {
     expect(html).not.toContain("Normal authentication");
   });
 
+  it("requests the setup token on the first-run screen when the server requires it", () => {
+    const html = render({ setup_required: true, setup_token_required: true });
+    expect(html).toContain("Create administrator");
+    expect(html).toContain("Setup token");
+    expect(html).toContain("ASTRYX_SETUP_TOKEN");
+  });
+
+  it("hides the setup token field when the server does not require it", () => {
+    const html = render({ setup_required: true, setup_token_required: false });
+    expect(html).toContain("Create administrator");
+    expect(html).not.toContain("Setup token");
+  });
+
   it("continues normal authentication after setup closes", () => {
     expect(render({ setup_required: false, setup_token_required: false })).toContain("Normal authentication");
   });
