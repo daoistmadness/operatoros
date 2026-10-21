@@ -21,6 +21,31 @@ Backup directories use mode `0700`; backup, metadata, and audit files use `0600`
 
 Retention keeps the newest 10 complete backup generations (`BACKUP_RETENTION_LIMIT`) after each successful backup. The count covers every trigger (manual, scheduled, pre-restore). The newest generation and a backup selected as the restore source are never eviction candidates, so a directory can temporarily hold 11 generations while a restore source is protected; the next successful backup re-applies the limit. Incomplete artifact/metadata pairs are ignored, and a file that cannot be removed is skipped and audited. Each eviction writes a `backup_evicted` line to the operations audit; eviction failure never invalidates the newly published backup. Operators can still remove a specific backup through `DELETE /api/admin/backups/:filename`.
 
+## Backup health status
+
+`GET /api/admin/backups/status` checks destination accessibility and capacity,
+artifact/metadata pair completeness, and the latest listed artifact's actual
+file size, SHA-256, and encrypted-envelope metadata consistency. A checksum is
+reported as `verified` only after reading and hashing the current artifact.
+Missing, empty, truncated, mismatched, or unreadable artifacts cannot produce
+`HEALTHY`. Status reads do not write history or audit events.
+
+SQLite integrity and quick checks performed during creation are historical
+evidence. Status does not decrypt or open the backup as SQLite; it reports
+`latest_backup_integrity_status: "not_checked"`. `HEALTHY` describes the checks
+above, not authenticated decryption, recoverability, or a restore rehearsal.
+Restore preflight still performs decryption and database validation on demand.
+The latest creation outcome is reported as unknown (`null`), since the current
+creation path does not persist execution history; a manifest alone is not an
+execution outcome.
+
+Status precedence is restore in progress, backup in progress, destination
+unavailable, incomplete pairs (`UNKNOWN`), no backup, failed artifact checks or
+unknown capacity (`UNKNOWN`), low disk space, then healthy. A missing destination
+can remain available when its nearest existing ancestor is an accessible
+directory where it can be created. Age is reported in seconds; status does not
+apply aging/stale thresholds. Retention and restore eligibility are unchanged.
+
 ## Restore authorization and safeguards
 
 Restore requires all of the following:

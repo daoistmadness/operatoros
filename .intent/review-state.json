@@ -233,15 +233,21 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "af5460ca49fb2e6755a9dec7ebcc27a02a67125d758ead0685114fda9de79c8f",
+      "fingerprint": "5ae75cf878fa2d45e6030618366d4a149e60dca6e598e88301646ceec5ff8735",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "4c1a80006e50573de509c51436fbad4739b63044564666ace58bc63884f260ac"
+        "apps/api/src/domains/safety.ts": "e98e93c76bcd25af64d4b7270a287d8f2f90ba4e41577f995c03f22457e9d57c"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "f4ba5bcee846afbe476802847cfb1e342ed4ff87",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Requalify the original status-only backup-health candidate on verified green main after readiness PR #262. Creation, retention, restore, authorization, and audit behavior are unchanged. Current checksum/size evidence is distinct from SQLite integrity checks. Existing Elysia skill and domain_map.yaml, skill_spec.md, skill_tree.yaml remain accurate; no new guidance or skill is needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "apps/api/src/domains/safety.ts:statusPayload",
+        "apps/api/tests/backup-health.test.ts",
+        "docs/security/backup-restore.md:Backup health status",
+        "_artifacts/domain_map.yaml",
+        "_artifacts/skill_spec.md",
+        "_artifacts/skill_tree.yaml",
+        "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -269,15 +275,21 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "2a284ab49e68ece0fb75ba341cf510013e85554820f80cfdc05c58f96915116e",
+      "fingerprint": "94b4d5cc2ba3ae741f4b804244a83c993409da088ed70918ca28b4f029c3aec6",
       "snapshot": {
-        "docs/security/backup-restore.md": "16544635730f9f3114f05feca3358ef4a6fa50f44ca9e6860169be00cde0e110"
+        "docs/security/backup-restore.md": "ab3db75080e1b3cf331d3bf2153d60c9cb5207a179598de301b70fff9cee2b95"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "f4ba5bcee846afbe476802847cfb1e342ed4ff87",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Requalify the original status-only backup-health candidate on verified green main after readiness PR #262. Creation, retention, restore, authorization, and audit behavior are unchanged. Current checksum/size evidence is distinct from SQLite integrity checks. Existing Elysia skill and domain_map.yaml, skill_spec.md, skill_tree.yaml remain accurate; no new guidance or skill is needed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "apps/api/src/domains/safety.ts:statusPayload",
+        "apps/api/tests/backup-health.test.ts",
+        "docs/security/backup-restore.md:Backup health status",
+        "_artifacts/domain_map.yaml",
+        "_artifacts/skill_spec.md",
+        "_artifacts/skill_tree.yaml",
+        "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -335,6 +347,24 @@
         "_artifacts/skill_spec.md",
         "_artifacts/skill_tree.yaml",
         "Loop 98 standalone candidate: 8 seeder/config-load tests, strict config TypeScript, 3 readiness browser scenarios, hk lint and architecture passed. Loop 97 full release exit 0 in 709.46 seconds is reused as supporting evidence for identical readiness sources on its combined candidate; standalone hosted CI is still pending."
+      ]
+    },
+    "source:apps/api/tests/backup-health.test.ts": {
+      "fingerprint": "0969cf002b527780cc2af657163e7ee95be1a1c201c7238db681832cb664896c",
+      "snapshot": {
+        "apps/api/tests/backup-health.test.ts": "01d016ebc586d687ee28b51927c7ed245192000e3601bc8f3bfc1e8e807991dd"
+      },
+      "head": "f4ba5bcee846afbe476802847cfb1e342ed4ff87",
+      "outcome": "no-change",
+      "reason": "Requalify the original status-only backup-health candidate on verified green main after readiness PR #262. Creation, retention, restore, authorization, and audit behavior are unchanged. Current checksum/size evidence is distinct from SQLite integrity checks. Existing Elysia skill and domain_map.yaml, skill_spec.md, skill_tree.yaml remain accurate; no new guidance or skill is needed.",
+      "evidence": [
+        "apps/api/src/domains/safety.ts:statusPayload",
+        "apps/api/tests/backup-health.test.ts",
+        "docs/security/backup-restore.md:Backup health status",
+        "_artifacts/domain_map.yaml",
+        "_artifacts/skill_spec.md",
+        "_artifacts/skill_tree.yaml",
+        "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
       ]
     }
   }
