@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "7d08dfefcbdda525f8bc181305ba7aca6fc217d5736e8280c37fc828aca09a6f",
+      "fingerprint": "755f6d2c8f23a677d177cb21cc19210280320199b41327c2c98548baed962e76",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
         "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
+        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -44,16 +44,15 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
       "outcome": "no-change",
-      "reason": "The PR updates TanStack React Table for the web UI; it does not affect Elysia skill guidance or examples.",
+      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
       "evidence": [
-        "The PR diff updates apps/web and the TanStack packages in bun.lock; the Elysia skill files are unchanged.",
-        "The CI skills:validate step passed on this PR head."
+        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "223624995f1b2c06d9daa14a484e64c1bc13856bcddf96284a7aec9100cc42e1",
+      "fingerprint": "28e4264fc295692089fca2d656363def63e8ebf84b6c4e12bf27fe5981e6d1b8",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
@@ -63,7 +62,7 @@
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
+        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -97,12 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
       "outcome": "no-change",
-      "reason": "The lockfile update is limited to TanStack React Table and its store dependencies; planning artifacts remain accurate.",
+      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
       "evidence": [
-        "The bun.lock diff changes @tanstack/react-table and adds @tanstack/react-store and @tanstack/store.",
-        "No _artifacts files are changed by the PR."
+        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
