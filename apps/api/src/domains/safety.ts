@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
+import { accessSync, constants, appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -7,7 +7,7 @@ import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
-import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
+import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 
@@ -270,12 +270,47 @@ function evictBeyondRetention(root: string, newest: string, preserve?: string): 
 }
 
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
-  const root = backupRoot(config); const active = dbPath(context); const entries = statSafe(root) ? metadata(root) : [];
+  const root = backupRoot(config); const active = dbPath(context);
+  let entries: Row[] = [];
+  let available = false;
+  let incomplete = false;
+  try {
+    const destination = diskSpaceProbePath(root);
+    available = statSync(destination).isDirectory();
+    accessSync(destination, constants.R_OK | constants.W_OK | constants.X_OK);
+    if (statSafe(root)) {
+      entries = metadata(root);
+      const generations = new Set(readdirSync(root).map((name) => name.replace(/\.meta\.json$/, "")).filter((name) => backupFile.test(name)));
+      incomplete = generations.size !== entries.length;
+    }
+  } catch { available = false; }
+  const latest = entries[0] ?? null;
+  let actualSize: number | null = null;
+  let checksumStatus: string | null = latest ? "failed" : null;
+  if (latest) {
+    try {
+      const path = join(root, latest.filename);
+      const stats = statSync(path);
+      actualSize = stats.size;
+      if (!stats.isFile() || stats.size <= 0 || stats.size !== latest.size) throw new Error("Backup size mismatch.");
+      const manifest = JSON.parse(readFileSync(`${path}.meta.json`, "utf8"));
+      if (manifest.filename !== latest.filename || !Number.isFinite(Date.parse(latest.created_at))) throw new Error("Backup metadata invalid.");
+      const artifact = readFileSync(path);
+      if (artifact.length !== stats.size || backupSha256(artifact) !== latest.checksum) throw new Error("Backup checksum mismatch.");
+      const envelope = JSON.parse(artifact.toString());
+      if (!isEncryptedBackup(artifact) || latest.encrypted !== true || envelope.version !== BACKUP_ENVELOPE_VERSION || envelope.algorithm !== BACKUP_ENCRYPTION_ALGORITHM || latest.format_version !== envelope.version || latest.algorithm !== envelope.algorithm || latest.key_id !== envelope.keyId) throw new Error("Backup metadata mismatch.");
+      checksumStatus = "verified";
+    } catch { /* fail closed; creation-time checks do not verify the current artifact */ }
+  }
   const minimumRequired = minimumRequiredSpaceBytes(active);
-  const available = statSafe(dirname(root)); const latest = entries[0] ?? null;
   let probeValues: { availableBytes: number; freeBytes: number } | null = null;
-  try { probeValues = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
-  return { health_state: latest ? "HEALTHY" : "NO_BACKUP", last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: latest?.size ?? null, latest_backup_checksum_status: latest ? "verified" : null, latest_backup_integrity_status: latest ? "ok" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: config.backupEncryption !== null, backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: probeValues === null || probeValues.availableBytes < minimumRequired, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latest ? "SUCCESS" : null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
+  try {
+    const value = diskSpaceProbeFor(config)(diskSpaceProbePath(root));
+    if (Number.isFinite(value.availableBytes) && value.availableBytes >= 0 && Number.isFinite(value.freeBytes) && value.freeBytes >= 0) probeValues = value;
+  } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
+  const lowSpace = probeValues === null || probeValues.availableBytes < minimumRequired;
+  const health = restoreBusy ? "RESTORE_IN_PROGRESS" : backupBusy ? "BACKUP_IN_PROGRESS" : !available ? "DESTINATION_UNAVAILABLE" : incomplete ? "UNKNOWN" : !latest ? "NO_BACKUP" : checksumStatus !== "verified" || probeValues === null ? "UNKNOWN" : lowSpace ? "LOW_DISK_SPACE" : "HEALTHY";
+  return { health_state: health, last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: actualSize, latest_backup_checksum_status: checksumStatus, latest_backup_integrity_status: latest ? "not_checked" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: Boolean(config.backupEncryption), backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: lowSpace, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
