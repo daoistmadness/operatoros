@@ -233,15 +233,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "88a800a9911526123b6619bc74c2e82bf6efce5e289e4717375b3695507fee80",
+      "fingerprint": "348b68e67e6d156bf52d83af34f7d66df1e4b9df71154d34c5728b2ee6c5b885",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "9b545b52309efc178622735758e7494ac7d5cd48fc06fbafe387e789beef987f"
+        "apps/api/src/domains/safety.ts": "5e110044307040ad39ea8e4646a28f65f4de407ec2081c3bab096d5ab8c6db8c"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/src/domains/safety.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "af3cb5ad725c518c79278422b2cf7062e9fe761b851fd5be81e0beadf8f1e438",
+      "fingerprint": "82b30f8fc44eae4b8b575d57cfd48e7214dc5e1978a8c4cc519ccb310c4f63b8",
       "snapshot": {
-        "docs/security/backup-restore.md": "457ab94ae685109a5c6231657f02b09091484eaa4d517e0c00188e56f8c9863c"
+        "docs/security/backup-restore.md": "62b6284204a2662db84ca481f07312abeab5f73a612ae14796ff3c67affb9313"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: docs/security/backup-restore.md at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -356,87 +356,183 @@
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
-      "fingerprint": "a248df04ec3375dabf153355811af71c64d517082fac42289c2a139fadf8460f",
+      "fingerprint": "60d2bfad25d54cb79088ce54c0b152e692ffa810f0b251703a989e3f5e6245ce",
       "snapshot": {
-        "apps/api/tests/restore-foreign-keys.test.ts": "defe527b1f4a52572a952fe6e95ec6d1cf53f732107037754b351cf5c66b3912"
+        "apps/api/tests/restore-foreign-keys.test.ts": "ff72698ada336bbfb72d83111e95666d5dadbbb56b3318de0773c50e389c41bb"
       },
-      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
-      "fingerprint": "b11e5c957a4ebdf6ceb1f4040e7cec1c97f546d8df41461ba7206789e8ecb907",
+      "fingerprint": "da6de02a3d8d3effb0b3f8a18eefef8698a9475f1ac858b9844264859b4c36e9",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.tsx": "530571f48443ed5c4370d8d1dfc5d20bbb11d982181288b5b81de78c527d2014"
+        "apps/web/src/pages/BackupManagement.tsx": "01ad7be4d3d5b49591cd23a88e9f328bf2aac4ddffcba7e289a61f43bb3b51f8"
       },
-      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.tsx at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+        "Changed: apps/web/src/pages/BackupManagement.tsx at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "8b48aad43927438f3c28dce5e58563cb233f537bd07c9439f967ddd67c4fbe11",
+      "fingerprint": "2a48c0da25e246ae99aa126d1d764b324c59c77e1ce4d69982caeb2c2b6b8c9e",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "1ccd33776b3557d17956faaa11442b133b04deb540c08f6e9490f081cf917d91"
+        "apps/api/src/backup-cli.ts": "86d9adf53669da671c2a40f308948540523442d8180148623f503ade348dca4a"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/src/backup-cli.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "4f4593849a36dfdee5ecd7af82e64042a62f062feb0c3b9f837dbfe7408eac0b",
+      "fingerprint": "1520011fa0d98263aacbd12eb7ec3589bff3fecf86e22d2491b40d8bd28fe399",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "2689099b6901309f30271226cb587f3c759ec1ac15bf797e329e2feaf50123e6"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "703f6b98b4b1e6e8023daf691a3b5a4801748074b6891a065974a2fbcd076710"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
-      "fingerprint": "12cdf874d1a21aff4e22d05f580b00b0a0fb4550074c82143c984caaa4371486",
+      "fingerprint": "837faaa27f6bbf2e32506b8df79076962a78fcc3469c5b85be27edc379b98543",
       "snapshot": {
-        "apps/api/src/auth/admin-state.ts": "8608662fe654d927924c32ab2ddf22494c73e90592c9eb5db8776ac62c4324b4"
+        "apps/api/src/auth/admin-state.ts": "d2224b05fcf67beb7715ad4c6fdb8a6c287e0af9b0006ccff44c2d162f3067cd"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/auth/admin-state.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/src/auth/admin-state.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/src/auth/service.ts": {
-      "fingerprint": "426016cf86b70293d7906dcab8cc6b3f61d96e4a324f4ec2799542390927fb6f",
+      "fingerprint": "4868504b296f74b46c1ff59f0ab4128ed311f71d90ec1c3f857859ec8ca0f0d1",
       "snapshot": {
-        "apps/api/src/auth/service.ts": "645f790f2dfaced9f73b930d853693a4aea2fa5222089c66af052c4ab358e2f3"
+        "apps/api/src/auth/service.ts": "5853f2d9a508a437644f0c4ff218232dbc47791a7efc6d486d9fb2cc3cda6447"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/auth/service.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/src/auth/service.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
-      "fingerprint": "91712fdff037039ba243ba40f1b07f483b3fe995bed4462db4033896e882049e",
+      "fingerprint": "639389056b2b8d38100a4e2e362453bff35c705deb245322fe589832895381d3",
       "snapshot": {
-        "apps/api/tests/restore-administrator.test.ts": "b174a3dd273d57698d3f5352d02c6ffc9c114e99f435d2a0af50c58b9d85f128"
+        "apps/api/tests/restore-administrator.test.ts": "301760213ca8943b6d681639ebf26bd291945ccc0596a546ed26f7af221c1f4d"
       },
-      "head": "c806c6db60d2f0d4a8a71a51a079f7296fd7eb48",
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
       "outcome": "no-change",
-      "reason": "Loop 103 changes OperatorOS restore administrator eligibility, covered by docs/security/backup-restore.md; they add no Elysia APIs or backend guidance.",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
       "evidence": [
-        "Changed: apps/api/tests/restore-administrator.test.ts at c806c6db60d2f0d4a8a71a51a079f7296fd7eb48"
+        "Changed: apps/api/tests/restore-administrator.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/api/src/auth/sqlite-date.ts": {
+      "fingerprint": "203919da84966373e79def5a67de5b6dbc99ca1fbfed03ee42271f47294f6865",
+      "snapshot": {
+        "apps/api/src/auth/sqlite-date.ts": "fecea9320f3e0926056c6a76657cca74a39c510d953aea3b592ae9f7ba429227"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/api/src/auth/sqlite-date.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/api/src/cli/admin-recovery.ts": {
+      "fingerprint": "48b58b5555734cfcebdc1fc9151d4b828c56af3dc13e660c72f0ed8c6afc679d",
+      "snapshot": {
+        "apps/api/src/cli/admin-recovery.ts": "46a8dcac1b60e9a4f2292bbbadd738fe08228795caef0363b9fd5f3ebc2059cb"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/api/src/cli/admin-recovery.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/api/src/cli/prompt-hidden.ts": {
+      "fingerprint": "9d4e7c9bba357a1a9845f3a18606bdf00fe65b1c041c0359794132c5a9fc3149",
+      "snapshot": {
+        "apps/api/src/cli/prompt-hidden.ts": "175b9ca33c2045bfb240153d1c3baa6706a9402ca146774ff43e16f7a375abec"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/api/src/cli/prompt-hidden.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/web/src/api/backups.test.ts": {
+      "fingerprint": "0ef7843bc7327f22550a800198831ca215d48b3ae06963905b22992a007d6838",
+      "snapshot": {
+        "apps/web/src/api/backups.test.ts": "3d3ead9db88b88c964d11446d4650a2e9c13eeea9fc6e756d1a3feb46445e7b9"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/backups.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/web/src/api/backups.ts": {
+      "fingerprint": "c05e3db804e613f80d1307b514b5dd995793ac41d938218124ec5d96a6547cb9",
+      "snapshot": {
+        "apps/web/src/api/backups.ts": "40e33e08464248ef46750060c94a77d69a2f6e275f8c7b48e4617045f9d50fe5"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/backups.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/web/src/generated/openapi/schema.ts": {
+      "fingerprint": "bdf361f3ce6c315c9289eefec0e9eae93d3793b994e91a1380dd25dac6eee5c6",
+      "snapshot": {
+        "apps/web/src/generated/openapi/schema.ts": "3b3b3dad2b2538bd1de72ef71cdc5fb83e3d0dc1065163ab56359f23d749071e"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/generated/openapi/schema.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:apps/web/src/pages/BackupManagement.test.tsx": {
+      "fingerprint": "d8d02132037891726d34f1a7256dcc5d5d5c1675ba96b6896fbb0af0a55dc2a0",
+      "snapshot": {
+        "apps/web/src/pages/BackupManagement.test.tsx": "64a46cb79206e60cb72cbcd2c1bac4eeb17fdc88aeda3174be291834691ec7ed"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/BackupManagement.test.tsx at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+      ]
+    },
+    "source:openapi/operatoros.openapi.json": {
+      "fingerprint": "6b946dcda79ffa30bb2ea3e713d4d24c2563517a779ba509e9cd2d4ffd919607",
+      "snapshot": {
+        "openapi/operatoros.openapi.json": "c4ee045f0a33dde549817a94ca86bfdec6253addb16d4f79300e54e996a4d4dd"
+      },
+      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "outcome": "no-change",
+      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: openapi/operatoros.openapi.json at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
       ]
     }
   }

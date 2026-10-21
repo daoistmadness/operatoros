@@ -38696,6 +38696,18 @@
             "title": "Acknowledge Session Revocation",
             "type": "boolean"
           },
+          "candidate_admin_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Candidate Admin Password",
+            "type": "string"
+          },
+          "candidate_admin_username": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Candidate Admin Username",
+            "type": "string"
+          },
           "confirmation_filename": {
             "maxLength": 255,
             "minLength": 1,

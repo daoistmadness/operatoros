@@ -59,14 +59,18 @@ Restore requires all of the following:
 7. metadata, SHA-256, and expected source/active checksum validation;
 8. SQLite integrity, quick-check, foreign-key, required-table, and schema compatibility validation;
 9. compatible `users` and `sessions` tables with required columns;
-10. an active administrator with a usable username, or an empty database whose first-admin setup is still open;
+10. an active, unlocked administrator with an addressable username, a password hash accepted by the runtime, and a verified backup credential, or an empty database whose first-admin setup is still open;
 11. a pre-restore safety snapshot;
 12. isolated replacement with a rollback copy; and
 13. post-replacement database reopen and restored-session revocation, followed by integrity/quick-check, foreign-key, administrator-state, and row-count inspection.
 
-Preflight and restore reject a candidate without an active `admin` account unless it has no users and first-admin setup is incomplete. This preserves restoration of a genuinely uninitialized database while blocking states where setup is already closed. The check validates the account's role, active flag, and username shape; it does not verify the password hash or promise that the account's current credentials work. The local admin-recovery procedure can reset credentials for an existing active administrator.
+Preflight rejects a candidate without an active, currently unlocked `admin` account, an addressable username, or a password hash the runtime can parse, unless the database is empty and first-admin setup remains open. It cannot establish that an operator knows the password. Before the safety snapshot or replacement, API restore verifies either the current administrator credentials against the selected backup or the optional `candidate_admin_username` and `candidate_admin_password` supplied for one active backup administrator. It verifies that credential again after replacement; a mismatch rolls back. Credential values are excluded from logs and audit events. Open first-admin setup requires no backup credential.
 
-Legacy plaintext backups are refused unless `ALLOW_LEGACY_PLAINTEXT_BACKUPS=true`. Recovery outside the authenticated API requires a separately reviewed offline procedure; it is not silently performed by the API.
+CLI restore requires `--admin-user <username>` for a database with an existing administrator and prompts for that administrator's password without echo. It verifies the password before the safety snapshot and after replacement. Leave `--admin-user` out only for an empty database whose first-admin setup is still open.
+
+If no active backup administrator password is known, recover a controlled candidate copy before replacing the active database: use `backup-cli restore-disposable` into an empty temporary data root, run the local `admin-recovery` CLI against that candidate root for an existing active administrator, create a new encrypted backup from the repaired candidate, then copy its artifact and metadata pair into the target backup directory. Complete the normal restore using that new administrator password. During preparation, this leaves the active database and original backup intact and creates a new encrypted generation. Do not use the recovery CLI against the protected legacy `attendance.db`.
+
+Legacy plaintext backups are refused unless `ALLOW_LEGACY_PLAINTEXT_BACKUPS=true`. Password recovery is performed on an isolated candidate copy; it is never silently applied by the API.
 
 ## Recovery objectives and limitations (P4-08)
 
@@ -79,7 +83,7 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 | Recovery time objective (RTO) | No fixed guarantee. It depends on database size, disk speed, key availability, and operator action. The disposable-VM release-rollback drill (backup, upgrade, rollback, restore) completed in 146 seconds end to end on synthetic data; treat that only as a drill measurement. |
 | Retention | Newest 10 complete generations; the newest backup and a restore source are protected; one audit line per eviction; manual deletion remains available. |
 | Backup durability | Backups are written under the configured data root on the same host. Copy encrypted backups off-host to survive host or disk loss. |
-| Verification | Every created backup is integrity-checked and encrypted; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, identity columns, and an active administrator or open first-admin setup. CLI restore verifies encrypted artifact identity/checksum/authentication, SQLite integrity, quick-check, foreign keys, schema, and administrator/setup eligibility before replacement and again after replacement. Neither path validates password hashes. Periodic restore rehearsal remains an operator responsibility. |
+| Verification | Every created backup is integrity-checked and encrypted; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, identity columns, and an active, unlocked administrator with a runtime-parseable password hash or open first-admin setup. API restore verifies one backup administrator password before and after replacement. CLI restore verifies encrypted artifact identity/checksum/authentication, SQLite integrity, quick-check, foreign keys, schema, administrator/setup eligibility, and an unlocked administrator credential before and after replacement. Periodic restore rehearsal remains an operator responsibility. |
 
 Limitations:
 
@@ -98,10 +102,11 @@ Limitations:
 - **A protected restore source can exceed the visible limit.** The status count can
   read 11 while a restore source is protected; the next successful backup re-applies
   the limit.
-- **Restore eligibility does not verify credentials.** It requires an active,
-  addressable administrator record, or an empty database with first-admin setup
-  incomplete. It does not test password hashes; use the local admin-recovery
-  procedure to reset credentials for an existing active account.
+- **Preflight cannot verify operator knowledge of credentials.** It verifies
+  that an active unlocked administrator's hash is parseable by the runtime. API and CLI
+  restore then require a password that matches an active, unlocked administrator in the
+  selected backup. Use the isolated-candidate recovery procedure above when the
+  backup password is unknown.
 - **Some restore impact fields are placeholders.** The preflight reports
   `source_is_older: false` and `possible_data_loss: false` without deriving
   those values. Do not treat them as an authoritative impact assessment.
@@ -125,9 +130,9 @@ flowchart TD
   Verify -->|"failure"| Rollback["Restore safety copy and verify original"]
 ```
 
-An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, administrator/setup eligibility remains valid, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy.
+An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, administrator/setup eligibility remains valid, the selected backup's administrator credential still verifies, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy.
 
-The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, format version, algorithm, key ID, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It validates SQLite integrity, quick-check, foreign keys, required tables, current schema, and administrator/setup eligibility before replacement and again after replacement. An active administrator must have `role='admin'`, `is_active=1`, and a non-empty trimmed username no longer than 255 characters. A database with no users remains eligible only while first-admin setup is incomplete. Password hashes are not checked. When an active database exists, the CLI first creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement validation failure triggers rollback. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. The CLI does not revoke restored sessions. Explicitly opted-in legacy plaintext receives the SQLite checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Artifact/path/manifest/decryption failures occur before restore audit emission; later restore outcomes are audit-attempted, and audit-write failure does not undo a committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
+The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, format version, algorithm, key ID, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It validates SQLite integrity, quick-check, foreign keys, required tables, current schema, and administrator/setup eligibility before replacement and again after replacement. An active administrator must have `role='admin'`, `is_active=1`, an addressable username no longer than 255 characters, an unlocked account, and a password hash accepted by the runtime. The operator must also provide the matching username with `--admin-user` and its password through the hidden prompt. A database with no users remains eligible only while first-admin setup is incomplete. When an active database exists, the CLI validates the candidate credential before it creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement failure triggers rollback. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. The CLI does not revoke restored sessions. Explicitly opted-in legacy plaintext receives the SQLite and credential checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Artifact/path/manifest/decryption failures occur before restore audit emission; later restore outcomes are audit-attempted, and audit-write failure does not undo a committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
 
 ## Audit lifecycle
 

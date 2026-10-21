@@ -1,6 +1,7 @@
 import { expect, it } from "bun:test";
+import { spawnSync as spawnCommand } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { Database } from "bun:sqlite";
@@ -13,6 +14,7 @@ import { createAccountFixture } from "./fixtures/accounts";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const cli = join(root, "apps/api/src/backup-cli.ts");
+const adminRecoveryCli = join(root, "apps/api/src/cli/admin-recovery.ts");
 const artifactPattern = /^backup_.*\.sqlite3$/;
 
 it("creates a pre-restore safety snapshot with an audit line and preserves the original database on failure", () => {
@@ -250,6 +252,166 @@ it("restores an empty CLI candidate while first-admin setup is still open", () =
     expect(restored.client.query("SELECT completed FROM first_admin_setup_state WHERE id = 1").get()).toEqual({ completed: 0 });
     restored.close();
   } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("requires a verified backup administrator credential before making the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-credentials-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("UPDATE users SET password_hash = ? WHERE username = 'golden-admin'", [Bun.password.hashSync("synthetic-backup-admin-password", "argon2id")]);
+    candidate.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    writeFileSync(databasePath, original);
+    const activeBefore = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env))).toThrow("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+
+    const restored = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], { cwd: root, env, input: "synthetic-backup-admin-password\n" });
+    expect(restored.status).toBe(0);
+    expect(restored.stdout?.toString()).toContain("SQLite restore completed:");
+    const verified = openDatabase(databasePath, { readonly: true });
+    const hash = String((verified.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("synthetic-backup-admin-password", hash)).toBe(true);
+    verified.close();
+    const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8");
+    expect(audit).not.toContain("synthetic-backup-admin-password");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("installs an administrator-backed backup when no active database exists", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-initial-admin-restore-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    rmSync(databasePath);
+
+    const restored = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], {
+      cwd: root,
+      env,
+      input: "golden-admin-pass-1\n",
+    });
+    expect(restored.status).toBe(0);
+    expect(restored.stdout?.toString()).toContain(`SQLite restore completed: ${databasePath}`);
+    const database = openDatabase(databasePath, { readonly: true });
+    expect(database.client.query("SELECT username FROM users WHERE role = 'admin' AND is_active = 1").get()).toEqual({ username: "golden-admin" });
+    database.close();
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("refuses a locked administrator backup before creating the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-locked-admin-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const database = openDatabase(databasePath);
+    database.client.run("UPDATE users SET locked_until = ? WHERE username = 'golden-admin'", [new Date(Date.now() + 60_000).toISOString().replace("T", " ").replace("Z", "")]);
+    database.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const active = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env), undefined, { username: "golden-admin", password: "golden-admin-pass-1" })).toThrow("RESTORE_ADMINISTRATOR_REQUIRED");
+    expect(readFileSync(databasePath).equals(active)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("supports credential recovery on an isolated candidate before re-encrypted restore", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-"));
+  const candidateRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-candidate-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (environment: NodeJS.ProcessEnv, ...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = command(env, "backup");
+    expect(backup.exitCode).toBe(0);
+    const sourceFilename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const disposable = command(env, "restore-disposable", sourceFilename, candidateRoot);
+    expect(disposable.exitCode).toBe(0);
+
+    const candidateDatabasePath = join(candidateRoot, "operatoros.sqlite");
+    const candidateEnv = { ...env, OPERATOROS_DATA_DIR: candidateRoot, DATABASE_URL: `sqlite:///${candidateDatabasePath}` };
+    const recovery = spawnCommand(process.execPath, [adminRecoveryCli, "--user", "golden-admin"], {
+      cwd: root,
+      env: candidateEnv,
+      input: "recovered-synthetic-admin-password\nrecovered-synthetic-admin-password\n",
+    });
+    expect(recovery.status).toBe(0);
+    expect(recovery.stdout?.toString()).toContain("Admin recovery completed");
+    const recoveredCandidate = openDatabase(candidateDatabasePath, { readonly: true });
+    const recoveredHash = String((recoveredCandidate.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("recovered-synthetic-admin-password", recoveredHash)).toBe(true);
+    recoveredCandidate.close();
+
+    const reencrypted = command(candidateEnv, "backup");
+    expect(reencrypted.exitCode).toBe(0);
+    const candidateFilename = basename(reencrypted.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    mkdirSync(backupDir, { recursive: true });
+    copyFileSync(join(candidateRoot, "backups", candidateFilename), join(backupDir, candidateFilename));
+    copyFileSync(join(candidateRoot, "backups", `${candidateFilename}.meta.json`), join(backupDir, `${candidateFilename}.meta.json`));
+
+    restoreCli(candidateFilename, loadConfig(env), undefined, { username: "golden-admin", password: "recovered-synthetic-admin-password" });
+    const restored = openDatabase(databasePath, { readonly: true });
+    const passwordHash = String((restored.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("recovered-synthetic-admin-password", passwordHash)).toBe(true);
+    restored.close();
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+    rmSync(candidateRoot, { recursive: true, force: true });
+  }
 });
 
 it("rejects manifest identity, checksum, and envelope-authentication mismatches before changing the active database", () => {

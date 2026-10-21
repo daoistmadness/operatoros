@@ -19,6 +19,8 @@ vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn() }));
 const filename = "backup_2026-07-13T00-00-00Z.sqlite3";
 const restoreBody: RestoreRequest = {
   current_password: "not-persisted",
+  candidate_admin_username: "backup-admin",
+  candidate_admin_password: "synthetic-backup-password",
   confirmation_filename: filename,
   confirmation_phrase: "RESTORE_DATABASE",
   acknowledge_complete_replacement: true,

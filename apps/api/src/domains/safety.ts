@@ -6,7 +6,7 @@ import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
-import { restoreIdentityEligible } from "../auth/admin-state";
+import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit } from "./restore-audit";
@@ -71,7 +71,7 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean } {
+function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null } {
   const database = new Database(path, { readonly: true });
   try {
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
@@ -86,12 +86,13 @@ function inspectDatabase(path: string): { integrity: string; quick: string; fore
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
-    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentityEligible(database) };
+    const restoreIdentity = checkRestoreIdentity ? restoreIdentityState(database) : null;
+    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
   } finally { database.close(); }
 }
 
-function validateSnapshot(path: string, sourceTables: Set<string>): ReturnType<typeof inspectDatabase> {
-  const value = inspectDatabase(path);
+function validateSnapshot(path: string, sourceTables: Set<string>, checkRestoreIdentity = true): ReturnType<typeof inspectDatabase> {
+  const value = inspectDatabase(path, checkRestoreIdentity);
   if (value.integrity !== "ok" || value.quick !== "ok") throw new Error("Backup integrity validation failed.");
   const missing = REQUIRED_TABLES.filter((table) => !value.tables.has(table));
   if (missing.length > 0 || (sourceTables.has("student_subject_grades") && !value.tables.has("student_subject_grades"))) throw new Error(`Backup is missing required operational tables: ${missing.join(", ")}`);
@@ -180,7 +181,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     writeFileSync(temporary, bytes);
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
-    validateSnapshot(temporary, sourceTables);
+    validateSnapshot(temporary, sourceTables, false);
     const encrypted = encryptBackup(readFileSync(temporary), config.backupEncryption);
     writeFileSync(encryptedTemporary, encrypted, { mode: 0o600 });
     chmodSync(encryptedTemporary, 0o600);
@@ -212,10 +213,15 @@ function backupSequence(filename: string): number {
   const match = /_(\d+)\.sqlite3$/.exec(filename);
   return match ? Number(match[1]) : 0;
 }
-/** Newest first. Same-second generations are ordered by their `_N` filename suffix, which `nextFilename` assigns monotonically. */
+function backupTimestamp(filename: string): string {
+  return /^backup_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)(?:_\d+)?\.sqlite3$/.exec(filename)?.[1] ?? "";
+}
+/** Newest first. Filename timestamp and suffix break ties when metadata timestamps have second precision. */
 function compareBackupDescending(a: Row, b: Row): number {
   const byCreatedAt = String(b.created_at).localeCompare(String(a.created_at));
   if (byCreatedAt !== 0) return byCreatedAt;
+  const byFilenameTimestamp = backupTimestamp(String(b.filename)).localeCompare(backupTimestamp(String(a.filename)));
+  if (byFilenameTimestamp !== 0) return byFilenameTimestamp;
   const bySequence = backupSequence(String(b.filename)) - backupSequence(String(a.filename));
   return bySequence !== 0 ? bySequence : String(b.filename).localeCompare(String(a.filename));
 }
@@ -329,14 +335,14 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
       if (manifest.encrypted !== true || manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
-    const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context)); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
+    const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
     const same = plaintextChecksum === activeChecksum; const compatible = source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
       ...(same ? ["source_identical_to_active"] : []),
       ...(classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : []),
       ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
-      ...(!source.restoreIdentityEligible ? ["active_administrator_missing"] : []),
+      ...(source.restoreIdentityBlockingReason ? [source.restoreIdentityBlockingReason] : []),
     ];
     const sourceStudents = source.counts.students ?? 0;
     const sourceAttendance = source.counts.attendance ?? 0;
@@ -350,6 +356,12 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
 
 function missingRestoreFields(body: Row): string[] { return ["acknowledge_complete_replacement", "acknowledge_session_revocation", "acknowledge_restart_required", "acknowledge_safety_backup", "expected_source_sha256", "expected_active_sha256"].filter((key) => body[key] === undefined); }
 function restoreValidationError(set: any, fields: string[]): { detail: unknown } { set.status = 422; return { detail: fields.map((field) => ({ loc: ["body", field], msg: "Field required", type: "missing" })) }; }
+
+function restoredAdministratorCredentialsMatch(client: Database, body: Row, operator: { username: string }): boolean {
+  return isFirstAdminSetupRequired(client) ||
+    restoreAdministratorCredentialMatches(client, operator.username, body.current_password) ||
+    restoreAdministratorCredentialMatches(client, body.candidate_admin_username, body.candidate_admin_password);
+}
 
 function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, operator: { id: number; username: string }): Row {
   if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
@@ -370,17 +382,22 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   };
   try {
     try {
-      snapshot = createBackup(context, config, "pre_restore_auto", filename);
       decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => {
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
-        if (!candidateInspection.restoreIdentityEligible) throw new Error("Restore candidate has no active administrator and first-run setup is closed.");
+        if (candidateInspection.restoreIdentityEligible !== true) throw new Error("Restore candidate has no eligible active administrator and first-run setup is closed.");
         if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
+        const candidateDatabase = new Database(candidate, { readonly: true });
+        try {
+          if (!restoredAdministratorCredentialsMatch(candidateDatabase, body, operator)) throw Object.assign(new Error("A password for an active administrator in the selected backup could not be verified."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
+        } finally { candidateDatabase.close(); }
         return {};
       });
+      snapshot = createBackup(context, config, "pre_restore_auto", filename);
     } catch (error) {
       recordFailure(error);
+      if ((error as Row)?.code === "RESTORE_ADMIN_CREDENTIAL_REQUIRED") throw Object.assign(new Error("Restore was refused because no active administrator credential from the selected backup was verified; the active database is unchanged."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
       throw Object.assign(new Error("Restore failed before replacing the active database; the active database is unchanged."), { status: 500, code: "RESTORE_ROLLED_BACK" });
     }
     const swap = performRestoreSwap({
@@ -392,7 +409,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
-        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible) throw new Error("Post-restore integrity validation failed.");
+        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client as unknown as Database, body, operator)) throw new Error("Post-restore integrity validation failed.");
         audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename });
         appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;
@@ -422,7 +439,7 @@ class Scheduler {
 }
 export const backupScheduler = new Scheduler();
 
-const restoreBody = t.Object({ current_password: t.Optional(t.String()), confirmation_filename: t.Optional(t.String()), confirmation_phrase: t.Optional(t.String()), acknowledge_complete_replacement: t.Optional(t.Boolean()), acknowledge_session_revocation: t.Optional(t.Boolean()), acknowledge_restart_required: t.Optional(t.Boolean()), acknowledge_safety_backup: t.Optional(t.Boolean()), expected_source_sha256: t.Optional(t.String()), expected_active_sha256: t.Optional(t.String()) });
+const restoreBody = t.Object({ current_password: t.Optional(t.String()), candidate_admin_username: t.Optional(t.String({ minLength: 1, maxLength: 255 })), candidate_admin_password: t.Optional(t.String({ minLength: 1, maxLength: 1024 })), confirmation_filename: t.Optional(t.String()), confirmation_phrase: t.Optional(t.String()), acknowledge_complete_replacement: t.Optional(t.Boolean()), acknowledge_session_revocation: t.Optional(t.Boolean()), acknowledge_restart_required: t.Optional(t.Boolean()), acknowledge_safety_backup: t.Optional(t.Boolean()), expected_source_sha256: t.Optional(t.String()), expected_active_sha256: t.Optional(t.String()) });
 
 export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfig): void {
   app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } });

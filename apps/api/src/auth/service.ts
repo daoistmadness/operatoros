@@ -9,6 +9,7 @@ import { capabilitiesForRole } from "./capabilities";
 import { DEFAULT_LOGIN_RATE_LIMIT, type LoginRateLimitConfig, normalizeLoginAccount } from "./rate-limit";
 import { isAllowedOrigin } from "../security/http";
 import { isFirstAdminSetupRequired } from "./admin-state";
+import { isAccountUnlocked, parseSqliteDate } from "./sqlite-date";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
 export const SETUP_COOKIE_NAME = "operatoros_setup_authorization";
@@ -101,13 +102,6 @@ function futureSqlite(milliseconds: number): string {
   return new Date(Date.now() + milliseconds).toISOString().replace("T", " ").replace("Z", "");
 }
 
-function parseSqliteDate(value: string | null): number | null {
-  if (!value) return null;
-  const normalized = value.includes("T") ? value : `${value.replace(" ", "T")}Z`;
-  const time = Date.parse(normalized);
-  return Number.isNaN(time) ? null : time;
-}
-
 function digest(token: string, config: AuthConfig): string {
   return createHmac("sha256", requireSecret(config)).update(token).digest("hex");
 }
@@ -193,8 +187,7 @@ export async function authenticate(
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "inactive_account" });
     throw new Error(GENERIC_LOGIN_ERROR);
   }
-  const lockedUntil = parseSqliteDate(user.locked_until);
-  if (lockedUntil !== null && lockedUntil > Date.now()) {
+  if (!isAccountUnlocked(user.locked_until)) {
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "account_locked" });
     throw new Error(GENERIC_LOGIN_ERROR);
   }

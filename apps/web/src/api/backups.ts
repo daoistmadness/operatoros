@@ -89,6 +89,8 @@ export interface RestorePreflight {
 
 export interface RestoreRequest {
   current_password: string;
+  candidate_admin_username?: string;
+  candidate_admin_password?: string;
   confirmation_filename: string;
   confirmation_phrase: string;
   acknowledge_complete_replacement: boolean;

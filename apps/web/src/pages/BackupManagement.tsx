@@ -125,6 +125,8 @@ export const canExecuteRestore = ({
   confirmationFilename,
   confirmationPhrase,
   password,
+  candidateAdminUsername,
+  candidateAdminPassword,
   acknowledgements,
   eligible,
   busy,
@@ -133,6 +135,8 @@ export const canExecuteRestore = ({
   confirmationFilename: string;
   confirmationPhrase: string;
   password: string;
+  candidateAdminUsername: string;
+  candidateAdminPassword: string;
   acknowledgements: Acknowledgements;
   eligible: boolean;
   busy: boolean;
@@ -140,6 +144,7 @@ export const canExecuteRestore = ({
   eligible &&
   !busy &&
   password.length > 0 &&
+  Boolean(candidateAdminUsername.trim()) === Boolean(candidateAdminPassword) &&
   confirmationFilename === filename &&
   confirmationPhrase === RESTORE_PHRASE &&
   allAcknowledged(acknowledgements);
@@ -347,6 +352,8 @@ export function RestoreWizard({
   const [preflight, setPreflight] = useState<RestorePreflight | null>(null);
   const [acknowledgements, setAcknowledgements] = useState(EMPTY_ACKNOWLEDGEMENTS);
   const [password, setPassword] = useState("");
+  const [candidateAdminUsername, setCandidateAdminUsername] = useState("");
+  const [candidateAdminPassword, setCandidateAdminPassword] = useState("");
   const [confirmationFilename, setConfirmationFilename] = useState("");
   const [confirmationPhrase, setConfirmationPhrase] = useState("");
   const [result, setResult] = useState<RestoreResult | null>(null);
@@ -358,6 +365,8 @@ export function RestoreWizard({
     confirmationFilename,
     confirmationPhrase,
     password,
+    candidateAdminUsername,
+    candidateAdminPassword,
     acknowledgements,
     eligible,
     busy,
@@ -379,6 +388,10 @@ export function RestoreWizard({
     setError(null);
     const body: RestoreRequest = {
       current_password: password,
+      ...(candidateAdminUsername.trim() && candidateAdminPassword ? {
+        candidate_admin_username: candidateAdminUsername,
+        candidate_admin_password: candidateAdminPassword,
+      } : {}),
       confirmation_filename: confirmationFilename,
       confirmation_phrase: confirmationPhrase,
       acknowledge_complete_replacement: acknowledgements.replace,
@@ -405,7 +418,9 @@ export function RestoreWizard({
       }
     } finally {
       body.current_password = "";
+      body.candidate_admin_password = "";
       setPassword("");
+      setCandidateAdminPassword("");
     }
   };
 
@@ -482,6 +497,15 @@ export function RestoreWizard({
               <FormField id="restore-password">
                 <FieldLabel>Current password</FieldLabel>
                 <Input id="restore-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+              </FormField>
+              <p className="text-sm text-slate-600">If the selected backup uses a different administrator account or password, provide one active administrator credential from that backup. It is checked before the safety snapshot and database replacement. Leave both fields empty when the current account password still works in the backup. An open first-admin setup needs no backup credential.</p>
+              <FormField id="restore-candidate-admin-username">
+                <FieldLabel>Administrator username in backup (optional)</FieldLabel>
+                <Input id="restore-candidate-admin-username" autoComplete="off" value={candidateAdminUsername} onChange={(event) => setCandidateAdminUsername(event.target.value)} />
+              </FormField>
+              <FormField id="restore-candidate-admin-password">
+                <FieldLabel>Administrator password in backup (optional)</FieldLabel>
+                <Input id="restore-candidate-admin-password" type="password" autoComplete="off" value={candidateAdminPassword} onChange={(event) => setCandidateAdminPassword(event.target.value)} />
               </FormField>
               <FormField id="restore-filename">
                 <FieldLabel>Exact backup filename</FieldLabel>
