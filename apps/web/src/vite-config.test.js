@@ -39,6 +39,17 @@ it('advertises an HTTPS reverse proxy without changing the listening port', asyn
   expect(config.server.allowedHosts).not.toBe(true);
 });
 
+it('transforms JSX in source .js files with the Vite Oxc transformer', async () => {
+  const config = await load();
+  const jsxPlugin = config.plugins.at(-1);
+  expect(config.optimizeDeps.rolldownOptions.moduleTypes).toEqual({ '.js': 'jsx' });
+  const transformed = await jsxPlugin.transform('export const Label = () => <span>Hi</span>', '/repo/apps/web/src/Label.js');
+  expect(jsxPlugin.name).toBe('treat-js-files-as-jsx');
+  expect(transformed.code).toContain('react/jsx-runtime');
+  expect(transformed.code).toContain('"span"');
+  expect(await jsxPlugin.transform('export const value = 1', '/repo/apps/web/src/Label.ts')).toBeNull();
+});
+
 it.each(['0', '65536', '1.5', 'invalid'])('rejects invalid client port %s', async (port) => {
   vi.stubEnv('VITE_HMR_CLIENT_PORT', port);
   await expect(load()).rejects.toThrow('VITE_HMR_CLIENT_PORT');

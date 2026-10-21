@@ -2,6 +2,7 @@
   "name": "@operatoros/web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
     "bun": ">=1.4.3 <2"
   },
@@ -35,14 +36,14 @@
     "@types/node": "26.4.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "4.7.0",
+    "@vitejs/plugin-react": "6.1.2",
     "autoprefixer": "10.4.27",
     "happy-dom": "20.10.6",
     "openapi-typescript": "7.13.0",
     "postcss": "8.5.23",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
-    "vite": "6.4.4",
+    "vite": "8.3.4",
     "vitest": "4.1.11"
   },
   "scripts": {

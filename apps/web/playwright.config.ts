@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 function runtimeBaseUrl(): string {
   const explicitUrl = process.env.OPERATOROS_E2E_FRONTEND_URL;
@@ -17,7 +18,7 @@ function runtimeBaseUrl(): string {
   throw new Error("OperatorOS runtime state did not provide the selected frontend URL");
 }
 
-const repositoryRoot = path.resolve(__dirname, "../..");
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const resultsRoot = path.join(repositoryRoot, "e2e-results");
 
 export default defineConfig({
