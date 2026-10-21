@@ -273,11 +273,11 @@
       "snapshot": {
         "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
       },
-      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
+      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
       "outcome": "no-change",
-      "reason": "CLI concurrency locking does not change Elysia framework guidance or authoring instructions.",
+      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 51d6b4df767a669d65f03d703e5160fd63055102"
+        "Changed: docs/security/backup-restore.md at 77d939cc6c56f57f5fb38398002f01cc17247158"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -378,11 +378,11 @@
       "snapshot": {
         "apps/api/src/backup-cli.ts": "fa8c3ea5f7b74183b2b1a5ff703d4eedefda1024eb7b5c05ad0b7b4d8b3d1283"
       },
-      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
+      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
       "outcome": "no-change",
-      "reason": "The final CLI lock wrapper remains shell/process coordination and does not change Elysia framework guidance.",
+      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 51d6b4df767a669d65f03d703e5160fd63055102"
+        "Changed: apps/api/src/backup-cli.ts at 77d939cc6c56f57f5fb38398002f01cc17247158"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -390,11 +390,11 @@
       "snapshot": {
         "apps/api/tests/backup-cli-restore-safety.test.ts": "2a18c486cb0ef17eabd25ae59e947c456353f9496d84dcc0a18a190f55f8e80b"
       },
-      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
+      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
       "outcome": "no-change",
-      "reason": "CLI concurrency locking does not change Elysia framework guidance or authoring instructions.",
+      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 51d6b4df767a669d65f03d703e5160fd63055102"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 77d939cc6c56f57f5fb38398002f01cc17247158"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
