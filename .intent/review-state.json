@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "727d5180732e3a8ce17ec94343d6a3a3138294a97a70c788b06eb31d2be3223e",
+      "fingerprint": "5e98546282797dbb7f6861ff4813a3360e5e3c0443d9416cda285a4c4535269b",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "2b05cc07d68f099da4c1079ee7ad65fcd408bd32c164aa8157644c27fa9cc07d"
+        "apps/api/src/backup-cli.ts": "38eee829534f92655acb2e229fd73d95f70c45722986c1892c6276d21f29446d"
       },
-      "head": "06a7f66e58136199064f5dd8dbbd00add784a007",
+      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
       "outcome": "no-change",
-      "reason": "The lock re-entry fix replaces a forgeable fixed environment flag with a per-invocation token, and a held-flock regression test now verifies the old flag cannot bypass serialization.",
+      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 06a7f66e58136199064f5dd8dbbd00add784a007"
+        "Changed: apps/api/src/backup-cli.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "62cbaedc348d289e9ee95b6115b03474543fc9ec8c1bce9b1633ae657292edc5",
+      "fingerprint": "ab1ca09ca19ac392ac4cbdc0ff38ea5d567f09994416f69a899000cf5242ba6f",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "42bab8fb14400e1802caca3c98db3cbb9a16d806a6a1b696bdb881c922aa4370"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "d588846bdf071494874b8b36036507d3d04172541687f008053c19c0afd5abc5"
       },
-      "head": "06a7f66e58136199064f5dd8dbbd00add784a007",
+      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
       "outcome": "no-change",
-      "reason": "The lock re-entry fix replaces a forgeable fixed environment flag with a per-invocation token, and a held-flock regression test now verifies the old flag cannot bypass serialization.",
+      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 06a7f66e58136199064f5dd8dbbd00add784a007"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {

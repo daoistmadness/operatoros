@@ -304,14 +304,27 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   } finally { if (directory) rmSync(directory, { recursive: true, force: true }); }
 }
 
+export async function runBackupCli(args: string[]): Promise<void> {
+  const [action, selected, targetDir] = args;
+  try {
+    if (action === "backup") backup();
+    else if (action === "restore" && selected) {
+      const usernameIndex = args.indexOf("--admin-user");
+      const username = usernameIndex >= 0 ? args[usernameIndex + 1] : undefined;
+      const validUsername = Boolean(username && username.trim() === username && username.length <= 255);
+      const password = validUsername ? await promptHidden(`Password for backup administrator '${username}': `) : "";
+      restore(selected, config(), nodeRestoreFileSystem, usernameIndex >= 0 ? { username: username ?? "", password } : undefined);
+    }
+    else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
+    else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
+    else throw new Error("Usage: backup-cli.ts backup | restore <backup-file> [--admin-user <username>] | restore-disposable <backup-file> <empty-data-dir> | migrate-existing <backup-file> <data-dir>");
+  } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+}
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
-  const lockTokenIndex = args.indexOf("--operatoros-backup-cli-lock-token");
-  const lockToken = lockTokenIndex >= 0 ? args[lockTokenIndex + 1] : undefined;
-  const locked = Boolean(lockToken && process.env.OPERATOROS_BACKUP_CLI_LOCK_TOKEN === lockToken);
-  if (lockTokenIndex >= 0) args.splice(lockTokenIndex, 2);
-  const [action, selected, targetDir] = args;
-  if (!locked && ["backup", "restore", "restore-disposable", "migrate-existing"].includes(action ?? "")) {
+  const [action, selected] = args;
+  if (["backup", "restore", "restore-disposable", "migrate-existing"].includes(args[0] ?? "")) {
     let value: ReturnType<typeof config> | undefined;
     try {
       value = config();
@@ -319,11 +332,12 @@ if (import.meta.main) {
       const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
-      const internalLockToken = randomUUID();
+      const moduleUrl = pathToFileURL(resolve(process.argv[1]!)).href;
+      const runner = `import(${JSON.stringify(moduleUrl)}).then(({ runBackupCli }) => runBackupCli(${JSON.stringify(args)}));`;
       const result = Bun.spawnSync([
         "flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
-        process.execPath, resolve(process.argv[1]!), "--operatoros-backup-cli-lock-token", internalLockToken, ...args,
-      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe", env: { ...process.env, OPERATOROS_BACKUP_CLI_LOCK_TOKEN: internalLockToken } });
+        process.execPath, "-e", runner,
+      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe" });
       if (result.exitCode === 75) {
         if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_OPERATION_BUSY");
         else if (action === "backup") {
@@ -358,19 +372,5 @@ if (import.meta.main) {
       process.exit(1);
     }
   }
-  await (async () => {
-    try {
-      if (action === "backup") backup();
-      else if (action === "restore" && selected) {
-        const usernameIndex = process.argv.indexOf("--admin-user");
-        const username = usernameIndex >= 0 ? process.argv[usernameIndex + 1] : undefined;
-        const validUsername = Boolean(username && username.trim() === username && username.length <= 255);
-        const password = validUsername ? await promptHidden(`Password for backup administrator '${username}': `) : "";
-        restore(selected, config(), nodeRestoreFileSystem, usernameIndex >= 0 ? { username: username ?? "", password } : undefined);
-      }
-      else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
-      else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
-      else throw new Error("Usage: backup-cli.ts backup | restore <backup-file> [--admin-user <username>] | restore-disposable <backup-file> <empty-data-dir> | migrate-existing <backup-file> <data-dir>");
-    } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
-  })();
+  void runBackupCli(args);
 }

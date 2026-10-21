@@ -237,9 +237,9 @@ it("refuses a concurrent CLI restore before changing the active database and aud
     await Bun.sleep(100);
     expect(Bun.spawnSync(["flock", "--nonblock", "--conflict-exit-code", "75", lockPath, "true"]).exitCode).toBe(75);
 
-    const refused = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], {
+    const refused = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin", "--operatoros-backup-cli-lock-token", "spoofed"], {
       cwd: root,
-      env: { ...env, OPERATOROS_BACKUP_CLI_LOCKED: "1" },
+      env: { ...env, OPERATOROS_BACKUP_CLI_LOCKED: "1", OPERATOROS_BACKUP_CLI_LOCK_TOKEN: "spoofed" },
       input: "golden-admin-pass-1\n",
     });
     expect(refused.status).toBe(1);
