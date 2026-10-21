@@ -179,6 +179,7 @@ export function BackupStatusPanel({ status }: { status: BackupStatus }) {
     ["Health", HEALTH_LABELS[status.health_state]],
     ["Last successful", status.last_successful_backup_at || "Not available"],
     ["Backup age", formatAge(status.backup_age_seconds)],
+    ["Latest attempt", status.latest_backup_outcome || "Unknown"],
     ["Last failed", status.last_failed_backup_at || "None recorded"],
     ["Failure", status.last_failure_code || status.last_failure_message || "None"],
     ["Backups retained", `${status.backup_count} of ${status.retention_limit}`],
@@ -290,7 +291,7 @@ export function BackupList({
   );
 }
 
-function Comparison({ preflight }: { preflight: RestorePreflight }) {
+export function Comparison({ preflight }: { preflight: RestorePreflight }) {
   const rows = [
     ["Checksum", preflight.active.active_sha256.slice(0, 12), preflight.source.sha256.slice(0, 12), "—"],
     ["Schema", preflight.active.active_schema_version, preflight.source.schema_version, "—"],
@@ -305,12 +306,12 @@ function Comparison({ preflight }: { preflight: RestorePreflight }) {
       </div>
       {rows.map(([label, active, source, delta]) => (
         <div key={String(label)} className="grid grid-cols-4 gap-2 border-b border-slate-200 p-3 text-sm">
-          <strong>{label}</strong><span className="break-all">{active ?? "—"}</span><span className="break-all">{source ?? "—"}</span><span>{delta}</span>
+          <strong>{label}</strong><span className="break-all">{active ?? "Unknown"}</span><span className="break-all">{source ?? "Unknown"}</span><span>{delta ?? "Unknown"}</span>
         </div>
       ))}
-      <Alert variant={preflight.active.possible_data_loss ? "danger" : "information"} className="mt-5">
+      <Alert variant={preflight.active.possible_data_loss === false ? "information" : "warning"} className="mt-5">
         <strong>{preflight.impact_classification}</strong>
-        <p className="mt-1">Source age: {formatAge(preflight.source.age_seconds)}. Possible data loss: {preflight.active.possible_data_loss ? "Yes" : "No"}.</p>
+        <p className="mt-1">Backup age: {formatAge(preflight.source.age_seconds)}. Source older than current database: {preflight.active.source_is_older === null ? "Unknown" : preflight.active.source_is_older ? "Yes" : "No"}. Possible data loss: {preflight.active.possible_data_loss === null ? "Unknown" : preflight.active.possible_data_loss ? "Yes" : "No"}.</p>
       </Alert>
     </div>
   );

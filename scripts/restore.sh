@@ -2,11 +2,11 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKUP_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format backup-dir)"
 
 if [ "$#" -gt 0 ]; then
   SELECTED_BACKUP="$1"
 else
+  BACKUP_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format backup-dir)"
   mapfile -t OPTIONS < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'backup_*.sqlite3' -printf '%f\n' | sort -r)
   [ "${#OPTIONS[@]}" -gt 0 ] || { echo "No backups found in $BACKUP_DIR"; exit 1; }
   echo "Choose an encrypted backup file to restore:"
@@ -19,4 +19,8 @@ fi
 echo "Selected backup: $SELECTED_BACKUP"
 read -r -p "Restore this backup and replace the current database? (y/N) " confirm
 [[ "$confirm" =~ ^[yY]$ ]] || { echo "Restore cancelled."; exit 0; }
+read -r -p "Backup administrator username (leave blank only for first-admin setup): " RESTORE_ADMIN_USERNAME
+if [ -n "$RESTORE_ADMIN_USERNAME" ]; then
+  exec bun "$PROJECT_ROOT/apps/api/src/backup-cli.ts" restore "$SELECTED_BACKUP" --admin-user "$RESTORE_ADMIN_USERNAME"
+fi
 exec bun "$PROJECT_ROOT/apps/api/src/backup-cli.ts" restore "$SELECTED_BACKUP"

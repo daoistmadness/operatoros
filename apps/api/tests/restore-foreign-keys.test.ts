@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { Database } from "bun:sqlite";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
-import { decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 import type { RestoreFileSystem } from "../src/domains/restore-transaction";
 import { createAccountFixture } from "./fixtures/accounts";
 
@@ -30,16 +30,6 @@ async function prepare(sourceState: SourceState = "clean") {
   const backupDir = join(root, "backups");
   createAccountFixture(path, "golden-active");
   const database = openDatabase(path);
-  if (sourceState === "check-error") {
-    database.client.run("CREATE TABLE loop101_parent (value INTEGER)");
-    database.client.run("CREATE TABLE loop101_child (parent_id INTEGER REFERENCES loop101_parent(id))");
-    database.client.run("PRAGMA foreign_keys = OFF");
-    database.client.run("INSERT INTO loop101_child VALUES (404)");
-  } else if (sourceState === "violations") {
-    database.client.run("PRAGMA foreign_keys = OFF");
-    database.client.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop101-source-violation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
-  }
-
   const backupEncryption = parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret });
   if (!backupEncryption) throw new Error("synthetic backup encryption config missing");
   let injectPostSwapViolation = false;
@@ -76,6 +66,30 @@ async function prepare(sourceState: SourceState = "clean") {
     const backup = await created.json() as { filename: string };
     database.client.run("INSERT INTO users (username, password_hash, role, is_active, created_at, updated_at, failed_login_attempts) VALUES ('loop101-active-marker', 'synthetic-marker-hash', 'staff', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)");
     const artifactPath = join(backupDir, backup.filename);
+    if (sourceState !== "clean") {
+      const plaintextPath = join(root, "synthetic-source.sqlite");
+      writeFileSync(plaintextPath, decryptBackup(readFileSync(artifactPath), backupEncryption), { mode: 0o600 });
+      const source = new Database(plaintextPath);
+      let plaintext: Uint8Array;
+      try {
+        if (sourceState === "check-error") {
+          source.run("CREATE TABLE loop101_parent (value INTEGER)");
+          source.run("CREATE TABLE loop101_child (parent_id INTEGER REFERENCES loop101_parent(id))");
+          source.run("PRAGMA foreign_keys = OFF");
+          source.run("INSERT INTO loop101_child VALUES (404)");
+        } else {
+          source.run("PRAGMA foreign_keys = OFF");
+          source.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop101-source-violation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+        }
+        plaintext = source.serialize();
+      } finally { source.close(); }
+      const artifact = encryptBackup(plaintext!, backupEncryption);
+      writeFileSync(artifactPath, artifact);
+      const manifestPath = `${artifactPath}.meta.json`;
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
+      writeFileSync(manifestPath, JSON.stringify({ ...manifest, sha256: backupSha256(artifact), plaintext_sha256: backupSha256(plaintext!), backup_file_size_bytes: artifact.length, sqlite_file_size_bytes: plaintext!.length }));
+      rmSync(plaintextPath, { force: true });
+    }
     return {
       root, path, backupDir, artifactPath, database, app, cookie, backup, backupEncryption,
       injectPostSwapViolation: () => { injectPostSwapViolation = true; },
@@ -143,7 +157,6 @@ describe("restore foreign-key validation", () => {
   it("reports actual candidate violations and refuses replacement", async () => {
     const value = await prepare("violations");
     try {
-      expect(value.database.client.query("PRAGMA foreign_key_check").all()).toHaveLength(1);
       const checked = await preflight(value);
       expect(checked.source.foreign_key_violation_count).toBe(1);
       expect(checked.source.restore_eligible).toBe(false);
@@ -167,6 +180,30 @@ describe("restore foreign-key validation", () => {
       expect(response.status).toBe(409);
       expect(activeMarker(value)).toBe(1);
     } finally { cleanup(value); }
+  }, 30000);
+
+  it("marks incomplete schema backups ineligible and leaves missing table counts unknown", async () => {
+    const value = await prepare();
+    const plaintextPath = join(value.root, "incomplete-schema.sqlite");
+    try {
+      const plaintext = decryptBackup(readFileSync(value.artifactPath), value.backupEncryption);
+      writeFileSync(plaintextPath, plaintext, { mode: 0o600 });
+      const incomplete = new Database(plaintextPath);
+      let damaged: Uint8Array;
+      try { incomplete.run("DROP TABLE attendance"); damaged = incomplete.serialize(); } finally { incomplete.close(); }
+      const artifact = encryptBackup(damaged!, value.backupEncryption);
+      writeFileSync(value.artifactPath, artifact);
+      const manifestPath = `${value.artifactPath}.meta.json`;
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
+      writeFileSync(manifestPath, JSON.stringify({ ...manifest, sha256: backupSha256(artifact), plaintext_sha256: backupSha256(damaged!), backup_file_size_bytes: artifact.length, sqlite_file_size_bytes: damaged!.length }));
+
+      const checked = await preflight(value);
+      expect(checked.source.application_compatible).toBe(false);
+      expect(checked.source.restore_eligible).toBe(false);
+      expect(checked.source.blocking_reasons).toContain("schema_incompatible");
+      expect(checked.active.source_attendance).toBe(null);
+      expect(checked.active.attendance_delta).toBe(null);
+    } finally { rmSync(plaintextPath, { force: true }); cleanup(value); }
   }, 30000);
 
   it("uses the validated candidate copy if the source artifact changes afterward", async () => {

@@ -16,6 +16,7 @@ export interface BackupStatus {
   latest_backup_size_bytes: number | null;
   latest_backup_checksum_status: string | null;
   latest_backup_integrity_status: string | null;
+  latest_backup_outcome?: "SUCCESS" | "FAILED" | null;
   latest_backup_schema_version: string | null;
   backup_age_seconds: number | null;
   next_scheduled_backup_at: string | null;
@@ -68,18 +69,18 @@ export interface RestorePreflight {
   active: {
     active_sha256: string;
     active_schema_version: string | null;
-    active_students: number;
-    active_attendance: number;
-    active_enrollments: number;
-    source_students: number;
-    source_attendance: number;
-    source_enrollments: number;
-    student_delta: number;
-    attendance_delta: number;
-    enrollment_delta: number;
+    active_students: number | null;
+    active_attendance: number | null;
+    active_enrollments: number | null;
+    source_students: number | null;
+    source_attendance: number | null;
+    source_enrollments: number | null;
+    student_delta: number | null;
+    attendance_delta: number | null;
+    enrollment_delta: number | null;
     same_database_content: boolean;
-    source_is_older: boolean;
-    possible_data_loss: boolean;
+    source_is_older: boolean | null;
+    possible_data_loss: boolean | null;
     sessions_will_be_revoked: boolean;
     restart_required: boolean;
     pre_restore_backup_will_be_created: boolean;
@@ -146,8 +147,8 @@ export interface BackupSchedulerConfig {
 export interface BackupExecutionHistory {
   id: number; backup_filename: string | null; started_at: string; completed_at: string | null;
   duration_seconds: number | null; status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED" | "CANCELLED";
-  error_message: string | null; trigger_type: "MANUAL" | "SCHEDULED"; size_bytes: number | null;
-  checksum: string | null; integrity_verified: boolean; removed_backups: string[];
+  error_message: string | null; trigger_type: "MANUAL" | "SCHEDULED" | "PRE_RESTORE_AUTO"; size_bytes: number | null;
+  checksum: string | null; integrity_verified: boolean | null; removed_backups: string[];
 }
 
 export const backupApiPath = (suffix = "") => `/api/admin/backups${suffix}`;

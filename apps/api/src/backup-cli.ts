@@ -5,11 +5,12 @@ import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
-import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
 import { appendRestoreAudit } from "./domains/restore-audit";
+import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 
 const root = resolve(import.meta.dir, "../../");
@@ -87,10 +88,7 @@ function restoreDisposable(selected: string, targetDir: string): void {
     writeFileSync(target.databasePath, plaintext, { flag: "wx", mode: 0o600 });
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
-    try {
-      if ((database.query("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check !== "ok" ||
-        database.query("PRAGMA foreign_key_check").all().length) throw new Error("DISPOSABLE_RESTORE_INTEGRITY_FAILED");
-    } finally { database.close(); }
+    try { validateDatabase(database); } finally { database.close(); }
   } catch (error) {
     if (created) for (const suffix of ["", "-wal", "-shm"]) rmSync(`${target.databasePath}${suffix}`, { force: true });
     throw error;
@@ -136,6 +134,18 @@ function validateRestoreSnapshot(path: string, credential?: RestoreAdministrator
   } finally { database.close(); }
 }
 
+function revokeRestoredSessions(path: string): void {
+  const database = openDatabase(path);
+  try {
+    database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
+    if (database.client.query("SELECT 1 FROM sessions WHERE revoked_at IS NULL LIMIT 1").get()) throw new Error("RESTORE_SESSION_REVOCATION_FAILED");
+  } finally { database.close(); }
+}
+
+function assertRestoredSessionsRevoked(database: Database): void {
+  if (database.query("SELECT 1 FROM sessions WHERE revoked_at IS NULL LIMIT 1").get()) throw new Error("RESTORE_SESSION_REVOCATION_FAILED");
+}
+
 function hasPendingRestoreRollback(path: string): boolean {
   const prefix = `${basename(path)}.`;
   return readdirSync(dirname(path)).some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
@@ -149,12 +159,14 @@ function audit(root: string, event: string, values: Record<string, unknown> = {}
 }
 
 /** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
-function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pre_restore_auto"): { filename: string; path: string } {
+function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pre_restore_auto", preserve?: string): { filename: string; path: string } {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled.");
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
   if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
   if (!exists(databasePath)) throw new Error("SQLite database file not found.");
+  const startedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const started = Date.now();
   mkdirSync(backupDir, { recursive: true, mode: 0o700 }); chmodSync(backupDir, 0o700);
   const directory = mkdtempSync(join(backupDir, ".operatoros-backup-cli-")); chmodSync(directory, 0o700);
   const name = nextFilename(backupDir);
@@ -163,13 +175,25 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     const database = openOfflineSnapshot(databasePath);
     let plaintext: Uint8Array;
     let schemaVersion: string;
-    try { schemaVersion = snapshotSchemaVersion(database); plaintext = database.serialize(); } finally { database.close(); }
+    try {
+      validateDatabase(database);
+      if ((database.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("BACKUP_QUICK_CHECK_FAILED");
+      schemaVersion = snapshotSchemaVersion(database);
+      plaintext = database.serialize();
+    } finally { database.close(); }
     const encrypted = encryptBackup(plaintext, value.backupEncryption);
     const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
     const artifact = join(directory, name); const manifest = join(directory, `${name}.meta.json`);
     writeFileSync(artifact, encrypted, { mode: 0o600 }); writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
+    let removedBackups: string[] = [];
+    try { removedBackups = evictBeyondRetention(backupDir, name, preserve); }
+    catch (error) { try { audit(backupDir, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    try { audit(backupDir, "backup_succeeded", { filename: name, trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000, size_bytes: encrypted.length, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); } catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
     return { filename: name, path: join(backupDir, name) };
+  } catch (error) {
+    try { audit(backupDir, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error", failure_code: typeof (error as { code?: unknown })?.code === "string" ? (error as { code: string }).code : error instanceof Error ? error.constructor.name : "Error", trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000 }); } catch { /* audit failure must not mask the backup error */ }
+    throw error;
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }
 
@@ -198,7 +222,8 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   try {
     writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
     validateRestoreSnapshot(target, credential);
-    safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
+    revokeRestoredSessions(target);
+    safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;
     if (safety) {
       let opened: ReturnType<typeof openDatabase> | null = null;
       const close = () => { opened?.close(); opened = null; };
@@ -213,6 +238,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
           if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
           if (!opened || !restoreIdentityEligible(opened.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
           if (!isFirstAdminSetupRequired(opened.client as unknown as Database) && !restoreAdministratorCredentialMatches(opened.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+          assertRestoredSessionsRevoked(opened.client as unknown as Database);
           close();
         },
       });
@@ -226,7 +252,11 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
       }
     } else {
       linkSync(target, databasePath);
-      try { validateRestoreSnapshot(databasePath, credential); }
+      try {
+        validateRestoreSnapshot(databasePath, credential);
+        const restored = openDatabase(databasePath, { readonly: true });
+        try { assertRestoredSessionsRevoked(restored.client as unknown as Database); } finally { restored.close(); }
+      }
       catch (error) { rmSync(databasePath, { force: true }); throw error; }
     }
     completed = true;
