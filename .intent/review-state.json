@@ -245,15 +245,15 @@
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
-      "fingerprint": "b12830d85dd3f80faebe021973721cfd155ad250ea480312bef7134809461388",
+      "fingerprint": "0c6730aba81b20b6bbfc6ae4c3e420e34ff942601275d0e5d1de2e747b9edcc8",
       "snapshot": {
-        "apps/api/tests/restore-rename-failure.test.ts": "a82fde1c16a931e7a688819bc9b6ffc0ec3a2a3f6f74b2226763646e784f206a"
+        "apps/api/tests/restore-rename-failure.test.ts": "999afaa4a25e1bb448fff6735d25575d47d1c2535952a8d64b3c836e5c19dfcc"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "ab16c13b847256b563f16663aeed9f67a6a7091f",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Restore audit assertions extend existing coverage; no guidance change is required.",
       "evidence": [
-        "Changed: apps/api/tests/restore-rename-failure.test.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at ab16c13b847256b563f16663aeed9f67a6a7091f"
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
