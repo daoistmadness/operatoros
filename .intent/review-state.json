@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "35f852590a01f84ca31df98f47eb00814f202ea6439dafae047b5b09679e0b28",
+      "fingerprint": "727d5180732e3a8ce17ec94343d6a3a3138294a97a70c788b06eb31d2be3223e",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "fa8c3ea5f7b74183b2b1a5ff703d4eedefda1024eb7b5c05ad0b7b4d8b3d1283"
+        "apps/api/src/backup-cli.ts": "2b05cc07d68f099da4c1079ee7ad65fcd408bd32c164aa8157644c27fa9cc07d"
       },
-      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
+      "head": "06a7f66e58136199064f5dd8dbbd00add784a007",
       "outcome": "no-change",
-      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
+      "reason": "The lock re-entry fix replaces a forgeable fixed environment flag with a per-invocation token, and a held-flock regression test now verifies the old flag cannot bypass serialization.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 77d939cc6c56f57f5fb38398002f01cc17247158"
+        "Changed: apps/api/src/backup-cli.ts at 06a7f66e58136199064f5dd8dbbd00add784a007"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "858a11b2abd1b33fb159eb4cbfa392feb2c3da5d44d1e3e32d243466414690c1",
+      "fingerprint": "62cbaedc348d289e9ee95b6115b03474543fc9ec8c1bce9b1633ae657292edc5",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "2a18c486cb0ef17eabd25ae59e947c456353f9496d84dcc0a18a190f55f8e80b"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "42bab8fb14400e1802caca3c98db3cbb9a16d806a6a1b696bdb881c922aa4370"
       },
-      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
+      "head": "06a7f66e58136199064f5dd8dbbd00add784a007",
       "outcome": "no-change",
-      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
+      "reason": "The lock re-entry fix replaces a forgeable fixed environment flag with a per-invocation token, and a held-flock regression test now verifies the old flag cannot bypass serialization.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 77d939cc6c56f57f5fb38398002f01cc17247158"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 06a7f66e58136199064f5dd8dbbd00add784a007"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {

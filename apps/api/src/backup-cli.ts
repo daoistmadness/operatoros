@@ -306,7 +306,10 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
-  const locked = process.env.OPERATOROS_BACKUP_CLI_LOCKED === "1";
+  const lockTokenIndex = args.indexOf("--operatoros-backup-cli-lock-token");
+  const lockToken = lockTokenIndex >= 0 ? args[lockTokenIndex + 1] : undefined;
+  const locked = Boolean(lockToken && process.env.OPERATOROS_BACKUP_CLI_LOCK_TOKEN === lockToken);
+  if (lockTokenIndex >= 0) args.splice(lockTokenIndex, 2);
   const [action, selected, targetDir] = args;
   if (!locked && ["backup", "restore", "restore-disposable", "migrate-existing"].includes(action ?? "")) {
     let value: ReturnType<typeof config> | undefined;
@@ -316,10 +319,11 @@ if (import.meta.main) {
       const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
+      const internalLockToken = randomUUID();
       const result = Bun.spawnSync([
         "flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
-        process.execPath, resolve(process.argv[1]!), ...args,
-      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe", env: { ...process.env, OPERATOROS_BACKUP_CLI_LOCKED: "1" } });
+        process.execPath, resolve(process.argv[1]!), "--operatoros-backup-cli-lock-token", internalLockToken, ...args,
+      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe", env: { ...process.env, OPERATOROS_BACKUP_CLI_LOCK_TOKEN: internalLockToken } });
       if (result.exitCode === 75) {
         if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_OPERATION_BUSY");
         else if (action === "backup") {

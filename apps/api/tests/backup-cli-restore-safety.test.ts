@@ -239,7 +239,7 @@ it("refuses a concurrent CLI restore before changing the active database and aud
 
     const refused = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], {
       cwd: root,
-      env,
+      env: { ...env, OPERATOROS_BACKUP_CLI_LOCKED: "1" },
       input: "golden-admin-pass-1\n",
     });
     expect(refused.status).toBe(1);
