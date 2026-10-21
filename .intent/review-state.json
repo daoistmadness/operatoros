@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+  "items": {
+    "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
+      "fingerprint": "852812fdbc35633a09ee46ddccb619d4854fd089b4cb01b91e5de6fd1bb0f958",
+      "snapshot": {
+        ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
+        ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
+        "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
+        "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
+        "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
+        "bun.lock": "7fbf5f1e003bde08dce45036f1216ee17b2317b8f13919941c293a47d7746075",
+        "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
+        "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
+        "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
+        "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
+        "package.json": "aab635a1a17439c4e21f829187c71f8a8d74ff017449a5044fcaf78dc0181c4e",
+        "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
+        "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
+        "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
+        "packages/agent-skills/docs/elysiajs/references/api.md": "dc805ba470597f479316f7e2d77e55fdf951540da00e1aad3406b262c751d75c",
+        "packages/agent-skills/docs/elysiajs/references/better-auth.md": "0ab46126b292c7bc4cddfd9a56b112242823ca93eca571ddf308703c21418bca",
+        "packages/agent-skills/docs/elysiajs/references/cheat-sheet.md": "34f6747f4442cd627612c1b7415f674d65e2b47b1c0281554b4985133cf6737c",
+        "packages/agent-skills/docs/elysiajs/references/composition.md": "f35e5a9cc65f6fc0e2beb8535f477dca66f5e4813438c8a24c303fc9da0971a0",
+        "packages/agent-skills/docs/elysiajs/references/cookie.md": "0df9017d34dc9e03929634f56f0ee992e1834dee1ab8d18629a76673ee1fa7d0",
+        "packages/agent-skills/docs/elysiajs/references/deploy.md": "908ca52a11b212622e6d9331100df4196fe36b7f87d712ae88e3cc43b52fabed",
+        "packages/agent-skills/docs/elysiajs/references/drizzle.md": "0be50a24fcae9d253d7f08bd8b907cdaeea0b9afaa46726ca3de5b50d5c5dc01",
+        "packages/agent-skills/docs/elysiajs/references/eden.md": "48ee097231a96bc40fbe74ba8183201c7b30752a715448e05a96455ea3bc9c85",
+        "packages/agent-skills/docs/elysiajs/references/errors.md": "81f1c50f1b42e1d45bb26ad7ada9350ddf5f0efaaaeee003033c8c164b01deb3",
+        "packages/agent-skills/docs/elysiajs/references/lifecycle.md": "1e5128daf5183d502725d6a527dd0fe490b87f7380e1ea2efba6505da001bbe8",
+        "packages/agent-skills/docs/elysiajs/references/migration.md": "6a143ab0b2229a65f21acdb1605ec934ab27273c343d00bdb3e03d7603f70cc9",
+        "packages/agent-skills/docs/elysiajs/references/observability.md": "573cad8e5c855a590d70c54fbb40e444f8e7dc0b077ece22abc2263e3a0623f0",
+        "packages/agent-skills/docs/elysiajs/references/openapi.md": "fb3a65f106733851e7edcbbb3676e7cd51c81457eeec7c84fc2701405e6a7181",
+        "packages/agent-skills/docs/elysiajs/references/plugins.md": "b186adf85c614752bcb407a6bd4a253f0aeb72b56280dc6c7613c044484568ec",
+        "packages/agent-skills/docs/elysiajs/references/prisma.md": "57d23dfe3e779c8dd9f41ff369d36d315efda4a3417b52f9fa8a20d63c1f6590",
+        "packages/agent-skills/docs/elysiajs/references/project-structure.md": "205a0c205922e510ae4686ee3de1b55976f263f472cc3075edc8324c69997209",
+        "packages/agent-skills/docs/elysiajs/references/react-email.md": "430803f8f2da3a379274c2b2441403510532b4def837fa8beac014bbf9e62241",
+        "packages/agent-skills/docs/elysiajs/references/runtimes.md": "719e1c4b79656836b08093bb8d14755eea28399387fd01cf2279403239abf92a",
+        "packages/agent-skills/docs/elysiajs/references/testing.md": "4c4ffbd8166009939e1a9df0a64928fe02699c873c0ee60f1752632c40836046",
+        "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
+        "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
+        "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
+        "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
+        "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
+      },
+      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+      "outcome": "updated",
+      "reason": "Added the TypeScript package entry to root lint and typecheck plus the workspace ESLint boundary map, so the public package surface is checked by the same repository gates that package the skill.",
+      "evidence": [
+        "OperatorOS baseline 4c855d2d14a1211a2c9d80488630da6fcaa3df7b: apps/api/package.json reports Elysia 1.4.29; AGENTS.md and backend development docs constrain use of the separate generic v2 guidance.",
+        "Package-specific typecheck, root frozen install, workspace architecture check, lint, hk, Intent validation, and base-aware maintainer check passed locally.",
+        "Bun tarball and disposable-consumer checks passed with lifecycle scripts disabled; only the explicit allowlisted skill was discovered and task-scoped load resolved it.",
+        "An independent fresh-agent task and behavioral discovery evaluation remain unverified."
+      ]
+    },
+    "planning:_artifacts": {
+      "fingerprint": "de1033e5eeecc49a1a596effa8c6ba4e308302fbf286ba3d8b9234afc3f8a9ce",
+      "snapshot": {
+        ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
+        ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
+        "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
+        "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
+        "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
+        "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
+        "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
+        "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
+        "bun.lock": "7fbf5f1e003bde08dce45036f1216ee17b2317b8f13919941c293a47d7746075",
+        "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
+        "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
+        "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
+        "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
+        "package.json": "aab635a1a17439c4e21f829187c71f8a8d74ff017449a5044fcaf78dc0181c4e",
+        "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
+        "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
+        "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
+        "packages/agent-skills/docs/elysiajs/references/api.md": "dc805ba470597f479316f7e2d77e55fdf951540da00e1aad3406b262c751d75c",
+        "packages/agent-skills/docs/elysiajs/references/better-auth.md": "0ab46126b292c7bc4cddfd9a56b112242823ca93eca571ddf308703c21418bca",
+        "packages/agent-skills/docs/elysiajs/references/cheat-sheet.md": "34f6747f4442cd627612c1b7415f674d65e2b47b1c0281554b4985133cf6737c",
+        "packages/agent-skills/docs/elysiajs/references/composition.md": "f35e5a9cc65f6fc0e2beb8535f477dca66f5e4813438c8a24c303fc9da0971a0",
+        "packages/agent-skills/docs/elysiajs/references/cookie.md": "0df9017d34dc9e03929634f56f0ee992e1834dee1ab8d18629a76673ee1fa7d0",
+        "packages/agent-skills/docs/elysiajs/references/deploy.md": "908ca52a11b212622e6d9331100df4196fe36b7f87d712ae88e3cc43b52fabed",
+        "packages/agent-skills/docs/elysiajs/references/drizzle.md": "0be50a24fcae9d253d7f08bd8b907cdaeea0b9afaa46726ca3de5b50d5c5dc01",
+        "packages/agent-skills/docs/elysiajs/references/eden.md": "48ee097231a96bc40fbe74ba8183201c7b30752a715448e05a96455ea3bc9c85",
+        "packages/agent-skills/docs/elysiajs/references/errors.md": "81f1c50f1b42e1d45bb26ad7ada9350ddf5f0efaaaeee003033c8c164b01deb3",
+        "packages/agent-skills/docs/elysiajs/references/lifecycle.md": "1e5128daf5183d502725d6a527dd0fe490b87f7380e1ea2efba6505da001bbe8",
+        "packages/agent-skills/docs/elysiajs/references/migration.md": "6a143ab0b2229a65f21acdb1605ec934ab27273c343d00bdb3e03d7603f70cc9",
+        "packages/agent-skills/docs/elysiajs/references/observability.md": "573cad8e5c855a590d70c54fbb40e444f8e7dc0b077ece22abc2263e3a0623f0",
+        "packages/agent-skills/docs/elysiajs/references/openapi.md": "fb3a65f106733851e7edcbbb3676e7cd51c81457eeec7c84fc2701405e6a7181",
+        "packages/agent-skills/docs/elysiajs/references/plugins.md": "b186adf85c614752bcb407a6bd4a253f0aeb72b56280dc6c7613c044484568ec",
+        "packages/agent-skills/docs/elysiajs/references/prisma.md": "57d23dfe3e779c8dd9f41ff369d36d315efda4a3417b52f9fa8a20d63c1f6590",
+        "packages/agent-skills/docs/elysiajs/references/project-structure.md": "205a0c205922e510ae4686ee3de1b55976f263f472cc3075edc8324c69997209",
+        "packages/agent-skills/docs/elysiajs/references/react-email.md": "430803f8f2da3a379274c2b2441403510532b4def837fa8beac014bbf9e62241",
+        "packages/agent-skills/docs/elysiajs/references/runtimes.md": "719e1c4b79656836b08093bb8d14755eea28399387fd01cf2279403239abf92a",
+        "packages/agent-skills/docs/elysiajs/references/testing.md": "4c4ffbd8166009939e1a9df0a64928fe02699c873c0ee60f1752632c40836046",
+        "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
+        "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
+        "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
+        "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
+        "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
+      },
+      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+      "outcome": "updated",
+      "reason": "Updated the cumulative skill package record to include TypeScript lint/typecheck integration and the final package-consumer checks.",
+      "evidence": [
+        "_artifacts/domain_map.yaml and _artifacts/skill_tree.yaml parse with js-yaml 4.3.2; _artifacts/skill_spec.md records scope, package version, sources, checks, and remaining limits.",
+        "Intent maintainer sync and maintainer check passed with zero stale generated files, authoring issues, or pending reviews.",
+        "mise run test:fast, hk lint/architecture, dependency audit, TypeScript package check, documentation checks, and tarball consumer list/load checks passed."
+      ]
+    },
+    "source:packages/agent-skills/src/index.ts": {
+      "fingerprint": "b97c111cdcbbcf52e1d2b814d8730f2d39d51a1db6c0b86a42d3d5cceab346c7",
+      "snapshot": {
+        "packages/agent-skills/src/index.ts": "c2121ce6002d77aea8e5fb7dbba5841c6410297f0fd2765373d064913f19a43f"
+      },
+      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+      "outcome": "out-of-scope",
+      "reason": "This file exports only the AgentSkillId string-literal type. It defines no Elysia behavior or recommendation, so it does not affect the backend skill guidance.",
+      "evidence": [
+        "packages/agent-skills/src/index.ts contains only the AgentSkillId type alias.",
+        "TypeScript typecheck passed and the file is present in the inspected package tarball."
+      ]
+    },
+    "source:packages/config/eslint/index.mjs": {
+      "fingerprint": "e905741b4713906327267a43c1cdd8e424ce9a23185560d031018b826e569834",
+      "snapshot": {
+        "packages/config/eslint/index.mjs": "04fdedcb482c4782ad083edc2825f842a41d85831e2f08647d916eb67252477f"
+      },
+      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+      "outcome": "out-of-scope",
+      "reason": "This change registers the new workspace path for existing ESLint boundary rules; it changes no Elysia source or skill recommendation.",
+      "evidence": [
+        "The new package entry has no imports; scripts/check-architecture.ts and hk architecture checks pass with 2,845 source edges and zero exceptions.",
+        "The package-specific typecheck and ESLint checks pass."
+      ]
+    }
+  }
+}

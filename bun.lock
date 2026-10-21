@@ -5,7 +5,9 @@
     "": {
       "name": "operatoros",
       "devDependencies": {
+        "@operatoros/agent-skills": "workspace:*",
         "@operatoros/db": "workspace:*",
+        "@tanstack/intent": "0.5.6",
         "@typescript-eslint/parser": "8.68.0",
         "eslint": "10.9.1",
         "saxes": "5.0.1",
@@ -76,6 +78,10 @@
         "vite": "8.3.4",
         "vitest": "4.1.11",
       },
+    },
+    "packages/agent-skills": {
+      "name": "@operatoros/agent-skills",
+      "version": "0.1.0",
     },
     "packages/contracts": {
       "name": "@operatoros/contracts",
@@ -278,6 +284,8 @@
 
     "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
 
+    "@operatoros/agent-skills": ["@operatoros/agent-skills@workspace:packages/agent-skills"],
+
     "@operatoros/api": ["@operatoros/api@workspace:apps/api"],
 
     "@operatoros/contracts": ["@operatoros/contracts@workspace:packages/contracts"],
@@ -467,6 +475,8 @@
     "@tailwindcss/oxide-win32-x64-msvc": ["@tailwindcss/oxide-win32-x64-msvc@4.2.2", "", { "os": "win32", "cpu": "x64" }, "sha512-1T/37VvI7WyH66b+vqHj/cLwnCxt7Qt3WFu5Q8hk65aOvlwAhs7rAp1VkulBJw/N4tMirXjVnylTR72uI0HGcA=="],
 
     "@tailwindcss/postcss": ["@tailwindcss/postcss@4.2.2", "", { "dependencies": { "@alloc/quick-lru": "^5.2.0", "@tailwindcss/node": "4.2.2", "@tailwindcss/oxide": "4.2.2", "postcss": "^8.5.6", "tailwindcss": "4.2.2" } }, "sha512-n4goKQbW8RVXIbNKRB/45LzyUqN451deQK0nzIeauVEqjlI49slUlgKYJM2QyUzap/PcpnS7kzSUmPb1sCRvYQ=="],
+
+    "@tanstack/intent": ["@tanstack/intent@0.5.6", "", { "bin": { "intent": "dist/cli.mjs" } }, "sha512-9Ta/GMGPcqBIqlbrqeYyqBVKEP7XyAXy6nn90bPiE2oHB6KPgjEweUbHNXLQ6Pim01VtMMNf0dmUFMGKKHXmlw=="],
 
     "@tanstack/query-core": ["@tanstack/query-core@5.101.2", "", {}, "sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw=="],
 

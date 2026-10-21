@@ -1,0 +1,24 @@
+library:
+  name: operatoros
+domains:
+  - slug: backend
+    description: Elysia server implementation, debugging, and migration tasks.
+skills:
+  - name: elysiajs
+    slug: elysiajs
+    domain: backend
+    description: >-
+      Use when implementing or debugging Elysia v2 TypeScript backends,
+      designing or reviewing routes, plugins, validation, errors, lifecycle,
+      or typed clients, or planning an explicitly requested Elysia migration.
+      For OperatorOS, first check the installed Elysia version and follow its
+      package source notes.
+    packages:
+      - "@operatoros/agent-skills"
+    tasks:
+      - Implement or debug an Elysia backend while preserving installed versions and project architecture.
+      - Design or review Elysia routes, plugins, validation, errors, lifecycle, deployment, or typed clients.
+      - Plan an Elysia migration only when the user explicitly requests it.
+      - Test Elysia behavior with the project runner, type checks, and failure cases.
+    covers: []
+gaps: []
