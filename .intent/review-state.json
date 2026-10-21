@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "bd8237b14e5db6f10a9645f4fe1395013dd44a7f61e45cf099d5d5f1228f257d",
+      "fingerprint": "6987d6b0bd7f40cfa7b5d8e77e0d26d75649b1ef89671206ad2903764e5e5aa4",
       "snapshot": {
-        "docs/security/backup-restore.md": "7e4fd377e01553bad0e0fe7f6ea50f05e2e44a1acb2d5bce75e8a78104d0869b"
+        "docs/security/backup-restore.md": "c5d29929be407579dab29680937abfcae7a0ff9d793ebbab6d50098f9b4fd3f6"
       },
-      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
       "outcome": "no-change",
-      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
+      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
+        "Changed: docs/security/backup-restore.md at d772ca9e30641cb3537fa123a9b0b18594470ce6"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "6059aa4574056e028164d3133ae9e74973b73ad0a7b7c505297bca625b952877",
+      "fingerprint": "5934fd7660ce86d7a5470a84535a1494a51c833626856cccea018449fe723d86",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "c986fce390f012aca893054425608450634b0421ef3f28580725e1fb809759ad"
+        "apps/api/src/backup-cli.ts": "0b03c9e72be314b951030d33cac64dc224a07aea571662058b4df1947c22e8c0"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/src/backup-cli.ts at d772ca9e30641cb3537fa123a9b0b18594470ce6"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "2a8102bc9eff990fbd64e07c6693facfc6c69f1d3b07016428d959df11a0dbfa",
+      "fingerprint": "28e88adecf0b4c8ae0c7c7706c5f8be4254012537e17bdf1b33d91f16338a715",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "b1eaac2bddd11fbea792e8ff9ea0a6fc088a04596eedb609cb71570af60b365c"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "141fd9e7f2299cd1a6f2c4c262eb9052d5020ccedd5c48048a4053dd932cf787"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at d772ca9e30641cb3537fa123a9b0b18594470ce6"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {

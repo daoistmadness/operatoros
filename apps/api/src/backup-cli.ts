@@ -158,6 +158,20 @@ function audit(root: string, event: string, values: Record<string, unknown> = {}
   chmodSync(path, 0o600);
 }
 
+function restoreAuditReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  return message.match(/^[A-Z][A-Z0-9_]+/)?.[0] ??
+    (message.startsWith("Legacy plaintext backups") ? "RESTORE_LEGACY_OPT_IN_REQUIRED" : error instanceof Error ? error.constructor.name : "Error");
+}
+
+function recordRestoreFailure(root: string, filename: string, actor: string | null, operationId: string, safety: { filename: string } | null, rollbackOutcome: string | undefined, error: unknown): void {
+  const reason = restoreAuditReason(error);
+  try { audit(root, "restore_failed", { filename, operation_id: operationId, reason, ...(rollbackOutcome ? { rollback_outcome: rollbackOutcome } : {}) }); }
+  catch { console.error("WARN: CLI restore failure could not be written to the operations audit."); }
+  try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: safety?.filename ?? null, reason }); }
+  catch { console.error("WARN: CLI restore failure could not be written to recovery history."); }
+}
+
 /** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
 function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pre_restore_auto", preserve?: string): { filename: string; path: string } {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled.");
@@ -203,23 +217,27 @@ function backup(): void {
 }
 
 export function restore(selected: string, value: BackendConfig = config(), fileSystem: RestoreFileSystem = nodeRestoreFileSystem, credential?: RestoreAdministratorCredential): void {
-  if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required for backup restore.");
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
-  if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
-  if (hasPendingRestoreRollback(databasePath)) throw new Error("RESTORE_RECOVERY_PENDING: inspect the existing rollback database before retrying.");
-  const path = resolve(isAbsolute(selected) ? selected : join(backupDir, selected));
-  if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
-  if (!backupName.test(basename(path)) || !exists(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) throw new Error("Invalid encrypted backup file.");
-  const label = basename(path);
-  const artifact = readFileSync(path);
-  const plaintext = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
-  const directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
-  const target = join(directory, `${randomUUID()}.candidate`);
+  const operationId = randomUUID();
+  const actor = process.env.SUDO_USER ?? process.env.USER ?? null;
+  let label = "unknown";
+  let directory: string | null = null;
   let safety: { filename: string; path: string } | null = null;
   let rollbackOutcome: string | undefined;
   let completed = false;
   try {
+    if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required for backup restore.");
+    if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
+    if (hasPendingRestoreRollback(databasePath)) throw new Error("RESTORE_RECOVERY_PENDING: inspect the existing rollback database before retrying.");
+    const path = resolve(isAbsolute(selected) ? selected : join(backupDir, selected));
+    if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
+    if (!backupName.test(basename(path)) || !exists(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) throw new Error("Invalid encrypted backup file.");
+    label = basename(path);
+    const artifact = readFileSync(path);
+    const plaintext = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
+    directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
+    const target = join(directory, `${randomUUID()}.candidate`);
     writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
     validateRestoreSnapshot(target, credential);
     revokeRestoredSessions(target);
@@ -262,12 +280,14 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     completed = true;
     console.log(`Pre-restore safety snapshot: ${safety ? safety.path : "none (no active database to preserve)"}`);
     console.log(`SQLite restore completed: ${databasePath}`);
-    try { audit(backupDir, "restore_completed", { filename: label, safety_backup_filename: safety ? safety.filename : null }); appendRestoreAudit(backupDir, { event: "restore_completed", outcome: "COMPLETED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason: null }); }
-    catch { console.error("WARN: restore completed but the audit line could not be written."); }
+    try { audit(backupDir, "restore_completed", { filename: label, operation_id: operationId, safety_backup_filename: safety ? safety.filename : null }); }
+    catch { console.error("WARN: restore completed but the operations audit line could not be written."); }
+    try { appendRestoreAudit(backupDir, { event: "restore_completed", outcome: "COMPLETED", target_filename: label, authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: safety ? safety.filename : null, reason: null }); }
+    catch { console.error("WARN: restore completed but the recovery-history line could not be written."); }
   } catch (error) {
-    if (!completed) { try { const reason = error instanceof Error ? error.message : "Restore failed."; audit(backupDir, "restore_failed", { filename: label, reason, ...(rollbackOutcome ? { rollback_outcome: rollbackOutcome } : {}) }); appendRestoreAudit(backupDir, { event: "restore_failed", outcome: "FAILED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason }); } catch { /* audit failure must not mask the restore error */ } }
+    if (!completed && backupDir) recordRestoreFailure(backupDir, label, actor, operationId, safety, rollbackOutcome, error);
     throw error;
-  } finally { rmSync(directory, { recursive: true, force: true }); }
+  } finally { if (directory) rmSync(directory, { recursive: true, force: true }); }
 }
 
 if (import.meta.main) {
