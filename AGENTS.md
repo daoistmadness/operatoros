@@ -56,7 +56,9 @@ change, reuse existing patterns, and update affected tests with synthetic data.
 Implementation prompts start with `/plan`; keep code identifiers exact.
 
 Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
-`Makefile`, and [COMMANDS.md](COMMANDS.md). Use native Linux Bun resolved by mise.
+`Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
+resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.3
+in its local development image and does not change the supported runtime.
 Before running Bun, inspect `command -v`, `type -P` (in Bash), and `readlink -f`.
 Reject `/mnt/<drive>`, WindowsApps, Program Files, `.exe`, `.cmd`, `.bat`, and
 UNC-like paths. `operatoros_wsl_prepare_bun` and `validate-wsl-bun.sh` are legacy

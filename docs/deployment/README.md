@@ -2,8 +2,10 @@
 
 Ubuntu-first deployment hub for the supported runtime: a local Elysia API
 (`apps/api`) with one SQLite data root, and the React frontend (`apps/web`) in a
-browser. PostgreSQL and container runtimes are not supported
-(`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED`).
+browser. PostgreSQL and containerized server deployments are not supported
+(`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED`). The optional
+rootless Podman workflow is for local development only; see
+[`docs/development/README.md`](../development/README.md).
 
 ## Read in this order
 

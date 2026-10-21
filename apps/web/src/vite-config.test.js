@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 beforeEach(() => {
   vi.resetModules();
   vi.stubEnv('FRONTEND_PORT', '5173');
-  for (const name of ['VITE_HMR_HOST', 'VITE_HMR_PROTOCOL', 'VITE_HMR_CLIENT_PORT']) vi.stubEnv(name, undefined);
+  for (const name of ['FRONTEND_HOST', 'OPERATOROS_DISABLE_ENV_FILES', 'VITE_HMR_HOST', 'VITE_HMR_PROTOCOL', 'VITE_HMR_CLIENT_PORT']) vi.stubEnv(name, undefined);
 });
 afterEach(() => vi.unstubAllEnvs());
 const load = async () => (await import('../vite.config.js')).default;
@@ -14,6 +14,19 @@ it('keeps local hot reload and host restrictions by default', async () => {
   expect(config.server.hmr.port).toBe(5173);
   expect(config.server.hmr.clientPort).toBeUndefined();
   expect(config.server.hmr.protocol).toBeUndefined();
+  expect(config.server.host).toBe('127.0.0.1');
+  expect(config.preview.host).toBe('127.0.0.1');
+  expect(config.envDir).toBeUndefined();
+  expect(config.server.allowedHosts).not.toBe(true);
+});
+
+it('binds the frontend explicitly and disables env files for isolated development containers', async () => {
+  vi.stubEnv('FRONTEND_HOST', '0.0.0.0');
+  vi.stubEnv('OPERATOROS_DISABLE_ENV_FILES', 'true');
+  const config = await load();
+  expect(config.server.host).toBe('0.0.0.0');
+  expect(config.preview.host).toBe('0.0.0.0');
+  expect(config.envDir).toBe(false);
   expect(config.server.allowedHosts).not.toBe(true);
 });
 

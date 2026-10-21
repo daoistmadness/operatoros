@@ -8,7 +8,7 @@
 
 OperatorOS delivers school attendance processing, automated Hari Efektif Belajar (HEB) calculations, academic performance tracking against Kriteria Ketuntasan Minimal (KKM), and administrative analytics directly on local hardware without depending on external cloud services or persistent internet connectivity.
 
-The supported runtime is a local Elysia/TypeScript backend paired with a React frontend accessed via a local browser, backed by SQLite (`bun:sqlite` via Drizzle ORM). Containerized hosted deployments (Docker/Podman) and PostgreSQL are unsupported.
+The supported runtime is a local Elysia/TypeScript backend paired with a React frontend accessed via a local browser, backed by SQLite (`bun:sqlite` via Drizzle ORM). PostgreSQL and containerized hosted deployments (Docker/Podman/Quadlet) are unsupported. An optional rootless Podman workflow is available for local development only.
 
 Current developer and operational guidance is indexed in [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) is the authoritative execution contract.
 
@@ -92,7 +92,7 @@ The table below delineates verified system capabilities, bounded partial feature
 | **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)). |
 | **Enterprise / Cloud Auth** | **Not Implemented** | No MFA, SSO, OAuth, LDAP, password-reset emails, or cloud identity integrations. |
 | **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is unencrypted; encryption applies solely to backup envelopes via `BACKUP_ENCRYPTION_KEY`. |
-| **Distributed / Cloud Hosting** | **Not Implemented** | PostgreSQL and containerized deployments (Docker/Podman/Quadlet) are unsupported. |
+| **Distributed / Cloud Hosting** | **Not Implemented** | PostgreSQL and containerized hosted deployments (Docker/Podman/Quadlet) are unsupported; optional local Podman development does not change this runtime contract. |
 
 ---
 
@@ -202,6 +202,24 @@ mise run dev
 
 > [!NOTE]
 > On a fresh database, open `http://127.0.0.1:5173` to initialize the first administrator account. The setup form permanently closes upon creation. There are no default credentials.
+
+### Optional: Rootless Podman Development
+
+On Linux, run the same managed development launcher in a container with
+rootless Podman, Git, and `sha256sum`. This alternative uses its pinned Bun
+image instead of the host Bun/mise toolchain.
+
+```bash
+./scripts/podman-dev.sh
+```
+
+Open `http://127.0.0.1:5174`. The API stays private inside the container, and
+the frontend port is bound to host loopback. Press `Ctrl+C` to stop. Development
+data persists in the `operatoros-podman-dev-data` Podman volume and is isolated
+from the native launcher. Set `OPERATOROS_PODMAN_PORT` to change the host port
+(1024–65535).
+This path uses synthetic local development data only; it does not support
+production or hosted Podman deployments.
 
 ### Diagnostic & Operational Commands
 

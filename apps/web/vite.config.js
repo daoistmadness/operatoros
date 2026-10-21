@@ -19,6 +19,7 @@ const hmrHost = process.env.VITE_HMR_HOST?.trim() || '127.0.0.1';
 const hmrProtocol = process.env.VITE_HMR_PROTOCOL?.trim() || undefined;
 const rawHmrClientPort = process.env.VITE_HMR_CLIENT_PORT?.trim();
 const hmrClientPort = rawHmrClientPort ? Number(rawHmrClientPort) : undefined;
+const frontendHost = process.env.FRONTEND_HOST || '127.0.0.1';
 if (hmrProtocol && !['ws', 'wss'].includes(hmrProtocol)) {
   throw new Error('VITE_HMR_PROTOCOL must be ws or wss');
 }
@@ -40,6 +41,7 @@ const apiProxy = {
 // Tech Stack: Vite / React 19 / Vitest
 
 export default defineConfig({
+  envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,
   resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
   plugins: [
     react(),
@@ -56,7 +58,7 @@ export default defineConfig({
     },
   ],
   server: {
-    host: '127.0.0.1',
+    host: frontendHost,
     port: frontendPort,
     strictPort: true,
     clearScreen: false,
@@ -69,7 +71,7 @@ export default defineConfig({
     proxy: apiProxy,
   },
   preview: {
-    host: '127.0.0.1',
+    host: frontendHost,
     port: frontendPort,
     strictPort: true,
     headers: { 'Cache-Control': 'no-store' },

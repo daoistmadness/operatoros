@@ -10,6 +10,14 @@ checks against `origin/main`, and `mise run check:full` for the Tier 3
 release-sensitive gate. Use `mise run doctor` for read-only environment
 diagnostics.
 
+Linux developers may optionally run `./scripts/podman-dev.sh` with rootless
+Podman. It uses the same `start-dev.sh` launcher, binds only the frontend to
+host loopback (default port 5174), keeps the API inside the container, and
+stores isolated development data in the `operatoros-podman-dev-data` volume.
+Set `OPERATOROS_PODMAN_PORT` to use another host port from 1024 to 65535.
+`Ctrl+C` stops the container while retaining that volume. This is a local
+development convenience, not a production or hosted deployment profile.
+
 ## Identify the running checkout
 
 `./start-dev.sh` prints the repository path, branch, commit, working-tree
