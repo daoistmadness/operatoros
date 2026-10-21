@@ -57,11 +57,11 @@ Restore requires all of the following:
 5. exact typed filename confirmation and the `RESTORE_DATABASE` phrase;
 6. filename/path validation;
 7. metadata, SHA-256, and expected source/active checksum validation;
-8. SQLite integrity, quick-check, required-table, and schema compatibility validation;
+8. SQLite integrity, quick-check, foreign-key, required-table, and schema compatibility validation;
 9. compatible `users` and `sessions` tables with required columns;
 10. a pre-restore safety snapshot;
 11. isolated replacement with a rollback copy; and
-12. post-replacement database reopen and restored-session revocation, followed by integrity/quick-check and row-count inspection.
+12. post-replacement database reopen and restored-session revocation, followed by integrity/quick-check, foreign-key, and row-count inspection.
 
 The preflight validates `users`/`sessions` column compatibility but does not verify that the backup contains an active administrator row. Confirm an active administrator exists in the backup before restoring; otherwise the restored database can lock operators out.
 
@@ -78,7 +78,7 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 | Recovery time objective (RTO) | No fixed guarantee. It depends on database size, disk speed, key availability, and operator action. The disposable-VM release-rollback drill (backup, upgrade, rollback, restore) completed in 146 seconds end to end on synthetic data; treat that only as a drill measurement. |
 | Retention | Newest 10 complete generations; the newest backup and a restore source are protected; one audit line per eviction; manual deletion remains available. |
 | Backup durability | Backups are written under the configured data root on the same host. Copy encrypted backups off-host to survive host or disk loss. |
-| Verification | Every created backup is integrity-checked and encrypted; API restore preflight re-verifies checksum, schema, and identity columns, but not an active administrator. Periodic restore rehearsal remains an operator responsibility. |
+| Verification | Every created backup is integrity-checked and encrypted; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, and identity columns, but not an active administrator. Periodic restore rehearsal remains an operator responsibility. |
 
 Limitations:
 
@@ -102,9 +102,8 @@ Limitations:
   administrator account. Keep a reviewed recovery procedure and a known-good
   administrator path before relying on an old snapshot.
 - **Some restore impact fields are placeholders.** The preflight reports
-  `foreign_key_violation_count: 0`, `source_is_older: false`, and
-  `possible_data_loss: false` without deriving those values. Do not treat them
-  as an authoritative impact assessment.
+  `source_is_older: false` and `possible_data_loss: false` without deriving
+  those values. Do not treat them as an authoritative impact assessment.
 - **The live SQLite database is not encrypted at rest.** Only backup artifacts are.
   Protect host and filesystem access.
 - **Audit rotation is operator-managed.** Losing an audit file does not invalidate
@@ -116,16 +115,16 @@ Limitations:
 ```mermaid
 flowchart TD
   Request["Restore request"] --> Auth["Session and current-user admin authorization"]
-  Auth --> Validate["Checksum, schema, and identity compatibility"]
+  Auth --> Validate["Checksum, SQLite, foreign-key, schema, and identity checks"]
   Validate --> Snapshot["Pre-restore safety snapshot"]
   Snapshot --> Replace["Close database handle and replace SQLite file"]
   Replace --> Revoke["Revoke all restored sessions"]
-  Revoke --> Verify["Integrity, quick-check, and row-count inspection"]
+  Revoke --> Verify["Integrity, quick-check, foreign-key, and row-count inspection"]
   Verify --> Login["Require browser reauthentication"]
   Verify -->|"failure"| Rollback["Restore safety copy and verify original"]
 ```
 
-An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, and restored sessions are revoked. The response reports the post-restore protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
+An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
 
 ## Audit lifecycle
 

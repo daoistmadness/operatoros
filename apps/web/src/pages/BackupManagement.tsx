@@ -457,7 +457,7 @@ export function RestoreWizard({
                     ["Checksum", preflight.source.checksum_matches_manifest ? "Verified" : "Failed"],
                     ["Integrity", preflight.source.integrity_check],
                     ["Quick check", preflight.source.quick_check],
-                    ["Foreign keys", preflight.source.foreign_key_violation_count === 0 ? "Valid" : `${preflight.source.foreign_key_violation_count} violations`],
+                    ["Foreign keys", preflight.source.foreign_key_violation_count === null ? "Not verified" : preflight.source.foreign_key_violation_count === 0 ? "Valid" : `${preflight.source.foreign_key_violation_count} violations`],
                     ["Schema", preflight.source.schema_version || "Unknown"],
                     ["Identity", preflight.source.identity_compatible ? "Compatible" : "Incompatible"],
                     ["Eligibility", preflight.source.restore_eligible ? "Eligible" : "Blocked"],

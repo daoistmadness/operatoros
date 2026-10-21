@@ -233,21 +233,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "5ae75cf878fa2d45e6030618366d4a149e60dca6e598e88301646ceec5ff8735",
+      "fingerprint": "3d0015852ec01845f9037d85104ceb934e2a2ed233795d4f0b3ec3d5324b76f2",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "e98e93c76bcd25af64d4b7270a287d8f2f90ba4e41577f995c03f22457e9d57c"
+        "apps/api/src/domains/safety.ts": "d2ad4d01df65ce1c0469bdca79e8720732954aff7cb57ae3068a16b0223c29f7"
       },
-      "head": "f4ba5bcee846afbe476802847cfb1e342ed4ff87",
+      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
       "outcome": "no-change",
-      "reason": "Requalify the original status-only backup-health candidate on verified green main after readiness PR #262. Creation, retention, restore, authorization, and audit behavior are unchanged. Current checksum/size evidence is distinct from SQLite integrity checks. Existing Elysia skill and domain_map.yaml, skill_spec.md, skill_tree.yaml remain accurate; no new guidance or skill is needed.",
+      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
       "evidence": [
-        "apps/api/src/domains/safety.ts:statusPayload",
-        "apps/api/tests/backup-health.test.ts",
-        "docs/security/backup-restore.md:Backup health status",
-        "_artifacts/domain_map.yaml",
-        "_artifacts/skill_spec.md",
-        "_artifacts/skill_tree.yaml",
-        "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
+        "Changed: apps/api/src/domains/safety.ts at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -275,21 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "94b4d5cc2ba3ae741f4b804244a83c993409da088ed70918ca28b4f029c3aec6",
+      "fingerprint": "09699172d3fb50df1b0942e7f07220af2d30f17904dd269026619271580200f3",
       "snapshot": {
-        "docs/security/backup-restore.md": "ab3db75080e1b3cf331d3bf2153d60c9cb5207a179598de301b70fff9cee2b95"
+        "docs/security/backup-restore.md": "99783d284c36d9c9842598bd17f12fc4667b68f48564a2a77fa0460b430c91d7"
       },
-      "head": "f4ba5bcee846afbe476802847cfb1e342ed4ff87",
+      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
       "outcome": "no-change",
-      "reason": "Requalify the original status-only backup-health candidate on verified green main after readiness PR #262. Creation, retention, restore, authorization, and audit behavior are unchanged. Current checksum/size evidence is distinct from SQLite integrity checks. Existing Elysia skill and domain_map.yaml, skill_spec.md, skill_tree.yaml remain accurate; no new guidance or skill is needed.",
+      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
       "evidence": [
-        "apps/api/src/domains/safety.ts:statusPayload",
-        "apps/api/tests/backup-health.test.ts",
-        "docs/security/backup-restore.md:Backup health status",
-        "_artifacts/domain_map.yaml",
-        "_artifacts/skill_spec.md",
-        "_artifacts/skill_tree.yaml",
-        "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
+        "Changed: docs/security/backup-restore.md at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -365,6 +353,30 @@
         "_artifacts/skill_spec.md",
         "_artifacts/skill_tree.yaml",
         "Main f4ba5bcee846afbe476802847cfb1e342ed4ff87 hosted CI/security successful; clean post-merge readiness 8 tooling + 3 browser tests passed. Fresh baseline reproduced zero-byte backup falsely HEALTHY. Fixed candidate passed 24 backup/recovery tests, 22 security tests, API typecheck, hk lint/architecture, 34 architecture fixtures, dependency audit, and docs checks. Entire tracked tree except Intent review metadata matches Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89, whose full release run passed in 709.46 seconds."
+      ]
+    },
+    "source:apps/api/tests/restore-foreign-keys.test.ts": {
+      "fingerprint": "a248df04ec3375dabf153355811af71c64d517082fac42289c2a139fadf8460f",
+      "snapshot": {
+        "apps/api/tests/restore-foreign-keys.test.ts": "defe527b1f4a52572a952fe6e95ec6d1cf53f732107037754b351cf5c66b3912"
+      },
+      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "outcome": "no-change",
+      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+      ]
+    },
+    "source:apps/web/src/pages/BackupManagement.tsx": {
+      "fingerprint": "b11e5c957a4ebdf6ceb1f4040e7cec1c97f546d8df41461ba7206789e8ecb907",
+      "snapshot": {
+        "apps/web/src/pages/BackupManagement.tsx": "530571f48443ed5c4370d8d1dfc5d20bbb11d982181288b5b81de78c527d2014"
+      },
+      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "outcome": "no-change",
+      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/BackupManagement.tsx at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
       ]
     }
   }
