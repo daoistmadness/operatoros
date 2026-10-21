@@ -208,11 +208,16 @@ The dependency set is fully cacheable; nothing at runtime requires the network
   low disk and a failed capacity probe. Monitor `/api/admin/backups/status`
   (`health_state`, `backup_count`, `retention_limit`, `low_space`) and copy
   encrypted backups off-host.
-- Restore: use the guarded admin restore (typed confirmation, schema/identity
-  validation, a pre-restore safety snapshot, and session revocation). The legacy
-  CLI restore is an operator tool with fewer safeguards — prefer the admin path;
-  CLI hardening is tracked as P3-06. After a restore, restart the service and sign
-  in again.
+- Restore: prefer the guarded admin restore for online operations (typed
+  confirmation, authenticated admin session, schema/identity validation, a
+  pre-restore safety snapshot, and session revocation). For offline recovery,
+  `scripts/restore.sh` invokes the hardened CLI, which verifies encrypted
+  artifact identity/authentication, SQLite integrity, foreign keys, schema, and
+  administrator credentials; it revokes restored sessions and rolls back to a
+  safety snapshot on verified failure. Stop the API and all other writers first.
+  The CLI lock coordinates CLI commands only, and CLI audit writes are
+  best-effort; follow [Backup and Restore Security](../security/backup-restore.md).
+  After a restore, restart the service and sign in again.
 - Rollback: restore the pre-upgrade backup, restart the service, re-run the health
   check and `db:validate`, and retain the previous revision until smoke checks pass.
 

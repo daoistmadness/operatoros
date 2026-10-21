@@ -626,15 +626,15 @@
       ]
     },
     "source:docs/deployment/ubuntu-server.md": {
-      "fingerprint": "26f4c600c4b408f475bbf18b63c184838b589848b780a759874216604cffd853",
+      "fingerprint": "7acf2f9badf4e5a60ea9329eb6cf5c5dc7e6f3f6e97e3a75281b6c42f30da6c1",
       "snapshot": {
-        "docs/deployment/ubuntu-server.md": "7bfbf39761805ba11670f38c70651694e7ed172a62a148a68bd7a2e4050de7c1"
+        "docs/deployment/ubuntu-server.md": "988b081eada90597ed836108f13be1b3cb33bed379ccf2c7aa00330f6b69900f"
       },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "head": "99755b882b13a2390bebfa44157c133d8b0546f4",
       "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "reason": "The Ubuntu deployment restore guidance now describes existing CLI safeguards and limits; Elysia skill guidance and planning artifacts are unchanged.",
       "evidence": [
-        "Changed: docs/deployment/ubuntu-server.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+        "Changed: docs/deployment/ubuntu-server.md at 99755b882b13a2390bebfa44157c133d8b0546f4"
       ]
     },
     "source:docs/security/identity-authentication.md": {
