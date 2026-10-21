@@ -1,9 +1,11 @@
 import { expect, it } from "bun:test";
+import { Database } from "bun:sqlite";
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
+import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const cli = join(root, "apps/api/src/backup-cli.ts");
@@ -60,6 +62,27 @@ it("backs up and restores only an explicit disposable data root", () => {
     expect(existsSync(join(restored, "operatoros.sqlite-shm"))).toBe(false);
     const handle = openDatabase(join(restored, "operatoros.sqlite"), { readonly: true });
     handle.close();
+
+    const backupEncryption = parseBackupEncryptionConfig({ activeKey: env.BACKUP_ENCRYPTION_KEY, activeKeyId: env.BACKUP_ENCRYPTION_KEY_ID, authCookieSecret: env.AUTH_COOKIE_SECRET });
+    if (!backupEncryption) throw new Error("synthetic backup encryption config missing");
+    const plaintextPath = join(temporary, "incomplete-schema.sqlite");
+    writeFileSync(plaintextPath, decryptBackup(readFileSync(artifact), backupEncryption), { mode: 0o600 });
+    const incomplete = new Database(plaintextPath);
+    let plaintext: Uint8Array;
+    try { incomplete.run("DROP TABLE attendance"); plaintext = incomplete.serialize(); } finally { incomplete.close(); }
+    const invalidArtifact = encryptBackup(plaintext!, backupEncryption);
+    const invalidFilename = "backup_2099-01-01T00-00-00Z.sqlite3";
+    const invalidPath = join(source, "backups", invalidFilename);
+    writeFileSync(invalidPath, invalidArtifact, { mode: 0o600 });
+    writeFileSync(`${invalidPath}.meta.json`, JSON.stringify({ ...JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")), filename: invalidFilename, sha256: backupSha256(invalidArtifact), plaintext_sha256: backupSha256(plaintext!), backup_file_size_bytes: invalidArtifact.length, sqlite_file_size_bytes: plaintext!.length }), { mode: 0o600 });
+    const invalidTarget = join(temporary, "invalid-restored");
+    mkdirSync(invalidTarget);
+    const rejectedDisposable = command("restore-disposable", invalidFilename, invalidTarget);
+    expect(rejectedDisposable.exitCode).not.toBe(0);
+    expect(rejectedDisposable.stderr.toString()).toContain("EXISTING_SCHEMA_INCOMPLETE");
+    expect(existsSync(join(invalidTarget, "operatoros.sqlite"))).toBe(false);
+    rmSync(plaintextPath, { force: true });
+
     writeFileSync(`${databasePath}-wal`, "");
     writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
     expect(command("migrate-existing", artifact, source).stdout.toString()).toContain("NOOP 20261002_s48");
@@ -80,4 +103,4 @@ it("backs up and restores only an explicit disposable data root", () => {
     expect(refused.exitCode).not.toBe(0);
     expect(refused.stderr.toString()).toContain("BACKUP_SOURCE_MISMATCH");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);

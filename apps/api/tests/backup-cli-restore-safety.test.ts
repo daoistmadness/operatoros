@@ -1,7 +1,7 @@
 import { expect, it } from "bun:test";
 import { spawnSync as spawnCommand } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { Database } from "bun:sqlite";
@@ -115,6 +115,35 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(cliFailures[0]!.outcome).toBe("FAILED");
     expect(cliFailures[0]!.target_filename).toBe(label);
     expect(cliFailures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("refuses to publish a CLI backup from a synthetic database with foreign-key violations", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-source-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const damaged = new Database(databasePath);
+    damaged.run("PRAGMA foreign_keys = OFF");
+    damaged.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'synthetic-orphan-session', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+    damaged.close();
+
+    const result = command("backup");
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain("DATABASE_INTEGRITY_FAILED");
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(0);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.at(-1)).toMatchObject({ event: "backup_failed", trigger: "manual" });
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
@@ -254,7 +283,7 @@ it("restores an empty CLI candidate while first-admin setup is still open", () =
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
-it("requires a verified backup administrator credential before making the CLI safety snapshot", () => {
+it("requires a verified backup administrator credential before making the CLI safety snapshot", async () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-credentials-"));
   const databasePath = join(temporary, "operatoros.sqlite");
   const backupDir = join(temporary, "backups");
@@ -273,10 +302,13 @@ it("requires a verified backup administrator credential before making the CLI sa
     const original = readFileSync(databasePath);
     const candidate = openDatabase(databasePath);
     candidate.client.run("UPDATE users SET password_hash = ? WHERE username = 'golden-admin'", [Bun.password.hashSync("synthetic-backup-admin-password", "argon2id")]);
+    const admin = candidate.client.query("SELECT id FROM users WHERE username = 'golden-admin'").get() as { id: number };
+    candidate.client.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (?, 'synthetic-restored-session', datetime('now', '+1 hour'), datetime('now', '+1 day'))", [admin.id]);
     candidate.close();
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
     const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const selectedArtifact = readFileSync(join(backupDir, filename));
     writeFileSync(databasePath, original);
     const activeBefore = readFileSync(databasePath);
 
@@ -290,11 +322,75 @@ it("requires a verified backup administrator credential before making the CLI sa
     const verified = openDatabase(databasePath, { readonly: true });
     const hash = String((verified.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
     expect(Bun.password.verifySync("synthetic-backup-admin-password", hash)).toBe(true);
+    const restoredSession = verified.client.query("SELECT revoked_at FROM sessions WHERE token_hash = 'synthetic-restored-session'").get() as { revoked_at: string | null };
+    expect(restoredSession.revoked_at).not.toBeNull();
     verified.close();
+    expect(readFileSync(join(backupDir, filename)).equals(selectedArtifact)).toBe(true);
     const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8");
     expect(audit).not.toContain("synthetic-backup-admin-password");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("passes the selected backup administrator to the CLI from the restore script", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-restore-script-"));
+  const bin = join(temporary, "bin");
+  const argsPath = join(temporary, "args");
+  mkdirSync(bin);
+  const bunStub = join(bin, "bun");
+  writeFileSync(bunStub, '#!/bin/sh\nprintf "%s\\n" "$@" > "$RESTORE_SCRIPT_ARGS"\n', { mode: 0o700 });
+  chmodSync(bunStub, 0o700);
+  const filename = "backup_2026-10-21T17-00-00Z.sqlite3";
+  const run = (username: string) => spawnCommand("/bin/bash", [join(root, "scripts/restore.sh"), filename], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RESTORE_SCRIPT_ARGS: argsPath },
+    input: `y\n${username}\n`,
+  });
+  try {
+    const initialSetup = run("");
+    expect(initialSetup.status).toBe(0);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", filename]);
+    const withAdministrator = run("golden-admin");
+    expect(withAdministrator.status).toBe(0);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", filename, "--admin-user", "golden-admin"]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
+
+it("applies newest-ten retention to CLI backups while protecting a selected restore source", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-retention-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    let selected = "";
+    for (let index = 0; index < 10; index++) {
+      const result = command("backup");
+      expect(result.exitCode).toBe(0);
+      if (index === 0) selected = basename(result.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    }
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(10);
+
+    const restore = command("restore", selected);
+    expect(restore.exitCode).toBe(0);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(11);
+    expect(existsSync(join(backupDir, selected))).toBe(true);
+
+    expect(command("backup").exitCode).toBe(0);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(10);
+    expect(existsSync(join(backupDir, selected))).toBe(false);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.filter((entry) => entry.event === "backup_succeeded")).toHaveLength(12);
+    expect(operations.some((entry) => entry.event === "backup_evicted" && entry.filename === selected)).toBe(true);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 60000);
 
 it("installs an administrator-backed backup when no active database exists", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-initial-admin-restore-"));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { backupScheduler } from "../src/domains/safety";
@@ -46,6 +46,29 @@ describe("backup, restore, and scheduler safety", () => {
       expect(backup.filename).toMatch(/^backup_.*\.sqlite3$/);
       expect(backup.sha256).toHaveLength(64);
 
+      const unchangedPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
+      expect(unchangedPreflight.status).toBe(200);
+      const unchangedImpact = (await unchangedPreflight.json() as any).active;
+      expect(unchangedImpact.same_database_content).toBe(true);
+      expect(unchangedImpact.source_is_older).toBeNull();
+      expect(unchangedImpact.possible_data_loss).toBe(false);
+      const metadataPath = `${backupDir}/${backup.filename}.meta.json`;
+      const metadata = readFileSync(metadataPath);
+      writeFileSync(metadataPath, JSON.stringify({ ...JSON.parse(metadata.toString()), filename: "backup_2000-01-01T00-00-00Z.sqlite3" }));
+      const inconsistentMetadata = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
+      expect(inconsistentMetadata.status).toBe(409);
+      expect((await inconsistentMetadata.json() as any).detail).toContain("Backup metadata");
+      writeFileSync(metadataPath, metadata);
+      const metadataTarget = `${backupDir}/manifest-target.json`;
+      writeFileSync(metadataTarget, metadata);
+      rmSync(metadataPath);
+      symlinkSync(metadataTarget, metadataPath);
+      const symlinkPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
+      expect(symlinkPreflight.status).toBe(404);
+      rmSync(metadataPath);
+      writeFileSync(metadataPath, metadata);
+      rmSync(metadataTarget);
+
       const download = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/download`, { headers: { cookie, origin: "http://localhost:5173" } }));
       expect(download.status).toBe(200);
       expect(download.headers.get("content-type")).toBe("application/vnd.operatoros.backup+json");
@@ -84,6 +107,8 @@ describe("backup, restore, and scheduler safety", () => {
       expect(preflight.status).toBe(200);
       const checked = await preflight.json() as any;
       expect(checked.source.restore_eligible).toBe(true);
+      expect(checked.active.source_is_older).toBeNull();
+      expect(checked.active.possible_data_loss).toBeNull();
       const restore = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore`, { method: "POST", headers: { cookie, origin: "http://localhost:5173", "content-type": "application/json" }, body: JSON.stringify({ current_password: "golden-admin-pass-1", confirmation_filename: backup.filename, confirmation_phrase: "RESTORE_DATABASE", acknowledge_complete_replacement: true, acknowledge_session_revocation: true, acknowledge_restart_required: true, acknowledge_safety_backup: true, expected_source_sha256: checked.source.sha256, expected_active_sha256: checked.active.active_sha256 }) }));
       expect(restore.status).toBe(200);
       expect((await restore.json() as any).sessions_revoked).toBe(true);

@@ -1,5 +1,5 @@
 import { expect, it } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openDatabase } from "@operatoros/db";
@@ -27,7 +27,7 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     const status = async () => {
       const response = await app.handle(new Request("http://local/api/admin/backups/status", { headers }));
       expect(response.status).toBe(200);
-      return await response.json() as { health_state: string; latest_backup_size_bytes: number | null; latest_backup_checksum_status: string | null; latest_backup_integrity_status: string | null; latest_backup_outcome: string | null; backup_directory_available: boolean };
+      return await response.json() as { health_state: string; latest_backup_size_bytes: number | null; latest_backup_checksum_status: string | null; latest_backup_integrity_status: string | null; latest_backup_outcome: string | null; last_successful_backup_at: string | null; last_failed_backup_at: string | null; last_failure_code: string | null; backup_directory_available: boolean };
     };
     expect((await status()).health_state).toBe("NO_BACKUP");
     const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
@@ -37,13 +37,21 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     const manifestPath = `${artifactPath}.meta.json`;
     const artifact = readFileSync(artifactPath);
     const manifest = readFileSync(manifestPath);
-    const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"));
+    const auditPath = join(backupDir, "backup_operations_audit.jsonl");
+    const audit = readFileSync(auditPath);
     const healthy = await status();
     expect(healthy.health_state).toBe("HEALTHY");
     expect(healthy.latest_backup_size_bytes).toBe(artifact.length);
     expect(healthy.latest_backup_checksum_status).toBe("verified");
     expect(healthy.latest_backup_integrity_status).toBe("not_checked");
-    expect(healthy.latest_backup_outcome).toBe(null);
+    expect(healthy.latest_backup_outcome).toBe("SUCCESS");
+    expect(healthy.last_successful_backup_at).not.toBeNull();
+
+    rmSync(auditPath);
+    const unavailableHistory = await status();
+    expect(unavailableHistory.latest_backup_outcome).toBeNull();
+    expect(unavailableHistory.last_successful_backup_at).toBeNull();
+    writeFileSync(auditPath, audit);
 
     for (const damaged of [Buffer.alloc(0), artifact.subarray(0, artifact.length - 1), Buffer.from(artifact)]) {
       if (damaged.length === artifact.length) damaged[damaged.length - 5] = damaged[damaged.length - 5]! ^ 1;
@@ -56,6 +64,9 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     }
     writeFileSync(artifactPath, artifact);
     writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), key_id: "inconsistent" }));
+    expect((await status()).health_state).toBe("UNKNOWN");
+    writeFileSync(manifestPath, manifest);
+    writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), backup_file_size_bytes: String(artifact.length) }));
     expect((await status()).health_state).toBe("UNKNOWN");
     writeFileSync(manifestPath, manifest);
     capacity = "low";
@@ -75,6 +86,31 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     expect((await status()).health_state).toBe("UNKNOWN");
     writeFileSync(manifestPath, manifest);
     expect(readFileSync(join(backupDir, "backup_operations_audit.jsonl"))).toEqual(audit);
+
+    const historyResponse = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect(historyResponse.status).toBe(200);
+    expect(await historyResponse.json()).toMatchObject([{ backup_filename: backup.filename, status: "SUCCESS", integrity_verified: true, checksum: expect.any(String) }]);
+    appendFileSync(join(backupDir, "backup_operations_audit.jsonl"), `${JSON.stringify({ timestamp: "2026-01-01T00:00:00Z", event: "backup_succeeded", filename: backup.filename, trigger: "manual" })}\n`);
+    const legacyHistory = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect((await legacyHistory.json() as any[])[0]?.integrity_verified).toBe(null);
+
+    capacity = "low";
+    const failedBackup = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
+    expect(failedBackup.status).toBe(507);
+    capacity = "enough";
+    const failedHealth = await status();
+    expect(failedHealth.health_state).toBe("LAST_BACKUP_FAILED");
+    expect(failedHealth.latest_backup_outcome).toBe("FAILED");
+    expect(failedHealth.last_failed_backup_at).not.toBeNull();
+    expect(failedHealth.last_failure_code).toBe("BACKUP_LOW_DISK_SPACE");
+    const failedHistory = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect((await failedHistory.json() as any[]).slice(0, 2).map((entry) => entry.status)).toEqual(["FAILED", "SUCCESS"]);
+
+    const recoveredBackup = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
+    expect(recoveredBackup.status).toBe(200);
+    expect((await status()).health_state).toBe("HEALTHY");
+    expect((await status()).latest_backup_outcome).toBe("SUCCESS");
+
     rmSync(backupDir, { recursive: true });
     writeFileSync(backupDir, "destination is a file");
     const unavailable = await status();
@@ -83,5 +119,11 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     rmSync(backupDir);
     mkdirSync(backupDir);
     expect((await status()).health_state).toBe("NO_BACKUP");
+
+    database.client.run("PRAGMA foreign_keys = OFF");
+    database.client.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'synthetic-orphan-session', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+    const invalidSource = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
+    expect(invalidSource.status).toBeGreaterThanOrEqual(400);
+    expect(readdirSync(backupDir).filter((name) => /^backup_.*\.sqlite3$/.test(name))).toHaveLength(0);
   } finally { database.close(); rmSync(root, { recursive: true, force: true }); }
 }, 15000);

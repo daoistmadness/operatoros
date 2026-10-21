@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import {
   BackupList,
   BackupStatusPanel,
+  Comparison,
   RecoveryHistoryPanel,
   RESTORE_STEPS,
   RESTORE_WARNING,
@@ -14,7 +15,7 @@ import {
   formatAge,
   formatBytes,
 } from "./BackupManagement";
-import type { BackupEntry, BackupStatus } from "../api/backups";
+import type { BackupEntry, BackupStatus, RestorePreflight } from "../api/backups";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 vi.mock("../api/backups", () => ({
@@ -104,6 +105,17 @@ describe("guided backup and recovery", () => {
     expect(output).toContain("Checksum verified");
     expect(output).toContain("Integrity ok");
     expect(output).toContain("Restore eligible after preflight");
+  });
+  it("shows unknown restore impact and missing counts without claiming zero", () => {
+    const preflight = {
+      source: { age_seconds: 3600, sha256: "source", schema_version: "schema" },
+      active: { active_sha256: "active", active_schema_version: "schema", active_students: 0, active_attendance: 0, active_enrollments: 0, source_students: 0, source_attendance: null, source_enrollments: 0, student_delta: 0, attendance_delta: null, enrollment_delta: 0, same_database_content: false, source_is_older: null, possible_data_loss: null },
+      impact_classification: "LOW_IMPACT",
+    } as RestorePreflight;
+    const output = html(<Comparison preflight={preflight} />);
+    expect(output).toContain("Source older than current database: Unknown");
+    expect(output).toContain("Possible data loss: Unknown");
+    expect(output).toContain("<strong>Attendance</strong><span class=\"break-all\">0</span><span class=\"break-all\">Unknown</span><span>Unknown</span>");
   });
   it("keeps CSV out of the recovery warning", () => {
     expect(RESTORE_WARNING).toContain("CSV exports are data exchange files");

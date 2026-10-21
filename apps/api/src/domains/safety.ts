@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, appendFileSync, chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
+import { accessSync, constants, appendFileSync, chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -7,7 +7,7 @@ import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
-import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
+import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, schemaFingerprint } from "@operatoros/db";
 import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
@@ -46,6 +46,7 @@ function row(context: AuthContext, sql: string, params: any[] = []): Row | null 
 function fail(set: any, status: number, detail: unknown): { detail: unknown } { set.status = status; return { detail }; }
 function auth(context: AuthContext, ctx: Context): any { return actor(context, ctx, { role: "admin", refreshSession: false }); }
 function denied(ctx: Context): { detail: string } { return { detail: ctx.set.status === 401 ? "Authentication required" : "Insufficient permissions" }; }
+function regularFile(path: string): boolean { try { return lstatSync(path).isFile(); } catch { return false; } }
 
 function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
   mkdirSync(root, { recursive: true, mode: 0o700 });
@@ -71,7 +72,7 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null } {
+function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity: string; quick: string; schemaValid: boolean; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number | null>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null } {
   const database = new Database(path, { readonly: true });
   try {
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
@@ -79,21 +80,30 @@ function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity
     let foreignKeyViolationCount: number | null;
     try { foreignKeyViolationCount = database.query("PRAGMA foreign_key_check").all().length; }
     catch { foreignKeyViolationCount = null; }
+    const migrations = database.query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations").all() as Row[];
+    const currentMigration = migrations.find((value) => value.version === CURRENT_SCHEMA_VERSION);
+    const schemaValid = currentMigration?.schema_fingerprint === CURRENT_SCHEMA_FINGERPRINT &&
+      !migrations.some((value) => compareSchemaVersions(String(value.version), CURRENT_SCHEMA_VERSION) === 1) &&
+      schemaFingerprint(database) === CURRENT_SCHEMA_FINGERPRINT;
     const objects = database.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[];
     const tables = new Set(objects.map((value) => String(value.name)));
-    const counts: Record<string, number> = {};
-    for (const [key, table] of Object.entries({ students: "students", attendance: "attendance", enrollments: "student_enrollments" })) counts[key] = tables.has(table) ? Number((database.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as Row).count) : 0;
+    const counts: Record<string, number | null> = {};
+    for (const [key, table] of Object.entries({ students: "students", attendance: "attendance", enrollments: "student_enrollments" })) {
+      try { counts[key] = tables.has(table) ? Number((database.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as Row).count) : null; }
+      catch { counts[key] = null; }
+    }
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
     const restoreIdentity = checkRestoreIdentity ? restoreIdentityState(database) : null;
-    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
+    return { integrity, quick, schemaValid, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
   } finally { database.close(); }
 }
 
 function validateSnapshot(path: string, sourceTables: Set<string>, checkRestoreIdentity = true): ReturnType<typeof inspectDatabase> {
   const value = inspectDatabase(path, checkRestoreIdentity);
   if (value.integrity !== "ok" || value.quick !== "ok") throw new Error("Backup integrity validation failed.");
+  if (value.foreignKeyViolationCount !== 0) throw new Error("Backup foreign-key validation failed.");
   const missing = REQUIRED_TABLES.filter((table) => !value.tables.has(table));
   if (missing.length > 0 || (sourceTables.has("student_subject_grades") && !value.tables.has("student_subject_grades"))) throw new Error(`Backup is missing required operational tables: ${missing.join(", ")}`);
   return value;
@@ -146,6 +156,7 @@ function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root:
 }
 
 function decryptedBackup(config: SafetyConfig, path: string, operation: (path: string, artifact: Buffer) => Row): Row {
+  if (!regularFile(path)) throw Object.assign(new Error("Backup artifact is not a regular file."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
   const artifact = readFileSync(path);
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required for backup restore."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
   const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-"));
@@ -161,15 +172,17 @@ function decryptedBackup(config: SafetyConfig, path: string, operation: (path: s
 
 function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manual" | "scheduled" | "pre_restore_auto", preserve?: string): Row {
   if (backupBusy) throw Object.assign(new Error("Another backup execution is already active."), { status: 409 });
-  if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
   const active = dbPath(context);
   if (basename(active) === PROTECTED_DATABASE_BASENAME) throw new Error("Protected database access is forbidden.");
-  assertBackupDiskSpace(context, config, backupRoot(config));
+  const root = backupRoot(config);
+  const startedAt = now();
+  const started = Date.now();
   backupBusy = true;
-  let root = "";
   let temporaryDirectory = "";
   try {
-    root = ensureRoot(config);
+    if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
+    assertBackupDiskSpace(context, config, root);
+    ensureRoot(config);
     const filename = nextFilename(root);
     temporaryDirectory = mkdtempSync(join(root, ".operatoros-backup-"));
     chmodSync(temporaryDirectory, 0o700);
@@ -190,11 +203,19 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     chmodSync(metadataTemporary, 0o600);
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
-    audit(root, "backup_succeeded", { filename, trigger });
-    try { evictBeyondRetention(root, filename, preserve); } catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    let removedBackups: string[] = [];
+    try { removedBackups = evictBeyondRetention(root, filename, preserve); }
+    catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    try { audit(root, "backup_succeeded", { filename, trigger, started_at: startedAt, completed_at: now(), duration_seconds: (Date.now() - started) / 1000, size_bytes: metadata.backup_file_size_bytes, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); }
+    catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
     return metadata;
   } catch (error) {
-    if (root) audit(root, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error" });
+    try {
+      if (statSync(root).isDirectory()) {
+        try { audit(root, "backup_failed", { trigger, started_at: startedAt, completed_at: now(), duration_seconds: (Date.now() - started) / 1000, failure_code: typeof (error as Row)?.code === "string" ? (error as Row).code : error instanceof Error ? error.constructor.name : "Error" }); }
+        catch { console.error("WARN: backup failed and the operations audit line could not be written."); }
+      }
+    } catch { /* no existing backup directory is available to hold failure history */ }
     throw error;
   } finally {
     try {
@@ -233,7 +254,7 @@ function rowsFromFiles(root: string): Row[] {
   for (const entry of (readdirSync(root, { withFileTypes: true }) as { name: string; isFile(): boolean }[])) {
     if (!entry.isFile() || !backupFile.test(entry.name)) continue;
     const manifest = `${root}/${entry.name}.meta.json`;
-    try { const value = JSON.parse(readFileSync(manifest, "utf8")); result.push({ filename: entry.name, created_at: value.created_at, trigger: value.trigger, size: Number(value.backup_file_size_bytes ?? value.sqlite_file_size_bytes), checksum: value.sha256, schema_version: value.schema_version, encrypted: value.encrypted === true, format_version: value.format_version ?? null, algorithm: value.algorithm ?? null, key_id: value.key_id ?? null }); } catch { /* incomplete pairs stay invisible */ }
+    try { if (!regularFile(manifest)) continue; const value = JSON.parse(readFileSync(manifest, "utf8")); result.push({ filename: entry.name, created_at: value.created_at, trigger: value.trigger, size: Number(value.backup_file_size_bytes ?? value.sqlite_file_size_bytes), checksum: value.sha256, schema_version: value.schema_version, encrypted: value.encrypted === true, format_version: value.format_version ?? null, algorithm: value.algorithm ?? null, key_id: value.key_id ?? null }); } catch { /* incomplete pairs stay invisible */ }
   }
   return result;
 }
@@ -241,7 +262,7 @@ function rowsFromFiles(root: string): Row[] {
 function verifiedBackup(root: string, filename: string): string {
   if (!backupFile.test(filename)) throw Object.assign(new Error("Invalid backup filename."), { status: 404 });
   const path = `${root}/${filename}`;
-  if (!statSafe(path) || !statSafe(`${path}.meta.json`)) throw Object.assign(new Error("Backup not found."), { status: 404 });
+  if (!regularFile(path) || !regularFile(`${path}.meta.json`)) throw Object.assign(new Error("Backup not found."), { status: 404 });
   return path;
 }
 
@@ -258,12 +279,13 @@ function deleteBackup(root: string, filename: string): void {
  * backup, an explicitly preserved restore source, and any file that cannot be
  * removed are skipped. Cleanup never turns a verified backup into a failure.
  */
-function evictBeyondRetention(root: string, newest: string, preserve?: string): void {
+export function evictBeyondRetention(root: string, newest: string, preserve?: string): string[] {
   const entries = metadata(root);
-  if (entries.length <= BACKUP_RETENTION_LIMIT) return;
+  if (entries.length <= BACKUP_RETENTION_LIMIT) return [];
   const keep = new Set(entries.slice(0, BACKUP_RETENTION_LIMIT).map((entry) => String(entry.filename)));
   keep.add(newest);
   if (preserve) keep.add(preserve);
+  const removed: string[] = [];
   for (const entry of entries.slice(BACKUP_RETENTION_LIMIT)) {
     const filename = String(entry.filename);
     if (keep.has(filename)) continue;
@@ -276,8 +298,57 @@ function evictBeyondRetention(root: string, newest: string, preserve?: string): 
       try { audit(root, "backup_eviction_skipped", { filename, reason: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
       continue;
     }
+    removed.push(filename);
     try { audit(root, "backup_evicted", { filename, trigger: entry.trigger ?? null, size_bytes: entry.size ?? null, reason: "retention_limit", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ }
   }
+  return removed;
+}
+
+function readBackupExecutionHistory(root: string): Row[] {
+  const path = join(root, "backup_operations_audit.jsonl");
+  let lines: string[];
+  try {
+    const file = lstatSync(path);
+    if (!file.isFile() || file.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
+    lines = readFileSync(path, "utf8").split("\n");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
+  const history: Row[] = [];
+  for (const [index, line] of lines.entries()) {
+    try {
+      const event = JSON.parse(line) as Row;
+      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") continue;
+      const filename = typeof event.filename === "string" && backupFile.test(event.filename) ? event.filename : null;
+      let manifest: Row | null = null;
+      if (filename) {
+        try {
+          const manifestPath = join(root, `${filename}.meta.json`);
+          const file = lstatSync(manifestPath);
+          if (file.isFile() && !file.isSymbolicLink()) manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Row;
+        } catch { /* old/evicted artifacts have no readable manifest */ }
+      }
+      const completedAt = typeof event.completed_at === "string" ? event.completed_at : typeof event.timestamp === "string" ? event.timestamp : null;
+      const rawTrigger = String(event.trigger ?? manifest?.trigger ?? "manual").toUpperCase();
+      const errorMessage = typeof event.failure_code === "string" ? event.failure_code : typeof event.error === "string" ? event.error : "Backup failed";
+      history.push({
+        id: index + 1,
+        backup_filename: filename,
+        started_at: typeof event.started_at === "string" ? event.started_at : completedAt ?? "",
+        completed_at: completedAt,
+        duration_seconds: Number.isFinite(event.duration_seconds) ? event.duration_seconds : null,
+        status: event.event === "backup_succeeded" ? "SUCCESS" : "FAILED",
+        error_message: event.event === "backup_failed" ? errorMessage : null,
+        trigger_type: rawTrigger,
+        size_bytes: Number.isFinite(event.size_bytes) ? event.size_bytes : manifest?.backup_file_size_bytes ?? manifest?.sqlite_file_size_bytes ?? null,
+        checksum: typeof event.checksum === "string" ? event.checksum : manifest?.sha256 ?? null,
+        integrity_verified: event.event === "backup_succeeded" && typeof event.integrity_verified === "boolean" ? event.integrity_verified : null,
+        removed_backups: Array.isArray(event.removed_backups) ? event.removed_backups.filter((value: unknown) => typeof value === "string" && backupFile.test(value)) : [],
+      });
+    } catch { /* a partial final line or malformed legacy record is not a backup execution */ }
+  }
+  return history.reverse().slice(0, 200);
 }
 
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
@@ -305,11 +376,14 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
       actualSize = stats.size;
       if (!stats.isFile() || stats.size <= 0 || stats.size !== latest.size) throw new Error("Backup size mismatch.");
       const manifest = JSON.parse(readFileSync(`${path}.meta.json`, "utf8"));
-      if (manifest.filename !== latest.filename || !Number.isFinite(Date.parse(latest.created_at))) throw new Error("Backup metadata invalid.");
+      if (manifest.filename !== latest.filename || manifest.source_db_path !== basename(active) ||
+        !Number.isFinite(Date.parse(latest.created_at)) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
+        manifest.backup_file_size_bytes !== stats.size || typeof manifest.schema_version !== "string" || !manifest.schema_version ||
+        typeof manifest.plaintext_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(manifest.plaintext_sha256)) throw new Error("Backup metadata invalid.");
       const artifact = readFileSync(path);
       if (artifact.length !== stats.size || backupSha256(artifact) !== latest.checksum) throw new Error("Backup checksum mismatch.");
       const envelope = JSON.parse(artifact.toString());
-      if (!isEncryptedBackup(artifact) || latest.encrypted !== true || envelope.version !== BACKUP_ENVELOPE_VERSION || envelope.algorithm !== BACKUP_ENCRYPTION_ALGORITHM || latest.format_version !== envelope.version || latest.algorithm !== envelope.algorithm || latest.key_id !== envelope.keyId) throw new Error("Backup metadata mismatch.");
+      if (!isEncryptedBackup(artifact) || manifest.encrypted !== true || manifest.format_version !== BACKUP_ENVELOPE_VERSION || manifest.format_version !== envelope.version || manifest.algorithm !== BACKUP_ENCRYPTION_ALGORITHM || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId || latest.encrypted !== true || latest.format_version !== envelope.version || latest.algorithm !== envelope.algorithm || latest.key_id !== envelope.keyId) throw new Error("Backup metadata mismatch.");
       checksumStatus = "verified";
     } catch { /* fail closed; creation-time checks do not verify the current artifact */ }
   }
@@ -320,37 +394,54 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
     if (Number.isFinite(value.availableBytes) && value.availableBytes >= 0 && Number.isFinite(value.freeBytes) && value.freeBytes >= 0) probeValues = value;
   } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
   const lowSpace = probeValues === null || probeValues.availableBytes < minimumRequired;
-  const health = restoreBusy ? "RESTORE_IN_PROGRESS" : backupBusy ? "BACKUP_IN_PROGRESS" : !available ? "DESTINATION_UNAVAILABLE" : incomplete ? "UNKNOWN" : !latest ? "NO_BACKUP" : checksumStatus !== "verified" || probeValues === null ? "UNKNOWN" : lowSpace ? "LOW_DISK_SPACE" : "HEALTHY";
-  return { health_state: health, last_successful_backup_at: latest?.created_at ?? null, last_failed_backup_at: null, last_failure_code: null, last_failure_message: null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: actualSize, latest_backup_checksum_status: checksumStatus, latest_backup_integrity_status: latest ? "not_checked" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: Boolean(config.backupEncryption), backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: lowSpace, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: null, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
+  let history: Row[] = [];
+  try { history = readBackupExecutionHistory(root); } catch { /* history failure is represented as unknown outcome, not a failed artifact check */ }
+  const latestAttempt = history[0] ?? null;
+  const lastSuccessful = history.find((entry) => entry.status === "SUCCESS");
+  const lastFailed = history.find((entry) => entry.status === "FAILED");
+  const latestOutcome = latestAttempt?.status === "FAILED" ? "FAILED" : latestAttempt?.status === "SUCCESS" && latestAttempt.backup_filename === latest?.filename ? "SUCCESS" : null;
+  const health = restoreBusy ? "RESTORE_IN_PROGRESS" : backupBusy ? "BACKUP_IN_PROGRESS" : !available ? "DESTINATION_UNAVAILABLE" : incomplete ? "UNKNOWN" : !latest ? "NO_BACKUP" : checksumStatus !== "verified" || probeValues === null ? "UNKNOWN" : lowSpace ? "LOW_DISK_SPACE" : latestAttempt?.status === "FAILED" ? "LAST_BACKUP_FAILED" : "HEALTHY";
+  return { health_state: health, last_successful_backup_at: lastSuccessful?.completed_at ?? null, last_failed_backup_at: lastFailed?.completed_at ?? null, last_failure_code: lastFailed?.error_message ?? null, last_failure_message: lastFailed ? "The most recent backup attempt failed." : null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: actualSize, latest_backup_checksum_status: checksumStatus, latest_backup_integrity_status: latest ? "not_checked" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: Boolean(config.backupEncryption), backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: lowSpace, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latestOutcome, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
   if (!backupFile.test(filename)) throw Object.assign(new Error("Invalid backup filename."), { status: 400 });
-  const root = backupRoot(config); const target = `${root}/${filename}`; const manifest = JSON.parse(readFileSync(`${target}.meta.json`, "utf8"));
+  const root = backupRoot(config); const target = `${root}/${filename}`;
+  if (!regularFile(target) || !regularFile(`${target}.meta.json`)) throw Object.assign(new Error("Backup artifact and metadata must be regular files."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
+  const manifest = JSON.parse(readFileSync(`${target}.meta.json`, "utf8"));
   return decryptedBackup(config, target, (plaintextPath, artifact) => {
     const sourceChecksum = backupSha256(artifact);
     if (manifest.sha256 !== sourceChecksum) throw Object.assign(new Error("Backup checksum verification failed."), { status: 409, code: "BACKUP_CHECKSUM_MISMATCH" });
     if (isEncryptedBackup(artifact)) {
       let envelope: Row;
       try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
-      if (manifest.encrypted !== true || manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+      const plaintextSize = statSync(plaintextPath).size;
+      if (manifest.encrypted !== true || manifest.filename !== filename || manifest.source_db_path !== basename(dbPath(context)) ||
+        manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
+        manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId ||
+        manifest.backup_file_size_bytes !== artifact.length || manifest.sqlite_file_size_bytes !== plaintextSize ||
+        manifest.plaintext_sha256 !== sha256(plaintextPath)) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
     const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
-    const same = plaintextChecksum === activeChecksum; const compatible = source.schema === active.schema && source.identityCompatible;
+    if (isEncryptedBackup(artifact) && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+    const same = plaintextChecksum === activeChecksum; const compatible = source.schemaValid && source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
       ...(same ? ["source_identical_to_active"] : []),
       ...(classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : []),
+      ...(source.integrity !== "ok" ? ["integrity_check_failed"] : []),
+      ...(source.quick !== "ok" ? ["quick_check_failed"] : []),
       ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
       ...(source.restoreIdentityBlockingReason ? [source.restoreIdentityBlockingReason] : []),
     ];
-    const sourceStudents = source.counts.students ?? 0;
-    const sourceAttendance = source.counts.attendance ?? 0;
-    const sourceEnrollments = source.counts.enrollments ?? 0;
-    const activeStudents = active.counts.students ?? 0;
-    const activeAttendance = active.counts.attendance ?? 0;
-    const activeEnrollments = active.counts.enrollments ?? 0;
-    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: sourceStudents - activeStudents, attendance_delta: sourceAttendance - activeAttendance, enrollment_delta: sourceEnrollments - activeEnrollments, same_database_content: same, source_is_older: false, possible_data_loss: false, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
+    const sourceStudents = source.counts.students ?? null;
+    const sourceAttendance = source.counts.attendance ?? null;
+    const sourceEnrollments = source.counts.enrollments ?? null;
+    const activeStudents = active.counts.students ?? null;
+    const activeAttendance = active.counts.attendance ?? null;
+    const activeEnrollments = active.counts.enrollments ?? null;
+    const delta = (sourceCount: number | null, activeCount: number | null) => sourceCount === null || activeCount === null ? null : sourceCount - activeCount;
+    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.integrity === "ok" && source.quick === "ok" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible === true, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: delta(sourceStudents, activeStudents), attendance_delta: delta(sourceAttendance, activeAttendance), enrollment_delta: delta(sourceEnrollments, activeEnrollments), same_database_content: same, source_is_older: null, possible_data_loss: same ? false : null, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
   });
 }
 
@@ -382,7 +473,8 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   };
   try {
     try {
-      decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => {
+      decryptedBackup(config, `${root}/${filename}`, (plaintextPath, artifact) => {
+        if (backupSha256(artifact) !== checked.source.sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
@@ -447,7 +539,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
-  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return rows(context, "SELECT id, backup_filename, started_at, completed_at, duration_seconds, status, error_message, trigger_type, size_bytes, checksum, integrity_verified, removed_backups_json FROM backup_execution_history ORDER BY started_at DESC, id DESC LIMIT 200").map((value) => ({ ...value, integrity_verified: Boolean(value.integrity_verified), removed_backups: JSON.parse(String(value.removed_backups_json ?? "[]")) })); });
+  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)); });
   app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); if (!statSafe(`${root}/backup_restore_audit.jsonl`)) return []; return readFileSync(`${root}/backup_restore_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((value) => { try { const item = JSON.parse(value); return { timestamp: item.timestamp ?? null, filename: item.target_filename ?? null, event: item.event ?? null, actor_display: item.authenticated_username ?? "unknown", result: item.outcome ?? null, safe_reason_code: item.reason ?? null, operation_reference_id: item.request_context?.operation_id ?? null, safety_backup_filename: item.pre_restore_snapshot_filename ?? null }; } catch { return null; } }).filter(Boolean); });
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); }, { body: t.Object({ enabled: t.Boolean(), schedule_type: t.Union([t.Literal("daily"), t.Literal("weekly"), t.Literal("interval")]), interval_minutes: t.Number({ minimum: 1, maximum: 525600 }), hour_utc: t.Number({ minimum: 0, maximum: 23 }), minute_utc: t.Number({ minimum: 0, maximum: 59 }), weekday_utc: t.Number({ minimum: 0, maximum: 6 }), keep_daily: t.Number({ minimum: 0, maximum: 365 }), keep_weekly: t.Number({ minimum: 0, maximum: 260 }), keep_monthly: t.Number({ minimum: 0, maximum: 120 }) }) });
