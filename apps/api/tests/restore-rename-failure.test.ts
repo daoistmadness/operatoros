@@ -109,6 +109,11 @@ describe("restore filesystem-transition failures", () => {
 
       expect(databaseState(value.path)).toEqual({ marker: 1, integrity: "ok" });
       expect(recoveryFiles(value.path)).toEqual([]);
+      const operations = fs.readFileSync(join(value.backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+      expect(operations.filter((entry) => entry.event === "restore_failed")).toHaveLength(1);
+      expect(operations.find((entry) => entry.event === "restore_failed")?.rollback_outcome).toBe("rolled_back");
+      const recovery = fs.readFileSync(join(value.backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+      expect(recovery.filter((entry) => entry.event === "restore_failed")).toHaveLength(1);
       await login(value.app, "golden-admin", "golden-admin-pass-1");
 
       // Retry after the transient filesystem failure.
