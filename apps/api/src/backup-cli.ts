@@ -172,6 +172,14 @@ function recordRestoreFailure(root: string, filename: string, actor: string | nu
   recordRestoreEvent(root, event, outcome, filename, actor, operationId, safety, reason);
 }
 
+function recordRestoreCliRefusal(root: string, selected: string | undefined, reason: string): void {
+  const filename = backupName.test(basename(selected ?? "")) ? basename(selected!) : "unknown";
+  const operationId = randomUUID();
+  const actor = process.env.SUDO_USER ?? process.env.USER ?? null;
+  recordRestoreEvent(root, "restore_requested", "REQUESTED", filename, actor, operationId, null, null);
+  recordRestoreFailure(root, filename, actor, operationId, null, undefined, false, new Error(reason));
+}
+
 /** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
 function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pre_restore_auto", preserve?: string): { filename: string; path: string } {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled.");
@@ -296,21 +304,73 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   } finally { if (directory) rmSync(directory, { recursive: true, force: true }); }
 }
 
+export async function runBackupCli(args: string[]): Promise<void> {
+  const [action, selected, targetDir] = args;
+  try {
+    if (action === "backup") backup();
+    else if (action === "restore" && selected) {
+      const usernameIndex = args.indexOf("--admin-user");
+      const username = usernameIndex >= 0 ? args[usernameIndex + 1] : undefined;
+      const validUsername = Boolean(username && username.trim() === username && username.length <= 255);
+      const password = validUsername ? await promptHidden(`Password for backup administrator '${username}': `) : "";
+      restore(selected, config(), nodeRestoreFileSystem, usernameIndex >= 0 ? { username: username ?? "", password } : undefined);
+    }
+    else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
+    else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
+    else throw new Error("Usage: backup-cli.ts backup | restore <backup-file> [--admin-user <username>] | restore-disposable <backup-file> <empty-data-dir> | migrate-existing <backup-file> <data-dir>");
+  } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+}
+
 if (import.meta.main) {
-  const [action, selected, targetDir] = process.argv.slice(2);
-  await (async () => {
+  const args = process.argv.slice(2);
+  const [action, selected] = args;
+  if (["backup", "restore", "restore-disposable", "migrate-existing"].includes(args[0] ?? "")) {
+    let value: ReturnType<typeof config> | undefined;
     try {
-      if (action === "backup") backup();
-      else if (action === "restore" && selected) {
-        const usernameIndex = process.argv.indexOf("--admin-user");
-        const username = usernameIndex >= 0 ? process.argv[usernameIndex + 1] : undefined;
-        const validUsername = Boolean(username && username.trim() === username && username.length <= 255);
-        const password = validUsername ? await promptHidden(`Password for backup administrator '${username}': `) : "";
-        restore(selected, config(), nodeRestoreFileSystem, usernameIndex >= 0 ? { username: username ?? "", password } : undefined);
+      value = config();
+      if (!value.dataPaths) throw new Error("Canonical data paths are unavailable.");
+      const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
+      writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
+      chmodSync(lockPath, 0o600);
+      const moduleUrl = pathToFileURL(resolve(process.argv[1]!)).href;
+      const runner = `import(${JSON.stringify(moduleUrl)}).then(({ runBackupCli }) => runBackupCli(${JSON.stringify(args)}));`;
+      const result = Bun.spawnSync([
+        "flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
+        process.execPath, "-e", runner,
+      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe" });
+      if (result.exitCode === 75) {
+        if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_OPERATION_BUSY");
+        else if (action === "backup") {
+          const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+          try { audit(value.backupDir!, "backup_failed", { failure_code: "BACKUP_CLI_OPERATION_BUSY", trigger: "manual", started_at: at, completed_at: at }); }
+          catch { /* a busy CLI operation must not proceed without the lock */ }
+        }
+        console.error("Another backup CLI operation is already active.");
+        process.exit(1);
       }
-      else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
-      else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
-      else throw new Error("Usage: backup-cli.ts backup | restore <backup-file> [--admin-user <username>] | restore-disposable <backup-file> <empty-data-dir> | migrate-existing <backup-file> <data-dir>");
-    } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
-  })();
+      if (result.exitCode === 127) {
+        if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_LOCK_UNAVAILABLE");
+        else if (action === "backup") {
+          const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+          try { audit(value.backupDir!, "backup_failed", { failure_code: "BACKUP_CLI_LOCK_UNAVAILABLE", trigger: "manual", started_at: at, completed_at: at }); }
+          catch { /* lock failure must fail closed */ }
+        }
+        console.error("BACKUP_CLI_LOCK_UNAVAILABLE: flock is required for backup operations.");
+        process.exit(1);
+      }
+      if (result.stdout.length) process.stdout.write(result.stdout);
+      if (result.stderr.length) process.stderr.write(result.stderr);
+      process.exit(result.exitCode ?? 1);
+    } catch (error) {
+      if (value && action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_LOCK_UNAVAILABLE");
+      if (value && action === "backup") {
+        const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+        try { audit(value.backupDir!, "backup_failed", { failure_code: "BACKUP_CLI_LOCK_UNAVAILABLE", trigger: "manual", started_at: at, completed_at: at }); }
+        catch { /* lock failure must fail closed */ }
+      }
+      console.error(error instanceof Error ? error.message : "Backup operation failed.");
+      process.exit(1);
+    }
+  }
+  void runBackupCli(args);
 }

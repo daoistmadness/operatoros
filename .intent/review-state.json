@@ -267,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
+      "fingerprint": "fe98c2c702caa023ce97804b428dc4d845e23b731336102557b65ad5306975e1",
       "snapshot": {
-        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
+        "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: docs/security/backup-restore.md at 77d939cc6c56f57f5fb38398002f01cc17247158"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -372,27 +372,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
+      "fingerprint": "5e98546282797dbb7f6861ff4813a3360e5e3c0443d9416cda285a4c4535269b",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
+        "apps/api/src/backup-cli.ts": "38eee829534f92655acb2e229fd73d95f70c45722986c1892c6276d21f29446d"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/backup-cli.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "22eb857e1753096d86890fe85154db3ebeba420e686cc7e689333e3ceea16bcf",
+      "fingerprint": "ab1ca09ca19ac392ac4cbdc0ff38ea5d567f09994416f69a899000cf5242ba6f",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "3388b39a2508fa6a5b219eccb2324ee8284553e8c94a946198b82bec7942a7a7"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "d588846bdf071494874b8b36036507d3d04172541687f008053c19c0afd5abc5"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -585,6 +585,66 @@
       "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
+      ]
+    },
+    "source:README.md": {
+      "fingerprint": "ae75866ec301dae1103e49858f8db2a4338eea305ae5f99e7d987e8d96e38fad",
+      "snapshot": {
+        "README.md": "32fb771e729057f274d4fa4e6f56fff1c4051503eb7259e615eeba0bc4b6ee0e"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: README.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/BACKUP_SCHEME.md": {
+      "fingerprint": "3b4564619c2b715e63361e56a2cabdac919a34b69d4d2b0792c3b55f9c9fbb54",
+      "snapshot": {
+        "docs/BACKUP_SCHEME.md": "96000606eb2d8442314f4a905cc8bc6fdff3abaa2055d06766f8b96e2714249c"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/BACKUP_SCHEME.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/backup-scheduler-architecture.md": {
+      "fingerprint": "2de5da1a9e217484dd10d56c88f886f221588a0fbb7fe14e2a8927cc02186476",
+      "snapshot": {
+        "docs/backup-scheduler-architecture.md": "c47bdb786e8464d8214f9365ea05b35bc71772137661efff3d8f743214ffa4dd"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/backup-scheduler-architecture.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/deployment/ubuntu-server.md": {
+      "fingerprint": "7acf2f9badf4e5a60ea9329eb6cf5c5dc7e6f3f6e97e3a75281b6c42f30da6c1",
+      "snapshot": {
+        "docs/deployment/ubuntu-server.md": "988b081eada90597ed836108f13be1b3cb33bed379ccf2c7aa00330f6b69900f"
+      },
+      "head": "99755b882b13a2390bebfa44157c133d8b0546f4",
+      "outcome": "no-change",
+      "reason": "The Ubuntu deployment restore guidance now describes existing CLI safeguards and limits; Elysia skill guidance and planning artifacts are unchanged.",
+      "evidence": [
+        "Changed: docs/deployment/ubuntu-server.md at 99755b882b13a2390bebfa44157c133d8b0546f4"
+      ]
+    },
+    "source:docs/security/identity-authentication.md": {
+      "fingerprint": "0ec91ab35cc61ebaed3d2d2ae49ce548a4eeb43045ce675dc8db2fa871abc4f1",
+      "snapshot": {
+        "docs/security/identity-authentication.md": "63470c3a37e3426bb097e9ccfbe518cd0024239b912ae97458f029571e9b33a5"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/security/identity-authentication.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
       ]
     }
   }
