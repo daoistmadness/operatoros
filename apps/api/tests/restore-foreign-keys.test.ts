@@ -48,6 +48,8 @@ async function prepare(sourceState: SourceState = "clean") {
     },
     remove: (value) => rmSync(value, { force: true }),
     exists: (value) => { try { statSync(value); return true; } catch { return false; } },
+    syncFile: () => {},
+    syncDirectory: () => {},
   };
   const app = createApp({
     databaseHandle: database,

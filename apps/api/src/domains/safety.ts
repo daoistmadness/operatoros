@@ -5,6 +5,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryEntrySchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
+import { syncDirectory, syncFile } from "./durable-files";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
@@ -193,6 +194,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
     assertBackupDiskSpace(context, config, root);
     ensureRoot(config);
+    syncDirectory(dirname(root));
     const filename = nextFilename(root);
     temporaryDirectory = mkdtempSync(join(root, ".operatoros-backup-"));
     chmodSync(temporaryDirectory, 0o700);
@@ -211,10 +213,15 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     const metadata = { filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client), sqlite_file_size_bytes: statSync(temporary).size, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: sha256(temporary), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId, source_db_path: basename(active), backup_tool_version: "1.0" };
     writeFileSync(metadataTemporary, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     chmodSync(metadataTemporary, 0o600);
+    syncFile(encryptedTemporary);
+    syncFile(metadataTemporary);
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
+    syncDirectory(root);
     let removedBackups: string[] = [];
     try { removedBackups = evictBeyondRetention(root, filename, preserve); }
+    catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    try { syncDirectory(root); }
     catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     try { audit(root, "backup_succeeded", { filename, trigger, started_at: startedAt, completed_at: now(), duration_seconds: (Date.now() - started) / 1000, size_bytes: metadata.backup_file_size_bytes, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); }
     catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
@@ -536,9 +543,10 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     }
     restoreStarted = true;
     recordRestoreEvent(root, "restore_started", "STARTED", filename, operator.username, operationId, snapshot?.filename ?? null, null);
+    const restoreFileSystem = config.restoreFileSystem ?? undefined;
     const swap = performRestoreSwap({
       active, candidate, rollback,
-      fileSystem: config.restoreFileSystem ?? undefined,
+      fileSystem: restoreFileSystem,
       close: () => context.database.close(),
       reopen: () => context.database.reopen(),
       afterSwap: () => {
@@ -546,9 +554,9 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
         if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client as unknown as Database, body, operator)) throw new Error("Post-restore integrity validation failed.");
-        appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;
       },
+      beforeCommit: () => appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null }),
     });
     if (swap.outcome === "committed") {
       const checkedRestored = swap.value!;
