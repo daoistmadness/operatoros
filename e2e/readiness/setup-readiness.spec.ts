@@ -1,4 +1,7 @@
-import { expect, test, type Page } from "../../apps/web/node_modules/@playwright/test";
+import { createRequire } from "node:module";
+import type { Page } from "../../apps/web/node_modules/@playwright/test";
+
+const { expect, test }: typeof import("../../apps/web/node_modules/@playwright/test") = createRequire(import.meta.url)("../../apps/web/node_modules/@playwright/test");
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
