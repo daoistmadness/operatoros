@@ -18,7 +18,7 @@ export function appendRestoreAudit(root: string, record: {
 }): void {
   mkdirSync(root, { recursive: true, mode: 0o700 });
   const path = `${root}/backup_restore_audit.jsonl`;
-  appendFileSync(path, `${JSON.stringify({
+  const line = `${JSON.stringify({
     timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     event: record.event,
     target_filename: record.target_filename,
@@ -27,6 +27,8 @@ export function appendRestoreAudit(root: string, record: {
     reason: record.reason,
     request_context: { operation_id: record.operation_id },
     pre_restore_snapshot_filename: record.pre_restore_snapshot_filename,
-  })}\n`, { mode: 0o600 });
+  })}\n`;
+  appendFileSync(path, "", { mode: 0o600 });
   chmodSync(path, 0o600);
+  appendFileSync(path, line, { mode: 0o600 });
 }

@@ -233,15 +233,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "05d2ed058db2407cbc42150ab819940293d7bc9a53a5f52ec78ed4b28c08e7c4",
+      "fingerprint": "233816262129c673feefda7fc08e186da2db4482481ecbd5739c48cbaa804391",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "412a4127e1b2ba5f642482be41a3c0786f3636d0fd9d498799ae1dca0f8fc706"
+        "apps/api/src/domains/safety.ts": "a13b9fb535e7b6886d22401cd56f06b2c1811fe7d4902abf3682bdce832f1305"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/src/domains/safety.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "225c2e6275406e49cad470fae2f355ead1138df6d5ddb630482c6861c896325d",
+      "fingerprint": "bd8237b14e5db6f10a9645f4fe1395013dd44a7f61e45cf099d5d5f1228f257d",
       "snapshot": {
-        "docs/security/backup-restore.md": "ed319768e8518df5cd39407d5de4430f9e53bf1ff67e51120c2edaed3b8d13cc"
+        "docs/security/backup-restore.md": "7e4fd377e01553bad0e0fe7f6ea50f05e2e44a1acb2d5bce75e8a78104d0869b"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: docs/security/backup-restore.md at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -563,6 +563,30 @@
       "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
       "evidence": [
         "Changed: scripts/restore.sh at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+      ]
+    },
+    "source:apps/api/tests/restore-audit-failure.test.ts": {
+      "fingerprint": "d6e170256265dfb8312f4d74d533ef6575fde774afe4932314549089a98028af",
+      "snapshot": {
+        "apps/api/tests/restore-audit-failure.test.ts": "de8c7e0b8fc9783b3d20ba326fcd6f0d1b97d6e3ce5670a8d89654599a663311"
+      },
+      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "outcome": "no-change",
+      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
+      "evidence": [
+        "Changed: apps/api/tests/restore-audit-failure.test.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
+      ]
+    },
+    "source:apps/api/src/domains/restore-audit.ts": {
+      "fingerprint": "d5afe79e39727a1d4d50194b062a5d58fbae7ea5b4686dbf4684b2608ddafd69",
+      "snapshot": {
+        "apps/api/src/domains/restore-audit.ts": "d9ffa3ea92605016535c7b1e00e5a760d8f767352a5e3aee236dd52910562a49"
+      },
+      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "outcome": "no-change",
+      "reason": "Reviewed API restore audit changes against Elysia v1 source notes and skill guidance; the existing route composition, error mapping, and test conventions are preserved.",
+      "evidence": [
+        "Changed: apps/api/src/domains/restore-audit.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
       ]
     }
   }
