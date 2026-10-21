@@ -45,7 +45,7 @@ Session lifecycle:
 create → validate → refresh idle expiry → expire/revoke → logout
 ```
 
-Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. A successful API restore revokes every restored session; reauthentication is mandatory. CLI restore does not revoke sessions.
+Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. API and CLI restore revoke restored sessions, so reauthentication is mandatory. CLI restore limitations are documented in [Backup and Restore Security](backup-restore.md).
 
 No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented.
 

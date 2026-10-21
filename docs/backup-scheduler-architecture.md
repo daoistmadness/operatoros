@@ -69,5 +69,8 @@ invalid snapshot.
 
 The supported runtime is one local API process against one SQLite data root.
 PostgreSQL and Docker/Compose are not supported runtimes. Backup, restore, and
-scheduler guards are process-local module state; no component coordinates multiple
-processes or claims multi-worker restore safety.
+scheduler guards are process-local module state and do not coordinate multiple
+API processes. CLI commands use a nonblocking Linux `flock` to serialize CLI
+processes with one another, but that lock does not coordinate with the API
+process. Run one API process per SQLite data root and stop API writers before
+CLI restore; multi-worker restore is unsupported.

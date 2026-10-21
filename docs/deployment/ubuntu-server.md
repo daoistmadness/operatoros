@@ -251,7 +251,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
 | Backup or restore refuses with `ENOENT` for `lsof` or `DATABASE_OPEN_HANDLE_CHECK_FAILED` | Install or repair `lsof`; the handle check cannot run. |
-| Restore refused | Single-worker guard, `ENABLE_DESTRUCTIVE_OPERATIONS=false`, or validation failure — see `docs/security/backup-restore.md`. |
+| Restore refused | `ENABLE_DESTRUCTIVE_OPERATIONS=false`, validation failure, or the CLI cannot verify the active database is offline — see `docs/security/backup-restore.md`. Keep one API process per data root; the runtime does not enforce a worker count. |
 | Restart loop | `journalctl -u operatoros-api`; note `StartLimitBurst=5`/60 s backoff policy. |
 | `Read-only file system` errors at runtime | A write escaped the state directory; keep all writable state under `/var/lib/operatoros`. |
 

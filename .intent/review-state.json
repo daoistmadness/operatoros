@@ -588,6 +588,66 @@
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
+    },
+    "source:README.md": {
+      "fingerprint": "ae75866ec301dae1103e49858f8db2a4338eea305ae5f99e7d987e8d96e38fad",
+      "snapshot": {
+        "README.md": "32fb771e729057f274d4fa4e6f56fff1c4051503eb7259e615eeba0bc4b6ee0e"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: README.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/BACKUP_SCHEME.md": {
+      "fingerprint": "3b4564619c2b715e63361e56a2cabdac919a34b69d4d2b0792c3b55f9c9fbb54",
+      "snapshot": {
+        "docs/BACKUP_SCHEME.md": "96000606eb2d8442314f4a905cc8bc6fdff3abaa2055d06766f8b96e2714249c"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/BACKUP_SCHEME.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/backup-scheduler-architecture.md": {
+      "fingerprint": "2de5da1a9e217484dd10d56c88f886f221588a0fbb7fe14e2a8927cc02186476",
+      "snapshot": {
+        "docs/backup-scheduler-architecture.md": "c47bdb786e8464d8214f9365ea05b35bc71772137661efff3d8f743214ffa4dd"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/backup-scheduler-architecture.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/deployment/ubuntu-server.md": {
+      "fingerprint": "26f4c600c4b408f475bbf18b63c184838b589848b780a759874216604cffd853",
+      "snapshot": {
+        "docs/deployment/ubuntu-server.md": "7bfbf39761805ba11670f38c70651694e7ed172a62a148a68bd7a2e4050de7c1"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/deployment/ubuntu-server.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:docs/security/identity-authentication.md": {
+      "fingerprint": "0ec91ab35cc61ebaed3d2d2ae49ce548a4eeb43045ce675dc8db2fa871abc4f1",
+      "snapshot": {
+        "docs/security/identity-authentication.md": "63470c3a37e3426bb097e9ccfbe518cd0024239b912ae97458f029571e9b33a5"
+      },
+      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "outcome": "no-change",
+      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: docs/security/identity-authentication.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
     }
   }
 }
