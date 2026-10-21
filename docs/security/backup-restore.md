@@ -78,7 +78,7 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 | Recovery time objective (RTO) | No fixed guarantee. It depends on database size, disk speed, key availability, and operator action. The disposable-VM release-rollback drill (backup, upgrade, rollback, restore) completed in 146 seconds end to end on synthetic data; treat that only as a drill measurement. |
 | Retention | Newest 10 complete generations; the newest backup and a restore source are protected; one audit line per eviction; manual deletion remains available. |
 | Backup durability | Backups are written under the configured data root on the same host. Copy encrypted backups off-host to survive host or disk loss. |
-| Verification | Every created backup is integrity-checked and encrypted; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, and identity columns, but not an active administrator. Periodic restore rehearsal remains an operator responsibility. |
+| Verification | Every created backup is integrity-checked and encrypted; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, and identity columns, but not an active administrator. CLI restore verifies encrypted artifact identity/checksum/authentication and SQLite integrity, quick-check, foreign keys, and schema before and after replacement, but does not verify an active administrator. Periodic restore rehearsal remains an operator responsibility. |
 
 Limitations:
 
@@ -124,7 +124,9 @@ flowchart TD
   Verify -->|"failure"| Rollback["Restore safety copy and verify original"]
 ```
 
-An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
+An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy.
+
+The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, format version, algorithm, key ID, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It validates SQLite integrity, quick-check, foreign keys, required tables, and current schema before replacement and again after replacement. When an active database exists, it first creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement validation failure triggers rollback. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. The CLI does not verify an active administrator or revoke restored sessions. Explicitly opted-in legacy plaintext receives the SQLite checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Artifact/path/manifest/decryption failures occur before restore audit emission; later restore outcomes are audit-attempted, and audit-write failure does not undo a committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
 
 ## Audit lifecycle
 
@@ -140,8 +142,11 @@ The supported runtime is a single local API process. Docker/Compose and PostgreS
 
 `scripts/backup.sh` and `scripts/restore.sh`, where present, use the same
 versioned encrypted backup envelope but remain separate operator tools. The CLI
-restore path creates a pre-restore safety snapshot and writes restore audit
-lines, but it does not verify the manifest, integrity, schema, or an active
-administrator, and it does not revoke restored sessions or provide browser
-sign-out. Use it only with all writers stopped and an approved recovery
-procedure.
+restore path creates a pre-restore safety snapshot when an active database
+exists and validates encrypted artifact identity, checksum, authenticated
+decryption, SQLite integrity, schema, and foreign keys before and after
+replacement. It retains the prior database through validation and attempts
+rollback on failure. It does not verify an active administrator or revoke
+restored sessions or provide browser sign-out. Explicitly opted-in legacy
+plaintext lacks encrypted artifact verification. Use the CLI only with all
+writers stopped and an approved recovery procedure.

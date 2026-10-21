@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "09699172d3fb50df1b0942e7f07220af2d30f17904dd269026619271580200f3",
+      "fingerprint": "3138efae33ddf8315161843ba277375eec3ae76bf3f8013d79f5845e24005eea",
       "snapshot": {
-        "docs/security/backup-restore.md": "99783d284c36d9c9842598bd17f12fc4667b68f48564a2a77fa0460b430c91d7"
+        "docs/security/backup-restore.md": "bf48775fafda91f1325659f2945ed05445e4453df950791bbfd6bf7681016c3b"
       },
-      "head": "2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb",
+      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
       "outcome": "no-change",
-      "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
+      "reason": "Reviewed final CLI restore implementation, its synthetic failure tests, and the existing backup/restore security guide; no agent-skill guidance or Elysia usage changed, and verified restore behavior is documented in the existing security guide.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+        "Changed: docs/security/backup-restore.md at 2b39c982215cc388d01dba195c3d630003c497f3"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -377,6 +377,30 @@
       "reason": "This restore-integrity correction changes application safety code, its synthetic regression tests, the UI status label, and backup/restore guidance; it does not change Elysia usage or require new agent skill guidance. The existing Elysia skill and three planning artifacts remain accurate.",
       "evidence": [
         "Changed: apps/web/src/pages/BackupManagement.tsx at 2de8bbdc920a7461de8cc03b4a4a02b9b72a71fb"
+      ]
+    },
+    "source:apps/api/src/backup-cli.ts": {
+      "fingerprint": "8f9f11255858de6822980328cda4966023095bf61310a018c5d603a24547a92e",
+      "snapshot": {
+        "apps/api/src/backup-cli.ts": "904eff61eaa3da120779b57a9fa25c506a0906ee03f3c8c1ec3ca4c9c732f794"
+      },
+      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
+      "outcome": "no-change",
+      "reason": "Reviewed CLI restore code, regression tests, and the existing backup/restore security guide; none changes agent-skill guidance or Elysia usage, and the existing backup/restore document was updated in place.",
+      "evidence": [
+        "Changed: apps/api/src/backup-cli.ts at 2b39c982215cc388d01dba195c3d630003c497f3"
+      ]
+    },
+    "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
+      "fingerprint": "58f287a814390ec15871926d32960f8de42d78f2eaf7a1c4a8008df18a8e83eb",
+      "snapshot": {
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "2004535426fafd7cac9d43be3e9f73c889b2a5a9287055ff5a894435f9acb1c6"
+      },
+      "head": "2b39c982215cc388d01dba195c3d630003c497f3",
+      "outcome": "no-change",
+      "reason": "Reviewed final CLI restore implementation, its synthetic failure tests, and the existing backup/restore security guide; no agent-skill guidance or Elysia usage changed, and verified restore behavior is documented in the existing security guide.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 2b39c982215cc388d01dba195c3d630003c497f3"
       ]
     }
   }
