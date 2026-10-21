@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Database, constants } from "bun:sqlite";
-import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
-import { loadConfig } from "./config";
+import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
+import { loadConfig, type BackendConfig } from "./config";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
 import { appendRestoreAudit } from "./domains/restore-audit";
+import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -47,7 +48,7 @@ function clearOrphanedEmptyWal(path: string): void {
   rmSync(shm);
 }
 
-function verifiedArtifact(selected: string, value: ReturnType<typeof config>): Buffer {
+function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): Buffer {
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
@@ -55,8 +56,10 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>): B
   const manifestPath = `${path}.meta.json`;
   if (!existsSync(manifestPath) || !lstatSync(manifestPath).isFile() || lstatSync(manifestPath).isSymbolicLink()) throw new Error("BACKUP_MANIFEST_INVALID");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const encrypted = readFileSync(path);
+  const encrypted = artifact ?? readFileSync(path);
+  const envelope = JSON.parse(encrypted.toString("utf8")) as Record<string, unknown>;
   if (manifest.encrypted !== true || manifest.algorithm !== "aes-256-gcm" ||
+    manifest.format_version !== envelope.version || manifest.key_id !== envelope.keyId || manifest.algorithm !== envelope.algorithm ||
     manifest.filename !== basename(path) || manifest.source_db_path !== basename(value.databasePath) ||
     manifest.sha256 !== backupSha256(encrypted) || !isEncryptedBackup(encrypted)) throw new Error("BACKUP_VERIFICATION_FAILED");
   const plaintext = decryptBackup(encrypted, value.backupEncryption);
@@ -122,6 +125,18 @@ function snapshotSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version?: unknown } | null)?.version ?? CURRENT_SCHEMA_VERSION);
 }
 
+function validateRestoreSnapshot(path: string): void {
+  const database = openDatabase(path, { readonly: true });
+  try {
+    if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
+  } finally { database.close(); }
+}
+
+function hasPendingRestoreRollback(path: string): boolean {
+  const prefix = `${basename(path)}.`;
+  return readdirSync(dirname(path)).some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
+}
+
 function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
   mkdirSync(root, { recursive: true, mode: 0o700 });
   const path = `${root}/backup_operations_audit.jsonl`;
@@ -159,41 +174,73 @@ function backup(): void {
   console.log(`Encrypted backup completed: ${published.path}`);
 }
 
-function restore(selected: string): void {
-  const value = config();
+export function restore(selected: string, value: BackendConfig = config(), fileSystem: RestoreFileSystem = nodeRestoreFileSystem): void {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required for backup restore.");
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
   if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
+  if (hasPendingRestoreRollback(databasePath)) throw new Error("RESTORE_RECOVERY_PENDING: inspect the existing rollback database before retrying.");
   const path = resolve(isAbsolute(selected) ? selected : join(backupDir, selected));
   if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
-  if (!backupName.test(basename(path)) || !exists(path)) throw new Error("Invalid encrypted backup file.");
+  if (!backupName.test(basename(path)) || !exists(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) throw new Error("Invalid encrypted backup file.");
   const label = basename(path);
   const artifact = readFileSync(path);
-  const plaintext = isEncryptedBackup(artifact) ? decryptBackup(artifact, value.backupEncryption) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
-  const directory = mkdtempSync(join(tmpdir(), "operatoros-restore-cli-")); chmodSync(directory, 0o700);
-  const candidate = join(directory, "candidate.sqlite"); const target = `${databasePath}.${process.pid}.restore`;
-  let replaced = false;
+  const plaintext = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
+  const directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
+  const target = join(directory, `${randomUUID()}.candidate`);
   let safety: { filename: string; path: string } | null = null;
+  let rollbackOutcome: string | undefined;
+  let completed = false;
   try {
-    writeFileSync(candidate, plaintext, { mode: 0o600 }); const database = new Database(candidate, { readonly: true }); database.close();
+    writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
+    validateRestoreSnapshot(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
-    writeFileSync(target, plaintext, { mode: 0o600 }); renameSync(target, databasePath); replaced = true;
+    if (safety) {
+      let opened: ReturnType<typeof openDatabase> | null = null;
+      const close = () => { opened?.close(); opened = null; };
+      const swap = performRestoreSwap({
+        active: databasePath,
+        candidate: target,
+        rollback: `${databasePath}.${randomUUID()}.rollback`,
+        fileSystem,
+        close,
+        reopen: () => { opened = openDatabase(databasePath, { readonly: true }); },
+        afterSwap: () => {
+          if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
+          close();
+        },
+      });
+      rollbackOutcome = swap.outcome;
+      if (swap.outcome !== "committed") {
+        close();
+        const reason = swap.error instanceof Error ? ` ${swap.error.message}` : "";
+        throw new Error(swap.outcome === "recovery_required"
+          ? `RESTORE_RECOVERY_REQUIRED: automatic rollback could not be verified; preserve the remaining database files for operator recovery.${reason}`
+          : `RESTORE_ROLLED_BACK: active database was preserved.${reason}`);
+      }
+    } else {
+      linkSync(target, databasePath);
+      try { validateRestoreSnapshot(databasePath); }
+      catch (error) { rmSync(databasePath, { force: true }); throw error; }
+    }
+    completed = true;
     console.log(`Pre-restore safety snapshot: ${safety ? safety.path : "none (no active database to preserve)"}`);
     console.log(`SQLite restore completed: ${databasePath}`);
     try { audit(backupDir, "restore_completed", { filename: label, safety_backup_filename: safety ? safety.filename : null }); appendRestoreAudit(backupDir, { event: "restore_completed", outcome: "COMPLETED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason: null }); }
     catch { console.error("WARN: restore completed but the audit line could not be written."); }
   } catch (error) {
-    if (!replaced) { try { const reason = error instanceof Error ? error.message : "Restore failed."; audit(backupDir, "restore_failed", { filename: label, reason }); appendRestoreAudit(backupDir, { event: "restore_failed", outcome: "FAILED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason }); } catch { /* audit failure must not mask the restore error */ } }
+    if (!completed) { try { const reason = error instanceof Error ? error.message : "Restore failed."; audit(backupDir, "restore_failed", { filename: label, reason, ...(rollbackOutcome ? { rollback_outcome: rollbackOutcome } : {}) }); appendRestoreAudit(backupDir, { event: "restore_failed", outcome: "FAILED", target_filename: label, authenticated_username: process.env.SUDO_USER ?? process.env.USER ?? null, operation_id: randomUUID(), pre_restore_snapshot_filename: safety ? safety.filename : null, reason }); } catch { /* audit failure must not mask the restore error */ } }
     throw error;
-  } finally { rmSync(directory, { recursive: true, force: true }); rmSync(target, { force: true }); }
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 }
 
-const [action, selected, targetDir] = process.argv.slice(2);
-try {
-  if (action === "backup") backup();
-  else if (action === "restore" && selected) restore(selected);
-  else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
-  else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
-  else throw new Error("Usage: backup-cli.ts <backup|restore|restore-disposable|migrate-existing> [backup-file] [target-data-dir]");
-} catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+if (import.meta.main) {
+  const [action, selected, targetDir] = process.argv.slice(2);
+  try {
+    if (action === "backup") backup();
+    else if (action === "restore" && selected) restore(selected);
+    else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
+    else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
+    else throw new Error("Usage: backup-cli.ts <backup|restore|restore-disposable|migrate-existing> [backup-file] [target-data-dir]");
+  } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+}
