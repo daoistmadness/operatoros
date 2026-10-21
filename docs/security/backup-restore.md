@@ -174,6 +174,13 @@ Before API replacement, the operations-audit path must be writable; if it is una
 
 Backup and restore use process-local operation locks. Data reset uses its own process-local guard and an immediate SQLite transaction. These guards do not coordinate multiple API processes, and the runtime does not detect a second process. Run exactly one API process per SQLite data root.
 
+CLI backup, restore, disposable restore, and migration commands also take a
+nonblocking Linux `flock` in the data root. A second CLI operation on the same
+root is refused before it can publish or replace data. This lock serializes CLI
+processes only; it does not coordinate with the API process. Keep all API
+writers stopped before CLI restore. The CLI requires `flock` and `lsof` on
+`PATH`.
+
 The supported runtime is a single local API process. Docker/Compose and PostgreSQL are not supported runtimes; a multi-worker deployment is not a supported substitute. Do not claim multi-worker restore safety.
 
 ## Legacy scripts

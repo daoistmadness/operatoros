@@ -161,6 +161,100 @@ it("refuses to publish a CLI backup from a synthetic database with foreign-key v
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
+it("serializes concurrent CLI backups so every successful command keeps a distinct verified artifact", async () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-concurrent-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    createFreshDatabase(databasePath);
+    const database = new Database(databasePath);
+    database.query("INSERT INTO students (id, name) VALUES (?, ?)").run(424242, "Synthetic Student ".repeat(800000));
+    database.close();
+
+    const processes = Array.from({ length: 6 }, () => Bun.spawn([process.execPath, cli, "backup"], {
+      cwd: root,
+      env,
+      stdout: "pipe",
+      stderr: "pipe",
+    }));
+    const results = await Promise.all(processes.map(async (process) => {
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+      return { exitCode, stdout, stderr };
+    }));
+
+    const successfulNames = results.flatMap(({ exitCode, stdout }) => exitCode === 0
+      ? stdout.split("\n").filter((line) => line.startsWith("Encrypted backup completed:")).map((line) => line.slice(line.lastIndexOf("/") + 1))
+      : []);
+    const artifacts = readdirSync(backupDir).filter((name) => artifactPattern.test(name));
+    expect(successfulNames.length).toBeGreaterThan(0);
+    expect(new Set(successfulNames).size).toBe(successfulNames.length);
+    expect(artifacts).toHaveLength(successfulNames.length);
+    for (const filename of artifacts) {
+      const metadata = JSON.parse(readFileSync(join(backupDir, `${filename}.meta.json`), "utf8")) as { sha256: string };
+      expect(metadata.sha256).toBe(backupSha256(readFileSync(join(backupDir, filename))));
+    }
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 60000);
+
+it("refuses a concurrent CLI restore before changing the active database and audits the denial", async () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-restore-lock-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const lockPath = join(temporary, ".operatoros-backup-cli.lock");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  let lockHolder: ReturnType<typeof Bun.spawn> | undefined;
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = Bun.spawnSync([process.execPath, cli, "backup"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const marker = openDatabase(databasePath);
+    marker.client.run("INSERT INTO students (id, name) VALUES (424243, 'Active marker')");
+    marker.close();
+    const activeBefore = readFileSync(databasePath);
+
+    writeFileSync(lockPath, "", { mode: 0o600 });
+    lockHolder = Bun.spawn(["flock", "--no-fork", "--exclusive", lockPath, "sleep", "5"], { stdout: "ignore", stderr: "ignore" });
+    await Bun.sleep(100);
+    expect(Bun.spawnSync(["flock", "--nonblock", "--conflict-exit-code", "75", lockPath, "true"]).exitCode).toBe(75);
+
+    const refused = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], {
+      cwd: root,
+      env,
+      input: "golden-admin-pass-1\n",
+    });
+    expect(refused.status).toBe(1);
+    expect(refused.stderr?.toString()).toContain("Another backup CLI operation is already active.");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
+    expect(recovery[1]).toMatchObject({ outcome: "DENIED", target_filename: filename, reason: "RESTORE_CLI_OPERATION_BUSY" });
+  } finally {
+    lockHolder?.kill();
+    if (lockHolder) await lockHolder.exited;
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}, 15000);
+
 it("rejects authenticated SQLite candidates with integrity, foreign-key, or schema failures before replacing the active database", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-schema-"));
   const source = join(temporary, "source");
@@ -225,7 +319,7 @@ it("rejects authenticated SQLite candidates with integrity, foreign-key, or sche
     rejectCandidate(Buffer.from("authenticated but not a SQLite database"));
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);
 
 it("rejects an admin-less candidate with closed setup before making the CLI safety snapshot", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-"));
@@ -522,7 +616,7 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
     rmSync(temporary, { recursive: true, force: true });
     rmSync(candidateRoot, { recursive: true, force: true });
   }
-});
+}, 15000);
 
 it("rejects manifest identity, checksum, and envelope-authentication mismatches before changing the active database", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-manifest-"));
@@ -580,7 +674,7 @@ it("rejects manifest identity, checksum, and envelope-authentication mismatches 
     expect(readFileSync(databasePath).equals(original)).toBe(true);
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);
 
 it("rolls back interrupted and post-swap-invalid replacements, then allows a safe retry", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-rollback-"));

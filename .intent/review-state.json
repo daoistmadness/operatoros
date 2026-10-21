@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
+      "fingerprint": "fe98c2c702caa023ce97804b428dc4d845e23b731336102557b65ad5306975e1",
       "snapshot": {
-        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
+        "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "CLI concurrency locking does not change Elysia framework guidance or authoring instructions.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: docs/security/backup-restore.md at 51d6b4df767a669d65f03d703e5160fd63055102"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
+      "fingerprint": "35f852590a01f84ca31df98f47eb00814f202ea6439dafae047b5b09679e0b28",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
+        "apps/api/src/backup-cli.ts": "fa8c3ea5f7b74183b2b1a5ff703d4eedefda1024eb7b5c05ad0b7b4d8b3d1283"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The final CLI lock wrapper remains shell/process coordination and does not change Elysia framework guidance.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/backup-cli.ts at 51d6b4df767a669d65f03d703e5160fd63055102"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "22eb857e1753096d86890fe85154db3ebeba420e686cc7e689333e3ceea16bcf",
+      "fingerprint": "858a11b2abd1b33fb159eb4cbfa392feb2c3da5d44d1e3e32d243466414690c1",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "3388b39a2508fa6a5b219eccb2324ee8284553e8c94a946198b82bec7942a7a7"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "2a18c486cb0ef17eabd25ae59e947c456353f9496d84dcc0a18a190f55f8e80b"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "51d6b4df767a669d65f03d703e5160fd63055102",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "CLI concurrency locking does not change Elysia framework guidance or authoring instructions.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 51d6b4df767a669d65f03d703e5160fd63055102"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
