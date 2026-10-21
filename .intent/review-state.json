@@ -219,27 +219,27 @@
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
-      "fingerprint": "1693ea8210833eacca3730017635d02cf8411021f8c3e635351d5de8e7ee3e13",
+      "fingerprint": "b88224c57b3858344d7d5203a2401e9f88435bf369bd8e80e0c62ae1368041ea",
       "snapshot": {
-        "apps/api/src/domains/restore-transaction.ts": "cc75ee074c103010de13ca492d69eefbb7527c4580528155d63af201fcc5f5a6"
+        "apps/api/src/domains/restore-transaction.ts": "be228d5b374e552cabc7ae527cb3d7be582551e72843636b384506ae04e8f13b"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
       "evidence": [
-        "Changed: apps/api/src/domains/restore-transaction.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/src/domains/restore-transaction.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "3666913da5301bec2a4b582e05d5ae6ff665825bd076e89dcb7dfe49667416ce",
+      "fingerprint": "2f1a11b3df1ff9c84372769b5d866d0242a0fe9881962ab2fd03ae8c46ef34cf",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "19a3b3d5460c665149c6a15872f965602084ca9058c4f727a04ac6468718dc59"
+        "apps/api/src/domains/safety.ts": "f75fa1f9a0a5fccac0af2583b5c978bf6e0aab02fd92bc6527b49da24311b638"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/src/domains/safety.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -255,27 +255,27 @@
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
-      "fingerprint": "ac342eda25fe682627c97a8f1992edd409c5b72c07ae23417098fdad7909e153",
+      "fingerprint": "c34b121d0c3a8d323c5ed119d780aeb48efd23fd9719e8c26122a0398dca1258",
       "snapshot": {
-        "apps/api/tests/restore-transaction.test.ts": "099c428785e03217baf2b231c15cf6e8316ada748461e0caf26d4cefb4ba017d"
+        "apps/api/tests/restore-transaction.test.ts": "b97d771929d9fd33ef1586406b1a9934354f0074a74ccf58de952edc1dc0e56a"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
       "evidence": [
-        "Changed: apps/api/tests/restore-transaction.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/tests/restore-transaction.test.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "425c4a7d4c39846bf3839e6c20f1fe0ed791776970aa0c4391b09b821f24c1f0",
+      "fingerprint": "905dd73910c71d862235e59b9a66c8db0cfe0e61494d34c3f1d40c94dc753fb4",
       "snapshot": {
-        "docs/security/backup-restore.md": "63c8e22b687cc0fce9cd88d0917891f3003e7048b6ce0bdbb101cbdce7c6bf58"
+        "docs/security/backup-restore.md": "c3824cd133d9b34c10f444c4b6d710b99cebc3721fb1f5c7b805a8d0b519479f"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: docs/security/backup-restore.md at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -372,15 +372,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "46e3ffa359518d61b25895a37f40b6c9a866337586183ecac923045d8a0d79b4",
+      "fingerprint": "01f6ee3f3d96f08c68107085471a61ff948ec014648952a8c7bb138a806df61b",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "ddb9f41b7e2d748faa6a271aae737b503ea43e97c16fe3a76063c98284622687"
+        "apps/api/src/backup-cli.ts": "ca8c9f4b0498f3aecdcd7e42d04c83d4ef9b9aca615c100719f6243462141006"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/src/backup-cli.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {

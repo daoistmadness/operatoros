@@ -20,11 +20,12 @@ The connection layer sets `PRAGMA foreign_keys = ON` and does not configure WAL.
 Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
 
 Before publishing a backup, API and CLI creation flush the encrypted artifact and
-metadata files; after their atomic renames they flush the containing directory.
+metadata files; after their atomic renames they flush both source and destination
+directories.
 On POSIX filesystems that honor `fsync`, this asks the operating system to make
 both file contents and published names survive a crash or reboot. Restore also
-flushes the verified candidate and the directory after each active/rollback
-rename, and flushes the validated restored database before writing the API
+flushes the verified candidate and both directories after cross-directory
+renames, and flushes the validated restored database before writing the API
 completion record. Retention directory changes are flushed after eviction.
 Windows directory-entry flushing is unavailable through this Node filesystem
 path, so Windows receives file-content flushes but no directory durability

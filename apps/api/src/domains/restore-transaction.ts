@@ -83,7 +83,10 @@ export function performRestoreSwap<T>(options: RestoreSwapOptions<T>): RestoreSw
     return true;
   };
 
-  try { files.syncFile(options.candidate); }
+  try {
+    files.syncFile(options.candidate);
+    files.syncDirectory(dirname(options.candidate));
+  }
   catch (error) { return { outcome: "unchanged", error }; }
 
   try { options.close(); }
@@ -107,6 +110,7 @@ export function performRestoreSwap<T>(options: RestoreSwapOptions<T>): RestoreSw
   try {
     files.rename(options.candidate, options.active);
     files.syncDirectory(dirname(options.active));
+    if (dirname(options.candidate) !== dirname(options.active)) files.syncDirectory(dirname(options.candidate));
   }
   catch (error) {
     return restorePriorActive()

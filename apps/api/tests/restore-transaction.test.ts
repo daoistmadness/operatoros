@@ -119,6 +119,30 @@ describe("performRestoreSwap transitions", () => {
     expect(store.has(rollback)).toBe(false);
   });
 
+  it("rolls back when a cross-directory restore cannot sync the candidate source directory", () => {
+    const nestedCandidate = "/data/.restore/candidate";
+    const { store, fs } = files({ [active]: "prior", [nestedCandidate]: "restored" });
+    let sourceDirectorySyncs = 0;
+    const result = performRestoreSwap({
+      active, candidate: nestedCandidate, rollback,
+      fileSystem: {
+        ...fs,
+        syncDirectory: (path) => {
+          if (path === "/data/.restore" && ++sourceDirectorySyncs === 2) throw new Error("SOURCE_DIRECTORY_SYNC_FAILED");
+        },
+      },
+      close: () => {},
+      reopen: () => {},
+      afterSwap: () => "verified",
+    });
+    expect(result.outcome).toBe("rolled_back");
+    expect((result.error as Error).message).toBe("SOURCE_DIRECTORY_SYNC_FAILED");
+    expect(store.get(active)).toBe("prior");
+    expect(store.has(rollback)).toBe(false);
+    expect(store.has(nestedCandidate)).toBe(false);
+    expect([...store.keys()].filter((path) => path.endsWith(".rejected"))).toEqual([]);
+  });
+
   it("rolls back if the active directory entry cannot be synced", () => {
     const { store, fs } = files({ [active]: "prior", [candidate]: "restored" });
     let directorySyncs = 0;
@@ -126,7 +150,7 @@ describe("performRestoreSwap transitions", () => {
       active, candidate, rollback,
       fileSystem: {
         ...fs,
-        syncDirectory: () => { if (++directorySyncs === 2) throw new Error("DIRECTORY_SYNC_FAILED"); },
+        syncDirectory: () => { if (++directorySyncs === 3) throw new Error("DIRECTORY_SYNC_FAILED"); },
       },
       close: () => {},
       reopen: () => {},
@@ -145,7 +169,7 @@ describe("performRestoreSwap transitions", () => {
       active, candidate, rollback,
       fileSystem: {
         ...fs,
-        syncDirectory: () => { if (++directorySyncs === 1) throw new Error("DIRECTORY_SYNC_FAILED"); },
+        syncDirectory: () => { if (++directorySyncs === 2) throw new Error("DIRECTORY_SYNC_FAILED"); },
       },
       close: () => {},
       reopen: () => {},
