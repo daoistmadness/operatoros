@@ -1,6 +1,5 @@
-import { defineConfig } from 'vite';
+import { defineConfig, transformWithOxc } from 'vite';
 import react from '@vitejs/plugin-react';
-import * as vite from 'vite';
 import path from 'node:path';
 
 const rawFrontendPort = process.env.FRONTEND_PORT ?? 5173;
@@ -50,9 +49,9 @@ export default defineConfig({
       async transform(code, id) {
         if (!id.match(/src\/.*\.js$/)) return null;
 
-        return vite.transformWithEsbuild(code, id, {
-          loader: 'jsx',
-          jsx: 'automatic',
+        return transformWithOxc(code, id, {
+          lang: 'jsx',
+          jsx: { runtime: 'automatic' },
         });
       },
     },
@@ -78,8 +77,8 @@ export default defineConfig({
     proxy: apiProxy,
   },
   optimizeDeps: {
-    esbuildOptions: {
-      loader: { '.js': 'jsx' },
+    rolldownOptions: {
+      moduleTypes: { '.js': 'jsx' },
     },
   },
   build: {

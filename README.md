@@ -41,7 +41,7 @@ OperatorOS follows a strict local-first architecture where the backend API remai
 flowchart LR
   subgraph Client ["Client Interface"]
     Browser["Browser / Staff User"]
-    FE["React Frontend<br/>(Vite 6 + React Router 7)"]
+    FE["React Frontend<br/>(Vite 8 + React Router 7)"]
   end
 
   subgraph Server ["Backend API Authority"]
@@ -137,7 +137,7 @@ flowchart TD
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `5.9`, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
-| **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19`, Vite `6`, React Router `7`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |
+| **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19`, Vite `8.3.4`, React Router `7`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |
 | **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
 
 ---

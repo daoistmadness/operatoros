@@ -87,7 +87,7 @@ jobs:
         env:
           HK_MISE: "1"
         run: hk check --all
-      - name: Validate Turbo orchestration
+      - name: Typecheck, test, and build workspaces
         working-directory: ${{ github.workspace }}
         run: |
           started_at=$(date +%s)
