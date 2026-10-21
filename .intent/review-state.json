@@ -219,63 +219,63 @@
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
-      "fingerprint": "3bb22b6e75a93e3d320a18843aeb0fbdff2e769901150cc482342236d5156d77",
+      "fingerprint": "1693ea8210833eacca3730017635d02cf8411021f8c3e635351d5de8e7ee3e13",
       "snapshot": {
-        "apps/api/src/domains/restore-transaction.ts": "2dbf77bfcad578088baf1db5241423a2da7d11e9fe7789666629512ca766a30f"
+        "apps/api/src/domains/restore-transaction.ts": "cc75ee074c103010de13ca492d69eefbb7527c4580528155d63af201fcc5f5a6"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/restore-transaction.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/src/domains/restore-transaction.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "d032d23e55aae66d87b966d258fffc0278af4302d1a61aba5eaf888ba4aa943a",
+      "fingerprint": "3666913da5301bec2a4b582e05d5ae6ff665825bd076e89dcb7dfe49667416ce",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "0d5f6a3b525852220fac5d2810ee34a254fa9ad7cc300505833a6cda78b522c3"
+        "apps/api/src/domains/safety.ts": "19a3b3d5460c665149c6a15872f965602084ca9058c4f727a04ac6468718dc59"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/domains/safety.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
-      "fingerprint": "fab48d149f6fa67336ba9b19b312cd401ec44bf4f4be3fbdcf449b96e77b7a23",
+      "fingerprint": "6125cc26510384490924f31bb9dc5ce9a25471a0481907cab1f07d1935ac8f66",
       "snapshot": {
-        "apps/api/tests/restore-rename-failure.test.ts": "8b9122a05ebf46f3de14f7b6a2f2bf868786aa91c1c590e25e4eb85190177669"
+        "apps/api/tests/restore-rename-failure.test.ts": "33ae92ceaa7b007c657afe8a4b98d14fa39e4650d37001cd1a3daaa1faf8f8cb"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-rename-failure.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
-      "fingerprint": "a6ccfa2bc117408cb858309c3afe4344793bd1bf7cfcd5e957a25b1dc79c62d4",
+      "fingerprint": "ac342eda25fe682627c97a8f1992edd409c5b72c07ae23417098fdad7909e153",
       "snapshot": {
-        "apps/api/tests/restore-transaction.test.ts": "6487712e530742f61eb64c88efe469522c4c56d48af2ca74a1c2ec5ae6f241a0"
+        "apps/api/tests/restore-transaction.test.ts": "099c428785e03217baf2b231c15cf6e8316ada748461e0caf26d4cefb4ba017d"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-transaction.test.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/tests/restore-transaction.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "fe98c2c702caa023ce97804b428dc4d845e23b731336102557b65ad5306975e1",
+      "fingerprint": "425c4a7d4c39846bf3839e6c20f1fe0ed791776970aa0c4391b09b821f24c1f0",
       "snapshot": {
-        "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
+        "docs/security/backup-restore.md": "63c8e22b687cc0fce9cd88d0917891f3003e7048b6ce0bdbb101cbdce7c6bf58"
       },
-      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 77d939cc6c56f57f5fb38398002f01cc17247158"
+        "Changed: docs/security/backup-restore.md at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -336,63 +336,63 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "1c63e02a49deb13b701e99a70aa4e7be824a8f182d2bd73481bf95a2475e34af",
+      "fingerprint": "a4d93310e9293009b8d1e24d09089964e90cda00844c6ee78860ffba434ae01e",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "3d208600540a4aa5e7b3ff5a9767096cdf0541d61a3eea75bbdeaf76a0155615"
+        "apps/api/tests/backup-health.test.ts": "6c76a415dfb75c823a24a40c3c8f39c67806aa9daa97c32a55aba045b0b69cb1"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/backup-health.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
-      "fingerprint": "c22f09d5504ea59d8287169c3efe27597d39fdb32ab3958470c4544144fa5faa",
+      "fingerprint": "946c122b274009be6fa02118c364366f918bb403ca1dc1a3c855a76cfb845798",
       "snapshot": {
-        "apps/api/tests/restore-foreign-keys.test.ts": "798e665d6975efdb9e593f32f2b264b5ca58db1875f03dc0badeccce24f4d82a"
+        "apps/api/tests/restore-foreign-keys.test.ts": "69e97b9acf7841a443a7da4a9802cb4b976ba9a0215de4bcfdcf90cfa387ad04"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
-      "fingerprint": "8c06d24367d6bc70389e39893fcdab3d185cc3003e4b83d11b8905a4c31f220c",
+      "fingerprint": "2e5cb281a820504bcc4b4a2a1290cd0e92908a7d4f9887b990f280fe9c5ca37e",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.tsx": "bdfbee574dd644f00436c5ea5de69e374e7008d267c66542f2d19d20123ddd53"
+        "apps/web/src/pages/BackupManagement.tsx": "bdd80da13ab74eb2392712df0b9422b13529679422816998e3c96cc665b63305"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.tsx at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/pages/BackupManagement.tsx at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "5e98546282797dbb7f6861ff4813a3360e5e3c0443d9416cda285a4c4535269b",
+      "fingerprint": "46e3ffa359518d61b25895a37f40b6c9a866337586183ecac923045d8a0d79b4",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "38eee829534f92655acb2e229fd73d95f70c45722986c1892c6276d21f29446d"
+        "apps/api/src/backup-cli.ts": "ddb9f41b7e2d748faa6a271aae737b503ea43e97c16fe3a76063c98284622687"
       },
-      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
+        "Changed: apps/api/src/backup-cli.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "ab1ca09ca19ac392ac4cbdc0ff38ea5d567f09994416f69a899000cf5242ba6f",
+      "fingerprint": "72217c250a0e78748373e7c37cc07eaa460f0d4e0682b592b718b5f1c991539c",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "d588846bdf071494874b8b36036507d3d04172541687f008053c19c0afd5abc5"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "18c3c7ca5ad1d11afd5fdaa05fd65888fb3f8ab906191d8cc560bd0b0c1dc173"
       },
-      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -420,15 +420,15 @@
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
-      "fingerprint": "1fe7971b2a34f70d3abfa0444cd7978d71ec85bd5c9702fe266a82472e7f63c5",
+      "fingerprint": "6d31ce3d4fccccd3c241f231fa9e703559193bdaea17b4b8c9bc27dddecfad79",
       "snapshot": {
-        "apps/api/tests/restore-administrator.test.ts": "6381093a78645215d12641b7bf203af411c8de28a8b9aea5925a841ca7e1f4a9"
+        "apps/api/tests/restore-administrator.test.ts": "784cc60222695a1c17d7445e89bb435ba70601e9e76f006f420290d58d380a75"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-administrator.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-administrator.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/src/auth/sqlite-date.ts": {
@@ -468,63 +468,63 @@
       ]
     },
     "source:apps/web/src/api/backups.test.ts": {
-      "fingerprint": "0ef7843bc7327f22550a800198831ca215d48b3ae06963905b22992a007d6838",
+      "fingerprint": "4d3845591d34b3f48244a71ce0e131d2d86f553c27f8813344b325566b347ada",
       "snapshot": {
-        "apps/web/src/api/backups.test.ts": "3d3ead9db88b88c964d11446d4650a2e9c13eeea9fc6e756d1a3feb46445e7b9"
+        "apps/web/src/api/backups.test.ts": "17019e4290f88910290731637d34d8df7634dfac96acbd2521d99a55ada262e8"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/web/src/api/backups.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/web/src/api/backups.ts": {
-      "fingerprint": "40d7a934bc1e46ac4ff3bd9b6f7eaaa9be50d8593013b53658fb3284de01dd88",
+      "fingerprint": "c09492acfd84fd40a1b2b4441c50788cc108f000ff6b5ab80c26a532c312441e",
       "snapshot": {
-        "apps/web/src/api/backups.ts": "262939dcdf39bb0f208ebfda67a647e2437af90ee9bfd9de44d0a8455f11aab6"
+        "apps/web/src/api/backups.ts": "b6f8949669a1c8d619d0305d199519509bec23ccc11e2f7671c0b2f6ad46f067"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/api/backups.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "bdf361f3ce6c315c9289eefec0e9eae93d3793b994e91a1380dd25dac6eee5c6",
+      "fingerprint": "5544ab6d654cf6ad0f35c3495628d22f19e6de667e6161b860402edb5cc1dae8",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "3b3b3dad2b2538bd1de72ef71cdc5fb83e3d0dc1065163ab56359f23d749071e"
+        "apps/web/src/generated/openapi/schema.ts": "4d7a509bc3de364523a9ed9bd49991c4aed839f706409f8af3bc540c7054c50c"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
-      "fingerprint": "b98d5ccf31ca8cad21be64ebfc2a22910d9f5efe73e661a5e6d394cecb563e99",
+      "fingerprint": "f3018754fdb8e34cc37935dc46a7897f11c4e032a282c263f2d82e9e92acdd5b",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.test.tsx": "702f10319441eccae496b1729133355d0864d8e47dc7b0f1eba6601834766459"
+        "apps/web/src/pages/BackupManagement.test.tsx": "edb7344fa05ae9834c8bc3e33b52420fbde26e24beb4ce303faff8c8b27942a6"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.test.tsx at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/pages/BackupManagement.test.tsx at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "6b946dcda79ffa30bb2ea3e713d4d24c2563517a779ba509e9cd2d4ffd919607",
+      "fingerprint": "12b87c037a382ce45e194754a880e04b4078b9dc54255d8c18370041bc0bc78c",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "c4ee045f0a33dde549817a94ca86bfdec6253addb16d4f79300e54e996a4d4dd"
+        "openapi/operatoros.openapi.json": "e5137cede5863a28dac98dc73cc74432ba9117c8af0e4e0f5187ec7fde16f097"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: openapi/operatoros.openapi.json at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -540,15 +540,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "61bdd3bf728df9bebdc10ec1ee02a69fae84cd3dfcf7cafe82a188a4952f1ebb",
+      "fingerprint": "a609fd94fe303f5ebe5dcc939d7b0907b008128b1d299d446e8a92ac694b1c88",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "f8709999ab5bdb75aa19c94108cb895dedc54329e25728467c632a2dafe29d3a"
+        "apps/api/tests/safety.test.ts": "f0b8e06eb80d44d7dbd35f13f8136325180bf99d50aacc776ec3874d8078b56b"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/safety.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     },
     "source:scripts/restore.sh": {
@@ -645,6 +645,78 @@
       "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
       "evidence": [
         "Changed: docs/security/identity-authentication.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:apps/api/src/domains/durable-files.ts": {
+      "fingerprint": "7aaf186565303394743eb683c8ccf699cea39ac7e3a48fa7301e243302b97d43",
+      "snapshot": {
+        "apps/api/src/domains/durable-files.ts": "6bf8c3e213ae96e15ec2011310691af666df2d0f46fa24425fbc1613a27f58a5"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/durable-files.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:apps/api/tests/durable-files.test.ts": {
+      "fingerprint": "1eeb5e39e40621fe54f6bd1f6f4689c2853380702e4c66ba2455b4e933446092",
+      "snapshot": {
+        "apps/api/tests/durable-files.test.ts": "0dabc7a950104078c2f6dd556e21e534fd6618fe4607e6f9dce9899ee2dcd0d9"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: apps/api/tests/durable-files.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:apps/web/src/hooks/useBackupQueries.ts": {
+      "fingerprint": "b80c4a1799493aac1cbbb0faeed55bee31213c6f3be04f4edd02aac621da438d",
+      "snapshot": {
+        "apps/web/src/hooks/useBackupQueries.ts": "6da2b902069ce1b25c016400ba65cb007b26b8749d335d7ac8b75e1d29e6881d"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: apps/web/src/hooks/useBackupQueries.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:packages/contracts/src/backup/index.ts": {
+      "fingerprint": "0b78012a4dc5058168c53d6b84e9b759410f7f757b662ae08a959052afe0cb08",
+      "snapshot": {
+        "packages/contracts/src/backup/index.ts": "2e22a571dc05c051fa5251db1c7d7fc2eac1964a42d81e608932cad25a52e5ca"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/src/backup/index.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:packages/contracts/src/index.ts": {
+      "fingerprint": "041652ba6b2131e7b28121b9b0787b4e7da696120d7c009e0a3f9ba8f5f6b883",
+      "snapshot": {
+        "packages/contracts/src/index.ts": "1d9e5facd19f8ff43c35646b6045267435ef43df6ddb4b242a0b14af0896ef14"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/src/index.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:packages/contracts/tests/backup.test.ts": {
+      "fingerprint": "3bd7acfe191ac94df1932c9d7fb3eba6d4b999b6696d8fd3b41bcafbbb156da3",
+      "snapshot": {
+        "packages/contracts/tests/backup.test.ts": "4cfa4ff20526b53c8407a4ea4e69e76445594a98420df7b94956da502d5fec7a"
+      },
+      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "outcome": "no-change",
+      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/tests/backup.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
       ]
     }
   }
