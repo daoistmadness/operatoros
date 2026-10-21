@@ -8187,6 +8187,10 @@ export interface components {
             acknowledge_safety_backup: boolean;
             /** Acknowledge Session Revocation */
             acknowledge_session_revocation: boolean;
+            /** Candidate Admin Password */
+            candidate_admin_password?: string;
+            /** Candidate Admin Username */
+            candidate_admin_username?: string;
             /** Confirmation Filename */
             confirmation_filename: string;
             /** Confirmation Phrase */

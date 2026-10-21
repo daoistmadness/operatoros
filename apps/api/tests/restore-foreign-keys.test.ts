@@ -169,16 +169,17 @@ describe("restore foreign-key validation", () => {
     } finally { cleanup(value); }
   }, 30000);
 
-  it("rejects a candidate with new FK violations before replacement", async () => {
+  it("uses the validated candidate copy if the source artifact changes afterward", async () => {
     const value = await prepare();
     try {
       const checked = await preflight(value);
       expect(checked.source.foreign_key_violation_count).toBe(0);
       value.tamperArtifactAfterPreflight();
       const response = await restore(value, checked);
-      expect(response.status).toBe(500);
-      expect((await response.json() as any).detail.code).toBe("RESTORE_ROLLED_BACK");
-      expect(activeMarker(value)).toBe(1);
+      expect(response.status).toBe(200);
+      expect((await response.json() as any).post_restore_foreign_key_violations).toBe(0);
+      expect(activeMarker(value)).toBe(0);
+      expect(value.database.client.query("PRAGMA foreign_key_check").all()).toHaveLength(0);
     } finally { cleanup(value); }
   }, 30000);
 

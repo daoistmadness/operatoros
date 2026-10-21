@@ -3,10 +3,11 @@ import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, 
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
 import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
-import { restoreIdentityEligible } from "./auth/admin-state";
+import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
 import { appendRestoreAudit } from "./domains/restore-audit";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
@@ -126,11 +127,12 @@ function snapshotSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version?: unknown } | null)?.version ?? CURRENT_SCHEMA_VERSION);
 }
 
-function validateRestoreSnapshot(path: string): void {
+function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential): void {
   const database = openDatabase(path, { readonly: true });
   try {
     if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
     if (!restoreIdentityEligible(database.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
+    if (!isFirstAdminSetupRequired(database.client as unknown as Database) && !restoreAdministratorCredentialMatches(database.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
   } finally { database.close(); }
 }
 
@@ -176,7 +178,7 @@ function backup(): void {
   console.log(`Encrypted backup completed: ${published.path}`);
 }
 
-export function restore(selected: string, value: BackendConfig = config(), fileSystem: RestoreFileSystem = nodeRestoreFileSystem): void {
+export function restore(selected: string, value: BackendConfig = config(), fileSystem: RestoreFileSystem = nodeRestoreFileSystem, credential?: RestoreAdministratorCredential): void {
   if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required for backup restore.");
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
@@ -195,7 +197,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   let completed = false;
   try {
     writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
-    validateRestoreSnapshot(target);
+    validateRestoreSnapshot(target, credential);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto") : null;
     if (safety) {
       let opened: ReturnType<typeof openDatabase> | null = null;
@@ -210,6 +212,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
         afterSwap: () => {
           if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
           if (!opened || !restoreIdentityEligible(opened.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
+          if (!isFirstAdminSetupRequired(opened.client as unknown as Database) && !restoreAdministratorCredentialMatches(opened.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
           close();
         },
       });
@@ -223,7 +226,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
       }
     } else {
       linkSync(target, databasePath);
-      try { validateRestoreSnapshot(databasePath); }
+      try { validateRestoreSnapshot(databasePath, credential); }
       catch (error) { rmSync(databasePath, { force: true }); throw error; }
     }
     completed = true;
@@ -239,11 +242,19 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
 
 if (import.meta.main) {
   const [action, selected, targetDir] = process.argv.slice(2);
-  try {
-    if (action === "backup") backup();
-    else if (action === "restore" && selected) restore(selected);
-    else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
-    else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
-    else throw new Error("Usage: backup-cli.ts <backup|restore|restore-disposable|migrate-existing> [backup-file] [target-data-dir]");
-  } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+  await (async () => {
+    try {
+      if (action === "backup") backup();
+      else if (action === "restore" && selected) {
+        const usernameIndex = process.argv.indexOf("--admin-user");
+        const username = usernameIndex >= 0 ? process.argv[usernameIndex + 1] : undefined;
+        if (usernameIndex >= 0 && (!username || username.trim() !== username || username.length > 255)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+        const password = username ? await promptHidden(`Password for backup administrator '${username}': `) : "";
+        restore(selected, config(), nodeRestoreFileSystem, username ? { username, password } : undefined);
+      }
+      else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
+      else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);
+      else throw new Error("Usage: backup-cli.ts backup | restore <backup-file> [--admin-user <username>] | restore-disposable <backup-file> <empty-data-dir> | migrate-existing <backup-file> <data-dir>");
+    } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
+  })();
 }

@@ -125,12 +125,16 @@ describe("guided backup and recovery", () => {
       confirmationFilename: backup.filename,
       confirmationPhrase: "RESTORE_DATABASE",
       password: "current-password",
+      candidateAdminUsername: "",
+      candidateAdminPassword: "",
       acknowledgements: { replace: true, sessions: true, restart: true, safety: true },
       eligible: true,
       busy: false,
     };
     expect(canExecuteRestore(common)).toBe(true);
     expect(canExecuteRestore({ ...common, password: "" })).toBe(false);
+    expect(canExecuteRestore({ ...common, candidateAdminUsername: "backup-admin" })).toBe(false);
+    expect(canExecuteRestore({ ...common, candidateAdminUsername: "backup-admin", candidateAdminPassword: "backup-password" })).toBe(true);
     expect(canExecuteRestore({ ...common, confirmationFilename: "wrong" })).toBe(false);
     expect(canExecuteRestore({ ...common, confirmationPhrase: "RESTORE" })).toBe(false);
     expect(canExecuteRestore({ ...common, busy: true })).toBe(false);
