@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { createColumnHelper, flexRender, rowPaginationFeature, columnVisibilityFeature, tableFeatures, useTable } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
 import { Download, Plus, Search, Upload } from "lucide-react";
 import type { ManagedStudent, StudentFilters } from "../api/students";
@@ -22,7 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { useAuth } from "../context/AuthContext";
 import { queryKeys } from "../lib/query/queryKeys";
 
-const column = createColumnHelper<ManagedStudent>();
+const features = tableFeatures({ rowPaginationFeature, columnVisibilityFeature });
+const column = createColumnHelper<typeof features, ManagedStudent>();
 const today = () => new Date().toISOString().slice(0, 10);
 
 function saveBlob(blob: Blob, filename: string) {
@@ -135,7 +136,7 @@ export default function StudentManagement() {
   const visiblePrograms = (programs.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)));
   const visibleGrades = (grades.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)) && (!programId || item.program_id === Number(programId)));
   const visibleClasses = (classes.data || []).filter((item) => item.active && (!academicYearId || item.academic_year_id === Number(academicYearId)) && (!gradeId || item.grade_id === Number(gradeId)));
-  const columns = useMemo(() => [
+  const columns = useMemo(() => column.columns([
     column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-black text-brand hover:underline" to={`/students/${row.original.id}`}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
     column.accessor("nipd_masked", { header: "NIPD", cell: (info) => info.getValue() || "—" }),
     column.accessor("nisn_masked", { header: "NISN", cell: (info) => info.getValue() || "—" }),
@@ -148,8 +149,8 @@ export default function StudentManagement() {
     column.accessor("student_status", { header: "Status", cell: (info) => <Badge variant={info.getValue() === "active" ? "success" : "secondary"}>{info.getValue().replaceAll("_", " ")}</Badge> }),
     column.accessor("quality_flags", { header: "Data quality", cell: (info) => info.getValue().length ? <Badge variant="warning">{info.getValue().length} item(s)</Badge> : <Badge variant="success">Complete</Badge> }),
     column.display({ id: "actions", header: "Actions", cell: ({ row }) => <Button variant="outline" size="sm" onClick={() => { window.location.href = `/students/${row.original.id}`; }}>Open profile</Button> }),
-  ], []);
-  const table = useReactTable({ data: students.data?.items || [], columns, getCoreRowModel: getCoreRowModel(), manualPagination: true, pageCount: students.data?.total_pages || 0 });
+  ]), []);
+  const table = useTable({ features, data: students.data?.items || [], columns, manualPagination: true, pageCount: students.data?.total_pages || 0 });
   const exportTemplate = async () => { const blob = await exporter.mutateAsync(); saveBlob(blob, "operatoros-student-update.xlsx"); };
   const exportCsv = async () => { const blob = await csvExporter.mutateAsync(filters); saveBlob(blob, "operatoros-students.csv"); };
 
