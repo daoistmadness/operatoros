@@ -233,15 +233,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "d032d23e55aae66d87b966d258fffc0278af4302d1a61aba5eaf888ba4aa943a",
+      "fingerprint": "df5a87095bc4a52eddbcb7646063447fb5733772a08f55476ad9d02b6b4c46dc",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "0d5f6a3b525852220fac5d2810ee34a254fa9ad7cc300505833a6cda78b522c3"
+        "apps/api/src/domains/safety.ts": "ac21893f748177ee5984dcda394ff844b7a8ab3be9a03a63ff873e399ae6fc54"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The response DTO and manifest validation changes use existing Elysia/TypeBox route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/domains/safety.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -338,15 +338,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "1c63e02a49deb13b701e99a70aa4e7be824a8f182d2bd73481bf95a2475e34af",
+      "fingerprint": "a4d93310e9293009b8d1e24d09089964e90cda00844c6ee78860ffba434ae01e",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "3d208600540a4aa5e7b3ff5a9767096cdf0541d61a3eea75bbdeaf76a0155615"
+        "apps/api/tests/backup-health.test.ts": "6c76a415dfb75c823a24a40c3c8f39c67806aa9daa97c32a55aba045b0b69cb1"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "The response DTO and manifest validation changes use existing Elysia/TypeBox route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/backup-health.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
@@ -362,15 +362,15 @@
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
-      "fingerprint": "8c06d24367d6bc70389e39893fcdab3d185cc3003e4b83d11b8905a4c31f220c",
+      "fingerprint": "2e5cb281a820504bcc4b4a2a1290cd0e92908a7d4f9887b990f280fe9c5ca37e",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.tsx": "bdfbee574dd644f00436c5ea5de69e374e7008d267c66542f2d19d20123ddd53"
+        "apps/web/src/pages/BackupManagement.tsx": "bdd80da13ab74eb2392712df0b9422b13529679422816998e3c96cc665b63305"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.tsx at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/pages/BackupManagement.tsx at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
@@ -470,63 +470,63 @@
       ]
     },
     "source:apps/web/src/api/backups.test.ts": {
-      "fingerprint": "0ef7843bc7327f22550a800198831ca215d48b3ae06963905b22992a007d6838",
+      "fingerprint": "4d3845591d34b3f48244a71ce0e131d2d86f553c27f8813344b325566b347ada",
       "snapshot": {
-        "apps/web/src/api/backups.test.ts": "3d3ead9db88b88c964d11446d4650a2e9c13eeea9fc6e756d1a3feb46445e7b9"
+        "apps/web/src/api/backups.test.ts": "17019e4290f88910290731637d34d8df7634dfac96acbd2521d99a55ada262e8"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/web/src/api/backups.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/web/src/api/backups.ts": {
-      "fingerprint": "40d7a934bc1e46ac4ff3bd9b6f7eaaa9be50d8593013b53658fb3284de01dd88",
+      "fingerprint": "c09492acfd84fd40a1b2b4441c50788cc108f000ff6b5ab80c26a532c312441e",
       "snapshot": {
-        "apps/web/src/api/backups.ts": "262939dcdf39bb0f208ebfda67a647e2437af90ee9bfd9de44d0a8455f11aab6"
+        "apps/web/src/api/backups.ts": "b6f8949669a1c8d619d0305d199519509bec23ccc11e2f7671c0b2f6ad46f067"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/api/backups.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "bdf361f3ce6c315c9289eefec0e9eae93d3793b994e91a1380dd25dac6eee5c6",
+      "fingerprint": "5544ab6d654cf6ad0f35c3495628d22f19e6de667e6161b860402edb5cc1dae8",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "3b3b3dad2b2538bd1de72ef71cdc5fb83e3d0dc1065163ab56359f23d749071e"
+        "apps/web/src/generated/openapi/schema.ts": "4d7a509bc3de364523a9ed9bd49991c4aed839f706409f8af3bc540c7054c50c"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/web/src/generated/openapi/schema.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
-      "fingerprint": "b98d5ccf31ca8cad21be64ebfc2a22910d9f5efe73e661a5e6d394cecb563e99",
+      "fingerprint": "f3018754fdb8e34cc37935dc46a7897f11c4e032a282c263f2d82e9e92acdd5b",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.test.tsx": "702f10319441eccae496b1729133355d0864d8e47dc7b0f1eba6601834766459"
+        "apps/web/src/pages/BackupManagement.test.tsx": "edb7344fa05ae9834c8bc3e33b52420fbde26e24beb4ce303faff8c8b27942a6"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.test.tsx at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/web/src/pages/BackupManagement.test.tsx at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "6b946dcda79ffa30bb2ea3e713d4d24c2563517a779ba509e9cd2d4ffd919607",
+      "fingerprint": "12b87c037a382ce45e194754a880e04b4078b9dc54255d8c18370041bc0bc78c",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "c4ee045f0a33dde549817a94ca86bfdec6253addb16d4f79300e54e996a4d4dd"
+        "openapi/operatoros.openapi.json": "e5137cede5863a28dac98dc73cc74432ba9117c8af0e4e0f5187ec7fde16f097"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: openapi/operatoros.openapi.json at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -542,15 +542,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "61bdd3bf728df9bebdc10ec1ee02a69fae84cd3dfcf7cafe82a188a4952f1ebb",
+      "fingerprint": "a609fd94fe303f5ebe5dcc939d7b0907b008128b1d299d446e8a92ac694b1c88",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "f8709999ab5bdb75aa19c94108cb895dedc54329e25728467c632a2dafe29d3a"
+        "apps/api/tests/safety.test.ts": "f0b8e06eb80d44d7dbd35f13f8136325180bf99d50aacc776ec3874d8078b56b"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The response DTO and manifest validation changes use existing Elysia/TypeBox route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/safety.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:scripts/restore.sh": {
@@ -587,6 +587,54 @@
       "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
+      ]
+    },
+    "source:apps/web/src/hooks/useBackupQueries.ts": {
+      "fingerprint": "b80c4a1799493aac1cbbb0faeed55bee31213c6f3be04f4edd02aac621da438d",
+      "snapshot": {
+        "apps/web/src/hooks/useBackupQueries.ts": "6da2b902069ce1b25c016400ba65cb007b26b8749d335d7ac8b75e1d29e6881d"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
+      "evidence": [
+        "Changed: apps/web/src/hooks/useBackupQueries.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+      ]
+    },
+    "source:packages/contracts/src/backup/index.ts": {
+      "fingerprint": "0b78012a4dc5058168c53d6b84e9b759410f7f757b662ae08a959052afe0cb08",
+      "snapshot": {
+        "packages/contracts/src/backup/index.ts": "2e22a571dc05c051fa5251db1c7d7fc2eac1964a42d81e608932cad25a52e5ca"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/src/backup/index.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+      ]
+    },
+    "source:packages/contracts/src/index.ts": {
+      "fingerprint": "041652ba6b2131e7b28121b9b0787b4e7da696120d7c009e0a3f9ba8f5f6b883",
+      "snapshot": {
+        "packages/contracts/src/index.ts": "1d9e5facd19f8ff43c35646b6045267435ef43df6ddb4b242a0b14af0896ef14"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/src/index.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+      ]
+    },
+    "source:packages/contracts/tests/backup.test.ts": {
+      "fingerprint": "3bd7acfe191ac94df1932c9d7fb3eba6d4b999b6696d8fd3b41bcafbbb156da3",
+      "snapshot": {
+        "packages/contracts/tests/backup.test.ts": "4cfa4ff20526b53c8407a4ea4e69e76445594a98420df7b94956da502d5fec7a"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore response DTOs now use shared TypeBox schemas and existing Elysia validation patterns; no Elysia authoring guidance, skill source, or planning artifact changed.",
+      "evidence": [
+        "Changed: packages/contracts/tests/backup.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     }
   }

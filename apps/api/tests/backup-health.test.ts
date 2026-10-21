@@ -68,6 +68,8 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     writeFileSync(manifestPath, manifest);
     writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), backup_file_size_bytes: String(artifact.length) }));
     expect((await status()).health_state).toBe("UNKNOWN");
+    const invalidSizeList = await app.handle(new Request("http://local/api/admin/backups", { headers }));
+    expect((await invalidSizeList.json() as Array<{ filename: string }>).some((entry) => entry.filename === backup.filename)).toBe(false);
     writeFileSync(manifestPath, manifest);
     capacity = "low";
     expect((await status()).health_state).toBe("LOW_DISK_SPACE");

@@ -21,7 +21,7 @@ import {
   type BackupStatus,
   type RecoveryHistoryEntry,
   type RestorePreflight,
-  type RestoreRequest,
+  type RestoreSubmission,
   type RestoreResult,
   downloadBackupUrl,
 } from "../api/backups";
@@ -188,7 +188,7 @@ export function BackupStatusPanel({ status }: { status: BackupStatus }) {
     ["Free space", formatBytes(status.free_space_bytes)],
     ["Required space", formatBytes(status.minimum_required_space_bytes)],
     ["Checksum", status.latest_backup_checksum_status || "Not available"],
-    ["Integrity", status.latest_backup_integrity_status || "Not available"],
+    ["Integrity", status.latest_backup_integrity_status === "not_checked" ? "Not checked during status" : "Not available"],
     ["Schema", status.latest_backup_schema_version || "Not available"],
     ["Backup running", status.backup_in_progress ? "Yes" : "No"],
     ["Restore running", status.restore_in_progress ? "Yes" : "No"],
@@ -387,7 +387,7 @@ export function RestoreWizard({
     if (!preflight || !executeEnabled) return;
     setStep(6);
     setError(null);
-    const body: RestoreRequest = {
+    const body: RestoreSubmission = {
       current_password: password,
       ...(candidateAdminUsername.trim() && candidateAdminPassword ? {
         candidate_admin_username: candidateAdminUsername,
@@ -408,15 +408,8 @@ export function RestoreWizard({
       onCompleted(next);
       setStep(7);
     } catch (reason) {
-      const data = (reason as Error & { data?: { detail?: RestoreResult } }).data?.detail;
-      if (data?.status) {
-        setResult(data);
-        onCompleted(data);
-        setStep(7);
-      } else {
-        setError(safeError(reason));
-        setStep(5);
-      }
+      setError(safeError(reason));
+      setStep(5);
     } finally {
       body.current_password = "";
       body.candidate_admin_password = "";
@@ -529,19 +522,18 @@ export function RestoreWizard({
           )}
           {step === 7 && result && (
             <div role="status" aria-live="polite">
-              <Alert variant={result.status === "COMPLETED" ? "success" : result.status === "ROLLED_BACK" ? "warning" : "danger"}>
+              <Alert variant="success">
                 <strong>{result.status}</strong><p className="mt-1">{result.safe_message}</p>
               </Alert>
               <dl className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div><dt className="text-xs font-bold uppercase text-slate-500">Operation</dt><dd className="font-mono">{result.operation_id}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Safety backup</dt><dd className="break-all">{result.safety_backup_filename || "Not available"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Integrity</dt><dd>{result.post_restore_integrity || "Not confirmed"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Sessions revoked</dt><dd>{result.sessions_revoked ? "Yes" : "Not confirmed"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Rollback</dt><dd>{result.rollback_attempted ? result.rollback_succeeded ? "Succeeded and verified" : "Not confirmed" : "Not required"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Restart</dt><dd>{result.restart_required ? "Required" : "Not required"}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Safety backup</dt><dd className="break-all">{result.safety_backup_filename}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Integrity</dt><dd>{result.post_restore_integrity}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Sessions revoked</dt><dd>Yes</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Rollback</dt><dd>Not required</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Restart</dt><dd>Required</dd></div>
               </dl>
-              {result.status === "FAILED" && <Alert variant="danger" className="mt-5"><strong>Active data safety is not confirmed.</strong><p>{result.safe_next_action}</p><p className="mt-2 font-mono">Support reference: {result.support_reference}</p></Alert>}
-              {result.restart_required && <Alert variant="information" className="mt-5">Close and reopen OperatorOS, then sign in again. Browser refresh is not a backend restart.</Alert>}
+              <Alert variant="information" className="mt-5">Close and reopen OperatorOS, then sign in again. Browser refresh is not a backend restart.</Alert>
             </div>
           )}
         </div>
@@ -605,7 +597,7 @@ export default function BackupManagement() {
       <PageHeader title="Backup & Recovery" description="Verified SQLite disaster recovery for this OperatorOS installation." actions={<><Link to="/settings" className={buttonVariants({ variant: "outline" })}><ArrowLeft /> Settings</Link><Button size="lg" onClick={() => void createMutation.mutateAsync().then(setCreatedBackup)} disabled={busy || status?.restore_in_progress}>{createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />} {createMutation.isPending ? "Creating verified backup…" : "Create verified backup"}</Button></>} />
       <Alert variant="warning"><AlertTriangle className="mr-2 inline h-5 w-5" /><strong>Complete recovery uses SQLite backups.</strong> CSV remains a separate data-exchange workflow and cannot restore OperatorOS.</Alert>
       {error && <ErrorState title="Backup & Recovery could not be loaded" description={safeError(error)}><Button variant="outline" className="mt-4" onClick={retry}><RefreshCw className="h-4 w-4" /> Retry</Button></ErrorState>}
-      {result && <Alert variant={result.status === "COMPLETED" ? "success" : result.status === "ROLLED_BACK" ? "warning" : "danger"}><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>{result.status}</strong> {result.safe_message}</Alert>}
+      {result && <Alert variant="success"><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>{result.status}</strong> {result.safe_message}</Alert>}
       {createdBackup && <Alert variant="success"><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>Backup verified:</strong> {createdBackup.filename} · {createdBackup.created_at} · {formatBytes(createdBackup.size)} · checksum {createdBackup.checksum_status || "verified"} · integrity {createdBackup.integrity_status || "ok"} · schema {createdBackup.schema_version}</Alert>}
       {statusQuery.isLoading || backupsQuery.isLoading ? <LoadingState title="Loading backup and recovery status" /> : status ? <>
         <BackupStatusPanel status={status} />
