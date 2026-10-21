@@ -76,17 +76,20 @@ command accepts only clean registered secondary paths whose HEAD is merged into
 ## Backend skill workflow
 
 Load the `elysiajs` skill before Elysia backend implementation, debugging,
-review, or migration work. Read only the references the task needs. Inspect
-`apps/api/package.json`, `bun.lock`, existing routes, and installed types first.
-The current backend uses Elysia 1.4.29; the local skill describes v2, so use
+review, or explicitly requested migration work with
+`bun run skills:load @operatoros/agent-skills#elysiajs`. Read only the
+references the task needs.
+Inspect `apps/api/package.json`, `bun.lock`, existing routes, and installed
+types first. The current backend uses Elysia 1.4.29; the generic skill
+describes v2, so use
 [v1 documentation](https://elysiajs.com/llms.txt) and v1-compatible examples.
 A skill's new-project defaults do not authorize dependency, schema, transport,
 authentication, or runtime migrations. See [AGENTS.md](../../AGENTS.md).
 
-Local skill installations may be untracked and absent in another worktree.
-Resolve the skill from the session's available-skills catalog; report a missing
-skill before backend implementation. Preserve user-owned skill directories and
-lockfiles instead of copying them into unrelated commits.
+The workspace Intent config explicitly allowlists this package and excludes
+`@tanstack/intent` guidance. Its scanner reads installed package metadata and
+static Markdown without executing package code. Editor hooks are optional
+convenience signals, not a security boundary.
 
 ## HTTPS development proxy
 

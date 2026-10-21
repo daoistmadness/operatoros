@@ -23,8 +23,11 @@ fallback in the autonomous workflow.
 
 Use `mise run db:fresh` for schema/bootstrap work.
 
-For Elysia backend work, load the `elysiajs` skill and apply the installed
-Elysia major version as described in [backend development](docs/development/README.md#backend-skill-workflow).
+For Elysia backend work, load the allowlisted
+`@operatoros/agent-skills#elysiajs` guidance with
+`bun run skills:load @operatoros/agent-skills#elysiajs`. Apply the installed
+Elysia major version as described in
+[backend development](docs/development/README.md#backend-skill-workflow).
 For API changes, update the source contract and run the documented OpenAPI
 generation/drift check. Pages must use feature APIs and the shared client, not
 generated contracts directly. Preserve feature ownership boundaries and

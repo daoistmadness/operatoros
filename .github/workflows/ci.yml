@@ -184,6 +184,80 @@ jobs:
       - name: Validate current developer commands
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
+      - name: Fetch base for skill freshness check
+        working-directory: ${{ github.workspace }}
+        env:
+          INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
+            echo "A valid base commit is required for skill freshness checks." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin "$INTENT_BASE_SHA"
+      - name: Validate agent skills and package tarball
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          bun run skills:validate
+          bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
+
+          package_dir="$RUNNER_TEMP/operatoros-agent-skills"
+          mkdir -p "$package_dir"
+          cd packages/agent-skills
+          archive="$(bun pm pack --destination "$package_dir" --ignore-scripts --quiet)"
+          test -f "$archive"
+          entries="$(tar -tzf "$archive")"
+          has_entry() {
+            local expected="$1"
+            local entry
+            while IFS= read -r entry; do
+              if [[ "$entry" == "$expected" ]]; then
+                return 0
+              fi
+            done <<<"$entries"
+            return 1
+          }
+          for package_path in README.md package.json; do
+            if ! has_entry "package/$package_path"; then
+              echo "Package tarball is missing $package_path" >&2
+              exit 1
+            fi
+          done
+          while IFS= read -r package_path; do
+            if ! has_entry "package/$package_path"; then
+              echo "Package tarball is missing $package_path" >&2
+              exit 1
+            fi
+          done < <(git ls-files --cached --others --exclude-standard -- docs skills src)
+
+          consumer_dir="$RUNNER_TEMP/operatoros-agent-skills-consumer"
+          mkdir -p "$consumer_dir"
+          cat > "$consumer_dir/package.json" <<EOF
+          {
+            "name": "operatoros-agent-skills-consumer-ci",
+            "private": true,
+            "devDependencies": { "@tanstack/intent": "0.5.6" },
+            "dependencies": { "@operatoros/agent-skills": "file:$archive" },
+            "intent": {
+              "skills": ["@operatoros/agent-skills#elysiajs"],
+              "exclude": ["@tanstack/intent"]
+            }
+          }
+          EOF
+          (cd "$consumer_dir" && bun install --ignore-scripts)
+          (cd "$consumer_dir" && bunx --no-install --package @tanstack/intent intent list --json > intent-list.json)
+          BUN_CONSUMER_DIR="$consumer_dir" bun -e '
+            const result = await Bun.file(process.env.BUN_CONSUMER_DIR + "/intent-list.json").json()
+            if (result.skills.length !== 1 || result.skills[0].use !== "@operatoros/agent-skills#elysiajs") {
+              throw new Error("Consumer allowlist did not resolve exactly the Elysia skill")
+            }
+            if (result.hiddenSourceCount !== 0 || result.warnings.length || result.conflicts.length) {
+              throw new Error("Consumer skill discovery reported hidden sources, warnings, or conflicts")
+            }
+          '
+          skill_path="$(cd "$consumer_dir" && bunx --no-install --package @tanstack/intent intent load @operatoros/agent-skills#elysiajs --path)"
+          test -f "$consumer_dir/$skill_path"
 
   release:
     if: github.event.schedule == '17 4 * * 3' || github.event_name == 'workflow_dispatch'

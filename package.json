@@ -31,7 +31,7 @@
     "test:ui": "bun --filter @operatoros/ui test",
     "test:web": "bun --filter @operatoros/web test",
     "test": "bun run test:contracts && bun run test:excel && bun run test:db && bun run test:ui && bun run test:api && bun run test:web",
-    "typecheck": "bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/excel typecheck && bun --filter @operatoros/db typecheck && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck && bun run typecheck:launcher",
+    "typecheck": "bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/excel typecheck && bun --filter @operatoros/db typecheck && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/agent-skills typecheck && bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck && bun run typecheck:launcher",
     "build": "bun --filter @operatoros/web build",
     "check:typebox": "bun scripts/check-typebox-resolution.ts",
     "check:contracts": "bun scripts/check-contract-boundaries.ts",
@@ -45,16 +45,30 @@
     "security:audit": "bun audit",
     "test:security": "bun --filter @operatoros/api test tests/security.test.ts tests/auth.test.ts tests/safety.test.ts",
     "test:analytics": "bun test apps/api/tests/analytics-phase16.test.ts packages/contracts/tests/contracts.test.ts && bun --filter @operatoros/web test src/lib/query/queryKeys.test.ts",
-    "lint": "eslint --max-warnings=0 apps/api apps/web packages/db packages/contracts packages/excel packages/ui packages/config",
+    "skills:list": "intent list",
+    "skills:load": "intent load",
+    "skills:validate": "intent validate packages/agent-skills/skills --check",
+    "skills:check": "bun run skills:validate && intent maintainer check",
+    "lint": "eslint --max-warnings=0 apps/api apps/web packages/db packages/contracts packages/excel packages/ui packages/config packages/agent-skills",
     "check": "bun run lint && bun run check:typebox && bun run check:architecture && bun run test:architecture && bun run check:contracts && bun run check:ui && bun run typecheck && bun run test"
   },
   "devDependencies": {
+    "@operatoros/agent-skills": "workspace:*",
     "@operatoros/db": "workspace:*",
+    "@tanstack/intent": "0.5.6",
     "@typescript-eslint/parser": "8.68.0",
     "eslint": "10.9.1",
     "saxes": "5.0.1",
     "turbo": "2.11.4",
     "typescript": "5.9.3"
+  },
+  "intent": {
+    "skills": [
+      "workspace:@operatoros/agent-skills#elysiajs"
+    ],
+    "exclude": [
+      "@tanstack/intent"
+    ]
   },
   "overrides": {
     "@esbuild-kit/core-utils": {
