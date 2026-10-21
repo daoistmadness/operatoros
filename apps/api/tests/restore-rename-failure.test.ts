@@ -113,7 +113,7 @@ describe("restore filesystem-transition failures", () => {
       expect(operations.filter((entry) => entry.event === "restore_failed")).toHaveLength(1);
       expect(operations.find((entry) => entry.event === "restore_failed")?.rollback_outcome).toBe("rolled_back");
       const recovery = fs.readFileSync(join(value.backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-      expect(recovery.filter((entry) => entry.event === "restore_failed")).toHaveLength(1);
+      expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_rolled_back"]);
       await login(value.app, "golden-admin", "golden-admin-pass-1");
 
       // Retry after the transient filesystem failure.
@@ -131,7 +131,7 @@ describe("restore filesystem-transition failures", () => {
       injection = "active-to-rollback";
       const response = await restoreRequest(value.app, value.backup.filename, value.cookie, value.checked);
       expect(response.status).toBe(500);
-      expect((await response.json() as any).detail.code).toBe("RESTORE_ROLLED_BACK");
+      expect((await response.json() as any).detail.code).toBe("RESTORE_NOT_APPLIED");
 
       expect(databaseState(value.path)).toEqual({ marker: 1, integrity: "ok" });
       expect(recoveryFiles(value.path)).toEqual([]);

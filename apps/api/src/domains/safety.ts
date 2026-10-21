@@ -9,7 +9,7 @@ import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
 import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, schemaFingerprint } from "@operatoros/db";
 import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
-import { appendRestoreAudit } from "./restore-audit";
+import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 
 type Row = Record<string, any>;
@@ -58,6 +58,10 @@ function assertOperationsAuditWritable(root: string): void {
   const path = `${root}/backup_operations_audit.jsonl`;
   appendFileSync(path, "", { mode: 0o600 });
   chmodSync(path, 0o600);
+}
+function recordRestoreEvent(root: string, event: RestoreAuditEvent, outcome: RestoreAuditOutcome, filename: string, actor: string, operationId: string, snapshot: string | null, reason: string | null): void {
+  try { appendRestoreAudit(root, { event, outcome, target_filename: backupFile.test(filename) ? filename : "unknown", authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: snapshot, reason }); }
+  catch { console.error(`WARN: ${event} restore audit record could not be written.`); }
 }
 
 function dbSchemaVersion(database: Database): string {
@@ -459,23 +463,31 @@ function restoredAdministratorCredentialsMatch(client: Database, body: Row, oper
     restoreAdministratorCredentialMatches(client, body.candidate_admin_username, body.candidate_admin_password);
 }
 
-function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, operator: { id: number; username: string }): Row {
-  if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
-  if (!body.current_password || !body.confirmation_filename || !body.confirmation_phrase) throw Object.assign(new Error("Restore fields are required."), { status: 422 });
-  const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [operator.id]);
-  if (!user || !Bun.password.verifySync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
-  if (body.confirmation_filename !== filename) throw Object.assign(new Error("The confirmation filename does not match."), { status: 400, code: "RESTORE_CONFIRMATION_FILENAME_MISMATCH" });
-  if (body.confirmation_phrase !== "RESTORE_DATABASE") throw Object.assign(new Error("The restore confirmation phrase is invalid."), { status: 400, code: "RESTORE_CONFIRMATION_PHRASE_INVALID" });
-  if (![body.acknowledge_complete_replacement, body.acknowledge_session_revocation, body.acknowledge_restart_required, body.acknowledge_safety_backup].every(Boolean)) throw Object.assign(new Error("Every restore safety acknowledgement is required."), { status: 400, code: "RESTORE_ACKNOWLEDGEMENT_REQUIRED" });
-  const checked = preflight(context, config, filename); if (checked.source.sha256 !== body.expected_source_sha256 || checked.active.active_sha256 !== body.expected_active_sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
-  if (!checked.source.restore_eligible) throw Object.assign(new Error("The selected backup is not eligible for restore."), { status: 409, code: "RESTORE_SOURCE_INVALID" });
-  if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
-  restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let snapshot: Row | null = null;
+function restore(context: AuthContext, config: SafetyConfig, filename: string, body: Row, operator: { id: number; username: string }, operationId: string): Row {
+  const root = backupRoot(config);
+  let checked: Row;
+  try {
+    if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
+    if (!body.current_password || !body.confirmation_filename || !body.confirmation_phrase) throw Object.assign(new Error("Restore fields are required."), { status: 422, code: "RESTORE_FIELDS_REQUIRED" });
+    const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [operator.id]);
+    if (!user || !Bun.password.verifySync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
+    if (body.confirmation_filename !== filename) throw Object.assign(new Error("The confirmation filename does not match."), { status: 400, code: "RESTORE_CONFIRMATION_FILENAME_MISMATCH" });
+    if (body.confirmation_phrase !== "RESTORE_DATABASE") throw Object.assign(new Error("The restore confirmation phrase is invalid."), { status: 400, code: "RESTORE_CONFIRMATION_PHRASE_INVALID" });
+    if (![body.acknowledge_complete_replacement, body.acknowledge_session_revocation, body.acknowledge_restart_required, body.acknowledge_safety_backup].every(Boolean)) throw Object.assign(new Error("Every restore safety acknowledgement is required."), { status: 400, code: "RESTORE_ACKNOWLEDGEMENT_REQUIRED" });
+    checked = preflight(context, config, filename);
+    if (checked.source.sha256 !== body.expected_source_sha256 || checked.active.active_sha256 !== body.expected_active_sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
+    if (!checked.source.restore_eligible) throw Object.assign(new Error("The selected backup is not eligible for restore."), { status: 409, code: "RESTORE_SOURCE_INVALID" });
+    if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
+  } catch (error) {
+    recordRestoreEvent(root, "restore_denied", "DENIED", filename, operator.username, operationId, null, restoreAuditReason(error));
+    throw error;
+  }
+  restoreBusy = true; const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let snapshot: Row | null = null; let restoreStarted = false;
   const recordFailure = (error: unknown, outcome?: string): void => {
-    try { audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error", ...(outcome ? { rollback_outcome: outcome } : {}) }); }
+    const reason = restoreAuditReason(error);
+    try { audit(root, "restore_failed", { filename, operation_id: operationId, reason, ...(outcome ? { rollback_outcome: outcome } : {}) }); }
     catch { console.error("WARN: restore failure could not be written to the operations audit."); }
-    try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
-    catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
+    recordRestoreEvent(root, outcome === "rolled_back" ? "restore_rolled_back" : "restore_failed", outcome === "rolled_back" ? "ROLLED_BACK" : "FAILED", filename, operator.username, operationId, snapshot?.filename ?? null, reason);
   };
   try {
     try {
@@ -493,12 +505,17 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         return {};
       });
       snapshot = createBackup(context, config, "pre_restore_auto", filename);
-      assertOperationsAuditWritable(root);
+      try { assertOperationsAuditWritable(root); }
+      catch { throw Object.assign(new Error("Restore stopped because its audit storage is unavailable; the active database was not changed."), { status: 503, code: "RESTORE_AUDIT_UNAVAILABLE" }); }
     } catch (error) {
-      recordFailure(error);
+      if (restoreStarted) recordFailure(error);
+      else recordRestoreEvent(root, "restore_denied", "DENIED", filename, operator.username, operationId, snapshot?.filename ?? null, restoreAuditReason(error));
       if ((error as Row)?.code === "RESTORE_ADMIN_CREDENTIAL_REQUIRED") throw Object.assign(new Error("Restore was refused because no active administrator credential from the selected backup was verified; the active database is unchanged."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
-      throw Object.assign(new Error("Restore failed before replacing the active database; the active database is unchanged."), { status: 500, code: "RESTORE_ROLLED_BACK" });
+      if ((error as Row)?.code === "RESTORE_AUDIT_UNAVAILABLE") throw error;
+      throw Object.assign(new Error("Restore failed before replacing the active database; the active database is unchanged."), { status: 500, code: "RESTORE_NOT_APPLIED" });
     }
+    restoreStarted = true;
+    recordRestoreEvent(root, "restore_started", "STARTED", filename, operator.username, operationId, snapshot?.filename ?? null, null);
     const swap = performRestoreSwap({
       active, candidate, rollback,
       fileSystem: config.restoreFileSystem ?? undefined,
@@ -515,7 +532,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     });
     if (swap.outcome === "committed") {
       const checkedRestored = swap.value!;
-      try { audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename }); }
+      try { audit(root, "restore_completed", { filename, operation_id: operationId, safety_backup_filename: snapshot!.filename }); }
       catch { console.error("WARN: restore completed but the operations audit line could not be written."); }
       return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot!.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: checkedRestored.foreignKeyViolationCount, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
     }
@@ -525,7 +542,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
       throw Object.assign(new Error("Restore failed and automatic rollback could not be verified. The service preserved the remaining database files in the data directory; stop OperatorOS and recover the prior database before retrying."), { status: 500, code: "RESTORE_ROLLBACK_FAILED" });
     }
     recordFailure(swap.error, swap.outcome);
-    throw Object.assign(new Error(swap.outcome === "unchanged" ? "Restore failed before replacing the active database; the active database is unchanged." : "Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
+    throw Object.assign(new Error(swap.outcome === "unchanged" ? "Restore failed before replacing the active database; the active database is unchanged." : "Restore failed and the prior active database was restored and verified."), { status: 500, code: swap.outcome === "unchanged" ? "RESTORE_NOT_APPLIED" : "RESTORE_ROLLED_BACK" });
   } finally { rmSync(candidate, { force: true }); restoreBusy = false; }
 }
 
@@ -552,7 +569,18 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); }, { body: t.Object({ enabled: t.Boolean(), schedule_type: t.Union([t.Literal("daily"), t.Literal("weekly"), t.Literal("interval")]), interval_minutes: t.Number({ minimum: 1, maximum: 525600 }), hour_utc: t.Number({ minimum: 0, maximum: 23 }), minute_utc: t.Number({ minimum: 0, maximum: 59 }), weekday_utc: t.Number({ minimum: 0, maximum: 6 }), keep_daily: t.Number({ minimum: 0, maximum: 365 }), keep_weekly: t.Number({ minimum: 0, maximum: 260 }), keep_monthly: t.Number({ minimum: 0, maximum: 120 }) }) });
   app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
-  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => { const user = auth(context, ctx); if (!user) return denied(ctx); const missing = missingRestoreFields(ctx.body ?? {}); if (missing.length > 0) return restoreValidationError(ctx.set, missing); try { return restore(context, config, ctx.params.filename, ctx.body, { id: user.id, username: user.username }); } catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); } }, { body: restoreBody });
+  app.post("/api/admin/backups/:filename/restore", (ctx: Context) => {
+    const user = auth(context, ctx); if (!user) return denied(ctx);
+    const operationId = randomUUID(); const filename = backupFile.test(ctx.params.filename) ? ctx.params.filename : "unknown";
+    try { recordRestoreEvent(backupRoot(config), "restore_requested", "REQUESTED", filename, user.username, operationId, null, null); } catch { /* invalid storage configuration cannot be audited */ }
+    const missing = missingRestoreFields(ctx.body ?? {});
+    if (missing.length > 0) {
+      try { recordRestoreEvent(backupRoot(config), "restore_denied", "DENIED", filename, user.username, operationId, null, "RESTORE_FIELDS_REQUIRED"); } catch { /* invalid storage configuration cannot be audited */ }
+      return restoreValidationError(ctx.set, missing);
+    }
+    try { return restore(context, config, ctx.params.filename, ctx.body, { id: user.id, username: user.username }, operationId); }
+    catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); }
+  }, { body: restoreBody });
   app.onStart(() => backupScheduler.start(context, config));
   app.onStop(() => backupScheduler.stop());
 }

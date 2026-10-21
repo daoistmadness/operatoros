@@ -164,6 +164,10 @@ describe("restore administrator eligibility", () => {
       const refused = await restore(value, differentPassword);
       expect(refused.status).toBe(409);
       expect((await refused.json() as any).detail.code).toBe("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+      const deniedEvents = readFileSync(join(value.backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>).slice(-2);
+      expect(deniedEvents.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
+      expect(deniedEvents[1]!.reason).toBe("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+      expect((deniedEvents[0]!.request_context as { operation_id: string }).operation_id).toBe((deniedEvents[1]!.request_context as { operation_id: string }).operation_id);
       expect(value.database.client.query("SELECT id FROM users WHERE username = 'loop103-active-marker'").get()).toBeDefined();
       expect(readdirSync(value.backupDir).filter((name) => /^backup_.*\.sqlite3$/.test(name))).toHaveLength(1);
       expect(readFileSync(join(value.backupDir, "backup_operations_audit.jsonl"), "utf8")).not.toContain("synthetic-backup-admin-password");

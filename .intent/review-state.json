@@ -233,27 +233,27 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "233816262129c673feefda7fc08e186da2db4482481ecbd5739c48cbaa804391",
+      "fingerprint": "d032d23e55aae66d87b966d258fffc0278af4302d1a61aba5eaf888ba4aa943a",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "a13b9fb535e7b6886d22401cd56f06b2c1811fe7d4902abf3682bdce832f1305"
+        "apps/api/src/domains/safety.ts": "0d5f6a3b525852220fac5d2810ee34a254fa9ad7cc300505833a6cda78b522c3"
       },
-      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
+        "Changed: apps/api/src/domains/safety.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
-      "fingerprint": "0c6730aba81b20b6bbfc6ae4c3e420e34ff942601275d0e5d1de2e747b9edcc8",
+      "fingerprint": "fab48d149f6fa67336ba9b19b312cd401ec44bf4f4be3fbdcf449b96e77b7a23",
       "snapshot": {
-        "apps/api/tests/restore-rename-failure.test.ts": "999afaa4a25e1bb448fff6735d25575d47d1c2535952a8d64b3c836e5c19dfcc"
+        "apps/api/tests/restore-rename-failure.test.ts": "8b9122a05ebf46f3de14f7b6a2f2bf868786aa91c1c590e25e4eb85190177669"
       },
-      "head": "ab16c13b847256b563f16663aeed9f67a6a7091f",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Restore audit assertions extend existing coverage; no guidance change is required.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/restore-rename-failure.test.ts at ab16c13b847256b563f16663aeed9f67a6a7091f"
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
@@ -269,15 +269,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "6987d6b0bd7f40cfa7b5d8e77e0d26d75649b1ef89671206ad2903764e5e5aa4",
+      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
       "snapshot": {
-        "docs/security/backup-restore.md": "c5d29929be407579dab29680937abfcae7a0ff9d793ebbab6d50098f9b4fd3f6"
+        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
       },
-      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at d772ca9e30641cb3537fa123a9b0b18594470ce6"
+        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -350,15 +350,15 @@
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
-      "fingerprint": "35dece25d3dc5212a2d3a191a07e438c792804c04a89cc7f4ca8f805d6323c3f",
+      "fingerprint": "c22f09d5504ea59d8287169c3efe27597d39fdb32ab3958470c4544144fa5faa",
       "snapshot": {
-        "apps/api/tests/restore-foreign-keys.test.ts": "179815422f6baa4febd0340efc92e2d48ae219e216150cd28aab8732f9090fb5"
+        "apps/api/tests/restore-foreign-keys.test.ts": "798e665d6975efdb9e593f32f2b264b5ca58db1875f03dc0badeccce24f4d82a"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "5934fd7660ce86d7a5470a84535a1494a51c833626856cccea018449fe723d86",
+      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "0b03c9e72be314b951030d33cac64dc224a07aea571662058b4df1947c22e8c0"
+        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
       },
-      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at d772ca9e30641cb3537fa123a9b0b18594470ce6"
+        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "28e88adecf0b4c8ae0c7c7706c5f8be4254012537e17bdf1b33d91f16338a715",
+      "fingerprint": "22eb857e1753096d86890fe85154db3ebeba420e686cc7e689333e3ceea16bcf",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "141fd9e7f2299cd1a6f2c4c262eb9052d5020ccedd5c48048a4053dd932cf787"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "3388b39a2508fa6a5b219eccb2324ee8284553e8c94a946198b82bec7942a7a7"
       },
-      "head": "d772ca9e30641cb3537fa123a9b0b18594470ce6",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the Elysia v1 guidance; this CLI restore-audit change does not alter or conflict with its instructions.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at d772ca9e30641cb3537fa123a9b0b18594470ce6"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -422,15 +422,15 @@
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
-      "fingerprint": "639389056b2b8d38100a4e2e362453bff35c705deb245322fe589832895381d3",
+      "fingerprint": "1fe7971b2a34f70d3abfa0444cd7978d71ec85bd5c9702fe266a82472e7f63c5",
       "snapshot": {
-        "apps/api/tests/restore-administrator.test.ts": "301760213ca8943b6d681639ebf26bd291945ccc0596a546ed26f7af221c1f4d"
+        "apps/api/tests/restore-administrator.test.ts": "6381093a78645215d12641b7bf203af411c8de28a8b9aea5925a841ca7e1f4a9"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/restore-administrator.test.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/api/tests/restore-administrator.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/src/auth/sqlite-date.ts": {
@@ -542,15 +542,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "bf826e4850b40d6819f4761ab01f9e0b15a38e8c683d9116ede49bd268ba057e",
+      "fingerprint": "61bdd3bf728df9bebdc10ec1ee02a69fae84cd3dfcf7cafe82a188a4952f1ebb",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "10c174229d4b14cec403f1ffa743f2d07cf21d3ff61c139eccd3dba7a4ddff98"
+        "apps/api/tests/safety.test.ts": "f8709999ab5bdb75aa19c94108cb895dedc54329e25728467c632a2dafe29d3a"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:scripts/restore.sh": {
@@ -566,27 +566,27 @@
       ]
     },
     "source:apps/api/tests/restore-audit-failure.test.ts": {
-      "fingerprint": "d6e170256265dfb8312f4d74d533ef6575fde774afe4932314549089a98028af",
+      "fingerprint": "21e02f496ebcb1c1edad58e3710a61c26e62e91102d7c39d6b95ff7f5c98be97",
       "snapshot": {
-        "apps/api/tests/restore-audit-failure.test.ts": "de8c7e0b8fc9783b3d20ba326fcd6f0d1b97d6e3ce5670a8d89654599a663311"
+        "apps/api/tests/restore-audit-failure.test.ts": "8f60ac1fc91403bb3cbd64f6cbb2bfa499e56e85932173106f05f23ebb98f36e"
       },
-      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the API restore audit change against the Elysia v1 source notes and skill guidance; route composition and framework guidance are unchanged.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/tests/restore-audit-failure.test.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
+        "Changed: apps/api/tests/restore-audit-failure.test.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/src/domains/restore-audit.ts": {
-      "fingerprint": "d5afe79e39727a1d4d50194b062a5d58fbae7ea5b4686dbf4684b2608ddafd69",
+      "fingerprint": "7d0e58c2a4f44f8628f4e36316aaf454bd6cb8bb2b77d56c6706011f7658e927",
       "snapshot": {
-        "apps/api/src/domains/restore-audit.ts": "d9ffa3ea92605016535c7b1e00e5a760d8f767352a5e3aee236dd52910562a49"
+        "apps/api/src/domains/restore-audit.ts": "379afcc06d57a831196021646a310a38736be9b96092f9bc576ad3ce52841dca"
       },
-      "head": "6a65d7e6f6614940798bb3c8c425e1377fae3449",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed API restore audit changes against Elysia v1 source notes and skill guidance; the existing route composition, error mapping, and test conventions are preserved.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/src/domains/restore-audit.ts at 6a65d7e6f6614940798bb3c8c425e1377fae3449"
+        "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     }
   }

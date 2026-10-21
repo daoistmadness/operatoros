@@ -242,7 +242,7 @@ describe("restore foreign-key validation", () => {
       expect(operations.find((entry) => entry.event === "restore_failed")?.rollback_outcome).toBe("rolled_back");
       expect(operations.filter((entry) => entry.event === "restore_completed")).toHaveLength(1);
       const recovery = readFileSync(join(value.backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-      expect(recovery.map((entry) => entry.event)).toEqual(["restore_failed", "restore_completed"]);
+      expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_rolled_back", "restore_requested", "restore_started", "restore_completed"]);
     } finally { cleanup(value); }
   }, 30000);
 });

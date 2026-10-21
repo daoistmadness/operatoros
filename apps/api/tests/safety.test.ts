@@ -123,12 +123,15 @@ describe("backup, restore, and scheduler safety", () => {
       const recovery = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
       expect(recovery.status).toBe(200);
       const recoveryHistory = await recovery.json() as any[];
-      expect(recoveryHistory).toHaveLength(1);
-      expect(recoveryHistory[0]).toMatchObject({ filename: backup.filename, event: "restore_completed", actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
-      expect(recoveryHistory[0].operation_reference_id).toBeTruthy();
-      expect(recoveryHistory[0].safety_backup_filename).toMatch(/^backup_.*\.sqlite3$/);
-      expect(recoveryHistory[0].timestamp).toBeTruthy();
-      expect(readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n")).toHaveLength(1);
+      expect(recoveryHistory.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed"]);
+      expect(recoveryHistory[2]).toMatchObject({ filename: backup.filename, actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
+      expect(new Set(recoveryHistory.map((entry) => entry.operation_reference_id)).size).toBe(1);
+      expect(recoveryHistory[2].safety_backup_filename).toMatch(/^backup_.*\.sqlite3$/);
+      expect(recoveryHistory[2].timestamp).toBeTruthy();
+      expect(readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n")).toHaveLength(3);
+      const restoreOperations = readFileSync(`${backupDir}/backup_operations_audit.jsonl`, "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>).filter((entry) => String(entry.event).startsWith("restore_"));
+      expect(restoreOperations).toHaveLength(1);
+      expect(restoreOperations[0]!.operation_id).toBe(recoveryHistory[2].operation_reference_id);
       const repeatedRecovery = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } }));
       expect(await repeatedRecovery.json()).toEqual(recoveryHistory);
 
