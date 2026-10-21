@@ -10,8 +10,9 @@ string, so never embed credentials in `DATABASE_URL`. The supported runtime is a
 local Elysia backend with the React frontend in a browser. The retired
 Python/FastAPI backend is not a runtime dependency and is not present in the
 current tree. The Tauri desktop shell is removed. A container runtime is not
-required, and no Docker/Compose deployment definition is part of the current
-repository.
+required. The repository includes an optional rootless Podman launcher for
+local development; it does not provide a Docker/Compose or hosted container
+deployment.
 
 The current deployment labels are:
 
