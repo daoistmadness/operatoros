@@ -633,6 +633,8 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
       },
       remove: (path) => rmSync(path, { force: true }),
       exists: (path) => { try { statSync(path); return true; } catch { return false; } },
+      syncFile: () => {},
+      syncDirectory: () => {},
     };
 
     expect(() => restoreCli(filename, value, fileSystem)).toThrow("RESTORE_ROLLED_BACK");

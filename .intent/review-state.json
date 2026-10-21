@@ -221,63 +221,63 @@
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
-      "fingerprint": "3bb22b6e75a93e3d320a18843aeb0fbdff2e769901150cc482342236d5156d77",
+      "fingerprint": "1693ea8210833eacca3730017635d02cf8411021f8c3e635351d5de8e7ee3e13",
       "snapshot": {
-        "apps/api/src/domains/restore-transaction.ts": "2dbf77bfcad578088baf1db5241423a2da7d11e9fe7789666629512ca766a30f"
+        "apps/api/src/domains/restore-transaction.ts": "cc75ee074c103010de13ca492d69eefbb7527c4580528155d63af201fcc5f5a6"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "The final rollback adjustment only retries the prior-database rename after a transient directory flush failure; targeted fault-injection tests cover both branches, with no skill guidance or planning artifact change.",
       "evidence": [
-        "Changed: apps/api/src/domains/restore-transaction.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/src/domains/restore-transaction.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "d032d23e55aae66d87b966d258fffc0278af4302d1a61aba5eaf888ba4aa943a",
+      "fingerprint": "ff04e754388d246cad8923bed9983414ce54f75aefdfc57723b753019e10ca96",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "0d5f6a3b525852220fac5d2810ee34a254fa9ad7cc300505833a6cda78b522c3"
+        "apps/api/src/domains/safety.ts": "1753ead43b6a9ac712b78897ab763940754c0e15fd2ce6f71aa930095cbee22b"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The final publication/retention changes use Node filesystem durability helpers and existing restore authorities; no skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/domains/safety.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
-      "fingerprint": "fab48d149f6fa67336ba9b19b312cd401ec44bf4f4be3fbdcf449b96e77b7a23",
+      "fingerprint": "6125cc26510384490924f31bb9dc5ce9a25471a0481907cab1f07d1935ac8f66",
       "snapshot": {
-        "apps/api/tests/restore-rename-failure.test.ts": "8b9122a05ebf46f3de14f7b6a2f2bf868786aa91c1c590e25e4eb85190177669"
+        "apps/api/tests/restore-rename-failure.test.ts": "33ae92ceaa7b007c657afe8a4b98d14fa39e4650d37001cd1a3daaa1faf8f8cb"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-rename-failure.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
-      "fingerprint": "a6ccfa2bc117408cb858309c3afe4344793bd1bf7cfcd5e957a25b1dc79c62d4",
+      "fingerprint": "ac342eda25fe682627c97a8f1992edd409c5b72c07ae23417098fdad7909e153",
       "snapshot": {
-        "apps/api/tests/restore-transaction.test.ts": "6487712e530742f61eb64c88efe469522c4c56d48af2ca74a1c2ec5ae6f241a0"
+        "apps/api/tests/restore-transaction.test.ts": "099c428785e03217baf2b231c15cf6e8316ada748461e0caf26d4cefb4ba017d"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "The final rollback adjustment only retries the prior-database rename after a transient directory flush failure; targeted fault-injection tests cover both branches, with no skill guidance or planning artifact change.",
       "evidence": [
-        "Changed: apps/api/tests/restore-transaction.test.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/tests/restore-transaction.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
+      "fingerprint": "1535bfa2e1a8fc8d9f580e372a4343c4cc2f59f453742e7b7792cd1d708959cc",
       "snapshot": {
-        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
+        "docs/security/backup-restore.md": "375c6c3bf16448803e64f72ddb026b8dfa63fd7a8a393cebd9ba21bb49729b86"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: docs/security/backup-restore.md at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -350,15 +350,15 @@
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
-      "fingerprint": "c22f09d5504ea59d8287169c3efe27597d39fdb32ab3958470c4544144fa5faa",
+      "fingerprint": "946c122b274009be6fa02118c364366f918bb403ca1dc1a3c855a76cfb845798",
       "snapshot": {
-        "apps/api/tests/restore-foreign-keys.test.ts": "798e665d6975efdb9e593f32f2b264b5ca58db1875f03dc0badeccce24f4d82a"
+        "apps/api/tests/restore-foreign-keys.test.ts": "69e97b9acf7841a443a7da4a9802cb4b976ba9a0215de4bcfdcf90cfa387ad04"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
+      "fingerprint": "2c5c13f2b53b990ff0654ba4266d26f011594c559d2043bf8bc81941f8a99cdf",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
+        "apps/api/src/backup-cli.ts": "5ec370a892fb8e5c1add41970026ae1ce160dc77e497da8bca43e81bd8f37413"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "The final publication/retention changes use Node filesystem durability helpers and existing restore authorities; no skill guidance or planning artifact changed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/src/backup-cli.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "22eb857e1753096d86890fe85154db3ebeba420e686cc7e689333e3ceea16bcf",
+      "fingerprint": "08727399aa0c708916a85db272a31132a8d823adfb7b7e2b88fcb83c6177517a",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "3388b39a2508fa6a5b219eccb2324ee8284553e8c94a946198b82bec7942a7a7"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "1ae3e8c837c6be3c84fa6bd95f6b6e5bf173cd2090a8288c2958124cc609da13"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -422,15 +422,15 @@
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
-      "fingerprint": "1fe7971b2a34f70d3abfa0444cd7978d71ec85bd5c9702fe266a82472e7f63c5",
+      "fingerprint": "6d31ce3d4fccccd3c241f231fa9e703559193bdaea17b4b8c9bc27dddecfad79",
       "snapshot": {
-        "apps/api/tests/restore-administrator.test.ts": "6381093a78645215d12641b7bf203af411c8de28a8b9aea5925a841ca7e1f4a9"
+        "apps/api/tests/restore-administrator.test.ts": "784cc60222695a1c17d7445e89bb435ba70601e9e76f006f420290d58d380a75"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-administrator.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "Changed: apps/api/tests/restore-administrator.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     },
     "source:apps/api/src/auth/sqlite-date.ts": {
@@ -587,6 +587,30 @@
       "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
+      ]
+    },
+    "source:apps/api/src/domains/durable-files.ts": {
+      "fingerprint": "7aaf186565303394743eb683c8ccf699cea39ac7e3a48fa7301e243302b97d43",
+      "snapshot": {
+        "apps/api/src/domains/durable-files.ts": "6bf8c3e213ae96e15ec2011310691af666df2d0f46fa24425fbc1613a27f58a5"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/durable-files.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+      ]
+    },
+    "source:apps/api/tests/durable-files.test.ts": {
+      "fingerprint": "1eeb5e39e40621fe54f6bd1f6f4689c2853380702e4c66ba2455b4e933446092",
+      "snapshot": {
+        "apps/api/tests/durable-files.test.ts": "0dabc7a950104078c2f6dd556e21e534fd6618fe4607e6f9dce9899ee2dcd0d9"
+      },
+      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "outcome": "no-change",
+      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
+      "evidence": [
+        "Changed: apps/api/tests/durable-files.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
       ]
     }
   }

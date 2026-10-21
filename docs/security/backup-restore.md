@@ -19,6 +19,20 @@ The connection layer sets `PRAGMA foreign_keys = ON` and does not configure WAL.
 
 Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
 
+Before publishing a backup, API and CLI creation flush the encrypted artifact and
+metadata files; after their atomic renames they flush the containing directory.
+On POSIX filesystems that honor `fsync`, this asks the operating system to make
+both file contents and published names survive a crash or reboot. Restore also
+flushes the verified candidate and the directory after each active/rollback
+rename, and flushes the validated restored database before writing the API
+completion record. Retention directory changes are flushed after eviction.
+Windows directory-entry flushing is unavailable through this Node filesystem
+path, so Windows receives file-content flushes but no directory durability
+claim. Retention deletion flushes are best-effort: a failure is audited, but the
+new backup remains successful and older files may remain after a crash.
+Filesystem and device behavior still governs the actual persistence; keep
+encrypted copies off-host to recover from host or storage loss.
+
 Retention keeps the newest 10 complete backup generations (`BACKUP_RETENTION_LIMIT`) after each successful API or CLI backup. The count covers manual, scheduled, and pre-restore snapshots. The newest generation and a backup selected as the restore source are never eviction candidates, so a directory can temporarily hold 11 generations while a restore source is protected; the next successful backup re-applies the limit. Incomplete artifact/metadata pairs are ignored, and a file that cannot be removed is skipped and audited. Each eviction writes a `backup_evicted` line to the operations audit; eviction failure never invalidates the newly published backup. Operators can still remove a specific backup through `DELETE /api/admin/backups/:filename`.
 
 ## Backup health status

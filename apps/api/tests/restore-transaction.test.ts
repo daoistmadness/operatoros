@@ -14,6 +14,8 @@ function files(initial: Record<string, string>): { store: Map<string, string>; f
       rename: (from, to) => { const value = store.get(from); if (value === undefined) throw new Error(`ENOENT ${from}`); store.delete(from); store.set(to, value); },
       remove: (path) => { store.delete(path); },
       exists: (path) => store.has(path),
+      syncFile: () => {},
+      syncDirectory: () => {},
     },
   };
 }
@@ -56,6 +58,8 @@ describe("performRestoreSwap transitions", () => {
         rename: (from, to) => { const value = store.get(from); if (value === undefined) throw new Error(`ENOENT ${from}`); store.delete(from); store.set(to, value); },
         remove: () => { throw new Error("REMOVE_FAILED"); },
         exists: (path) => store.has(path),
+        syncFile: () => {},
+        syncDirectory: () => {},
       },
       close: () => {},
       reopen: () => {},
@@ -78,6 +82,8 @@ describe("performRestoreSwap transitions", () => {
         },
         remove: (path) => { store.delete(path); },
         exists: (path) => store.has(path),
+        syncFile: () => {},
+        syncDirectory: () => {},
       },
       close: () => {},
       reopen: () => {},
@@ -86,5 +92,87 @@ describe("performRestoreSwap transitions", () => {
     expect(result.outcome).toBe("recovery_required");
     expect(store.get(active)).toBe("restored");
     expect(store.get(rollback)).toBe("prior");
+  });
+
+  it("rolls back when the restored database cannot be synced before audit commit", () => {
+    const { store, fs } = files({ [active]: "prior", [candidate]: "restored" });
+    let activeSyncs = 0;
+    let beforeCommitCalled = false;
+    const result = performRestoreSwap({
+      active, candidate, rollback,
+      fileSystem: {
+        ...fs,
+        syncFile: (path) => {
+          if (path === active && ++activeSyncs === 2) throw new Error("ACTIVE_SYNC_FAILED");
+        },
+      },
+      close: () => {},
+      reopen: () => {},
+      afterSwap: () => "verified",
+      beforeCommit: () => { beforeCommitCalled = true; },
+    });
+    expect(result.outcome).toBe("rolled_back");
+    expect(result.error).toBeInstanceOf(Error);
+    expect((result.error as Error).message).toBe("ACTIVE_SYNC_FAILED");
+    expect(beforeCommitCalled).toBe(false);
+    expect(store.get(active)).toBe("prior");
+    expect(store.has(rollback)).toBe(false);
+  });
+
+  it("rolls back if the active directory entry cannot be synced", () => {
+    const { store, fs } = files({ [active]: "prior", [candidate]: "restored" });
+    let directorySyncs = 0;
+    const result = performRestoreSwap({
+      active, candidate, rollback,
+      fileSystem: {
+        ...fs,
+        syncDirectory: () => { if (++directorySyncs === 2) throw new Error("DIRECTORY_SYNC_FAILED"); },
+      },
+      close: () => {},
+      reopen: () => {},
+      afterSwap: () => "verified",
+    });
+    expect(result.outcome).toBe("rolled_back");
+    expect((result.error as Error).message).toBe("DIRECTORY_SYNC_FAILED");
+    expect(store.get(active)).toBe("prior");
+    expect(store.has(rollback)).toBe(false);
+  });
+
+  it("restores the prior database if syncing its first rename fails", () => {
+    const { store, fs } = files({ [active]: "prior", [candidate]: "restored" });
+    let directorySyncs = 0;
+    const result = performRestoreSwap({
+      active, candidate, rollback,
+      fileSystem: {
+        ...fs,
+        syncDirectory: () => { if (++directorySyncs === 1) throw new Error("DIRECTORY_SYNC_FAILED"); },
+      },
+      close: () => {},
+      reopen: () => {},
+      afterSwap: () => "unreachable",
+    });
+    expect(result.outcome).toBe("unchanged");
+    expect(store.get(active)).toBe("prior");
+    expect(store.get(candidate)).toBe("restored");
+    expect(store.has(rollback)).toBe(false);
+  });
+
+  it("completes rollback after a transient directory sync failure while parking the candidate", () => {
+    const { store, fs } = files({ [active]: "prior", [candidate]: "restored" });
+    let directorySyncs = 0;
+    const result = performRestoreSwap({
+      active, candidate, rollback,
+      fileSystem: {
+        ...fs,
+        syncDirectory: () => { if (++directorySyncs === 3) throw new Error("DIRECTORY_SYNC_FAILED"); },
+      },
+      close: () => {},
+      reopen: () => {},
+      afterSwap: () => { throw new Error("VERIFY_FAILED"); },
+    });
+    expect(result.outcome).toBe("rolled_back");
+    expect(store.get(active)).toBe("prior");
+    expect(store.has(rollback)).toBe(false);
+    expect([...store.keys()].filter((path) => path.endsWith(".rejected"))).toEqual([]);
   });
 });

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { syncDirectory, syncFile } from "./domains/durable-files";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
@@ -89,8 +90,13 @@ function restoreDisposable(selected: string, targetDir: string): void {
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
     try { validateDatabase(database); } finally { database.close(); }
+    syncFile(target.databasePath);
+    syncDirectory(target.dataDir);
   } catch (error) {
-    if (created) for (const suffix of ["", "-wal", "-shm"]) rmSync(`${target.databasePath}${suffix}`, { force: true });
+    if (created) {
+      for (const suffix of ["", "-wal", "-shm"]) rmSync(`${target.databasePath}${suffix}`, { force: true });
+      try { syncDirectory(target.dataDir); } catch { /* disposable files are not an active recovery source */ }
+    }
     throw error;
   }
   console.log(`RESTORED_DISPOSABLE ${target.dataDir}`);
@@ -182,6 +188,7 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
   const startedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const started = Date.now();
   mkdirSync(backupDir, { recursive: true, mode: 0o700 }); chmodSync(backupDir, 0o700);
+  syncDirectory(dirname(backupDir));
   const directory = mkdtempSync(join(backupDir, ".operatoros-backup-cli-")); chmodSync(directory, 0o700);
   const name = nextFilename(backupDir);
   try {
@@ -199,9 +206,13 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
     const artifact = join(directory, name); const manifest = join(directory, `${name}.meta.json`);
     writeFileSync(artifact, encrypted, { mode: 0o600 }); writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
+    syncFile(artifact); syncFile(manifest);
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
+    syncDirectory(backupDir);
     let removedBackups: string[] = [];
     try { removedBackups = evictBeyondRetention(backupDir, name, preserve); }
+    catch (error) { try { audit(backupDir, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    try { syncDirectory(backupDir); }
     catch (error) { try { audit(backupDir, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     try { audit(backupDir, "backup_succeeded", { filename: name, trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000, size_bytes: encrypted.length, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); } catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
     return { filename: name, path: join(backupDir, name) };
@@ -275,13 +286,19 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
           : `RESTORE_ROLLED_BACK: active database was preserved.${reason}`);
       }
     } else {
+      fileSystem.syncFile(target);
       linkSync(target, databasePath);
       try {
+        fileSystem.syncDirectory(dirname(databasePath));
         validateRestoreSnapshot(databasePath, credential);
         const restored = openDatabase(databasePath, { readonly: true });
         try { assertRestoredSessionsRevoked(restored.client as unknown as Database); } finally { restored.close(); }
       }
-      catch (error) { rmSync(databasePath, { force: true }); throw error; }
+      catch (error) {
+        try { fileSystem.remove(databasePath); fileSystem.syncDirectory(dirname(databasePath)); }
+        catch { throw new Error("RESTORE_RECOVERY_REQUIRED: no prior database existed and the failed candidate could not be durably removed."); }
+        throw error;
+      }
     }
     completed = true;
     console.log(`Pre-restore safety snapshot: ${safety ? safety.path : "none (no active database to preserve)"}`);
