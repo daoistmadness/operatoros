@@ -28,6 +28,7 @@
     "./system": "./src/system/index.ts",
     "./config": "./src/config/index.ts",
     "./staff": "./src/staff.ts",
-    "./excel": "./src/excel.ts"
+    "./excel": "./src/excel.ts",
+    "./backup": "./src/backup/index.ts"
   }
 }

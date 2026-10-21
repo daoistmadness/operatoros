@@ -11,3 +11,4 @@ export * from "./academic-masters";
 export * from "./system";
 export * from "./config";
 export * from "./staff";
+export * from "./backup";

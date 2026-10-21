@@ -11,13 +11,13 @@ import {
   preflightRestore,
   restoreBackup,
   updateBackupScheduler,
-  type RestoreRequest,
+  type RestoreSubmission,
 } from "./backups";
 
 vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn() }));
 
 const filename = "backup_2026-07-13T00-00-00Z.sqlite3";
-const restoreBody: RestoreRequest = {
+const restoreBody: RestoreSubmission = {
   current_password: "not-persisted",
   candidate_admin_username: "backup-admin",
   candidate_admin_password: "synthetic-backup-password",
@@ -44,6 +44,10 @@ describe("backup API", () => {
     await createBackup();
     expect(apiRequest).toHaveBeenNthCalledWith(1, { path: "/api/admin/backups" });
     expect(apiRequest).toHaveBeenNthCalledWith(2, { path: "/api/admin/backups", method: "POST" });
+  });
+  it("types the create response with current artifact metadata", async () => {
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: { filename, sha256: "a".repeat(64) }, status: 200, headers: {} });
+    await expect(createBackup()).resolves.toMatchObject({ filename, sha256: "a".repeat(64) });
   });
   it("preflights the selected backend filename", async () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
