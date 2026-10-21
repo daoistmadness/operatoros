@@ -6,6 +6,7 @@ import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { restoreIdentityEligible } from "../auth/admin-state";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit } from "./restore-audit";
@@ -70,7 +71,7 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean } {
+function inspectDatabase(path: string): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean } {
   const database = new Database(path, { readonly: true });
   try {
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
@@ -85,7 +86,7 @@ function inspectDatabase(path: string): { integrity: string; quick: string; fore
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
-    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible };
+    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentityEligible(database) };
   } finally { database.close(); }
 }
 
@@ -335,6 +336,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       ...(same ? ["source_identical_to_active"] : []),
       ...(classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : []),
       ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
+      ...(!source.restoreIdentityEligible ? ["active_administrator_missing"] : []),
     ];
     const sourceStudents = source.counts.students ?? 0;
     const sourceAttendance = source.counts.attendance ?? 0;
@@ -342,7 +344,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     const activeStudents = active.counts.students ?? 0;
     const activeAttendance = active.counts.attendance ?? 0;
     const activeEnrollments = active.counts.enrollments ?? 0;
-    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.foreignKeyViolationCount === 0, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: sourceStudents - activeStudents, attendance_delta: sourceAttendance - activeAttendance, enrollment_delta: sourceEnrollments - activeEnrollments, same_database_content: same, source_is_older: false, possible_data_loss: false, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
+    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: sourceStudents - activeStudents, attendance_delta: sourceAttendance - activeAttendance, enrollment_delta: sourceEnrollments - activeEnrollments, same_database_content: same, source_is_older: false, possible_data_loss: false, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
   });
 }
 
@@ -373,6 +375,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
+        if (!candidateInspection.restoreIdentityEligible) throw new Error("Restore candidate has no active administrator and first-run setup is closed.");
         if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
         return {};
       });
@@ -389,7 +392,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
-        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0) throw new Error("Post-restore integrity validation failed.");
+        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible) throw new Error("Post-restore integrity validation failed.");
         audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename });
         appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;

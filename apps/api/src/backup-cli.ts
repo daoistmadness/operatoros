@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { Database, constants } from "bun:sqlite";
 import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
+import { restoreIdentityEligible } from "./auth/admin-state";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
 import { appendRestoreAudit } from "./domains/restore-audit";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
@@ -129,6 +130,7 @@ function validateRestoreSnapshot(path: string): void {
   const database = openDatabase(path, { readonly: true });
   try {
     if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
+    if (!restoreIdentityEligible(database.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
   } finally { database.close(); }
 }
 
@@ -207,6 +209,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
         reopen: () => { opened = openDatabase(databasePath, { readonly: true }); },
         afterSwap: () => {
           if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
+          if (!opened || !restoreIdentityEligible(opened.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
           close();
         },
       });

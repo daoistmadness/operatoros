@@ -8,6 +8,7 @@ import { resolveOperatorOSPaths } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
 import { DEFAULT_LOGIN_RATE_LIMIT, type LoginRateLimitConfig, normalizeLoginAccount } from "./rate-limit";
 import { isAllowedOrigin } from "../security/http";
+import { isFirstAdminSetupRequired } from "./admin-state";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
 export const SETUP_COOKIE_NAME = "operatoros_setup_authorization";
@@ -295,10 +296,7 @@ function setupToken(configuration: AuthConfig): string {
 }
 
 export function setupStatus(context: AuthContext): { setup_required: boolean; setup_token_required: boolean } {
-  const client = context.database.client;
-  const hasUser = Boolean(client.query("SELECT id FROM users LIMIT 1").get());
-  const state = client.query<{ completed: number }, []>("SELECT completed FROM first_admin_setup_state WHERE id = 1").get() ?? null;
-  const required = !hasUser && !Boolean(state?.completed);
+  const required = isFirstAdminSetupRequired(context.database.client);
   return { setup_required: required, setup_token_required: required && Boolean(context.config.setupToken) && !context.config.managedDevSetup };
 }
 
