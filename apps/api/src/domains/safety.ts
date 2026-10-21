@@ -54,6 +54,11 @@ function audit(root: string, event: string, values: Record<string, unknown> = {}
   appendFileSync(path, `${JSON.stringify({ timestamp: now(), event, ...values })}\n`, { mode: 0o600 });
   chmodSync(path, 0o600);
 }
+function assertOperationsAuditWritable(root: string): void {
+  const path = `${root}/backup_operations_audit.jsonl`;
+  appendFileSync(path, "", { mode: 0o600 });
+  chmodSync(path, 0o600);
+}
 
 function dbSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as Row | null)?.version ?? CURRENT_SCHEMA_VERSION);
@@ -467,7 +472,8 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
   restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let snapshot: Row | null = null;
   const recordFailure = (error: unknown, outcome?: string): void => {
-    audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error", ...(outcome ? { rollback_outcome: outcome } : {}) });
+    try { audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error", ...(outcome ? { rollback_outcome: outcome } : {}) }); }
+    catch { console.error("WARN: restore failure could not be written to the operations audit."); }
     try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
     catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
   };
@@ -487,6 +493,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         return {};
       });
       snapshot = createBackup(context, config, "pre_restore_auto", filename);
+      assertOperationsAuditWritable(root);
     } catch (error) {
       recordFailure(error);
       if ((error as Row)?.code === "RESTORE_ADMIN_CREDENTIAL_REQUIRED") throw Object.assign(new Error("Restore was refused because no active administrator credential from the selected backup was verified; the active database is unchanged."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
@@ -502,13 +509,14 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
         if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client as unknown as Database, body, operator)) throw new Error("Post-restore integrity validation failed.");
-        audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename });
         appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;
       },
     });
     if (swap.outcome === "committed") {
       const checkedRestored = swap.value!;
+      try { audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename }); }
+      catch { console.error("WARN: restore completed but the operations audit line could not be written."); }
       return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot!.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: checkedRestored.foreignKeyViolationCount, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
     }
     if (swap.outcome === "recovery_required") {

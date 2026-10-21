@@ -72,6 +72,7 @@ describe("restore completion-recording failure window", () => {
       // The blocked recovery path stays untouched, and the operations audit records the failure truthfully.
       expect(lstatSync(recoveryPath).isDirectory()).toBe(true);
       const operations = readFileSync(`${backupDir}/backup_operations_audit.jsonl`, "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+      expect(operations.filter((entry) => entry.event === "restore_completed")).toHaveLength(0);
       expect(operations.filter((entry) => entry.event === "restore_failed")).toHaveLength(1);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
@@ -102,7 +103,8 @@ describe("restore completion-recording failure window", () => {
       expect(existsSync(path)).toBe(true);
       expect(markerCount(database)).toBe(1);
       await login(app, "golden-admin", "golden-admin-pass-1");
-      expect(existsSync(`${backupDir}/backup_restore_audit.jsonl`)).toBe(false);
+      const recovery = readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+      expect(recovery.map((entry) => entry.event)).toEqual(["restore_failed"]);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 });
