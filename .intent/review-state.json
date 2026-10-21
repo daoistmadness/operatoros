@@ -195,6 +195,90 @@
         "Reviewed docs/ui/UI_ARCHITECTURE.md; it covers the web table migration only.",
         "The Elysia skill package and planning artifacts are not changed by this file."
       ]
+    },
+    "source:apps/api/src/app.ts": {
+      "fingerprint": "e9e8b4a962e5410d0b8018d6e4b317063aed1ddfc54832b7734e094c2e515f0d",
+      "snapshot": {
+        "apps/api/src/app.ts": "e0f2fbe47158a5deb85e53b894e38594d113289f0631a7903b955f72601315c7"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/app.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
+    },
+    "source:apps/api/src/config.ts": {
+      "fingerprint": "ee29b049e893efa963709e6a95290ad34894c139817d92b7dffb43d2c3f7ec1a",
+      "snapshot": {
+        "apps/api/src/config.ts": "4e093e65351f8f44110785fea0668ae47782506d53b8d44b26c4c388c46ebcf0"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/config.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
+    },
+    "source:apps/api/src/domains/restore-transaction.ts": {
+      "fingerprint": "3bb22b6e75a93e3d320a18843aeb0fbdff2e769901150cc482342236d5156d77",
+      "snapshot": {
+        "apps/api/src/domains/restore-transaction.ts": "2dbf77bfcad578088baf1db5241423a2da7d11e9fe7789666629512ca766a30f"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/restore-transaction.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
+    },
+    "source:apps/api/src/domains/safety.ts": {
+      "fingerprint": "af5460ca49fb2e6755a9dec7ebcc27a02a67125d758ead0685114fda9de79c8f",
+      "snapshot": {
+        "apps/api/src/domains/safety.ts": "4c1a80006e50573de509c51436fbad4739b63044564666ace58bc63884f260ac"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/safety.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
+    },
+    "source:apps/api/tests/restore-rename-failure.test.ts": {
+      "fingerprint": "0c6730aba81b20b6bbfc6ae4c3e420e34ff942601275d0e5d1de2e747b9edcc8",
+      "snapshot": {
+        "apps/api/tests/restore-rename-failure.test.ts": "999afaa4a25e1bb448fff6735d25575d47d1c2535952a8d64b3c836e5c19dfcc"
+      },
+      "head": "ab16c13b847256b563f16663aeed9f67a6a7091f",
+      "outcome": "no-change",
+      "reason": "Restore audit assertions extend existing coverage; no guidance change is required.",
+      "evidence": [
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at ab16c13b847256b563f16663aeed9f67a6a7091f"
+      ]
+    },
+    "source:apps/api/tests/restore-transaction.test.ts": {
+      "fingerprint": "a6ccfa2bc117408cb858309c3afe4344793bd1bf7cfcd5e957a25b1dc79c62d4",
+      "snapshot": {
+        "apps/api/tests/restore-transaction.test.ts": "6487712e530742f61eb64c88efe469522c4c56d48af2ca74a1c2ec5ae6f241a0"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/restore-transaction.test.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
+    },
+    "source:docs/security/backup-restore.md": {
+      "fingerprint": "2a284ab49e68ece0fb75ba341cf510013e85554820f80cfdc05c58f96915116e",
+      "snapshot": {
+        "docs/security/backup-restore.md": "16544635730f9f3114f05feca3358ef4a6fa50f44ca9e6860169be00cde0e110"
+      },
+      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "outcome": "no-change",
+      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "evidence": [
+        "Changed: docs/security/backup-restore.md at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+      ]
     }
   }
 }
