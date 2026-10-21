@@ -216,6 +216,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     syncFile(metadataTemporary);
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
+    syncDirectory(temporaryDirectory);
     syncDirectory(root);
     let removedBackups: string[] = [];
     try { removedBackups = evictBeyondRetention(root, filename, preserve); }

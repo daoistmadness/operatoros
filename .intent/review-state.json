@@ -221,27 +221,27 @@
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
-      "fingerprint": "1693ea8210833eacca3730017635d02cf8411021f8c3e635351d5de8e7ee3e13",
+      "fingerprint": "b88224c57b3858344d7d5203a2401e9f88435bf369bd8e80e0c62ae1368041ea",
       "snapshot": {
-        "apps/api/src/domains/restore-transaction.ts": "cc75ee074c103010de13ca492d69eefbb7527c4580528155d63af201fcc5f5a6"
+        "apps/api/src/domains/restore-transaction.ts": "be228d5b374e552cabc7ae527cb3d7be582551e72843636b384506ae04e8f13b"
       },
-      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "head": "cacbc9b4715462c27ba061d68694cfeb8ac2d51a",
       "outcome": "no-change",
-      "reason": "The final rollback adjustment only retries the prior-database rename after a transient directory flush failure; targeted fault-injection tests cover both branches, with no skill guidance or planning artifact change.",
+      "reason": "Durability now flushes source and destination directories for cross-directory renames; existing restore security documentation states this behavior, and no framework skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/restore-transaction.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+        "Changed: apps/api/src/domains/restore-transaction.ts at cacbc9b4715462c27ba061d68694cfeb8ac2d51a"
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "ff04e754388d246cad8923bed9983414ce54f75aefdfc57723b753019e10ca96",
+      "fingerprint": "bac5b340438595fe02aa5f0787d887e2a5856961ce694c78e55b92c9d54ea4ff",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "1753ead43b6a9ac712b78897ab763940754c0e15fd2ce6f71aa930095cbee22b"
+        "apps/api/src/domains/safety.ts": "b042a1f749f92ca00e21f114268458222dcf4e3bc9b96b559c00393c46d44b72"
       },
-      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "head": "cacbc9b4715462c27ba061d68694cfeb8ac2d51a",
       "outcome": "no-change",
-      "reason": "The final publication/retention changes use Node filesystem durability helpers and existing restore authorities; no skill guidance or planning artifact changed.",
+      "reason": "Durability now flushes source and destination directories for cross-directory renames; existing restore security documentation states this behavior, and no framework skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+        "Changed: apps/api/src/domains/safety.ts at cacbc9b4715462c27ba061d68694cfeb8ac2d51a"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -257,27 +257,27 @@
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
-      "fingerprint": "ac342eda25fe682627c97a8f1992edd409c5b72c07ae23417098fdad7909e153",
+      "fingerprint": "c34b121d0c3a8d323c5ed119d780aeb48efd23fd9719e8c26122a0398dca1258",
       "snapshot": {
-        "apps/api/tests/restore-transaction.test.ts": "099c428785e03217baf2b231c15cf6e8316ada748461e0caf26d4cefb4ba017d"
+        "apps/api/tests/restore-transaction.test.ts": "b97d771929d9fd33ef1586406b1a9934354f0074a74ccf58de952edc1dc0e56a"
       },
-      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "head": "cacbc9b4715462c27ba061d68694cfeb8ac2d51a",
       "outcome": "no-change",
-      "reason": "The final rollback adjustment only retries the prior-database rename after a transient directory flush failure; targeted fault-injection tests cover both branches, with no skill guidance or planning artifact change.",
+      "reason": "Durability now flushes source and destination directories for cross-directory renames; existing restore security documentation states this behavior, and no framework skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-transaction.test.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+        "Changed: apps/api/tests/restore-transaction.test.ts at cacbc9b4715462c27ba061d68694cfeb8ac2d51a"
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "1535bfa2e1a8fc8d9f580e372a4343c4cc2f59f453742e7b7792cd1d708959cc",
+      "fingerprint": "fc2b1c423557c620466b5f45c3b97d1f353bd0ae45c92250efda56cd6b345d70",
       "snapshot": {
-        "docs/security/backup-restore.md": "375c6c3bf16448803e64f72ddb026b8dfa63fd7a8a393cebd9ba21bb49729b86"
+        "docs/security/backup-restore.md": "940b052328ec1bd379bfcaa488336f89bd06988244c05ccc560b32a2d3abd1d0"
       },
-      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "head": "cacbc9b4715462c27ba061d68694cfeb8ac2d51a",
       "outcome": "no-change",
-      "reason": "Backup and restore durability uses Node filesystem operations and existing Elysia 1.4.29 route patterns; no framework guidance or skill source changed.",
+      "reason": "Durability now flushes source and destination directories for cross-directory renames; existing restore security documentation states this behavior, and no framework skill guidance changed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+        "Changed: docs/security/backup-restore.md at cacbc9b4715462c27ba061d68694cfeb8ac2d51a"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -374,15 +374,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "2c5c13f2b53b990ff0654ba4266d26f011594c559d2043bf8bc81941f8a99cdf",
+      "fingerprint": "fbb77ee9239a11a5427a2b2ac3408b3485e0b5ae9e188a0975366d476e22e5aa",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "5ec370a892fb8e5c1add41970026ae1ce160dc77e497da8bca43e81bd8f37413"
+        "apps/api/src/backup-cli.ts": "7909b74aee6cdf3514765093fbdf3cac0192b1f2c98af9238c0dc4d7fc1f8683"
       },
-      "head": "a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87",
+      "head": "cacbc9b4715462c27ba061d68694cfeb8ac2d51a",
       "outcome": "no-change",
-      "reason": "The final publication/retention changes use Node filesystem durability helpers and existing restore authorities; no skill guidance or planning artifact changed.",
+      "reason": "Durability now flushes source and destination directories for cross-directory renames; existing restore security documentation states this behavior, and no framework skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at a1ea7bc4a4e5a27c48519db45b4ce0b0cf235a87"
+        "Changed: apps/api/src/backup-cli.ts at cacbc9b4715462c27ba061d68694cfeb8ac2d51a"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {

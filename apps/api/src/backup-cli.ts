@@ -208,6 +208,7 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     writeFileSync(artifact, encrypted, { mode: 0o600 }); writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     syncFile(artifact); syncFile(manifest);
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
+    syncDirectory(directory);
     syncDirectory(backupDir);
     let removedBackups: string[] = [];
     try { removedBackups = evictBeyondRetention(backupDir, name, preserve); }
