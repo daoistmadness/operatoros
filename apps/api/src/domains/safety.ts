@@ -70,11 +70,14 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string): { integrity: string; quick: string; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean } {
+function inspectDatabase(path: string): { integrity: string; quick: string; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number>; schema: string; identityCompatible: boolean } {
   const database = new Database(path, { readonly: true });
   try {
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
     const quick = String((database.query("PRAGMA quick_check").get() as Row | null)?.quick_check ?? "");
+    let foreignKeyViolationCount: number | null;
+    try { foreignKeyViolationCount = database.query("PRAGMA foreign_key_check").all().length; }
+    catch { foreignKeyViolationCount = null; }
     const objects = database.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[];
     const tables = new Set(objects.map((value) => String(value.name)));
     const counts: Record<string, number> = {};
@@ -82,15 +85,16 @@ function inspectDatabase(path: string): { integrity: string; quick: string; tabl
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
-    return { integrity, quick, tables, counts, schema: dbSchemaVersion(database), identityCompatible };
+    return { integrity, quick, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible };
   } finally { database.close(); }
 }
 
-function validateSnapshot(path: string, sourceTables: Set<string>): void {
+function validateSnapshot(path: string, sourceTables: Set<string>): ReturnType<typeof inspectDatabase> {
   const value = inspectDatabase(path);
   if (value.integrity !== "ok" || value.quick !== "ok") throw new Error("Backup integrity validation failed.");
   const missing = REQUIRED_TABLES.filter((table) => !value.tables.has(table));
   if (missing.length > 0 || (sourceTables.has("student_subject_grades") && !value.tables.has("student_subject_grades"))) throw new Error(`Backup is missing required operational tables: ${missing.join(", ")}`);
+  return value;
 }
 
 function nextFilename(root: string): string {
@@ -327,14 +331,18 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context)); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
     const same = plaintextChecksum === activeChecksum; const compatible = source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
-    const reasons = same ? ["source_identical_to_active"] : classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : [];
+    const reasons = [
+      ...(same ? ["source_identical_to_active"] : []),
+      ...(classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : []),
+      ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
+    ];
     const sourceStudents = source.counts.students ?? 0;
     const sourceAttendance = source.counts.attendance ?? 0;
     const sourceEnrollments = source.counts.enrollments ?? 0;
     const activeStudents = active.counts.students ?? 0;
     const activeAttendance = active.counts.attendance ?? 0;
     const activeEnrollments = active.counts.enrollments ?? 0;
-    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: 0, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT", blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: sourceStudents - activeStudents, attendance_delta: sourceAttendance - activeAttendance, enrollment_delta: sourceEnrollments - activeEnrollments, same_database_content: same, source_is_older: false, possible_data_loss: false, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
+    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.foreignKeyViolationCount === 0, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: sourceStudents - activeStudents, attendance_delta: sourceAttendance - activeAttendance, enrollment_delta: sourceEnrollments - activeEnrollments, same_database_content: same, source_is_older: false, possible_data_loss: false, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
   });
 }
 
@@ -361,7 +369,13 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   try {
     try {
       snapshot = createBackup(context, config, "pre_restore_auto", filename);
-      decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
+      decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => {
+        copyFileSync(plaintextPath, candidate);
+        chmodSync(candidate, 0o600);
+        const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
+        if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
+        return {};
+      });
     } catch (error) {
       recordFailure(error);
       throw Object.assign(new Error("Restore failed before replacing the active database; the active database is unchanged."), { status: 500, code: "RESTORE_ROLLED_BACK" });
@@ -373,7 +387,9 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
       reopen: () => context.database.reopen(),
       afterSwap: () => {
         context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
-        const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
+        const checkedRestored = inspectDatabase(active);
+        const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
+        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0) throw new Error("Post-restore integrity validation failed.");
         audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename });
         appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;
@@ -381,7 +397,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     });
     if (swap.outcome === "committed") {
       const checkedRestored = swap.value!;
-      return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot!.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
+      return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot!.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: checkedRestored.foreignKeyViolationCount, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
     }
     if (swap.outcome === "recovery_required") {
       // The preserved rollback/rejected files are the operator's recovery source.
