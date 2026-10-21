@@ -9,7 +9,7 @@ import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTE
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
-import { appendRestoreAudit } from "./domains/restore-audit";
+import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./domains/restore-audit";
 import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 
@@ -158,18 +158,18 @@ function audit(root: string, event: string, values: Record<string, unknown> = {}
   chmodSync(path, 0o600);
 }
 
-function restoreAuditReason(error: unknown): string {
-  const message = error instanceof Error ? error.message : "";
-  return message.match(/^[A-Z][A-Z0-9_]+/)?.[0] ??
-    (message.startsWith("Legacy plaintext backups") ? "RESTORE_LEGACY_OPT_IN_REQUIRED" : error instanceof Error ? error.constructor.name : "Error");
+function recordRestoreEvent(root: string, event: RestoreAuditEvent, outcome: RestoreAuditOutcome, filename: string, actor: string | null, operationId: string, safety: { filename: string } | null, reason: string | null): void {
+  try { appendRestoreAudit(root, { event, outcome, target_filename: filename, authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: safety?.filename ?? null, reason }); }
+  catch { console.error(`WARN: CLI ${event} could not be written to recovery history.`); }
 }
 
-function recordRestoreFailure(root: string, filename: string, actor: string | null, operationId: string, safety: { filename: string } | null, rollbackOutcome: string | undefined, error: unknown): void {
+function recordRestoreFailure(root: string, filename: string, actor: string | null, operationId: string, safety: { filename: string } | null, rollbackOutcome: string | undefined, restoreStarted: boolean, error: unknown): void {
   const reason = restoreAuditReason(error);
   try { audit(root, "restore_failed", { filename, operation_id: operationId, reason, ...(rollbackOutcome ? { rollback_outcome: rollbackOutcome } : {}) }); }
   catch { console.error("WARN: CLI restore failure could not be written to the operations audit."); }
-  try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: safety?.filename ?? null, reason }); }
-  catch { console.error("WARN: CLI restore failure could not be written to recovery history."); }
+  const event = !restoreStarted ? "restore_denied" : rollbackOutcome === "rolled_back" ? "restore_rolled_back" : "restore_failed";
+  const outcome = event === "restore_denied" ? "DENIED" : event === "restore_rolled_back" ? "ROLLED_BACK" : "FAILED";
+  recordRestoreEvent(root, event, outcome, filename, actor, operationId, safety, reason);
 }
 
 /** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
@@ -221,14 +221,18 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   const backupDir = value.backupDir;
   const operationId = randomUUID();
   const actor = process.env.SUDO_USER ?? process.env.USER ?? null;
+  const requestedFilename = backupName.test(basename(selected)) ? basename(selected) : "unknown";
+  if (backupDir) recordRestoreEvent(backupDir, "restore_requested", "REQUESTED", requestedFilename, actor, operationId, null, null);
   let label = "unknown";
   let directory: string | null = null;
   let safety: { filename: string; path: string } | null = null;
   let rollbackOutcome: string | undefined;
+  let restoreStarted = false;
   let completed = false;
   try {
     if (!value.backupEncryption) throw new Error("BACKUP_ENCRYPTION_KEY is required for backup restore.");
     if (!databasePath || !backupDir) throw new Error("Canonical SQLite paths are unavailable.");
+    if (credential && (!credential.username || credential.username.trim() !== credential.username || credential.username.length > 255)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
     if (hasPendingRestoreRollback(databasePath)) throw new Error("RESTORE_RECOVERY_PENDING: inspect the existing rollback database before retrying.");
     const path = resolve(isAbsolute(selected) ? selected : join(backupDir, selected));
     if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
@@ -242,6 +246,8 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     validateRestoreSnapshot(target, credential);
     revokeRestoredSessions(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;
+    restoreStarted = true;
+    recordRestoreEvent(backupDir, "restore_started", "STARTED", label, actor, operationId, safety, null);
     if (safety) {
       let opened: ReturnType<typeof openDatabase> | null = null;
       const close = () => { opened?.close(); opened = null; };
@@ -285,7 +291,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     try { appendRestoreAudit(backupDir, { event: "restore_completed", outcome: "COMPLETED", target_filename: label, authenticated_username: actor, operation_id: operationId, pre_restore_snapshot_filename: safety ? safety.filename : null, reason: null }); }
     catch { console.error("WARN: restore completed but the recovery-history line could not be written."); }
   } catch (error) {
-    if (!completed && backupDir) recordRestoreFailure(backupDir, label, actor, operationId, safety, rollbackOutcome, error);
+    if (!completed && backupDir) recordRestoreFailure(backupDir, label, actor, operationId, safety, rollbackOutcome, restoreStarted, error);
     throw error;
   } finally { if (directory) rmSync(directory, { recursive: true, force: true }); }
 }
@@ -298,9 +304,9 @@ if (import.meta.main) {
       else if (action === "restore" && selected) {
         const usernameIndex = process.argv.indexOf("--admin-user");
         const username = usernameIndex >= 0 ? process.argv[usernameIndex + 1] : undefined;
-        if (usernameIndex >= 0 && (!username || username.trim() !== username || username.length > 255)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
-        const password = username ? await promptHidden(`Password for backup administrator '${username}': `) : "";
-        restore(selected, config(), nodeRestoreFileSystem, username ? { username, password } : undefined);
+        const validUsername = Boolean(username && username.trim() === username && username.length <= 255);
+        const password = validUsername ? await promptHidden(`Password for backup administrator '${username}': `) : "";
+        restore(selected, config(), nodeRestoreFileSystem, usernameIndex >= 0 ? { username: username ?? "", password } : undefined);
       }
       else if (action === "restore-disposable" && selected && targetDir) restoreDisposable(selected, targetDir);
       else if (action === "migrate-existing" && selected && targetDir) migrateVerifiedExisting(selected, targetDir);

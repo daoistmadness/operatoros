@@ -98,13 +98,17 @@ describe("restore completion-recording failure window", () => {
       const checked = await preflight.json() as any;
 
       const restore = await restoreRequest(app, backup.filename, cookie, checked);
-      expect([400, 500]).toContain(restore.status);
+      expect((await restore.json() as any).detail.code).toBe("RESTORE_AUDIT_UNAVAILABLE");
+      expect(restore.status).toBe(503);
 
       expect(existsSync(path)).toBe(true);
       expect(markerCount(database)).toBe(1);
       await login(app, "golden-admin", "golden-admin-pass-1");
       const recovery = readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-      expect(recovery.map((entry) => entry.event)).toEqual(["restore_failed"]);
+      expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
+      expect(recovery[1]!.outcome).toBe("DENIED");
+      expect(recovery[1]!.reason).toBe("RESTORE_AUDIT_UNAVAILABLE");
+      expect(recovery[1]!.pre_restore_snapshot_filename).toMatch(/^backup_.*\.sqlite3$/);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 });

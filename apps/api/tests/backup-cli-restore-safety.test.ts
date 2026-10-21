@@ -77,14 +77,14 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(completed[0]!.safety_backup_filename).toBe(safety);
 
     const cliRecovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-    expect(cliRecovery).toHaveLength(1);
-    expect(cliRecovery[0]!.event).toBe("restore_completed");
-    expect(cliRecovery[0]!.outcome).toBe("COMPLETED");
-    expect(cliRecovery[0]!.target_filename).toBe(label);
-    expect(cliRecovery[0]!.pre_restore_snapshot_filename).toBe(safety);
-    expect(cliRecovery[0]!.reason).toBeNull();
-    expect(typeof (cliRecovery[0]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
-    expect(completed[0]!.operation_id).toBe((cliRecovery[0]!.request_context as { operation_id: string }).operation_id);
+    expect(cliRecovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed"]);
+    expect(cliRecovery[2]!.outcome).toBe("COMPLETED");
+    expect(cliRecovery[2]!.target_filename).toBe(label);
+    expect(cliRecovery[2]!.pre_restore_snapshot_filename).toBe(safety);
+    expect(cliRecovery[2]!.reason).toBeNull();
+    expect(typeof (cliRecovery[2]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
+    expect(completed[0]!.operation_id).toBe((cliRecovery[2]!.request_context as { operation_id: string }).operation_id);
+    expect(new Set(cliRecovery.map((entry) => (entry.request_context as { operation_id: string }).operation_id)).size).toBe(1);
 
     const preserved = readFileSync(databasePath);
     writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
@@ -117,13 +117,14 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(JSON.stringify(failures[2])).not.toContain(outsidePath);
 
     const cliRecoveryLines = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-    expect(cliRecoveryLines).toHaveLength(4);
-    const cliFailures = cliRecoveryLines.filter((entry) => entry.event === "restore_failed");
+    expect(cliRecoveryLines.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed", "restore_requested", "restore_denied", "restore_requested", "restore_denied", "restore_requested", "restore_denied"]);
+    expect(JSON.stringify(cliRecoveryLines)).not.toContain(outsidePath);
+    const cliFailures = cliRecoveryLines.filter((entry) => entry.event === "restore_denied");
     expect(cliFailures).toHaveLength(3);
-    expect(cliFailures[0]!.outcome).toBe("FAILED");
+    expect(cliFailures[0]!.outcome).toBe("DENIED");
     expect(cliFailures[0]!.target_filename).toBe(label);
     expect(cliFailures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
-    expect(cliFailures[1]!.outcome).toBe("FAILED");
+    expect(cliFailures[1]!.outcome).toBe("DENIED");
     expect(cliFailures[1]!.target_filename).toBe("backup_2000-01-01T00-00-00Z.sqlite3");
     expect(cliFailures[1]!.reason).toBe("RESTORE_LEGACY_OPT_IN_REQUIRED");
     expect(failures[1]!.operation_id).toBe((cliFailures[1]!.request_context as { operation_id: string }).operation_id);
@@ -662,8 +663,10 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
     expect(failed[3]!.reason).toBe("RESTORE_RECOVERY_PENDING");
     expect(operations.filter((entry) => entry.event === "restore_completed")).toHaveLength(1);
     const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
-    expect(recovery.map((entry) => entry.outcome)).toEqual(["FAILED", "FAILED", "FAILED", "FAILED", "COMPLETED"]);
-    expect(recovery[3]!.reason).toBe("RESTORE_RECOVERY_PENDING");
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_rolled_back", "restore_requested", "restore_started", "restore_rolled_back", "restore_requested", "restore_started", "restore_failed", "restore_requested", "restore_denied", "restore_requested", "restore_started", "restore_completed"]);
+    expect(recovery[9]!.outcome).toBe("REQUESTED");
+    expect(recovery[10]!.reason).toBe("RESTORE_RECOVERY_PENDING");
+    expect(recovery[10]!.outcome).toBe("DENIED");
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(5);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
