@@ -9,12 +9,13 @@ import type { AuthContext } from "../auth/service";
 import { CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit } from "./restore-audit";
+import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 
 type Row = Record<string, any>;
 type Context = any;
 /** Filesystem capacity probe seam: bytes available to the service user (`availableBytes`) and free bytes (`freeBytes`) for the filesystem hosting the resolved path. */
 export type DiskSpaceProbe = (resolvedPath: string) => { availableBytes: number; freeBytes: number };
-export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null };
+export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null; restoreFileSystem?: RestoreFileSystem | null };
 
 /** Stable refusal codes for the backup free-space preflight. The HTTP detail string is `"<CODE>: <message>"`. */
 export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
@@ -316,23 +317,45 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   const checked = preflight(context, config, filename); if (checked.source.sha256 !== body.expected_source_sha256 || checked.active.active_sha256 !== body.expected_active_sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
   if (!checked.source.restore_eligible) throw Object.assign(new Error("The selected backup is not eligible for restore."), { status: 409, code: "RESTORE_SOURCE_INVALID" });
   if (restoreBusy) throw Object.assign(new Error("Another destructive operation is already active."), { status: 409, code: "SYSTEM_MAINTENANCE_OPERATION_ACTIVE" });
-  restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let replaced = false; let snapshot: Row | null = null;
-  try {
-    snapshot = createBackup(context, config, "pre_restore_auto", filename);
-    decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
-    context.database.close(); renameSync(active, rollback); renameSync(candidate, active); replaced = true; context.database.reopen(); context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
-    const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
-    audit(root, "restore_completed", { filename, safety_backup_filename: snapshot.filename });
-    appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot.filename, reason: null });
-    rmSync(rollback, { force: true });
-    return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
-  } catch (error) {
-    if (replaced) { try { context.database.close(); rmSync(active, { force: true }); renameSync(rollback, active); context.database.reopen(); } catch { /* fail closed below */ } }
-    audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error" });
+  restoreBusy = true; const operationId = randomUUID(); const root = backupRoot(config); const active = dbPath(context); const rollback = `${active}.${randomUUID()}.rollback`; const candidate = `${active}.${randomUUID()}.candidate`; let snapshot: Row | null = null;
+  const recordFailure = (error: unknown, outcome?: string): void => {
+    audit(root, "restore_failed", { filename, reason: error instanceof Error ? error.constructor.name : "Error", ...(outcome ? { rollback_outcome: outcome } : {}) });
     try { appendRestoreAudit(root, { event: "restore_failed", outcome: "FAILED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot?.filename ?? null, reason: error instanceof Error ? error.constructor.name : "Error" }); }
     catch { console.error("WARN: restore outcome recorded but the recovery-history line could not be written."); }
-    throw Object.assign(new Error("Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
-  } finally { rmSync(candidate, { force: true }); rmSync(rollback, { force: true }); restoreBusy = false; }
+  };
+  try {
+    try {
+      snapshot = createBackup(context, config, "pre_restore_auto", filename);
+      decryptedBackup(config, `${root}/${filename}`, (plaintextPath) => { copyFileSync(plaintextPath, candidate); chmodSync(candidate, 0o600); validateSnapshot(candidate, new Set(REQUIRED_TABLES)); return {}; });
+    } catch (error) {
+      recordFailure(error);
+      throw Object.assign(new Error("Restore failed before replacing the active database; the active database is unchanged."), { status: 500, code: "RESTORE_ROLLED_BACK" });
+    }
+    const swap = performRestoreSwap({
+      active, candidate, rollback,
+      fileSystem: config.restoreFileSystem ?? undefined,
+      close: () => context.database.close(),
+      reopen: () => context.database.reopen(),
+      afterSwap: () => {
+        context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
+        const checkedRestored = inspectDatabase(active); if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok") throw new Error("Post-restore integrity validation failed.");
+        audit(root, "restore_completed", { filename, safety_backup_filename: snapshot!.filename });
+        appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
+        return checkedRestored;
+      },
+    });
+    if (swap.outcome === "committed") {
+      const checkedRestored = swap.value!;
+      return { operation_id: operationId, status: "COMPLETED", restored_backup_filename: filename, completed_at: now(), safety_backup_filename: snapshot!.filename, post_restore_integrity: "ok", post_restore_quick_check: "ok", post_restore_foreign_key_violations: 0, post_restore_students: checkedRestored.counts.students, post_restore_attendance: checkedRestored.counts.attendance, post_restore_enrollments: checkedRestored.counts.enrollments, sessions_revoked: true, restart_required: true, rollback_attempted: false, safe_message: "Restore completed. Close and reopen OperatorOS, then sign in again." };
+    }
+    if (swap.outcome === "recovery_required") {
+      // The preserved rollback/rejected files are the operator's recovery source.
+      try { recordFailure(swap.error, swap.outcome); } catch { console.error("WARN: restore failure could not be fully recorded."); }
+      throw Object.assign(new Error("Restore failed and automatic rollback could not be verified. The service preserved the remaining database files in the data directory; stop OperatorOS and recover the prior database before retrying."), { status: 500, code: "RESTORE_ROLLBACK_FAILED" });
+    }
+    recordFailure(swap.error, swap.outcome);
+    throw Object.assign(new Error(swap.outcome === "unchanged" ? "Restore failed before replacing the active database; the active database is unchanged." : "Restore failed and the prior active database was restored and verified."), { status: 500, code: "RESTORE_ROLLED_BACK" });
+  } finally { rmSync(candidate, { force: true }); restoreBusy = false; }
 }
 
 function schedulerNext(config: Row, at = Date.now()): string | null { if (!config.enabled) return null; const date = new Date(at); if (config.schedule_type === "interval") date.setUTCMinutes(date.getUTCMinutes() + Number(config.interval_minutes)); else { date.setUTCHours(Number(config.hour_utc), Number(config.minute_utc), 0, 0); if (date.getTime() <= at || config.schedule_type === "weekly" && date.getUTCDay() !== Number(config.weekday_utc)) date.setUTCDate(date.getUTCDate() + (config.schedule_type === "weekly" ? ((Number(config.weekday_utc) - date.getUTCDay() + 7) % 7 || 7) : 1)); } return date.toISOString(); }

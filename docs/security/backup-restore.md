@@ -100,7 +100,7 @@ flowchart TD
   Verify -->|"failure"| Rollback["Restore safety copy and verify original"]
 ```
 
-An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, and restored sessions are revoked. The response reports the post-restore protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
+An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, and restored sessions are revoked. The response reports the post-restore protected-table counts. Post-replacement failure enters rollback and emits a failure audit event. The prior database file is not removed until the restore is committed. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy. The CLI restore path reports completion after replacement; it does not perform these post-replacement checks or revoke sessions.
 
 ## Audit lifecycle
 

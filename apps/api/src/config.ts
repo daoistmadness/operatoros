@@ -17,6 +17,8 @@ export interface BackendConfig {
   backupEncryption?: BackupEncryptionConfig | null;
   /** Optional capacity-probe override for deterministic tests (see domains/safety). */
   diskSpaceProbe?: import("./domains/safety").DiskSpaceProbe | null;
+  /** Optional restore-swap filesystem override for deterministic failure tests (see domains/restore-transaction). */
+  restoreFileSystem?: import("./domains/restore-transaction").RestoreFileSystem | null;
   clock?: () => Date;
 }
 
