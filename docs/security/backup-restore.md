@@ -196,6 +196,12 @@ The API no longer writes restore preflight plaintext under the shared OS temp
 directory. Legacy `operatoros-backup-*` temp directories from earlier versions
 are not auto-scanned because they cannot be safely attributed to one data root.
 
+API preflight and restore execution refuse with `409 RESTORE_RECOVERY_PENDING`
+while a rollback copy for the active database remains in the data root. The
+refusal leaves active and recovery files unchanged and creates no safety backup.
+Resolve the copy through an approved operator recovery procedure before retrying;
+do not delete it merely to bypass the gate. CLI restore uses the same detection.
+
 ## Audit lifecycle
 
 The canonical recovery-history audit is `backup_restore_audit.jsonl`. After administrator authorization, the API attempts to record `restore_requested`, then `restore_denied` for a refusal before replacement or `restore_started` immediately before replacement. A terminal event is `restore_completed`, `restore_rolled_back` only after verified rollback, or `restore_failed` when recovery is not confirmed. The CLI attempts the same lifecycle once its backup root is known. Records include one operation ID per attempt, target filename, authenticated username when verified, optional safety-snapshot filename, and a controlled reason code or error class; raw error messages, credentials, and paths are not recorded. CLI requests and refusals use no authenticated username; a username is recorded only after the selected backup's administrator credential has been validated. First-admin setup restores have no authenticated username. Unauthenticated and unauthorized HTTP requests are not written to this file. Lifecycle appends are best-effort, so missing or unwritable audit storage can leave gaps.

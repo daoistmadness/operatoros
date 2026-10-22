@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import { join } from "node:path";
 import { createApp } from "../src/app";
@@ -101,6 +102,43 @@ function cleanup(value: Awaited<ReturnType<typeof prepare>>) {
 }
 
 describe("restore filesystem-transition failures", () => {
+  it("refuses pending rollback copies before preflight or replacement and allows retry after recovery is resolved", async () => {
+    const value = await prepare("pending-rollback");
+    const rollback = `${value.path}.${randomUUID()}.rollback`;
+    try {
+      fs.writeFileSync(rollback, value.database.client.serialize(), { mode: 0o600 });
+      const anonymous = await value.app.handle(new Request(`http://local/api/admin/backups/${value.backup.filename}/restore-preflight`, { method: "POST", headers: { origin: "http://localhost:5173" } }));
+      expect(anonymous.status).toBe(401);
+      const staffCookie = await login(value.app, "golden-staff", "golden-staff-pass-1");
+      const forbidden = await value.app.handle(new Request(`http://local/api/admin/backups/${value.backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: staffCookie, origin: "http://localhost:5173" } }));
+      expect(forbidden.status).toBe(403);
+      const activeBefore = fs.readFileSync(value.path);
+      const rollbackBefore = fs.readFileSync(rollback);
+      const backupsBefore = fs.readdirSync(value.backupDir).filter((name) => name.endsWith(".sqlite3"));
+
+      const blockedPreflight = await value.app.handle(new Request(`http://local/api/admin/backups/${value.backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" } }));
+      expect(blockedPreflight.status).toBe(409);
+      expect((await blockedPreflight.json() as any).detail).toContain("RESTORE_RECOVERY_PENDING");
+
+      const blockedRestore = await restoreRequest(value.app, value.backup.filename, value.cookie, value.checked);
+      expect(blockedRestore.status).toBe(409);
+      expect((await blockedRestore.json() as any).detail.code).toBe("RESTORE_RECOVERY_PENDING");
+      expect(fs.readFileSync(value.path).equals(activeBefore)).toBe(true);
+      expect(fs.readFileSync(rollback).equals(rollbackBefore)).toBe(true);
+      expect(fs.readdirSync(value.backupDir).filter((name) => name.endsWith(".sqlite3"))).toEqual(backupsBefore);
+      expect(recoveryFiles(value.path)).toEqual([rollback.slice(rollback.lastIndexOf("/") + 1)]);
+      const recovery = fs.readFileSync(join(value.backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line));
+      expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
+      expect(recovery[1].reason).toBe("RESTORE_RECOVERY_PENDING");
+
+      fs.rmSync(rollback);
+      const retried = await restoreRequest(value.app, value.backup.filename, value.cookie, await preflight(value.app, value.backup.filename, value.cookie));
+      expect(retried.status).toBe(200);
+      expect(databaseState(value.path)).toEqual({ marker: 0, integrity: "ok" });
+      expect(recoveryFiles(value.path)).toEqual([]);
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("keeps the original database and allows a retry when the candidate cannot be moved into place", async () => {
     const value = await prepare("candidate-rename");
     try {
@@ -158,6 +196,11 @@ describe("restore filesystem-transition failures", () => {
       expect(preserved.length).toBeGreaterThan(0);
       const states = preserved.map((name) => databaseState(join(value.path.slice(0, value.path.lastIndexOf("/")), name)));
       expect(states).toContainEqual({ marker: 1, integrity: "ok" });
+      const retryCookie = await login(value.app, "golden-admin", "golden-admin-pass-1");
+      const retryPreflight = await value.app.handle(new Request(`http://local/api/admin/backups/${value.backup.filename}/restore-preflight`, { method: "POST", headers: { cookie: retryCookie, origin: "http://localhost:5173" } }));
+      expect(retryPreflight.status).toBe(409);
+      expect((await retryPreflight.json() as any).detail).toContain("RESTORE_RECOVERY_PENDING");
+      expect(recoveryFiles(value.path)).toEqual(preserved);
     } finally { cleanup(value); }
   }, 30000);
 
