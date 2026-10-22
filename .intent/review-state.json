@@ -374,15 +374,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "5e98546282797dbb7f6861ff4813a3360e5e3c0443d9416cda285a4c4535269b",
+      "fingerprint": "a59a170905c96e1d00ae16ffc423f6a7eec84d845cd9570449af43284321de91",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "38eee829534f92655acb2e229fd73d95f70c45722986c1892c6276d21f29446d"
+        "apps/api/src/backup-cli.ts": "48315595ea9e14101e1bd6b35e8e418c025117d0fb6ea0ab2f3327dd79095dcd"
       },
-      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
+      "head": "c6479062f069d9251d69de213fe477a43e6f7389",
       "outcome": "no-change",
-      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
+      "reason": "Reviewed the CLI operation lock and static runner: they serialize existing backup and restore commands and do not change Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
+        "Changed: apps/api/src/backup-cli.ts at c6479062f069d9251d69de213fe477a43e6f7389"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -647,6 +647,18 @@
       "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
       "evidence": [
         "Changed: docs/security/identity-authentication.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+      ]
+    },
+    "source:apps/api/src/backup-cli-runner.ts": {
+      "fingerprint": "77512035dda969423e9f6862753628cfa601f957d195fc874b2a2355aab9dfda",
+      "snapshot": {
+        "apps/api/src/backup-cli-runner.ts": "1844d254413a82f70a22ad55fe429fbcc845524ac2a1964f57d3415c0a4ae692"
+      },
+      "head": "c6479062f069d9251d69de213fe477a43e6f7389",
+      "outcome": "no-change",
+      "reason": "Reviewed the CLI operation lock and static runner: they serialize existing backup and restore commands and do not change Elysia skill guidance or planning artifacts.",
+      "evidence": [
+        "Changed: apps/api/src/backup-cli-runner.ts at c6479062f069d9251d69de213fe477a43e6f7389"
       ]
     }
   }
