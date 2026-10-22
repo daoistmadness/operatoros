@@ -332,11 +332,10 @@ if (import.meta.main) {
       const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
-      const moduleUrl = pathToFileURL(resolve(process.argv[1]!)).href;
-      const runner = `import(${JSON.stringify(moduleUrl)}).then(({ runBackupCli }) => runBackupCli(${JSON.stringify(args)}));`;
+      const runner = join(import.meta.dir, "backup-cli-runner.ts");
       const result = Bun.spawnSync([
         "flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
-        process.execPath, "-e", runner,
+        process.execPath, runner, ...args,
       ], { stdin: "inherit", stdout: "pipe", stderr: "pipe" });
       if (result.exitCode === 75) {
         if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_OPERATION_BUSY");
