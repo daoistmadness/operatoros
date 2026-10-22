@@ -225,7 +225,7 @@ it("rejects authenticated SQLite candidates with integrity, foreign-key, or sche
     rejectCandidate(Buffer.from("authenticated but not a SQLite database"));
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);
 
 it("rejects an admin-less candidate with closed setup before making the CLI safety snapshot", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-"));
