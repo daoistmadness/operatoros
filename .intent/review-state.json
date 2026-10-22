@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "2391edf810313b57b813fbc031c001a609cacba19e60381cdbd0890f12f2f218",
+      "fingerprint": "f7e6bdf11fdca4dbe62f59a6ee0c3ceff66dd72167722fd788c84b2b69355189",
       "snapshot": {
-        "docs/security/backup-restore.md": "3539bf5efe80976de281c3450d6fea8c325d7bbec4cd306cefdffded2793f4e0"
+        "docs/security/backup-restore.md": "dbdb087009ba22abeb9c4bc5b08ea355f67702a1cf7b8956323660aa04104105"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "c7f0ec17e8108c6bbd829c383be4d23f8d407363",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Removed the obsolete duplicated paragraph claiming the CLI flock does not coordinate with the API and requiring API writers to stop. The same guide and merged source/tests establish that canonical Linux API and CLI processes share the data-root flock; the remaining limitation paragraph is accurate. No runtime behavior or additional guidance changed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: docs/security/backup-restore.md at c7f0ec17e8108c6bbd829c383be4d23f8d407363"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
