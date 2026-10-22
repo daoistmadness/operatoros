@@ -376,27 +376,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "be70f338e39f65800421889b05301c1044786d6994241933bc6621245c4a75df",
+      "fingerprint": "6588c2f5320240b7bf6115f8be0382fe4a4a7519586bfb20e854335e44a9efb3",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "b8173a25dd59a4c26b463d0f9ba0e84cea71500caf9154ae2b833f2bac78a954"
+        "apps/api/src/backup-cli.ts": "645fbaa4d4f206b6302dbcacd52a9219066f61f512444e1b32b6f42970cea779"
       },
-      "head": "91d4438a384e6726e3e5f54253bf135476528584",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
+      "reason": "Reviewed the CLI restore artifact path and named-pipe regression test. The change rejects non-regular files before reading and does not alter agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 91d4438a384e6726e3e5f54253bf135476528584"
+        "Changed: apps/api/src/backup-cli.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "9a2395470b336a0443cb51bf5cd9307507218cfb9936ed185fe77bcb78295c34",
+      "fingerprint": "0d5fbd233d9b4ad37761cd482dc3f073772b1fe83b3e0aa382f3122f1e484baf",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "99507d21b3cb199b8260aba12a0221d748a291efa1e253a4d5306d4fb0b211c8"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "831b5b944b38ca08b6756af39e6c1a2c8d1dcf078e0689173499f616b8659a5d"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the CLI restore artifact path and named-pipe regression test. The change rejects non-regular files before reading and does not alter agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
