@@ -69,6 +69,8 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     writeFileSync(artifactPath, artifact);
     writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), key_id: "inconsistent" }));
     expect((await status()).health_state).toBe("UNKNOWN");
+    writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), trigger: "unsupported" }));
+    expect((await status()).health_state).toBe("UNKNOWN");
     writeFileSync(manifestPath, manifest);
     writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), backup_file_size_bytes: String(artifact.length) }));
     expect((await status()).health_state).toBe("UNKNOWN");

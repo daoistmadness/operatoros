@@ -231,15 +231,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "a7eb2be4fbc8a0c5e85907b6520d43cb31e9e105211306f79d4b79bbb2420f26",
+      "fingerprint": "9d353c24b0ea3765754db225adce7d06280024f9a3248824a054a4cc353f2f8d",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "5f0933c540a1a2ee4417802e92c3e197d28816cd0e06928ba027e3add9c8713f"
+        "apps/api/src/domains/safety.ts": "c7f155955f21201ee419dd4bf7d555c1c3b813d1e89a8715e57144821b0f1a2d"
       },
-      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
+      "head": "b712aa909d4f100f2001c71d678c53ad679fdf6a",
       "outcome": "no-change",
-      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
+      "reason": "Reviewed the fail-closed backup manifest trigger validation, synthetic health regression test, and updated backup security guidance; the changes do not alter Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
+        "Changed: apps/api/src/domains/safety.ts at b712aa909d4f100f2001c71d678c53ad679fdf6a"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -267,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "c82b5967673e701be196d9bc1f72e2f842b5543f896721d5a43e17795bec40d4",
+      "fingerprint": "f7e6bdf11fdca4dbe62f59a6ee0c3ceff66dd72167722fd788c84b2b69355189",
       "snapshot": {
-        "docs/security/backup-restore.md": "9b69982e90b1039005da3c7ac5121dedbb24f431796d32b3eccaf8b319d8079d"
+        "docs/security/backup-restore.md": "dbdb087009ba22abeb9c4bc5b08ea355f67702a1cf7b8956323660aa04104105"
       },
-      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
+      "head": "b712aa909d4f100f2001c71d678c53ad679fdf6a",
       "outcome": "no-change",
-      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
+      "reason": "Reviewed the fail-closed backup manifest trigger validation, synthetic health regression test, and updated backup security guidance; the changes do not alter Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
+        "Changed: docs/security/backup-restore.md at b712aa909d4f100f2001c71d678c53ad679fdf6a"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -336,15 +336,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "466f519262512d96e4eb81b1614c0e48a6ce3575bc02b16799b904d7ddca959c",
+      "fingerprint": "7b5bbbf5fe9417a6265e7c8d0bef701103572c5748897a7cba0b858e05b9a06f",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "fe49215d2d8ae619d8c6970e9895fbfffd94f66e9a1234cc601052d571ee6da2"
+        "apps/api/tests/backup-health.test.ts": "892ef1b0e966a83a4841b07fc1fb2cec49791e940bb5b69e6e6456e1be2a9504"
       },
-      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
+      "head": "b712aa909d4f100f2001c71d678c53ad679fdf6a",
       "outcome": "no-change",
-      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
+      "reason": "Reviewed the fail-closed backup manifest trigger validation, synthetic health regression test, and updated backup security guidance; the changes do not alter Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
+        "Changed: apps/api/tests/backup-health.test.ts at b712aa909d4f100f2001c71d678c53ad679fdf6a"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {

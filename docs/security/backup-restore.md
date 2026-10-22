@@ -40,8 +40,9 @@ Retention keeps the newest 10 complete backup generations (`BACKUP_RETENTION_LIM
 
 `GET /api/admin/backups/status` checks destination accessibility and capacity,
 artifact/metadata pair completeness, and the latest listed artifact's actual
-file size, SHA-256, and encrypted-envelope metadata consistency. A checksum is
-reported as `verified` only after reading and hashing the current artifact.
+file size, SHA-256, supported creation trigger, and encrypted-envelope metadata
+consistency. A checksum is reported as `verified` only after reading and hashing
+the current artifact.
 Missing, empty, truncated, mismatched, or unreadable artifacts cannot produce
 `HEALTHY`. Status reads do not write history or audit events.
 

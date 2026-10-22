@@ -29,6 +29,7 @@ const BACKUP_HISTORY_LIMIT = 200;
 const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
 /** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
 export const BACKUP_RETENTION_LIMIT = 10;
+const BACKUP_TRIGGERS = new Set(["manual", "scheduled", "pre_restore_auto"]);
 
 const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -283,7 +284,7 @@ function rowsFromFiles(root: string): Row[] {
       const value = JSON.parse(readFileSync(manifest, "utf8"));
       const size = value.backup_file_size_bytes ?? value.sqlite_file_size_bytes;
       if (typeof value.created_at !== "string" || !Number.isFinite(Date.parse(value.created_at)) ||
-        typeof value.trigger !== "string" || !Number.isSafeInteger(size) || size <= 0 ||
+        !BACKUP_TRIGGERS.has(value.trigger) || !Number.isSafeInteger(size) || size <= 0 ||
         typeof value.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(value.sha256) ||
         typeof value.schema_version !== "string" || !value.schema_version ||
         value.format_version != null && !Number.isSafeInteger(value.format_version) ||
@@ -447,7 +448,7 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
       if (!stats.isFile() || stats.size <= 0 || stats.size !== latest.size) throw new Error("Backup size mismatch.");
       const manifest = JSON.parse(readFileSync(`${path}.meta.json`, "utf8"));
       if (manifest.filename !== latest.filename || manifest.source_db_path !== basename(active) ||
-        !Number.isFinite(Date.parse(latest.created_at)) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
+        !Number.isFinite(Date.parse(latest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
         manifest.backup_file_size_bytes !== stats.size || typeof manifest.schema_version !== "string" || !manifest.schema_version ||
         typeof manifest.plaintext_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(manifest.plaintext_sha256)) throw new Error("Backup metadata invalid.");
       const artifact = readFileSync(path);
@@ -491,7 +492,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
       const plaintextSize = statSync(plaintextPath).size;
       if (manifest.encrypted !== true || manifest.filename !== filename || manifest.source_db_path !== basename(dbPath(context)) ||
-        manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
+        manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) ||
         manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId ||
         manifest.backup_file_size_bytes !== artifact.length || manifest.sqlite_file_size_bytes !== plaintextSize ||
         manifest.plaintext_sha256 !== sha256(plaintextPath)) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
