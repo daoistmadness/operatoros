@@ -178,6 +178,12 @@ export const RecoveryHistoryEntrySchema = Type.Object({
 });
 export type RecoveryHistoryEntry = Static<typeof RecoveryHistoryEntrySchema>;
 
+export const RecoveryHistoryPageSchema = Type.Object({
+  entries: Type.Array(RecoveryHistoryEntrySchema),
+  next_cursor: NullableString,
+});
+export type RecoveryHistoryPage = Static<typeof RecoveryHistoryPageSchema>;
+
 export const BackupSchedulerConfigSchema = Type.Object({
   enabled: Type.Boolean(),
   schedule_type: Type.Union([Type.Literal("daily"), Type.Literal("weekly"), Type.Literal("interval")]),

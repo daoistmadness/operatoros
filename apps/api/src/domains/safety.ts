@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { t } from "elysia";
-import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryEntrySchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
+import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryPageSchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
 import { syncDirectory, syncFile } from "./durable-files";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
@@ -27,6 +27,8 @@ export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
 const BACKUP_HISTORY_LIMIT = 200;
 const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
+const RECOVERY_HISTORY_LIMIT = BACKUP_HISTORY_LIMIT;
+const RECOVERY_HISTORY_MAX_SCAN_BYTES = 1024 * 1024;
 /** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
 export const BACKUP_RETENTION_LIMIT = 10;
 const BACKUP_TRIGGERS = new Set(["manual", "scheduled", "pre_restore_auto"]);
@@ -422,6 +424,112 @@ function readBackupExecutionHistory(root: string): Row[] {
   return history;
 }
 
+function recoveryHistoryCursorError(): Error & { code: string; status: number } {
+  return Object.assign(new Error("Recovery history changed. Refresh and try again."), { code: "RECOVERY_HISTORY_CURSOR_STALE", status: 409 });
+}
+
+function readRecoveryAuditBytes(descriptor: number, position: number, length: number): Buffer {
+  const buffer = Buffer.allocUnsafe(length);
+  let bytesRead = 0;
+  while (bytesRead < length) {
+    const count = readSync(descriptor, buffer, bytesRead, length - bytesRead, position + bytesRead);
+    if (count === 0) throw recoveryHistoryCursorError();
+    bytesRead += count;
+  }
+  return buffer;
+}
+
+function readRecoveryHistory(root: string, encodedCursor?: string): { entries: Row[]; next_cursor: string | null } {
+  const path = join(root, "backup_restore_audit.jsonl");
+  let cursor: { dev: number; ino: number; offset: number; fingerprint: string } | null = null;
+  if (encodedCursor !== undefined) {
+    try {
+      if (encodedCursor.length > 256 || !/^[A-Za-z0-9_-]+$/.test(encodedCursor)) throw new Error();
+      const decoded = Buffer.from(encodedCursor, "base64url").toString("utf8");
+      const value = JSON.parse(decoded);
+      if (Buffer.from(decoded).toString("base64url") !== encodedCursor || !Number.isSafeInteger(value.dev) || !Number.isSafeInteger(value.ino) || !Number.isSafeInteger(value.offset) || value.offset < 1 || typeof value.fingerprint !== "string" || !/^[a-f\d]{64}$/.test(value.fingerprint)) throw new Error();
+      cursor = value;
+    } catch { throw recoveryHistoryCursorError(); }
+  }
+  let descriptor: number | null = null;
+  let fileSize: number;
+  let head: string;
+  let dev: number;
+  let ino: number;
+  try {
+    const entry = lstatSync(path);
+    if (!entry.isFile() || entry.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
+    descriptor = openSync(path, "r");
+    const opened = fstatSync(descriptor);
+    if (!opened.isFile() || opened.dev !== entry.dev || opened.ino !== entry.ino || !Number.isSafeInteger(opened.size) || !Number.isSafeInteger(opened.dev) || !Number.isSafeInteger(opened.ino)) throw new Error("BACKUP_AUDIT_INVALID");
+    fileSize = opened.size;
+    dev = opened.dev;
+    ino = opened.ino;
+    const prefixLength = Math.min(fileSize, 256);
+    const prefix = readRecoveryAuditBytes(descriptor, 0, prefixLength);
+    head = backupSha256(prefix);
+  } catch (error) {
+    if (descriptor !== null) closeSync(descriptor);
+    if ((error as NodeJS.ErrnoException).code === "ENOENT" && cursor === null) return { entries: [], next_cursor: null };
+    if (cursor !== null && (error as NodeJS.ErrnoException).code === "ENOENT") throw recoveryHistoryCursorError();
+    throw error;
+  }
+
+  try {
+    if (cursor && (cursor.dev !== dev || cursor.ino !== ino || cursor.offset >= fileSize)) throw recoveryHistoryCursorError();
+    if (cursor) {
+      const anchorStart = Math.max(0, cursor.offset - 256);
+      const anchor = backupSha256(readRecoveryAuditBytes(descriptor, anchorStart, cursor.offset - anchorStart));
+      if (backupSha256(Buffer.from(`${head}:${anchor}`)) !== cursor.fingerprint) throw recoveryHistoryCursorError();
+    }
+    const endOffset = cursor?.offset ?? fileSize;
+    if (endOffset === 0) return { entries: [], next_cursor: null };
+    const scanStart = Math.max(0, endOffset - RECOVERY_HISTORY_MAX_SCAN_BYTES);
+    const buffer = readRecoveryAuditBytes(descriptor, scanStart, endOffset - scanStart);
+    const firstNewline = scanStart === 0 ? 0 : buffer.indexOf(0x0a);
+    const contentStart = scanStart === 0 ? 0 : firstNewline < 0 ? buffer.length : firstNewline + 1;
+
+    const entries: Row[] = [];
+    let oldestEntryOffset: number | null = null;
+    const addLine = (line: Buffer, offset: number): void => {
+      try {
+        const event = JSON.parse(line.toString("utf8")) as Row;
+        const text = (candidate: unknown): string | null => typeof candidate === "string" ? candidate : null;
+        entries.push({
+          timestamp: text(event.timestamp),
+          filename: text(event.target_filename),
+          event: text(event.event),
+          actor_display: text(event.authenticated_username) ?? "unknown",
+          result: text(event.outcome),
+          safe_reason_code: text(event.reason),
+          operation_reference_id: text(event.request_context?.operation_id),
+          safety_backup_filename: text(event.pre_restore_snapshot_filename),
+        });
+        oldestEntryOffset = offset;
+      } catch { /* malformed or partial lines are not recovery events */ }
+    };
+
+    let end = buffer.length;
+    while (end > contentStart && entries.length < RECOVERY_HISTORY_LIMIT) {
+      const newline = buffer.lastIndexOf(0x0a, end - 1);
+      if (newline < contentStart) {
+        if (contentStart < end) addLine(buffer.subarray(contentStart, end), scanStart + contentStart);
+        break;
+      }
+      const lineStart = newline + 1;
+      if (lineStart < end) addLine(buffer.subarray(lineStart, end), scanStart + lineStart);
+      end = newline;
+    }
+    const nextOffset = entries.length === RECOVERY_HISTORY_LIMIT ? oldestEntryOffset : scanStart > 0 ? (contentStart < buffer.length ? scanStart + contentStart : scanStart) : null;
+    const next_cursor = nextOffset !== null && nextOffset > 0 && nextOffset < endOffset
+      ? Buffer.from(JSON.stringify({ dev, ino, offset: nextOffset, fingerprint: backupSha256(Buffer.from(`${head}:${backupSha256(readRecoveryAuditBytes(descriptor, Math.max(0, nextOffset - 256), Math.min(256, nextOffset)))}`)) })).toString("base64url")
+      : null;
+    return { entries, next_cursor };
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   const root = backupRoot(config); const active = dbPath(context);
   let entries: Row[] = [];
@@ -632,7 +740,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: DeleteBackupResultSchema } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
   app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)); }, { response: { 200: t.Array(BackupExecutionHistoryEntrySchema) } });
-  app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); if (!statSafe(`${root}/backup_restore_audit.jsonl`)) return []; return readFileSync(`${root}/backup_restore_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((value) => { try { const item = JSON.parse(value); const text = (candidate: unknown): string | null => typeof candidate === "string" ? candidate : null; return { timestamp: text(item.timestamp), filename: text(item.target_filename), event: text(item.event), actor_display: text(item.authenticated_username) ?? "unknown", result: text(item.outcome), safe_reason_code: text(item.reason), operation_reference_id: text(item.request_context?.operation_id), safety_backup_filename: text(item.pre_restore_snapshot_filename) }; } catch { return null; } }).filter((value): value is NonNullable<typeof value> => value !== null).reverse(); }, { response: { 200: t.Array(RecoveryHistoryEntrySchema) } });
+  app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return readRecoveryHistory(backupRoot(config), ctx.query.cursor); } catch (error) { if ((error as any)?.code === "RECOVERY_HISTORY_CURSOR_STALE") return fail(ctx.set, 409, { code: (error as any).code, message: (error as Error).message }); throw error; } }, { query: t.Object({ cursor: t.Optional(t.String({ maxLength: 256 })) }), response: { 200: RecoveryHistoryPageSchema, 409: t.Object({ detail: t.Object({ code: t.String(), message: t.String() }) }) } });
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return schedulerPayload(value!); }, { response: { 200: BackupSchedulerConfigSchema } });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return schedulerPayload(row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1")!); }, { body: BackupSchedulerUpdateSchema, response: { 200: BackupSchedulerConfigSchema } });
   app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: RestorePreflightSchema } });

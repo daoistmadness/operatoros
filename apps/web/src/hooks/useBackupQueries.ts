@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBackup, deleteBackup, getBackupScheduler, listBackupHistory, listRecoveryHistory, getBackupStatus, listBackups, preflightRestore, restoreBackup, updateBackupScheduler, type BackupSchedulerConfig, type BackupSchedulerUpdate, type RestoreSubmission } from "../api/backups";
 import { queryKeys } from "../lib/query/queryKeys";
 
@@ -6,7 +6,7 @@ export const useBackupStatus = () => useQuery({ queryKey: queryKeys.backups.stat
 export const useBackupList = () => useQuery({ queryKey: queryKeys.backups.list, queryFn: listBackups });
 export const useBackupScheduler = () => useQuery({ queryKey: queryKeys.backups.scheduler, queryFn: getBackupScheduler });
 export const useBackupHistory = () => useQuery({ queryKey: queryKeys.backups.history, queryFn: listBackupHistory });
-export const useRecoveryHistory = () => useQuery({ queryKey: queryKeys.backups.recoveryHistory, queryFn: listRecoveryHistory });
+export const useRecoveryHistory = () => useInfiniteQuery({ queryKey: queryKeys.backups.recoveryHistory, initialPageParam: undefined as string | undefined, queryFn: ({ pageParam }) => listRecoveryHistory(pageParam), getNextPageParam: (page) => page.next_cursor ?? undefined });
 
 export function useUpdateBackupSchedulerMutation() {
   const client = useQueryClient();

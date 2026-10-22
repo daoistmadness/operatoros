@@ -72,9 +72,11 @@ describe("backup API", () => {
     await getBackupScheduler();
     await listBackupHistory();
     await listRecoveryHistory();
+    await listRecoveryHistory("next-page");
     expect(apiRequest).toHaveBeenNthCalledWith(1, { path: "/api/admin/backups/scheduler" });
     expect(apiRequest).toHaveBeenNthCalledWith(2, { path: "/api/admin/backups/history" });
-    expect(apiRequest).toHaveBeenNthCalledWith(3, { path: "/api/admin/backups/recovery-history" });
+    expect(apiRequest).toHaveBeenNthCalledWith(3, { path: "/api/admin/backups/recovery-history", params: { cursor: undefined } });
+    expect(apiRequest).toHaveBeenNthCalledWith(4, { path: "/api/admin/backups/recovery-history", params: { cursor: "next-page" } });
   });
   it("updates scheduler settings", async () => {
     const body = { enabled: true, schedule_type: "interval" as const, interval_minutes: 60, hour_utc: 1, minute_utc: 0, weekday_utc: 0, keep_daily: 7, keep_weekly: 4, keep_monthly: 12 };

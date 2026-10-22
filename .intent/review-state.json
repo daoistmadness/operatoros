@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "9d353c24b0ea3765754db225adce7d06280024f9a3248824a054a4cc353f2f8d",
+      "fingerprint": "8c7e177c1f281a7d03ee1748738097c955e91e8973c7f796ed90dec51957478e",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "c7f155955f21201ee419dd4bf7d555c1c3b813d1e89a8715e57144821b0f1a2d"
+        "apps/api/src/domains/safety.ts": "f1230237368035391fefb339168d822f6bdc0015f0e1824963654c7b29330cdf"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/src/domains/safety.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "f7e6bdf11fdca4dbe62f59a6ee0c3ceff66dd72167722fd788c84b2b69355189",
+      "fingerprint": "2d90a4ed6ca49a4b9e8f93837bd341748962a3aff98b246976b6bb3f65851bcc",
       "snapshot": {
-        "docs/security/backup-restore.md": "dbdb087009ba22abeb9c4bc5b08ea355f67702a1cf7b8956323660aa04104105"
+        "docs/security/backup-restore.md": "52324896e65d5781a9becf7230e6a5b03dae83cfce64e2dd1ed6f5d8af34707e"
       },
-      "head": "c7f0ec17e8108c6bbd829c383be4d23f8d407363",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Removed the obsolete duplicated paragraph claiming the CLI flock does not coordinate with the API and requiring API writers to stop. The same guide and merged source/tests establish that canonical Linux API and CLI processes share the data-root flock; the remaining limitation paragraph is accurate. No runtime behavior or additional guidance changed.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at c7f0ec17e8108c6bbd829c383be4d23f8d407363"
+        "Changed: docs/security/backup-restore.md at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -364,15 +364,15 @@
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
-      "fingerprint": "2e5cb281a820504bcc4b4a2a1290cd0e92908a7d4f9887b990f280fe9c5ca37e",
+      "fingerprint": "cd4a1c6ecef380520f7bcf754b2e769bc52105eb5e94cfbc056efe63537cd839",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.tsx": "bdd80da13ab74eb2392712df0b9422b13529679422816998e3c96cc665b63305"
+        "apps/web/src/pages/BackupManagement.tsx": "5f5948310b5eb068335302e5baec02976064fcb9e67763032c03c96e543a4eae"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.tsx at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/pages/BackupManagement.tsx at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
@@ -472,63 +472,63 @@
       ]
     },
     "source:apps/web/src/api/backups.test.ts": {
-      "fingerprint": "4d3845591d34b3f48244a71ce0e131d2d86f553c27f8813344b325566b347ada",
+      "fingerprint": "492ee79cd1ece5039301023d7ca2c93b6e0a4b8c271ad76b44892c8bbb299c6f",
       "snapshot": {
-        "apps/web/src/api/backups.test.ts": "17019e4290f88910290731637d34d8df7634dfac96acbd2521d99a55ada262e8"
+        "apps/web/src/api/backups.test.ts": "7f54c84e32c32179b644bb65e9fd52fdb116e82b02d518d7d266a44417ddad60"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/api/backups.test.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/web/src/api/backups.ts": {
-      "fingerprint": "c09492acfd84fd40a1b2b4441c50788cc108f000ff6b5ab80c26a532c312441e",
+      "fingerprint": "98d564a2a6cd038691205b2228b819866d50870df0506893411a22c00442a870",
       "snapshot": {
-        "apps/web/src/api/backups.ts": "b6f8949669a1c8d619d0305d199519509bec23ccc11e2f7671c0b2f6ad46f067"
+        "apps/web/src/api/backups.ts": "5278f51067ab92c4a65b07ed5547c2e1704f588312b1acedfefc0ee7656e5068"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/api/backups.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "5544ab6d654cf6ad0f35c3495628d22f19e6de667e6161b860402edb5cc1dae8",
+      "fingerprint": "f1a5779c063a472c485000d447a1a9e3501bd444c71392319f3761823d14e1b4",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "4d7a509bc3de364523a9ed9bd49991c4aed839f706409f8af3bc540c7054c50c"
+        "apps/web/src/generated/openapi/schema.ts": "e138231e028ce25998374bba0a9b8152598ac29052dd4e8083144f8fb44b8c5d"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/generated/openapi/schema.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
-      "fingerprint": "f3018754fdb8e34cc37935dc46a7897f11c4e032a282c263f2d82e9e92acdd5b",
+      "fingerprint": "1b90553fabd394663303ea4f5cd2bc7c882591e35ad231e2e62032b02918351d",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.test.tsx": "edb7344fa05ae9834c8bc3e33b52420fbde26e24beb4ce303faff8c8b27942a6"
+        "apps/web/src/pages/BackupManagement.test.tsx": "f3062df6faee8ef892552c15f9ff0833524aa86f57d5d370621cada40ce61400"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.test.tsx at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/pages/BackupManagement.test.tsx at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "12b87c037a382ce45e194754a880e04b4078b9dc54255d8c18370041bc0bc78c",
+      "fingerprint": "812f86ad0338eb0f27fd2b7a8d57c7c394b230b4a05ee023781dac079b3dfbff",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "e5137cede5863a28dac98dc73cc74432ba9117c8af0e4e0f5187ec7fde16f097"
+        "openapi/operatoros.openapi.json": "a9b6a955996cd83e28852a33da1e5bf0ecbbc38421fb2c1eca64bd36bd5e0b59"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: openapi/operatoros.openapi.json at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -544,15 +544,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "d14dd214b747fcee7b463a0e241f85f72e8a156797d89688a40ab52ba3ae9397",
+      "fingerprint": "ad104d601db7b69a7ddedd1d811c03e8834cc06ad664f4cdfdee6bb8644c3d6f",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "36f8a3e5592df28b9e0db586b8881543786badc4e6ed3c24bdf8189f455cd7d5"
+        "apps/api/tests/safety.test.ts": "45aa4193cf068a2e78cdfb197716c704cfe8b6430aa9825ee9cf76bb30ce9038"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/safety.test.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:scripts/restore.sh": {
@@ -763,27 +763,27 @@
       ]
     },
     "source:apps/web/src/hooks/useBackupQueries.ts": {
-      "fingerprint": "b80c4a1799493aac1cbbb0faeed55bee31213c6f3be04f4edd02aac621da438d",
+      "fingerprint": "17b190e1b9226d990c6342063482c0694ff2c511564450cff7538ede3bde429c",
       "snapshot": {
-        "apps/web/src/hooks/useBackupQueries.ts": "6da2b902069ce1b25c016400ba65cb007b26b8749d335d7ac8b75e1d29e6881d"
+        "apps/web/src/hooks/useBackupQueries.ts": "49d1bf90c040ca976a5d9a22423fea87ed6dbf9dc7de0d40a78ae5f7b4681833"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/web/src/hooks/useBackupQueries.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/web/src/hooks/useBackupQueries.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:packages/contracts/src/backup/index.ts": {
-      "fingerprint": "0b78012a4dc5058168c53d6b84e9b759410f7f757b662ae08a959052afe0cb08",
+      "fingerprint": "46a77d08fb34b93fcca350ecf1915863386f9350cc269d5c950d7904ef16dbaa",
       "snapshot": {
-        "packages/contracts/src/backup/index.ts": "2e22a571dc05c051fa5251db1c7d7fc2eac1964a42d81e608932cad25a52e5ca"
+        "packages/contracts/src/backup/index.ts": "5f8def153e04dcaba2e24ec54656bcc449d80cdc897a76bd7a4e4f14c043127e"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
       "evidence": [
-        "Changed: packages/contracts/src/backup/index.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: packages/contracts/src/backup/index.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
       ]
     },
     "source:packages/contracts/src/index.ts": {

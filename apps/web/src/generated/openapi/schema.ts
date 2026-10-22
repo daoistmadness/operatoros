@@ -22823,7 +22823,9 @@ export interface operations {
     };
     recovery_history_api_admin_backups_recovery_history_get: {
         parameters: {
-            query?: never;
+            query?: {
+                cursor?: string;
+            };
             header?: never;
             path?: never;
             cookie?: {
@@ -22839,15 +22841,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        timestamp: string | null;
-                        filename: string | null;
-                        event: string | null;
-                        actor_display: string;
-                        result: string | null;
-                        safe_reason_code: string | null;
-                        operation_reference_id: string | null;
-                        safety_backup_filename: string | null;
-                    }[];
+                        entries: {
+                            timestamp: string | null;
+                            filename: string | null;
+                            event: string | null;
+                            actor_display: string;
+                            result: string | null;
+                            safe_reason_code: string | null;
+                            operation_reference_id: string | null;
+                            safety_backup_filename: string | null;
+                        }[];
+                        next_cursor: string | null;
+                    };
+                };
+            };
+            /** @description Stale recovery-history cursor */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        detail: {
+                            code: string;
+                            message: string;
+                        };
+                    };
                 };
             };
             /** @description Validation Error */

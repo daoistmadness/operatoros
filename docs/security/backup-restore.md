@@ -188,7 +188,7 @@ The canonical recovery-history audit is `backup_restore_audit.jsonl`. After admi
 
 Before API replacement, the operations-audit path must be writable; if it is unavailable, restore stops before swapping databases and reports `RESTORE_AUDIT_UNAVAILABLE`. The canonical API completion record is the last fallible step inside the rollback-protected swap; if it cannot be written, the transaction rolls back. The operations-audit `restore_completed` line is written only after the swap commits, so a rolled-back attempt cannot claim completion there. That operations entry is best-effort after commit. CLI canonical and operations audit writes are best-effort after commit and do not undo a completed restore.
 
-`GET /api/admin/backups/recovery-history` returns valid lifecycle records newest first and skips malformed lines; the source JSONL remains append-only.
+`GET /api/admin/backups/recovery-history` returns `{ entries, next_cursor }` with up to 200 valid lifecycle records per page. Each request scans at most 1 MiB of the active audit file and skips malformed lines. Administrators can page through older records without changing the append-only JSONL; operator-managed rotated archives are not combined. A cursor is bound to the active file and page boundary, and returns `409 RECOVERY_HISTORY_CURSOR_STALE` if the audit changes in a way that invalidates that position; refresh the history to start again.
 
 ## Concurrency and deployment restriction
 

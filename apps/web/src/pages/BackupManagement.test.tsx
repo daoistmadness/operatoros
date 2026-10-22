@@ -174,10 +174,15 @@ describe("guided backup and recovery", () => {
     const output = html(<RecoveryHistoryPanel rows={[
       { timestamp: "2026-07-25T00:00:00Z", filename: backup.filename, event: "RESTORE_COMPLETED", actor_display: "admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "op-old", safety_backup_filename: null },
       { timestamp: "2026-07-26T00:00:00Z", filename: backup.filename, event: "RESTORE_FAILED", actor_display: "admin", result: "FAILED", safe_reason_code: "CHECKSUM", operation_reference_id: "op-new", safety_backup_filename: backup.filename },
-    ]} />);
+    ]} hasMore={false} loadingMore={false} onLoadMore={() => {}} />);
     expect(output.indexOf("op-new")).toBeLessThan(output.indexOf("op-old"));
+    expect(output).toContain("Showing up to 200 events per page from the active audit file.");
     expect(output).not.toContain("/home/");
     expect(output).not.toContain("password");
+  });
+  it("offers accessible paging for older recovery events", () => {
+    const output = html(<RecoveryHistoryPanel rows={[]} hasMore loadingMore={false} onLoadMore={() => {}} />);
+    expect(output).toContain("Load older events");
   });
   it("formats sizes and ages without health threshold calculation", () => {
     expect(formatBytes(2048)).toBe("2.0 KB");
