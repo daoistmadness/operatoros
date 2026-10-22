@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "755f6d2c8f23a677d177cb21cc19210280320199b41327c2c98548baed962e76",
+      "fingerprint": "92456e6831e6e856a309c22d488242045e2441c1be3dc2ee3b1faa1b463411ff",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
-        "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
+        "AGENTS.md": "4b8af614bf8b42a9062f0a03441dbb04f318eb46d872aae351685d38e2006176",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
         "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
@@ -44,19 +44,21 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
+      "head": "4bd49f97f24423f7487cef706cd23bc2d92e29ee",
       "outcome": "no-change",
-      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
+      "reason": "Reviewed the new general coding principles against the Elysia skill. They reinforce its existing instructions to inspect the installed version, preserve project conventions, and verify affected routes; they change no Elysia-specific guidance, version facts, or examples.",
       "evidence": [
-        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
+        "AGENTS.md at 4bd49f97f24423f7487cef706cd23bc2d92e29ee; packages/agent-skills/skills/elysiajs/SKILL.md and its mapped source files reviewed.",
+        "Intent skill validation passed: 1 skill file validated.",
+        "Intent maintainer sync reported: Nothing to synchronize."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "28e4264fc295692089fca2d656363def63e8ebf84b6c4e12bf27fe5981e6d1b8",
+      "fingerprint": "658ec3ea86976a390ff6d39edb748a16e2045c6161f74a3dafc147295b38a1ea",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
-        "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
+        "AGENTS.md": "4b8af614bf8b42a9062f0a03441dbb04f318eb46d872aae351685d38e2006176",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -96,11 +98,13 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
+      "head": "4bd49f97f24423f7487cef706cd23bc2d92e29ee",
       "outcome": "no-change",
-      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
+      "reason": "Reviewed all three planning records against the AGENTS.md change. Their Elysia coverage, mapped sources, package decisions, and task scope remain accurate; the general coding principles add no new skill coverage or maintainer decision.",
       "evidence": [
-        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
+        "_artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml reviewed against AGENTS.md at 4bd49f97f24423f7487cef706cd23bc2d92e29ee.",
+        "Intent maintainer sync reported: Nothing to synchronize.",
+        "Intent skill validation passed: 1 skill file validated."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
