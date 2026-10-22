@@ -126,10 +126,12 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 
 Limitations:
 
-- **Single API process per data root.** Backup/restore locks and the scheduler are
-  process-local module state. They do not coordinate separate processes, and the
-  runtime does not detect a second process. Run exactly one API process against a
-  SQLite data root; multi-worker restore is unsupported.
+- **Single API process per data root.** Backup/restore also use process-local
+  state, while the scheduler remains process-local. On Linux, the canonical API
+  server and CLI share a data-root `flock`, so a second API or CLI operation
+  fails closed. The lock does not coordinate tools that ignore it, and non-Linux
+  API processes do not acquire it. Run one API process per SQLite data root;
+  multi-worker restore is unsupported.
 - **No point-in-time recovery.** There is no WAL archiving or incremental chain;
   the most recent successful backup is the recovery point.
 - **No built-in off-host replication, object storage, or scheduled restore test.**
@@ -189,14 +191,13 @@ Before API replacement, the operations-audit path must be writable; if it is una
 
 ## Concurrency and deployment restriction
 
-Backup and restore use process-local operation locks. Data reset uses its own process-local guard and an immediate SQLite transaction. These guards do not coordinate multiple API processes, and the runtime does not detect a second process. Run exactly one API process per SQLite data root.
+Backup and restore use process-local operation locks. On Linux, the canonical API server also holds a nonblocking `flock` on the data root for its lifetime. CLI backup, restore, disposable restore, and migration commands acquire the same lock, so they refuse to run while that API server or another CLI operation holds it; a second canonical API process also fails at startup. The kernel releases the lock when its process exits. Data reset uses its own process-local guard and an immediate SQLite transaction. Run exactly one API process per SQLite data root; this lock does not coordinate tools that ignore it, and non-Linux API processes do not acquire this Linux lock.
 
 CLI backup, restore, disposable restore, and migration commands also take a
 nonblocking Linux `flock` in the data root. A second CLI operation on the same
-root is refused before it can publish or replace data. This lock serializes CLI
-processes only; it does not coordinate with the API process. Keep all API
-writers stopped before CLI restore. The CLI requires `flock` and `lsof` on
-`PATH`.
+root is refused before it can publish or replace data. The CLI requires
+`flock` and `lsof` on `PATH`. The Linux API requires `flock` when using the
+canonical data root; startup fails closed if the lock cannot be acquired.
 
 The supported runtime is a single local API process. Docker/Compose and PostgreSQL are not supported runtimes; a multi-worker deployment is not a supported substitute. Do not claim multi-worker restore safety.
 

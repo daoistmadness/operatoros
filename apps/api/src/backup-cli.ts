@@ -13,6 +13,7 @@ import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from ".
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./domains/restore-audit";
 import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
+import { BACKUP_OPERATION_LOCK_FILENAME } from "./domains/backup-operation-lock";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -348,7 +349,7 @@ if (import.meta.main) {
     try {
       value = config();
       if (!value.dataPaths) throw new Error("Canonical data paths are unavailable.");
-      const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
+      const lockPath = join(value.dataPaths.dataDir, BACKUP_OPERATION_LOCK_FILENAME);
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
       const moduleUrl = pathToFileURL(resolve(process.argv[1]!)).href;
@@ -364,7 +365,7 @@ if (import.meta.main) {
           try { audit(value.backupDir!, "backup_failed", { failure_code: "BACKUP_CLI_OPERATION_BUSY", trigger: "manual", started_at: at, completed_at: at }); }
           catch { /* a busy CLI operation must not proceed without the lock */ }
         }
-        console.error("Another backup CLI operation is already active.");
+        console.error("Another backup or restore operation is already active for this data root.");
         process.exit(1);
       }
       if (result.exitCode === 127) {

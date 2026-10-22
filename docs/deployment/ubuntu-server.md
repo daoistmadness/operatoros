@@ -20,17 +20,19 @@ This runbook covers a single-host Ubuntu deployment of the supported runtime:
 | Frontend (`apps/web`) | Built once, served by the Vite preview server (section 6). Interim: started by the operator; a second unit template is a tracked follow-up (P3-01b). |
 | Backups/recovery | Via the API admin path or `scripts/backup.sh` / guarded restore (section 9). |
 
-Do not run more than one API instance against the same data root. Backup,
-restore, and scheduler guards are process-local and do not coordinate separate
-processes; the runtime reports `single_process_only` but cannot detect a second
-process. SQLite WAL serialization also assumes a single writer.
+Do not run more than one API instance against the same data root. On Linux, the
+canonical API server and CLI backup/restore commands share a data-root `flock`,
+so a second API or CLI operation fails closed. The lock does not coordinate
+tools that write SQLite directly or ignore it. The runtime still reports
+`single_process_only`; SQLite WAL serialization assumes a single writer.
 
 ## 2. Prerequisites
 
 - Ubuntu 24.04/26.04 server or VM with systemd (validated against systemd 259).
 - Packages: `curl`, `lsof` (required by backup/restore handle checks — a missing
-  `lsof` fails those checks closed). `git` only when the checkout is updated from
-  a remote; offline hosts use a staged bundle instead.
+  `lsof` fails those checks closed), and `flock` from `util-linux` (required for
+  API/CLI data-root exclusion). `git` only when the checkout is updated from a
+  remote; offline hosts use a staged bundle instead.
 - Native Bun `1.4.3` on Linux:
   - Install with mise (`mise install`) and verify: `bun --version` prints `1.4.3`.
   - Expose it at a stable path for the service:
@@ -255,8 +257,10 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 | `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
+| `BACKUP_OPERATION_LOCKED` | Another API or CLI backup/restore operation holds the data-root lock; wait for it to finish before retrying. |
+| `BACKUP_OPERATION_LOCK_UNAVAILABLE` | Install or repair `flock` from `util-linux`; the API cannot safely start without the lock. |
 | Backup or restore refuses with `ENOENT` for `lsof` or `DATABASE_OPEN_HANDLE_CHECK_FAILED` | Install or repair `lsof`; the handle check cannot run. |
-| Restore refused | `ENABLE_DESTRUCTIVE_OPERATIONS=false`, validation failure, or the CLI cannot verify the active database is offline — see `docs/security/backup-restore.md`. Keep one API process per data root; the runtime does not enforce a worker count. |
+| Restore refused | `ENABLE_DESTRUCTIVE_OPERATIONS=false`, validation failure, or another process holds the data-root lock — see `docs/security/backup-restore.md`. Keep one API process per data root; the Linux lock is not multi-worker support. |
 | Restart loop | `journalctl -u operatoros-api`; note `StartLimitBurst=5`/60 s backoff policy. |
 | `Read-only file system` errors at runtime | A write escaped the state directory; keep all writable state under `/var/lib/operatoros`. |
 

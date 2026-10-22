@@ -243,7 +243,7 @@ it("refuses a concurrent CLI restore before changing the active database and aud
       input: "golden-admin-pass-1\n",
     });
     expect(refused.status).toBe(1);
-    expect(refused.stderr?.toString()).toContain("Another backup CLI operation is already active.");
+    expect(refused.stderr?.toString()).toContain("Another backup or restore operation is already active for this data root.");
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
     const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
     expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);

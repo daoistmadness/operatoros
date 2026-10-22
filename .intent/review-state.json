@@ -267,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "c89d94a99c0e36fc17f859d8d6aae303bb3ddfbbfb9a531e04bb7baee89ea343",
+      "fingerprint": "49b17423e17be3a76dcf5eb0eb8c1515d288b77d221f29162b965ba9ff3d2068",
       "snapshot": {
-        "docs/security/backup-restore.md": "ad325235889cf6e83bf142973bb0f3a730a01e23dcc0bede98bab1b3984084f1"
+        "docs/security/backup-restore.md": "e1b1067f93e6c9529f4d67903e42c506a2050a4768656f3f2facd5231775b6de"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: docs/security/backup-restore.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -372,27 +372,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "a1fd1dc9268307a682c0eab6a26b1f6fab00a6411adaf6e04dabd2c4a09c6bc3",
+      "fingerprint": "0ed1750b6a127419356cb29c034547192c138dc62897875a4af3c8b6f921c49b",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "23d2ac3a3306783e296618beb78d91fc65c9800b160866b58a252b8995c68c5a"
+        "apps/api/src/backup-cli.ts": "44eedc7ef67ffeccb8208ffc7961e4f35b47737792a56a7d25cb39511fc02990"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: apps/api/src/backup-cli.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "a1c4d782b06cd3c90b5eee2f9c8131e2e2f8fe647732fc77e26e45fb95dd8806",
+      "fingerprint": "3a496a29b6dddcd29f3536dec4b2e8b7554f49ab055be40dab2090733ea0ed9c",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "5dbcbe6e7c83df1845bb44fd1bbcb788ff32b0b59b510aaba60f96a779698716"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "4ba8e64bb9377c0c5b398478e0c7adb8cc81439c1a55e9285c9b008d1506383c"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -612,27 +612,27 @@
       ]
     },
     "source:docs/backup-scheduler-architecture.md": {
-      "fingerprint": "2459ea827f17488e81dbfd7ecabdd84db824e6dd9773a817fc2fdfa86d3302bc",
+      "fingerprint": "b68a77e186d9c096038c6329459a01412bc8c34550179a0056e73d04a22d85ec",
       "snapshot": {
-        "docs/backup-scheduler-architecture.md": "8ac124111a0e2a9777e9501740f77134d473cd17a59b82589800c660b4ebd1e5"
+        "docs/backup-scheduler-architecture.md": "82abe0cf1640926d27e760a96b42bc90e1f7cb097c9ab63af6536f20a08065bf"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
       "evidence": [
-        "Changed: docs/backup-scheduler-architecture.md at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: docs/backup-scheduler-architecture.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     },
     "source:docs/deployment/ubuntu-server.md": {
-      "fingerprint": "7acf2f9badf4e5a60ea9329eb6cf5c5dc7e6f3f6e97e3a75281b6c42f30da6c1",
+      "fingerprint": "898bb84f3d99834c09bece962cc6c81caf712c2ccc5f6784adf8dcb325e755bb",
       "snapshot": {
-        "docs/deployment/ubuntu-server.md": "988b081eada90597ed836108f13be1b3cb33bed379ccf2c7aa00330f6b69900f"
+        "docs/deployment/ubuntu-server.md": "f0233e64490b5195a18cd1c5d48b2884ba00e75d0e893b05ef766415cd6d4181"
       },
-      "head": "99755b882b13a2390bebfa44157c133d8b0546f4",
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
       "outcome": "no-change",
-      "reason": "The Ubuntu deployment restore guidance now describes existing CLI safeguards and limits; Elysia skill guidance and planning artifacts are unchanged.",
+      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
       "evidence": [
-        "Changed: docs/deployment/ubuntu-server.md at 99755b882b13a2390bebfa44157c133d8b0546f4"
+        "Changed: docs/deployment/ubuntu-server.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     },
     "source:docs/security/identity-authentication.md": {
@@ -717,6 +717,66 @@
       "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
       "evidence": [
         "Changed: packages/contracts/tests/backup.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+      ]
+    },
+    "source:apps/api/src/adapter.ts": {
+      "fingerprint": "5047e5740ae6acecbae6a63e6f4def2212b544911e8acb528df0bae2ec947d40",
+      "snapshot": {
+        "apps/api/src/adapter.ts": "faaa90bdadcf395b74c09edf40d8ce904d232b5212918b97db99ff01494be969"
+      },
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "outcome": "no-change",
+      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/adapter.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+      ]
+    },
+    "source:apps/api/src/domains/backup-operation-lock.ts": {
+      "fingerprint": "06e9a00160072ec03829b7c3d13c558c601a1f8da07d9c15b26684470bf5a31d",
+      "snapshot": {
+        "apps/api/src/domains/backup-operation-lock.ts": "2e36e17ce2912b5802be3d7fe0747e9b9b7b471b65f57debea29f5870695bb9e"
+      },
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "outcome": "no-change",
+      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/backup-operation-lock.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+      ]
+    },
+    "source:apps/api/src/server.ts": {
+      "fingerprint": "c50714b859f20a98a6c30c74b688febe00c95a378707c7a21f044bd1178e78c2",
+      "snapshot": {
+        "apps/api/src/server.ts": "71e49c9143d6ee2dd0e17e6254275b45ea060ffc4ef61a47a3d579bfabe2912b"
+      },
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "outcome": "no-change",
+      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
+      "evidence": [
+        "Changed: apps/api/src/server.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+      ]
+    },
+    "source:apps/api/tests/backup-operation-lock.test.ts": {
+      "fingerprint": "43d41af7e9043f7943de8ba0d2aa8caf6da4e852acea5cd3a6eb42553e36c9b3",
+      "snapshot": {
+        "apps/api/tests/backup-operation-lock.test.ts": "08c6e0bb1fa9073e51c34a740a23e5addce5bb0c416aefedd2b1b4533f5a790a"
+      },
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "outcome": "no-change",
+      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-operation-lock.test.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+      ]
+    },
+    "source:apps/api/tests/lifecycle.test.ts": {
+      "fingerprint": "636e9ea54e8d236e1267dc527cd22ead9a5e2340813d19aa964cbef1fedb5544",
+      "snapshot": {
+        "apps/api/tests/lifecycle.test.ts": "5cdd4fe92a7f963d49010764f902e835851856490337943e887d448aaf4fca8a"
+      },
+      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "outcome": "no-change",
+      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
+      "evidence": [
+        "Changed: apps/api/tests/lifecycle.test.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
       ]
     }
   }
