@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { syncDirectory, syncFile } from "./domains/durable-files";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
@@ -77,11 +77,16 @@ function restoreDisposable(selected: string, targetDir: string): void {
   if (!process.env.OPERATOROS_DATA_DIR || !isAbsolute(targetDir)) throw new Error("Explicit source and disposable data directories are required.");
   const value = config();
   const target = resolveOperatorOSPaths({ repositoryRoot: root, env: { OPERATOROS_DATA_DIR: targetDir } });
-  if (!value.dataPaths || !target.dataDir.startsWith(`${tmpdir()}/`) ||
+  if (!value.dataPaths || !target.dataDir.startsWith(`${tmpdir()}${sep}`) ||
     !existsSync(target.dataDir) || !lstatSync(target.dataDir).isDirectory() ||
-    target.dataDir === value.dataPaths.dataDir || realpathSync(target.dataDir) === realpathSync(value.dataPaths.dataDir) ||
-    target.dataDir.startsWith(`${value.dataPaths.dataDir}/`) || value.dataPaths.dataDir.startsWith(`${target.dataDir}/`) ||
     lstatSync(target.dataDir).isSymbolicLink() || readdirSync(target.dataDir).length > 0) {
+    throw new Error("DISPOSABLE_RESTORE_TARGET_INVALID");
+  }
+  const targetRoot = realpathSync(target.dataDir);
+  const sourceRoot = realpathSync(value.dataPaths.dataDir);
+  const temporaryRoot = realpathSync(tmpdir());
+  if (!targetRoot.startsWith(`${temporaryRoot}${sep}`) || targetRoot === sourceRoot ||
+    targetRoot.startsWith(`${sourceRoot}${sep}`) || sourceRoot.startsWith(`${targetRoot}${sep}`)) {
     throw new Error("DISPOSABLE_RESTORE_TARGET_INVALID");
   }
   const plaintext = verifiedArtifact(selected, value);

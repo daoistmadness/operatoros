@@ -1,9 +1,9 @@
 import { expect, it } from "bun:test";
 import { spawnSync as spawnCommand } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Database } from "bun:sqlite";
 import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
 import { loadConfig } from "../src/config";
@@ -601,6 +601,7 @@ it("refuses a locked administrator backup before creating the CLI safety snapsho
 it("supports credential recovery on an isolated candidate before re-encrypted restore", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-"));
   const candidateRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-candidate-"));
+  const aliasRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-alias-"));
   const databasePath = join(temporary, "operatoros.sqlite");
   const backupDir = join(temporary, "backups");
   const env = {
@@ -618,6 +619,16 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
     const backup = command(env, "backup");
     expect(backup.exitCode).toBe(0);
     const sourceFilename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+
+    const nestedTarget = join(temporary, "disposable-container", "target");
+    mkdirSync(nestedTarget, { recursive: true });
+    const targetAlias = join(aliasRoot, "source-container");
+    symlinkSync(dirname(nestedTarget), targetAlias);
+    const symlinkedRestore = command(env, "restore-disposable", sourceFilename, join(targetAlias, "target"));
+    expect(symlinkedRestore.exitCode).not.toBe(0);
+    expect(symlinkedRestore.stderr.toString()).toContain("DISPOSABLE_RESTORE_TARGET_INVALID");
+    expect(existsSync(join(nestedTarget, "operatoros.sqlite"))).toBe(false);
+
     const disposable = command(env, "restore-disposable", sourceFilename, candidateRoot);
     expect(disposable.exitCode).toBe(0);
 
@@ -650,6 +661,7 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
   } finally {
     rmSync(temporary, { recursive: true, force: true });
     rmSync(candidateRoot, { recursive: true, force: true });
+    rmSync(aliasRoot, { recursive: true, force: true });
   }
 }, 15000);
 
