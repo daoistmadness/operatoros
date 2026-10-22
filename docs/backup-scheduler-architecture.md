@@ -56,10 +56,11 @@ successful backup re-applies the limit.
 `backup_operations_audit.jsonl` is the authoritative append-only operational audit
 for the current path (`backup_succeeded`, `backup_failed`, `backup_deleted`,
 `backup_evicted`, `backup_eviction_skipped`, `backup_retention_failed`). The
-`backup_execution_history` table and its read API exist for compatibility, but the
-current Elysia creation path does not insert execution rows, so its
-`removed_backups_json` column is not populated by retention. Do not use it as the
-primary operational record.
+The authenticated `/api/admin/backups/history` endpoint projects the latest 200
+successful and failed creation events from this JSONL file. It ignores malformed
+and partial lines; the history table remains unused for this execution path, so
+its `removed_backups_json` column is not populated by retention. Use the JSONL
+audit as the operational record.
 
 Restore events are recorded separately in `backup_restore_audit.jsonl` and the
 restore-history API. Audit append failures never turn a verified backup into an
