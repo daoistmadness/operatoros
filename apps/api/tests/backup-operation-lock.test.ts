@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createFreshDatabase, ensureOperatorOSDirectories, resolveOperatorOSPaths } from "@operatoros/db";
 import type { BackendConfig } from "../src/config";
 import { BACKUP_OPERATION_LOCK_FILENAME } from "../src/domains/backup-operation-lock";
@@ -11,10 +11,11 @@ import { startServer } from "../src/server";
 
 const authCookieSecret = "synthetic-auth-cookie-secret-for-operation-lock-test";
 const backupKey = Buffer.alloc(32, 19).toString("base64");
+const root = fileURLToPath(new URL("../../../", import.meta.url));
 
 function setup() {
   const dataDir = mkdtempSync(join(tmpdir(), "operatoros-backup-operation-lock-"));
-  const paths = resolveOperatorOSPaths({ repositoryRoot: process.cwd(), env: { OPERATOROS_DATA_DIR: dataDir } });
+  const paths = resolveOperatorOSPaths({ repositoryRoot: root, env: { OPERATOROS_DATA_DIR: dataDir } });
   ensureOperatorOSDirectories(paths);
   createFreshDatabase(paths.databasePath);
   const config: Partial<BackendConfig> = {
@@ -54,13 +55,13 @@ describe("API and CLI backup operation lock", () => {
       expect(lockProbe(fixture.lockPath).exitCode).toBe(75);
       await expect(startServer(fixture.config)).rejects.toMatchObject({ code: "BACKUP_OPERATION_LOCKED" });
 
-      const cli = Bun.spawnSync([process.execPath, join(process.cwd(), "apps/api/src/backup-cli.ts"), "backup"], {
+      const cli = Bun.spawnSync([process.execPath, join(root, "apps/api/src/backup-cli.ts"), "backup"], {
         stdout: "pipe",
         stderr: "pipe",
         env: {
           ...process.env,
           OPERATOROS_DATA_DIR: fixture.dataDir,
-          OPERATOROS_REPOSITORY_ROOT: process.cwd(),
+          OPERATOROS_REPOSITORY_ROOT: root,
           AUTH_COOKIE_SECRET: authCookieSecret,
           BACKUP_ENCRYPTION_KEY: backupKey,
           BACKUP_ENCRYPTION_KEY_ID: "synthetic",
@@ -99,13 +100,13 @@ describe("API and CLI backup operation lock", () => {
 
   it.skipIf(process.platform !== "linux")("releases the shared lock after an API process is interrupted", async () => {
     const fixture = setup();
-    const serverModule = pathToFileURL(join(process.cwd(), "apps/api/src/server.ts")).href;
+    const serverModule = pathToFileURL(join(root, "apps/api/src/server.ts")).href;
     const script = `const { startServer } = await import(${JSON.stringify(serverModule)}); await startServer({ hostname: "127.0.0.1", port: 0 }); process.stdout.write("SERVER_READY\\n"); setInterval(() => {}, 2147483647);`;
     const server = Bun.spawn([process.execPath, "-e", script], {
       env: {
         ...process.env,
         OPERATOROS_DATA_DIR: fixture.dataDir,
-        OPERATOROS_REPOSITORY_ROOT: process.cwd(),
+        OPERATOROS_REPOSITORY_ROOT: root,
         AUTH_COOKIE_SECRET: authCookieSecret,
         BACKUP_ENCRYPTION_KEY: backupKey,
         BACKUP_ENCRYPTION_KEY_ID: "synthetic",
