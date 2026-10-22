@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "806a6efb286c88ea5d2cb04e4e8a4b3ea24a575d0670a91e1822aa52c6b0e84f",
+      "fingerprint": "4531e6ec409ccc2cfaf50c9843caae6b65bb9bce75ac8883a5836636fabe53c8",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "5ca97b9432862a462b8a67c4c12e80d9fd54214c62d02201c0cfee8f7cbf454a"
+        "apps/api/src/domains/safety.ts": "fc77444a46a273246643150d6f4184bf87411afddad462bd223f1e873cba73f5"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "627b0fabd69c8f1f83023e0b7a59006c1d0712c7",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Reviewed the current streaming TAR encoder, regular-file descriptor handling, bounded file stream, cancellation cleanup, and synthetic normal-size and oversized tests. No route contract or Elysia guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/src/domains/safety.ts at 627b0fabd69c8f1f83023e0b7a59006c1d0712c7"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -823,15 +823,15 @@
       ]
     },
     "source:apps/api/tests/backup-download.test.ts": {
-      "fingerprint": "c6f5f15f82830b55b80934ac549387f76eac9ff75298e56d8cbaaa4728accace",
+      "fingerprint": "1dbd9a42422c1f7a41a5df721a0805c065c6f1df0c7d98863114eb1ab1c1bc93",
       "snapshot": {
-        "apps/api/tests/backup-download.test.ts": "b17cb2e3ac138a9ccb4bce7ec3046b5d98c9f4084958cc3e25dbd3737fb7b8fd"
+        "apps/api/tests/backup-download.test.ts": "913b772a283d79c0850c1ec33c47c6d91be6190d0f4a73b94ac275a794e30586"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "627b0fabd69c8f1f83023e0b7a59006c1d0712c7",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Reviewed the backup download API and regression coverage. The change replaces whole-artifact buffering with bounded file streaming and a streaming TAR encoder; Elysia/API guidance is unchanged because the route contract and runtime ownership remain the same.",
       "evidence": [
-        "Changed: apps/api/tests/backup-download.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/tests/backup-download.test.ts at 627b0fabd69c8f1f83023e0b7a59006c1d0712c7"
       ]
     },
     "source:e2e/smoke/web/phase11-verification.spec.ts": {

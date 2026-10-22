@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
+import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, createReadStream, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
+import { Readable } from "node:stream";
 import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryPageSchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
@@ -303,6 +304,141 @@ function verifiedBackup(root: string, filename: string): string {
   const path = `${root}/${filename}`;
   if (!regularFile(path) || !regularFile(`${path}.meta.json`)) throw Object.assign(new Error("Backup not found."), { status: 404 });
   return path;
+}
+
+const TAR_BLOCK_BYTES = 512;
+const TAR_MAX_OCTAL_SIZE = (1n << 33n) - 1n;
+
+type TarMember = { name: string; path: string; fd: number | null; size: bigint; stream: ReturnType<typeof createReadStream> | null };
+
+function openTarMember(name: string, path: string): TarMember {
+  const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const stat = fstatSync(fd, { bigint: true });
+    if (!stat.isFile()) throw Object.assign(new Error("Backup artifact and metadata must be regular files."), { status: 404 });
+    return { name, path, fd, size: stat.size, stream: null };
+  } catch (error) {
+    closeSync(fd);
+    throw error;
+  }
+}
+
+function closeTarMembers(members: TarMember[]): void {
+  for (const member of members) {
+    member.stream?.destroy();
+    if (member.fd !== null) {
+      try { closeSync(member.fd); } catch { /* cleanup after a canceled or failed response is best-effort */ }
+      member.fd = null;
+    }
+  }
+}
+
+function writeTarOctal(header: Buffer, value: bigint, offset: number, length: number): void {
+  const digits = value.toString(8);
+  if (digits.length > length - 1) throw new Error("Tar header value exceeds its octal field.");
+  header.write(digits.padStart(length - 1, "0"), offset, length - 1, "ascii");
+  header[offset + length - 1] = 0;
+}
+
+function tarHeader(name: string, size: bigint, modifiedAt: bigint, type: "0" | "x" = "0"): Buffer {
+  if (Buffer.byteLength(name) > 100) throw new Error("Backup filename cannot be represented in a tar header.");
+  const header = Buffer.alloc(TAR_BLOCK_BYTES);
+  header.write(name, 0, 100, "utf8");
+  writeTarOctal(header, 0o600n, 100, 8);
+  writeTarOctal(header, 0n, 108, 8);
+  writeTarOctal(header, 0n, 116, 8);
+  writeTarOctal(header, size, 124, 12);
+  writeTarOctal(header, modifiedAt, 136, 12);
+  header.fill(0x20, 148, 156);
+  header[156] = type === "x" ? 0x78 : 0x30;
+  header.write("ustar\0", 257, 6, "ascii");
+  header.write("00", 263, 2, "ascii");
+  const checksum = header.reduce((sum, byte) => sum + byte, 0);
+  header.write(checksum.toString(8).padStart(6, "0"), 148, 6, "ascii");
+  header[154] = 0;
+  header[155] = 0x20;
+  return header;
+}
+
+function paxRecord(key: string, value: string): Buffer {
+  const field = ` ${key}=${value}\n`;
+  let length = Buffer.byteLength(field) + 1;
+  for (;;) {
+    const record = `${length}${field}`;
+    const actualLength = Buffer.byteLength(record);
+    if (actualLength === length) return Buffer.from(record);
+    length = actualLength;
+  }
+}
+
+function tarPadding(size: bigint): number {
+  return Number((BigInt(TAR_BLOCK_BYTES) - size % BigInt(TAR_BLOCK_BYTES)) % BigInt(TAR_BLOCK_BYTES));
+}
+
+async function* tarBundle(members: TarMember[]): AsyncGenerator<Buffer> {
+  try {
+    const modifiedAt = BigInt(Math.floor(Date.now() / 1000));
+    for (const member of members) {
+      const oversized = member.size > TAR_MAX_OCTAL_SIZE;
+      if (oversized) {
+        const pax = paxRecord("size", member.size.toString());
+        yield tarHeader(`PaxHeaders/${member.name}`, BigInt(pax.length), modifiedAt, "x");
+        yield pax;
+        const paxPadding = tarPadding(BigInt(pax.length));
+        if (paxPadding) yield Buffer.alloc(paxPadding);
+      }
+      yield tarHeader(member.name, oversized ? 0n : member.size, modifiedAt);
+      if (member.fd === null) throw new Error("Backup bundle file handle is unavailable.");
+      const stream = createReadStream(member.path, { fd: member.fd, autoClose: true });
+      member.fd = null;
+      member.stream = stream;
+      try {
+        let streamedSize = 0n;
+        for await (const chunk of stream) {
+          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          streamedSize += BigInt(bytes.byteLength);
+          yield bytes;
+        }
+        if (streamedSize !== member.size) throw new Error("Backup bundle file changed during download.");
+      } finally {
+        member.stream = null;
+        stream.destroy();
+      }
+      const padding = tarPadding(member.size);
+      if (padding) yield Buffer.alloc(padding);
+    }
+    yield Buffer.alloc(TAR_BLOCK_BYTES * 2);
+  } finally {
+    closeTarMembers(members);
+  }
+}
+
+function backupFileStream(path: string): ReadableStream<Uint8Array> {
+  const member = openTarMember(basename(path), path);
+  try {
+    if (member.fd === null) throw new Error("Backup file handle is unavailable.");
+    const stream = createReadStream(member.path, { fd: member.fd, autoClose: true });
+    member.fd = null;
+    member.stream = stream;
+    const body = Readable.toWeb(stream) as ReadableStream<Uint8Array>;
+    member.stream = null;
+    return body;
+  } catch (error) {
+    closeTarMembers([member]);
+    throw error;
+  }
+}
+
+function backupBundleStream(filename: string, path: string): ReadableStream<Uint8Array> {
+  const members: TarMember[] = [];
+  try {
+    members.push(openTarMember(filename, path));
+    members.push(openTarMember(`${filename}.meta.json`, `${path}.meta.json`));
+    return Readable.toWeb(Readable.from(tarBundle(members))) as ReadableStream<Uint8Array>;
+  } catch (error) {
+    closeTarMembers(members);
+    throw error;
+  }
 }
 
 function deleteBackup(root: string, filename: string): void {
@@ -766,15 +902,13 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; }, { response: { 200: t.Array(BackupEntrySchema) } });
   app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } }, { response: { 200: CreatedBackupSchema } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: DeleteBackupResultSchema } });
-  app.get("/api/admin/backups/:filename/download", async (ctx: Context) => {
+  app.get("/api/admin/backups/:filename/download", (ctx: Context) => {
     if (!auth(context, ctx)) return denied(ctx);
     try {
       const filename = ctx.params.filename;
       const path = verifiedBackup(backupRoot(config), filename);
       const bundle = ctx.query.bundle === "true";
-      const body = bundle
-        ? await new Bun.Archive({ [filename]: readFileSync(path), [`${filename}.meta.json`]: readFileSync(`${path}.meta.json`) }).blob()
-        : readFileSync(path);
+      const body = bundle ? backupBundleStream(filename, path) : backupFileStream(path);
       return new Response(body, { headers: {
         "content-type": bundle ? "application/x-tar" : "application/vnd.operatoros.backup+json",
         "cache-control": "no-store, no-cache, must-revalidate, private",
