@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "eed92c72a94f13ea54e039704db2403829942bb442b2fcee19c2c8c1c11c3736",
+      "fingerprint": "f804d4e6e6b65ef4031813331d23ab1f1bd2c6a548020dbd1deb440c791b603c",
       "snapshot": {
-        "docs/security/backup-restore.md": "b06abf45ee1d1e97427295c79cd27527022f45b08b0b2fb385c576729891dae5"
+        "docs/security/backup-restore.md": "c7abaaa0e87bf1e72d2ef5e4cce3e022ccab6463f708ff24bc8fee089e2bdf06"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "e9071ab18111015d3e1e8e6d5807b176cab71df7",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Clarified that API and CLI restore discover imported bundles only in the configured backup directory; this is operator guidance for existing source behavior and does not change agent or skill guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: docs/security/backup-restore.md at e9071ab18111015d3e1e8e6d5807b176cab71df7"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
