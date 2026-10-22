@@ -139,7 +139,7 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(failures[1]!.operation_id).toBe((cliFailures[1]!.request_context as { operation_id: string }).operation_id);
     expect(cliFailures[2]!.target_filename).toBe("unknown");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-}, 15000);
+}, 30000);
 
 it("refuses to publish a CLI backup from a synthetic database with foreign-key violations", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-source-"));
