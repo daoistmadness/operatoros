@@ -74,21 +74,25 @@ memory.
 Older execution records without an explicit integrity result are returned with
 unknown verification rather than inferred as verified.
 
-Status verification reads and hashes the complete current encrypted artifact on
-every request. A local synthetic measurement on 2026-10-22 (Bun 1.4.3, Intel
-i5-3470, Linux 7.0.0-38-generic) took these median times over three repeated
-checks per size; the status measurement includes file reading, hashing, envelope
-parsing, and the authenticated status request:
+Status hashes the complete current encrypted artifact on every request using
+64 KiB reads. It parses the bounded envelope header and checks the serialized
+ciphertext encoding while streaming; it does not decrypt the artifact or run
+SQLite integrity checks. A local synthetic measurement on 2026-10-22 (Bun 1.4.3,
+Intel i5-3470, Linux 7.0.0-38-generic) used synthetic base64 payloads and took
+these median times over three authenticated status requests per size. The
+measurement covers status validation, not AES-GCM decryption:
 
-| Plaintext size | Encrypted artifact | Read + SHA-256 | Full status request |
-|---:|---:|---:|---:|
-| 1 MiB | 1.33 MiB | 4.93 ms | 11.06 ms |
-| 10 MiB | 13.33 MiB | 48.10 ms | 73.12 ms |
-| 50 MiB | 66.67 MiB | 237.68 ms | 386.51 ms |
+| Encrypted artifact | Full status request |
+|---:|---:|
+| 1.33 MB | 9.12 ms |
+| 13.33 MB | 75.47 ms |
+| 66.67 MB | 372.08 ms |
 
-These are local measurements, not service thresholds or SLAs. Status verification
-also holds the artifact in memory while checking its checksum and envelope;
-latency and memory use grow with artifact size. Verification caching remains a
+The benchmark process peaked at 179 MiB RSS while checking artifacts through
+66.67 MB, compared with 177 MiB in a separate run containing only the 1.33 MB
+artifact. Those values include Bun and API startup and are measurements, not
+memory limits or SLAs. Status still reads and hashes every artifact byte on each
+request, so latency grows with artifact size. Verification caching remains a
 separate design decision.
 
 Status precedence is restore in progress, backup in progress, destination

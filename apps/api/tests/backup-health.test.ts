@@ -1,4 +1,5 @@
 import { expect, it } from "bun:test";
+import { createHash } from "node:crypto";
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -79,6 +80,17 @@ it("reports current artifact checks without claiming SQLite integrity verificati
       expect(result.latest_backup_checksum_status).not.toBe("verified");
       expect(result.latest_backup_integrity_status).toBe("not_checked");
     }
+    writeFileSync(artifactPath, artifact);
+    const malformedEnvelope = Buffer.from(artifact);
+    const ciphertextStart = malformedEnvelope.indexOf(Buffer.from(',"ciphertext":"')) + Buffer.byteLength(',"ciphertext":"');
+    expect(ciphertextStart).toBeGreaterThan(0);
+    malformedEnvelope[ciphertextStart] = 0x22;
+    const originalManifest = JSON.parse(manifest.toString());
+    writeFileSync(artifactPath, malformedEnvelope);
+    writeFileSync(manifestPath, JSON.stringify({ ...originalManifest, sha256: createHash("sha256").update(malformedEnvelope).digest("hex") }));
+    const invalidEnvelope = await status();
+    expect(invalidEnvelope.health_state).toBe("UNKNOWN");
+    expect(invalidEnvelope.latest_backup_checksum_status).not.toBe("verified");
     writeFileSync(artifactPath, artifact);
     writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(manifest.toString()), key_id: "inconsistent" }));
     expect((await status()).health_state).toBe("UNKNOWN");

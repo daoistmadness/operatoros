@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -9,7 +9,7 @@ import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
 import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, schemaFingerprint } from "@operatoros/db";
-import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
+import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 import { hasPendingRestoreRollback } from "./backup-scratch";
@@ -27,6 +27,8 @@ export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
 const BACKUP_HISTORY_LIMIT = 200;
 const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
+const BACKUP_STATUS_READ_CHUNK_BYTES = 64 * 1024;
+const BACKUP_ENVELOPE_HEADER_MAX_BYTES = 4096;
 const BACKUP_AUDIT_MAX_LINE_BYTES = 1024 * 1024;
 const RECOVERY_HISTORY_LIMIT = BACKUP_HISTORY_LIMIT;
 const RECOVERY_HISTORY_MAX_SCAN_BYTES = 1024 * 1024;
@@ -55,6 +57,63 @@ function fail(set: any, status: number, detail: unknown): { detail: unknown } { 
 function auth(context: AuthContext, ctx: Context): any { return actor(context, ctx, { role: "admin", refreshSession: false }); }
 function denied(ctx: Context): { detail: string } { return { detail: ctx.set.status === 401 ? "Authentication required" : "Insufficient permissions" }; }
 function regularFile(path: string): boolean { try { return lstatSync(path).isFile(); } catch { return false; } }
+
+// The writer emits a canonical JSON envelope, so status can validate its small header and stream the large ciphertext.
+function verifyBackupArtifact(path: string, expectedSize: number, expectedChecksum: string): Row {
+  const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+  try {
+    const before = fstatSync(descriptor, { bigint: true });
+    if (!before.isFile() || before.size !== BigInt(expectedSize)) throw new Error("Backup size mismatch.");
+    const header = Buffer.alloc(Math.min(expectedSize, BACKUP_ENVELOPE_HEADER_MAX_BYTES));
+    let headerBytes = 0;
+    while (headerBytes < header.length) {
+      const bytesRead = readSync(descriptor, header, headerBytes, header.length - headerBytes, headerBytes);
+      if (bytesRead === 0) break;
+      headerBytes += bytesRead;
+    }
+    const marker = Buffer.from(',"ciphertext":"');
+    const markerStart = header.subarray(0, headerBytes).indexOf(marker);
+    if (markerStart < 0 || markerStart + marker.length >= headerBytes) throw new Error("Backup envelope header invalid.");
+    const envelope = JSON.parse(Buffer.concat([header.subarray(0, markerStart), Buffer.from(',"ciphertext":""}')]).toString("utf8"));
+    if (!envelope || typeof envelope !== "object" || Array.isArray(envelope)) throw new Error("Backup envelope invalid.");
+
+    const size = expectedSize;
+    const payloadStart = markerStart + marker.length;
+    const payloadEnd = size - 2;
+    const hash = createHash("sha256");
+    const chunk = Buffer.alloc(BACKUP_STATUS_READ_CHUNK_BYTES);
+    let offset = 0;
+    let payloadBytes = 0;
+    let paddingStarted = false;
+    let paddingBytes = 0;
+    while (offset < size) {
+      const bytesRead = readSync(descriptor, chunk, 0, Math.min(chunk.length, size - offset), offset);
+      if (bytesRead === 0) throw new Error("Backup artifact was truncated during verification.");
+      const bytes = chunk.subarray(0, bytesRead);
+      hash.update(bytes);
+      for (let index = Math.max(0, payloadStart - offset); index < Math.min(bytesRead, payloadEnd - offset); index += 1) {
+        const byte = bytes[index]!;
+        payloadBytes += 1;
+        if (byte === 0x3d) {
+          paddingStarted = true;
+          paddingBytes += 1;
+          if (paddingBytes > 2) throw new Error("Backup ciphertext encoding invalid.");
+        } else if (paddingStarted || !(byte >= 0x41 && byte <= 0x5a || byte >= 0x61 && byte <= 0x7a || byte >= 0x30 && byte <= 0x39 || byte === 0x2b || byte === 0x2f)) {
+          throw new Error("Backup ciphertext encoding invalid.");
+        }
+      }
+      offset += bytesRead;
+    }
+    const suffix = Buffer.alloc(2);
+    if (readSync(descriptor, suffix, 0, suffix.length, payloadEnd) !== suffix.length || suffix[0] !== 0x22 || suffix[1] !== 0x7d || payloadBytes === 0 || payloadBytes % 4 !== 0) throw new Error("Backup envelope ending invalid.");
+    const after = fstatSync(descriptor, { bigint: true });
+    if (offset !== size || before.size !== after.size || before.mtimeNs !== after.mtimeNs || before.ctimeNs !== after.ctimeNs || before.dev !== after.dev || before.ino !== after.ino) throw new Error("Backup artifact changed during verification.");
+    if (hash.digest("hex") !== expectedChecksum) throw new Error("Backup checksum mismatch.");
+    return envelope;
+  } finally {
+    closeSync(descriptor);
+  }
+}
 
 function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
   mkdirSync(root, { recursive: true, mode: 0o700 });
@@ -585,10 +644,8 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
         !Number.isFinite(Date.parse(latest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
         manifest.backup_file_size_bytes !== stats.size || typeof manifest.schema_version !== "string" || !manifest.schema_version ||
         typeof manifest.plaintext_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(manifest.plaintext_sha256)) throw new Error("Backup metadata invalid.");
-      const artifact = readFileSync(path);
-      if (artifact.length !== stats.size || backupSha256(artifact) !== latest.checksum) throw new Error("Backup checksum mismatch.");
-      const envelope = JSON.parse(artifact.toString());
-      if (!isEncryptedBackup(artifact) || manifest.encrypted !== true || manifest.format_version !== BACKUP_ENVELOPE_VERSION || manifest.format_version !== envelope.version || manifest.algorithm !== BACKUP_ENCRYPTION_ALGORITHM || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId || latest.encrypted !== true || latest.format_version !== envelope.version || latest.algorithm !== envelope.algorithm || latest.key_id !== envelope.keyId) throw new Error("Backup metadata mismatch.");
+      const envelope = verifyBackupArtifact(path, stats.size, latest.checksum);
+      if (envelope.magic !== BACKUP_ENVELOPE_MAGIC || manifest.encrypted !== true || manifest.format_version !== BACKUP_ENVELOPE_VERSION || manifest.format_version !== envelope.version || manifest.algorithm !== BACKUP_ENCRYPTION_ALGORITHM || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId || latest.encrypted !== true || latest.format_version !== envelope.version || latest.algorithm !== envelope.algorithm || latest.key_id !== envelope.keyId) throw new Error("Backup metadata mismatch.");
       checksumStatus = "verified";
     } catch { /* fail closed; creation-time checks do not verify the current artifact */ }
   }
