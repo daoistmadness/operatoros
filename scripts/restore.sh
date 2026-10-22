@@ -7,7 +7,7 @@ if [ "$#" -gt 0 ]; then
   SELECTED_BACKUP="$1"
 else
   BACKUP_DIR="$(bun "$PROJECT_ROOT/packages/db/src/data-dir-cli.ts" --repo "$PROJECT_ROOT" --format backup-dir)"
-  mapfile -t OPTIONS < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'backup_*.sqlite3' -printf '%f\n' | sort -r)
+  mapfile -t OPTIONS < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'backup_*.sqlite3' -printf '%f\n' | sort -V -r)
   [ "${#OPTIONS[@]}" -gt 0 ] || { echo "No backups found in $BACKUP_DIR"; exit 1; }
   echo "Choose an encrypted backup file to restore:"
   for index in "${!OPTIONS[@]}"; do echo "$((index + 1))) ${OPTIONS[$index]}"; done

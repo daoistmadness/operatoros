@@ -3,9 +3,9 @@ import { spawnSync as spawnCommand } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { Database } from "bun:sqlite";
-import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, createFreshDatabase, openDatabase } from "@operatoros/db";
 import { loadConfig } from "../src/config";
 import { restore as restoreCli } from "../src/backup-cli";
 import type { RestoreFileSystem } from "../src/domains/restore-transaction";
@@ -34,10 +34,16 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
+    const migrations = new Database(databasePath);
+    const previousMigration = SCHEMA_MIGRATIONS[SCHEMA_MIGRATIONS.length - 2]!;
+    migrations.query("INSERT OR IGNORE INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', ?, ?)").run(previousMigration, "synthetic-history", "synthetic-test", "2099-01-01T00:00:00Z");
+    migrations.query("UPDATE operatoros_schema_migrations SET applied_at = ? WHERE version = ?").run("2000-01-01T00:00:00Z", CURRENT_SCHEMA_VERSION);
+    migrations.close();
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
     const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
     const label = basename(artifact);
+    expect((JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")) as { schema_version: string }).schema_version).toBe(CURRENT_SCHEMA_VERSION);
 
     const marked = openDatabase(databasePath);
     marked.client.run("INSERT INTO students (id, name) VALUES (424242, 'Withdrawn Student')");
@@ -82,6 +88,9 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(cliRecovery[2]!.target_filename).toBe(label);
     expect(cliRecovery[2]!.pre_restore_snapshot_filename).toBe(safety);
     expect(cliRecovery[2]!.reason).toBeNull();
+    expect(cliRecovery[0]!.authenticated_username).toBeNull();
+    expect(cliRecovery[1]!.authenticated_username).toBeNull();
+    expect(cliRecovery[2]!.authenticated_username).toBeNull();
     expect(typeof (cliRecovery[2]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
     expect(completed[0]!.operation_id).toBe((cliRecovery[2]!.request_context as { operation_id: string }).operation_id);
     expect(new Set(cliRecovery.map((entry) => (entry.request_context as { operation_id: string }).operation_id)).size).toBe(1);
@@ -273,7 +282,7 @@ it("refuses a concurrent CLI restore before changing the active database and aud
       input: "golden-admin-pass-1\n",
     });
     expect(refused.status).toBe(1);
-    expect(refused.stderr?.toString()).toContain("Another backup CLI operation is already active.");
+    expect(refused.stderr?.toString()).toContain("Another backup or restore operation is already active for this data root.");
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
     const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
     expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
@@ -463,6 +472,9 @@ it("requires a verified backup administrator credential before making the CLI sa
     const restoredSession = verified.client.query("SELECT revoked_at FROM sessions WHERE token_hash = 'synthetic-restored-session'").get() as { revoked_at: string | null };
     expect(restoredSession.revoked_at).not.toBeNull();
     verified.close();
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied", "restore_requested", "restore_started", "restore_completed"]);
+    expect(recovery.map((entry) => entry.authenticated_username)).toEqual([null, null, null, "golden-admin", "golden-admin"]);
     expect(readFileSync(join(backupDir, filename)).equals(selectedArtifact)).toBe(true);
     const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8");
     expect(audit).not.toContain("synthetic-backup-admin-password");
@@ -490,6 +502,35 @@ it("passes the selected backup administrator to the CLI from the restore script"
     const withAdministrator = run("golden-admin");
     expect(withAdministrator.status).toBe(0);
     expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", filename, "--admin-user", "golden-admin"]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("orders same-second restore menu entries by numeric backup sequence", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-restore-menu-order-"));
+  const bin = join(temporary, "bin");
+  const backupDir = join(temporary, "backups");
+  const argsPath = join(temporary, "args");
+  mkdirSync(bin);
+  mkdirSync(backupDir);
+  const newest = "backup_2026-10-21T17-00-00Z_10.sqlite3";
+  const names = [
+    "backup_2026-10-21T17-00-00Z.sqlite3",
+    "backup_2026-10-21T17-00-00Z_1.sqlite3",
+    "backup_2026-10-21T17-00-00Z_9.sqlite3",
+    newest,
+  ];
+  for (const name of names) writeFileSync(join(backupDir, name), "synthetic artifact");
+  const bunStub = join(bin, "bun");
+  writeFileSync(bunStub, '#!/bin/sh\ncase "$1" in\n  */data-dir-cli.ts) printf "%s\\n" "$RESTORE_SCRIPT_BACKUP_DIR" ;;\n  *) printf "%s\\n" "$@" > "$RESTORE_SCRIPT_ARGS" ;;\nesac\n', { mode: 0o700 });
+  const result = spawnCommand("/bin/bash", [join(root, "scripts/restore.sh")], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RESTORE_SCRIPT_BACKUP_DIR: backupDir, RESTORE_SCRIPT_ARGS: argsPath },
+    input: "1\ny\n\n",
+  });
+  try {
+    expect(result.status).toBe(0);
+    expect(result.stdout.toString()).toContain(`1) ${newest}`);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", newest]);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
@@ -596,6 +637,7 @@ it("refuses a locked administrator backup before creating the CLI safety snapsho
 it("supports credential recovery on an isolated candidate before re-encrypted restore", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-"));
   const candidateRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-candidate-"));
+  const aliasRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-alias-"));
   const databasePath = join(temporary, "operatoros.sqlite");
   const backupDir = join(temporary, "backups");
   const env = {
@@ -613,6 +655,16 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
     const backup = command(env, "backup");
     expect(backup.exitCode).toBe(0);
     const sourceFilename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+
+    const nestedTarget = join(temporary, "disposable-container", "target");
+    mkdirSync(nestedTarget, { recursive: true });
+    const targetAlias = join(aliasRoot, "source-container");
+    symlinkSync(dirname(nestedTarget), targetAlias);
+    const symlinkedRestore = command(env, "restore-disposable", sourceFilename, join(targetAlias, "target"));
+    expect(symlinkedRestore.exitCode).not.toBe(0);
+    expect(symlinkedRestore.stderr.toString()).toContain("DISPOSABLE_RESTORE_TARGET_INVALID");
+    expect(existsSync(join(nestedTarget, "operatoros.sqlite"))).toBe(false);
+
     const disposable = command(env, "restore-disposable", sourceFilename, candidateRoot);
     expect(disposable.exitCode).toBe(0);
 
@@ -645,10 +697,11 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
   } finally {
     rmSync(temporary, { recursive: true, force: true });
     rmSync(candidateRoot, { recursive: true, force: true });
+    rmSync(aliasRoot, { recursive: true, force: true });
   }
 }, 15000);
 
-it("rejects manifest identity, checksum, and envelope-authentication mismatches before changing the active database", () => {
+it("rejects manifest identity, size, checksum, and envelope-authentication mismatches before changing the active database", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-manifest-"));
   const source = join(temporary, "source");
   mkdirSync(source);
@@ -689,6 +742,38 @@ it("rejects manifest identity, checksum, and envelope-authentication mismatches 
 
     manifest.filename = filename;
     manifest.key_id = "synthetic-test";
+    const schemaVersion = manifest.schema_version;
+    manifest.schema_version = "synthetic-mismatched-schema";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+
+    manifest.schema_version = schemaVersion;
+    for (const [field, invalid] of [["created_at", "invalid timestamp"], ["trigger", "unknown"]] as const) {
+      const valid = manifest[field];
+      manifest[field] = invalid;
+      writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+      expect(command("restore", filename).exitCode).not.toBe(0);
+      expect(readFileSync(databasePath).equals(original)).toBe(true);
+      expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+      manifest[field] = valid;
+    }
+
+    const encryptedSize = statSync(artifactPath).size;
+    const sqliteSize = manifest.sqlite_file_size_bytes;
+    manifest.backup_file_size_bytes = encryptedSize + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.backup_file_size_bytes = encryptedSize;
+    manifest.sqlite_file_size_bytes = Number(sqliteSize) + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.sqlite_file_size_bytes = sqliteSize;
     manifest.sha256 = "0".repeat(64);
     writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
     expect(command("restore", filename).exitCode).not.toBe(0);
@@ -757,6 +842,8 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
       },
       remove: (path) => rmSync(path, { force: true }),
       exists: (path) => { try { statSync(path); return true; } catch { return false; } },
+      syncFile: () => {},
+      syncDirectory: () => {},
     };
 
     expect(() => restoreCli(filename, value, fileSystem)).toThrow("RESTORE_ROLLED_BACK");

@@ -29,9 +29,10 @@ through `/api/admin/backups/scheduler`.
 
 The in-process timer polls every 30 seconds, computes the next UTC run when a run
 is due, persists `next_run_at`, and calls the backup creator. `next_run_at` survives
-an application restart. This is an offline, single-process scheduler; it is not a
-distributed lock or queue, and multiple API processes would each run their own
-timer.
+an application restart. This is an offline, single-process scheduler, not a
+distributed lock or queue. On Linux the canonical server's data-root lock blocks
+a second API process; other environments do not gain multi-process scheduler
+coordination from the timer itself.
 
 `keep_daily`, `keep_weekly`, and `keep_monthly` are persisted configuration fields
 reserved for planned tiered retention. They are not used by the current count-based
@@ -56,10 +57,11 @@ successful backup re-applies the limit.
 `backup_operations_audit.jsonl` is the authoritative append-only operational audit
 for the current path (`backup_succeeded`, `backup_failed`, `backup_deleted`,
 `backup_evicted`, `backup_eviction_skipped`, `backup_retention_failed`). The
-`backup_execution_history` table and its read API exist for compatibility, but the
-current Elysia creation path does not insert execution rows, so its
-`removed_backups_json` column is not populated by retention. Do not use it as the
-primary operational record.
+The authenticated `/api/admin/backups/history` endpoint projects the latest 200
+successful and failed creation events from this JSONL file. It ignores malformed
+and partial lines; the history table remains unused for this execution path, so
+its `removed_backups_json` column is not populated by retention. Use the JSONL
+audit as the operational record.
 
 Restore events are recorded separately in `backup_restore_audit.jsonl` and the
 restore-history API. Audit append failures never turn a verified backup into an
@@ -69,8 +71,8 @@ invalid snapshot.
 
 The supported runtime is one local API process against one SQLite data root.
 PostgreSQL and Docker/Compose are not supported runtimes. Backup, restore, and
-scheduler guards are process-local module state and do not coordinate multiple
-API processes. CLI commands use a nonblocking Linux `flock` to serialize CLI
-processes with one another, but that lock does not coordinate with the API
-process. Run one API process per SQLite data root and stop API writers before
-CLI restore; multi-worker restore is unsupported.
+scheduler guards also use process-local module state. On Linux, the canonical
+API server and CLI backup/restore commands share a nonblocking data-root
+`flock`, so a second API or CLI operation fails closed. The lock does not
+coordinate tools that ignore it or non-Linux API processes. Run one API process
+per SQLite data root; multi-worker restore is unsupported.

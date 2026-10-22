@@ -2,10 +2,10 @@ import { startServer } from "./server";
 
 /** Candidate-side adapter matching the Phase 0 harness protocol (foundation scope). */
 export class ElysiaCandidateAdapter {
-  private instance: ReturnType<typeof startServer> | null = null;
+  private instance: Awaited<ReturnType<typeof startServer>> | null = null;
 
   async start(_seedFnName: string) {
-    this.instance = startServer({ port: 0, databasePath: undefined });
+    this.instance = await startServer({ port: 0, databasePath: undefined });
     const base = `http://${this.instance.hostname}:${this.instance.port}`;
     const deadline = Date.now() + 3000;
     while (Date.now() < deadline) {
@@ -15,7 +15,7 @@ export class ElysiaCandidateAdapter {
       } catch {}
       await Bun.sleep(25);
     }
-    this.stop();
+    await this.stop();
     throw new Error("Elysia candidate failed readiness check");
   }
 
@@ -33,8 +33,8 @@ export class ElysiaCandidateAdapter {
     return Promise.resolve({ note: "foundation adapter captures no database state" });
   }
 
-  stop() {
-    this.instance?.stop();
+  async stop() {
+    await this.instance?.stop();
     this.instance = null;
   }
 }

@@ -42,8 +42,12 @@ const status: BackupStatus = {
   latest_backup_type: "manual",
   latest_backup_size_bytes: 2048,
   latest_backup_checksum_status: "verified",
-  latest_backup_integrity_status: "ok",
+  latest_backup_integrity_status: "not_checked",
+  latest_backup_outcome: "SUCCESS",
   latest_backup_schema_version: "s42",
+  latest_backup_encrypted: true,
+  latest_backup_key_id: "synthetic-test-key",
+  backup_encryption_configured: true,
   backup_age_seconds: 3600,
   next_scheduled_backup_at: null,
   backup_count: 1,
@@ -52,18 +56,32 @@ const status: BackupStatus = {
   backup_directory_available: true,
   free_space_bytes: 1048576,
   minimum_required_space_bytes: 2048,
+  free_disk_space_bytes: 1048576,
   low_space: false,
   backup_in_progress: false,
   restore_in_progress: false,
+  generated_at_utc: "2026-07-13T00:00:00Z",
+  latest_backup_timestamp: "2026-07-13T00:00:00Z",
+  database_basename: "synthetic.db",
+  sqlite_journal_mode: "wal",
   destructive_operations_enabled: true,
+  authentication_available: true,
+  restore_support_mode: "single_process_only",
+  restore_requires_admin: true,
+  restore_requires_reauthentication: true,
+  restore_multi_worker_safe: false,
 };
 const backup: BackupEntry = {
   filename: "backup_2026-07-13T00-00-00Z.sqlite3",
   created_at: "2026-07-13T00:00:00Z",
   trigger: "manual",
   size: 2048,
-  checksum: "abcdef1234567890",
+  checksum: "a".repeat(64),
   schema_version: "s42",
+  encrypted: true,
+  format_version: 1,
+  algorithm: "aes-256-gcm",
+  key_id: "synthetic-test-key",
   age_seconds: 3600,
   checksum_status: "verified",
   integrity_status: "ok",
@@ -97,6 +115,7 @@ describe("guided backup and recovery", () => {
     expect(output).toContain("Healthy");
     expect(output).toContain("Checksum");
     expect(output).toContain("verified");
+    expect(output).toContain("Not checked during status");
   });
   it("renders safe backup metadata and safety labels", () => {
     const output = html(<BackupList backups={[{ ...backup, trigger: "pre_restore_auto" }]} onRestore={vi.fn()} onDelete={vi.fn()} />);

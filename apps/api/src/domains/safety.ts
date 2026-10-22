@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, appendFileSync, chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
+import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { t } from "elysia";
+import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryEntrySchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
+import { syncDirectory, syncFile } from "./durable-files";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
@@ -23,8 +25,11 @@ export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
 export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 /** Conservative floor for the preflight minimum on small or empty databases (about 2.95 MiB). */
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
+const BACKUP_HISTORY_LIMIT = 200;
+const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
 /** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
 export const BACKUP_RETENTION_LIMIT = 10;
+const BACKUP_TRIGGERS = new Set(["manual", "scheduled", "pre_restore_auto"]);
 
 const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -65,7 +70,11 @@ function recordRestoreEvent(root: string, event: RestoreAuditEvent, outcome: Res
 }
 
 function dbSchemaVersion(database: Database): string {
-  return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as Row | null)?.version ?? CURRENT_SCHEMA_VERSION);
+  const versions = (database.query("SELECT version FROM operatoros_schema_migrations").all() as Row[]).map((value) => String(value.version));
+  return versions.reduce((latest, version) => {
+    const order = compareSchemaVersions(version, latest);
+    return order === 1 || order === undefined && version > latest ? version : latest;
+  }, versions[0] ?? CURRENT_SCHEMA_VERSION);
 }
 
 /** Scheduler next run time for the status payload: null when no schedule row exists, the scheduler is disabled, or no run time has been computed yet. */
@@ -192,6 +201,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required. Plaintext backups are disabled."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
     assertBackupDiskSpace(context, config, root);
     ensureRoot(config);
+    syncDirectory(dirname(root));
     const filename = nextFilename(root);
     temporaryDirectory = mkdtempSync(join(root, ".operatoros-backup-"));
     chmodSync(temporaryDirectory, 0o700);
@@ -210,10 +220,16 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     const metadata = { filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client), sqlite_file_size_bytes: statSync(temporary).size, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: sha256(temporary), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId, source_db_path: basename(active), backup_tool_version: "1.0" };
     writeFileSync(metadataTemporary, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     chmodSync(metadataTemporary, 0o600);
+    syncFile(encryptedTemporary);
+    syncFile(metadataTemporary);
     renameSync(encryptedTemporary, `${root}/${filename}`);
     renameSync(metadataTemporary, `${root}/${filename}.meta.json`);
+    syncDirectory(temporaryDirectory);
+    syncDirectory(root);
     let removedBackups: string[] = [];
     try { removedBackups = evictBeyondRetention(root, filename, preserve); }
+    catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
+    try { syncDirectory(root); }
     catch (error) { try { audit(root, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     try { audit(root, "backup_succeeded", { filename, trigger, started_at: startedAt, completed_at: now(), duration_seconds: (Date.now() - started) / 1000, size_bytes: metadata.backup_file_size_bytes, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); }
     catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
@@ -263,7 +279,18 @@ function rowsFromFiles(root: string): Row[] {
   for (const entry of (readdirSync(root, { withFileTypes: true }) as { name: string; isFile(): boolean }[])) {
     if (!entry.isFile() || !backupFile.test(entry.name)) continue;
     const manifest = `${root}/${entry.name}.meta.json`;
-    try { if (!regularFile(manifest)) continue; const value = JSON.parse(readFileSync(manifest, "utf8")); result.push({ filename: entry.name, created_at: value.created_at, trigger: value.trigger, size: Number(value.backup_file_size_bytes ?? value.sqlite_file_size_bytes), checksum: value.sha256, schema_version: value.schema_version, encrypted: value.encrypted === true, format_version: value.format_version ?? null, algorithm: value.algorithm ?? null, key_id: value.key_id ?? null }); } catch { /* incomplete pairs stay invisible */ }
+    try {
+      if (!regularFile(manifest)) continue;
+      const value = JSON.parse(readFileSync(manifest, "utf8"));
+      const size = value.backup_file_size_bytes ?? value.sqlite_file_size_bytes;
+      if (typeof value.created_at !== "string" || !Number.isFinite(Date.parse(value.created_at)) ||
+        !BACKUP_TRIGGERS.has(value.trigger) || !Number.isSafeInteger(size) || size <= 0 ||
+        typeof value.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(value.sha256) ||
+        typeof value.schema_version !== "string" || !value.schema_version ||
+        value.format_version != null && !Number.isSafeInteger(value.format_version) ||
+        value.algorithm != null && typeof value.algorithm !== "string" || value.key_id != null && typeof value.key_id !== "string") continue;
+      result.push({ filename: entry.name, created_at: value.created_at, trigger: value.trigger, size, checksum: value.sha256, schema_version: value.schema_version, encrypted: value.encrypted === true, format_version: value.format_version ?? null, algorithm: value.algorithm ?? null, key_id: value.key_id ?? null });
+    } catch { /* incomplete pairs stay invisible */ }
   }
   return result;
 }
@@ -315,20 +342,25 @@ export function evictBeyondRetention(root: string, newest: string, preserve?: st
 
 function readBackupExecutionHistory(root: string): Row[] {
   const path = join(root, "backup_operations_audit.jsonl");
-  let lines: string[];
+  let descriptor: number | null = null;
+  let size: number;
   try {
-    const file = lstatSync(path);
-    if (!file.isFile() || file.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
-    lines = readFileSync(path, "utf8").split("\n");
+    const entry = lstatSync(path);
+    if (!entry.isFile() || entry.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
+    descriptor = openSync(path, "r");
+    const opened = fstatSync(descriptor);
+    if (!opened.isFile() || opened.dev !== entry.dev || opened.ino !== entry.ino || !Number.isSafeInteger(opened.size)) throw new Error("BACKUP_AUDIT_INVALID");
+    size = opened.size;
   } catch (error) {
+    if (descriptor !== null) closeSync(descriptor);
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw error;
   }
   const history: Row[] = [];
-  for (const [index, line] of lines.entries()) {
+  const addLine = (line: Buffer, offset: number): void => {
     try {
-      const event = JSON.parse(line) as Row;
-      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") continue;
+      const event = JSON.parse(line.toString("utf8")) as Row;
+      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") return;
       const filename = typeof event.filename === "string" && backupFile.test(event.filename) ? event.filename : null;
       let manifest: Row | null = null;
       if (filename) {
@@ -341,8 +373,10 @@ function readBackupExecutionHistory(root: string): Row[] {
       const completedAt = typeof event.completed_at === "string" ? event.completed_at : typeof event.timestamp === "string" ? event.timestamp : null;
       const rawTrigger = String(event.trigger ?? manifest?.trigger ?? "manual").toUpperCase();
       const errorMessage = typeof event.failure_code === "string" ? event.failure_code : typeof event.error === "string" ? event.error : "Backup failed";
+      const manifestBackupSize = manifest?.backup_file_size_bytes;
+      const manifestSqliteSize = manifest?.sqlite_file_size_bytes;
       history.push({
-        id: index + 1,
+        id: offset + 1,
         backup_filename: filename,
         started_at: typeof event.started_at === "string" ? event.started_at : completedAt ?? "",
         completed_at: completedAt,
@@ -350,14 +384,42 @@ function readBackupExecutionHistory(root: string): Row[] {
         status: event.event === "backup_succeeded" ? "SUCCESS" : "FAILED",
         error_message: event.event === "backup_failed" ? errorMessage : null,
         trigger_type: rawTrigger,
-        size_bytes: Number.isFinite(event.size_bytes) ? event.size_bytes : manifest?.backup_file_size_bytes ?? manifest?.sqlite_file_size_bytes ?? null,
+        size_bytes: Number.isFinite(event.size_bytes) ? event.size_bytes : Number.isFinite(manifestBackupSize) ? manifestBackupSize : Number.isFinite(manifestSqliteSize) ? manifestSqliteSize : null,
         checksum: typeof event.checksum === "string" ? event.checksum : manifest?.sha256 ?? null,
         integrity_verified: event.event === "backup_succeeded" && typeof event.integrity_verified === "boolean" ? event.integrity_verified : null,
         removed_backups: Array.isArray(event.removed_backups) ? event.removed_backups.filter((value: unknown) => typeof value === "string" && backupFile.test(value)) : [],
       });
     } catch { /* a partial final line or malformed legacy record is not a backup execution */ }
+  };
+  try {
+    let position = size;
+    let partial = Buffer.alloc(0);
+    while (position > 0 && history.length < BACKUP_HISTORY_LIMIT) {
+      const length = Math.min(BACKUP_AUDIT_READ_CHUNK_BYTES, position);
+      position -= length;
+      const chunk = Buffer.allocUnsafe(length);
+      let bytesRead = 0;
+      while (bytesRead < length) {
+        const count = readSync(descriptor!, chunk, bytesRead, length - bytesRead, position + bytesRead);
+        if (count === 0) throw new Error("BACKUP_AUDIT_CHANGED");
+        bytesRead += count;
+      }
+      const combined = Buffer.concat([chunk, partial]);
+      let end = combined.length;
+      let newline = combined.lastIndexOf(0x0a);
+      while (newline >= 0 && history.length < BACKUP_HISTORY_LIMIT) {
+        addLine(combined.subarray(newline + 1, end), position + newline + 1);
+        end = newline;
+        if (newline === 0) break;
+        newline = combined.lastIndexOf(0x0a, newline - 1);
+      }
+      partial = combined.subarray(0, end);
+    }
+    if (position === 0 && history.length < BACKUP_HISTORY_LIMIT && partial.length > 0) addLine(partial, 0);
+  } finally {
+    closeSync(descriptor);
   }
-  return history.reverse().slice(0, 200);
+  return history;
 }
 
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {
@@ -386,7 +448,7 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
       if (!stats.isFile() || stats.size <= 0 || stats.size !== latest.size) throw new Error("Backup size mismatch.");
       const manifest = JSON.parse(readFileSync(`${path}.meta.json`, "utf8"));
       if (manifest.filename !== latest.filename || manifest.source_db_path !== basename(active) ||
-        !Number.isFinite(Date.parse(latest.created_at)) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
+        !Number.isFinite(Date.parse(latest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) || !Number.isSafeInteger(manifest.sqlite_file_size_bytes) || manifest.sqlite_file_size_bytes <= 0 ||
         manifest.backup_file_size_bytes !== stats.size || typeof manifest.schema_version !== "string" || !manifest.schema_version ||
         typeof manifest.plaintext_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(manifest.plaintext_sha256)) throw new Error("Backup metadata invalid.");
       const artifact = readFileSync(path);
@@ -413,6 +475,10 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
   return { health_state: health, last_successful_backup_at: lastSuccessful?.completed_at ?? null, last_failed_backup_at: lastFailed?.completed_at ?? null, last_failure_code: lastFailed?.error_message ?? null, last_failure_message: lastFailed ? "The most recent backup attempt failed." : null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: actualSize, latest_backup_checksum_status: checksumStatus, latest_backup_integrity_status: latest ? "not_checked" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: Boolean(config.backupEncryption), backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: lowSpace, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latestOutcome, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
 }
 
+function schedulerPayload(value: Row): Row {
+  return { ...value, enabled: Boolean(value.enabled), interval_minutes: Number(value.interval_minutes), hour_utc: Number(value.hour_utc), minute_utc: Number(value.minute_utc), weekday_utc: Number(value.weekday_utc), keep_daily: Number(value.keep_daily), keep_weekly: Number(value.keep_weekly), keep_monthly: Number(value.keep_monthly), next_run_at: value.next_run_at ?? null };
+}
+
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
   if (!backupFile.test(filename)) throw Object.assign(new Error("Invalid backup filename."), { status: 400 });
   const root = backupRoot(config); const target = `${root}/${filename}`;
@@ -426,7 +492,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
       const plaintextSize = statSync(plaintextPath).size;
       if (manifest.encrypted !== true || manifest.filename !== filename || manifest.source_db_path !== basename(dbPath(context)) ||
-        manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
+        manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) ||
         manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId ||
         manifest.backup_file_size_bytes !== artifact.length || manifest.sqlite_file_size_bytes !== plaintextSize ||
         manifest.plaintext_sha256 !== sha256(plaintextPath)) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
@@ -450,7 +516,9 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     const activeAttendance = active.counts.attendance ?? null;
     const activeEnrollments = active.counts.enrollments ?? null;
     const delta = (sourceCount: number | null, activeCount: number | null) => sourceCount === null || activeCount === null ? null : sourceCount - activeCount;
-    return { source: { filename, backup_type: manifest.trigger, created_at: manifest.created_at, age_seconds: Math.max(0, Math.floor((Date.now() - Date.parse(manifest.created_at)) / 1000)), size_bytes: manifest.backup_file_size_bytes ?? manifest.sqlite_file_size_bytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: manifest.format_version ?? null, algorithm: manifest.algorithm ?? null, key_id: manifest.key_id ?? null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.integrity === "ok" && source.quick === "ok" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible === true, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: delta(sourceStudents, activeStudents), attendance_delta: delta(sourceAttendance, activeAttendance), enrollment_delta: delta(sourceEnrollments, activeEnrollments), same_database_content: same, source_is_older: null, possible_data_loss: same ? false : null, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
+    const createdAt = typeof manifest.created_at === "string" && Number.isFinite(Date.parse(manifest.created_at)) ? manifest.created_at : undefined;
+    const sizeBytes = Number.isSafeInteger(manifest.backup_file_size_bytes) && manifest.backup_file_size_bytes >= 0 ? manifest.backup_file_size_bytes : Number.isSafeInteger(manifest.sqlite_file_size_bytes) && manifest.sqlite_file_size_bytes >= 0 ? manifest.sqlite_file_size_bytes : statSync(plaintextPath).size;
+    return { source: { filename, backup_type: typeof manifest.trigger === "string" ? manifest.trigger : undefined, created_at: createdAt, age_seconds: createdAt ? Math.max(0, Math.floor((Date.now() - Date.parse(createdAt)) / 1000)) : undefined, size_bytes: sizeBytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: Number.isSafeInteger(manifest.format_version) ? manifest.format_version : null, algorithm: typeof manifest.algorithm === "string" ? manifest.algorithm : null, key_id: typeof manifest.key_id === "string" ? manifest.key_id : null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.integrity === "ok" && source.quick === "ok" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible === true, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: delta(sourceStudents, activeStudents), attendance_delta: delta(sourceAttendance, activeAttendance), enrollment_delta: delta(sourceEnrollments, activeEnrollments), same_database_content: same, source_is_older: null, possible_data_loss: same ? false : null, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
   });
 }
 
@@ -516,9 +584,10 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     }
     restoreStarted = true;
     recordRestoreEvent(root, "restore_started", "STARTED", filename, operator.username, operationId, snapshot?.filename ?? null, null);
+    const restoreFileSystem = config.restoreFileSystem ?? undefined;
     const swap = performRestoreSwap({
       active, candidate, rollback,
-      fileSystem: config.restoreFileSystem ?? undefined,
+      fileSystem: restoreFileSystem,
       close: () => context.database.close(),
       reopen: () => context.database.reopen(),
       afterSwap: () => {
@@ -526,9 +595,9 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
         if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client as unknown as Database, body, operator)) throw new Error("Post-restore integrity validation failed.");
-        appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null });
         return checkedRestored;
       },
+      beforeCommit: () => appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null }),
     });
     if (swap.outcome === "committed") {
       const checkedRestored = swap.value!;
@@ -556,19 +625,17 @@ class Scheduler {
 }
 export const backupScheduler = new Scheduler();
 
-const restoreBody = t.Object({ current_password: t.Optional(t.String()), candidate_admin_username: t.Optional(t.String({ minLength: 1, maxLength: 255 })), candidate_admin_password: t.Optional(t.String({ minLength: 1, maxLength: 1024 })), confirmation_filename: t.Optional(t.String()), confirmation_phrase: t.Optional(t.String()), acknowledge_complete_replacement: t.Optional(t.Boolean()), acknowledge_session_revocation: t.Optional(t.Boolean()), acknowledge_restart_required: t.Optional(t.Boolean()), acknowledge_safety_backup: t.Optional(t.Boolean()), expected_source_sha256: t.Optional(t.String()), expected_active_sha256: t.Optional(t.String()) });
-
 export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfig): void {
-  app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } });
-  app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; });
-  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } });
-  app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.get("/api/admin/backups/status", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return statusPayload(context, config); } catch { return fail(ctx.set, 500, { code: "BACKUP_STATUS_UNAVAILABLE", message: "Backup status is unavailable." }); } }, { response: { 200: BackupStatusSchema } });
+  app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; }, { response: { 200: t.Array(BackupEntrySchema) } });
+  app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } }, { response: { 200: CreatedBackupSchema } });
+  app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: DeleteBackupResultSchema } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
-  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)); });
-  app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); if (!statSafe(`${root}/backup_restore_audit.jsonl`)) return []; return readFileSync(`${root}/backup_restore_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((value) => { try { const item = JSON.parse(value); return { timestamp: item.timestamp ?? null, filename: item.target_filename ?? null, event: item.event ?? null, actor_display: item.authenticated_username ?? "unknown", result: item.outcome ?? null, safe_reason_code: item.reason ?? null, operation_reference_id: item.request_context?.operation_id ?? null, safety_backup_filename: item.pre_restore_snapshot_filename ?? null }; } catch { return null; } }).filter(Boolean); });
-  app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return value; });
-  app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); }, { body: t.Object({ enabled: t.Boolean(), schedule_type: t.Union([t.Literal("daily"), t.Literal("weekly"), t.Literal("interval")]), interval_minutes: t.Number({ minimum: 1, maximum: 525600 }), hour_utc: t.Number({ minimum: 0, maximum: 23 }), minute_utc: t.Number({ minimum: 0, maximum: 59 }), weekday_utc: t.Number({ minimum: 0, maximum: 6 }), keep_daily: t.Number({ minimum: 0, maximum: 365 }), keep_weekly: t.Number({ minimum: 0, maximum: 260 }), keep_monthly: t.Number({ minimum: 0, maximum: 120 }) }) });
-  app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } });
+  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)); }, { response: { 200: t.Array(BackupExecutionHistoryEntrySchema) } });
+  app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); if (!statSafe(`${root}/backup_restore_audit.jsonl`)) return []; return readFileSync(`${root}/backup_restore_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((value) => { try { const item = JSON.parse(value); const text = (candidate: unknown): string | null => typeof candidate === "string" ? candidate : null; return { timestamp: text(item.timestamp), filename: text(item.target_filename), event: text(item.event), actor_display: text(item.authenticated_username) ?? "unknown", result: text(item.outcome), safe_reason_code: text(item.reason), operation_reference_id: text(item.request_context?.operation_id), safety_backup_filename: text(item.pre_restore_snapshot_filename) }; } catch { return null; } }).filter((value): value is NonNullable<typeof value> => value !== null).reverse(); }, { response: { 200: t.Array(RecoveryHistoryEntrySchema) } });
+  app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return schedulerPayload(value!); }, { response: { 200: BackupSchedulerConfigSchema } });
+  app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return schedulerPayload(row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1")!); }, { body: BackupSchedulerUpdateSchema, response: { 200: BackupSchedulerConfigSchema } });
+  app.post("/api/admin/backups/:filename/restore-preflight", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return preflight(context, config, ctx.params.filename); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: RestorePreflightSchema } });
   app.post("/api/admin/backups/:filename/restore", (ctx: Context) => {
     const user = auth(context, ctx); if (!user) return denied(ctx);
     const operationId = randomUUID(); const filename = backupFile.test(ctx.params.filename) ? ctx.params.filename : "unknown";
@@ -580,7 +647,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
     }
     try { return restore(context, config, ctx.params.filename, ctx.body, { id: user.id, username: user.username }, operationId); }
     catch (error) { const value = error as any; return fail(ctx.set, Number(value.status ?? 400), { code: value.code ?? "RESTORE_SOURCE_INVALID", message: String(value.message ?? "Restore failed.") }); }
-  }, { body: restoreBody });
+  }, { body: RestoreRequestSchema, response: { 200: RestoreResultSchema } });
   app.onStart(() => backupScheduler.start(context, config));
   app.onStop(() => backupScheduler.stop());
 }
