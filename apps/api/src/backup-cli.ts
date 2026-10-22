@@ -133,12 +133,14 @@ function snapshotSchemaVersion(database: Database): string {
   return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version?: unknown } | null)?.version ?? CURRENT_SCHEMA_VERSION);
 }
 
-function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential): void {
+function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential): string | null {
   const database = openDatabase(path, { readonly: true });
   try {
     if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
     if (!restoreIdentityEligible(database.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
-    if (!isFirstAdminSetupRequired(database.client as unknown as Database) && !restoreAdministratorCredentialMatches(database.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+    const firstAdminSetupRequired = isFirstAdminSetupRequired(database.client as unknown as Database);
+    if (!firstAdminSetupRequired && !restoreAdministratorCredentialMatches(database.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+    return firstAdminSetupRequired ? null : credential?.username ?? null;
   } finally { database.close(); }
 }
 
@@ -183,9 +185,8 @@ function recordRestoreFailure(root: string, filename: string, actor: string | nu
 function recordRestoreCliRefusal(root: string, selected: string | undefined, reason: string): void {
   const filename = backupName.test(basename(selected ?? "")) ? basename(selected!) : "unknown";
   const operationId = randomUUID();
-  const actor = process.env.SUDO_USER ?? process.env.USER ?? null;
-  recordRestoreEvent(root, "restore_requested", "REQUESTED", filename, actor, operationId, null, null);
-  recordRestoreFailure(root, filename, actor, operationId, null, undefined, false, new Error(reason));
+  recordRestoreEvent(root, "restore_requested", "REQUESTED", filename, null, operationId, null, null);
+  recordRestoreFailure(root, filename, null, operationId, null, undefined, false, new Error(reason));
 }
 
 /** Single encrypted-artifact pipeline shared by `backup` and by the pre-restore safety snapshot. `pre_restore_auto` marks snapshots taken automatically before a CLI restore. */
@@ -242,7 +243,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
   const databasePath = value.databasePath;
   const backupDir = value.backupDir;
   const operationId = randomUUID();
-  const actor = process.env.SUDO_USER ?? process.env.USER ?? null;
+  let actor: string | null = null;
   const requestedFilename = backupName.test(basename(selected)) ? basename(selected) : "unknown";
   if (backupDir) recordRestoreEvent(backupDir, "restore_requested", "REQUESTED", requestedFilename, actor, operationId, null, null);
   let label = "unknown";
@@ -265,7 +266,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
     const target = join(directory, `${randomUUID()}.candidate`);
     writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
-    validateRestoreSnapshot(target, credential);
+    actor = validateRestoreSnapshot(target, credential);
     revokeRestoredSessions(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;
     restoreStarted = true;

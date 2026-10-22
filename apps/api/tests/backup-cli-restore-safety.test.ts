@@ -82,6 +82,9 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(cliRecovery[2]!.target_filename).toBe(label);
     expect(cliRecovery[2]!.pre_restore_snapshot_filename).toBe(safety);
     expect(cliRecovery[2]!.reason).toBeNull();
+    expect(cliRecovery[0]!.authenticated_username).toBeNull();
+    expect(cliRecovery[1]!.authenticated_username).toBeNull();
+    expect(cliRecovery[2]!.authenticated_username).toBeNull();
     expect(typeof (cliRecovery[2]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
     expect(completed[0]!.operation_id).toBe((cliRecovery[2]!.request_context as { operation_id: string }).operation_id);
     expect(new Set(cliRecovery.map((entry) => (entry.request_context as { operation_id: string }).operation_id)).size).toBe(1);
@@ -433,6 +436,9 @@ it("requires a verified backup administrator credential before making the CLI sa
     const restoredSession = verified.client.query("SELECT revoked_at FROM sessions WHERE token_hash = 'synthetic-restored-session'").get() as { revoked_at: string | null };
     expect(restoredSession.revoked_at).not.toBeNull();
     verified.close();
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied", "restore_requested", "restore_started", "restore_completed"]);
+    expect(recovery.map((entry) => entry.authenticated_username)).toEqual([null, null, null, "golden-admin", "golden-admin"]);
     expect(readFileSync(join(backupDir, filename)).equals(selectedArtifact)).toBe(true);
     const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8");
     expect(audit).not.toContain("synthetic-backup-admin-password");
