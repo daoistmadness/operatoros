@@ -470,11 +470,12 @@ it("orders same-second restore menu entries by numeric backup sequence", () => {
   const argsPath = join(temporary, "args");
   mkdirSync(bin);
   mkdirSync(backupDir);
+  const newest = "backup_2026-10-21T17-00-00Z_10.sqlite3";
   const names = [
     "backup_2026-10-21T17-00-00Z.sqlite3",
     "backup_2026-10-21T17-00-00Z_1.sqlite3",
     "backup_2026-10-21T17-00-00Z_9.sqlite3",
-    "backup_2026-10-21T17-00-00Z_10.sqlite3",
+    newest,
   ];
   for (const name of names) writeFileSync(join(backupDir, name), "synthetic artifact");
   const bunStub = join(bin, "bun");
@@ -486,8 +487,8 @@ it("orders same-second restore menu entries by numeric backup sequence", () => {
   });
   try {
     expect(result.status).toBe(0);
-    expect(result.stdout.toString()).toContain(`1) ${names[3]}`);
-    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", names[3]]);
+    expect(result.stdout.toString()).toContain(`1) ${newest}`);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", newest]);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
