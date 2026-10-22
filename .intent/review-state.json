@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "7d08dfefcbdda525f8bc181305ba7aca6fc217d5736e8280c37fc828aca09a6f",
+      "fingerprint": "755f6d2c8f23a677d177cb21cc19210280320199b41327c2c98548baed962e76",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
         "AGENTS.md": "acde9d81af3d997dc6f87f3bda624219a9b33a1ea3155bcb1265229e012d7dfd",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
+        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -44,16 +44,15 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
       "outcome": "no-change",
-      "reason": "The PR updates TanStack React Table for the web UI; it does not affect Elysia skill guidance or examples.",
+      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
       "evidence": [
-        "The PR diff updates apps/web and the TanStack packages in bun.lock; the Elysia skill files are unchanged.",
-        "The CI skills:validate step passed on this PR head."
+        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "223624995f1b2c06d9daa14a484e64c1bc13856bcddf96284a7aec9100cc42e1",
+      "fingerprint": "28e4264fc295692089fca2d656363def63e8ebf84b6c4e12bf27fe5981e6d1b8",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
@@ -63,7 +62,7 @@
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "93fa5354af5e560af486cc5ecfb2c7bbe4bb7770a454c21f5ea26edee6115fbc",
+        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -97,12 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
+      "head": "3a1f433742ce1df0de0587a05b4e0478d6663167",
       "outcome": "no-change",
-      "reason": "The lockfile update is limited to TanStack React Table and its store dependencies; planning artifacts remain accurate.",
+      "reason": "This change only updates the web workspace Vitest patch release and its lockfile; it does not change Elysia guidance or planning artifacts.",
       "evidence": [
-        "The bun.lock diff changes @tanstack/react-table and adds @tanstack/react-store and @tanstack/store.",
-        "No _artifacts files are changed by the PR."
+        "Changed: bun.lock at 3a1f433742ce1df0de0587a05b4e0478d6663167"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -269,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "fe98c2c702caa023ce97804b428dc4d845e23b731336102557b65ad5306975e1",
+      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
       "snapshot": {
-        "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
+        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
       },
-      "head": "77d939cc6c56f57f5fb38398002f01cc17247158",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "The final CLI lock implementation and its tests/documentation do not change Elysia skill guidance.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 77d939cc6c56f57f5fb38398002f01cc17247158"
+        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -374,27 +372,28 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "5bd247a81070f60c85bf570326af7232a2cfa3cb84b6578a02ee83693a2a88cc",
+      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "0cdbd1c04ca9ba72b9b87f2ab1e4f0671b282e8884a07e6fc5e71023e0b71cdc"
+        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
       },
-      "head": "1441f12c86b141b5672c634bd98cf656e28defb8",
+      "head": "7fad48197d91440418320ae7da43547047781537",
       "outcome": "no-change",
-      "reason": "Reviewed the lock-file symlink rejection and synthetic regression: it hardens CLI operation locking without changing Elysia guidance or planning artifacts.",
+      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 1441f12c86b141b5672c634bd98cf656e28defb8"
+        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "a8150cc82aa88d860c911926856a40971e78bf74a31bba13315b1c95ffdb1d53",
+      "fingerprint": "fb16db19fb91cd52e12a604f23d355efa3d46ac83def77cc14dcaa7425df4e8d",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "240d1cd5f3cdc195f9f242dcdd39290c1b1364b61cfe4c737d1a5b759cbc6a85"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "a2ebc4a5b03ee0d154a4e3f2ecaa7b66466029259386e3842d1aab912be37ac1"
       },
-      "head": "1441f12c86b141b5672c634bd98cf656e28defb8",
+      "head": "3b1a99071446cfbe4ac11d80027a4b8686b34e65",
       "outcome": "no-change",
-      "reason": "Reviewed the lock-file symlink rejection and synthetic regression: it hardens CLI operation locking without changing Elysia guidance or planning artifacts.",
+      "reason": "Reviewed the restore-safety test timeout extension. It preserves the existing synthetic integrity, foreign-key, schema, and active-database assertions while allowing slower CI execution; it does not change Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1441f12c86b141b5672c634bd98cf656e28defb8"
+        "The diff changes only the targeted test timeout from the default to 15 seconds; it leaves every assertion and synthetic fixture intact.",
+        "The focused restore-safety suite passed all 14 tests with 148 assertions after the change."
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -587,78 +586,6 @@
       "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
-      ]
-    },
-    "source:README.md": {
-      "fingerprint": "ae75866ec301dae1103e49858f8db2a4338eea305ae5f99e7d987e8d96e38fad",
-      "snapshot": {
-        "README.md": "32fb771e729057f274d4fa4e6f56fff1c4051503eb7259e615eeba0bc4b6ee0e"
-      },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
-      "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
-      "evidence": [
-        "Changed: README.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
-      ]
-    },
-    "source:docs/BACKUP_SCHEME.md": {
-      "fingerprint": "3b4564619c2b715e63361e56a2cabdac919a34b69d4d2b0792c3b55f9c9fbb54",
-      "snapshot": {
-        "docs/BACKUP_SCHEME.md": "96000606eb2d8442314f4a905cc8bc6fdff3abaa2055d06766f8b96e2714249c"
-      },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
-      "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
-      "evidence": [
-        "Changed: docs/BACKUP_SCHEME.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
-      ]
-    },
-    "source:docs/backup-scheduler-architecture.md": {
-      "fingerprint": "2de5da1a9e217484dd10d56c88f886f221588a0fbb7fe14e2a8927cc02186476",
-      "snapshot": {
-        "docs/backup-scheduler-architecture.md": "c47bdb786e8464d8214f9365ea05b35bc71772137661efff3d8f743214ffa4dd"
-      },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
-      "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
-      "evidence": [
-        "Changed: docs/backup-scheduler-architecture.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
-      ]
-    },
-    "source:docs/deployment/ubuntu-server.md": {
-      "fingerprint": "7acf2f9badf4e5a60ea9329eb6cf5c5dc7e6f3f6e97e3a75281b6c42f30da6c1",
-      "snapshot": {
-        "docs/deployment/ubuntu-server.md": "988b081eada90597ed836108f13be1b3cb33bed379ccf2c7aa00330f6b69900f"
-      },
-      "head": "99755b882b13a2390bebfa44157c133d8b0546f4",
-      "outcome": "no-change",
-      "reason": "The Ubuntu deployment restore guidance now describes existing CLI safeguards and limits; Elysia skill guidance and planning artifacts are unchanged.",
-      "evidence": [
-        "Changed: docs/deployment/ubuntu-server.md at 99755b882b13a2390bebfa44157c133d8b0546f4"
-      ]
-    },
-    "source:docs/security/identity-authentication.md": {
-      "fingerprint": "0ec91ab35cc61ebaed3d2d2ae49ce548a4eeb43045ce675dc8db2fa871abc4f1",
-      "snapshot": {
-        "docs/security/identity-authentication.md": "63470c3a37e3426bb097e9ccfbe518cd0024239b912ae97458f029571e9b33a5"
-      },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
-      "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
-      "evidence": [
-        "Changed: docs/security/identity-authentication.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
-      ]
-    },
-    "source:apps/api/src/backup-cli-runner.ts": {
-      "fingerprint": "77512035dda969423e9f6862753628cfa601f957d195fc874b2a2355aab9dfda",
-      "snapshot": {
-        "apps/api/src/backup-cli-runner.ts": "1844d254413a82f70a22ad55fe429fbcc845524ac2a1964f57d3415c0a4ae692"
-      },
-      "head": "c6479062f069d9251d69de213fe477a43e6f7389",
-      "outcome": "no-change",
-      "reason": "Reviewed the CLI operation lock and static runner: they serialize existing backup and restore commands and do not change Elysia skill guidance or planning artifacts.",
-      "evidence": [
-        "Changed: apps/api/src/backup-cli-runner.ts at c6479062f069d9251d69de213fe477a43e6f7389"
       ]
     }
   }
