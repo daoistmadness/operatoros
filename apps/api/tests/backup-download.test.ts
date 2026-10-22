@@ -1,5 +1,5 @@
 import { expect, it } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,7 +54,19 @@ it("downloads the encrypted artifact and metadata together for isolated CLI reco
     expect(response.headers.get("content-disposition")).toBe(`attachment; filename="${filename}.tar"`);
     expect(response.headers.get("cache-control")).toContain("no-store");
     expect(response.headers.get("cache-control")).toContain("private");
-    const files = await new Bun.Archive(await response.blob()).files();
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Backup bundle response body is unavailable.");
+    const first = await reader.read();
+    if (first.done || !first.value) throw new Error("Backup bundle header is missing.");
+    expect(first.value.byteLength).toBe(512);
+    expect(Buffer.from(first.value).toString("ascii", 257, 263)).toBe("ustar\0");
+    const chunks = [Buffer.from(first.value)];
+    for (;;) {
+      const next = await reader.read();
+      if (next.done) break;
+      chunks.push(Buffer.from(next.value));
+    }
+    const files = await new Bun.Archive(Buffer.concat(chunks)).files();
     expect([...files.keys()].sort()).toEqual([filename, `${filename}.meta.json`].sort());
     const artifact = Buffer.from(await files.get(filename)!.arrayBuffer());
     const metadata = Buffer.from(await files.get(`${filename}.meta.json`)!.arrayBuffer());
@@ -103,3 +115,26 @@ it("keeps bundle downloads administrator-only and refuses missing or symlinked p
     }
   } finally { value.database.close(); rmSync(value.root, { recursive: true, force: true }); }
 });
+
+it("uses a PAX size record when a synthetic artifact exceeds the tar octal size limit", async () => {
+  if (process.platform !== "linux") return;
+  const value = fixture();
+  try {
+    const cookie = await login(value.app);
+    const filename = await createBackup(value.app, cookie);
+    truncateSync(join(value.backupDir, filename), 2 ** 33);
+    const response = await value.app.handle(new Request(`http://local/api/admin/backups/${filename}/download?bundle=true`, { headers: { cookie } }));
+    expect(response.status).toBe(200);
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Backup bundle response body is unavailable.");
+    const header = await reader.read();
+    if (header.done || !header.value) throw new Error("PAX header is missing.");
+    expect(header.value.byteLength).toBe(512);
+    expect(Buffer.from(header.value).subarray(0, 100).toString("utf8").replace(/\0.*$/s, "")).toBe(`PaxHeaders/${filename}`);
+    expect(header.value[156]).toBe(0x78);
+    const sizeRecord = await reader.read();
+    if (sizeRecord.done || !sizeRecord.value) throw new Error("PAX size record is missing.");
+    expect(Buffer.from(sizeRecord.value).toString()).toMatch(/^\d+ size=8589934592\n$/);
+    await reader.cancel();
+  } finally { value.database.close(); rmSync(value.root, { recursive: true, force: true }); }
+}, 15000);
