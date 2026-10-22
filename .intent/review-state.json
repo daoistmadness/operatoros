@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "3b1b94bde563dcc2cb160302f38478252fce135b24a7ea278cc630dd91866004",
+      "fingerprint": "92127a21e9afbf6ca2c4fafff43716099ec70de14d26392210d7f919357b2a5d",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "97b240e3b3aeb9fffd7f51c11ef2f4331a2ed57472779d9ff0bec683ca558cf3"
+        "apps/api/src/domains/safety.ts": "24ce4a8050e9f39bd107dd99899fdd0146c74e3e316e50c926a0813bfb8104b8"
       },
-      "head": "89ca9263fc4b429fd533cf87493c431819010364",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "The bounded parser and status truthfulness change do not alter Elysia skill guidance; existing guidance remains accurate.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 89ca9263fc4b429fd533cf87493c431819010364"
+        "Changed: apps/api/src/domains/safety.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "8b1d7c41ebbed2e03b73d0c7c63e60d4a604c011f9abd9f73ec1c5ef2a2b7968",
+      "fingerprint": "9a54ec4bca5c16ba210ec207602bd369163e82673a5bdd99331814f02f095e3c",
       "snapshot": {
-        "docs/security/backup-restore.md": "09afb2fc1daf9561895f22ded23274d8bb6f2964b414d510e3813cc94cd2a5ac"
+        "docs/security/backup-restore.md": "8fcbf49121db51d78d2c95738cd21e3a2500b5062c1d52e7143a378509e60070"
       },
-      "head": "ef482e7827c93367869f07dd46cb92237af21cfc",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at ef482e7827c93367869f07dd46cb92237af21cfc"
+        "Changed: docs/security/backup-restore.md at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -376,27 +376,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "0511fc6ee999e86a24fc64b315ce49344d140fd0019c2e8701acd7de1f177be8",
+      "fingerprint": "3cc2fa82bd82926049bafa25d0d5270b0c5176086b89eca6ce3f5977b44fc286",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "59eb797b0615b8b9cb43433cff52f52645c5f2d86e358bfea5c0613c9f0a9679"
+        "apps/api/src/backup-cli.ts": "f6d27ef84d17de0975bfdfcb3baea08465b054291749433f792b5edfe6955eb2"
       },
-      "head": "ef482e7827c93367869f07dd46cb92237af21cfc",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at ef482e7827c93367869f07dd46cb92237af21cfc"
+        "Changed: apps/api/src/backup-cli.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "413b54f8f37322114b5228f7a82a098165378eb0dcd58b3b7169947bf824ce75",
+      "fingerprint": "9a2395470b336a0443cb51bf5cd9307507218cfb9936ed185fe77bcb78295c34",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "bc51e6b6495378a7e9b785c3f975a2de34149aef51be11953e1f52dfac8c6485"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "99507d21b3cb199b8260aba12a0221d748a291efa1e253a4d5306d4fb0b211c8"
       },
-      "head": "ef482e7827c93367869f07dd46cb92237af21cfc",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at ef482e7827c93367869f07dd46cb92237af21cfc"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -544,15 +544,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "ad104d601db7b69a7ddedd1d811c03e8834cc06ad664f4cdfdee6bb8644c3d6f",
+      "fingerprint": "8e2e2e7d27e5754bb34bbbf3affdfb119ca76ed73fb21ea2a9dad46ce90105bf",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "45aa4193cf068a2e78cdfb197716c704cfe8b6430aa9825ee9cf76bb30ce9038"
+        "apps/api/tests/safety.test.ts": "813684d5ac36839fb6730a8226085080d36789951550f3270a8201239020b28a"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/api/tests/safety.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:scripts/restore.sh": {
@@ -715,27 +715,27 @@
       ]
     },
     "source:apps/api/src/server.ts": {
-      "fingerprint": "c50714b859f20a98a6c30c74b688febe00c95a378707c7a21f044bd1178e78c2",
+      "fingerprint": "56dac118b335ed28b44c75b1ec90a2f1103cdb89b91923b5732da8f7ee9fe666",
       "snapshot": {
-        "apps/api/src/server.ts": "71e49c9143d6ee2dd0e17e6254275b45ea060ffc4ef61a47a3d579bfabe2912b"
+        "apps/api/src/server.ts": "3fee0f92b0e247eb09d4fd73f47c5d44bd26ba368ed45a71bcc1f01959eed7e5"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/src/server.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/src/server.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
-      "fingerprint": "b691d7d13cb1203a5fbe44774a77a8db9cb150388169bd2096eed94c11a1d759",
+      "fingerprint": "568dd55c17dbc6c0791c94ea6c630e196d96eb880c78787cd8f1478e01fc4ce9",
       "snapshot": {
-        "apps/api/tests/backup-operation-lock.test.ts": "58278bfea00f8395851f2c3c9984879f12b643d11c315490e33d7342e4d67fe8"
+        "apps/api/tests/backup-operation-lock.test.ts": "e92961fd4a4c4d4a31b0bf1c3b11b1e8e7c3e75e824b177cbc3703c64fd66b07"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
       "evidence": [
-        "Changed: apps/api/tests/backup-operation-lock.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/backup-operation-lock.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     },
     "source:apps/api/tests/durable-files.test.ts": {
@@ -808,6 +808,18 @@
       "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
       "evidence": [
         "Changed: packages/contracts/tests/backup.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+      ]
+    },
+    "source:apps/api/src/domains/backup-scratch.ts": {
+      "fingerprint": "60394a1a026746b47e6892c8b1700d3a67d218cabf67b3768933bb44f7ace29e",
+      "snapshot": {
+        "apps/api/src/domains/backup-scratch.ts": "2cc59b97b0c7474e11d68cf69569806798fb4f113f1e44520bd65669a0d20066"
+      },
+      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "outcome": "no-change",
+      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "evidence": [
+        "Changed: apps/api/src/domains/backup-scratch.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
       ]
     }
   }

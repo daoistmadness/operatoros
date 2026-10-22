@@ -2,6 +2,7 @@ import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { assertDatabaseMigrationSafe, ensureOperatorOSDirectories, openDatabase, type OperatorOSPaths } from "@operatoros/db";
 import { acquireBackupOperationLock } from "./domains/backup-operation-lock";
+import { cleanupInterruptedBackupScratch } from "./domains/backup-scratch";
 
 export interface RunningServer {
   port: number;
@@ -24,6 +25,7 @@ export async function startServer(overrides: Partial<import("./config").BackendC
       assertDatabaseMigrationSafe(dataPaths);
       ensureOperatorOSDirectories(dataPaths);
       if (process.platform === "linux") operationLock = await acquireBackupOperationLock(dataPaths.dataDir);
+      cleanupInterruptedBackupScratch(dataPaths.databasePath, dataPaths.backupDir);
     }
     databaseHandle ??= config.databasePath ? openDatabase(config.databasePath) : undefined;
     app = createApp({ ...config, databaseHandle });

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { syncDirectory, syncFile } from "./domains/durable-files";
@@ -14,6 +14,7 @@ import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type Re
 import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 import { BACKUP_OPERATION_LOCK_FILENAME } from "./domains/backup-operation-lock";
+import { cleanupInterruptedBackupScratch } from "./domains/backup-scratch";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -176,24 +177,6 @@ function assertRestoredSessionsRevoked(database: Database): void {
 function hasPendingRestoreRollback(path: string): boolean {
   const prefix = `${basename(path)}.`;
   return readdirSync(dirname(path)).some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
-}
-
-function cleanupInterruptedRestoreCandidates(databasePath: string): void {
-  if (hasPendingRestoreRollback(databasePath)) return;
-  const parent = dirname(databasePath);
-  for (const name of readdirSync(parent)) {
-    if (!/^\.operatoros-restore-cli-[A-Za-z0-9]{6}$/.test(name)) continue;
-    const directory = join(parent, name);
-    const directoryStat = lstatSync(directory, { throwIfNoEntry: false });
-    if (!directoryStat?.isDirectory() || directoryStat.isSymbolicLink()) continue;
-    for (const entry of readdirSync(directory)) {
-      if (!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\.candidate(?:-(?:wal|shm|journal))?$/.test(entry)) continue;
-      const path = join(directory, entry);
-      const file = lstatSync(path, { throwIfNoEntry: false });
-      if (file?.isFile() && !file.isSymbolicLink()) rmSync(path);
-    }
-    if (readdirSync(directory).length === 0) rmdirSync(directory);
-  }
 }
 
 function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
@@ -366,10 +349,10 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
 export async function runBackupCli(args: string[]): Promise<void> {
   const [action, selected, targetDir] = args;
   try {
-    if (action === "backup" || action === "restore") {
+    if (["backup", "restore", "restore-disposable", "migrate-existing"].includes(action ?? "")) {
       const value = config();
-      if (!value.databasePath) throw new Error("Canonical SQLite paths are unavailable.");
-      try { cleanupInterruptedRestoreCandidates(value.databasePath); }
+      if (!value.databasePath || !value.backupDir) throw new Error("Canonical SQLite paths are unavailable.");
+      try { cleanupInterruptedBackupScratch(value.databasePath, value.backupDir); }
       catch (error) {
         if (action === "restore" && value.backupDir) recordRestoreCliRefusal(value.backupDir, selected, "RESTORE_STALE_CANDIDATE_CLEANUP_FAILED");
         if (action === "backup" && value.backupDir) {

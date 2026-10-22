@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { chmodSync, mkdtempSync, rmSync, statSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -46,6 +46,36 @@ async function holdLock(lockPath: string) {
 }
 
 describe("API and CLI backup operation lock", () => {
+  it.skipIf(process.platform !== "linux")("cleans recognized API plaintext scratch after acquiring the data-root lock", async () => {
+    const fixture = setup();
+    const restoreScratch = join(fixture.dataDir, ".operatoros-restore-api-Ab12Cd");
+    const restorePlaintext = join(restoreScratch, "snapshot.sqlite");
+    const restoreNote = join(restoreScratch, "operator-note.txt");
+    const backupScratch = join(fixture.paths.backupDir, ".operatoros-backup-Ef34Gh");
+    const backupPlaintext = join(backupScratch, "snapshot.sqlite");
+    const apiCandidate = `${fixture.paths.databasePath}.01234567-89ab-cdef-0123-456789abcdef.candidate`;
+    let server: Awaited<ReturnType<typeof startServer>> | undefined;
+    try {
+      mkdirSync(restoreScratch, { mode: 0o700 });
+      mkdirSync(backupScratch, { mode: 0o700 });
+      writeFileSync(restorePlaintext, "synthetic API restore plaintext", { mode: 0o600 });
+      writeFileSync(restoreNote, "preserve unrelated scratch contents", { mode: 0o600 });
+      writeFileSync(backupPlaintext, "synthetic API backup plaintext", { mode: 0o600 });
+      writeFileSync(apiCandidate, "synthetic API restore candidate", { mode: 0o600 });
+
+      server = await startServer(fixture.config);
+
+      expect(existsSync(restorePlaintext)).toBe(false);
+      expect(existsSync(backupPlaintext)).toBe(false);
+      expect(existsSync(apiCandidate)).toBe(false);
+      expect(readFileSync(restoreNote, "utf8")).toBe("preserve unrelated scratch contents");
+      expect(server.port).toBeGreaterThan(0);
+    } finally {
+      await server?.stop();
+      rmSync(fixture.dataDir, { recursive: true, force: true });
+    }
+  });
+
   it.skipIf(process.platform !== "linux")("refuses a symlink lock path without changing its target", async () => {
     const fixture = setup();
     const target = join(fixture.dataDir, "lock-target");

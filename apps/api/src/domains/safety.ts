@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import { t } from "elysia";
@@ -176,11 +175,11 @@ function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root:
   if (probe.availableBytes < required) throw Object.assign(new Error(`Insufficient free disk space for backup: ${required} bytes required, ${probe.availableBytes} bytes available.`), { status: 507, code: BACKUP_LOW_DISK_SPACE });
 }
 
-function decryptedBackup(config: SafetyConfig, path: string, operation: (path: string, artifact: Buffer) => Row): Row {
+function decryptedBackup(config: SafetyConfig, path: string, scratchRoot: string, operation: (path: string, artifact: Buffer) => Row): Row {
   if (!regularFile(path)) throw Object.assign(new Error("Backup artifact is not a regular file."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
   const artifact = readFileSync(path);
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required for backup restore."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
-  const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-"));
+  const directory = mkdtempSync(join(scratchRoot, ".operatoros-restore-api-"));
   chmodSync(directory, 0o700);
   const plaintextPath = join(directory, "snapshot.sqlite");
   try {
@@ -619,7 +618,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
   const root = backupRoot(config); const target = `${root}/${filename}`;
   if (!regularFile(target) || !regularFile(`${target}.meta.json`)) throw Object.assign(new Error("Backup artifact and metadata must be regular files."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
   const manifest = JSON.parse(readFileSync(`${target}.meta.json`, "utf8"));
-  return decryptedBackup(config, target, (plaintextPath, artifact) => {
+  return decryptedBackup(config, target, dirname(dbPath(context)), (plaintextPath, artifact) => {
     const sourceChecksum = backupSha256(artifact);
     if (manifest.sha256 !== sourceChecksum) throw Object.assign(new Error("Backup checksum verification failed."), { status: 409, code: "BACKUP_CHECKSUM_MISMATCH" });
     if (isEncryptedBackup(artifact)) {
@@ -694,7 +693,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   };
   try {
     try {
-      decryptedBackup(config, `${root}/${filename}`, (plaintextPath, artifact) => {
+      decryptedBackup(config, `${root}/${filename}`, dirname(active), (plaintextPath, artifact) => {
         if (backupSha256(artifact) !== checked.source.sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
