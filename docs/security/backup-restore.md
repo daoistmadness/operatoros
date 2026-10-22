@@ -200,13 +200,6 @@ root is refused before it can publish or replace data. The CLI requires
 `flock` and `lsof` on `PATH`. The Linux API requires `flock` when using the
 canonical data root; startup fails closed if the lock cannot be acquired.
 
-CLI backup, restore, disposable restore, and migration commands also take a
-nonblocking Linux `flock` in the data root. A second CLI operation on the same
-root is refused before it can publish or replace data. This lock serializes CLI
-processes only; it does not coordinate with the API process. Keep all API
-writers stopped before CLI restore. The CLI requires `flock` and `lsof` on
-`PATH`.
-
 The supported runtime is a single local API process. Docker/Compose and PostgreSQL are not supported runtimes; a multi-worker deployment is not a supported substitute. Do not claim multi-worker restore safety.
 
 ## Legacy scripts
