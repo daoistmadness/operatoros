@@ -224,6 +224,8 @@ describe("restore administrator eligibility", () => {
       },
       remove: (path) => rmSync(path, { force: true }),
       exists: (path) => { try { readFileSync(path); return true; } catch { return false; } },
+      syncFile: () => {},
+      syncDirectory: () => {},
     };
     const value = await prepare(restoreFileSystem);
     activePath = value.path;

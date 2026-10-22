@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBackup, deleteBackup, getBackupScheduler, listBackupHistory, listRecoveryHistory, getBackupStatus, listBackups, preflightRestore, restoreBackup, updateBackupScheduler, type BackupSchedulerConfig, type RestoreRequest } from "../api/backups";
+import { createBackup, deleteBackup, getBackupScheduler, listBackupHistory, listRecoveryHistory, getBackupStatus, listBackups, preflightRestore, restoreBackup, updateBackupScheduler, type BackupSchedulerConfig, type BackupSchedulerUpdate, type RestoreSubmission } from "../api/backups";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export const useBackupStatus = () => useQuery({ queryKey: queryKeys.backups.status, queryFn: getBackupStatus });
@@ -11,7 +11,7 @@ export const useRecoveryHistory = () => useQuery({ queryKey: queryKeys.backups.r
 export function useUpdateBackupSchedulerMutation() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (body: Omit<BackupSchedulerConfig, "next_run_at" | "updated_at">) => updateBackupScheduler(body),
+    mutationFn: (body: BackupSchedulerUpdate) => updateBackupScheduler(body),
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.backups.all }),
   });
 }
@@ -24,7 +24,7 @@ export function useCreateBackupMutation() {
 export function useRestoreBackupMutation() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({ filename, body }: { filename: string; body: RestoreRequest }) => restoreBackup(filename, body),
+    mutationFn: ({ filename, body }: { filename: string; body: RestoreSubmission }) => restoreBackup(filename, body),
     onSuccess: () => client.clear(),
   });
 }

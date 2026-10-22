@@ -1,6 +1,6 @@
 # Backup and Restore Security
 
-This document describes the authenticated Phase 6/7 backup path for local, file-backed SQLite deployments. It is distinct from the repository's legacy shell scripts and does not claim live PostgreSQL restore support.
+This document describes the supported backup and restore paths for local, file-backed SQLite deployments. The authenticated API and the local CLI share the encrypted backup format but use different authorization and audit flows. PostgreSQL and container-backed database restore are not supported.
 
 ## Backup creation
 
@@ -19,14 +19,30 @@ The connection layer sets `PRAGMA foreign_keys = ON` and does not configure WAL.
 
 Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
 
+Before publishing a backup, API and CLI creation flush the encrypted artifact and
+metadata files; after their atomic renames they flush both source and destination
+directories.
+On POSIX filesystems that honor `fsync`, this asks the operating system to make
+both file contents and published names survive a crash or reboot. Restore also
+flushes the verified candidate and both directories after cross-directory
+renames, and flushes the validated restored database before writing the API
+completion record. Retention directory changes are flushed after eviction.
+Windows directory-entry flushing is unavailable through this Node filesystem
+path, so Windows receives file-content flushes but no directory durability
+claim. Retention deletion flushes are best-effort: a failure is audited, but the
+new backup remains successful and older files may remain after a crash.
+Filesystem and device behavior still governs the actual persistence; keep
+encrypted copies off-host to recover from host or storage loss.
+
 Retention keeps the newest 10 complete backup generations (`BACKUP_RETENTION_LIMIT`) after each successful API or CLI backup. The count covers manual, scheduled, and pre-restore snapshots. The newest generation and a backup selected as the restore source are never eviction candidates, so a directory can temporarily hold 11 generations while a restore source is protected; the next successful backup re-applies the limit. Incomplete artifact/metadata pairs are ignored, and a file that cannot be removed is skipped and audited. Each eviction writes a `backup_evicted` line to the operations audit; eviction failure never invalidates the newly published backup. Operators can still remove a specific backup through `DELETE /api/admin/backups/:filename`.
 
 ## Backup health status
 
 `GET /api/admin/backups/status` checks destination accessibility and capacity,
 artifact/metadata pair completeness, and the latest listed artifact's actual
-file size, SHA-256, and encrypted-envelope metadata consistency. A checksum is
-reported as `verified` only after reading and hashing the current artifact.
+file size, SHA-256, supported creation trigger, and encrypted-envelope metadata
+consistency. A checksum is reported as `verified` only after reading and hashing
+the current artifact.
 Missing, empty, truncated, mismatched, or unreadable artifacts cannot produce
 `HEALTHY`. Status reads do not write history or audit events.
 
@@ -91,7 +107,7 @@ Preflight rejects a candidate without an active, currently unlocked `admin` acco
 
 CLI restore requires `--admin-user <username>` for a database with an existing administrator and prompts for that administrator's password without echo. `scripts/restore.sh` asks for the backup administrator username after confirmation and passes it to the CLI; leave the username blank only for an empty backup whose first-admin setup is still open. The CLI verifies the password before the safety snapshot and after replacement, revokes every session in the isolated candidate before replacement, and confirms no restored session remains active after replacement.
 
-If no active backup administrator password is known, recover a controlled candidate copy before replacing the active database: use `backup-cli restore-disposable` into an empty temporary data root, run the local `admin-recovery` CLI against that candidate root for an existing active administrator, create a new encrypted backup from the repaired candidate, then copy its artifact and metadata pair into the target backup directory. Complete the normal restore using that new administrator password. During preparation, this leaves the active database and original backup intact and creates a new encrypted generation. Do not use the recovery CLI against the protected legacy `attendance.db`.
+If no active backup administrator password is known, recover a controlled candidate copy before replacing the active database: use `backup-cli restore-disposable` into an existing empty directory whose resolved path is under the OS temporary root and outside the source data root (symlink escapes are refused), run the local `admin-recovery` CLI against that candidate root for an existing active administrator, create a new encrypted backup from the repaired candidate, then copy its artifact and metadata pair into the target backup directory. Complete the normal restore using that new administrator password. During preparation, this leaves the active database and original backup intact and creates a new encrypted generation. Do not use the recovery CLI against the protected legacy `attendance.db`.
 The disposable restore command validates SQLite integrity, foreign keys, and the current physical schema before reporting the candidate as restored.
 
 Legacy plaintext backups are refused unless `ALLOW_LEGACY_PLAINTEXT_BACKUPS=true`. Password recovery is performed on an isolated candidate copy; it is never silently applied by the API.
@@ -111,10 +127,12 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 
 Limitations:
 
-- **Single API process per data root.** Backup/restore locks and the scheduler are
-  process-local module state. They do not coordinate separate processes, and the
-  runtime does not detect a second process. Run exactly one API process against a
-  SQLite data root; multi-worker restore is unsupported.
+- **Single API process per data root.** Backup/restore also use process-local
+  state, while the scheduler remains process-local. On Linux, the canonical API
+  server and CLI share a data-root `flock`, so a second API or CLI operation
+  fails closed. The lock does not coordinate tools that ignore it, and non-Linux
+  API processes do not acquire it. Run one API process per SQLite data root;
+  multi-worker restore is unsupported.
 - **No point-in-time recovery.** There is no WAL archiving or incremental chain;
   the most recent successful backup is the recovery point.
 - **No built-in off-host replication, object storage, or scheduled restore test.**
@@ -162,17 +180,25 @@ flowchart TD
 
 An API restore is reported complete only after the restored database reopens successfully, integrity and quick checks pass, no foreign-key violations are found, administrator/setup eligibility remains valid, the selected backup's administrator credential still verifies, and restored sessions are revoked. Preflight reports the actual foreign-key violation count; an unavailable check or any violation blocks restore. The response reports the measured post-restore foreign-key count and protected-table counts. Post-replacement failure enters rollback and emits a terminal audit event. The prior database file is not removed until the restore is committed. A failure before replacement reports `RESTORE_NOT_APPLIED`; unavailable operations-audit storage reports `RESTORE_AUDIT_UNAVAILABLE` with status 503. `RESTORE_ROLLED_BACK` is returned only after the prior database is restored and verified. If automatic rollback cannot be verified, the API responds with `RESTORE_ROLLBACK_FAILED`, leaves the surviving database and recovery files in the data root, and requires operator recovery before a retry; it does not delete the last on-disk copy.
 
-The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, format version, algorithm, key ID, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It validates SQLite integrity, quick-check, foreign keys, required tables, current schema, and administrator/setup eligibility before replacement and again after replacement. An active administrator must have `role='admin'`, `is_active=1`, an addressable username no longer than 255 characters, an unlocked account, and a password hash accepted by the runtime. The operator must also provide the matching username with `--admin-user` and its password through the hidden prompt. A database with no users remains eligible only while first-admin setup is incomplete. When an active database exists, the CLI validates the candidate credential before it creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement failure triggers rollback. Every session in the candidate is revoked before replacement and verified again after replacement; the source artifact remains unchanged. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. Explicitly opted-in legacy plaintext receives the SQLite and credential checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Once a backup root is configured, the CLI attempts terminal restore audit records for path, artifact, manifest, decryption, candidate-validation, and swap failures; it writes a sanitized filename (or `unknown`) and a controlled reason category, with one operation ID shared across the operations and recovery-history logs. Audit writes are independent and best-effort; a missing backup root or unavailable audit storage can still prevent a record, and a failed post-commit audit does not undo the committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
+The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, creation timestamp, trigger, declared schema version, format version, algorithm, key ID, encrypted and plaintext byte sizes, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It compares the manifest schema version with the decrypted SQLite migration ledger, whose version order does not depend on wall-clock timestamps. The CLI validates SQLite integrity, quick-check, foreign keys, required tables, current schema, and administrator/setup eligibility before replacement and again after replacement. An active administrator must have `role='admin'`, `is_active=1`, an addressable username no longer than 255 characters, an unlocked account, and a password hash accepted by the runtime. The operator must also provide the matching username with `--admin-user` and its password through the hidden prompt. A database with no users remains eligible only while first-admin setup is incomplete. When an active database exists, the CLI validates the candidate credential before it creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement failure triggers rollback. Every session in the candidate is revoked before replacement and verified again after replacement; the source artifact remains unchanged. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. Explicitly opted-in legacy plaintext receives the SQLite and credential checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Once a backup root is configured, the CLI attempts terminal restore audit records for path, artifact, manifest, decryption, candidate-validation, and swap failures; it writes a sanitized filename (or `unknown`) and a controlled reason category, with one operation ID shared across the operations and recovery-history logs. Audit writes are independent and best-effort; a missing backup root or unavailable audit storage can still prevent a record, and a failed post-commit audit does not undo the committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
 
 ## Audit lifecycle
 
-The canonical recovery-history audit is `backup_restore_audit.jsonl`. After administrator authorization, the API attempts to record `restore_requested`, then `restore_denied` for a refusal before replacement or `restore_started` immediately before replacement. A terminal event is `restore_completed`, `restore_rolled_back` only after verified rollback, or `restore_failed` when recovery is not confirmed. The CLI attempts the same lifecycle once its backup root is known. Records include one operation ID per attempt, target filename, actor, optional safety-snapshot filename, and a controlled reason code or error class; raw error messages, credentials, and paths are not recorded. Unauthenticated and unauthorized HTTP requests are not written to this file. Lifecycle appends are best-effort, so missing or unwritable audit storage can leave gaps.
+The canonical recovery-history audit is `backup_restore_audit.jsonl`. After administrator authorization, the API attempts to record `restore_requested`, then `restore_denied` for a refusal before replacement or `restore_started` immediately before replacement. A terminal event is `restore_completed`, `restore_rolled_back` only after verified rollback, or `restore_failed` when recovery is not confirmed. The CLI attempts the same lifecycle once its backup root is known. Records include one operation ID per attempt, target filename, authenticated username when verified, optional safety-snapshot filename, and a controlled reason code or error class; raw error messages, credentials, and paths are not recorded. CLI requests and refusals use no authenticated username; a username is recorded only after the selected backup's administrator credential has been validated. First-admin setup restores have no authenticated username. Unauthenticated and unauthorized HTTP requests are not written to this file. Lifecycle appends are best-effort, so missing or unwritable audit storage can leave gaps.
 
 Before API replacement, the operations-audit path must be writable; if it is unavailable, restore stops before swapping databases and reports `RESTORE_AUDIT_UNAVAILABLE`. The canonical API completion record is the last fallible step inside the rollback-protected swap; if it cannot be written, the transaction rolls back. The operations-audit `restore_completed` line is written only after the swap commits, so a rolled-back attempt cannot claim completion there. That operations entry is best-effort after commit. CLI canonical and operations audit writes are best-effort after commit and do not undo a completed restore.
 
+`GET /api/admin/backups/recovery-history` returns valid lifecycle records newest first and skips malformed lines; the source JSONL remains append-only.
+
 ## Concurrency and deployment restriction
 
-Backup and restore use process-local operation locks. Data reset uses its own process-local guard and an immediate SQLite transaction. These guards do not coordinate multiple API processes, and the runtime does not detect a second process. Run exactly one API process per SQLite data root.
+Backup and restore use process-local operation locks. On Linux, the canonical API server also holds a nonblocking `flock` on the data root for its lifetime. CLI backup, restore, disposable restore, and migration commands acquire the same lock, so they refuse to run while that API server or another CLI operation holds it; a second canonical API process also fails at startup. The kernel releases the lock when its process exits. Data reset uses its own process-local guard and an immediate SQLite transaction. Run exactly one API process per SQLite data root; this lock does not coordinate tools that ignore it, and non-Linux API processes do not acquire this Linux lock.
+
+CLI backup, restore, disposable restore, and migration commands also take a
+nonblocking Linux `flock` in the data root. A second CLI operation on the same
+root is refused before it can publish or replace data. The CLI requires
+`flock` and `lsof` on `PATH`. The Linux API requires `flock` when using the
+canonical data root; startup fails closed if the lock cannot be acquired.
 
 CLI backup, restore, disposable restore, and migration commands also take a
 nonblocking Linux `flock` in the data root. A second CLI operation on the same
@@ -192,4 +218,6 @@ authenticated decryption, SQLite state, and administrator/setup eligibility
 before and after replacement. It creates a safety snapshot when an active
 database exists, revokes restored sessions, and attempts rollback on failure.
 Explicitly opted-in legacy plaintext lacks encrypted artifact verification.
+The interactive restore menu orders same-second backup sequence suffixes
+numerically, with the highest generated sequence first.
 Use the CLI only with all writers stopped and an approved recovery procedure.

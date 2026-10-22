@@ -22549,7 +22549,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /** @enum {string} */
+                        health_state: "HEALTHY" | "AGING" | "STALE" | "NO_BACKUP" | "LAST_BACKUP_FAILED" | "DESTINATION_UNAVAILABLE" | "LOW_DISK_SPACE" | "BACKUP_IN_PROGRESS" | "RESTORE_IN_PROGRESS" | "UNKNOWN";
+                        last_successful_backup_at: string | null;
+                        last_failed_backup_at: string | null;
+                        last_failure_code: string | null;
+                        last_failure_message: string | null;
+                        latest_backup_filename: string | null;
+                        latest_backup_type: string | null;
+                        latest_backup_size_bytes: number | null;
+                        latest_backup_checksum_status: "verified" | "failed" | null;
+                        latest_backup_integrity_status: "not_checked" | null;
+                        latest_backup_outcome: "SUCCESS" | "FAILED" | null;
+                        latest_backup_schema_version: string | null;
+                        latest_backup_encrypted: boolean;
+                        latest_backup_key_id: string | null;
+                        backup_encryption_configured: boolean;
+                        backup_age_seconds: number | null;
+                        next_scheduled_backup_at: string | null;
+                        backup_count: number;
+                        retention_limit: number;
+                        backup_directory_display: string;
+                        backup_directory_available: boolean;
+                        free_space_bytes: number | null;
+                        minimum_required_space_bytes: number;
+                        low_space: boolean;
+                        backup_in_progress: boolean;
+                        restore_in_progress: boolean;
+                        generated_at_utc: string;
+                        latest_backup_timestamp: string | null;
+                        free_disk_space_bytes: number | null;
+                        database_basename: string;
+                        sqlite_journal_mode: string;
+                        destructive_operations_enabled: boolean;
+                        /** @constant */
+                        authentication_available: true;
+                        /** @constant */
+                        restore_support_mode: "single_process_only";
+                        /** @constant */
+                        restore_requires_admin: true;
+                        /** @constant */
+                        restore_requires_reauthentication: true;
+                        /** @constant */
+                        restore_multi_worker_safe: false;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22580,7 +22624,24 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        filename: string;
+                        created_at: string;
+                        trigger: string;
+                        size: number;
+                        checksum: string;
+                        schema_version: string;
+                        encrypted: boolean;
+                        format_version: number | null;
+                        algorithm: string | null;
+                        key_id: string | null;
+                        age_seconds?: number;
+                        checksum_status?: string;
+                        integrity_status?: string;
+                        verification_state?: string;
+                        restore_eligible?: boolean;
+                        incompatibility_reasons?: string[];
+                    }[];
                 };
             };
             /** @description Validation Error */
@@ -22611,7 +22672,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        filename: string;
+                        created_at: string;
+                        trigger: string;
+                        size: number;
+                        checksum: string;
+                        schema_version: string;
+                        encrypted: boolean;
+                        format_version: number | null;
+                        algorithm: string | null;
+                        key_id: string | null;
+                        age_seconds?: number;
+                        checksum_status?: string;
+                        integrity_status?: string;
+                        verification_state?: string;
+                        restore_eligible?: boolean;
+                        incompatibility_reasons?: string[];
+                    } & {
+                        sha256: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22644,7 +22724,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /** @constant */
+                        status: "success";
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22710,7 +22793,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        id: number;
+                        backup_filename: string | null;
+                        started_at: string;
+                        completed_at: string | null;
+                        duration_seconds: number | null;
+                        /** @enum {string} */
+                        status: "SUCCESS" | "FAILED";
+                        error_message: string | null;
+                        trigger_type: string;
+                        size_bytes: number | null;
+                        checksum: string | null;
+                        integrity_verified: boolean | null;
+                        removed_backups: string[];
+                    }[];
                 };
             };
             /** @description Validation Error */
@@ -22741,7 +22838,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        timestamp: string | null;
+                        filename: string | null;
+                        event: string | null;
+                        actor_display: string;
+                        result: string | null;
+                        safe_reason_code: string | null;
+                        operation_reference_id: string | null;
+                        safety_backup_filename: string | null;
+                    }[];
                 };
             };
             /** @description Validation Error */
@@ -22772,7 +22878,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        schedule_type: "daily" | "weekly" | "interval";
+                        interval_minutes: number;
+                        hour_utc: number;
+                        minute_utc: number;
+                        weekday_utc: number;
+                        keep_daily: number;
+                        keep_weekly: number;
+                        keep_monthly: number;
+                        next_run_at: string | null;
+                        updated_at: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22807,7 +22926,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        enabled: boolean;
+                        /** @enum {string} */
+                        schedule_type: "daily" | "weekly" | "interval";
+                        interval_minutes: number;
+                        hour_utc: number;
+                        minute_utc: number;
+                        weekday_utc: number;
+                        keep_daily: number;
+                        keep_weekly: number;
+                        keep_monthly: number;
+                        next_run_at: string | null;
+                        updated_at: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22840,7 +22972,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        source: {
+                            filename: string;
+                            backup_type?: string;
+                            created_at?: string;
+                            age_seconds?: number;
+                            size_bytes?: number;
+                            sha256: string;
+                            checksum_matches_manifest: boolean;
+                            encrypted: boolean;
+                            format_version: number | null;
+                            algorithm: string | null;
+                            key_id: string | null;
+                            integrity_check: string;
+                            quick_check: string;
+                            foreign_key_violation_count: number | null;
+                            schema_version: string | null;
+                            identity_compatible: boolean;
+                            application_compatible: boolean;
+                            restore_eligible: boolean;
+                            blocking_reasons: string[];
+                            warning_reasons: string[];
+                        };
+                        active: {
+                            active_sha256: string;
+                            active_schema_version: string | null;
+                            active_students: number | null;
+                            active_attendance: number | null;
+                            active_enrollments: number | null;
+                            source_students: number | null;
+                            source_attendance: number | null;
+                            source_enrollments: number | null;
+                            student_delta: number | null;
+                            attendance_delta: number | null;
+                            enrollment_delta: number | null;
+                            same_database_content: boolean;
+                            source_is_older: boolean | null;
+                            possible_data_loss: boolean | null;
+                            sessions_will_be_revoked: boolean;
+                            restart_required: boolean;
+                            pre_restore_backup_will_be_created: boolean;
+                        };
+                        /** @enum {string} */
+                        impact_classification: "NO_CHANGE" | "SCHEMA_INCOMPATIBLE" | "LOW_IMPACT";
+                    };
                 };
             };
             /** @description Validation Error */
@@ -22877,7 +23053,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        operation_id: string;
+                        /** @constant */
+                        status: "COMPLETED";
+                        restored_backup_filename: string;
+                        completed_at: string;
+                        safety_backup_filename: string;
+                        /** @constant */
+                        post_restore_integrity: "ok";
+                        /** @constant */
+                        post_restore_quick_check: "ok";
+                        /** @constant */
+                        post_restore_foreign_key_violations: 0;
+                        post_restore_students: number | null;
+                        post_restore_attendance: number | null;
+                        post_restore_enrollments: number | null;
+                        /** @constant */
+                        sessions_revoked: true;
+                        /** @constant */
+                        restart_required: true;
+                        /** @constant */
+                        rollback_attempted: false;
+                        safe_message: string;
+                    };
                 };
             };
             /** @description Validation Error */

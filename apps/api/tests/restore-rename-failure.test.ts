@@ -23,6 +23,8 @@ const restoreFiles: RestoreFileSystem = {
   },
   remove: (path) => fs.rmSync(path, { force: true }),
   exists: (path) => { try { fs.statSync(path); return true; } catch { return false; } },
+  syncFile: () => {},
+  syncDirectory: () => {},
 };
 
 async function login(app: ReturnType<typeof createApp>, username: string, password: string): Promise<string> {
