@@ -766,7 +766,24 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.get("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const root = backupRoot(config); return statSafe(root) ? metadata(root) : []; }, { response: { 200: t.Array(BackupEntrySchema) } });
   app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } }, { response: { 200: CreatedBackupSchema } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: DeleteBackupResultSchema } });
-  app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
+  app.get("/api/admin/backups/:filename/download", async (ctx: Context) => {
+    if (!auth(context, ctx)) return denied(ctx);
+    try {
+      const filename = ctx.params.filename;
+      const path = verifiedBackup(backupRoot(config), filename);
+      const bundle = ctx.query.bundle === "true";
+      const body = bundle
+        ? await new Bun.Archive({ [filename]: readFileSync(path), [`${filename}.meta.json`]: readFileSync(`${path}.meta.json`) }).blob()
+        : readFileSync(path);
+      return new Response(body, { headers: {
+        "content-type": bundle ? "application/x-tar" : "application/vnd.operatoros.backup+json",
+        "cache-control": "no-store, no-cache, must-revalidate, private",
+        "content-disposition": `attachment; filename="${bundle ? `${filename}.tar` : filename}"`,
+      } });
+    } catch (error) {
+      return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message));
+    }
+  }, { query: t.Object({ bundle: t.Optional(t.Union([t.Literal("true"), t.Literal("false")])) }) });
   app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)).entries; }, { response: { 200: t.Array(BackupExecutionHistoryEntrySchema) } });
   app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return readRecoveryHistory(backupRoot(config), ctx.query.cursor); } catch (error) { if ((error as any)?.code === "RECOVERY_HISTORY_CURSOR_STALE") return fail(ctx.set, 409, { code: (error as any).code, message: (error as Error).message }); throw error; } }, { query: t.Object({ cursor: t.Optional(t.String({ maxLength: 256 })) }), response: { 200: RecoveryHistoryPageSchema, 409: t.Object({ detail: t.Object({ code: t.String(), message: t.String() }) }) } });
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return schedulerPayload(value!); }, { response: { 200: BackupSchedulerConfigSchema } });

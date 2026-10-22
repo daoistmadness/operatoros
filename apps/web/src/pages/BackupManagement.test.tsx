@@ -29,7 +29,7 @@ vi.mock("../api/backups", () => ({
   preflightRestore: vi.fn(),
   restoreBackup: vi.fn(),
   deleteBackup: vi.fn(),
-  downloadBackupUrl: vi.fn((value) => `/api/admin/backups/${value}/download`),
+  downloadBackupUrl: vi.fn((value, bundle) => `/api/admin/backups/${value}/download${bundle ? "?bundle=true" : ""}`),
 }));
 
 const status: BackupStatus = {
@@ -124,6 +124,8 @@ describe("guided backup and recovery", () => {
     expect(output).toContain("Checksum verified");
     expect(output).toContain("Integrity ok");
     expect(output).toContain("Restore eligible after preflight");
+    expect(output).toContain(`href="/api/admin/backups/${backup.filename}/download?bundle=true"`);
+    expect(output).toContain("Download recovery bundle");
   });
   it("shows unknown restore impact and missing counts without claiming zero", () => {
     const preflight = {
