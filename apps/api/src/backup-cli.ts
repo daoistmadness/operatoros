@@ -67,7 +67,8 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, ar
     manifest.filename !== basename(path) || manifest.source_db_path !== basename(value.databasePath) ||
     manifest.sha256 !== backupSha256(encrypted) || !isEncryptedBackup(encrypted)) throw new Error("BACKUP_VERIFICATION_FAILED");
   const plaintext = decryptBackup(encrypted, value.backupEncryption);
-  if (manifest.plaintext_sha256 !== backupSha256(plaintext)) throw new Error("BACKUP_VERIFICATION_FAILED");
+  if (manifest.backup_file_size_bytes !== encrypted.length || manifest.sqlite_file_size_bytes !== plaintext.length ||
+    manifest.plaintext_sha256 !== backupSha256(plaintext)) throw new Error("BACKUP_VERIFICATION_FAILED");
   return plaintext;
 }
 

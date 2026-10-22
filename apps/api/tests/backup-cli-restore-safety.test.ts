@@ -618,7 +618,7 @@ it("supports credential recovery on an isolated candidate before re-encrypted re
   }
 }, 15000);
 
-it("rejects manifest identity, checksum, and envelope-authentication mismatches before changing the active database", () => {
+it("rejects manifest identity, size, checksum, and envelope-authentication mismatches before changing the active database", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-manifest-"));
   const source = join(temporary, "source");
   mkdirSync(source);
@@ -659,6 +659,20 @@ it("rejects manifest identity, checksum, and envelope-authentication mismatches 
 
     manifest.filename = filename;
     manifest.key_id = "synthetic-test";
+    const encryptedSize = statSync(artifactPath).size;
+    const sqliteSize = manifest.sqlite_file_size_bytes;
+    manifest.backup_file_size_bytes = encryptedSize + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.backup_file_size_bytes = encryptedSize;
+    manifest.sqlite_file_size_bytes = Number(sqliteSize) + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.sqlite_file_size_bytes = sqliteSize;
     manifest.sha256 = "0".repeat(64);
     writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
     expect(command("restore", filename).exitCode).not.toBe(0);
