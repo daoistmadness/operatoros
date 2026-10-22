@@ -12,9 +12,9 @@ function directoryEntries(path: string): string[] {
   }
 }
 
-function pendingRollback(databasePath: string, entries: string[]): boolean {
+export function hasPendingRestoreRollback(databasePath: string): boolean {
   const prefix = `${basename(databasePath)}.`;
-  return entries.some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
+  return directoryEntries(dirname(databasePath)).some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
 }
 
 function cleanScratchDirectory(root: string, name: string, files: RegExp): void {
@@ -33,11 +33,10 @@ function cleanScratchDirectory(root: string, name: string, files: RegExp): void 
 /** Call only while holding the data-root backup-operation lock. */
 export function cleanupInterruptedBackupScratch(databasePath: string, backupDir: string): void {
   const dataDir = dirname(databasePath);
-  const entries = directoryEntries(dataDir);
-  if (!pendingRollback(databasePath, entries)) {
+  if (!hasPendingRestoreRollback(databasePath)) {
     const escaped = basename(databasePath).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const candidate = new RegExp(`^${escaped}\\.${uuid}\\.candidate${sqliteSidecar}$`);
-    for (const name of entries) {
+    for (const name of directoryEntries(dataDir)) {
       if (candidate.test(name)) {
         const path = join(dataDir, name);
         const file = lstatSync(path, { throwIfNoEntry: false });

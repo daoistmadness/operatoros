@@ -235,27 +235,27 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "92127a21e9afbf6ca2c4fafff43716099ec70de14d26392210d7f919357b2a5d",
+      "fingerprint": "6caf7e6cbf592e6e4b0be1ef52a5006f8c4d67f8fc9d3b32e970b63bac1db1f7",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "24ce4a8050e9f39bd107dd99899fdd0146c74e3e316e50c926a0813bfb8104b8"
+        "apps/api/src/domains/safety.ts": "42c6aaa09a8083a0157cbeaebcda6e61694e97d8a12e86a14f7902acc7f06589"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "91d4438a384e6726e3e5f54253bf135476528584",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/src/domains/safety.ts at 91d4438a384e6726e3e5f54253bf135476528584"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
-      "fingerprint": "6125cc26510384490924f31bb9dc5ce9a25471a0481907cab1f07d1935ac8f66",
+      "fingerprint": "e54d58d0e01c4f6cd44cb294e8d6c1dde363debe848a2a16e6c351a1fd5c9ed3",
       "snapshot": {
-        "apps/api/tests/restore-rename-failure.test.ts": "33ae92ceaa7b007c657afe8a4b98d14fa39e4650d37001cd1a3daaa1faf8f8cb"
+        "apps/api/tests/restore-rename-failure.test.ts": "816c2f2edd69f1f99af9855c8b641c608628d8e97ae64e0db3076401c4c976aa"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "91d4438a384e6726e3e5f54253bf135476528584",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
-        "Changed: apps/api/tests/restore-rename-failure.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/restore-rename-failure.test.ts at 91d4438a384e6726e3e5f54253bf135476528584"
       ]
     },
     "source:apps/api/tests/restore-transaction.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "9a54ec4bca5c16ba210ec207602bd369163e82673a5bdd99331814f02f095e3c",
+      "fingerprint": "30071d2058a911491ea59204057ad48106dd0f68eedf36e2e02b3431d88cab2b",
       "snapshot": {
-        "docs/security/backup-restore.md": "8fcbf49121db51d78d2c95738cd21e3a2500b5062c1d52e7143a378509e60070"
+        "docs/security/backup-restore.md": "0b2a025c3fa82a5f92105724e12beab25e643e454b454b9ad7f2b0bf939f857b"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "91d4438a384e6726e3e5f54253bf135476528584",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: docs/security/backup-restore.md at 91d4438a384e6726e3e5f54253bf135476528584"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -376,15 +376,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "3cc2fa82bd82926049bafa25d0d5270b0c5176086b89eca6ce3f5977b44fc286",
+      "fingerprint": "be70f338e39f65800421889b05301c1044786d6994241933bc6621245c4a75df",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "f6d27ef84d17de0975bfdfcb3baea08465b054291749433f792b5edfe6955eb2"
+        "apps/api/src/backup-cli.ts": "b8173a25dd59a4c26b463d0f9ba0e84cea71500caf9154ae2b833f2bac78a954"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "91d4438a384e6726e3e5f54253bf135476528584",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/src/backup-cli.ts at 91d4438a384e6726e3e5f54253bf135476528584"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -811,15 +811,15 @@
       ]
     },
     "source:apps/api/src/domains/backup-scratch.ts": {
-      "fingerprint": "60394a1a026746b47e6892c8b1700d3a67d218cabf67b3768933bb44f7ace29e",
+      "fingerprint": "27974fdf5caf62f63d4f579839e5b685b623b5b0529fafd92a1b29bcdf131c2e",
       "snapshot": {
-        "apps/api/src/domains/backup-scratch.ts": "2cc59b97b0c7474e11d68cf69569806798fb4f113f1e44520bd65669a0d20066"
+        "apps/api/src/domains/backup-scratch.ts": "d593edb4ad70c2b02e54d44eabf97a6650f00430033c92566a161a91628ad87b"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "91d4438a384e6726e3e5f54253bf135476528584",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/backup-scratch.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/src/domains/backup-scratch.ts at 91d4438a384e6726e3e5f54253bf135476528584"
       ]
     }
   }

@@ -12,6 +12,7 @@ import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSI
 import { BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
+import { hasPendingRestoreRollback } from "./backup-scratch";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -615,6 +616,7 @@ function schedulerPayload(value: Row): Row {
 
 function preflight(context: AuthContext, config: SafetyConfig, filename: string): Row {
   if (!backupFile.test(filename)) throw Object.assign(new Error("Invalid backup filename."), { status: 400 });
+  if (hasPendingRestoreRollback(dbPath(context))) throw Object.assign(new Error("RESTORE_RECOVERY_PENDING: resolve the existing rollback database through operator recovery before retrying restore."), { status: 409, code: "RESTORE_RECOVERY_PENDING" });
   const root = backupRoot(config); const target = `${root}/${filename}`;
   if (!regularFile(target) || !regularFile(`${target}.meta.json`)) throw Object.assign(new Error("Backup artifact and metadata must be regular files."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
   const manifest = JSON.parse(readFileSync(`${target}.meta.json`, "utf8"));

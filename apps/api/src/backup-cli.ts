@@ -14,7 +14,7 @@ import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type Re
 import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 import { BACKUP_OPERATION_LOCK_FILENAME } from "./domains/backup-operation-lock";
-import { cleanupInterruptedBackupScratch } from "./domains/backup-scratch";
+import { cleanupInterruptedBackupScratch, hasPendingRestoreRollback } from "./domains/backup-scratch";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -172,11 +172,6 @@ function revokeRestoredSessions(path: string): void {
 
 function assertRestoredSessionsRevoked(database: Database): void {
   if (database.query("SELECT 1 FROM sessions WHERE revoked_at IS NULL LIMIT 1").get()) throw new Error("RESTORE_SESSION_REVOCATION_FAILED");
-}
-
-function hasPendingRestoreRollback(path: string): boolean {
-  const prefix = `${basename(path)}.`;
-  return readdirSync(dirname(path)).some((name) => name.startsWith(prefix) && name.endsWith(".rollback"));
 }
 
 function audit(root: string, event: string, values: Record<string, unknown> = {}): void {
