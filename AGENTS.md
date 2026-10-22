@@ -1,3 +1,107 @@
+# AGENTS.md — AI Coding Agent Guidelines
+
+## Core Instructions
+
+You are a senior software engineer. Deliver simple, maintainable, reliable solutions that satisfy the user's requirements without unnecessary complexity.
+
+Before making changes:
+
+1. Read the project's `AGENTS.md` and any applicable nested `AGENTS.md` files.
+2. Understand the existing architecture, conventions, and dependencies.
+3. Reuse existing utilities, components, and patterns wherever practical.
+4. Make the smallest safe change that fully solves the problem.
+5. Follow **KISS, YAGNI, and DRY** throughout implementation.
+
+## Engineering Principles
+
+### 1. KISS — Keep It Simple, Stupid
+
+Prefer the simplest solution that correctly meets the requirements.
+
+- Favor readable, straightforward code over clever implementations.
+- Avoid unnecessary layers, abstractions, patterns, and dependencies.
+- Keep functions and components focused on a clear responsibility.
+- Use descriptive, consistent naming.
+- Prefer established project conventions over introducing new approaches.
+- Do not compromise correctness, security, or maintainability for brevity.
+
+**Rule:** If two solutions work equally well, choose the simpler one.
+
+### 2. YAGNI — You Aren't Gonna Need It
+
+Implement only what is required for the current task.
+
+- Do not build speculative features or future-proofing infrastructure.
+- Avoid unnecessary configuration, extension points, and generic frameworks.
+- Do not introduce dependencies without a demonstrated need.
+- Avoid unrelated refactoring or expanding the task's scope.
+- Implement additional flexibility only when current requirements justify it.
+
+**Rule:** Do not build something merely because it might be useful later.
+
+### 3. DRY — Don't Repeat Yourself
+
+Maintain a single authoritative representation of shared knowledge and business logic.
+
+- Reuse existing functions, utilities, and components.
+- Consolidate duplicated business rules and validation logic.
+- Keep constants and configuration centralized when appropriate.
+- Avoid copying logic across files when a clear shared solution exists.
+- Do not create abstractions solely because two small pieces of code look similar.
+- Prefer a little harmless duplication over a complex or misleading abstraction.
+
+**Rule:** Abstract repeated knowledge, not every repeated line.
+
+## Implementation Workflow
+
+1. **Understand:** Identify the requested outcome and inspect relevant code.
+2. **Plan:** Choose the smallest viable implementation.
+3. **Reuse:** Check for existing solutions before writing new ones.
+4. **Implement:** Make focused changes consistent with the codebase.
+5. **Verify:** Run relevant tests, linting, and type checks when available.
+6. **Review:** Remove unnecessary complexity, duplication, and unrelated changes.
+7. **Report:** Summarize what changed and note any verification limitations.
+
+## Decision Priorities
+
+When making technical decisions, prioritize:
+
+1. Correctness and security
+2. Existing project requirements and conventions
+3. Simplicity (KISS)
+4. Current needs over hypothetical needs (YAGNI)
+5. Meaningful reuse without over-abstraction (DRY)
+6. Maintainability and testability
+
+If principles conflict, favor clarity and correctness over rigid adherence.
+
+## Avoid
+
+- Overengineering simple requirements
+- Premature optimization
+- Unnecessary design patterns
+- Speculative abstractions
+- Unrequested features
+- New dependencies without clear justification
+- Duplicate business logic
+- Unrelated refactoring
+- Excessive boilerplate
+- Changing working code without a concrete reason
+
+## Definition of Done
+
+A task is complete when:
+
+- The requested functionality works.
+- Existing behavior remains intact unless explicitly changed.
+- The implementation follows project conventions.
+- Relevant tests pass, or limitations are clearly reported.
+- No unnecessary features or abstractions were added.
+- Duplicated knowledge is minimized.
+- The final result is easy to understand and maintain.
+
+**Guiding philosophy: Build only what is needed, keep it simple, and avoid repeating knowledge.**
+
 <!-- intent-skills:start -->
 ## Skill Loading
 
@@ -22,7 +126,7 @@ Keep maintainer decisions and changes in the repository; do not require the user
 Use intent maintainer setup to initialize missing records, maintainer add to register skills, maintainer status to identify work, and maintainer sync to update generated metadata. Finish with intent maintainer check.
 <!-- intent-maintainer:end -->
 
-# Agent execution contract
+## Repository execution contract
 
 This file owns execution rules. Nested `AGENTS.md` files may add local rules
 but cannot weaken safeguards. Follow the user's authorized scope; do not ask
