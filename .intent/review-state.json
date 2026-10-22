@@ -374,27 +374,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "a59a170905c96e1d00ae16ffc423f6a7eec84d845cd9570449af43284321de91",
+      "fingerprint": "5bd247a81070f60c85bf570326af7232a2cfa3cb84b6578a02ee83693a2a88cc",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "48315595ea9e14101e1bd6b35e8e418c025117d0fb6ea0ab2f3327dd79095dcd"
+        "apps/api/src/backup-cli.ts": "0cdbd1c04ca9ba72b9b87f2ab1e4f0671b282e8884a07e6fc5e71023e0b71cdc"
       },
-      "head": "c6479062f069d9251d69de213fe477a43e6f7389",
+      "head": "1441f12c86b141b5672c634bd98cf656e28defb8",
       "outcome": "no-change",
-      "reason": "Reviewed the CLI operation lock and static runner: they serialize existing backup and restore commands and do not change Elysia skill guidance or planning artifacts.",
+      "reason": "Reviewed the lock-file symlink rejection and synthetic regression: it hardens CLI operation locking without changing Elysia guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at c6479062f069d9251d69de213fe477a43e6f7389"
+        "Changed: apps/api/src/backup-cli.ts at 1441f12c86b141b5672c634bd98cf656e28defb8"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "ab1ca09ca19ac392ac4cbdc0ff38ea5d567f09994416f69a899000cf5242ba6f",
+      "fingerprint": "a8150cc82aa88d860c911926856a40971e78bf74a31bba13315b1c95ffdb1d53",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "d588846bdf071494874b8b36036507d3d04172541687f008053c19c0afd5abc5"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "240d1cd5f3cdc195f9f242dcdd39290c1b1364b61cfe4c737d1a5b759cbc6a85"
       },
-      "head": "1121ed1b396f5dee69f92807d2a59eaf9f70d318",
+      "head": "1441f12c86b141b5672c634bd98cf656e28defb8",
       "outcome": "no-change",
-      "reason": "The CLI lock launcher changed internally; documented backup and restore commands and safety guidance remain accurate.",
+      "reason": "Reviewed the lock-file symlink rejection and synthetic regression: it hardens CLI operation locking without changing Elysia guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1121ed1b396f5dee69f92807d2a59eaf9f70d318"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 1441f12c86b141b5672c634bd98cf656e28defb8"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
