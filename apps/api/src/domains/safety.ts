@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { accessSync, constants, appendFileSync, chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
+import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
@@ -25,6 +25,8 @@ export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
 export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 /** Conservative floor for the preflight minimum on small or empty databases (about 2.95 MiB). */
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
+const BACKUP_HISTORY_LIMIT = 200;
+const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
 /** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
 export const BACKUP_RETENTION_LIMIT = 10;
 
@@ -335,20 +337,25 @@ export function evictBeyondRetention(root: string, newest: string, preserve?: st
 
 function readBackupExecutionHistory(root: string): Row[] {
   const path = join(root, "backup_operations_audit.jsonl");
-  let lines: string[];
+  let descriptor: number | null = null;
+  let size: number;
   try {
-    const file = lstatSync(path);
-    if (!file.isFile() || file.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
-    lines = readFileSync(path, "utf8").split("\n");
+    const entry = lstatSync(path);
+    if (!entry.isFile() || entry.isSymbolicLink()) throw new Error("BACKUP_AUDIT_INVALID");
+    descriptor = openSync(path, "r");
+    const opened = fstatSync(descriptor);
+    if (!opened.isFile() || opened.dev !== entry.dev || opened.ino !== entry.ino || !Number.isSafeInteger(opened.size)) throw new Error("BACKUP_AUDIT_INVALID");
+    size = opened.size;
   } catch (error) {
+    if (descriptor !== null) closeSync(descriptor);
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
     throw error;
   }
   const history: Row[] = [];
-  for (const [index, line] of lines.entries()) {
+  const addLine = (line: Buffer, offset: number): void => {
     try {
-      const event = JSON.parse(line) as Row;
-      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") continue;
+      const event = JSON.parse(line.toString("utf8")) as Row;
+      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") return;
       const filename = typeof event.filename === "string" && backupFile.test(event.filename) ? event.filename : null;
       let manifest: Row | null = null;
       if (filename) {
@@ -364,7 +371,7 @@ function readBackupExecutionHistory(root: string): Row[] {
       const manifestBackupSize = manifest?.backup_file_size_bytes;
       const manifestSqliteSize = manifest?.sqlite_file_size_bytes;
       history.push({
-        id: index + 1,
+        id: offset + 1,
         backup_filename: filename,
         started_at: typeof event.started_at === "string" ? event.started_at : completedAt ?? "",
         completed_at: completedAt,
@@ -378,8 +385,36 @@ function readBackupExecutionHistory(root: string): Row[] {
         removed_backups: Array.isArray(event.removed_backups) ? event.removed_backups.filter((value: unknown) => typeof value === "string" && backupFile.test(value)) : [],
       });
     } catch { /* a partial final line or malformed legacy record is not a backup execution */ }
+  };
+  try {
+    let position = size;
+    let partial = Buffer.alloc(0);
+    while (position > 0 && history.length < BACKUP_HISTORY_LIMIT) {
+      const length = Math.min(BACKUP_AUDIT_READ_CHUNK_BYTES, position);
+      position -= length;
+      const chunk = Buffer.allocUnsafe(length);
+      let bytesRead = 0;
+      while (bytesRead < length) {
+        const count = readSync(descriptor!, chunk, bytesRead, length - bytesRead, position + bytesRead);
+        if (count === 0) throw new Error("BACKUP_AUDIT_CHANGED");
+        bytesRead += count;
+      }
+      const combined = Buffer.concat([chunk, partial]);
+      let end = combined.length;
+      let newline = combined.lastIndexOf(0x0a);
+      while (newline >= 0 && history.length < BACKUP_HISTORY_LIMIT) {
+        addLine(combined.subarray(newline + 1, end), position + newline + 1);
+        end = newline;
+        if (newline === 0) break;
+        newline = combined.lastIndexOf(0x0a, newline - 1);
+      }
+      partial = combined.subarray(0, end);
+    }
+    if (position === 0 && history.length < BACKUP_HISTORY_LIMIT && partial.length > 0) addLine(partial, 0);
+  } finally {
+    closeSync(descriptor);
   }
-  return history.reverse().slice(0, 200);
+  return history;
 }
 
 function statusPayload(context: AuthContext, config: SafetyConfig): Row {

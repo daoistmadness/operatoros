@@ -127,5 +127,26 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     const invalidSource = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
     expect(invalidSource.status).toBeGreaterThanOrEqual(400);
     expect(readdirSync(backupDir).filter((name) => /^backup_.*\.sqlite3$/.test(name))).toHaveLength(0);
+
+    const singleEvent = JSON.stringify({ timestamp: "2026-01-01T00:00:00Z", event: "backup_succeeded", trigger: "synthetic_single" });
+    writeFileSync(auditPath, `\n${singleEvent}\n`);
+    const singleHistory = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect(singleHistory.status).toBe(200);
+    expect((await singleHistory.json() as Array<{ trigger_type: string }>)[0]?.trigger_type).toBe("SYNTHETIC_SINGLE");
+
+    const syntheticEvents = Array.from({ length: 1000 }, (_, index) => JSON.stringify({
+      timestamp: new Date(1_700_000_000_000 + index * 1000).toISOString(),
+      event: index % 2 === 0 ? "backup_succeeded" : "backup_failed",
+      trigger: `synthetic_${index}`,
+      failure_code: `synthetic_${index}`,
+    }));
+    writeFileSync(auditPath, `${syntheticEvents.join("\n")}\npartial record`);
+    const recentHistory = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect(recentHistory.status).toBe(200);
+    const history = await recentHistory.json() as Array<{ id: number; trigger_type: string }>;
+    expect(history).toHaveLength(200);
+    expect(history[0]?.trigger_type).toBe("SYNTHETIC_999");
+    expect(history.at(-1)?.trigger_type).toBe("SYNTHETIC_800");
+    expect(new Set(history.map((entry) => entry.id)).size).toBe(200);
   } finally { database.close(); rmSync(root, { recursive: true, force: true }); }
 }, 15000);
