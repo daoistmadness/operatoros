@@ -137,10 +137,10 @@ describe("backup, restore, and scheduler safety", () => {
       const recovery = await fetch(`${baseUrl}/api/admin/backups/recovery-history`, { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } });
       expect(recovery.status).toBe(200);
       const recoveryHistory = await recovery.json() as any[];
-      expect(recoveryHistory.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed"]);
-      expect(recoveryHistory[2]).toMatchObject({ filename: backup.filename, actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
+      expect(recoveryHistory.map((entry) => entry.event)).toEqual(["restore_completed", "restore_started", "restore_requested"]);
+      expect(recoveryHistory[0]).toMatchObject({ filename: backup.filename, actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
       expect(new Set(recoveryHistory.map((entry) => entry.operation_reference_id)).size).toBe(1);
-      expect(recoveryHistory[2].safety_backup_filename).toMatch(/^backup_.*\.sqlite3$/);
+      expect(recoveryHistory[0].safety_backup_filename).toMatch(/^backup_.*\.sqlite3$/);
       expect(recoveryHistory[2].timestamp).toBeTruthy();
       expect(readFileSync(`${backupDir}/backup_restore_audit.jsonl`, "utf8").trim().split("\n")).toHaveLength(3);
       const restoreOperations = readFileSync(`${backupDir}/backup_operations_audit.jsonl`, "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>).filter((entry) => String(entry.event).startsWith("restore_"));
@@ -173,11 +173,15 @@ describe("backup, restore, and scheduler safety", () => {
     const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
     try {
       const legacy = { timestamp: "2026-01-02T03:04:05Z", event: "restore_completed", target_filename: "backup_legacy.sqlite3", authenticated_username: "legacy-admin", outcome: "COMPLETED", reason: null, request_context: { operation_id: "legacy-operation" }, pre_restore_snapshot_filename: "backup_snapshot.sqlite3" };
-      writeFileSync(`${backupDir}/backup_restore_audit.jsonl`, `${JSON.stringify(legacy)}\nnot-json\n`, { mode: 0o600 });
+      const recent = { timestamp: "2026-01-03T03:04:05Z", event: "restore_failed", target_filename: "backup_recent.sqlite3", authenticated_username: "recent-admin", outcome: "FAILED", reason: "RESTORE_NOT_APPLIED", request_context: { operation_id: "recent-operation" }, pre_restore_snapshot_filename: null };
+      writeFileSync(`${backupDir}/backup_restore_audit.jsonl`, `${JSON.stringify(legacy)}\nnot-json\n${JSON.stringify(recent)}\n`, { mode: 0o600 });
       const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
       const response = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie, origin: "http://localhost:5173" } }));
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual([{ timestamp: "2026-01-02T03:04:05Z", filename: "backup_legacy.sqlite3", event: "restore_completed", actor_display: "legacy-admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "legacy-operation", safety_backup_filename: "backup_snapshot.sqlite3" }]);
+      expect(await response.json()).toEqual([
+        { timestamp: "2026-01-03T03:04:05Z", filename: "backup_recent.sqlite3", event: "restore_failed", actor_display: "recent-admin", result: "FAILED", safe_reason_code: "RESTORE_NOT_APPLIED", operation_reference_id: "recent-operation", safety_backup_filename: null },
+        { timestamp: "2026-01-02T03:04:05Z", filename: "backup_legacy.sqlite3", event: "restore_completed", actor_display: "legacy-admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "legacy-operation", safety_backup_filename: "backup_snapshot.sqlite3" },
+      ]);
     } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 

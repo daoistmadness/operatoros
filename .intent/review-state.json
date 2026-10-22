@@ -231,15 +231,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "2f1a11b3df1ff9c84372769b5d866d0242a0fe9881962ab2fd03ae8c46ef34cf",
+      "fingerprint": "0ac20692f6f8992ac09556278ff9e36e05b957d3631be26a8ce8201aaa001476",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "f75fa1f9a0a5fccac0af2583b5c978bf6e0aab02fd92bc6527b49da24311b638"
+        "apps/api/src/domains/safety.ts": "f3f93dbe27c6b3e919d9f063f255062b0582e92ed66f3f9784a9b85dafa9c48a"
       },
-      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
+        "Changed: apps/api/src/domains/safety.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -267,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "905dd73910c71d862235e59b9a66c8db0cfe0e61494d34c3f1d40c94dc753fb4",
+      "fingerprint": "c89d94a99c0e36fc17f859d8d6aae303bb3ddfbbfb9a531e04bb7baee89ea343",
       "snapshot": {
-        "docs/security/backup-restore.md": "c3824cd133d9b34c10f444c4b6d710b99cebc3721fb1f5c7b805a8d0b519479f"
+        "docs/security/backup-restore.md": "ad325235889cf6e83bf142973bb0f3a730a01e23dcc0bede98bab1b3984084f1"
       },
-      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
+        "Changed: docs/security/backup-restore.md at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -336,15 +336,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "a4d93310e9293009b8d1e24d09089964e90cda00844c6ee78860ffba434ae01e",
+      "fingerprint": "fbea48e957a9930f778728abd940f3a2f46da20adf2dd3b19b776357d7e962b2",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "6c76a415dfb75c823a24a40c3c8f39c67806aa9daa97c32a55aba045b0b69cb1"
+        "apps/api/tests/backup-health.test.ts": "181268c14b411d6c19b9eda081f460d28cdd0f4bbc8ae2de6530a2611db722da"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/tests/backup-health.test.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
@@ -372,27 +372,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "01f6ee3f3d96f08c68107085471a61ff948ec014648952a8c7bb138a806df61b",
+      "fingerprint": "a1fd1dc9268307a682c0eab6a26b1f6fab00a6411adaf6e04dabd2c4a09c6bc3",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "ca8c9f4b0498f3aecdcd7e42d04c83d4ef9b9aca615c100719f6243462141006"
+        "apps/api/src/backup-cli.ts": "23d2ac3a3306783e296618beb78d91fc65c9800b160866b58a252b8995c68c5a"
       },
-      "head": "36ae453c754be7c6d2cf8f3bd0039d7542469635",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "Composed backup and restore source was reviewed; cross-directory rename durability is documented and regression-tested, with no framework skill guidance changes.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 36ae453c754be7c6d2cf8f3bd0039d7542469635"
+        "Changed: apps/api/src/backup-cli.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "72217c250a0e78748373e7c37cc07eaa460f0d4e0682b592b718b5f1c991539c",
+      "fingerprint": "a1c4d782b06cd3c90b5eee2f9c8131e2e2f8fe647732fc77e26e45fb95dd8806",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "18c3c7ca5ad1d11afd5fdaa05fd65888fb3f8ab906191d8cc560bd0b0c1dc173"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "5dbcbe6e7c83df1845bb44fd1bbcb788ff32b0b59b510aaba60f96a779698716"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -540,27 +540,27 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "a609fd94fe303f5ebe5dcc939d7b0907b008128b1d299d446e8a92ac694b1c88",
+      "fingerprint": "d14dd214b747fcee7b463a0e241f85f72e8a156797d89688a40ab52ba3ae9397",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "f0b8e06eb80d44d7dbd35f13f8136325180bf99d50aacc776ec3874d8078b56b"
+        "apps/api/tests/safety.test.ts": "36f8a3e5592df28b9e0db586b8881543786badc4e6ed3c24bdf8189f455cd7d5"
       },
-      "head": "3361a4ecac0fca9211eb75239fccc5618634f36a",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "The composed backup/restore changes and existing operator docs were reviewed; no Elysia skill guidance or planning artifact changed.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at 3361a4ecac0fca9211eb75239fccc5618634f36a"
+        "Changed: apps/api/tests/safety.test.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:scripts/restore.sh": {
-      "fingerprint": "e48718c5c74aee77aa2983cb1699515b39fb3f3fa6244bd1cf69da519100618e",
+      "fingerprint": "8125af064c96f333000f6ac0efe9c9461230ec869b6d118583af4639d977554a",
       "snapshot": {
-        "scripts/restore.sh": "3936c7e51b2149a27688345790646acd412999d287650c3d4c9764f8afb774bd"
+        "scripts/restore.sh": "5c0a6febfafc61059e3ee321aa7255d548b4afcd36bbf5a2f2d75b7989159c95"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: scripts/restore.sh at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: scripts/restore.sh at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:apps/api/tests/restore-audit-failure.test.ts": {
@@ -612,15 +612,15 @@
       ]
     },
     "source:docs/backup-scheduler-architecture.md": {
-      "fingerprint": "2de5da1a9e217484dd10d56c88f886f221588a0fbb7fe14e2a8927cc02186476",
+      "fingerprint": "2459ea827f17488e81dbfd7ecabdd84db824e6dd9773a817fc2fdfa86d3302bc",
       "snapshot": {
-        "docs/backup-scheduler-architecture.md": "c47bdb786e8464d8214f9365ea05b35bc71772137661efff3d8f743214ffa4dd"
+        "docs/backup-scheduler-architecture.md": "8ac124111a0e2a9777e9501740f77134d473cd17a59b82589800c660b4ebd1e5"
       },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
       "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
       "evidence": [
-        "Changed: docs/backup-scheduler-architecture.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+        "Changed: docs/backup-scheduler-architecture.md at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
       ]
     },
     "source:docs/deployment/ubuntu-server.md": {

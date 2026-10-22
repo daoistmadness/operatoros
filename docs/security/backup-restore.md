@@ -185,6 +185,8 @@ The canonical recovery-history audit is `backup_restore_audit.jsonl`. After admi
 
 Before API replacement, the operations-audit path must be writable; if it is unavailable, restore stops before swapping databases and reports `RESTORE_AUDIT_UNAVAILABLE`. The canonical API completion record is the last fallible step inside the rollback-protected swap; if it cannot be written, the transaction rolls back. The operations-audit `restore_completed` line is written only after the swap commits, so a rolled-back attempt cannot claim completion there. That operations entry is best-effort after commit. CLI canonical and operations audit writes are best-effort after commit and do not undo a completed restore.
 
+`GET /api/admin/backups/recovery-history` returns valid lifecycle records newest first and skips malformed lines; the source JSONL remains append-only.
+
 ## Concurrency and deployment restriction
 
 Backup and restore use process-local operation locks. Data reset uses its own process-local guard and an immediate SQLite transaction. These guards do not coordinate multiple API processes, and the runtime does not detect a second process. Run exactly one API process per SQLite data root.
