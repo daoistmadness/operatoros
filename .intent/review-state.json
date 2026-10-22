@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "6caf7e6cbf592e6e4b0be1ef52a5006f8c4d67f8fc9d3b32e970b63bac1db1f7",
+      "fingerprint": "806a6efb286c88ea5d2cb04e4e8a4b3ea24a575d0670a91e1822aa52c6b0e84f",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "42c6aaa09a8083a0157cbeaebcda6e61694e97d8a12e86a14f7902acc7f06589"
+        "apps/api/src/domains/safety.ts": "5ca97b9432862a462b8a67c4c12e80d9fd54214c62d02201c0cfee8f7cbf454a"
       },
-      "head": "91d4438a384e6726e3e5f54253bf135476528584",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 91d4438a384e6726e3e5f54253bf135476528584"
+        "Changed: apps/api/src/domains/safety.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "30071d2058a911491ea59204057ad48106dd0f68eedf36e2e02b3431d88cab2b",
+      "fingerprint": "eed92c72a94f13ea54e039704db2403829942bb442b2fcee19c2c8c1c11c3736",
       "snapshot": {
-        "docs/security/backup-restore.md": "0b2a025c3fa82a5f92105724e12beab25e643e454b454b9ad7f2b0bf939f857b"
+        "docs/security/backup-restore.md": "b06abf45ee1d1e97427295c79cd27527022f45b08b0b2fb385c576729891dae5"
       },
-      "head": "91d4438a384e6726e3e5f54253bf135476528584",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 91d4438a384e6726e3e5f54253bf135476528584"
+        "Changed: docs/security/backup-restore.md at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -364,15 +364,15 @@
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
-      "fingerprint": "cd4a1c6ecef380520f7bcf754b2e769bc52105eb5e94cfbc056efe63537cd839",
+      "fingerprint": "5b0c0c6b07547acfec5298b0359fdfb38adc7e68696156a418912b30bad1a750",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.tsx": "5f5948310b5eb068335302e5baec02976064fcb9e67763032c03c96e543a4eae"
+        "apps/web/src/pages/BackupManagement.tsx": "f67e38d3adef0f3eceb911d40f85452ad1bed4aa3e54c86b08a8e166f9181c91"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.tsx at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/web/src/pages/BackupManagement.tsx at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
@@ -472,63 +472,63 @@
       ]
     },
     "source:apps/web/src/api/backups.test.ts": {
-      "fingerprint": "492ee79cd1ece5039301023d7ca2c93b6e0a4b8c271ad76b44892c8bbb299c6f",
+      "fingerprint": "8f0eb44a290598914358baad89f4a999c3c90988e56baf3eb93e630a1e5b3842",
       "snapshot": {
-        "apps/web/src/api/backups.test.ts": "7f54c84e32c32179b644bb65e9fd52fdb116e82b02d518d7d266a44417ddad60"
+        "apps/web/src/api/backups.test.ts": "c15d427a11bf5ef68cc1a5f7b816fceee02311237597f4765a315737aa02be97"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.test.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/web/src/api/backups.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/web/src/api/backups.ts": {
-      "fingerprint": "98d564a2a6cd038691205b2228b819866d50870df0506893411a22c00442a870",
+      "fingerprint": "bcf4ba1a43745347761bdfee12515de2bfae88c6f38ef2ec236a66b251245cc9",
       "snapshot": {
-        "apps/web/src/api/backups.ts": "5278f51067ab92c4a65b07ed5547c2e1704f588312b1acedfefc0ee7656e5068"
+        "apps/web/src/api/backups.ts": "e73f360158c03045ecb2090be7f16dfded3a13c258997a09bf24a12689768b4c"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/web/src/api/backups.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/web/src/api/backups.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "f1a5779c063a472c485000d447a1a9e3501bd444c71392319f3761823d14e1b4",
+      "fingerprint": "866006710b618973ff7da7e22399cc71c85c98b655e3b0f7fcdce701582f843d",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "e138231e028ce25998374bba0a9b8152598ac29052dd4e8083144f8fb44b8c5d"
+        "apps/web/src/generated/openapi/schema.ts": "ceb923e9f0a8f5724a3e8c3036f3f58c989712e200b43180d2a95d2944c2b305"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/web/src/generated/openapi/schema.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
-      "fingerprint": "1b90553fabd394663303ea4f5cd2bc7c882591e35ad231e2e62032b02918351d",
+      "fingerprint": "2f12f8d2c1b165d427af9d7d15b9d54cd4ca5dcdd358d9faa555d321964276fe",
       "snapshot": {
-        "apps/web/src/pages/BackupManagement.test.tsx": "f3062df6faee8ef892552c15f9ff0833524aa86f57d5d370621cada40ce61400"
+        "apps/web/src/pages/BackupManagement.test.tsx": "b7b2c3fece77ec25beef264d2751f52dbd15b299972f2fcc5c7190ed79da8c06"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination coverage changed; no agent guidance, skill instructions, or planning artifacts changed. Focused API/web tests, full release gate, final typecheck, lint, frontend build, OpenAPI drift, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: apps/web/src/pages/BackupManagement.test.tsx at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/web/src/pages/BackupManagement.test.tsx at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "812f86ad0338eb0f27fd2b7a8d57c7c394b230b4a05ee023781dac079b3dfbff",
+      "fingerprint": "2796569c8f2391ee685420a4746a154b9a9a489410e4d6f5cd248f59cf85d48a",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "a9b6a955996cd83e28852a33da1e5bf0ecbbc38421fb2c1eca64bd36bd5e0b59"
+        "openapi/operatoros.openapi.json": "8823a53324f20efabc7348cdf5a784655967891c1c0ce54e18b5f4a6f6b22875"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: openapi/operatoros.openapi.json at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -820,6 +820,30 @@
       "reason": "Reviewed the shared pending-rollback guard, API refusal and retry tests, and backup guide; no Elysia skill or framework guidance changes are needed.",
       "evidence": [
         "Changed: apps/api/src/domains/backup-scratch.ts at 91d4438a384e6726e3e5f54253bf135476528584"
+      ]
+    },
+    "source:apps/api/tests/backup-download.test.ts": {
+      "fingerprint": "c6f5f15f82830b55b80934ac549387f76eac9ff75298e56d8cbaaa4728accace",
+      "snapshot": {
+        "apps/api/tests/backup-download.test.ts": "b17cb2e3ac138a9ccb4bce7ec3046b5d98c9f4084958cc3e25dbd3737fb7b8fd"
+      },
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "outcome": "no-change",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-download.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+      ]
+    },
+    "source:e2e/smoke/web/phase11-verification.spec.ts": {
+      "fingerprint": "8bc9e9b14daf4713e84a5517c242d277a07b3c3b29f404674f8b9a3894c0022b",
+      "snapshot": {
+        "e2e/smoke/web/phase11-verification.spec.ts": "ec04942fe6e041bd6d0e9494fd639857b7b0e2b060e16a05c1e04dd32519eb3c"
+      },
+      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "outcome": "no-change",
+      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "evidence": [
+        "Changed: e2e/smoke/web/phase11-verification.spec.ts at c2437d6c3e57f6db448ca800f6319862433add29"
       ]
     }
   }

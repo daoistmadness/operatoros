@@ -22,4 +22,4 @@ export const getBackupScheduler = async () => (await apiRequest<BackupSchedulerC
 export const updateBackupScheduler = async (body: BackupSchedulerUpdate) => (await apiRequest<BackupSchedulerConfig>({ path: backupApiPath("/scheduler"), method: "PUT", body })).data;
 export const listBackupHistory = async () => (await apiRequest<BackupExecutionHistoryEntry[]>({ path: backupApiPath("/history") })).data;
 export const deleteBackup = async (filename: string) => (await apiRequest<DeleteBackupResult>({ path: backupApiPath(`/${encodeURIComponent(filename)}`), method: "DELETE" })).data;
-export const downloadBackupUrl = (filename: string) => backupApiPath(`/${encodeURIComponent(filename)}/download`);
+export const downloadBackupUrl = (filename: string, bundle = false) => `${backupApiPath(`/${encodeURIComponent(filename)}/download`)}${bundle ? "?bundle=true" : ""}`;
