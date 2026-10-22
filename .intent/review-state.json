@@ -388,15 +388,15 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "60b985fb34c1abd570a6573de1be2e133a8b912b3d0f7e085d2feacd104d2377",
+      "fingerprint": "c5dc75b64cebf9bb14e0c86c005af960185954f118645b0e7cac409b3eefd5fa",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "813123a518bce034f69a72f07b3a354774cbf1db3a2e7d9291451f126ff6244c"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "d8fb620c93fb658c40f0122e32103c84b1739dc5c25fc37c2704d9e19ca9e864"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "182fe539463a0255f86be1990d7f0712c920f4e6",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed the restore-safety integration test and the two hosted 15-second timeouts. The test exercises multiple synthetic CLI subprocesses and all safety/audit assertions still apply; only its timeout is increased to 30 seconds to allow CI runner contention. No Elysia guidance or skill claims changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 182fe539463a0255f86be1990d7f0712c920f4e6"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
