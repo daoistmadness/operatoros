@@ -96,6 +96,28 @@ not memory limits or SLAs. Status still hashes every artifact byte on each
 request, so latency grows with artifact size. Verification caching remains a
 separate design decision.
 
+API and CLI artifact encryption, decryption, and hashing use 64 KiB file chunks
+while preserving the version-1 AES-256-GCM JSON envelope. Decrypted bytes go to
+a private temporary file; restore validation and replacement start only after
+the GCM tag and artifact checks succeed. SQLite snapshot serialization still
+holds a database-sized buffer, so overall backup memory is not constant with
+database size.
+
+A synthetic CLI run on the same local machine used a 69.31 MB SQLite database
+and its 92.42 MB encrypted artifact. `/usr/bin/time -v` measured these peak RSS
+values before and after streaming file encryption/decryption; each operation
+ran in a separate process against disposable data:
+
+| Operation | Before | After |
+|---|---:|---:|
+| CLI backup | 538 MiB | 228 MiB |
+| Full CLI restore, including its safety snapshot | 1,157 MiB | 253 MiB |
+
+The measurements include Bun and SQLite startup, vary by machine, and are not
+memory limits or SLAs. Backup preflight now reserves the plaintext snapshot,
+the base64 envelope expansion, and bounded metadata/header space, with the
+existing minimum floor for small databases.
+
 Status precedence is restore in progress, backup in progress, destination
 unavailable, incomplete pairs (`UNKNOWN`), no backup, failed artifact checks or
 unknown capacity (`UNKNOWN`), low disk space, latest backup attempt failed, then

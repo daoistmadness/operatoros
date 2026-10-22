@@ -1,9 +1,13 @@
 import { describe, expect, it } from "bun:test";
+import { randomBytes } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { clientIp } from "../src/auth/service";
 import { normalizeOrigin, parseAllowedOrigins, parseTrustedProxyAddresses } from "../src/security/http";
-import { decryptBackup, encryptBackup, isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { backupSha256, decryptBackup, decryptBackupFileSync, encryptBackup, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackup, isEncryptedBackupFile, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
 const keyText = Buffer.alloc(32, 7).toString("base64");
 const otherKeyText = Buffer.alloc(32, 8).toString("base64");
@@ -118,5 +122,60 @@ describe("authenticated backup envelope", () => {
     expect(rotated?.allowLegacyPlaintext).toBe(false);
     expect(parseBackupEncryptionConfig({ activeKey: keyText, activeKeyId: "primary", allowLegacyPlaintext: true })?.allowLegacyPlaintext).toBe(true);
     expect(() => parseBackupEncryptionConfig({ activeKey: keyText, activeKeyId: "primary", previousKeys: "[]" })).toThrow();
+  });
+
+  it("streams encrypted files in both directions without changing the v1 envelope", () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-crypto-file-"));
+    const plaintext = randomBytes(128 * 1024 + 7);
+    const source = join(directory, "snapshot.sqlite");
+    const streamed = join(directory, "streamed.sqlite3");
+    const restored = join(directory, "restored.sqlite");
+    const compatible = join(directory, "compatible.sqlite3");
+    const compatibleRestore = join(directory, "compatible.sqlite");
+    try {
+      writeFileSync(source, plaintext, { mode: 0o600 });
+      const encryptedInfo = encryptBackupFileSync(source, streamed, config);
+      expect(encryptedInfo.plaintextSize).toBe(plaintext.length);
+      expect(encryptedInfo.plaintextSha256).toBe(backupSha256(plaintext));
+      expect(encryptedInfo.encryptedSha256).toBe(hashBackupFileSync(streamed));
+      expect(isEncryptedBackupFile(streamed)).toBe(true);
+      const envelope = JSON.parse(readFileSync(streamed, "utf8")) as { version: number; algorithm: string; keyId: string; tag: string };
+      expect(envelope).toMatchObject({ version: 1, algorithm: "aes-256-gcm", keyId: "primary" });
+      expect(Buffer.from(envelope.tag, "base64")).toHaveLength(16);
+      expect(decryptBackup(readFileSync(streamed), config)).toEqual(plaintext);
+
+      const decryptedInfo = decryptBackupFileSync(streamed, restored, config);
+      expect(readFileSync(restored)).toEqual(plaintext);
+      expect(decryptedInfo).toMatchObject({
+        encryptedSize: encryptedInfo.encryptedSize,
+        encryptedSha256: encryptedInfo.encryptedSha256,
+        plaintextSize: plaintext.length,
+        plaintextSha256: backupSha256(plaintext),
+      });
+
+      writeFileSync(compatible, encryptBackup(plaintext, config), { mode: 0o600 });
+      expect(decryptBackupFileSync(compatible, compatibleRestore, config).plaintextSha256).toBe(backupSha256(plaintext));
+      expect(readFileSync(compatibleRestore)).toEqual(plaintext);
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it("removes partial plaintext when streamed envelope authentication or framing fails", () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-crypto-failure-"));
+    const encryptedPath = join(directory, "backup.sqlite3");
+    const plaintextPath = join(directory, "candidate.sqlite");
+    const original = encryptBackup(randomBytes(70 * 1024 + 1), config);
+    try {
+      const tampered = JSON.parse(original.toString()) as { ciphertext: string };
+      const ciphertext = Buffer.from(tampered.ciphertext, "base64");
+      ciphertext[0] = ciphertext[0]! ^ 1;
+      tampered.ciphertext = ciphertext.toString("base64");
+      writeFileSync(encryptedPath, JSON.stringify(tampered), { mode: 0o600 });
+      expect(() => decryptBackupFileSync(encryptedPath, plaintextPath, config)).toThrow("could not be authenticated");
+      expect(() => readFileSync(plaintextPath)).toThrow();
+
+      writeFileSync(encryptedPath, original.subarray(0, original.length - 1), { mode: 0o600 });
+      expect(() => decryptBackupFileSync(encryptedPath, plaintextPath, config)).toThrow();
+      expect(() => readFileSync(plaintextPath)).toThrow();
+    } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 });

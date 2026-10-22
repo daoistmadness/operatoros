@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "3db07f4025ac38bff158855223ea88272f89f9f9e69cb1b5306cb55c4e0ef236",
+      "fingerprint": "0ae4d18d3cc1c49cd952e7b55a4818666f29209101cead50fed1c647a5403251",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "adac9d5498dc1127c05ababa516aa88509e6dc6599a0e9fd9c058215b78c4cdd"
+        "apps/api/src/domains/safety.ts": "1412ef3170bac568d9372c2ee1a088acc8eb955645301cd705a6763c3651fb6d"
       },
-      "head": "d17d59169e0a8cb39b18e356d39099336617d20d",
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
       "outcome": "no-change",
-      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at d17d59169e0a8cb39b18e356d39099336617d20d"
+        "Changed: apps/api/src/domains/safety.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "ffa62dd04cf1b29aa6ba580b7c986bb7589079ee715fc12be43aa52a40ed044a",
+      "fingerprint": "6a00a18fd35c29bb82e8a95a8222d431c9be454b8119d4f7d0099230de430228",
       "snapshot": {
-        "docs/security/backup-restore.md": "96481d3077154e923e86bd66216963e5ec6ccc9850ee21fa00a8666c06682962"
+        "docs/security/backup-restore.md": "31a9f9e9abb392cad9e02acb44528ac83ec2c568e98f52c4e03543a0bead6215"
       },
-      "head": "d17d59169e0a8cb39b18e356d39099336617d20d",
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
       "outcome": "no-change",
-      "reason": "Streaming artifact verification changes API internals and security guidance but do not alter agent-skill guidance or authoring instructions.",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at d17d59169e0a8cb39b18e356d39099336617d20d"
+        "Changed: docs/security/backup-restore.md at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -376,15 +376,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "6588c2f5320240b7bf6115f8be0382fe4a4a7519586bfb20e854335e44a9efb3",
+      "fingerprint": "a4c2093a3e7a6e3cef562a072944f8d5391a1af7e3173924a17fcac4a8e0a4cf",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "645fbaa4d4f206b6302dbcacd52a9219066f61f512444e1b32b6f42970cea779"
+        "apps/api/src/backup-cli.ts": "e327431b97b9c061620672b65df5014c264c5751e798bf6fb274481bd895abe0"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
       "outcome": "no-change",
-      "reason": "Reviewed the CLI restore artifact path and named-pipe regression test. The change rejects non-regular files before reading and does not alter agent guidance, skills, or planning artifacts.",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/src/backup-cli.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -844,6 +844,42 @@
       "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
       "evidence": [
         "Changed: e2e/smoke/web/phase11-verification.spec.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+      ]
+    },
+    "source:apps/api/src/security/backup-crypto.ts": {
+      "fingerprint": "d5b44c9e45b103754d62aaaab0dff2c27a0773c283379b52f912df469a0a06ab",
+      "snapshot": {
+        "apps/api/src/security/backup-crypto.ts": "faf17a952db0469298736088314e4d2f730ee94cbd8b14cbd0fd5c96d0f5f5c3"
+      },
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "outcome": "no-change",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "evidence": [
+        "Changed: apps/api/src/security/backup-crypto.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+      ]
+    },
+    "source:apps/api/tests/backup-disk-space.test.ts": {
+      "fingerprint": "974a8f388fd333ab3647497dd3358dc44cc9edf5597dbf8fb43bdf7bbda5ffff",
+      "snapshot": {
+        "apps/api/tests/backup-disk-space.test.ts": "af5af2d41303f5931af5cf9fd7d431b83e5fcc4bddc0856010621946598b0cd3"
+      },
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "outcome": "no-change",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-disk-space.test.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+      ]
+    },
+    "source:apps/api/tests/security.test.ts": {
+      "fingerprint": "b5749e1827827bfae6865f35c67238a130824031c5d5e87b7379683ac193d0b4",
+      "snapshot": {
+        "apps/api/tests/security.test.ts": "f56ba354f47a34d71b96574516e98cec374a5e856c01cdf93441cb0b2a1d0d54"
+      },
+      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "outcome": "no-change",
+      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "evidence": [
+        "Changed: apps/api/tests/security.test.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
       ]
     }
   }

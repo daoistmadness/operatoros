@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { appendFileSync, chmodSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, copyFileSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { syncDirectory, syncFile } from "./domains/durable-files";
@@ -9,7 +9,7 @@ import { Database, constants } from "bun:sqlite";
 import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
-import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
+import { backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile } from "./security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./domains/restore-audit";
 import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
@@ -54,7 +54,7 @@ function clearOrphanedEmptyWal(path: string): void {
   rmSync(shm);
 }
 
-function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): { plaintext: Buffer; schemaVersion: string; createdAt: string } {
+function verifiedArtifact(selected: string, value: ReturnType<typeof config>, plaintextPath: string): { schemaVersion: string; createdAt: string } {
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
@@ -62,19 +62,23 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, ar
   const manifestPath = `${path}.meta.json`;
   if (!existsSync(manifestPath) || !lstatSync(manifestPath).isFile() || lstatSync(manifestPath).isSymbolicLink()) throw new Error("BACKUP_MANIFEST_INVALID");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const encrypted = artifact ?? readFileSync(path);
-  const envelope = JSON.parse(encrypted.toString("utf8")) as Record<string, unknown>;
-  if (manifest.encrypted !== true || manifest.algorithm !== "aes-256-gcm" ||
-    manifest.format_version !== envelope.version || manifest.key_id !== envelope.keyId || manifest.algorithm !== envelope.algorithm ||
-    manifest.filename !== basename(path) || manifest.source_db_path !== basename(value.databasePath) ||
-    typeof manifest.created_at !== "string" || !Number.isFinite(Date.parse(manifest.created_at)) ||
-    !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
-    typeof manifest.schema_version !== "string" || !manifest.schema_version ||
-    manifest.sha256 !== backupSha256(encrypted) || !isEncryptedBackup(encrypted)) throw new Error("BACKUP_VERIFICATION_FAILED");
-  const plaintext = decryptBackup(encrypted, value.backupEncryption);
-  if (manifest.backup_file_size_bytes !== encrypted.length || manifest.sqlite_file_size_bytes !== plaintext.length ||
-    manifest.plaintext_sha256 !== backupSha256(plaintext)) throw new Error("BACKUP_VERIFICATION_FAILED");
-  return { plaintext, schemaVersion: manifest.schema_version, createdAt: manifest.created_at };
+  try {
+    const verification = decryptBackupFileSync(path, plaintextPath, value.backupEncryption);
+    if (manifest.encrypted !== true || manifest.algorithm !== "aes-256-gcm" ||
+      manifest.format_version !== verification.envelope.version || manifest.key_id !== verification.envelope.keyId || manifest.algorithm !== verification.envelope.algorithm ||
+      manifest.filename !== basename(path) || manifest.source_db_path !== basename(value.databasePath) ||
+      typeof manifest.created_at !== "string" || !Number.isFinite(Date.parse(manifest.created_at)) ||
+      !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
+      typeof manifest.schema_version !== "string" || !manifest.schema_version ||
+      manifest.sha256 !== verification.encryptedSha256 || manifest.backup_file_size_bytes !== verification.encryptedSize ||
+      manifest.sqlite_file_size_bytes !== verification.plaintextSize || manifest.plaintext_sha256 !== verification.plaintextSha256) {
+      throw new Error("BACKUP_VERIFICATION_FAILED");
+    }
+    return { schemaVersion: manifest.schema_version, createdAt: manifest.created_at };
+  } catch (error) {
+    rmSync(plaintextPath, { force: true });
+    throw error;
+  }
 }
 
 function restoreDisposable(selected: string, targetDir: string): void {
@@ -93,11 +97,10 @@ function restoreDisposable(selected: string, targetDir: string): void {
     targetRoot.startsWith(`${sourceRoot}${sep}`) || sourceRoot.startsWith(`${targetRoot}${sep}`)) {
     throw new Error("DISPOSABLE_RESTORE_TARGET_INVALID");
   }
-  const { plaintext, schemaVersion } = verifiedArtifact(selected, value);
   chmodSync(target.dataDir, 0o700);
   let created = false;
   try {
-    writeFileSync(target.databasePath, plaintext, { flag: "wx", mode: 0o600 });
+    const { schemaVersion } = verifiedArtifact(selected, value, target.databasePath);
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
     try {
@@ -122,18 +125,23 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   const value = config();
   if (!value.dataPaths || value.dataPaths.dataDir !== resolve(targetDir) || !value.databasePath) throw new Error("MIGRATION_TARGET_MISMATCH");
   const path = value.databasePath;
-  const { plaintext, schemaVersion, createdAt } = verifiedArtifact(selected, value);
-  const age = Date.now() - Date.parse(createdAt);
-  if (!Number.isFinite(age) || age < 0 || age > 60 * 60 * 1000) throw new Error("FRESH_BACKUP_REQUIRED");
-  clearOrphanedEmptyWal(path);
-  const database = openOfflineSnapshot(path);
-  let current: Uint8Array;
+  const verifyDirectory = mkdtempSync(join(tmpdir(), "operatoros-cli-verify-"));
+  chmodSync(verifyDirectory, 0o700);
+  const plaintextPath = join(verifyDirectory, "snapshot.sqlite");
   try {
-    if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
-    current = database.serialize();
-  } finally { database.close(); }
-  if (backupSha256(current) !== backupSha256(plaintext)) throw new Error("BACKUP_SOURCE_MISMATCH");
-  console.log(`${migrateExistingDatabase(path)} ${CURRENT_SCHEMA_VERSION}`);
+    const { schemaVersion, createdAt } = verifiedArtifact(selected, value, plaintextPath);
+    const age = Date.now() - Date.parse(createdAt);
+    if (!Number.isFinite(age) || age < 0 || age > 60 * 60 * 1000) throw new Error("FRESH_BACKUP_REQUIRED");
+    clearOrphanedEmptyWal(path);
+    const database = openOfflineSnapshot(path);
+    let current: Uint8Array;
+    try {
+      if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
+      current = database.serialize();
+    } finally { database.close(); }
+    if (backupSha256(current) !== hashBackupFileSync(plaintextPath)) throw new Error("BACKUP_SOURCE_MISMATCH");
+    console.log(`${migrateExistingDatabase(path)} ${CURRENT_SCHEMA_VERSION}`);
+  } finally { rmSync(verifyDirectory, { recursive: true, force: true }); }
 }
 
 function nextFilename(directory: string): string {
@@ -226,10 +234,12 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
       schemaVersion = snapshotSchemaVersion(database);
       plaintext = database.serialize();
     } finally { database.close(); }
-    const encrypted = encryptBackup(plaintext, value.backupEncryption);
-    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: plaintext.length, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
     const artifact = join(directory, name); const manifest = join(directory, `${name}.meta.json`);
-    writeFileSync(artifact, encrypted, { mode: 0o600 }); writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
+    const snapshot = join(directory, "snapshot.sqlite");
+    writeFileSync(snapshot, plaintext, { mode: 0o600 });
+    const encrypted = encryptBackupFileSync(snapshot, artifact, value.backupEncryption);
+    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: encrypted.plaintextSize, backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256, encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
+    writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     syncFile(artifact); syncFile(manifest);
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
     syncDirectory(directory);
@@ -239,7 +249,7 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     catch (error) { try { audit(backupDir, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
     try { syncDirectory(backupDir); }
     catch (error) { try { audit(backupDir, "backup_retention_failed", { error: error instanceof Error ? error.constructor.name : "Error", retention_limit: BACKUP_RETENTION_LIMIT }); } catch { /* retention must not fail the published backup */ } }
-    try { audit(backupDir, "backup_succeeded", { filename: name, trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000, size_bytes: encrypted.length, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); } catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
+    try { audit(backupDir, "backup_succeeded", { filename: name, trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000, size_bytes: encrypted.encryptedSize, checksum: metadata.sha256, integrity_verified: true, removed_backups: removedBackups }); } catch { console.error("WARN: backup completed but the operations audit line could not be written."); }
     return { filename: name, path: join(backupDir, name) };
   } catch (error) {
     try { audit(backupDir, "backup_failed", { error: error instanceof Error ? error.constructor.name : "Error", failure_code: typeof (error as { code?: unknown })?.code === "string" ? (error as { code: string }).code : error instanceof Error ? error.constructor.name : "Error", trigger, started_at: startedAt, completed_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), duration_seconds: (Date.now() - started) / 1000 }); } catch { /* audit failure must not mask the backup error */ }
@@ -274,13 +284,14 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     if (resolve(dirname(path)) !== resolve(backupDir)) throw new Error("Backup must be selected from the canonical backup directory.");
     if (!backupName.test(basename(path)) || !exists(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) throw new Error("Invalid encrypted backup file.");
     label = basename(path);
-    const artifact = readFileSync(path);
-    const verified = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : null;
-    if (!verified && !value.backupEncryption.allowLegacyPlaintext) throw new Error("Legacy plaintext backups require explicit operator opt-in.");
-    const plaintext = verified?.plaintext ?? artifact;
     directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
     const target = join(directory, `${randomUUID()}.candidate`);
-    writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
+    const verified = isEncryptedBackupFile(path) ? verifiedArtifact(label, value, target) : null;
+    if (!verified) {
+      if (!value.backupEncryption.allowLegacyPlaintext) throw new Error("Legacy plaintext backups require explicit operator opt-in.");
+      copyFileSync(path, target);
+      chmodSync(target, 0o600);
+    }
     actor = validateRestoreSnapshot(target, credential, verified?.schemaVersion);
     revokeRestoredSessions(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;

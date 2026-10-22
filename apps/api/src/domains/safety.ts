@@ -10,13 +10,14 @@ import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
 import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, schemaFingerprint } from "@operatoros/db";
-import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackup, encryptBackup, isEncryptedBackup, type BackupEncryptionConfig } from "../security/backup-crypto";
+import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile, type BackupEncryptionConfig, type BackupFileVerification } from "../security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 import { hasPendingRestoreRollback } from "./backup-scratch";
 
 type Row = Record<string, any>;
 type Context = any;
+type DecryptedBackupFile = BackupFileVerification | { encrypted: false; encryptedSize: number; encryptedSha256: string; plaintextSize: number; plaintextSha256: string; envelope: null };
 /** Filesystem capacity probe seam: bytes available to the service user (`availableBytes`) and free bytes (`freeBytes`) for the filesystem hosting the resolved path. */
 export type DiskSpaceProbe = (resolvedPath: string) => { availableBytes: number; freeBytes: number };
 export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null; restoreFileSystem?: RestoreFileSystem | null };
@@ -51,7 +52,7 @@ function backupRoot(config: SafetyConfig): string {
   return path;
 }
 function ensureRoot(config: SafetyConfig): string { const path = backupRoot(config); mkdirSync(path, { recursive: true, mode: 0o700 }); chmodSync(path, 0o700); return path; }
-function sha256(path: string): string { return backupSha256(readFileSync(path)); }
+function sha256(path: string): string { return hashBackupFileSync(path); }
 function rows(context: AuthContext, sql: string, params: any[] = []): Row[] { return context.database.client.query(sql).all(...params) as Row[]; }
 function row(context: AuthContext, sql: string, params: any[] = []): Row | null { return (context.database.client.query(sql).get(...params) as Row | null) ?? null; }
 function fail(set: any, status: number, detail: unknown): { detail: unknown } { set.status = status; return { detail }; }
@@ -212,9 +213,10 @@ const defaultDiskSpaceProbe: DiskSpaceProbe = (path) => {
 
 function diskSpaceProbeFor(config: SafetyConfig): DiskSpaceProbe { return config.diskSpaceProbe ?? defaultDiskSpaceProbe; }
 
-/** Minimum free bytes required before a backup may start: twice the active database size (the staging directory holds the plaintext snapshot and its encrypted envelope at the same time) with a conservative floor for small databases. */
+/** Minimum free bytes required for the plaintext snapshot and its base64 envelope, with bounded header/manifest space and a conservative floor for small databases. */
 export function minimumRequiredSpaceBytes(activeDatabasePath: string): number {
-  return Math.max(statSafe(activeDatabasePath) ? statSync(activeDatabasePath).size * 2 : 0, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
+  const size = statSafe(activeDatabasePath) ? statSync(activeDatabasePath).size : 0;
+  return Math.max(size + Math.ceil(size / 3) * 4 + BACKUP_ENVELOPE_HEADER_MAX_BYTES, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
 }
 
 /** Resolves the nearest existing ancestor of the backup destination so the probe covers the filesystem that will host new output and never an unrelated mount. */
@@ -236,17 +238,22 @@ function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root:
   if (probe.availableBytes < required) throw Object.assign(new Error(`Insufficient free disk space for backup: ${required} bytes required, ${probe.availableBytes} bytes available.`), { status: 507, code: BACKUP_LOW_DISK_SPACE });
 }
 
-function decryptedBackup(config: SafetyConfig, path: string, scratchRoot: string, operation: (path: string, artifact: Buffer) => Row): Row {
+function decryptedBackup(config: SafetyConfig, path: string, scratchRoot: string, operation: (path: string, artifact: DecryptedBackupFile) => Row): Row {
   if (!regularFile(path)) throw Object.assign(new Error("Backup artifact is not a regular file."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
-  const artifact = readFileSync(path);
   if (!config.backupEncryption) throw Object.assign(new Error("BACKUP_ENCRYPTION_KEY is required for backup restore."), { status: 503, code: "BACKUP_ENCRYPTION_KEY_REQUIRED" });
   const directory = mkdtempSync(join(scratchRoot, ".operatoros-restore-api-"));
   chmodSync(directory, 0o700);
   const plaintextPath = join(directory, "snapshot.sqlite");
   try {
-    const plaintext = isEncryptedBackup(artifact) ? decryptBackup(artifact, config.backupEncryption) : config.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw Object.assign(new Error("Legacy plaintext backups require explicit operator opt-in."), { status: 409, code: "LEGACY_PLAINTEXT_BACKUP_REFUSED" }); })();
-    writeFileSync(plaintextPath, plaintext, { mode: 0o600 });
-    chmodSync(plaintextPath, 0o600);
+    let artifact: DecryptedBackupFile;
+    if (isEncryptedBackupFile(path)) artifact = decryptBackupFileSync(path, plaintextPath, config.backupEncryption);
+    else if (config.backupEncryption.allowLegacyPlaintext) {
+      copyFileSync(path, plaintextPath);
+      chmodSync(plaintextPath, 0o600);
+      const size = statSync(plaintextPath).size;
+      const checksum = hashBackupFileSync(plaintextPath);
+      artifact = { encrypted: false, encryptedSize: size, encryptedSha256: checksum, plaintextSize: size, plaintextSha256: checksum, envelope: null };
+    } else throw Object.assign(new Error("Legacy plaintext backups require explicit operator opt-in."), { status: 409, code: "LEGACY_PLAINTEXT_BACKUP_REFUSED" });
     return operation(plaintextPath, artifact);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }
@@ -277,10 +284,8 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
     validateSnapshot(temporary, sourceTables, false);
-    const encrypted = encryptBackup(readFileSync(temporary), config.backupEncryption);
-    writeFileSync(encryptedTemporary, encrypted, { mode: 0o600 });
-    chmodSync(encryptedTemporary, 0o600);
-    const metadata = { filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client), sqlite_file_size_bytes: statSync(temporary).size, backup_file_size_bytes: encrypted.length, sha256: backupSha256(encrypted), plaintext_sha256: sha256(temporary), encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId, source_db_path: basename(active), backup_tool_version: "1.0" };
+    const encrypted = encryptBackupFileSync(temporary, encryptedTemporary, config.backupEncryption);
+    const metadata = { filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client), sqlite_file_size_bytes: encrypted.plaintextSize, backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256, encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId, source_db_path: basename(active), backup_tool_version: "1.0" };
     writeFileSync(metadataTemporary, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     chmodSync(metadataTemporary, 0o600);
     syncFile(encryptedTemporary);
@@ -814,20 +819,19 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
   if (!regularFile(target) || !regularFile(`${target}.meta.json`)) throw Object.assign(new Error("Backup artifact and metadata must be regular files."), { status: 404, code: "BACKUP_ARTIFACT_INVALID" });
   const manifest = JSON.parse(readFileSync(`${target}.meta.json`, "utf8"));
   return decryptedBackup(config, target, dirname(dbPath(context)), (plaintextPath, artifact) => {
-    const sourceChecksum = backupSha256(artifact);
+    const sourceChecksum = artifact.encryptedSha256;
     if (manifest.sha256 !== sourceChecksum) throw Object.assign(new Error("Backup checksum verification failed."), { status: 409, code: "BACKUP_CHECKSUM_MISMATCH" });
-    if (isEncryptedBackup(artifact)) {
-      let envelope: Row;
-      try { envelope = JSON.parse(artifact.toString()) as Row; } catch { throw Object.assign(new Error("Backup metadata is invalid."), { status: 409, code: "BACKUP_METADATA_INVALID" }); }
+    if (artifact.encrypted) {
+      const envelope = artifact.envelope;
       const plaintextSize = statSync(plaintextPath).size;
       if (manifest.encrypted !== true || manifest.filename !== filename || manifest.source_db_path !== basename(dbPath(context)) ||
         manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) ||
         manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId ||
-        manifest.backup_file_size_bytes !== artifact.length || manifest.sqlite_file_size_bytes !== plaintextSize ||
-        manifest.plaintext_sha256 !== sha256(plaintextPath)) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+        manifest.backup_file_size_bytes !== artifact.encryptedSize || manifest.sqlite_file_size_bytes !== plaintextSize ||
+        manifest.plaintext_sha256 !== artifact.plaintextSha256) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
     const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
-    if (isEncryptedBackup(artifact) && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+    if (artifact.encrypted && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     const same = plaintextChecksum === activeChecksum; const compatible = source.schemaValid && source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
@@ -889,7 +893,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
   try {
     try {
       decryptedBackup(config, `${root}/${filename}`, dirname(active), (plaintextPath, artifact) => {
-        if (backupSha256(artifact) !== checked.source.sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
+        if (artifact.encryptedSha256 !== checked.source.sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
         copyFileSync(plaintextPath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));

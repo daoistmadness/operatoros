@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, readdirSync, rmSync, statfsSync } from "node:fs";
+import { existsSync, readdirSync, rmSync, statfsSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -63,6 +63,16 @@ async function statusRequest(app: ReturnType<typeof createApp>, cookie: string):
 }
 
 describe("backup disk-space preflight (P3-02)", () => {
+  it("includes plaintext and base64-envelope space in its minimum", () => {
+    const h = harness("minimum-estimate");
+    try {
+      const size = statSync(h.databasePath).size;
+      const required = minimumRequiredSpaceBytes(h.databasePath);
+      expect(required).toBeGreaterThanOrEqual(size + Math.ceil(size / 3) * 4);
+      expect(required).toBeGreaterThan(size * 2);
+    } finally { h.cleanup(); }
+  });
+
   it("refuses the backup with the documented code below the minimum, leaving no artifacts", async () => {
     const h = harness("low", ({ databasePath }) => () => ({ availableBytes: minimumRequiredSpaceBytes(databasePath) - 1, freeBytes: 4096 }));
     try {
