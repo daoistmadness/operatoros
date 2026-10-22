@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "6a00a18fd35c29bb82e8a95a8222d431c9be454b8119d4f7d0099230de430228",
+      "fingerprint": "d4a15619a1a7ed048da4b513f25a5f9dd67007cb29afc730094e758e6f938ced",
       "snapshot": {
-        "docs/security/backup-restore.md": "31a9f9e9abb392cad9e02acb44528ac83ec2c568e98f52c4e03543a0bead6215"
+        "docs/security/backup-restore.md": "bcb2fa3bec2e62e22c7e769c5385082f8c37726441fd8de7ea1cd10e039b0fb6"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "4a5b544d95272241d4ef84ef5a2e2f3d80cc2679",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed the recovery-cycle status addition in docs/security/backup-restore.md against the merged backup and restore implementation. It documents existing security and recovery behavior and authorization boundaries, changes no Elysia-specific guidance, and does not warrant a skill or planning-record update.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Changed: docs/security/backup-restore.md at 4a5b544d95272241d4ef84ef5a2e2f3d80cc2679"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
