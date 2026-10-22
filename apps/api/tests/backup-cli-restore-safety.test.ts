@@ -955,6 +955,34 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
+it("refuses a named-pipe backup artifact before reading it", () => {
+  if (process.platform !== "linux") return;
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-special-file-"));
+  const source = join(temporary, "source");
+  const backupDir = join(source, "backups");
+  const target = join(temporary, "target");
+  mkdirSync(backupDir, { recursive: true });
+  mkdirSync(target);
+  const filename = "backup_2026-10-22T00-00-00Z.sqlite3";
+  const artifact = join(backupDir, filename);
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${join(source, "operatoros.sqlite")}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    expect(spawnCommand("mkfifo", [artifact]).status).toBe(0);
+    writeFileSync(`${artifact}.meta.json`, "{}", { mode: 0o600 });
+    const result = spawnCommand("timeout", ["--signal=TERM", "--kill-after=1s", "2s", process.execPath, cli, "restore-disposable", filename, target], { cwd: root, env });
+    expect(result.status).toBe(1);
+    expect(result.stderr?.toString()).toContain("Backup must be an encrypted artifact in the canonical backup directory.");
+    expect(readdirSync(target)).toEqual([]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
 it("restores a valid legacy plaintext backup only with explicit opt-in", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-legacy-"));
   const source = join(temporary, "source");

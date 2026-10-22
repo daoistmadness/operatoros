@@ -58,7 +58,7 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, ar
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
-    !existsSync(path) || lstatSync(path).isSymbolicLink()) throw new Error("Backup must be an encrypted artifact in the canonical backup directory.");
+    !existsSync(path) || !lstatSync(path).isFile()) throw new Error("Backup must be an encrypted artifact in the canonical backup directory.");
   const manifestPath = `${path}.meta.json`;
   if (!existsSync(manifestPath) || !lstatSync(manifestPath).isFile() || lstatSync(manifestPath).isSymbolicLink()) throw new Error("BACKUP_MANIFEST_INVALID");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
