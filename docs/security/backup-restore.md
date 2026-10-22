@@ -205,6 +205,26 @@ integrity, quick-check, or foreign-key validation as ineligible before restore.
   backups, but it reduces traceability.
 - **Schedules and filenames use UTC.** Account for local time when defining an RPO.
 
+## Recovery hardening status (2026-10-23)
+
+The recovery hardening cycle is complete through PR #287: 24 recovery-related
+PRs (#261, #263–#272, and #275–#287) plus adjacent PRs #273 and #274 are merged.
+The safeguards and streaming behavior above are the current supported baseline.
+
+- **Current limitation:** status hashes the full encrypted artifact on each
+  request, and SQLite snapshot serialization still uses a database-sized
+  buffer. The synthetic measurements above record observed performance; they
+  are not thresholds or SLAs.
+- **Future, authorization-gated:** a production recovery rehearsal remains
+  unauthorized. The protected operational database stays at S4.3 pending its
+  separate authorization. This review performed no production restore or
+  migration.
+- **Theoretical:** further caching or memory tuning has no reproducible workload
+  evidence in this review and has no established threshold.
+- **Next:** no reproducible current backup/recovery defect surfaced in the
+  reviewed status and open-issue evidence. Hold the stable baseline; revisit
+  only with reproducible evidence or explicit rehearsal authorization.
+
 ## Lifecycle
 
 ```mermaid
