@@ -158,21 +158,39 @@ it("cleans interrupted plaintext restore candidates under the CLI lock and prese
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   const interruptedDirectory = join(source, `.operatoros-restore-cli-${randomBytes(3).toString("hex")}`);
   const candidate = join(interruptedDirectory, `${randomUUID()}.candidate`);
+  const apiRestoreDirectory = join(source, `.operatoros-restore-api-${randomBytes(3).toString("hex")}`);
+  const apiRestoreSnapshot = join(apiRestoreDirectory, "snapshot.sqlite");
+  const apiBackupDirectory = join(backupDir, `.operatoros-backup-${randomBytes(3).toString("hex")}`);
+  const apiBackupSnapshot = join(apiBackupDirectory, "snapshot.sqlite");
+  const apiCandidate = join(source, `${basename(databasePath)}.${randomUUID()}.candidate`);
   try {
     createAccountFixture(databasePath, "golden-active");
     const activeBefore = readFileSync(databasePath);
     mkdirSync(interruptedDirectory, { mode: 0o700 });
     writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
     writeFileSync(`${candidate}-wal`, "synthetic SQLite sidecar", { mode: 0o600 });
+    mkdirSync(apiRestoreDirectory, { mode: 0o700 });
+    mkdirSync(apiBackupDirectory, { recursive: true, mode: 0o700 });
+    writeFileSync(apiRestoreSnapshot, "synthetic API restore snapshot", { mode: 0o600 });
+    writeFileSync(apiBackupSnapshot, "synthetic API backup snapshot", { mode: 0o600 });
+    writeFileSync(apiCandidate, "synthetic API restore candidate", { mode: 0o600 });
 
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
     const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
     expect(existsSync(interruptedDirectory)).toBe(false);
+    expect(existsSync(apiRestoreSnapshot)).toBe(false);
+    expect(existsSync(apiBackupSnapshot)).toBe(false);
+    expect(existsSync(apiCandidate)).toBe(false);
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
 
     mkdirSync(interruptedDirectory, { mode: 0o700 });
     writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
+    mkdirSync(apiRestoreDirectory, { mode: 0o700 });
+    writeFileSync(apiRestoreSnapshot, "synthetic API restore snapshot", { mode: 0o600 });
+    mkdirSync(apiBackupDirectory, { recursive: true, mode: 0o700 });
+    writeFileSync(apiBackupSnapshot, "synthetic API backup snapshot", { mode: 0o600 });
+    writeFileSync(apiCandidate, "synthetic API restore candidate", { mode: 0o600 });
     const unrelated = join(interruptedDirectory, "operator-note.txt");
     writeFileSync(unrelated, "preserve this file", { mode: 0o600 });
     const pendingRollback = join(source, `${basename(databasePath)}.synthetic.rollback`);
@@ -181,11 +199,16 @@ it("cleans interrupted plaintext restore candidates under the CLI lock and prese
     expect(refused.exitCode).not.toBe(0);
     expect(refused.stderr.toString()).toContain("RESTORE_RECOVERY_PENDING");
     expect(readFileSync(candidate, "utf8")).toBe("synthetic plaintext candidate");
+    expect(readFileSync(apiRestoreSnapshot, "utf8")).toBe("synthetic API restore snapshot");
+    expect(existsSync(apiBackupSnapshot)).toBe(false);
+    expect(readFileSync(apiCandidate, "utf8")).toBe("synthetic API restore candidate");
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
 
     rmSync(pendingRollback);
     expect(command("backup").exitCode).toBe(0);
     expect(existsSync(candidate)).toBe(false);
+    expect(existsSync(apiRestoreSnapshot)).toBe(false);
+    expect(existsSync(apiCandidate)).toBe(false);
     expect(readFileSync(unrelated, "utf8")).toBe("preserve this file");
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
   } finally { rmSync(temporary, { recursive: true, force: true }); }

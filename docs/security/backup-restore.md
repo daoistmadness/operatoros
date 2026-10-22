@@ -187,12 +187,14 @@ An API restore is reported complete only after the restored database reopens suc
 
 The `backup-cli.ts restore` path verifies an encrypted artifact's manifest filename, source basename, creation timestamp, trigger, declared schema version, format version, algorithm, key ID, encrypted and plaintext byte sizes, encrypted SHA-256, plaintext SHA-256, and AES-256-GCM authentication. It compares the manifest schema version with the decrypted SQLite migration ledger, whose version order does not depend on wall-clock timestamps. The CLI validates SQLite integrity, quick-check, foreign keys, required tables, current schema, and administrator/setup eligibility before replacement and again after replacement. An active administrator must have `role='admin'`, `is_active=1`, an addressable username no longer than 255 characters, an unlocked account, and a password hash accepted by the runtime. The operator must also provide the matching username with `--admin-user` and its password through the hidden prompt. A database with no users remains eligible only while first-admin setup is incomplete. When an active database exists, the CLI validates the candidate credential before it creates the encrypted safety snapshot and uses the shared rollback transaction; post-replacement failure triggers rollback. Every session in the candidate is revoked before replacement and verified again after replacement; the source artifact remains unchanged. If rollback cannot be verified, the CLI preserves remaining recovery files and refuses another restore while a rollback file remains. A hard process or host interruption can leave the original database at that rollback path for operator recovery. Explicitly opted-in legacy plaintext receives the SQLite and credential checks but has no encrypted manifest, checksum, or authenticated-decryption evidence. Once a backup root is configured, the CLI attempts terminal restore audit records for path, artifact, manifest, decryption, candidate-validation, and swap failures; it writes a sanitized filename (or `unknown`) and a controlled reason category, with one operation ID shared across the operations and recovery-history logs. Audit writes are independent and best-effort; a missing backup root or unavailable audit storage can still prevent a record, and a failed post-commit audit does not undo the committed restore. Use the CLI only with all writers stopped and an approved recovery procedure.
 
-A hard stop after decryption can leave the temporary plaintext candidate in a
-private scratch directory beside the database. The next locked CLI `backup` or
-`restore` removes recognized stale candidate files unless a rollback database
-is pending; in that case it preserves the scratch files for operator recovery.
-This cleanup removes directory entries but cannot guarantee secure erasure from
-the underlying storage.
+A hard stop during API backup or restore, or CLI restore, can leave a plaintext
+SQLite scratch file in the private data root. The next API startup or locked CLI
+backup/restore operation removes recognized stale scratch files. If a rollback
+database is pending, restore candidates remain for operator recovery. Cleanup
+unlinks files but cannot guarantee secure erasure from the underlying storage.
+The API no longer writes restore preflight plaintext under the shared OS temp
+directory. Legacy `operatoros-backup-*` temp directories from earlier versions
+are not auto-scanned because they cannot be safely attributed to one data root.
 
 ## Audit lifecycle
 

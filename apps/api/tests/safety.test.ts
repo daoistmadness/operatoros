@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { backupScheduler } from "../src/domains/safety";
@@ -22,7 +23,9 @@ async function login(app: ReturnType<typeof createApp>, username: string, passwo
 
 describe("backup, restore, and scheduler safety", () => {
   it("backs up, preflights, restores, revokes sessions, and rejects corruption", async () => {
-    const path = `/tmp/operatoros-phase9-safety-${process.pid}-${Date.now()}.db`;
+    const dataRoot = `/tmp/operatoros-phase9-safety-${process.pid}-${Date.now()}`;
+    mkdirSync(dataRoot, { recursive: true });
+    const path = join(dataRoot, "operatoros.sqlite");
     const backupDir = `/dev/shm/operatoros-phase9-backups-${process.pid}-${Date.now()}`;
     seed(path); mkdirSync(backupDir, { recursive: true });
     const database = openDatabase(path);
@@ -57,6 +60,7 @@ describe("backup, restore, and scheduler safety", () => {
 
       const unchangedPreflight = await app.handle(new Request(`http://local/api/admin/backups/${backup.filename}/restore-preflight`, { method: "POST", headers: { cookie, origin: "http://localhost:5173" } }));
       expect(unchangedPreflight.status).toBe(200);
+      expect(readdirSync(dataRoot).filter((name) => name.startsWith(".operatoros-restore-api-")).length).toBe(0);
       const unchangedImpact = (await unchangedPreflight.json() as any).active;
       expect(unchangedImpact.same_database_content).toBe(true);
       expect(unchangedImpact.source_is_older).toBeNull();
@@ -162,7 +166,7 @@ describe("backup, restore, and scheduler safety", () => {
       const deleted = await fetch(`${baseUrl}/api/admin/backups/${backup.filename}`, { method: "DELETE", headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } });
       expect(deleted.status).toBe(200);
       expect(existsSync(corrupt)).toBe(false);
-    } finally { (server.server as unknown as { stop(closeActiveConnections?: boolean): void }).stop(true); database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
+    } finally { (server.server as unknown as { stop(closeActiveConnections?: boolean): void }).stop(true); database.close(); rmSync(dataRoot, { recursive: true, force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 
   it("maps historical recovery-history records and skips malformed lines", async () => {
