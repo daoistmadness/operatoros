@@ -330,6 +330,8 @@ if (import.meta.main) {
       value = config();
       if (!value.dataPaths) throw new Error("Canonical data paths are unavailable.");
       const lockPath = join(value.dataPaths.dataDir, ".operatoros-backup-cli.lock");
+      const lockStat = lstatSync(lockPath, { throwIfNoEntry: false });
+      if (lockStat && !lockStat.isFile()) throw new Error("BACKUP_CLI_LOCK_INVALID");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
       const runner = join(import.meta.dir, "backup-cli-runner.ts");
@@ -361,10 +363,11 @@ if (import.meta.main) {
       if (result.stderr.length) process.stderr.write(result.stderr);
       process.exit(result.exitCode ?? 1);
     } catch (error) {
-      if (value && action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_LOCK_UNAVAILABLE");
+      const lockFailure = error instanceof Error && error.message === "BACKUP_CLI_LOCK_INVALID" ? "INVALID" : "UNAVAILABLE";
+      if (value && action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, `RESTORE_CLI_LOCK_${lockFailure}`);
       if (value && action === "backup") {
         const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-        try { audit(value.backupDir!, "backup_failed", { failure_code: "BACKUP_CLI_LOCK_UNAVAILABLE", trigger: "manual", started_at: at, completed_at: at }); }
+        try { audit(value.backupDir!, "backup_failed", { failure_code: `BACKUP_CLI_LOCK_${lockFailure}`, trigger: "manual", started_at: at, completed_at: at }); }
         catch { /* lock failure must fail closed */ }
       }
       console.error(error instanceof Error ? error.message : "Backup operation failed.");

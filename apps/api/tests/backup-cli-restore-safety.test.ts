@@ -1,7 +1,7 @@
 import { expect, it } from "bun:test";
 import { spawnSync as spawnCommand } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { Database } from "bun:sqlite";
@@ -207,6 +207,36 @@ it("serializes concurrent CLI backups so every successful command keeps a distin
     }
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 60000);
+
+it("fails closed when the CLI lock path is a symlink", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-lock-symlink-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const lockTarget = join(temporary, "lock-target");
+  const lockPath = join(temporary, ".operatoros-backup-cli.lock");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    createFreshDatabase(databasePath);
+    writeFileSync(lockTarget, "synthetic lock target", { mode: 0o644 });
+    chmodSync(lockTarget, 0o644);
+    symlinkSync(lockTarget, lockPath);
+
+    const result = Bun.spawnSync([process.execPath, cli, "backup"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain("BACKUP_CLI_LOCK_INVALID");
+    expect(statSync(lockTarget).mode & 0o777).toBe(0o644);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(0);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.at(-1)).toMatchObject({ event: "backup_failed", failure_code: "BACKUP_CLI_LOCK_INVALID", trigger: "manual" });
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
 
 it("refuses a concurrent CLI restore before changing the active database and audits the denial", async () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-restore-lock-"));
