@@ -267,15 +267,16 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "7a7f1d99c04269e6ec10eadcd2609e6b824a69064cd3a687d8ce81b96eb29c3c",
+      "fingerprint": "fe98c2c702caa023ce97804b428dc4d845e23b731336102557b65ad5306975e1",
       "snapshot": {
-        "docs/security/backup-restore.md": "fe5b0b561bda72eba68021eec170c676f926236715910c5229b7d8f0066f390e"
+        "docs/security/backup-restore.md": "277358275280d71e14ecf2a72dc899950365ed79edf8d107c8563d8199fa0d1c"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
-      "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 7fad48197d91440418320ae7da43547047781537"
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -372,28 +373,29 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "01eebfdcbd2d33b5b7cf3e369415e29c1e7315e5b8a149ce14374118b4dbe53f",
+      "fingerprint": "5bd247a81070f60c85bf570326af7232a2cfa3cb84b6578a02ee83693a2a88cc",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "8111d3a64d8da526c11e7b517f7d100a3c2510122a6bb4e0d675fa5cdc988536"
+        "apps/api/src/backup-cli.ts": "0cdbd1c04ca9ba72b9b87f2ab1e4f0671b282e8884a07e6fc5e71023e0b71cdc"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
-      "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 7fad48197d91440418320ae7da43547047781537"
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "fb16db19fb91cd52e12a604f23d355efa3d46ac83def77cc14dcaa7425df4e8d",
+      "fingerprint": "a8150cc82aa88d860c911926856a40971e78bf74a31bba13315b1c95ffdb1d53",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "a2ebc4a5b03ee0d154a4e3f2ecaa7b66466029259386e3842d1aab912be37ac1"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "240d1cd5f3cdc195f9f242dcdd39290c1b1364b61cfe4c737d1a5b759cbc6a85"
       },
-      "head": "3b1a99071446cfbe4ac11d80027a4b8686b34e65",
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
       "outcome": "no-change",
-      "reason": "Reviewed the restore-safety test timeout extension. It preserves the existing synthetic integrity, foreign-key, schema, and active-database assertions while allowing slower CI execution; it does not change Elysia skill guidance or planning artifacts.",
+      "reason": "Reviewed the implementation or regression-test change; it does not require a separate agent-skill or planning-guidance update.",
       "evidence": [
-        "The diff changes only the targeted test timeout from the default to 15 seconds; it leaves every assertion and synthetic fixture intact.",
-        "The focused restore-safety suite passed all 14 tests with 148 assertions after the change."
+        "The runner passes CLI arguments as process arguments instead of constructing JavaScript source.",
+        "The existing backup/restore docs cover the user-visible behavior; no Elysia skill guidance is affected."
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -586,6 +588,84 @@
       "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
       "evidence": [
         "Changed: apps/api/src/domains/restore-audit.ts at 7fad48197d91440418320ae7da43547047781537"
+      ]
+    },
+    "source:README.md": {
+      "fingerprint": "ae75866ec301dae1103e49858f8db2a4338eea305ae5f99e7d987e8d96e38fad",
+      "snapshot": {
+        "README.md": "32fb771e729057f274d4fa4e6f56fff1c4051503eb7259e615eeba0bc4b6ee0e"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "evidence": [
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
+      ]
+    },
+    "source:apps/api/src/backup-cli-runner.ts": {
+      "fingerprint": "77512035dda969423e9f6862753628cfa601f957d195fc874b2a2355aab9dfda",
+      "snapshot": {
+        "apps/api/src/backup-cli-runner.ts": "1844d254413a82f70a22ad55fe429fbcc845524ac2a1964f57d3415c0a4ae692"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "no-change",
+      "reason": "Reviewed the implementation or regression-test change; it does not require a separate agent-skill or planning-guidance update.",
+      "evidence": [
+        "The runner passes CLI arguments as process arguments instead of constructing JavaScript source.",
+        "The existing backup/restore docs cover the user-visible behavior; no Elysia skill guidance is affected."
+      ]
+    },
+    "source:docs/BACKUP_SCHEME.md": {
+      "fingerprint": "3b4564619c2b715e63361e56a2cabdac919a34b69d4d2b0792c3b55f9c9fbb54",
+      "snapshot": {
+        "docs/BACKUP_SCHEME.md": "96000606eb2d8442314f4a905cc8bc6fdff3abaa2055d06766f8b96e2714249c"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "evidence": [
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
+      ]
+    },
+    "source:docs/backup-scheduler-architecture.md": {
+      "fingerprint": "2de5da1a9e217484dd10d56c88f886f221588a0fbb7fe14e2a8927cc02186476",
+      "snapshot": {
+        "docs/backup-scheduler-architecture.md": "c47bdb786e8464d8214f9365ea05b35bc71772137661efff3d8f743214ffa4dd"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "evidence": [
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
+      ]
+    },
+    "source:docs/deployment/ubuntu-server.md": {
+      "fingerprint": "7acf2f9badf4e5a60ea9329eb6cf5c5dc7e6f3f6e97e3a75281b6c42f30da6c1",
+      "snapshot": {
+        "docs/deployment/ubuntu-server.md": "988b081eada90597ed836108f13be1b3cb33bed379ccf2c7aa00330f6b69900f"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "evidence": [
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
+      ]
+    },
+    "source:docs/security/identity-authentication.md": {
+      "fingerprint": "0ec91ab35cc61ebaed3d2d2ae49ce548a4eeb43045ce675dc8db2fa871abc4f1",
+      "snapshot": {
+        "docs/security/identity-authentication.md": "63470c3a37e3426bb097e9ccfbe518cd0024239b912ae97458f029571e9b33a5"
+      },
+      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
+      "outcome": "updated",
+      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "evidence": [
+        "The PR diff updates README.md and the backup/restore operator documentation.",
+        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
       ]
     }
   }
