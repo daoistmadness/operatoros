@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "8c7e177c1f281a7d03ee1748738097c955e91e8973c7f796ed90dec51957478e",
+      "fingerprint": "3b1b94bde563dcc2cb160302f38478252fce135b24a7ea278cc630dd91866004",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "f1230237368035391fefb339168d822f6bdc0015f0e1824963654c7b29330cdf"
+        "apps/api/src/domains/safety.ts": "97b240e3b3aeb9fffd7f51c11ef2f4331a2ed57472779d9ff0bec683ca558cf3"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "The bounded parser and status truthfulness change do not alter Elysia skill guidance; existing guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/api/src/domains/safety.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "2d90a4ed6ca49a4b9e8f93837bd341748962a3aff98b246976b6bb3f65851bcc",
+      "fingerprint": "cb4201a33abb1f040efb382552258cff0b845913f13bea20324c9ad3f52e9f85",
       "snapshot": {
-        "docs/security/backup-restore.md": "52324896e65d5781a9becf7230e6a5b03dae83cfce64e2dd1ed6f5d8af34707e"
+        "docs/security/backup-restore.md": "46f03073f7fca17236bb6d014b5757f983abb29981b51b3a6cabccd7ba1dfa43"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: docs/security/backup-restore.md at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -340,15 +340,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "7b5bbbf5fe9417a6265e7c8d0bef701103572c5748897a7cba0b858e05b9a06f",
+      "fingerprint": "30815b02693c6bc50851d0e297aa3b556f4084cf7a4482eef3aca2b68200acf6",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "892ef1b0e966a83a4841b07fc1fb2cec49791e940bb5b69e6e6456e1be2a9504"
+        "apps/api/tests/backup-health.test.ts": "7f6efd7a679fc8a56b15150147898b6c293c4b8945a2389dc7f20955eac5bd85"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/backup-health.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {

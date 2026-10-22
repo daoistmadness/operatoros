@@ -27,6 +27,7 @@ export const BACKUP_DISK_SPACE_PROBE_FAILED = "BACKUP_DISK_SPACE_PROBE_FAILED";
 export const BACKUP_MINIMUM_SPACE_FLOOR_BYTES = 3_088_384;
 const BACKUP_HISTORY_LIMIT = 200;
 const BACKUP_AUDIT_READ_CHUNK_BYTES = 64 * 1024;
+const BACKUP_AUDIT_MAX_LINE_BYTES = 1024 * 1024;
 const RECOVERY_HISTORY_LIMIT = BACKUP_HISTORY_LIMIT;
 const RECOVERY_HISTORY_MAX_SCAN_BYTES = 1024 * 1024;
 /** Count-based retention: keep the newest N complete backup generations. The newest backup and a backup selected for restore are never eviction candidates. */
@@ -342,7 +343,7 @@ export function evictBeyondRetention(root: string, newest: string, preserve?: st
   return removed;
 }
 
-function readBackupExecutionHistory(root: string): Row[] {
+function readBackupExecutionHistory(root: string): { entries: Row[]; latestAttemptKnown: boolean } {
   const path = join(root, "backup_operations_audit.jsonl");
   let descriptor: number | null = null;
   let size: number;
@@ -355,14 +356,18 @@ function readBackupExecutionHistory(root: string): Row[] {
     size = opened.size;
   } catch (error) {
     if (descriptor !== null) closeSync(descriptor);
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return { entries: [], latestAttemptKnown: false };
     throw error;
   }
   const history: Row[] = [];
-  const addLine = (line: Buffer, offset: number): void => {
+  let latestBackupAttemptFound = false;
+  let latestAttemptKnown = size === 0;
+  const addLine = (line: Buffer, offset: number): "empty" | "other" | "backup" | "invalid" => {
+    if (line.length === 0) return "empty";
+    if (line.length > BACKUP_AUDIT_MAX_LINE_BYTES) return "invalid";
     try {
       const event = JSON.parse(line.toString("utf8")) as Row;
-      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") return;
+      if (event.event !== "backup_succeeded" && event.event !== "backup_failed") return "other";
       const filename = typeof event.filename === "string" && backupFile.test(event.filename) ? event.filename : null;
       let manifest: Row | null = null;
       if (filename) {
@@ -391,11 +396,18 @@ function readBackupExecutionHistory(root: string): Row[] {
         integrity_verified: event.event === "backup_succeeded" && typeof event.integrity_verified === "boolean" ? event.integrity_verified : null,
         removed_backups: Array.isArray(event.removed_backups) ? event.removed_backups.filter((value: unknown) => typeof value === "string" && backupFile.test(value)) : [],
       });
-    } catch { /* a partial final line or malformed legacy record is not a backup execution */ }
+      return "backup";
+    } catch { return "invalid"; /* a partial final line or malformed legacy record is not a backup execution */ }
   };
   try {
+    if (size > 0) {
+      const finalByte = Buffer.allocUnsafe(1);
+      if (readSync(descriptor!, finalByte, 0, 1, size - 1) !== 1) throw new Error("BACKUP_AUDIT_CHANGED");
+      latestAttemptKnown = finalByte[0] === 0x0a;
+    }
     let position = size;
     let partial = Buffer.alloc(0);
+    let skippingOversizedLine = false;
     while (position > 0 && history.length < BACKUP_HISTORY_LIMIT) {
       const length = Math.min(BACKUP_AUDIT_READ_CHUNK_BYTES, position);
       position -= length;
@@ -406,22 +418,36 @@ function readBackupExecutionHistory(root: string): Row[] {
         if (count === 0) throw new Error("BACKUP_AUDIT_CHANGED");
         bytesRead += count;
       }
-      const combined = Buffer.concat([chunk, partial]);
+      const combined = skippingOversizedLine ? chunk : Buffer.concat([chunk, partial]);
       let end = combined.length;
       let newline = combined.lastIndexOf(0x0a);
+      let skipRightFragment: boolean = skippingOversizedLine;
       while (newline >= 0 && history.length < BACKUP_HISTORY_LIMIT) {
-        addLine(combined.subarray(newline + 1, end), position + newline + 1);
+        const result = skipRightFragment ? "invalid" : addLine(combined.subarray(newline + 1, end), position + newline + 1);
+        if (!latestBackupAttemptFound) {
+          if (result === "invalid") latestAttemptKnown = false;
+          if (result === "backup") latestBackupAttemptFound = true;
+        }
+        skipRightFragment = false;
         end = newline;
         if (newline === 0) break;
         newline = combined.lastIndexOf(0x0a, newline - 1);
       }
-      partial = combined.subarray(0, end);
+      partial = skipRightFragment ? Buffer.alloc(0) : combined.subarray(0, end);
+      skippingOversizedLine = skipRightFragment || partial.length > BACKUP_AUDIT_MAX_LINE_BYTES;
+      if (skippingOversizedLine) partial = Buffer.alloc(0);
     }
-    if (position === 0 && history.length < BACKUP_HISTORY_LIMIT && partial.length > 0) addLine(partial, 0);
+    if (position === 0 && history.length < BACKUP_HISTORY_LIMIT && partial.length > 0) {
+      const result = addLine(partial, 0);
+      if (!latestBackupAttemptFound) {
+        if (result === "invalid") latestAttemptKnown = false;
+        if (result === "backup") latestBackupAttemptFound = true;
+      }
+    } else if (position === 0 && skippingOversizedLine && !latestBackupAttemptFound) latestAttemptKnown = false;
   } finally {
     closeSync(descriptor);
   }
-  return history;
+  return { entries: history, latestAttemptKnown };
 }
 
 function recoveryHistoryCursorError(): Error & { code: string; status: number } {
@@ -573,11 +599,12 @@ function statusPayload(context: AuthContext, config: SafetyConfig): Row {
     if (Number.isFinite(value.availableBytes) && value.availableBytes >= 0 && Number.isFinite(value.freeBytes) && value.freeBytes >= 0) probeValues = value;
   } catch { /* fail-safe: unknown capacity is never reported as healthy */ }
   const lowSpace = probeValues === null || probeValues.availableBytes < minimumRequired;
-  let history: Row[] = [];
+  let history: { entries: Row[]; latestAttemptKnown: boolean } = { entries: [], latestAttemptKnown: false };
   try { history = readBackupExecutionHistory(root); } catch { /* history failure is represented as unknown outcome, not a failed artifact check */ }
-  const latestAttempt = history[0] ?? null;
-  const lastSuccessful = history.find((entry) => entry.status === "SUCCESS");
-  const lastFailed = history.find((entry) => entry.status === "FAILED");
+  const historyEntries = history.latestAttemptKnown ? history.entries : [];
+  const latestAttempt = historyEntries[0] ?? null;
+  const lastSuccessful = historyEntries.find((entry) => entry.status === "SUCCESS");
+  const lastFailed = historyEntries.find((entry) => entry.status === "FAILED");
   const latestOutcome = latestAttempt?.status === "FAILED" ? "FAILED" : latestAttempt?.status === "SUCCESS" && latestAttempt.backup_filename === latest?.filename ? "SUCCESS" : null;
   const health = restoreBusy ? "RESTORE_IN_PROGRESS" : backupBusy ? "BACKUP_IN_PROGRESS" : !available ? "DESTINATION_UNAVAILABLE" : incomplete ? "UNKNOWN" : !latest ? "NO_BACKUP" : checksumStatus !== "verified" || probeValues === null ? "UNKNOWN" : lowSpace ? "LOW_DISK_SPACE" : latestAttempt?.status === "FAILED" ? "LAST_BACKUP_FAILED" : "HEALTHY";
   return { health_state: health, last_successful_backup_at: lastSuccessful?.completed_at ?? null, last_failed_backup_at: lastFailed?.completed_at ?? null, last_failure_code: lastFailed?.error_message ?? null, last_failure_message: lastFailed ? "The most recent backup attempt failed." : null, latest_backup_filename: latest?.filename ?? null, latest_backup_type: latest?.trigger ?? null, latest_backup_size_bytes: actualSize, latest_backup_checksum_status: checksumStatus, latest_backup_integrity_status: latest ? "not_checked" : null, latest_backup_schema_version: latest?.schema_version ?? null, latest_backup_encrypted: latest?.encrypted ?? false, latest_backup_key_id: latest?.key_id ?? null, backup_encryption_configured: Boolean(config.backupEncryption), backup_age_seconds: latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.created_at)) / 1000)) : null, next_scheduled_backup_at: scheduledNextRunAt(context), backup_count: entries.length, retention_limit: BACKUP_RETENTION_LIMIT, backup_directory_display: basename(root), backup_directory_available: available, free_space_bytes: probeValues?.availableBytes ?? null, minimum_required_space_bytes: minimumRequired, low_space: lowSpace, backup_in_progress: backupBusy, restore_in_progress: restoreBusy, generated_at_utc: now(), latest_backup_timestamp: latest?.created_at ?? null, latest_backup_outcome: latestOutcome, free_disk_space_bytes: probeValues?.freeBytes ?? null, database_basename: basename(active), sqlite_journal_mode: activeJournalMode(context), destructive_operations_enabled: config.destructiveOperationsEnabled, authentication_available: true, restore_support_mode: "single_process_only", restore_requires_admin: true, restore_requires_reauthentication: true, restore_multi_worker_safe: false };
@@ -739,7 +766,7 @@ export function safetyRoutes(app: any, context: AuthContext, config: SafetyConfi
   app.post("/api/admin/backups", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const value = createBackup(context, config, "manual"); const entry = metadata(backupRoot(config)).find((item) => item.filename === value.filename); return { ...(entry ?? value), sha256: value.sha256 }; } catch (error) { const failure = error as any; const message = String((error as Error).message); return fail(ctx.set, Number(failure?.status ?? 400), typeof failure?.code === "string" ? `${failure.code}: ${message}` : message); } }, { response: { 200: CreatedBackupSchema } });
   app.delete("/api/admin/backups/:filename", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { deleteBackup(backupRoot(config), ctx.params.filename); return { status: "success" }; } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 400), String((error as Error).message)); } }, { response: { 200: DeleteBackupResultSchema } });
   app.get("/api/admin/backups/:filename/download", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { const path = verifiedBackup(backupRoot(config), ctx.params.filename); return new Response(readFileSync(path), { headers: { "content-type": "application/vnd.operatoros.backup+json", "cache-control": "no-store, no-cache, must-revalidate, private", "content-disposition": `attachment; filename="${ctx.params.filename}"` } }); } catch (error) { return fail(ctx.set, Number((error as any)?.status ?? 404), String((error as Error).message)); } });
-  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)); }, { response: { 200: t.Array(BackupExecutionHistoryEntrySchema) } });
+  app.get("/api/admin/backups/history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); return readBackupExecutionHistory(backupRoot(config)).entries; }, { response: { 200: t.Array(BackupExecutionHistoryEntrySchema) } });
   app.get("/api/admin/backups/recovery-history", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); try { return readRecoveryHistory(backupRoot(config), ctx.query.cursor); } catch (error) { if ((error as any)?.code === "RECOVERY_HISTORY_CURSOR_STALE") return fail(ctx.set, 409, { code: (error as any).code, message: (error as Error).message }); throw error; } }, { query: t.Object({ cursor: t.Optional(t.String({ maxLength: 256 })) }), response: { 200: RecoveryHistoryPageSchema, 409: t.Object({ detail: t.Object({ code: t.String(), message: t.String() }) }) } });
   app.get("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); let value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); if (!value) { context.database.client.run("INSERT INTO backup_scheduler_config (id, updated_at) VALUES (1, CURRENT_TIMESTAMP)"); value = row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1"); } return schedulerPayload(value!); }, { response: { 200: BackupSchedulerConfigSchema } });
   app.put("/api/admin/backups/scheduler", (ctx: Context) => { if (!auth(context, ctx)) return denied(ctx); const body = ctx.body as Row; const next = schedulerNext(body); context.database.client.run("INSERT INTO backup_scheduler_config (id, enabled, schedule_type, interval_minutes, hour_utc, minute_utc, weekday_utc, keep_daily, keep_weekly, keep_monthly, next_run_at, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled, schedule_type=excluded.schedule_type, interval_minutes=excluded.interval_minutes, hour_utc=excluded.hour_utc, minute_utc=excluded.minute_utc, weekday_utc=excluded.weekday_utc, keep_daily=excluded.keep_daily, keep_weekly=excluded.keep_weekly, keep_monthly=excluded.keep_monthly, next_run_at=excluded.next_run_at, updated_at=CURRENT_TIMESTAMP", [body.enabled ? 1 : 0, body.schedule_type, body.interval_minutes, body.hour_utc, body.minute_utc, body.weekday_utc, body.keep_daily, body.keep_weekly, body.keep_monthly, next]); return schedulerPayload(row(context, "SELECT * FROM backup_scheduler_config WHERE id = 1")!); }, { body: BackupSchedulerUpdateSchema, response: { 200: BackupSchedulerConfigSchema } });
