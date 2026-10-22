@@ -1,6 +1,6 @@
 # Backup and Restore Security
 
-This document describes the authenticated Phase 6/7 backup path for local, file-backed SQLite deployments. It is distinct from the repository's legacy shell scripts and does not claim live PostgreSQL restore support.
+This document describes the supported backup and restore paths for local, file-backed SQLite deployments. The authenticated API and the local CLI share the encrypted backup format but use different authorization and audit flows. PostgreSQL and container-backed database restore are not supported.
 
 ## Backup creation
 

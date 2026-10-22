@@ -53,7 +53,7 @@ function clearOrphanedEmptyWal(path: string): void {
   rmSync(shm);
 }
 
-function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): { plaintext: Buffer; schemaVersion: string } {
+function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): { plaintext: Buffer; schemaVersion: string; createdAt: string } {
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
@@ -73,7 +73,7 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, ar
   const plaintext = decryptBackup(encrypted, value.backupEncryption);
   if (manifest.backup_file_size_bytes !== encrypted.length || manifest.sqlite_file_size_bytes !== plaintext.length ||
     manifest.plaintext_sha256 !== backupSha256(plaintext)) throw new Error("BACKUP_VERIFICATION_FAILED");
-  return { plaintext, schemaVersion: manifest.schema_version };
+  return { plaintext, schemaVersion: manifest.schema_version, createdAt: manifest.created_at };
 }
 
 function restoreDisposable(selected: string, targetDir: string): void {
@@ -121,10 +121,8 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   const value = config();
   if (!value.dataPaths || value.dataPaths.dataDir !== resolve(targetDir) || !value.databasePath) throw new Error("MIGRATION_TARGET_MISMATCH");
   const path = value.databasePath;
-  const { plaintext, schemaVersion } = verifiedArtifact(selected, value);
-  const manifestPath = resolve(value.backupDir!, `${basename(selected)}.meta.json`);
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const age = Date.now() - Date.parse(manifest.created_at);
+  const { plaintext, schemaVersion, createdAt } = verifiedArtifact(selected, value);
+  const age = Date.now() - Date.parse(createdAt);
   if (!Number.isFinite(age) || age < 0 || age > 60 * 60 * 1000) throw new Error("FRESH_BACKUP_REQUIRED");
   clearOrphanedEmptyWal(path);
   const database = openOfflineSnapshot(path);
