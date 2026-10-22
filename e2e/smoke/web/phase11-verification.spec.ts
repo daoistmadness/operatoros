@@ -128,7 +128,7 @@ test("@phase11 @safety backup creation, download, and read-only restore prefligh
   await expect(page.getByRole("heading", { name: "Backup & Recovery" })).toBeVisible();
   await page.getByRole("button", { name: "Create verified backup" }).click();
   await expect(page.getByText(/Backup verified:/)).toBeVisible();
-  await assertDownload(page, () => page.getByRole("link", { name: /Download/ }).first().click(), "sqlite3");
+  await assertDownload(page, () => page.getByRole("link", { name: /Download recovery bundle/ }).first().click(), "tar");
 
   await page.getByRole("button", { name: "Guided Restore" }).first().click();
   const dialog = page.getByRole("dialog", { name: "Guided Database Restore" });

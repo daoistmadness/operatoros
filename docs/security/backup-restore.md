@@ -34,6 +34,15 @@ new backup remains successful and older files may remain after a crash.
 Filesystem and device behavior still governs the actual persistence; keep
 encrypted copies off-host to recover from host or storage loss.
 
+Backup Management downloads a recovery bundle containing the encrypted
+artifact and its `.meta.json` sidecar. Keep both files together when moving a
+backup off-host; restore validates their identity and checksum. The download
+does not include encryption keys or decrypt the backup. Store and extract it in
+a private location, then place both matching files in the configured backup
+directory. The API and CLI restore paths only discover backups in that
+directory. Use the normal API preflight and authorization flow or the CLI
+restore flow after the pair is in place.
+
 Retention keeps the newest 10 complete backup generations (`BACKUP_RETENTION_LIMIT`) after each successful API or CLI backup. The count covers manual, scheduled, and pre-restore snapshots. The newest generation and a backup selected as the restore source are never eviction candidates, so a directory can temporarily hold 11 generations while a restore source is protected; the next successful backup re-applies the limit. Incomplete artifact/metadata pairs are ignored, and a file that cannot be removed is skipped and audited. Each eviction writes a `backup_evicted` line to the operations audit; eviction failure never invalidates the newly published backup. Operators can still remove a specific backup through `DELETE /api/admin/backups/:filename`.
 
 ## Backup health status

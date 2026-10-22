@@ -22743,7 +22743,9 @@ export interface operations {
     };
     download_backup_api_admin_backups__filename__download_get: {
         parameters: {
-            query?: never;
+            query?: {
+                bundle?: "true" | "false";
+            };
             header?: never;
             path: {
                 filename: string;
@@ -22760,7 +22762,8 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/vnd.operatoros.backup+json": string;
+                    "application/x-tar": string;
                 };
             };
             /** @description Validation Error */

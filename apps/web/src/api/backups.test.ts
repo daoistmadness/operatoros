@@ -3,6 +3,7 @@ import { apiRequest } from "../lib/api/client";
 import {
   backupApiPath,
   createBackup,
+  downloadBackupUrl,
   getBackupScheduler,
   getBackupStatus,
   listBackupHistory,
@@ -86,5 +87,9 @@ describe("backup API", () => {
   });
   it("never creates a double API prefix", () => {
     expect(backupApiPath("/status")).not.toContain("/api/api/");
+  });
+  it("keeps the default artifact URL and opts into the complete recovery bundle", () => {
+    expect(downloadBackupUrl(filename)).toBe(`/api/admin/backups/${filename}/download`);
+    expect(downloadBackupUrl("backup name.sqlite3", true)).toBe("/api/admin/backups/backup%20name.sqlite3/download?bundle=true");
   });
 });

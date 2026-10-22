@@ -272,8 +272,8 @@ export function BackupList({
                   </DataTableCell>
                   <DataTableCell>
                     <div className="flex flex-wrap gap-2">
-                      <a href={downloadBackupUrl(backup.filename)} download className={buttonVariants({ variant: "outline", size: "sm" })}>
-                        <Download className="h-4 w-4" /> Download
+                      <a href={downloadBackupUrl(backup.filename, true)} download className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        <Download className="h-4 w-4" /> Download recovery bundle
                       </a>
                       <Button variant="danger" size="sm" onClick={() => onRestore(backup)} disabled={backup.restore_eligible === false}>
                         <RotateCcw className="h-4 w-4" /> Guided Restore
