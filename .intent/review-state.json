@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "08bc8134813ced6bcdd3c2a5ea6407484f26596ee6a659eea36f494d785eb21f",
+      "fingerprint": "4531e6ec409ccc2cfaf50c9843caae6b65bb9bce75ac8883a5836636fabe53c8",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "45e6da643217439b72bef86f1382a6a09395c98771350ef65300fa4980f96963"
+        "apps/api/src/domains/safety.ts": "fc77444a46a273246643150d6f4184bf87411afddad462bd223f1e873cba73f5"
       },
-      "head": "fd102f13cc973178ab87aac3818cce675a6147e9",
+      "head": "627b0fabd69c8f1f83023e0b7a59006c1d0712c7",
       "outcome": "no-change",
-      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
+      "reason": "Reviewed the current streaming TAR encoder, regular-file descriptor handling, bounded file stream, cancellation cleanup, and synthetic normal-size and oversized tests. No route contract or Elysia guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at fd102f13cc973178ab87aac3818cce675a6147e9"
+        "Changed: apps/api/src/domains/safety.ts at 627b0fabd69c8f1f83023e0b7a59006c1d0712c7"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "34b36593d1dc28489364803c2a109c32de5b7810e1f0fc6993190564b381d4a5",
+      "fingerprint": "f804d4e6e6b65ef4031813331d23ab1f1bd2c6a548020dbd1deb440c791b603c",
       "snapshot": {
-        "docs/security/backup-restore.md": "d29437279b295d3e47b324fc9dc6a3050f3ccdc3002f90e29323ca285a53f8b3"
+        "docs/security/backup-restore.md": "c7abaaa0e87bf1e72d2ef5e4cce3e022ccab6463f708ff24bc8fee089e2bdf06"
       },
-      "head": "fd102f13cc973178ab87aac3818cce675a6147e9",
+      "head": "e9071ab18111015d3e1e8e6d5807b176cab71df7",
       "outcome": "no-change",
-      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
+      "reason": "Clarified that API and CLI restore discover imported bundles only in the configured backup directory; this is operator guidance for existing source behavior and does not change agent or skill guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at fd102f13cc973178ab87aac3818cce675a6147e9"
+        "Changed: docs/security/backup-restore.md at e9071ab18111015d3e1e8e6d5807b176cab71df7"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -340,15 +340,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "608a0da5aab5ac022d50ee39e7d87999e794d8a984272f2e32e8aa2f974c58c7",
+      "fingerprint": "30815b02693c6bc50851d0e297aa3b556f4084cf7a4482eef3aca2b68200acf6",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "8de5b76ebea37245eb464025a3656b026c5da57b5205c4c69e7af11f3e54a254"
+        "apps/api/tests/backup-health.test.ts": "7f6efd7a679fc8a56b15150147898b6c293c4b8945a2389dc7f20955eac5bd85"
       },
-      "head": "fd102f13cc973178ab87aac3818cce675a6147e9",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
+      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at fd102f13cc973178ab87aac3818cce675a6147e9"
+        "Changed: apps/api/tests/backup-health.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
@@ -823,15 +823,15 @@
       ]
     },
     "source:apps/api/tests/backup-download.test.ts": {
-      "fingerprint": "c6f5f15f82830b55b80934ac549387f76eac9ff75298e56d8cbaaa4728accace",
+      "fingerprint": "1dbd9a42422c1f7a41a5df721a0805c065c6f1df0c7d98863114eb1ab1c1bc93",
       "snapshot": {
-        "apps/api/tests/backup-download.test.ts": "b17cb2e3ac138a9ccb4bce7ec3046b5d98c9f4084958cc3e25dbd3737fb7b8fd"
+        "apps/api/tests/backup-download.test.ts": "913b772a283d79c0850c1ec33c47c6d91be6190d0f4a73b94ac275a794e30586"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "627b0fabd69c8f1f83023e0b7a59006c1d0712c7",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Reviewed the backup download API and regression coverage. The change replaces whole-artifact buffering with bounded file streaming and a streaming TAR encoder; Elysia/API guidance is unchanged because the route contract and runtime ownership remain the same.",
       "evidence": [
-        "Changed: apps/api/tests/backup-download.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/tests/backup-download.test.ts at 627b0fabd69c8f1f83023e0b7a59006c1d0712c7"
       ]
     },
     "source:e2e/smoke/web/phase11-verification.spec.ts": {
