@@ -57,6 +57,11 @@ rewind that history. `GET /api/admin/backups/history` returns the latest 200
 creation outcomes. Status reports the latest outcome and recorded failure details;
 missing or unreadable history leaves the outcome unknown, since a manifest alone
 is not an execution record. Status reads do not write history or audit events.
+Malformed records are skipped for history display; if the log's tail is malformed
+or unterminated, status leaves its history-derived outcome and failure summaries
+unknown rather than inferring them from an older event. Records larger than 1 MiB
+are skipped so a damaged line cannot make the history reader accumulate unbounded
+memory.
 Older execution records without an explicit integrity result are returned with
 unknown verification rather than inferred as verified.
 

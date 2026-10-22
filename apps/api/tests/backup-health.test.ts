@@ -51,6 +51,19 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     expect(healthy.latest_backup_outcome).toBe("SUCCESS");
     expect(healthy.last_successful_backup_at).not.toBeNull();
 
+    for (const partialRecord of [
+      `${JSON.stringify({ timestamp: "2026-01-02T00:00:00Z", event: "backup_failed", failure_code: "synthetic" })}`,
+      `${JSON.stringify({ timestamp: "2026-01-02T00:00:00Z", event: "backup_failed" }).slice(0, -2)}\n`,
+    ]) {
+      writeFileSync(auditPath, Buffer.concat([audit, Buffer.from(partialRecord)]));
+      const incompleteHistory = await status();
+      expect(incompleteHistory.latest_backup_outcome).toBeNull();
+      expect(incompleteHistory.last_successful_backup_at).toBeNull();
+      expect(incompleteHistory.last_failed_backup_at).toBeNull();
+      expect(incompleteHistory.health_state).toBe("HEALTHY");
+    }
+    writeFileSync(auditPath, audit);
+
     rmSync(auditPath);
     const unavailableHistory = await status();
     expect(unavailableHistory.latest_backup_outcome).toBeNull();
@@ -154,5 +167,11 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     expect(history[0]?.trigger_type).toBe("SYNTHETIC_999");
     expect(history.at(-1)?.trigger_type).toBe("SYNTHETIC_800");
     expect(new Set(history.map((entry) => entry.id)).size).toBe(200);
+
+    const oversizedEvent = JSON.stringify({ timestamp: "2026-01-02T00:00:00Z", event: "backup_failed", trigger: "SYNTHETIC_OVERSIZED", padding: "x".repeat(1024 * 1024) });
+    writeFileSync(auditPath, `${singleEvent}\n${oversizedEvent}\n`);
+    const boundedHistory = await app.handle(new Request("http://local/api/admin/backups/history", { headers }));
+    expect(boundedHistory.status).toBe(200);
+    expect((await boundedHistory.json() as Array<{ trigger_type: string }>).map((entry) => entry.trigger_type)).toEqual(["SYNTHETIC_SINGLE"]);
   } finally { database.close(); rmSync(root, { recursive: true, force: true }); }
 }, 15000);

@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "8c7e177c1f281a7d03ee1748738097c955e91e8973c7f796ed90dec51957478e",
+      "fingerprint": "3b1b94bde563dcc2cb160302f38478252fce135b24a7ea278cc630dd91866004",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "f1230237368035391fefb339168d822f6bdc0015f0e1824963654c7b29330cdf"
+        "apps/api/src/domains/safety.ts": "97b240e3b3aeb9fffd7f51c11ef2f4331a2ed57472779d9ff0bec683ca558cf3"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "The bounded parser and status truthfulness change do not alter Elysia skill guidance; existing guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: apps/api/src/domains/safety.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,13 +271,13 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "57c08bccab930d184539fb41fc49cf068f6d0ebb2a8d2925f387e089d3eeb684",
+      "fingerprint": "cb4201a33abb1f040efb382552258cff0b845913f13bea20324c9ad3f52e9f85",
       "snapshot": {
-        "docs/security/backup-restore.md": "4ca29f53f4e1a464c26dab4b3823e76332c352c2c7f721e39167299ecb67bcbd"
+        "docs/security/backup-restore.md": "46f03073f7fca17236bb6d014b5757f983abb29981b51b3a6cabccd7ba1dfa43"
       },
       "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
       "evidence": [
         "Changed: docs/security/backup-restore.md at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
@@ -340,15 +340,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "7b5bbbf5fe9417a6265e7c8d0bef701103572c5748897a7cba0b858e05b9a06f",
+      "fingerprint": "30815b02693c6bc50851d0e297aa3b556f4084cf7a4482eef3aca2b68200acf6",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "892ef1b0e966a83a4841b07fc1fb2cec49791e940bb5b69e6e6456e1be2a9504"
+        "apps/api/tests/backup-health.test.ts": "7f6efd7a679fc8a56b15150147898b6c293c4b8945a2389dc7f20955eac5bd85"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/backup-health.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
@@ -376,27 +376,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "0511fc6ee999e86a24fc64b315ce49344d140fd0019c2e8701acd7de1f177be8",
+      "fingerprint": "77f4c20b0e92d5b73e79044ef9610aacddb49377788f84e21577fa51cf731a34",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "59eb797b0615b8b9cb43433cff52f52645c5f2d86e358bfea5c0613c9f0a9679"
+        "apps/api/src/backup-cli.ts": "06b230a101d10ee642affff385cdf3824263510be633451f9b5e2d47a06945d8"
       },
-      "head": "89ca9263fc4b429fd533cf87493c431819010364",
+      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 89ca9263fc4b429fd533cf87493c431819010364"
+        "Changed: apps/api/src/backup-cli.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "413b54f8f37322114b5228f7a82a098165378eb0dcd58b3b7169947bf824ce75",
+      "fingerprint": "c5dc75b64cebf9bb14e0c86c005af960185954f118645b0e7cac409b3eefd5fa",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "bc51e6b6495378a7e9b785c3f975a2de34149aef51be11953e1f52dfac8c6485"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "d8fb620c93fb658c40f0122e32103c84b1739dc5c25fc37c2704d9e19ca9e864"
       },
-      "head": "89ca9263fc4b429fd533cf87493c431819010364",
+      "head": "182fe539463a0255f86be1990d7f0712c920f4e6",
       "outcome": "no-change",
-      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
+      "reason": "Reviewed the restore-safety integration test and the two hosted 15-second timeouts. The test exercises multiple synthetic CLI subprocesses and all safety/audit assertions still apply; only its timeout is increased to 30 seconds to allow CI runner contention. No Elysia guidance or skill claims changed.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 182fe539463a0255f86be1990d7f0712c920f4e6"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
