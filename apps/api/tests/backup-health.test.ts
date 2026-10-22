@@ -2,7 +2,7 @@ import { expect, it } from "bun:test";
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { openDatabase } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 import { parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 import { createAccountFixture } from "./fixtures/accounts";
@@ -13,6 +13,9 @@ it("reports current artifact checks without claiming SQLite integrity verificati
   const backupDir = join(root, "backups");
   createAccountFixture(path, "golden-active");
   const database = openDatabase(path);
+  const previousMigration = SCHEMA_MIGRATIONS[SCHEMA_MIGRATIONS.length - 2]!;
+  database.client.query("INSERT OR IGNORE INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', ?, ?)").run(previousMigration, "synthetic-history", "synthetic-test", "2099-01-01T00:00:00Z");
+  database.client.query("UPDATE operatoros_schema_migrations SET applied_at = ? WHERE version = ?").run("2000-01-01T00:00:00Z", CURRENT_SCHEMA_VERSION);
   let capacity: "enough" | "low" | "failed" = "enough";
   const secret = "astryx-test-only-cookie-secret-32-chars";
   const app = createApp({ databaseHandle: database, backupDir, destructiveOperationsEnabled: false,
@@ -32,7 +35,8 @@ it("reports current artifact checks without claiming SQLite integrity verificati
     expect((await status()).health_state).toBe("NO_BACKUP");
     const created = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers }));
     expect(created.status).toBe(200);
-    const backup = await created.json() as { filename: string };
+    const backup = await created.json() as { filename: string; schema_version: string };
+    expect(backup.schema_version).toBe(CURRENT_SCHEMA_VERSION);
     const artifactPath = join(backupDir, backup.filename);
     const manifestPath = `${artifactPath}.meta.json`;
     const artifact = readFileSync(artifactPath);

@@ -5,7 +5,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { Database } from "bun:sqlite";
-import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, createFreshDatabase, openDatabase } from "@operatoros/db";
 import { loadConfig } from "../src/config";
 import { restore as restoreCli } from "../src/backup-cli";
 import type { RestoreFileSystem } from "../src/domains/restore-transaction";
@@ -34,10 +34,16 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
+    const migrations = new Database(databasePath);
+    const previousMigration = SCHEMA_MIGRATIONS[SCHEMA_MIGRATIONS.length - 2]!;
+    migrations.query("INSERT OR IGNORE INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', ?, ?)").run(previousMigration, "synthetic-history", "synthetic-test", "2099-01-01T00:00:00Z");
+    migrations.query("UPDATE operatoros_schema_migrations SET applied_at = ? WHERE version = ?").run("2000-01-01T00:00:00Z", CURRENT_SCHEMA_VERSION);
+    migrations.close();
     const backup = command("backup");
     expect(backup.exitCode).toBe(0);
     const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
     const label = basename(artifact);
+    expect((JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")) as { schema_version: string }).schema_version).toBe(CURRENT_SCHEMA_VERSION);
 
     const marked = openDatabase(databasePath);
     marked.client.run("INSERT INTO students (id, name) VALUES (424242, 'Withdrawn Student')");
@@ -706,6 +712,24 @@ it("rejects manifest identity, size, checksum, and envelope-authentication misma
 
     manifest.filename = filename;
     manifest.key_id = "synthetic-test";
+    const schemaVersion = manifest.schema_version;
+    manifest.schema_version = "synthetic-mismatched-schema";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+
+    manifest.schema_version = schemaVersion;
+    for (const [field, invalid] of [["created_at", "invalid timestamp"], ["trigger", "unknown"]] as const) {
+      const valid = manifest[field];
+      manifest[field] = invalid;
+      writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+      expect(command("restore", filename).exitCode).not.toBe(0);
+      expect(readFileSync(databasePath).equals(original)).toBe(true);
+      expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+      manifest[field] = valid;
+    }
+
     const encryptedSize = statSync(artifactPath).size;
     const sqliteSize = manifest.sqlite_file_size_bytes;
     manifest.backup_file_size_bytes = encryptedSize + 1;

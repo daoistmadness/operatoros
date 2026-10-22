@@ -6,7 +6,7 @@ import { syncDirectory, syncFile } from "./domains/durable-files";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
-import { CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase } from "@operatoros/db";
+import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackup, encryptBackup, isEncryptedBackup } from "./security/backup-crypto";
@@ -53,7 +53,7 @@ function clearOrphanedEmptyWal(path: string): void {
   rmSync(shm);
 }
 
-function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): Buffer {
+function verifiedArtifact(selected: string, value: ReturnType<typeof config>, artifact?: Buffer): { plaintext: Buffer; schemaVersion: string } {
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
@@ -66,11 +66,14 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, ar
   if (manifest.encrypted !== true || manifest.algorithm !== "aes-256-gcm" ||
     manifest.format_version !== envelope.version || manifest.key_id !== envelope.keyId || manifest.algorithm !== envelope.algorithm ||
     manifest.filename !== basename(path) || manifest.source_db_path !== basename(value.databasePath) ||
+    typeof manifest.created_at !== "string" || !Number.isFinite(Date.parse(manifest.created_at)) ||
+    !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
+    typeof manifest.schema_version !== "string" || !manifest.schema_version ||
     manifest.sha256 !== backupSha256(encrypted) || !isEncryptedBackup(encrypted)) throw new Error("BACKUP_VERIFICATION_FAILED");
   const plaintext = decryptBackup(encrypted, value.backupEncryption);
   if (manifest.backup_file_size_bytes !== encrypted.length || manifest.sqlite_file_size_bytes !== plaintext.length ||
     manifest.plaintext_sha256 !== backupSha256(plaintext)) throw new Error("BACKUP_VERIFICATION_FAILED");
-  return plaintext;
+  return { plaintext, schemaVersion: manifest.schema_version };
 }
 
 function restoreDisposable(selected: string, targetDir: string): void {
@@ -89,14 +92,17 @@ function restoreDisposable(selected: string, targetDir: string): void {
     targetRoot.startsWith(`${sourceRoot}${sep}`) || sourceRoot.startsWith(`${targetRoot}${sep}`)) {
     throw new Error("DISPOSABLE_RESTORE_TARGET_INVALID");
   }
-  const plaintext = verifiedArtifact(selected, value);
+  const { plaintext, schemaVersion } = verifiedArtifact(selected, value);
   chmodSync(target.dataDir, 0o700);
   let created = false;
   try {
     writeFileSync(target.databasePath, plaintext, { flag: "wx", mode: 0o600 });
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
-    try { validateDatabase(database); } finally { database.close(); }
+    try {
+      validateDatabase(database);
+      if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
+    } finally { database.close(); }
     syncFile(target.databasePath);
     syncDirectory(target.dataDir);
   } catch (error) {
@@ -115,7 +121,7 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   const value = config();
   if (!value.dataPaths || value.dataPaths.dataDir !== resolve(targetDir) || !value.databasePath) throw new Error("MIGRATION_TARGET_MISMATCH");
   const path = value.databasePath;
-  const plaintext = verifiedArtifact(selected, value);
+  const { plaintext, schemaVersion } = verifiedArtifact(selected, value);
   const manifestPath = resolve(value.backupDir!, `${basename(selected)}.meta.json`);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const age = Date.now() - Date.parse(manifest.created_at);
@@ -123,7 +129,10 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   clearOrphanedEmptyWal(path);
   const database = openOfflineSnapshot(path);
   let current: Uint8Array;
-  try { current = database.serialize(); } finally { database.close(); }
+  try {
+    if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
+    current = database.serialize();
+  } finally { database.close(); }
   if (backupSha256(current) !== backupSha256(plaintext)) throw new Error("BACKUP_SOURCE_MISMATCH");
   console.log(`${migrateExistingDatabase(path)} ${CURRENT_SCHEMA_VERSION}`);
 }
@@ -135,12 +144,17 @@ function nextFilename(directory: string): string {
 }
 
 function snapshotSchemaVersion(database: Database): string {
-  return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version?: unknown } | null)?.version ?? CURRENT_SCHEMA_VERSION);
+  const versions = (database.query("SELECT version FROM operatoros_schema_migrations").all() as { version: string }[]).map((value) => String(value.version));
+  return versions.reduce((latest, version) => {
+    const order = compareSchemaVersions(version, latest);
+    return order === 1 || order === undefined && version > latest ? version : latest;
+  }, versions[0] ?? CURRENT_SCHEMA_VERSION);
 }
 
-function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential): string | null {
+function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential, expectedSchemaVersion?: string): string | null {
   const database = openDatabase(path, { readonly: true });
   try {
+    if (expectedSchemaVersion && snapshotSchemaVersion(database.client as unknown as Database) !== expectedSchemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
     if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
     if (!restoreIdentityEligible(database.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
     const firstAdminSetupRequired = isFirstAdminSetupRequired(database.client as unknown as Database);
@@ -267,11 +281,13 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     if (!backupName.test(basename(path)) || !exists(path) || lstatSync(path).isSymbolicLink() || !lstatSync(path).isFile()) throw new Error("Invalid encrypted backup file.");
     label = basename(path);
     const artifact = readFileSync(path);
-    const plaintext = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : value.backupEncryption.allowLegacyPlaintext ? artifact : (() => { throw new Error("Legacy plaintext backups require explicit operator opt-in."); })();
+    const verified = isEncryptedBackup(artifact) ? verifiedArtifact(label, value, artifact) : null;
+    if (!verified && !value.backupEncryption.allowLegacyPlaintext) throw new Error("Legacy plaintext backups require explicit operator opt-in.");
+    const plaintext = verified?.plaintext ?? artifact;
     directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
     const target = join(directory, `${randomUUID()}.candidate`);
     writeFileSync(target, plaintext, { flag: "wx", mode: 0o600 });
-    actor = validateRestoreSnapshot(target, credential);
+    actor = validateRestoreSnapshot(target, credential, verified?.schemaVersion);
     revokeRestoredSessions(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;
     restoreStarted = true;
@@ -289,6 +305,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
         afterSwap: () => {
           if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
           if (!opened || !restoreIdentityEligible(opened.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
+          if (verified?.schemaVersion && snapshotSchemaVersion(opened.client as unknown as Database) !== verified.schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
           if (!isFirstAdminSetupRequired(opened.client as unknown as Database) && !restoreAdministratorCredentialMatches(opened.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
           assertRestoredSessionsRevoked(opened.client as unknown as Database);
           close();
@@ -307,7 +324,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
       linkSync(target, databasePath);
       try {
         fileSystem.syncDirectory(dirname(databasePath));
-        validateRestoreSnapshot(databasePath, credential);
+        validateRestoreSnapshot(databasePath, credential, verified?.schemaVersion);
         const restored = openDatabase(databasePath, { readonly: true });
         try { assertRestoredSessionsRevoked(restored.client as unknown as Database); } finally { restored.close(); }
       }

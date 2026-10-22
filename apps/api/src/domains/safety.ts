@@ -69,7 +69,11 @@ function recordRestoreEvent(root: string, event: RestoreAuditEvent, outcome: Res
 }
 
 function dbSchemaVersion(database: Database): string {
-  return String((database.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as Row | null)?.version ?? CURRENT_SCHEMA_VERSION);
+  const versions = (database.query("SELECT version FROM operatoros_schema_migrations").all() as Row[]).map((value) => String(value.version));
+  return versions.reduce((latest, version) => {
+    const order = compareSchemaVersions(version, latest);
+    return order === 1 || order === undefined && version > latest ? version : latest;
+  }, versions[0] ?? CURRENT_SCHEMA_VERSION);
 }
 
 /** Scheduler next run time for the status payload: null when no schedule row exists, the scheduler is disabled, or no run time has been computed yet. */
