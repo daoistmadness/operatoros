@@ -384,15 +384,16 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "22eb857e1753096d86890fe85154db3ebeba420e686cc7e689333e3ceea16bcf",
+      "fingerprint": "fb16db19fb91cd52e12a604f23d355efa3d46ac83def77cc14dcaa7425df4e8d",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "3388b39a2508fa6a5b219eccb2324ee8284553e8c94a946198b82bec7942a7a7"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "a2ebc4a5b03ee0d154a4e3f2ecaa7b66466029259386e3842d1aab912be37ac1"
       },
-      "head": "7fad48197d91440418320ae7da43547047781537",
+      "head": "3b1a99071446cfbe4ac11d80027a4b8686b34e65",
       "outcome": "no-change",
-      "reason": "Backup and restore audit behavior, tests, and security guidance changed; the repository Elysia authoring guidance and skill sources did not.",
+      "reason": "Reviewed the restore-safety test timeout extension. It preserves the existing synthetic integrity, foreign-key, schema, and active-database assertions while allowing slower CI execution; it does not change Elysia skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7fad48197d91440418320ae7da43547047781537"
+        "The diff changes only the targeted test timeout from the default to 15 seconds; it leaves every assertion and synthetic fixture intact.",
+        "The focused restore-safety suite passed all 14 tests with 148 assertions after the change."
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
