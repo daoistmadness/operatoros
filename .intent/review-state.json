@@ -231,15 +231,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "0ac20692f6f8992ac09556278ff9e36e05b957d3631be26a8ce8201aaa001476",
+      "fingerprint": "a7eb2be4fbc8a0c5e85907b6520d43cb31e9e105211306f79d4b79bbb2420f26",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "f3f93dbe27c6b3e919d9f063f255062b0582e92ed66f3f9784a9b85dafa9c48a"
+        "apps/api/src/domains/safety.ts": "5f0933c540a1a2ee4417802e92c3e197d28816cd0e06928ba027e3add9c8713f"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: apps/api/src/domains/safety.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -267,15 +267,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "49b17423e17be3a76dcf5eb0eb8c1515d288b77d221f29162b965ba9ff3d2068",
+      "fingerprint": "c82b5967673e701be196d9bc1f72e2f842b5543f896721d5a43e17795bec40d4",
       "snapshot": {
-        "docs/security/backup-restore.md": "e1b1067f93e6c9529f4d67903e42c506a2050a4768656f3f2facd5231775b6de"
+        "docs/security/backup-restore.md": "9b69982e90b1039005da3c7ac5121dedbb24f431796d32b3eccaf8b319d8079d"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: docs/security/backup-restore.md at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -336,15 +336,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "fbea48e957a9930f778728abd940f3a2f46da20adf2dd3b19b776357d7e962b2",
+      "fingerprint": "466f519262512d96e4eb81b1614c0e48a6ce3575bc02b16799b904d7ddca959c",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "181268c14b411d6c19b9eda081f460d28cdd0f4bbc8ae2de6530a2611db722da"
+        "apps/api/tests/backup-health.test.ts": "fe49215d2d8ae619d8c6970e9895fbfffd94f66e9a1234cc601052d571ee6da2"
       },
-      "head": "b3ab19a242adcc683a8bd63ad1fb08c06457477f",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed integrated backup/restore changes; the recovery-history correction keeps existing contracts and documents newest-first presentation.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at b3ab19a242adcc683a8bd63ad1fb08c06457477f"
+        "Changed: apps/api/tests/backup-health.test.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
@@ -372,27 +372,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "0ed1750b6a127419356cb29c034547192c138dc62897875a4af3c8b6f921c49b",
+      "fingerprint": "89fb4ed9f9971df35881232d62ece28f5bf39deefcda014176ddb39a0729a7a3",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "44eedc7ef67ffeccb8208ffc7961e4f35b47737792a56a7d25cb39511fc02990"
+        "apps/api/src/backup-cli.ts": "ed9732d2ac806c32abbefb31a50720d3e40192c71113ab08a4b7b38fb8be0471"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: apps/api/src/backup-cli.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "3a496a29b6dddcd29f3536dec4b2e8b7554f49ab055be40dab2090733ea0ed9c",
+      "fingerprint": "582af391d3928b961b00ca9f80774402c6ec3833c6c675e757b3d588a46dc9b2",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "4ba8e64bb9377c0c5b398478e0c7adb8cc81439c1a55e9285c9b008d1506383c"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "72a97d993a6ec92056ca79778254ad02bac65580920bccd2ff959de527cde5fb"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -588,15 +588,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ae75866ec301dae1103e49858f8db2a4338eea305ae5f99e7d987e8d96e38fad",
+      "fingerprint": "2ca68367064d23ed34758896dfd001372b9256000b2d38a91711178519596363",
       "snapshot": {
-        "README.md": "32fb771e729057f274d4fa4e6f56fff1c4051503eb7259e615eeba0bc4b6ee0e"
+        "README.md": "c927c39ad6307dfd64fc6e326da8fa17eb25374ffe50cdd9550395361d78b340"
       },
-      "head": "d0f0f41e5e2fbbf02fa384d71f47b5b89be91222",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "These edits correct existing backup and restore documentation against verified API and CLI behavior; they do not change Elysia skill guidance or planning artifacts.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: README.md at d0f0f41e5e2fbbf02fa384d71f47b5b89be91222"
+        "Changed: README.md at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:docs/BACKUP_SCHEME.md": {
@@ -612,27 +612,27 @@
       ]
     },
     "source:docs/backup-scheduler-architecture.md": {
-      "fingerprint": "b68a77e186d9c096038c6329459a01412bc8c34550179a0056e73d04a22d85ec",
+      "fingerprint": "eed69c3afd37605ad692e3562b46cecf49e5c6bfd4b46b219ce80fa7c2f58a5d",
       "snapshot": {
-        "docs/backup-scheduler-architecture.md": "82abe0cf1640926d27e760a96b42bc90e1f7cb097c9ab63af6536f20a08065bf"
+        "docs/backup-scheduler-architecture.md": "b4c534b7f1d0b32c14472dcfbe89dcc542e206fa4f62d506ae22837e632ded26"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed shared Linux API/CLI data-root lock behavior; no additional agent guidance changes are needed.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: docs/backup-scheduler-architecture.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: docs/backup-scheduler-architecture.md at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:docs/deployment/ubuntu-server.md": {
-      "fingerprint": "898bb84f3d99834c09bece962cc6c81caf712c2ccc5f6784adf8dcb325e755bb",
+      "fingerprint": "639adf9a46fd4721b04ab9b5f2295f9850305024fd33ecd53b28df0fcd90be01",
       "snapshot": {
-        "docs/deployment/ubuntu-server.md": "f0233e64490b5195a18cd1c5d48b2884ba00e75d0e893b05ef766415cd6d4181"
+        "docs/deployment/ubuntu-server.md": "fcd1f26f5b54b197541f17cb82bdaa6ce3d57707f78ed12435496241d8080666"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: docs/deployment/ubuntu-server.md at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: docs/deployment/ubuntu-server.md at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:docs/security/identity-authentication.md": {
@@ -756,15 +756,15 @@
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
-      "fingerprint": "43d41af7e9043f7943de8ba0d2aa8caf6da4e852acea5cd3a6eb42553e36c9b3",
+      "fingerprint": "a367362c0dc35f07ac13b95333a3bad6e4e938913659c78c64bbdc10da4ff5c1",
       "snapshot": {
-        "apps/api/tests/backup-operation-lock.test.ts": "08c6e0bb1fa9073e51c34a740a23e5addce5bb0c416aefedd2b1b4533f5a790a"
+        "apps/api/tests/backup-operation-lock.test.ts": "b31cfd3ba6145f5d28fb4197ac2b6105de368f28bbf49a3d2552edc9d5d14944"
       },
-      "head": "769cdf960e09bf5fa49c09eb156bca1ab199daad",
+      "head": "99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53",
       "outcome": "no-change",
-      "reason": "Reviewed the shared Linux API/CLI lock, crash release behavior, history ordering, and docs; existing agent guidance remains accurate.",
+      "reason": "Reviewed the outstanding backup/restore implementation, regression tests, and operator documentation against current Elysia guidance and planning artifacts; these changes do not change skill guidance or planning artifacts.",
       "evidence": [
-        "Changed: apps/api/tests/backup-operation-lock.test.ts at 769cdf960e09bf5fa49c09eb156bca1ab199daad"
+        "Changed: apps/api/tests/backup-operation-lock.test.ts at 99a0ba80efeb9ac8a3cc98da0fd919b624ee4f53"
       ]
     },
     "source:apps/api/tests/lifecycle.test.ts": {
