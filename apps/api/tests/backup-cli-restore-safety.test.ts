@@ -1,6 +1,6 @@
 import { expect, it } from "bun:test";
 import { spawnSync as spawnCommand } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
@@ -140,6 +140,56 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
     expect(cliFailures[2]!.target_filename).toBe("unknown");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 30000);
+
+it("cleans interrupted plaintext restore candidates under the CLI lock and preserves them during pending rollback", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-restore-orphan-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  const interruptedDirectory = join(source, `.operatoros-restore-cli-${randomBytes(3).toString("hex")}`);
+  const candidate = join(interruptedDirectory, `${randomUUID()}.candidate`);
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const activeBefore = readFileSync(databasePath);
+    mkdirSync(interruptedDirectory, { mode: 0o700 });
+    writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
+    writeFileSync(`${candidate}-wal`, "synthetic SQLite sidecar", { mode: 0o600 });
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    expect(existsSync(interruptedDirectory)).toBe(false);
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+
+    mkdirSync(interruptedDirectory, { mode: 0o700 });
+    writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
+    const unrelated = join(interruptedDirectory, "operator-note.txt");
+    writeFileSync(unrelated, "preserve this file", { mode: 0o600 });
+    const pendingRollback = join(source, `${basename(databasePath)}.synthetic.rollback`);
+    writeFileSync(pendingRollback, "synthetic rollback marker", { mode: 0o600 });
+    const refused = command("restore", filename);
+    expect(refused.exitCode).not.toBe(0);
+    expect(refused.stderr.toString()).toContain("RESTORE_RECOVERY_PENDING");
+    expect(readFileSync(candidate, "utf8")).toBe("synthetic plaintext candidate");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+
+    rmSync(pendingRollback);
+    expect(command("backup").exitCode).toBe(0);
+    expect(existsSync(candidate)).toBe(false);
+    expect(readFileSync(unrelated, "utf8")).toBe("preserve this file");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
 
 it("refuses to publish a CLI backup from a synthetic database with foreign-key violations", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-source-"));

@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "2d90a4ed6ca49a4b9e8f93837bd341748962a3aff98b246976b6bb3f65851bcc",
+      "fingerprint": "57c08bccab930d184539fb41fc49cf068f6d0ebb2a8d2925f387e089d3eeb684",
       "snapshot": {
-        "docs/security/backup-restore.md": "52324896e65d5781a9becf7230e6a5b03dae83cfce64e2dd1ed6f5d8af34707e"
+        "docs/security/backup-restore.md": "4ca29f53f4e1a464c26dab4b3823e76332c352c2c7f721e39167299ecb67bcbd"
       },
-      "head": "dc15c0bb03b6309f03a7d3848812e68a289b449a",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Recovery-history pagination changes runtime contracts and coverage but do not change agent guidance, skill instructions, or planning artifacts. Focused API/web tests, full release gate, typecheck, security, lint, architecture, OpenAPI, and documentation checks passed.",
+      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at dc15c0bb03b6309f03a7d3848812e68a289b449a"
+        "Changed: docs/security/backup-restore.md at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -376,27 +376,27 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "77f4c20b0e92d5b73e79044ef9610aacddb49377788f84e21577fa51cf731a34",
+      "fingerprint": "0511fc6ee999e86a24fc64b315ce49344d140fd0019c2e8701acd7de1f177be8",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "06b230a101d10ee642affff385cdf3824263510be633451f9b5e2d47a06945d8"
+        "apps/api/src/backup-cli.ts": "59eb797b0615b8b9cb43433cff52f52645c5f2d86e358bfea5c0613c9f0a9679"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/src/backup-cli.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "c5dc75b64cebf9bb14e0c86c005af960185954f118645b0e7cac409b3eefd5fa",
+      "fingerprint": "413b54f8f37322114b5228f7a82a098165378eb0dcd58b3b7169947bf824ce75",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "d8fb620c93fb658c40f0122e32103c84b1739dc5c25fc37c2704d9e19ca9e864"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "bc51e6b6495378a7e9b785c3f975a2de34149aef51be11953e1f52dfac8c6485"
       },
-      "head": "182fe539463a0255f86be1990d7f0712c920f4e6",
+      "head": "89ca9263fc4b429fd533cf87493c431819010364",
       "outcome": "no-change",
-      "reason": "Reviewed the restore-safety integration test and the two hosted 15-second timeouts. The test exercises multiple synthetic CLI subprocesses and all safety/audit assertions still apply; only its timeout is increased to 30 seconds to allow CI runner contention. No Elysia guidance or skill claims changed.",
+      "reason": "The CLI crash cleanup and its tests/docs do not change Elysia skill guidance; lock acquisition, validation, and error handling continue to follow existing backend guidance.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 182fe539463a0255f86be1990d7f0712c920f4e6"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
