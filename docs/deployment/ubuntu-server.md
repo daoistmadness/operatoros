@@ -217,7 +217,8 @@ The dependency set is fully cacheable; nothing at runtime requires the network
   artifact identity/authentication, SQLite integrity, foreign keys, schema, and
   administrator credentials; it revokes restored sessions and rolls back to a
   safety snapshot on verified failure. Stop the API and all other writers first.
-  The CLI lock coordinates CLI commands only, and CLI audit writes are
+  The Linux API and CLI share a data-root lock, so CLI restore refuses while the
+  API is running; stop the API and any other writers first. CLI audit writes are
   best-effort; follow [Backup and Restore Security](../security/backup-restore.md).
   After a restore, restart the service and sign in again.
 - Rollback: restore the pre-upgrade backup, restart the service, re-run the health

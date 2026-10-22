@@ -29,9 +29,10 @@ through `/api/admin/backups/scheduler`.
 
 The in-process timer polls every 30 seconds, computes the next UTC run when a run
 is due, persists `next_run_at`, and calls the backup creator. `next_run_at` survives
-an application restart. This is an offline, single-process scheduler; it is not a
-distributed lock or queue, and multiple API processes would each run their own
-timer.
+an application restart. This is an offline, single-process scheduler, not a
+distributed lock or queue. On Linux the canonical server's data-root lock blocks
+a second API process; other environments do not gain multi-process scheduler
+coordination from the timer itself.
 
 `keep_daily`, `keep_weekly`, and `keep_monthly` are persisted configuration fields
 reserved for planned tiered retention. They are not used by the current count-based
