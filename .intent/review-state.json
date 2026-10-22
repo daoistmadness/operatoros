@@ -235,15 +235,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "4531e6ec409ccc2cfaf50c9843caae6b65bb9bce75ac8883a5836636fabe53c8",
+      "fingerprint": "3db07f4025ac38bff158855223ea88272f89f9f9e69cb1b5306cb55c4e0ef236",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "fc77444a46a273246643150d6f4184bf87411afddad462bd223f1e873cba73f5"
+        "apps/api/src/domains/safety.ts": "adac9d5498dc1127c05ababa516aa88509e6dc6599a0e9fd9c058215b78c4cdd"
       },
-      "head": "627b0fabd69c8f1f83023e0b7a59006c1d0712c7",
+      "head": "d17d59169e0a8cb39b18e356d39099336617d20d",
       "outcome": "no-change",
-      "reason": "Reviewed the current streaming TAR encoder, regular-file descriptor handling, bounded file stream, cancellation cleanup, and synthetic normal-size and oversized tests. No route contract or Elysia guidance changed.",
+      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at 627b0fabd69c8f1f83023e0b7a59006c1d0712c7"
+        "Changed: apps/api/src/domains/safety.ts at d17d59169e0a8cb39b18e356d39099336617d20d"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -271,15 +271,15 @@
       ]
     },
     "source:docs/security/backup-restore.md": {
-      "fingerprint": "f804d4e6e6b65ef4031813331d23ab1f1bd2c6a548020dbd1deb440c791b603c",
+      "fingerprint": "ffa62dd04cf1b29aa6ba580b7c986bb7589079ee715fc12be43aa52a40ed044a",
       "snapshot": {
-        "docs/security/backup-restore.md": "c7abaaa0e87bf1e72d2ef5e4cce3e022ccab6463f708ff24bc8fee089e2bdf06"
+        "docs/security/backup-restore.md": "96481d3077154e923e86bd66216963e5ec6ccc9850ee21fa00a8666c06682962"
       },
-      "head": "e9071ab18111015d3e1e8e6d5807b176cab71df7",
+      "head": "d17d59169e0a8cb39b18e356d39099336617d20d",
       "outcome": "no-change",
-      "reason": "Clarified that API and CLI restore discover imported bundles only in the configured backup directory; this is operator guidance for existing source behavior and does not change agent or skill guidance.",
+      "reason": "Streaming artifact verification changes API internals and security guidance but do not alter agent-skill guidance or authoring instructions.",
       "evidence": [
-        "Changed: docs/security/backup-restore.md at e9071ab18111015d3e1e8e6d5807b176cab71df7"
+        "Changed: docs/security/backup-restore.md at d17d59169e0a8cb39b18e356d39099336617d20d"
       ]
     },
     "source:e2e/readiness/playwright.config.ts": {
@@ -340,15 +340,15 @@
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
-      "fingerprint": "30815b02693c6bc50851d0e297aa3b556f4084cf7a4482eef3aca2b68200acf6",
+      "fingerprint": "608a0da5aab5ac022d50ee39e7d87999e794d8a984272f2e32e8aa2f974c58c7",
       "snapshot": {
-        "apps/api/tests/backup-health.test.ts": "7f6efd7a679fc8a56b15150147898b6c293c4b8945a2389dc7f20955eac5bd85"
+        "apps/api/tests/backup-health.test.ts": "8de5b76ebea37245eb464025a3656b026c5da57b5205c4c69e7af11f3e54a254"
       },
-      "head": "89ca9263fc4b429fd533cf87493c431819010364",
+      "head": "d17d59169e0a8cb39b18e356d39099336617d20d",
       "outcome": "no-change",
-      "reason": "The backup-audit parser hardening and guide update do not change Elysia skill guidance; the existing guidance remains accurate.",
+      "reason": "This API backup-verification change and its tests/docs do not alter agent-skill guidance or authoring instructions.",
       "evidence": [
-        "Changed: apps/api/tests/backup-health.test.ts at 89ca9263fc4b429fd533cf87493c431819010364"
+        "Changed: apps/api/tests/backup-health.test.ts at d17d59169e0a8cb39b18e356d39099336617d20d"
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {

@@ -84,14 +84,15 @@ measurement covers status validation, not AES-GCM decryption:
 
 | Encrypted artifact | Full status request |
 |---:|---:|
-| 1.33 MB | 9.12 ms |
-| 13.33 MB | 75.47 ms |
-| 66.67 MB | 372.08 ms |
+| 1.33 MB | 8.89 ms |
+| 13.33 MB | 75.04 ms |
+| 66.67 MB | 367.89 ms |
 
-The benchmark process peaked at 179 MiB RSS while checking artifacts through
-66.67 MB, compared with 177 MiB in a separate run containing only the 1.33 MB
-artifact. Those values include Bun and API startup and are measurements, not
-memory limits or SLAs. Status still reads and hashes every artifact byte on each
+The verifier retains a 4 KiB header and one 64 KiB read buffer, independent of
+artifact size. The benchmark process peaked at 192 MiB RSS while checking
+artifacts through 66.67 MB, compared with 170 MiB in a separate 1.33 MB-only
+run. Those values include Bun and API startup and run-to-run variation; they are
+not memory limits or SLAs. Status still hashes every artifact byte on each
 request, so latency grows with artifact size. Verification caching remains a
 separate design decision.
 
