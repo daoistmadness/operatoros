@@ -207,4 +207,6 @@ authenticated decryption, SQLite state, and administrator/setup eligibility
 before and after replacement. It creates a safety snapshot when an active
 database exists, revokes restored sessions, and attempts rollback on failure.
 Explicitly opted-in legacy plaintext lacks encrypted artifact verification.
+The interactive restore menu orders same-second backup sequence suffixes
+numerically, with the highest generated sequence first.
 Use the CLI only with all writers stopped and an approved recovery procedure.

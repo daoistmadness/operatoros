@@ -463,6 +463,34 @@ it("passes the selected backup administrator to the CLI from the restore script"
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
 
+it("orders same-second restore menu entries by numeric backup sequence", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-restore-menu-order-"));
+  const bin = join(temporary, "bin");
+  const backupDir = join(temporary, "backups");
+  const argsPath = join(temporary, "args");
+  mkdirSync(bin);
+  mkdirSync(backupDir);
+  const names = [
+    "backup_2026-10-21T17-00-00Z.sqlite3",
+    "backup_2026-10-21T17-00-00Z_1.sqlite3",
+    "backup_2026-10-21T17-00-00Z_9.sqlite3",
+    "backup_2026-10-21T17-00-00Z_10.sqlite3",
+  ];
+  for (const name of names) writeFileSync(join(backupDir, name), "synthetic artifact");
+  const bunStub = join(bin, "bun");
+  writeFileSync(bunStub, '#!/bin/sh\ncase "$1" in\n  */data-dir-cli.ts) printf "%s\\n" "$RESTORE_SCRIPT_BACKUP_DIR" ;;\n  *) printf "%s\\n" "$@" > "$RESTORE_SCRIPT_ARGS" ;;\nesac\n', { mode: 0o700 });
+  const result = spawnCommand("/bin/bash", [join(root, "scripts/restore.sh")], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RESTORE_SCRIPT_BACKUP_DIR: backupDir, RESTORE_SCRIPT_ARGS: argsPath },
+    input: "1\ny\n\n",
+  });
+  try {
+    expect(result.status).toBe(0);
+    expect(result.stdout.toString()).toContain(`1) ${names[3]}`);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", names[3]]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
 it("applies newest-ten retention to CLI backups while protecting a selected restore source", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-retention-"));
   const databasePath = join(temporary, "operatoros.sqlite");
