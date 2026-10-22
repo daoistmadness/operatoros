@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { backupScheduler } from "../src/domains/safety";
@@ -136,7 +136,7 @@ describe("backup, restore, and scheduler safety", () => {
       expect(unauthorizedRecovery.status).toBe(401);
       const recovery = await fetch(`${baseUrl}/api/admin/backups/recovery-history`, { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } });
       expect(recovery.status).toBe(200);
-      const recoveryHistory = await recovery.json() as any[];
+      const recoveryHistory = (await recovery.json() as { entries: any[] }).entries;
       expect(recoveryHistory.map((entry) => entry.event)).toEqual(["restore_completed", "restore_started", "restore_requested"]);
       expect(recoveryHistory[0]).toMatchObject({ filename: backup.filename, actor_display: "golden-admin", result: "COMPLETED", safe_reason_code: null });
       expect(new Set(recoveryHistory.map((entry) => entry.operation_reference_id)).size).toBe(1);
@@ -147,7 +147,7 @@ describe("backup, restore, and scheduler safety", () => {
       expect(restoreOperations).toHaveLength(1);
       expect(restoreOperations[0]!.operation_id).toBe(recoveryHistory[2].operation_reference_id);
       const repeatedRecovery = await fetch(`${baseUrl}/api/admin/backups/recovery-history`, { headers: { cookie: postRestoreCookie, origin: "http://localhost:5173" } });
-      expect(await repeatedRecovery.json()).toEqual(recoveryHistory);
+      expect((await repeatedRecovery.json() as { entries: any[] }).entries).toEqual(recoveryHistory);
 
       const corrupt = `${backupDir}/${backup.filename}`;
       const bytes = readFileSync(corrupt); bytes[bytes.length - 1] = (bytes[bytes.length - 1] ?? 0) ^ 1; writeFileSync(corrupt, bytes);
@@ -178,11 +178,63 @@ describe("backup, restore, and scheduler safety", () => {
       const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
       const response = await app.handle(new Request("http://local/api/admin/backups/recovery-history", { headers: { cookie, origin: "http://localhost:5173" } }));
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual([
+      expect(await response.json()).toEqual({ entries: [
         { timestamp: "2026-01-03T03:04:05Z", filename: "backup_recent.sqlite3", event: "restore_failed", actor_display: "recent-admin", result: "FAILED", safe_reason_code: "RESTORE_NOT_APPLIED", operation_reference_id: "recent-operation", safety_backup_filename: null },
         { timestamp: "2026-01-02T03:04:05Z", filename: "backup_legacy.sqlite3", event: "restore_completed", actor_display: "legacy-admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "legacy-operation", safety_backup_filename: "backup_snapshot.sqlite3" },
-      ]);
+      ], next_cursor: null });
     } finally { database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
+  }, 30000);
+
+  it("bounds recovery-history reads and leaves the append-only audit untouched", async () => {
+    const path = `/tmp/operatoros-phase9-recovery-page-${process.pid}-${Date.now()}.db`;
+    const backupDir = `/tmp/operatoros-phase9-recovery-page-backups-${process.pid}-${Date.now()}`;
+    seed(path); mkdirSync(backupDir, { recursive: true });
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
+    const count = 6_000;
+    const auditPath = `${backupDir}/backup_restore_audit.jsonl`;
+    const events = Array.from({ length: count }, (_, index) => JSON.stringify({ timestamp: `2026-10-22T00:00:${String(index % 60).padStart(2, "0")}Z`, event: "restore_requested", target_filename: "backup_synthetic.sqlite3", authenticated_username: "synthetic-admin", outcome: "REQUESTED", reason: null, request_context: { operation_id: `synthetic-${index}` }, pre_restore_snapshot_filename: null })).join("\n");
+    writeFileSync(auditPath, `${events}\n`, { mode: 0o600 });
+    const originalAudit = readFileSync(auditPath);
+    expect(statSync(auditPath).size).toBeGreaterThan(1024 * 1024);
+    try {
+      const cookie = await login(app, "golden-admin", "golden-admin-pass-1");
+      const requestPage = (cursor?: string) => app.handle(new Request(`http://local/api/admin/backups/recovery-history${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`, { headers: { cookie, origin: "http://localhost:5173" } }));
+      const response = await requestPage();
+      expect(response.status).toBe(200);
+      const firstPage = await response.json() as { entries: Array<{ operation_reference_id: string }>; next_cursor: string | null };
+      const history = [...firstPage.entries];
+      expect(history).toHaveLength(200);
+      expect(history[0]?.operation_reference_id).toBe(`synthetic-${count - 1}`);
+      expect(history.at(-1)?.operation_reference_id).toBe(`synthetic-${count - 200}`);
+      expect(firstPage.next_cursor).toBeTruthy();
+      appendFileSync(auditPath, `${JSON.stringify({ timestamp: "2026-10-22T00:01:00Z", event: "restore_requested", target_filename: "backup_synthetic.sqlite3", authenticated_username: "synthetic-admin", outcome: "REQUESTED", reason: null, request_context: { operation_id: "synthetic-appended" }, pre_restore_snapshot_filename: null })}\n`);
+      expect((await requestPage(firstPage.next_cursor!)).status).toBe(200);
+      const originalInode = statSync(auditPath).ino;
+      const changedAudit = Buffer.from(originalAudit);
+      changedAudit[0] = (changedAudit[0] ?? 0) ^ 1;
+      writeFileSync(auditPath, changedAudit);
+      expect(statSync(auditPath).ino).toBe(originalInode);
+      const stale = await requestPage(firstPage.next_cursor!);
+      expect(stale.status).toBe(409);
+      expect(await stale.json()).toMatchObject({ detail: { code: "RECOVERY_HISTORY_CURSOR_STALE" } });
+      writeFileSync(auditPath, originalAudit);
+
+      let cursor = firstPage.next_cursor;
+      let pages = 1;
+      while (cursor) {
+        const next = await requestPage(cursor);
+        expect(next.status).toBe(200);
+        const page = await next.json() as { entries: typeof history; next_cursor: string | null };
+        history.push(...page.entries);
+        cursor = page.next_cursor;
+        pages += 1;
+        expect(pages).toBeLessThanOrEqual(40);
+      }
+      expect(history).toHaveLength(count);
+      expect(history.map((entry) => entry.operation_reference_id)).toEqual(Array.from({ length: count }, (_, index) => `synthetic-${count - index - 1}`));
+      expect(readFileSync(auditPath).equals(originalAudit)).toBe(true);
+    } finally { backupScheduler.stop(); database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   }, 30000);
 
   it("keeps scheduler lifecycle single-instance and clean", () => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -52,6 +53,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
 import { FieldLabel, FormField } from "../components/ui/field";
+import { queryKeys } from "../lib/query/queryKeys";
 import {
   DataTable,
   DataTableBody,
@@ -552,14 +554,16 @@ export function RestoreWizard({
   );
 }
 
-export function RecoveryHistoryPanel({ rows }: { rows: RecoveryHistoryEntry[] }) {
+export function RecoveryHistoryPanel({ rows, hasMore, loadingMore, onLoadMore }: { rows: RecoveryHistoryEntry[]; hasMore: boolean; loadingMore: boolean; onLoadMore: () => void }) {
   const sorted = [...rows].sort((left, right) => String(right.timestamp).localeCompare(String(left.timestamp)));
   return (
     <section className={card} aria-labelledby="recovery-history-title">
       <h2 id="recovery-history-title" className="flex items-center gap-2 text-lg font-black"><History className="h-5 w-5" /> Recovery History</h2>
+      <p className="mt-2 text-sm text-slate-600">Showing up to 200 events per page from the active audit file. The append-only audit and rotated archives remain unchanged.</p>
       {!sorted.length ? <EmptyState className="mt-5" title="No recovery events recorded." /> : (
         <DataTableContainer className="mt-5"><DataTable><DataTableHeader><DataTableRow><DataTableHead>Timestamp</DataTableHead><DataTableHead>Event</DataTableHead><DataTableHead>Backup</DataTableHead><DataTableHead>Actor</DataTableHead><DataTableHead>Result</DataTableHead><DataTableHead>Reference</DataTableHead></DataTableRow></DataTableHeader><DataTableBody>{sorted.map((row, index) => <DataTableRow key={`${row.timestamp}-${row.operation_reference_id}-${index}`}><DataTableCell>{row.timestamp || "Unknown"}</DataTableCell><DataTableCell>{row.event || "Unknown"}</DataTableCell><DataTableCell className="max-w-xs break-all font-mono text-xs">{row.filename || "—"}{row.safety_backup_filename ? <span className="block text-blue-700">Safety: {row.safety_backup_filename}</span> : null}</DataTableCell><DataTableCell>{row.actor_display}</DataTableCell><DataTableCell>{row.result || row.safe_reason_code || "Unknown"}</DataTableCell><DataTableCell className="font-mono text-xs">{row.operation_reference_id || "—"}</DataTableCell></DataTableRow>)}</DataTableBody></DataTable></DataTableContainer>
       )}
+      {hasMore && <Button className="mt-4" variant="outline" disabled={loadingMore} onClick={onLoadMore}>{loadingMore ? "Loading older events…" : "Load older events"}</Button>}
     </section>
   );
 }
@@ -575,6 +579,7 @@ export function BackupHistoryPanel({ rows }: { rows: BackupExecutionHistory[] })
 }
 
 export default function BackupManagement() {
+  const queryClient = useQueryClient();
   const statusQuery = useBackupStatus();
   const backupsQuery = useBackupList();
   const schedulerQuery = useBackupScheduler();
@@ -590,7 +595,7 @@ export default function BackupManagement() {
   const status = statusQuery.data;
   const busy = createMutation.isPending || deleteMutation.isPending;
   const error = statusQuery.error || backupsQuery.error || schedulerQuery.error || backupHistoryQuery.error || recoveryHistoryQuery.error || createMutation.error || deleteMutation.error;
-  const retry = () => void Promise.all([statusQuery.refetch(), backupsQuery.refetch(), schedulerQuery.refetch(), backupHistoryQuery.refetch(), recoveryHistoryQuery.refetch()]);
+  const retry = () => void Promise.all([statusQuery.refetch(), backupsQuery.refetch(), schedulerQuery.refetch(), backupHistoryQuery.refetch(), queryClient.resetQueries({ queryKey: queryKeys.backups.recoveryHistory })]);
 
   return (
     <div className="space-y-7 pb-12">
@@ -603,7 +608,7 @@ export default function BackupManagement() {
         <BackupStatusPanel status={status} />
         {schedulerQuery.data && <SchedulerPanel config={schedulerQuery.data} saving={schedulerMutation.isPending} onSave={(value) => void schedulerMutation.mutateAsync(value)} />}
         <BackupList backups={backupsQuery.data || []} onRestore={(backup) => { setSelected(backup); setResult(null); }} onDelete={setDeleteSelected} />
-        <RecoveryHistoryPanel rows={recoveryHistoryQuery.data || []} />
+        <RecoveryHistoryPanel rows={recoveryHistoryQuery.data?.pages.flatMap((page) => page.entries) ?? []} hasMore={Boolean(recoveryHistoryQuery.hasNextPage)} loadingMore={recoveryHistoryQuery.isFetchingNextPage} onLoadMore={() => void recoveryHistoryQuery.fetchNextPage()} />
         <BackupHistoryPanel rows={backupHistoryQuery.data || []} />
       </> : !error && <EmptyState title="Backup status is unavailable." />}
       {selected && status && <RestoreWizard backup={selected} destructiveEnabled={status.destructive_operations_enabled} onClose={() => setSelected(null)} onCompleted={setResult} />}
