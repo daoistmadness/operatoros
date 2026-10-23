@@ -1,9 +1,12 @@
 # Frontend architecture
 
 Frontend source is TypeScript with a route-level lazy-loading foundation. The
-observed baseline is 34 routes and 30 lazy route modules; this is an observation
-rather than a compatibility contract. Features retain ownership boundaries and
-are migrated incrementally, not through a big-bang reorganization.
+authenticated route table currently defines 58 entries, including the wildcard
+not-found entry and 12 entries with an explicit `redirectTo` target, and its 43
+lazy declarations cover 41 distinct modules; `App.tsx` adds one lazy `/login`
+route outside that table. These counts are observations rather than compatibility
+contracts. Features retain ownership boundaries and are migrated incrementally,
+not through a big-bang reorganization.
 
 TanStack Query owns server state and the sanitized API-error foundation handles
 client-facing failures. Generated OpenAPI contracts are version-controlled and
