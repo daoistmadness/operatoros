@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClientProvider, useQuery, type QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
-import { AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
+import { AUTH_UNAUTHORIZED_EVENT, apiRequest } from "../lib/api/client";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 const mock = vi.hoisted(() => {
@@ -30,6 +30,12 @@ vi.mock("../api/auth", () => ({
 
 const STUDENT_KEY = ["students", "list", "synthetic"] as const;
 const LATE_STUDENT_KEY = ["students", "late", "synthetic"] as const;
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => { resolve = resolvePromise; });
+  return { promise, resolve };
+}
 
 type Tab = { client: QueryClient; container: HTMLDivElement; root: Root };
 type Snapshot = { username: string | null; hasStudent: boolean };
@@ -151,6 +157,25 @@ describe("AuthProvider cross-tab session isolation", () => {
     expect(tab2.client.getQueryData(STUDENT_KEY)).toBeUndefined();
     expectNoNewSessionWithOldData("tab1", "checker");
     expectNoNewSessionWithOldData("tab2", "checker");
+  });
+
+  it("ignores a delayed 401 from before a cross-tab account switch", async () => {
+    const pendingResponse = deferred<Response>();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockReturnValue(pendingResponse.promise);
+    const tab1 = await renderTab("tab1");
+    const tab2 = await renderTab("tab2");
+    const pendingRequest = apiRequest({ path: "/api/students" });
+
+    await act(async () => click(tab2, "tab2-login-checker"));
+    await waitFor(() => expect(text(tab1, "tab1")).toBe("checker"));
+    tab1.client.setQueryData(STUDENT_KEY, "student-of-checker");
+
+    pendingResponse.resolve(new Response(null, { status: 401 }));
+    await expect(pendingRequest).rejects.toMatchObject({ status: 401 });
+
+    expect(text(tab1, "tab1")).toBe("checker");
+    expect(tab1.client.getQueryData(STUDENT_KEY)).toBe("student-of-checker");
+    fetchMock.mockRestore();
   });
 
   it("clears cached protected data in another tab when the session logs out", async () => {

@@ -67,6 +67,11 @@ export const API_BASE_URL = getApiBaseUrl();
 export { ApiError } from "./errors";
 
 export const AUTH_UNAUTHORIZED_EVENT = 'astryx:auth-unauthorized';
+let authSessionEpoch = 0;
+
+export function advanceAuthSessionEpoch(): void {
+  authSessionEpoch += 1;
+}
 
 function buildUrl(path: string, params: QueryParams = {}): URL {
   const base = API_BASE_URL;
@@ -201,6 +206,7 @@ export async function apiRequest({
   expectedBlobTypes = [],
   signal,
 }: ApiRequestOptions): Promise<ApiResponse<unknown>> {
+  const requestSessionEpoch = authSessionEpoch;
   const controller = new AbortController();
   let timedOut = false;
   const abortFromCaller = () => controller.abort(signal?.reason);
@@ -244,7 +250,8 @@ export async function apiRequest({
 
     if (!response.ok) {
       const errorData = await parseErrorResponse(response, responseType);
-      if (response.status === 401) {
+      if (response.status === 401 && requestSessionEpoch === authSessionEpoch) {
+        advanceAuthSessionEpoch();
         window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
       }
       throw new ApiError(getErrorMessage(response.status, errorData), {

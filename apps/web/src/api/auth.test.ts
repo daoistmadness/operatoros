@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiRequest } from "../lib/api/client";
+import { advanceAuthSessionEpoch, apiRequest } from "../lib/api/client";
 import { getCurrentUser, login, logout } from "./auth";
 
-vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn() }));
+vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn(), advanceAuthSessionEpoch: vi.fn() }));
 
 const user = { id: 1, username: "administrator", role: "admin" as const };
 
@@ -13,6 +13,7 @@ describe("authentication API", () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: user, status: 200, headers: {} });
     await expect(login("administrator", "secret")).resolves.toEqual(user);
     expect(apiRequest).toHaveBeenCalledWith({ path: "/api/auth/login", method: "POST", body: { username: "administrator", password: "secret" } });
+    expect(advanceAuthSessionEpoch).toHaveBeenCalledOnce();
   });
 
   it("loads the current session through the canonical endpoint", async () => {
@@ -25,5 +26,15 @@ describe("authentication API", () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: null, status: 204, headers: {} });
     await logout();
     expect(apiRequest).toHaveBeenCalledWith({ path: "/api/auth/logout", method: "POST" });
+    expect(advanceAuthSessionEpoch).toHaveBeenCalledOnce();
+  });
+
+  it("does not advance the session epoch when login or logout is rejected", async () => {
+    vi.mocked(apiRequest).mockRejectedValue(new Error("request rejected"));
+
+    await expect(login("administrator", "wrong-password")).rejects.toThrow("request rejected");
+    await expect(logout()).rejects.toThrow("request rejected");
+
+    expect(advanceAuthSessionEpoch).not.toHaveBeenCalled();
   });
 });

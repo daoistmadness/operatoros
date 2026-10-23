@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { ReactNode } from "react";
 import type { AuthUser } from "../api/auth";
 import { getCurrentUser } from "../api/auth";
-import { AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
+import { advanceAuthSessionEpoch, AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   }, [client]);
 
-  const revalidateSession = useCallback(async () => {
+  const revalidateSession = useCallback(async (sessionEpochAdvanced = false) => {
     const sequence = revalidationSequence.current + 1;
     revalidationSequence.current = sequence;
     await client.cancelQueries({ queryKey: queryKeys.auth.me });
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sequence !== revalidationSequence.current) return;
       const previousUser = client.getQueryData<AuthUser | null>(queryKeys.auth.me) ?? null;
       if ((previousUser?.id ?? null) !== (nextUser?.id ?? null)) {
+        if (!sessionEpochAdvanced) advanceAuthSessionEpoch();
         await clearProtectedQueries(client);
         if (sequence !== revalidationSequence.current) return;
       }
@@ -65,9 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleSessionChange = () => {
       void (async () => {
+        advanceAuthSessionEpoch();
         revalidationSequence.current += 1;
         await clearSessionQueries(client);
-        await revalidateSession();
+        await revalidateSession(true);
       })();
     };
     return sessionSync.subscribe(handleSessionChange);
