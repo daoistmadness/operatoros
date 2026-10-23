@@ -47,7 +47,7 @@ create → validate → refresh idle expiry → expire/revoke → logout
 
 Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. API and CLI restore revoke restored sessions, so reauthentication is mandatory. CLI restore limitations are documented in [Backup and Restore Security](backup-restore.md).
 
-No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented.
+No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented. Browser tabs keep authenticated query data in memory only. Login, logout, focus, and visibility changes trigger session revalidation; a different server session clears protected in-memory caches before its user is applied. Cross-tab notifications carry no credentials or user data, and the server session and database role remain authoritative.
 
 ## Authorization roles
 

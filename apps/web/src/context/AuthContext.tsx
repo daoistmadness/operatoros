@@ -1,9 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "../api/auth";
+import { getCurrentUser } from "../api/auth";
 import { AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
+import { createAuthSessionSync } from "../lib/auth/sessionSync";
+import { clearProtectedQueries, clearSessionQueries } from "../lib/query/sessionCache";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export interface AuthContextValue {
@@ -19,31 +22,76 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
+  const sessionSync = useMemo(() => createAuthSessionSync(), []);
   const currentUser = useCurrentUser();
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
+  const revalidationSequence = useRef(0);
   const user = currentUser.data ?? null;
   const loading = currentUser.isLoading && !currentUser.isError;
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      void client.cancelQueries();
-      client.setQueryData(queryKeys.auth.me, null);
-      client.removeQueries({
-        predicate: (query) => query.queryKey[0] !== queryKeys.auth.all[0],
-      });
+      void clearSessionQueries(client);
     };
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   }, [client]);
 
+  const revalidateSession = useCallback(async () => {
+    const sequence = revalidationSequence.current + 1;
+    revalidationSequence.current = sequence;
+    await client.cancelQueries({ queryKey: queryKeys.auth.me });
+    try {
+      const nextUser = await getCurrentUser();
+      if (sequence !== revalidationSequence.current) return;
+      const previousUser = client.getQueryData<AuthUser | null>(queryKeys.auth.me) ?? null;
+      if ((previousUser?.id ?? null) !== (nextUser?.id ?? null)) {
+        await clearProtectedQueries(client);
+        if (sequence !== revalidationSequence.current) return;
+      }
+      client.setQueryData(queryKeys.auth.me, nextUser);
+    } catch {
+      // A 401 response dispatches AUTH_UNAUTHORIZED_EVENT. Network failures keep the current session.
+    }
+  }, [client]);
+
+  useEffect(() => {
+    const handleSessionChange = () => {
+      void (async () => {
+        revalidationSequence.current += 1;
+        await clearSessionQueries(client);
+        await revalidateSession();
+      })();
+    };
+    return sessionSync.subscribe(handleSessionChange);
+  }, [client, revalidateSession, sessionSync]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      void revalidateSession();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void revalidateSession();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [revalidateSession]);
+
   const login = useCallback(async (username: string, password: string) => {
-    return loginMutation.mutateAsync({ username, password });
-  }, [loginMutation]);
+    const nextUser = await loginMutation.mutateAsync({ username, password });
+    sessionSync.notify();
+    return nextUser;
+  }, [loginMutation, sessionSync]);
 
   const logout = useCallback(async () => {
     await logoutMutation.mutateAsync();
-  }, [logoutMutation]);
+    sessionSync.notify();
+  }, [logoutMutation, sessionSync]);
 
   const can = useCallback(
     (capability: string) => Boolean(user?.capabilities?.includes(capability)),
