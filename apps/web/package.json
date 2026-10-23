@@ -31,13 +31,11 @@
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
-    "@tailwindcss/cli": "4.2.2",
     "@tailwindcss/postcss": "4.2.2",
     "@types/node": "26.4.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.1.2",
-    "autoprefixer": "10.4.27",
     "happy-dom": "20.10.6",
     "openapi-typescript": "7.13.0",
     "postcss": "8.5.23",
@@ -63,7 +61,6 @@
     "check:audit": "bun audit"
   },
   "trustedDependencies": [
-    "@parcel/watcher",
     "esbuild"
   ],
   "browserslist": {
