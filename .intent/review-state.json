@@ -654,16 +654,15 @@
       ]
     },
     "source:docs/security/identity-authentication.md": {
-      "fingerprint": "0ec91ab35cc61ebaed3d2d2ae49ce548a4eeb43045ce675dc8db2fa871abc4f1",
+      "fingerprint": "5683ae99492d16c044067a5600e8c135842131bd6ec9d0c7b2c9fc64a7e28fcc",
       "snapshot": {
-        "docs/security/identity-authentication.md": "63470c3a37e3426bb097e9ccfbe518cd0024239b912ae97458f029571e9b33a5"
+        "docs/security/identity-authentication.md": "7b6a7ad1cc3e97ec14d19e442b87ac789ffd797ab16b8149353e77575a81bb19"
       },
-      "head": "921b88a3a50995d2f470dc589aabf321052e0ea0",
-      "outcome": "updated",
-      "reason": "Reviewed the CLI backup and restore contract; the branch updates operator guidance for concurrency, offline recovery, verification, session revocation, and audit limits.",
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
       "evidence": [
-        "The PR diff updates README.md and the backup/restore operator documentation.",
-        "Documentation claims were checked against apps/api/src/backup-cli.ts and the synthetic restore-safety tests."
+        "Changed: docs/security/identity-authentication.md at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
       ]
     },
     "source:apps/api/src/adapter.ts": {
@@ -940,6 +939,102 @@
       "reason": "Documentation-only correction of measured frontend route counts. No architecture decision, agent guidance, security contract, routing, or runtime behavior changed; counts were derived from routeDefinitions.tsx and App.tsx and cross-checked against routeDefinitions.test.tsx.",
       "evidence": [
         "Changed: docs/architecture/FRONTEND_ARCHITECTURE.md at b24962a27b1d7d69bba3abf91bfc607d37632403"
+      ]
+    },
+    "source:apps/web/src/context/AuthContext.crossTab.test.tsx": {
+      "fingerprint": "1ddf0a74766d4dfaa868fbf6e546a0cca1be6f28d694f3e4cf48fc0e811bbbcb",
+      "snapshot": {
+        "apps/web/src/context/AuthContext.crossTab.test.tsx": "6d70c0ab10765de96ce3a43581c41af885ef3f98fc4720fcc9e8f64e898ff96e"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/web/src/context/AuthContext.tsx": {
+      "fingerprint": "2155edf46a9c07ef9b3c42c9e6e7378981ef02c5c94231a78caeb0f761dd123b",
+      "snapshot": {
+        "apps/web/src/context/AuthContext.tsx": "ddc52e3206d79a117885cdc689effbd38bc9c821449512d105d8b54901505e82"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/context/AuthContext.tsx at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/web/src/hooks/useAuthQueries.ts": {
+      "fingerprint": "2db1e0dde1715b5e2ef974da2ea425f4b14a436dd4ade42348af8231dc677c8d",
+      "snapshot": {
+        "apps/web/src/hooks/useAuthQueries.ts": "b0eeaefc55b4dec2e14ce566d2e609804d5abe473a79b03226bce0d19e16ac34"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/hooks/useAuthQueries.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/web/src/lib/auth/sessionSync.test.ts": {
+      "fingerprint": "0909d97dc52f2631288ff0b74161197b7b4bfef2eb6182814ec7ae3162990635",
+      "snapshot": {
+        "apps/web/src/lib/auth/sessionSync.test.ts": "183f86869c3d2464583019205029538094c13842fd32fe69e8c5020351dfc4ec"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/lib/auth/sessionSync.test.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/web/src/lib/auth/sessionSync.ts": {
+      "fingerprint": "e55ae689e95cb629a018170230e1b5e1d3943d8ca947f3e1966ce960997043e5",
+      "snapshot": {
+        "apps/web/src/lib/auth/sessionSync.ts": "17bdd70d3cfb670ff23bb4d35bb22fc05608b4be7e53f2ec120f9749791f7615"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/lib/auth/sessionSync.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/web/src/lib/query/sessionCache.ts": {
+      "fingerprint": "3c96ae42e2d0aff35006f6373ec9cacc22dccd1b64ced94df8455f56a73f262e",
+      "snapshot": {
+        "apps/web/src/lib/query/sessionCache.ts": "4633a0beab1267a3b9751cf6184567803f17520cc5711cba476301c0e5d28093"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: apps/web/src/lib/query/sessionCache.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:docs/frontend-query-architecture.md": {
+      "fingerprint": "96fb1fd5226c5c1d46877075a0b630b2b97359b68dd0ca62a6026def86852b8c",
+      "snapshot": {
+        "docs/frontend-query-architecture.md": "3fe64c7d2d79ce9e9b9a1d10dce565e163578d98a8c1b0f2469c0326a1fb2962"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: docs/frontend-query-architecture.md at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:e2e/smoke/web/cross-tab-session.spec.ts": {
+      "fingerprint": "69910110544097a7f4d3195598c965c473f8f9dc0966f60cc0bf5eccf1ed33b2",
+      "snapshot": {
+        "e2e/smoke/web/cross-tab-session.spec.ts": "6c048515fa81b4dc9539ed72d1b11459e0f89bc64845a3b90f024083b71be201"
+      },
+      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "outcome": "no-change",
+      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "evidence": [
+        "Changed: e2e/smoke/web/cross-tab-session.spec.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
       ]
     }
   }

@@ -17,15 +17,23 @@ Every server-side request input must be represented in its key. Invalidation may
 
 ## Cache and retry policy
 
-Application queries are fresh for five minutes and retained for thirty minutes. Window-focus refetch is disabled to prevent unexpected changes in data-dense operational screens. A failed network request or 5xx response receives one retry. Authentication, permission, and other 4xx responses are never retried. Tests use a new client with retries disabled and no retained cache.
+Application queries are fresh for five minutes and retained for thirty minutes. Window-focus refetch is disabled for operational data to prevent unexpected changes in data-dense screens. Authentication is revalidated on focus and visibility changes as described under cross-tab session isolation. A failed network request or 5xx response receives one retry. Authentication, permission, and other 4xx responses are never retried. Tests use a new client with retries disabled and no retained cache.
 
-The existing API client remains responsible for credentials, typed `ApiError` values, and the global unauthorized event. A 401 clears the current-user cache so existing route guards return to login. A 403 remains a query error and is rendered by the screen as permission denied/request failure state.
+The existing API client remains responsible for credentials, typed `ApiError` values, and the global unauthorized event. A 401 clears the current-user cache and protected query caches so existing route guards return to login. A 403 remains a query error and is rendered by the screen as permission denied/request failure state.
+
+## Cross-tab session isolation
+
+Each browser tab owns a separate in-memory `QueryClient`. Successful login and logout broadcast a fixed session-change signal over a same-origin `BroadcastChannel`. The payload contains only the event type and a random per-tab sender id; it never contains credentials, cookies, tokens, usernames, roles, or student data.
+
+A receiving tab clears the current-user cache, cancels outstanding queries, removes every non-auth query, and revalidates `/api/auth/me` before applying another session. The logging-in tab also clears protected queries before applying its new user. The server session and its database role remain authoritative.
+
+Tabs additionally revalidate `/api/auth/me` on window focus and visibility changes. This covers browsers without `BroadcastChannel` and suspended tabs that resume after a missed signal. When the revalidated user differs, protected caches are cleared before the new user is applied; same-user revalidation keeps the cached data.
 
 ## Mutations and invalidation
 
 Mutation hooks use `useCreateXMutation`, `useUpdateXMutation`, and `useDeleteXMutation` names. Domain-specific verbs are permitted where the operation is not CRUD, such as `useRestoreBackupMutation` and `useLogoutMutation`.
 
-Successful mutations invalidate the smallest complete stale set. Backup creation invalidates both backup status and list through the backup prefix. Logout cancels and invalidates authentication without an immediate refetch. Restore clears all cache when reauthentication is required; otherwise it invalidates backup state. Screens do not call manual `load()` functions after mutations.
+Successful mutations invalidate the smallest complete stale set. Backup creation invalidates both backup status and list through the backup prefix. Logout cancels and removes protected query caches, clears the current-user cache, and notifies other tabs without an immediate refetch. Restore clears all cache when reauthentication is required; otherwise it invalidates backup state. Screens do not call manual `load()` functions after mutations.
 
 Mutation errors remain `ApiError` instances and are displayed through the same accessible alert treatment already used by each screen. Mutations are not retried automatically, preventing duplicate writes.
 
