@@ -653,15 +653,15 @@
       ]
     },
     "source:docs/security/identity-authentication.md": {
-      "fingerprint": "697bd2c728005b0fca30fce938597f3d916cb1c9950d111f4fadb2846de108ea",
+      "fingerprint": "831654e23bc3dafcfe2ee4b46b38717b986fc317d419b1fa2804d87568356691",
       "snapshot": {
-        "docs/security/identity-authentication.md": "100c6e4febad30be74fa32d9d7bad4ff61001722e6095421c384cfd7529d0634"
+        "docs/security/identity-authentication.md": "ad6c178ce5f441f2c65ef1f4716e5f5e026f71e616aa68fe7684e1ffee692c33"
       },
-      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "head": "e974c0bb2ddf5918bb4886b781a3c7ef0535e24a",
       "outcome": "no-change",
-      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "reason": "Reviewed the auth cache implementation, regression tests, and authentication documentation; none change Elysia-specific guidance.",
       "evidence": [
-        "Changed: docs/security/identity-authentication.md at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+        "Changed: docs/security/identity-authentication.md at e974c0bb2ddf5918bb4886b781a3c7ef0535e24a"
       ]
     },
     "source:apps/api/src/adapter.ts": {
@@ -941,27 +941,27 @@
       ]
     },
     "source:apps/web/src/context/AuthContext.crossTab.test.tsx": {
-      "fingerprint": "d4e7a4f78aa9c60cd2c68605eca5e089c5c01f1a0bc6e419b580d717d9c64562",
+      "fingerprint": "cae168ac3e56044150748d924b631b69a5e21de84487d238ce2040aa0bf284a6",
       "snapshot": {
-        "apps/web/src/context/AuthContext.crossTab.test.tsx": "481ad59559fc2d48b5bc82c137cbc23530ffc780db94c159a31a654c386176f3"
+        "apps/web/src/context/AuthContext.crossTab.test.tsx": "7e51dc3fcd30e07af05a0c4425adf93f112d616e62ea37e2a35840efd58d3745"
       },
-      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "head": "e974c0bb2ddf5918bb4886b781a3c7ef0535e24a",
       "outcome": "no-change",
-      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "reason": "Reviewed the auth cache implementation, regression tests, and authentication documentation; none change Elysia-specific guidance.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at e974c0bb2ddf5918bb4886b781a3c7ef0535e24a"
       ]
     },
     "source:apps/web/src/context/AuthContext.tsx": {
-      "fingerprint": "2155edf46a9c07ef9b3c42c9e6e7378981ef02c5c94231a78caeb0f761dd123b",
+      "fingerprint": "0868c36eff3ef709ff54f62299c28ea1d7f0d5a1dd577575869404118fe1cf73",
       "snapshot": {
-        "apps/web/src/context/AuthContext.tsx": "ddc52e3206d79a117885cdc689effbd38bc9c821449512d105d8b54901505e82"
+        "apps/web/src/context/AuthContext.tsx": "22d432edace6cd0399b267afda3d0d59075fff9ca30d361cc51b5bfb2c3e890c"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "e974c0bb2ddf5918bb4886b781a3c7ef0535e24a",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Reviewed the auth cache implementation, regression tests, and authentication documentation; none change Elysia-specific guidance.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.tsx at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: apps/web/src/context/AuthContext.tsx at e974c0bb2ddf5918bb4886b781a3c7ef0535e24a"
       ]
     },
     "source:apps/web/src/hooks/useAuthQueries.ts": {
@@ -1001,15 +1001,15 @@
       ]
     },
     "source:apps/web/src/lib/query/sessionCache.ts": {
-      "fingerprint": "3c96ae42e2d0aff35006f6373ec9cacc22dccd1b64ced94df8455f56a73f262e",
+      "fingerprint": "7da6e00d1c859eb2a49542a118200464bfff0e98ef3a536c310d0a12ddb0007a",
       "snapshot": {
-        "apps/web/src/lib/query/sessionCache.ts": "4633a0beab1267a3b9751cf6184567803f17520cc5711cba476301c0e5d28093"
+        "apps/web/src/lib/query/sessionCache.ts": "26de4db3780530533f74f2d6a105d73f97a94f6b8cd981affe02c383a466e060"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "e974c0bb2ddf5918bb4886b781a3c7ef0535e24a",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Reviewed the auth cache implementation, regression tests, and authentication documentation; none change Elysia-specific guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/sessionCache.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: apps/web/src/lib/query/sessionCache.ts at e974c0bb2ddf5918bb4886b781a3c7ef0535e24a"
       ]
     },
     "source:docs/frontend-query-architecture.md": {
