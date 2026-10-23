@@ -232,10 +232,11 @@ function studentRows(context: AuthContext, scope: AttendanceScope, search: strin
         SELECT aggregated.*, CASE WHEN present + late + sakit + izin + alfa = 0 THEN NULL ELSE ROUND(100.0 * (present + late) / (present + late + sakit + izin + alfa), 2) END AS attendance_rate
         FROM aggregated
     )
-    SELECT * FROM scored ORDER BY ${order} ${direction}, label ASC, student_id ASC LIMIT ? OFFSET ?`;
+    SELECT scored.*, COUNT(*) OVER() AS total, COALESCE(SUM(records) OVER(), 0) AS total_records
+      FROM scored ORDER BY ${order} ${direction}, label ASC, student_id ASC LIMIT ? OFFSET ?`;
   const values = rows(context, sql, [...base.params, pageSize, offset]);
-  const summary = row(context, `${base.sql} SELECT COUNT(*) AS total, COALESCE(SUM(records), 0) AS records FROM (SELECT student_id, COUNT(*) AS records FROM selected GROUP BY student_id)`, base.params) ?? { total: 0, records: 0 };
-  return { rows: values.map((value) => responseRow(value, "student")), total: Number(summary.total ?? 0), records: Number(summary.records ?? 0) };
+  const summary = values[0] ?? row(context, `${base.sql} SELECT COUNT(*) AS total, COALESCE(SUM(records), 0) AS records FROM (SELECT student_id, COUNT(*) AS records FROM selected GROUP BY student_id)`, base.params);
+  return { rows: values.map((value) => responseRow(value, "student")), total: Number(summary?.total ?? 0), records: Number(summary?.total_records ?? summary?.records ?? 0) };
 }
 
 function auditExport(context: AuthContext, user: { username: string; role: string }, scope: AttendanceScope, total: number): void {

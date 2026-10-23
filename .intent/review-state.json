@@ -1220,6 +1220,30 @@
       "evidence": [
         "Changed: apps/web/src/pages/Dashboard.tsx at 91e759dc4f9d50ec60eaa485d62c5596faf29d84"
       ]
+    },
+    "source:apps/api/src/domains/attendance-analytics.ts": {
+      "fingerprint": "e6362cdf9414bf7a7d2043d6a887e10990dcc0632f44e98e02ecfb0a6698d21a",
+      "snapshot": {
+        "apps/api/src/domains/attendance-analytics.ts": "e6557ce6d6720e00a754e6417090b68822d4ee6ac5128ee1b9a0911f81a48b7d"
+      },
+      "head": "ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107",
+      "outcome": "no-change",
+      "reason": "The attendance SQL and regression test do not change repository guidance or agent skills.",
+      "evidence": [
+        "Changed: apps/api/src/domains/attendance-analytics.ts at ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107"
+      ]
+    },
+    "source:apps/api/tests/attendance-analytics.test.ts": {
+      "fingerprint": "fec28119c9d97174a0f886c5f1d764a651b822fd985279132cdbcf7ca4d4ba11",
+      "snapshot": {
+        "apps/api/tests/attendance-analytics.test.ts": "74d0d4e8f0a4f832cd7f28a30bd8c0dc7372f97417cc6364bc41ef06a6e8dead"
+      },
+      "head": "ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107",
+      "outcome": "no-change",
+      "reason": "The attendance SQL and regression test do not change repository guidance or agent skills.",
+      "evidence": [
+        "Changed: apps/api/tests/attendance-analytics.test.ts at ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107"
+      ]
     }
   }
 }
