@@ -1,5 +1,6 @@
 export const API_BASE_URL: string;
 export const AUTH_UNAUTHORIZED_EVENT: string;
+export function advanceAuthSessionEpoch(): void;
 
 export class ApiError extends Error {
   status: number;
