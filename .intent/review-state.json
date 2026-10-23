@@ -905,6 +905,30 @@
       "evidence": [
         "Changed: apps/web/src/context/DeploymentModeContext.tsx at b52af61f83a33f4696dd3dcecefb3b3ab6280a68"
       ]
+    },
+    "source:apps/web/src/vite-config.test.js": {
+      "fingerprint": "bf2f7cfb57876b4c0e9a64326c470cf5c07e5acf8fbf1a3197610b19296ed313",
+      "snapshot": {
+        "apps/web/src/vite-config.test.js": "38e71219c4804a92738b38ae0cba742b89427182c4daa9e43503416c2130a442"
+      },
+      "head": "e7d732e6c140632d765f13803c36cb035ab0f079",
+      "outcome": "no-change",
+      "reason": "Removed development-only JSX-in-JS Vite tooling with no remaining consumers; no agent guidance, routing, authentication, API, or metrics behavior changed. Verified identical production build manifest and identical dependency prebundle manifest, plus typecheck, lint, architecture, boundaries, 463 tests, and smoke 8 backend + 50 web scenarios.",
+      "evidence": [
+        "Changed: apps/web/src/vite-config.test.js at e7d732e6c140632d765f13803c36cb035ab0f079"
+      ]
+    },
+    "source:apps/web/vite.config.js": {
+      "fingerprint": "ca47561d2cf595ea9ab7a3599e1fb07bb3cced9640a0f5c0150fbfa5253830b0",
+      "snapshot": {
+        "apps/web/vite.config.js": "f21cbf18ee46b0f9c9dc1a34f8b90dec023c66c15e690cda4cd47170842834e3"
+      },
+      "head": "e7d732e6c140632d765f13803c36cb035ab0f079",
+      "outcome": "no-change",
+      "reason": "Removed development-only JSX-in-JS Vite tooling with no remaining consumers; no agent guidance, routing, authentication, API, or metrics behavior changed. Verified identical production build manifest and identical dependency prebundle manifest, plus typecheck, lint, architecture, boundaries, 463 tests, and smoke 8 backend + 50 web scenarios.",
+      "evidence": [
+        "Changed: apps/web/vite.config.js at e7d732e6c140632d765f13803c36cb035ab0f079"
+      ]
     }
   }
 }
