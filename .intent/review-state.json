@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "92456e6831e6e856a309c22d488242045e2441c1be3dc2ee3b1faa1b463411ff",
+      "fingerprint": "c09db7a6c3bab32b47f9975cdf80209b1e5fa70393b060a6db13b1026d5bdf40",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
         "AGENTS.md": "4b8af614bf8b42a9062f0a03441dbb04f318eb46d872aae351685d38e2006176",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
+        "bun.lock": "a14c7efc6e40356454dff7d385029978108f017e2caa07382f9fbf08e83dbe1a",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -44,17 +44,15 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "4bd49f97f24423f7487cef706cd23bc2d92e29ee",
+      "head": "e9b0a6e0799e95384b1581dc6dc623d4e9390b28",
       "outcome": "no-change",
-      "reason": "Reviewed the new general coding principles against the Elysia skill. They reinforce its existing instructions to inspect the installed version, preserve project conventions, and verify affected routes; they change no Elysia-specific guidance, version facts, or examples.",
+      "reason": "Only the web dependency lock changed; the Elysia skill and planning guidance are unaffected. intent validate passes, and the maintainer check confirms its examples still compile.",
       "evidence": [
-        "AGENTS.md at 4bd49f97f24423f7487cef706cd23bc2d92e29ee; packages/agent-skills/skills/elysiajs/SKILL.md and its mapped source files reviewed.",
-        "Intent skill validation passed: 1 skill file validated.",
-        "Intent maintainer sync reported: Nothing to synchronize."
+        "Changed: bun.lock at e9b0a6e0799e95384b1581dc6dc623d4e9390b28"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "658ec3ea86976a390ff6d39edb748a16e2045c6161f74a3dafc147295b38a1ea",
+      "fingerprint": "7f96d6c3e7e3813cdd4130c3a34c216f5abde6f654ecff01d8223aec4683ef53",
       "snapshot": {
         ".github/CI.md": "53e118d66ba0d26cf50b36de01e45ce2d0db10bbb3005a2cdaa0062717f2dddc",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
@@ -64,7 +62,7 @@
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "0bf2dc9e0a976640029653df21fe8ac7114f1338cccbe48d5e618b269d86f8b0",
+        "bun.lock": "a14c7efc6e40356454dff7d385029978108f017e2caa07382f9fbf08e83dbe1a",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
@@ -98,13 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "4bd49f97f24423f7487cef706cd23bc2d92e29ee",
+      "head": "e9b0a6e0799e95384b1581dc6dc623d4e9390b28",
       "outcome": "no-change",
-      "reason": "Reviewed all three planning records against the AGENTS.md change. Their Elysia coverage, mapped sources, package decisions, and task scope remain accurate; the general coding principles add no new skill coverage or maintainer decision.",
+      "reason": "Only the web dependency lock changed; the Elysia skill and planning guidance are unaffected. intent validate passes, and the maintainer check confirms its examples still compile.",
       "evidence": [
-        "_artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml reviewed against AGENTS.md at 4bd49f97f24423f7487cef706cd23bc2d92e29ee.",
-        "Intent maintainer sync reported: Nothing to synchronize.",
-        "Intent skill validation passed: 1 skill file validated."
+        "Changed: bun.lock at e9b0a6e0799e95384b1581dc6dc623d4e9390b28"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
