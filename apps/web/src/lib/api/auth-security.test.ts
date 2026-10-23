@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTH_UNAUTHORIZED_EVENT, apiRequest } from "./client";
+import { AUTH_FORBIDDEN_EVENT, AUTH_UNAUTHORIZED_EVENT, apiRequest } from "./client";
 import { login, logout } from "../../api/auth";
 
 function deferred<T>() {
@@ -21,16 +21,20 @@ describe("cookie-session client boundary", () => {
     expect(new Headers(init.headers).get("Authorization")).toBeNull();
   });
 
-  it("broadcasts 401 but not 403 as a session-loss event", async () => {
-    const listener = vi.fn();
-    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, listener);
+  it("signals 401 as session loss and 403 as a separate permission change hint", async () => {
+    const unauthorized = vi.fn();
+    const forbidden = vi.fn();
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, unauthorized);
+    window.addEventListener(AUTH_FORBIDDEN_EVENT, forbidden);
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Unauthorized" }), { status: 401 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Forbidden" }), { status: 403 }));
     await expect(apiRequest({ path: "/api/auth/me" })).rejects.toMatchObject({ status: 401 });
     await expect(apiRequest({ path: "/api/admin/backups" })).rejects.toMatchObject({ status: 403 });
-    expect(listener).toHaveBeenCalledTimes(1);
-    window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, listener);
+    expect(unauthorized).toHaveBeenCalledOnce();
+    expect(forbidden).toHaveBeenCalledOnce();
+    window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, unauthorized);
+    window.removeEventListener(AUTH_FORBIDDEN_EVENT, forbidden);
   });
 
   it("ignores a pending request's 401 after a successful login", async () => {

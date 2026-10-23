@@ -67,6 +67,7 @@ export const API_BASE_URL = getApiBaseUrl();
 export { ApiError } from "./errors";
 
 export const AUTH_UNAUTHORIZED_EVENT = 'astryx:auth-unauthorized';
+export const AUTH_FORBIDDEN_EVENT = 'astryx:auth-forbidden';
 let authSessionEpoch = 0;
 
 export function advanceAuthSessionEpoch(): void {
@@ -254,6 +255,7 @@ export async function apiRequest({
         advanceAuthSessionEpoch();
         window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
       }
+      if (response.status === 403) window.dispatchEvent(new Event(AUTH_FORBIDDEN_EVENT));
       throw new ApiError(getErrorMessage(response.status, errorData), {
         status: response.status,
         data: errorData,
