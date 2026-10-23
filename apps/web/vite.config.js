@@ -1,4 +1,4 @@
-import { defineConfig, transformWithOxc } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
@@ -36,26 +36,13 @@ const apiProxy = {
 };
 
 // vite.config.js
-// Vite development server with API proxy, Vitest configuration, and JSX-in-JS transform support.
+// Vite development server with API proxy and Vitest configuration.
 // Tech Stack: Vite / React 19 / Vitest
 
 export default defineConfig({
   envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,
   resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
-  plugins: [
-    react(),
-    {
-      name: 'treat-js-files-as-jsx',
-      async transform(code, id) {
-        if (!id.match(/src\/.*\.js$/)) return null;
-
-        return transformWithOxc(code, id, {
-          lang: 'jsx',
-          jsx: { runtime: 'automatic' },
-        });
-      },
-    },
-  ],
+  plugins: [react()],
   server: {
     host: frontendHost,
     port: frontendPort,
@@ -75,11 +62,6 @@ export default defineConfig({
     strictPort: true,
     headers: { 'Cache-Control': 'no-store' },
     proxy: apiProxy,
-  },
-  optimizeDeps: {
-    rolldownOptions: {
-      moduleTypes: { '.js': 'jsx' },
-    },
   },
   build: {
     outDir: 'build',
