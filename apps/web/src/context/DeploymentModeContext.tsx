@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { fetchDeploymentMode, type DeploymentMode } from '../features/operator-work-queue';
+import { fetchDeploymentMode, type DeploymentMode } from '../features/operator-work-queue/api/operator';
 import { useAuth } from './AuthContext';
 
 type DeploymentModeContextValue = {
