@@ -186,16 +186,15 @@
       ]
     },
     "source:docs/ui/UI_ARCHITECTURE.md": {
-      "fingerprint": "cc7522031d82529de3d60029139ff5aa26b51a50e3927d801951e14c706f5f09",
+      "fingerprint": "4b60ac3bb96d945d83c64195ba51d23bdc29616629e14ff5a6fd0355f3ba49bd",
       "snapshot": {
-        "docs/ui/UI_ARCHITECTURE.md": "07b90dc6022aa53abc73f769932607115de31f4ad2de2c1ccf89a370960d9502"
+        "docs/ui/UI_ARCHITECTURE.md": "b49e9c5822fe0f9846f9af6e6bc469eb1ba7c462bd308ca90072941adccb619f"
       },
-      "head": "408775497f0e106151e8e010bf199aba0065bf9a",
-      "outcome": "out-of-scope",
-      "reason": "This frontend table migration has no matching Elysia skill or planning guidance.",
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
       "evidence": [
-        "Reviewed docs/ui/UI_ARCHITECTURE.md; it covers the web table migration only.",
-        "The Elysia skill package and planning artifacts are not changed by this file."
+        "Changed: docs/ui/UI_ARCHITECTURE.md at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     },
     "source:apps/api/src/app.ts": {
@@ -654,15 +653,15 @@
       ]
     },
     "source:docs/security/identity-authentication.md": {
-      "fingerprint": "5683ae99492d16c044067a5600e8c135842131bd6ec9d0c7b2c9fc64a7e28fcc",
+      "fingerprint": "697bd2c728005b0fca30fce938597f3d916cb1c9950d111f4fadb2846de108ea",
       "snapshot": {
-        "docs/security/identity-authentication.md": "7b6a7ad1cc3e97ec14d19e442b87ac789ffd797ab16b8149353e77575a81bb19"
+        "docs/security/identity-authentication.md": "100c6e4febad30be74fa32d9d7bad4ff61001722e6095421c384cfd7529d0634"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
       "evidence": [
-        "Changed: docs/security/identity-authentication.md at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: docs/security/identity-authentication.md at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     },
     "source:apps/api/src/adapter.ts": {
@@ -942,15 +941,15 @@
       ]
     },
     "source:apps/web/src/context/AuthContext.crossTab.test.tsx": {
-      "fingerprint": "1ddf0a74766d4dfaa868fbf6e546a0cca1be6f28d694f3e4cf48fc0e811bbbcb",
+      "fingerprint": "d4e7a4f78aa9c60cd2c68605eca5e089c5c01f1a0bc6e419b580d717d9c64562",
       "snapshot": {
-        "apps/web/src/context/AuthContext.crossTab.test.tsx": "6d70c0ab10765de96ce3a43581c41af885ef3f98fc4720fcc9e8f64e898ff96e"
+        "apps/web/src/context/AuthContext.crossTab.test.tsx": "481ad59559fc2d48b5bc82c137cbc23530ffc780db94c159a31a654c386176f3"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     },
     "source:apps/web/src/context/AuthContext.tsx": {
@@ -966,15 +965,15 @@
       ]
     },
     "source:apps/web/src/hooks/useAuthQueries.ts": {
-      "fingerprint": "2db1e0dde1715b5e2ef974da2ea425f4b14a436dd4ade42348af8231dc677c8d",
+      "fingerprint": "ceafcc3cfc27fd0b250e1e400ca3f85a31816bec60b34a352f0b3c717ed1c6fe",
       "snapshot": {
-        "apps/web/src/hooks/useAuthQueries.ts": "b0eeaefc55b4dec2e14ce566d2e609804d5abe473a79b03226bce0d19e16ac34"
+        "apps/web/src/hooks/useAuthQueries.ts": "67bf54ec4b797f67737d55e7684af8ff7890765beb3039d9ab2124cff1992fa4"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/hooks/useAuthQueries.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: apps/web/src/hooks/useAuthQueries.ts at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     },
     "source:apps/web/src/lib/auth/sessionSync.test.ts": {
@@ -1014,15 +1013,15 @@
       ]
     },
     "source:docs/frontend-query-architecture.md": {
-      "fingerprint": "96fb1fd5226c5c1d46877075a0b630b2b97359b68dd0ca62a6026def86852b8c",
+      "fingerprint": "89ec47d5f88aeabd1f691d40de1c9ae65cf42de1cb4768f83f9c0ca2b4ae28da",
       "snapshot": {
-        "docs/frontend-query-architecture.md": "3fe64c7d2d79ce9e9b9a1d10dce565e163578d98a8c1b0f2469c0326a1fb2962"
+        "docs/frontend-query-architecture.md": "73ab8831b42330fd45ded9ea769bc257988db852142e69ec546ad86a00eb888a"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
       "evidence": [
-        "Changed: docs/frontend-query-architecture.md at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: docs/frontend-query-architecture.md at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     },
     "source:e2e/smoke/web/cross-tab-session.spec.ts": {
@@ -1035,6 +1034,78 @@
       "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
       "evidence": [
         "Changed: e2e/smoke/web/cross-tab-session.spec.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+      ]
+    },
+    "source:apps/api/tests/auth.test.ts": {
+      "fingerprint": "2ad04d7ceef29b06cf1e2ffbf80efb53401b3f661451438d125ebadd27114d06",
+      "snapshot": {
+        "apps/api/tests/auth.test.ts": "8fa0c5d95c70b3186541c68a43f0ff0fcfaba1711e3d18944b285114ef335938"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/tests/auth.test.ts at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+      ]
+    },
+    "source:apps/web/src/components/SidebarNav.test.tsx": {
+      "fingerprint": "862453703700c7a01c7a0a6a3b9a65cc2d353bb7f6b76560884208d6adb5c495",
+      "snapshot": {
+        "apps/web/src/components/SidebarNav.test.tsx": "ebe8ab13bbc96239dbdb905786c198b20777d7b81c1c3beee9044fb150c01705"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+      ]
+    },
+    "source:apps/web/src/components/SidebarNav.tsx": {
+      "fingerprint": "4a6e7e66a0111a0f70a65412c720f060158b04444e36ae1a667ab154aa0c7f68",
+      "snapshot": {
+        "apps/web/src/components/SidebarNav.tsx": "9d8b346c5413963db2cc6d5009e2066d2178db04769787db73d60ca05640a6b9"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: apps/web/src/components/SidebarNav.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+      ]
+    },
+    "source:apps/web/src/context/AuthContext.test.tsx": {
+      "fingerprint": "1fc4bcc9bf56908a225312f7762b5b8fa0957858a890d3af0e4ce8079401baab",
+      "snapshot": {
+        "apps/web/src/context/AuthContext.test.tsx": "0ad8f57ea87c32af3a0f9c51c50ffc52163e4fefdf71910ab0a5908102f63180"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: apps/web/src/context/AuthContext.test.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+      ]
+    },
+    "source:docs/analytics/ANALYTICS_ARCHITECTURE.md": {
+      "fingerprint": "fa4e4e5559f170bcecfea01664d3d7fd26590836e5654ea6de383d14a856d396",
+      "snapshot": {
+        "docs/analytics/ANALYTICS_ARCHITECTURE.md": "79bbda7867caa44bfa3272a53ec78bd002cd392ae8f6983a17045088364a032a"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: docs/analytics/ANALYTICS_ARCHITECTURE.md at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+      ]
+    },
+    "source:e2e/smoke/web/logout-failure.spec.ts": {
+      "fingerprint": "202424ee0c27805a82999f151f0d8f5f3ab3bdf915003ef3e43a48b4d7a88e57",
+      "snapshot": {
+        "e2e/smoke/web/logout-failure.spec.ts": "f0d204eda5596225dcdab394cf82ff617ce1aa73d0ea4718787742c3a61f1a5c"
+      },
+      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "outcome": "no-change",
+      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "evidence": [
+        "Changed: e2e/smoke/web/logout-failure.spec.ts at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
       ]
     }
   }

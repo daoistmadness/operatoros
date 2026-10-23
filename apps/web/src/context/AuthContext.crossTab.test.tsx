@@ -1,4 +1,4 @@
-import React, { act, useEffect } from "react";
+import React, { act, useEffect, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { QueryClientProvider, useQuery, type QueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,7 +9,7 @@ import { createTestQueryClient } from "../lib/query/queryClient";
 const mock = vi.hoisted(() => {
   const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student"] };
   const checker = { id: 2, username: "checker", role: "admin" as const, capabilities: ["view_student"] };
-  return { admin, checker, session: { current: null as typeof admin | null } };
+  return { admin, checker, session: { current: null as typeof admin | null }, logoutError: null as Error | null };
 });
 
 vi.mock("../api/auth", () => ({
@@ -22,6 +22,7 @@ vi.mock("../api/auth", () => ({
     return mock.session.current;
   }),
   logout: vi.fn(async () => {
+    if (mock.logoutError) throw mock.logoutError;
     mock.session.current = null;
   }),
 }));
@@ -38,6 +39,7 @@ const roots: Root[] = [];
 
 function TabProbe({ id }: { id: string }) {
   const auth = useAuth();
+  const [logoutError, setLogoutError] = useState("");
   const student = useQuery({
     queryKey: STUDENT_KEY,
     queryFn: async () => "network",
@@ -56,7 +58,8 @@ function TabProbe({ id }: { id: string }) {
       <span data-testid={`${id}-auth`}>{auth.loading ? "loading" : auth.user?.username ?? "anonymous"}</span>
       <span data-testid={`${id}-student`}>{student.data ?? "empty"}</span>
       <button data-testid={`${id}-login-checker`} onClick={() => void auth.login("checker", "secret")}>login checker</button>
-      <button data-testid={`${id}-logout`} onClick={() => void auth.logout()}>logout</button>
+      <button data-testid={`${id}-logout`} onClick={() => { setLogoutError(""); void auth.logout().catch(() => setLogoutError("logout failed")); }}>logout</button>
+      <span data-testid={`${id}-logout-error`}>{logoutError}</span>
     </div>
   );
 }
@@ -120,6 +123,7 @@ function expectNoNewSessionWithOldData(id: string, username: string) {
 describe("AuthProvider cross-tab session isolation", () => {
   beforeEach(() => {
     mock.session.current = mock.admin;
+    mock.logoutError = null;
     vi.clearAllMocks();
     for (const key of Object.keys(snapshots)) delete snapshots[key];
   });
@@ -159,6 +163,28 @@ describe("AuthProvider cross-tab session isolation", () => {
     expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
     expect(tab2.client.getQueryData(STUDENT_KEY)).toBeUndefined();
     expectNoNewSessionWithOldData("tab1", "checker");
+  });
+
+  it("keeps both tabs authenticated when logout is not confirmed, then clears both on retry", async () => {
+    const tab1 = await renderTab("tab1");
+    const tab2 = await renderTab("tab2");
+    mock.logoutError = new Error("network");
+
+    await act(async () => click(tab2, "tab2-logout"));
+    await waitFor(() => expect(tab2.container.querySelector('[data-testid="tab2-logout-error"]')?.textContent).toBe("logout failed"));
+
+    expect(text(tab1, "tab1")).toBe("admin");
+    expect(text(tab2, "tab2")).toBe("admin");
+    expect(tab1.client.getQueryData(STUDENT_KEY)).toBe("student-of-tab1");
+    expect(tab2.client.getQueryData(STUDENT_KEY)).toBe("student-of-tab2");
+
+    mock.logoutError = null;
+    await act(async () => click(tab2, "tab2-logout"));
+    await waitFor(() => expect(text(tab2, "tab2")).toBe("anonymous"));
+    await waitFor(() => expect(text(tab1, "tab1")).toBe("anonymous"));
+
+    expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+    expect(tab2.client.getQueryData(STUDENT_KEY)).toBeUndefined();
   });
 
   it("revalidates on focus when BroadcastChannel is unavailable", async () => {

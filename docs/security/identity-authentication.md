@@ -45,7 +45,7 @@ Session lifecycle:
 create → validate → refresh idle expiry → expire/revoke → logout
 ```
 
-Sessions have idle and absolute expiration limits. Logout revokes the database session and clears the cookie. API and CLI restore revoke restored sessions, so reauthentication is mandatory. CLI restore limitations are documented in [Backup and Restore Security](backup-restore.md).
+Sessions have idle and absolute expiration limits. A logout request that reaches the route revokes the database session and clears the cookie. The browser clears its authenticated in-memory state and notifies other tabs only after the server confirms the logout. If the request is rejected or the network fails, the browser does not treat logout as confirmed: absent an authoritative `401`, it keeps the current authenticated state, sends no cross-tab notification, and shows a retryable failure because the server session may still be active. A later `401` remains authoritative and clears local state. API and CLI restore revoke restored sessions, so reauthentication is mandatory. CLI restore limitations are documented in [Backup and Restore Security](backup-restore.md).
 
 No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented. Browser tabs keep authenticated query data in memory only. Login, logout, focus, and visibility changes trigger session revalidation; a different server session clears protected in-memory caches before its user is applied. Cross-tab notifications carry no credentials or user data, and the server session and database role remain authoritative.
 

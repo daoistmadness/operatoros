@@ -55,7 +55,7 @@ for these canonical values. Null grade cells are excluded.
 
 The web application has one TanStack Query client. Analytics keys include all
 filter values. Successful attendance, grade, and enrollment mutations
-invalidate the analytics query family. Logout removes protected query data.
+invalidate the analytics query family. Confirmed logout removes protected query data.
 The query cache is memory-only. It is not persisted to `localStorage`.
 
 Deterministic contract, query, and response tests may run through Turbo. Tests

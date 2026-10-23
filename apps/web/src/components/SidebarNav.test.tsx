@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '../api/auth';
+import { ApiError } from '../lib/api/errors';
 import { AuthContext, type AuthContextValue } from '../context/AuthContext';
 import SidebarNav, {
   NAV_GROUPS,
@@ -51,16 +52,18 @@ describe('role-aware sidebar navigation', () => {
     path = '/',
     collapsed = false,
     onToggleCollapsed = vi.fn(),
+    logout = vi.fn<() => Promise<void>>(),
   }: {
     user?: AuthUser | null;
     path?: string;
     collapsed?: boolean;
     onToggleCollapsed?: () => void;
+    logout?: () => Promise<void>;
   } = {}) {
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={[path]}>
-          <AuthContext.Provider value={authFor(user)}>
+          <AuthContext.Provider value={{ ...authFor(user), logout }}>
             <SidebarNav open collapsed={collapsed} onNavigate={vi.fn()} onToggleCollapsed={onToggleCollapsed} />
           </AuthContext.Provider>
         </MemoryRouter>,
@@ -99,6 +102,29 @@ describe('role-aware sidebar navigation', () => {
     expect(activeNames('/analytics/indicators')).toEqual(['Student Insights']);
     expect(activeNames('/analytics/attendance')).toEqual(['Attendance']);
     expect(activeNames('/enrollment')).toEqual(['Student Enrollment']);
+  });
+
+  it.each([
+    ['a network failure', new ApiError('The server could not be reached.', { kind: 'network' }), true],
+    ['a rejected request', new ApiError('The server could not complete the request.', { status: 500 }), false],
+  ])('reports an unconfirmed logout after %s without hiding the authenticated shell', async (_label, failure, expectsConnectionGuidance) => {
+    const logout = vi.fn<() => Promise<void>>().mockRejectedValue(failure);
+    await renderSidebar({ logout });
+
+    const button = container.querySelector('button[aria-label="Logout"]') as HTMLButtonElement;
+    await act(async () => {
+      button.click();
+      await Promise.resolve();
+    });
+
+    expect(logout).toHaveBeenCalledOnce();
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('Sign out could not be confirmed');
+    expect(alert?.textContent).toContain('session may still be active');
+    if (expectsConnectionGuidance) expect(alert?.textContent).toContain('Check the connection');
+    else expect(alert?.textContent).not.toContain('Check the connection');
+    expect(container.textContent).toContain('admin');
+    expect(container.querySelector('button[aria-label="Logout"]')).not.toBeNull();
   });
 
   it('keeps collapsed links named and exposes a usable expand control', async () => {

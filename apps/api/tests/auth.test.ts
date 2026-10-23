@@ -148,6 +148,39 @@ describe("authentication parity", () => {
     }
   }, 30000);
 
+  it("rejects cross-origin logout without revoking the current session", async () => {
+    const value = setup("logout-origin");
+    try {
+      const login = await value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      const cookie = cookieValue(login.headers.get("set-cookie"));
+
+      const rejected = await value.app.handle(new Request("http://local/api/auth/logout", {
+        method: "POST", headers: { cookie: `astyx_session=${cookie}`, origin: "http://evil.example" },
+      }));
+      expect(rejected.status).toBe(403);
+
+      const stillActive = await value.app.handle(new Request("http://local/api/auth/me", {
+        headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" },
+      }));
+      expect(stillActive.status).toBe(200);
+
+      const confirmed = await value.app.handle(new Request("http://local/api/auth/logout", {
+        method: "POST", headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" },
+      }));
+      expect(confirmed.status).toBe(204);
+
+      const afterLogout = await value.app.handle(new Request("http://local/api/auth/me", {
+        headers: { cookie: `astyx_session=${cookie}`, origin: "http://localhost:5173" },
+      }));
+      expect(afterLogout.status).toBe(401);
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
   it("reports setup status without exposing setup authorization", async () => {
     const value = setup("setup-status");
     try {
