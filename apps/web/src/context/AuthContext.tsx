@@ -6,7 +6,7 @@ import { AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
-import { clearProtectedQueries, clearSessionQueries } from "../lib/query/sessionCache";
+import { clearProtectedQueries, clearSessionQueries, resetProtectedQueries } from "../lib/query/sessionCache";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export interface AuthContextValue {
@@ -56,6 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [client]);
 
+  const revalidateAfterFocus = useCallback(async () => {
+    const reset = resetProtectedQueries(client);
+    await revalidateSession();
+    await reset;
+  }, [client, revalidateSession]);
+
   useEffect(() => {
     const handleSessionChange = () => {
       void (async () => {
@@ -69,10 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleFocus = () => {
-      void revalidateSession();
+      void revalidateAfterFocus();
     };
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") void revalidateSession();
+      if (document.visibilityState === "visible") void revalidateAfterFocus();
     };
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [revalidateSession]);
+  }, [revalidateAfterFocus]);
 
   const login = useCallback(async (username: string, password: string) => {
     const nextUser = await loginMutation.mutateAsync({ username, password });
