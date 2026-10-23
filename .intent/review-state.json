@@ -881,6 +881,30 @@
       "evidence": [
         "Changed: apps/api/tests/security.test.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
       ]
+    },
+    "source:apps/web/src/components/CorrectionSelfConfirmModal.tsx": {
+      "fingerprint": "466c72ff0fee49a4ac2252a769fa4b16abb9aabe86e9e3404da59a0588473c23",
+      "snapshot": {
+        "apps/web/src/components/CorrectionSelfConfirmModal.tsx": "a7569fceb4ff33a27c7e9c6cda970703ee4a0b09f56ffb03ee006435425da98a"
+      },
+      "head": "b52af61f83a33f4696dd3dcecefb3b3ab6280a68",
+      "outcome": "no-change",
+      "reason": "Import-path-only change to two existing consumers; no agent guidance, workflow, contract, or runtime semantics changed. Verified with typecheck, lint, architecture, boundaries, api:check, 461 tests, and smoke 8 backend + 50 web scenarios.",
+      "evidence": [
+        "Changed: apps/web/src/components/CorrectionSelfConfirmModal.tsx at b52af61f83a33f4696dd3dcecefb3b3ab6280a68"
+      ]
+    },
+    "source:apps/web/src/context/DeploymentModeContext.tsx": {
+      "fingerprint": "47daee70ae5f0a6506b73d63b8c658c2d6218cd73535d249aa2400fdaa479a49",
+      "snapshot": {
+        "apps/web/src/context/DeploymentModeContext.tsx": "f6c7da258c60bfa6d4b8d6d9a84354d196f00bc5bfe0662488ebd103fb5323ba"
+      },
+      "head": "b52af61f83a33f4696dd3dcecefb3b3ab6280a68",
+      "outcome": "no-change",
+      "reason": "Import-path-only change to two existing consumers; no agent guidance, workflow, contract, or runtime semantics changed. Verified with typecheck, lint, architecture, boundaries, api:check, 461 tests, and smoke 8 backend + 50 web scenarios.",
+      "evidence": [
+        "Changed: apps/web/src/context/DeploymentModeContext.tsx at b52af61f83a33f4696dd3dcecefb3b3ab6280a68"
+      ]
     }
   }
 }
