@@ -9,11 +9,12 @@ import { createTestQueryClient } from "../lib/query/queryClient";
 const mock = vi.hoisted(() => {
   const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student"] };
   const checker = { id: 2, username: "checker", role: "admin" as const, capabilities: ["view_student"] };
-  return { admin, checker, session: { current: null as typeof admin | null }, logoutError: null as Error | null };
+  return { admin, checker, session: { current: null as typeof admin | null }, nextUserResponse: null as Promise<typeof admin> | null, logoutError: null as Error | null };
 });
 
 vi.mock("../api/auth", () => ({
   getCurrentUser: vi.fn(async () => {
+    if (mock.nextUserResponse) return mock.nextUserResponse;
     if (!mock.session.current) throw new Error("unauthorized");
     return mock.session.current;
   }),
@@ -123,6 +124,7 @@ function expectNoNewSessionWithOldData(id: string, username: string) {
 describe("AuthProvider cross-tab session isolation", () => {
   beforeEach(() => {
     mock.session.current = mock.admin;
+    mock.nextUserResponse = null;
     mock.logoutError = null;
     vi.clearAllMocks();
     for (const key of Object.keys(snapshots)) delete snapshots[key];
@@ -219,11 +221,22 @@ describe("AuthProvider cross-tab session isolation", () => {
 
     // Simulate a suspended tab that missed a change signal.
     mock.session.current = mock.checker;
+    let resolveCurrentUser = (_user: typeof mock.checker) => {};
+    mock.nextUserResponse = new Promise((resolve) => { resolveCurrentUser = resolve; });
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"));
+      await Promise.resolve();
+    });
+
+    expect(text(tab1, "tab1")).toBe("admin");
+    expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+    await waitFor(() => expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty"));
+
+    await act(async () => {
+      resolveCurrentUser(mock.checker);
+      await Promise.resolve();
     });
     await waitFor(() => expect(text(tab1, "tab1")).toBe("checker"));
-    await waitFor(() => expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty"));
 
     expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
     expectNoNewSessionWithOldData("tab1", "checker");
@@ -241,7 +254,7 @@ describe("AuthProvider cross-tab session isolation", () => {
     expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty");
   });
 
-  it("keeps the cached data when focus revalidation finds the same session", async () => {
+  it("keeps the session and clears protected cache while focus revalidation runs", async () => {
     const tab1 = await renderTab("tab1");
     await act(async () => {
       window.dispatchEvent(new Event("focus"));
@@ -249,7 +262,38 @@ describe("AuthProvider cross-tab session isolation", () => {
     await flush();
 
     expect(text(tab1, "tab1")).toBe("admin");
-    expect(tab1.client.getQueryData(STUDENT_KEY)).toBe("student-of-tab1");
+    expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+    expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty");
+  });
+
+  it("clears protected data before focus revalidation resolves a changed session", async () => {
+    const saved = globalThis.BroadcastChannel;
+    delete (globalThis as { BroadcastChannel?: typeof BroadcastChannel }).BroadcastChannel;
+    let resolveCurrentUser = (_user: typeof mock.checker) => {};
+    try {
+      const tab1 = await renderTab("tab1");
+      mock.session.current = mock.checker;
+      mock.nextUserResponse = new Promise((resolve) => { resolveCurrentUser = resolve; });
+
+      await act(async () => {
+        window.dispatchEvent(new Event("focus"));
+        await Promise.resolve();
+      });
+
+      expect(text(tab1, "tab1")).toBe("admin");
+      expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+      await waitFor(() => expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty"));
+
+      await act(async () => {
+        resolveCurrentUser(mock.checker);
+        await Promise.resolve();
+      });
+      await waitFor(() => expect(text(tab1, "tab1")).toBe("checker"));
+      expectNoNewSessionWithOldData("tab1", "checker");
+    } finally {
+      resolveCurrentUser(mock.checker);
+      (globalThis as { BroadcastChannel?: typeof BroadcastChannel }).BroadcastChannel = saved;
+    }
   });
 
   it("cancels a late response from the previous session", async () => {

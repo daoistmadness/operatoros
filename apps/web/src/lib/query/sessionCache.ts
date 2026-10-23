@@ -13,6 +13,10 @@ export async function clearProtectedQueries(client: QueryClient): Promise<void> 
   }
 }
 
+export function resetProtectedQueries(client: QueryClient): Promise<void> {
+  return client.resetQueries({ predicate: isProtectedQuery });
+}
+
 export async function clearSessionQueries(client: QueryClient): Promise<void> {
   client.setQueryData(queryKeys.auth.me, null);
   await clearProtectedQueries(client);
