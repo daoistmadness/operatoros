@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type SVGProps } from "react";
+import { lazy, useEffect, useMemo, useRef, useState, type SVGProps } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import ChartMonthly from "../components/ChartMonthly";
-import ChartClass from "../components/ChartClass";
+import { DeferredChart } from "../components/DeferredChart";
 import {
   AlertTriangle,
   CalendarDays,
@@ -47,6 +46,9 @@ import {
   normalizeAbsenceTotals,
   type DashboardPendingStudent,
 } from "../lib/api/endpoints";
+
+const ChartMonthly = lazy(() => import("../components/ChartMonthly"));
+const ChartClass = lazy(() => import("../components/ChartClass"));
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -319,7 +321,7 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 flex flex-col justify-end">
             {monthlyData.length > 0 ? (
-              <div className="h-[300px] w-full"><ChartMonthly data={monthlyData} /></div>
+              <DeferredChart><ChartMonthly data={monthlyData} /></DeferredChart>
             ) : (
               <div className="h-[300px] flex items-center justify-center"><SharedEmptyState title="No monthly data recorded yet." /></div>
             )}
@@ -334,7 +336,7 @@ export default function Dashboard() {
           </div>
           <div className="flex-1 flex flex-col justify-center">
             {classData.length > 0 ? (
-              <div className="h-[300px] w-full"><ChartClass data={classData.slice(0, 5)} /></div>
+              <DeferredChart><ChartClass data={classData.slice(0, 5)} /></DeferredChart>
             ) : (
               <div className="h-[300px] flex items-center justify-center"><SharedEmptyState title="No class data available to rank." /></div>
             )}
