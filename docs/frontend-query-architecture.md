@@ -23,7 +23,7 @@ The existing API client remains responsible for credentials, typed `ApiError` va
 
 ## Cross-tab session isolation
 
-Each browser tab owns a separate in-memory `QueryClient`. Successful login and logout broadcast a fixed session-change signal over a same-origin `BroadcastChannel`. The payload contains only the event type and a random per-tab sender id; it never contains credentials, cookies, tokens, usernames, roles, or student data.
+Each browser tab owns a separate in-memory `QueryClient`. Successful login and confirmed logout broadcast a fixed session-change signal over a same-origin `BroadcastChannel`. The payload contains only the event type and a random per-tab sender id; it never contains credentials, cookies, tokens, usernames, roles, or student data. A failed or unconfirmed logout does not itself broadcast or clear protected caches, because the server session may still be active; the initiating tab shows a retryable failure. An authoritative `401` still clears local state and caches immediately.
 
 A receiving tab clears the current-user cache, cancels outstanding queries, removes every non-auth query, and revalidates `/api/auth/me` before applying another session. The logging-in tab also clears protected queries before applying its new user. The server session and its database role remain authoritative.
 
@@ -33,7 +33,7 @@ Tabs additionally revalidate `/api/auth/me` on window focus and visibility chang
 
 Mutation hooks use `useCreateXMutation`, `useUpdateXMutation`, and `useDeleteXMutation` names. Domain-specific verbs are permitted where the operation is not CRUD, such as `useRestoreBackupMutation` and `useLogoutMutation`.
 
-Successful mutations invalidate the smallest complete stale set. Backup creation invalidates both backup status and list through the backup prefix. Logout cancels and removes protected query caches, clears the current-user cache, and notifies other tabs without an immediate refetch. Restore clears all cache when reauthentication is required; otherwise it invalidates backup state. Screens do not call manual `load()` functions after mutations.
+Successful mutations invalidate the smallest complete stale set. Backup creation invalidates both backup status and list through the backup prefix. Confirmed logout cancels and removes protected query caches, clears the current-user cache, and notifies other tabs without an immediate refetch. Restore clears all cache when reauthentication is required; otherwise it invalidates backup state. Screens do not call manual `load()` functions after mutations.
 
 Mutation errors remain `ApiError` instances and are displayed through the same accessible alert treatment already used by each screen. Mutations are not retried automatically, preventing duplicate writes.
 

@@ -1,9 +1,10 @@
 import React from "react";
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser, login, logout } from "../api/auth";
 import { AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
+import { ApiError } from "../lib/api/errors";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../lib/query/queryClient";
@@ -12,18 +13,26 @@ vi.mock("../api/auth", () => ({ getCurrentUser: vi.fn(), login: vi.fn(), logout:
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student"] };
+const PROTECTED_KEY = ["students", "list", "synthetic"] as const;
 let container: HTMLDivElement;
 let root: Root;
 
 function Probe() {
   const auth = useAuth();
-  return <div><span data-testid="state">{auth.loading ? "loading" : auth.authenticated ? `${auth.user?.username}:${auth.user?.role}` : "anonymous"}</span><button onClick={() => void auth.login("admin", "secret")}>login</button><button onClick={() => void auth.logout()}>logout</button></div>;
+  const [logoutError, setLogoutError] = useState("");
+  return <div>
+    <span data-testid="state">{auth.loading ? "loading" : auth.authenticated ? `${auth.user?.username}:${auth.user?.role}` : "anonymous"}</span>
+    <button onClick={() => void auth.login("admin", "secret")}>login</button>
+    <button onClick={() => { setLogoutError(""); void auth.logout().catch(() => setLogoutError("logout failed")); }}>logout</button>
+    <span data-testid="logout-error">{logoutError}</span>
+  </div>;
 }
 
 async function renderProvider() {
   const client = createTestQueryClient();
   await act(async () => { root.render(<QueryClientProvider client={client}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>); });
   await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 0)); });
+  return { client };
 }
 
 async function waitForText(expected: string) {
@@ -60,6 +69,40 @@ describe("AuthProvider", () => {
     await waitForText("admin:admin");
     await act(async () => { (container.querySelectorAll("button")[1] as HTMLButtonElement).click(); });
     await waitForText("anonymous");
+  });
+
+  it.each([
+    ["a network failure", new ApiError("The server could not be reached.", { kind: "network" })],
+    ["a rejected request", new ApiError("The server could not complete the request.", { status: 500 })],
+  ])("keeps the session and protected cache after logout fails with %s", async (_label, failure) => {
+    vi.mocked(getCurrentUser).mockResolvedValue(admin);
+    vi.mocked(logout).mockRejectedValue(failure);
+    const { client } = await renderProvider();
+    client.setQueryData(PROTECTED_KEY, ["student"]);
+
+    await act(async () => { (container.querySelectorAll("button")[1] as HTMLButtonElement).click(); });
+    await waitForText("logout failed");
+
+    expect(container.textContent).toContain("admin:admin");
+    expect(client.getQueryData(PROTECTED_KEY)).toEqual(["student"]);
+  });
+
+  it("clears the session and protected cache only after a logout retry is confirmed", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValue(admin);
+    vi.mocked(logout)
+      .mockRejectedValueOnce(new ApiError("The server could not be reached.", { kind: "network" }))
+      .mockResolvedValueOnce(undefined);
+    const { client } = await renderProvider();
+    client.setQueryData(PROTECTED_KEY, ["student"]);
+
+    await act(async () => { (container.querySelectorAll("button")[1] as HTMLButtonElement).click(); });
+    await waitForText("logout failed");
+    expect(container.textContent).toContain("admin:admin");
+    expect(client.getQueryData(PROTECTED_KEY)).toEqual(["student"]);
+
+    await act(async () => { (container.querySelectorAll("button")[1] as HTMLButtonElement).click(); });
+    await waitForText("anonymous");
+    expect(client.getQueryData(PROTECTED_KEY)).toBeUndefined();
   });
 
   it("clears authenticated state on a global 401 event", async () => {

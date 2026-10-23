@@ -22,7 +22,7 @@ export function useLogoutMutation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: logout,
-    onSettled: async () => {
+    onSuccess: async () => {
       await clearSessionQueries(client);
     },
   });

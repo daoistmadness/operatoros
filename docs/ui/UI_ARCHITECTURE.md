@@ -26,7 +26,7 @@ OperatorOS visual identity and layout conventions.
 - `apps/api` and Phase 16 analytics queries own business metric computation.
 
 The dashboard uses one TanStack Query client. Dashboard keys include the
-selected month and year. Logout removes protected query data. Query data is
+selected month and year. Confirmed logout removes protected query data. Query data is
 not persisted to `localStorage`.
 
 The dashboard reads the server snapshot through
