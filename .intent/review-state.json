@@ -929,6 +929,18 @@
       "evidence": [
         "Changed: apps/web/vite.config.js at e7d732e6c140632d765f13803c36cb035ab0f079"
       ]
+    },
+    "source:docs/architecture/FRONTEND_ARCHITECTURE.md": {
+      "fingerprint": "b1f460b6294ab55103c13ed4ebd875b8c11b30266bccc743622e6a6b995f1408",
+      "snapshot": {
+        "docs/architecture/FRONTEND_ARCHITECTURE.md": "553ee5a7f418e1820f30f367124c22232455ed325ef2c8714a9d81616fd71b2a"
+      },
+      "head": "b24962a27b1d7d69bba3abf91bfc607d37632403",
+      "outcome": "no-change",
+      "reason": "Documentation-only correction of measured frontend route counts. No architecture decision, agent guidance, security contract, routing, or runtime behavior changed; counts were derived from routeDefinitions.tsx and App.tsx and cross-checked against routeDefinitions.test.tsx.",
+      "evidence": [
+        "Changed: docs/architecture/FRONTEND_ARCHITECTURE.md at b24962a27b1d7d69bba3abf91bfc607d37632403"
+      ]
     }
   }
 }
