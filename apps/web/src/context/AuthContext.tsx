@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { ReactNode } from "react";
 import type { AuthUser } from "../api/auth";
 import { getCurrentUser } from "../api/auth";
-import { advanceAuthSessionEpoch, AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
+import { advanceAuthSessionEpoch, AUTH_FORBIDDEN_EVENT, AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
@@ -20,6 +20,12 @@ export interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
+function authorizationChanged(previousUser: AuthUser | null, nextUser: AuthUser | null) {
+  return previousUser?.role !== nextUser?.role
+    || previousUser?.capabilities?.length !== nextUser?.capabilities?.length
+    || previousUser?.capabilities?.some((capability) => !nextUser?.capabilities?.includes(capability));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const client = useQueryClient();
   const sessionSync = useMemo(() => createAuthSessionSync(), []);
@@ -30,14 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = currentUser.data ?? null;
   const loading = currentUser.isLoading && !currentUser.isError;
 
-  useEffect(() => {
-    const handleUnauthorized = () => {
-      void clearSessionQueries(client);
-    };
-    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
-    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
-  }, [client]);
-
   const revalidateSession = useCallback(async (sessionEpochAdvanced = false) => {
     const sequence = revalidationSequence.current + 1;
     revalidationSequence.current = sequence;
@@ -46,16 +44,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextUser = await getCurrentUser();
       if (sequence !== revalidationSequence.current) return;
       const previousUser = client.getQueryData<AuthUser | null>(queryKeys.auth.me) ?? null;
-      if ((previousUser?.id ?? null) !== (nextUser?.id ?? null)) {
-        if (!sessionEpochAdvanced) advanceAuthSessionEpoch();
+      const identityChanged = (previousUser?.id ?? null) !== (nextUser?.id ?? null);
+      const permissionsChanged = authorizationChanged(previousUser, nextUser);
+      if (identityChanged || permissionsChanged) {
+        if (identityChanged && !sessionEpochAdvanced) advanceAuthSessionEpoch();
         await clearProtectedQueries(client);
         if (sequence !== revalidationSequence.current) return;
+        if (!identityChanged && permissionsChanged) sessionSync.notifyAuthorizationChange();
       }
       client.setQueryData(queryKeys.auth.me, nextUser);
     } catch {
       // A 401 response dispatches AUTH_UNAUTHORIZED_EVENT. Network failures keep the current session.
     }
-  }, [client]);
+  }, [client, sessionSync]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      void clearSessionQueries(client);
+    };
+    const handleForbidden = () => {
+      void (async () => {
+        await clearProtectedQueries(client);
+        await revalidateSession();
+      })();
+    };
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    window.addEventListener(AUTH_FORBIDDEN_EVENT, handleForbidden);
+    return () => {
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+      window.removeEventListener(AUTH_FORBIDDEN_EVENT, handleForbidden);
+    };
+  }, [client, revalidateSession]);
 
   const revalidateAfterFocus = useCallback(async () => {
     const reset = resetProtectedQueries(client);
@@ -64,7 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [client, revalidateSession]);
 
   useEffect(() => {
-    const handleSessionChange = () => {
+    const handleSessionChange = (change: "session" | "authorization") => {
+      if (change === "authorization") {
+        void (async () => {
+          await clearProtectedQueries(client);
+          await revalidateSession();
+        })();
+        return;
+      }
       void (async () => {
         advanceAuthSessionEpoch();
         revalidationSequence.current += 1;

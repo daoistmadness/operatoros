@@ -49,6 +49,8 @@ Sessions have idle and absolute expiration limits. A logout request that reaches
 
 No JWT, bearer-token storage, localStorage authentication, remember-me function, or frontend session-token access is implemented. Browser tabs keep authenticated query data in memory only. Login, logout, focus, and visibility changes trigger session revalidation. Focus and visibility events reset protected query state before revalidation so a suspended tab does not keep displaying the prior session while `/api/auth/me` is pending. Cross-tab notifications carry no credentials or user data, and the server session and database role remain authoritative.
 
+A protected `403` clears protected in-memory queries and triggers `/api/auth/me` revalidation without logging the user out. If that response confirms a role or capability change for the same user, the client refreshes its authorization state and sends a cross-tab signal containing no role or user data; other tabs clear protected queries and revalidate as well. A `403` remains distinct from session loss and the backend continues to authorize every request.
+
 ## Authorization roles
 
 - `admin`: backup management, restore, and destructive administrative operations.

@@ -4,12 +4,15 @@ import { QueryClientProvider, useQuery, type QueryClient } from "@tanstack/react
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { AUTH_UNAUTHORIZED_EVENT, apiRequest } from "../lib/api/client";
+import { createAuthSessionSync } from "../lib/auth/sessionSync";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 const mock = vi.hoisted(() => {
-  const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student"] };
+  const admin = { id: 1, username: "admin", role: "admin" as const, capabilities: ["view_student", "manage_staff"] };
+  const downgraded = { id: 1, username: "admin", role: "staff" as const, capabilities: ["view_student"] };
   const checker = { id: 2, username: "checker", role: "admin" as const, capabilities: ["view_student"] };
-  return { admin, checker, session: { current: null as typeof admin | null }, nextUserResponse: null as Promise<typeof admin> | null, logoutError: null as Error | null };
+  type TestUser = typeof admin | typeof downgraded | typeof checker;
+  return { admin, downgraded, checker, session: { current: null as TestUser | null }, nextUserResponse: null as Promise<TestUser> | null, logoutError: null as Error | null };
 });
 
 vi.mock("../api/auth", () => ({
@@ -27,6 +30,8 @@ vi.mock("../api/auth", () => ({
     mock.session.current = null;
   }),
 }));
+
+type MockUser = NonNullable<typeof mock.session.current>;
 
 const STUDENT_KEY = ["students", "list", "synthetic"] as const;
 const LATE_STUDENT_KEY = ["students", "late", "synthetic"] as const;
@@ -63,6 +68,8 @@ function TabProbe({ id }: { id: string }) {
   return (
     <div>
       <span data-testid={`${id}-auth`}>{auth.loading ? "loading" : auth.user?.username ?? "anonymous"}</span>
+      <span data-testid={`${id}-role`}>{auth.user?.role ?? "anonymous"}</span>
+      <span data-testid={`${id}-manage`}>{auth.can("manage_staff") ? "yes" : "no"}</span>
       <span data-testid={`${id}-student`}>{student.data ?? "empty"}</span>
       <button data-testid={`${id}-login-checker`} onClick={() => void auth.login("checker", "secret")}>login checker</button>
       <button data-testid={`${id}-logout`} onClick={() => { setLogoutError(""); void auth.logout().catch(() => setLogoutError("logout failed")); }}>logout</button>
@@ -93,6 +100,14 @@ async function waitFor(assertion: () => void) {
 
 function text(tab: Tab, id: string) {
   return tab.container.querySelector(`[data-testid="${id}-auth"]`)?.textContent ?? "";
+}
+
+function role(tab: Tab, id: string) {
+  return tab.container.querySelector(`[data-testid="${id}-role"]`)?.textContent ?? "";
+}
+
+function canManageStaff(tab: Tab, id: string) {
+  return tab.container.querySelector(`[data-testid="${id}-manage"]`)?.textContent ?? "";
 }
 
 function click(tab: Tab, id: string) {
@@ -246,7 +261,7 @@ describe("AuthProvider cross-tab session isolation", () => {
 
     // Simulate a suspended tab that missed a change signal.
     mock.session.current = mock.checker;
-    let resolveCurrentUser = (_user: typeof mock.checker) => {};
+    let resolveCurrentUser = (_user: MockUser) => {};
     mock.nextUserResponse = new Promise((resolve) => { resolveCurrentUser = resolve; });
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"));
@@ -279,6 +294,100 @@ describe("AuthProvider cross-tab session isolation", () => {
     expect(tab1.container.querySelector('[data-testid="tab1-student"]')?.textContent).toBe("empty");
   });
 
+  it("clears same-user protected data immediately while a deferred 403 revalidates permissions", async () => {
+    const pendingResponse = deferred<Response>();
+    const pendingUser = deferred<MockUser>();
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockReturnValue(pendingResponse.promise);
+    try {
+      const tab = await renderTab("tab1");
+      mock.session.current = mock.downgraded;
+      mock.nextUserResponse = pendingUser.promise;
+      const request = apiRequest({ path: "/api/admin/operations" });
+      pendingResponse.resolve(new Response(JSON.stringify({ detail: "Insufficient permissions" }), { status: 403 }));
+
+      await expect(request).rejects.toMatchObject({ status: 403 });
+      await waitFor(() => expect(tab.client.getQueryData(STUDENT_KEY)).toBeUndefined());
+      expect(role(tab, "tab1")).toBe("admin");
+
+      pendingUser.resolve(mock.downgraded);
+      await waitFor(() => expect(role(tab, "tab1")).toBe("staff"));
+
+      expect(text(tab, "tab1")).toBe("admin");
+      expect(canManageStaff(tab, "tab1")).toBe("no");
+      expect(tab.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("clears protected data across tabs when a non-sensitive permission-change signal arrives", async () => {
+    const pendingUser = deferred<MockUser>();
+    const tab1 = await renderTab("tab1");
+    const tab2 = await renderTab("tab2");
+    const notifier = createAuthSessionSync();
+    const closeNotifier = notifier.subscribe(() => {});
+    mock.session.current = mock.downgraded;
+    mock.nextUserResponse = pendingUser.promise;
+
+    notifier.notifyAuthorizationChange();
+    await waitFor(() => expect(tab1.client.getQueryData(STUDENT_KEY)).toBeUndefined());
+    await waitFor(() => expect(tab2.client.getQueryData(STUDENT_KEY)).toBeUndefined());
+    expect(role(tab1, "tab1")).toBe("admin");
+    expect(role(tab2, "tab2")).toBe("admin");
+
+    pendingUser.resolve(mock.downgraded);
+    await waitFor(() => expect(role(tab1, "tab1")).toBe("staff"));
+    await waitFor(() => expect(role(tab2, "tab2")).toBe("staff"));
+    expect(canManageStaff(tab1, "tab1")).toBe("no");
+    expect(canManageStaff(tab2, "tab2")).toBe("no");
+    closeNotifier();
+  });
+
+  it("keeps the authenticated session when a 403 does not reflect a permission change", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ detail: "Insufficient permissions" }), { status: 403 }));
+    try {
+      const tab = await renderTab("tab1");
+      await expect(apiRequest({ path: "/api/staff/private-record" })).rejects.toMatchObject({ status: 403 });
+      await flush();
+
+      expect(role(tab, "tab1")).toBe("admin");
+      expect(text(tab, "tab1")).toBe("admin");
+      expect(tab.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it("revalidates same-user permissions on focus and ignores a late protected response", async () => {
+    let resolveLate: ((value: string) => void) | null = null;
+    const tab = await renderTab("tab1");
+    await act(async () => {
+      void tab.client.fetchQuery({
+        queryKey: LATE_STUDENT_KEY,
+        staleTime: Infinity,
+        queryFn: ({ signal }) => new Promise<string>((resolve, reject) => {
+          resolveLate = resolve;
+          signal.addEventListener("abort", () => reject(new Error("aborted")));
+        }),
+      }).catch(() => undefined);
+      await Promise.resolve();
+    });
+
+    mock.session.current = mock.downgraded;
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(role(tab, "tab1")).toBe("staff"));
+    expect(tab.client.getQueryData(STUDENT_KEY)).toBeUndefined();
+
+    await act(async () => {
+      resolveLate?.("late-admin-data");
+      await flush();
+    });
+    expect(tab.client.getQueryData(LATE_STUDENT_KEY)).toBeUndefined();
+  });
+
   it("keeps the session and clears protected cache while focus revalidation runs", async () => {
     const tab1 = await renderTab("tab1");
     await act(async () => {
@@ -294,7 +403,7 @@ describe("AuthProvider cross-tab session isolation", () => {
   it("clears protected data before focus revalidation resolves a changed session", async () => {
     const saved = globalThis.BroadcastChannel;
     delete (globalThis as { BroadcastChannel?: typeof BroadcastChannel }).BroadcastChannel;
-    let resolveCurrentUser = (_user: typeof mock.checker) => {};
+    let resolveCurrentUser = (_user: MockUser) => {};
     try {
       const tab1 = await renderTab("tab1");
       mock.session.current = mock.checker;

@@ -1,14 +1,16 @@
 export const AUTH_SESSION_CHANNEL_NAME = "operatoros:auth-session";
 export const AUTH_SESSION_CHANGED_TYPE = "auth-session-changed";
+export const AUTH_AUTHORIZATION_CHANGED_TYPE = "auth-authorization-changed";
 
-interface AuthSessionMessage {
-  type: typeof AUTH_SESSION_CHANGED_TYPE;
+interface AuthSyncMessage {
+  type: typeof AUTH_SESSION_CHANGED_TYPE | typeof AUTH_AUTHORIZATION_CHANGED_TYPE;
   senderId: string;
 }
 
 export interface AuthSessionSync {
   notify: () => void;
-  subscribe: (listener: () => void) => () => void;
+  notifyAuthorizationChange: () => void;
+  subscribe: (listener: (change: "session" | "authorization") => void) => () => void;
 }
 
 function createSenderId(): string {
@@ -31,21 +33,21 @@ function createChannel(): BroadcastChannel | null {
   }
 }
 
-function isAuthSessionMessage(value: unknown): value is AuthSessionMessage {
+function isAuthSyncMessage(value: unknown): value is AuthSyncMessage {
   if (!value || typeof value !== "object") return false;
   const message = value as Record<string, unknown>;
-  return message.type === AUTH_SESSION_CHANGED_TYPE && typeof message.senderId === "string";
+  return (message.type === AUTH_SESSION_CHANGED_TYPE || message.type === AUTH_AUTHORIZATION_CHANGED_TYPE) && typeof message.senderId === "string";
 }
 
 export function createAuthSessionSync(): AuthSessionSync {
   const senderId = createSenderId();
   let channel: BroadcastChannel | null = null;
-  let listener: (() => void) | null = null;
+  let listener: ((change: "session" | "authorization") => void) | null = null;
 
   const handleMessage = (event: MessageEvent<unknown>) => {
     const message = event.data;
-    if (!isAuthSessionMessage(message) || message.senderId === senderId) return;
-    listener?.();
+    if (!isAuthSyncMessage(message) || message.senderId === senderId) return;
+    listener?.(message.type === AUTH_SESSION_CHANGED_TYPE ? "session" : "authorization");
   };
 
   const ensureChannel = () => {
@@ -55,16 +57,19 @@ export function createAuthSessionSync(): AuthSessionSync {
     return channel;
   };
 
+  const notify = (type: AuthSyncMessage["type"]) => {
+    const target = ensureChannel();
+    if (!target) return;
+    try {
+      target.postMessage({ type, senderId } satisfies AuthSyncMessage);
+    } catch {
+      // A closed or unavailable channel must not affect the local session change.
+    }
+  };
+
   return {
-    notify() {
-      const target = ensureChannel();
-      if (!target) return;
-      try {
-        target.postMessage({ type: AUTH_SESSION_CHANGED_TYPE, senderId } satisfies AuthSessionMessage);
-      } catch {
-        // A closed or unavailable channel must not affect the local session change.
-      }
-    },
+    notify: () => notify(AUTH_SESSION_CHANGED_TYPE),
+    notifyAuthorizationChange: () => notify(AUTH_AUTHORIZATION_CHANGED_TYPE),
     subscribe(next) {
       listener = next;
       const target = ensureChannel();

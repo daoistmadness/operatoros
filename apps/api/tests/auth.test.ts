@@ -211,6 +211,37 @@ describe("authentication parity", () => {
     }
   }, 30000);
 
+  it("rechecks a synthetic same-user role change on the existing session", async () => {
+    const value = setup("role-change");
+    try {
+      const login = await value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }),
+      }));
+      const cookie = cookieValue(login.headers.get("set-cookie"));
+      const session = `astyx_session=${cookie}`;
+      const authContext = {
+        database: value.database,
+        config: { authCookieSecret: secret, cookieSecure: false, sessionIdleTimeoutHours: 6, sessionAbsoluteTimeoutHours: 24, maxFailedLoginAttempts: 5, accountLockMinutes: 30, managedDevSetup: false, allowedOrigins: [], auditDir: value.auditDir },
+      };
+      const request = { path: "/api/admin-only", userAgent: null, ipAddress: null };
+      const before = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: session } }));
+      const beforeUser = await before.json() as { id: number; role: string; capabilities: string[] };
+      expect(beforeUser.role).toBe("admin");
+
+      value.database.client.run("UPDATE users SET role = 'staff' WHERE id = ?", [beforeUser.id]);
+      const after = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: session } }));
+      expect(after.status).toBe(200);
+      const afterUser = await after.json() as { id: number; role: string; capabilities: string[] };
+      expect(afterUser).toMatchObject({ id: beforeUser.id, role: "staff" });
+      expect(afterUser.capabilities).not.toContain("manage_staff");
+      expect(authorize(authContext, cookie, { role: "admin" }, request)).toEqual({ status: 403, message: "Insufficient permissions" });
+      expect(authorize(authContext, cookie, { capability: "manage_staff" }, request)).toEqual({ status: 403, message: "Insufficient permissions" });
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
   it("completes the managed setup token flow and clears the setup cookie", async () => {
     const value = setup("setup-flow", false, { managedDevSetup: true, setupToken: "managed-setup-token" });
     const listener = value.app.listen({ hostname: "127.0.0.1", port: 0 });
