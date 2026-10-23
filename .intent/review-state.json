@@ -1184,6 +1184,42 @@
         "A repository search found no remaining PostCSS config/plugin consumer; apps/web/package.json retains postcss 8.5.23.",
         "The PostCSS and Vite plugin builds produce identical CSS and 121/121 identical production assets; the frontend and E2E checks passed."
       ]
+    },
+    "source:apps/web/src/components/DeferredChart.test.tsx": {
+      "fingerprint": "2e2c606b7c8b6170f90cbd7b7973fc85095e639a81b3ad9049a8a8211835b74e",
+      "snapshot": {
+        "apps/web/src/components/DeferredChart.test.tsx": "1056741b6845eb1025df2735f442a2d4b6c14a7077740338521e8d205842e715"
+      },
+      "head": "91e759dc4f9d50ec60eaa485d62c5596faf29d84",
+      "outcome": "no-change",
+      "reason": "Reviewed all three changed source files; they implement and test viewport-triggered Dashboard chart loading and do not change agent guidance or skill behavior.",
+      "evidence": [
+        "Changed: apps/web/src/components/DeferredChart.test.tsx at 91e759dc4f9d50ec60eaa485d62c5596faf29d84"
+      ]
+    },
+    "source:apps/web/src/components/DeferredChart.tsx": {
+      "fingerprint": "f1f8e579065e9a52c37aa93b80f29058c24493ce3679b5ed120311b7d632206e",
+      "snapshot": {
+        "apps/web/src/components/DeferredChart.tsx": "d0119c1de7ae40b58a2672163cff0f29269cd86259fc1dcd470716eb37039633"
+      },
+      "head": "91e759dc4f9d50ec60eaa485d62c5596faf29d84",
+      "outcome": "no-change",
+      "reason": "Reviewed all three changed source files; they implement and test viewport-triggered Dashboard chart loading and do not change agent guidance or skill behavior.",
+      "evidence": [
+        "Changed: apps/web/src/components/DeferredChart.tsx at 91e759dc4f9d50ec60eaa485d62c5596faf29d84"
+      ]
+    },
+    "source:apps/web/src/pages/Dashboard.tsx": {
+      "fingerprint": "19ba8c8a3ce7e81b23975a71093149e0f6fd1942a269cda77ec8a41f521e5170",
+      "snapshot": {
+        "apps/web/src/pages/Dashboard.tsx": "59da5b1826c12c8b1968a05b9b895730ce993aac8ce1c773c9e8bf4b6ea2c99b"
+      },
+      "head": "91e759dc4f9d50ec60eaa485d62c5596faf29d84",
+      "outcome": "no-change",
+      "reason": "Reviewed all three changed source files; they implement and test viewport-triggered Dashboard chart loading and do not change agent guidance or skill behavior.",
+      "evidence": [
+        "Changed: apps/web/src/pages/Dashboard.tsx at 91e759dc4f9d50ec60eaa485d62c5596faf29d84"
+      ]
     }
   }
 }
