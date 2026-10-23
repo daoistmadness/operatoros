@@ -1,9 +1,10 @@
+import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 beforeEach(() => {
   vi.resetModules();
   vi.stubEnv('FRONTEND_PORT', '5173');
-  for (const name of ['FRONTEND_HOST', 'OPERATOROS_DISABLE_ENV_FILES', 'VITE_HMR_HOST', 'VITE_HMR_PROTOCOL', 'VITE_HMR_CLIENT_PORT']) vi.stubEnv(name, undefined);
+  for (const name of ['FRONTEND_HOST', 'OPERATOROS_DISABLE_ENV_FILES', 'VITE_HMR_HOST', 'VITE_HMR_PROTOCOL', 'VITE_HMR_CLIENT_PORT', 'BACKEND_PORT', 'DEV_API_PROXY_TARGET']) vi.stubEnv(name, undefined);
 });
 afterEach(() => vi.unstubAllEnvs());
 const load = async () => (await import('../vite.config.js')).default;
@@ -39,15 +40,31 @@ it('advertises an HTTPS reverse proxy without changing the listening port', asyn
   expect(config.server.allowedHosts).not.toBe(true);
 });
 
-it('transforms JSX in source .js files with the Vite Oxc transformer', async () => {
+it('resolves the @ alias to the web source root', async () => {
   const config = await load();
-  const jsxPlugin = config.plugins.at(-1);
-  expect(config.optimizeDeps.rolldownOptions.moduleTypes).toEqual({ '.js': 'jsx' });
-  const transformed = await jsxPlugin.transform('export const Label = () => <span>Hi</span>', '/repo/apps/web/src/Label.js');
-  expect(jsxPlugin.name).toBe('treat-js-files-as-jsx');
-  expect(transformed.code).toContain('react/jsx-runtime');
-  expect(transformed.code).toContain('"span"');
-  expect(await jsxPlugin.transform('export const value = 1', '/repo/apps/web/src/Label.ts')).toBeNull();
+  expect(config.resolve.alias['@']).toBe(path.resolve(process.cwd(), 'src'));
+});
+
+it('proxies /api to the default backend and honors target overrides', async () => {
+  let config = await load();
+  expect(config.server.proxy['/api']).toEqual({ target: 'http://127.0.0.1:8000', changeOrigin: true, secure: false });
+  expect(config.preview.proxy['/api']).toBe(config.server.proxy['/api']);
+
+  vi.resetModules();
+  vi.stubEnv('BACKEND_PORT', '8123');
+  config = await load();
+  expect(config.server.proxy['/api'].target).toBe('http://127.0.0.1:8123');
+
+  vi.resetModules();
+  vi.stubEnv('DEV_API_PROXY_TARGET', 'http://backend.example.test:9000');
+  config = await load();
+  expect(config.server.proxy['/api'].target).toBe('http://backend.example.test:9000');
+});
+
+it('does not register JSX-in-JS compatibility tooling', async () => {
+  const config = await load();
+  expect(config.plugins.map((plugin) => plugin.name)).not.toContain('treat-js-files-as-jsx');
+  expect(config.optimizeDeps).toBeUndefined();
 });
 
 it.each(['0', '65536', '1.5', 'invalid'])('rejects invalid client port %s', async (port) => {
