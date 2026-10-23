@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 
 const rawFrontendPort = process.env.FRONTEND_PORT ?? 5173;
@@ -42,7 +43,7 @@ const apiProxy = {
 export default defineConfig({
   envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,
   resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   server: {
     host: frontendHost,
     port: frontendPort,
