@@ -653,15 +653,15 @@
       ]
     },
     "source:docs/security/identity-authentication.md": {
-      "fingerprint": "42cc2cf31be4860307f67fe3c0d33d45c843ae509bb358228f01155cb3a06a2d",
+      "fingerprint": "3872f65bec055037f850bda040e1b5dc7f62d09bbeccbc21d5684260886ce3b1",
       "snapshot": {
-        "docs/security/identity-authentication.md": "5fc4f09535a479ef0096c66f0ab9829a7a0bef3e2dd5de974c99d5a11ef04063"
+        "docs/security/identity-authentication.md": "251838cd3f76bbcdebc04d7e29d82b86ebc8e35dc582b4f7fbba0a38dad209f9"
       },
-      "head": "ac54b5715064155052416aeb79e4d162ebb70a56",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Reviewed against current web session handling and mapped Elysia guidance; the change is frontend auth behavior with regression coverage and does not change backend Elysia API guidance.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: docs/security/identity-authentication.md at ac54b5715064155052416aeb79e4d162ebb70a56"
+        "Changed: docs/security/identity-authentication.md at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/api/src/adapter.ts": {
@@ -941,27 +941,27 @@
       ]
     },
     "source:apps/web/src/context/AuthContext.crossTab.test.tsx": {
-      "fingerprint": "9c29c0d6563b9f1885065def93a3422e34bc8772c8df726d3db6ec6e24a1a7df",
+      "fingerprint": "f4272429175963c858d6592a49b9230d2d38afcf9782406af8d511f9fd37e319",
       "snapshot": {
-        "apps/web/src/context/AuthContext.crossTab.test.tsx": "46047f871a11f46b5f09892bdde81ee972540471d6c17a4d091a7ea000ed5c9c"
+        "apps/web/src/context/AuthContext.crossTab.test.tsx": "65739ac0c06988cb88d2e6a84ebef74a27f9632d3dc3eaeea73106863e4242a8"
       },
-      "head": "ac54b5715064155052416aeb79e4d162ebb70a56",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Reviewed against current web session handling and mapped Elysia guidance; the change is frontend auth behavior with regression coverage and does not change backend Elysia API guidance.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at ac54b5715064155052416aeb79e4d162ebb70a56"
+        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/web/src/context/AuthContext.tsx": {
-      "fingerprint": "386d5f85315763f2cb6cae1920eee2aeb382830310c2579c797eb6d7d2cf125a",
+      "fingerprint": "6669b902aa94b688201574f46046d3b82177bbbede2efc68a2a2a6e28556f575",
       "snapshot": {
-        "apps/web/src/context/AuthContext.tsx": "744a3cce2e347a1b9bce34c34bda01568d49a2608cde8fb373bba772d46a711e"
+        "apps/web/src/context/AuthContext.tsx": "a7a431619d3bf4fdcac0c64edc435725886ddc8691a70938794b6542cafae7e4"
       },
-      "head": "ac54b5715064155052416aeb79e4d162ebb70a56",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Reviewed against current web session handling and mapped Elysia guidance; the change is frontend auth behavior with regression coverage and does not change backend Elysia API guidance.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.tsx at ac54b5715064155052416aeb79e4d162ebb70a56"
+        "Changed: apps/web/src/context/AuthContext.tsx at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/web/src/hooks/useAuthQueries.ts": {
@@ -989,15 +989,15 @@
       ]
     },
     "source:apps/web/src/lib/auth/sessionSync.ts": {
-      "fingerprint": "e55ae689e95cb629a018170230e1b5e1d3943d8ca947f3e1966ce960997043e5",
+      "fingerprint": "4235d8ce69325451f0099a68dd55226886784c8d8a77b561167df7c496660e91",
       "snapshot": {
-        "apps/web/src/lib/auth/sessionSync.ts": "17bdd70d3cfb670ff23bb4d35bb22fc05608b4be7e53f2ec120f9749791f7615"
+        "apps/web/src/lib/auth/sessionSync.ts": "0d582e37e2b330d7096579c4d0d2211e790389838ff372a157ad2341c441c386"
       },
-      "head": "995a9b1a383eb8626ea7ffd0dbb376a169be2522",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Frontend cross-tab session isolation, its regressions, documentation, and browser E2E coverage are outside the Elysia backend skill scope and do not change its mapped guidance or planning records.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/auth/sessionSync.ts at 995a9b1a383eb8626ea7ffd0dbb376a169be2522"
+        "Changed: apps/web/src/lib/auth/sessionSync.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/web/src/lib/query/sessionCache.ts": {
@@ -1037,15 +1037,15 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "2ad04d7ceef29b06cf1e2ffbf80efb53401b3f661451438d125ebadd27114d06",
+      "fingerprint": "9c75cbb5a2b14b209647eaa3153e1110ac63eb5d495131cf652da69370e7c7ac",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "8fa0c5d95c70b3186541c68a43f0ff0fcfaba1711e3d18944b285114ef335938"
+        "apps/api/tests/auth.test.ts": "58fac5520ef5ed51913cc6304d9f379de3e392a1348bb4b266bf652f162fb0e2"
       },
-      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/api/tests/auth.test.ts at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+        "Changed: apps/api/tests/auth.test.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
@@ -1133,15 +1133,15 @@
       ]
     },
     "source:apps/web/src/lib/api/auth-security.test.ts": {
-      "fingerprint": "3eec7eb11db66006421fcfe1abafb3daa533a65d426b92954b8b10fb9ea60844",
+      "fingerprint": "779465d1883d3746c4addca256d0d4800459e4819ff695f1ee0eca152a82311e",
       "snapshot": {
-        "apps/web/src/lib/api/auth-security.test.ts": "e93659bba2ee88412471b3edc454281633de8ca4a37037a9236d24e218f3dbed"
+        "apps/web/src/lib/api/auth-security.test.ts": "ffdc83e47b45cd84def5a028496f10adc5c7388afe3b0a926a09cdd19ccd0eba"
       },
-      "head": "ac54b5715064155052416aeb79e4d162ebb70a56",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Reviewed against current web session handling and mapped Elysia guidance; the change is frontend auth behavior with regression coverage and does not change backend Elysia API guidance.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/auth-security.test.ts at ac54b5715064155052416aeb79e4d162ebb70a56"
+        "Changed: apps/web/src/lib/api/auth-security.test.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     },
     "source:apps/web/src/lib/api/client.d.ts": {
@@ -1157,15 +1157,15 @@
       ]
     },
     "source:apps/web/src/lib/api/client.ts": {
-      "fingerprint": "068bf208253ae6ee1916fd5172da7f6adc1ab1037569d0f06c7795d63982ff28",
+      "fingerprint": "9e6687daee1a2fad49b4b2563c43d7056d66a09d78778c95b64d264f6b47f03a",
       "snapshot": {
-        "apps/web/src/lib/api/client.ts": "ec8dbc26307413055dbbc74dc636400fc282509a54de484493d37a8d1908a026"
+        "apps/web/src/lib/api/client.ts": "a29f1acde6c116689e9fe3e1e4e3c3014799e1e2b497137f8ba0bd97baea62fb"
       },
-      "head": "ac54b5715064155052416aeb79e4d162ebb70a56",
+      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
       "outcome": "no-change",
-      "reason": "Reviewed against current web session handling and mapped Elysia guidance; the change is frontend auth behavior with regression coverage and does not change backend Elysia API guidance.",
+      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/client.ts at ac54b5715064155052416aeb79e4d162ebb70a56"
+        "Changed: apps/web/src/lib/api/client.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
       ]
     }
   }
