@@ -32,6 +32,7 @@
     "test:web": "bun --filter @operatoros/web test",
     "test": "bun run test:contracts && bun run test:excel && bun run test:db && bun run test:ui && bun run test:api && bun run test:web",
     "typecheck": "bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/excel typecheck && bun --filter @operatoros/db typecheck && bun --filter @operatoros/ui typecheck && bun --filter @operatoros/agent-skills typecheck && bun --filter @operatoros/api typecheck && bun --filter @operatoros/web typecheck && bun run typecheck:launcher",
+    "typecheck:native": "bun check --no-script -p packages/contracts && bun check --no-script -p packages/excel && bun check --no-script -p packages/db && bun check --no-script -p packages/ui && bun check --no-script -p apps/api && bun check --no-script -p apps/web",
     "build": "bun --filter @operatoros/web build",
     "check:typebox": "bun scripts/check-typebox-resolution.ts",
     "check:contracts": "bun scripts/check-contract-boundaries.ts",

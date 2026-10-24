@@ -39,7 +39,7 @@ and `bun install --frozen-lockfile` resolved 392 installs across 490 packages.
 | Bun 1.4.4 runtime | Adopt | Exact Bun pins in mise, package metadata, CI and active runtime guidance; native `bun:sqlite`/Elysia regressions covered by full tests. Full check was 5:59.68 / 1.33 GB peak RSS versus 6:03.55 / 1.35 GB on 1.4.3; this is not a material speed claim. |
 | Production build | Keep Vite | 124 output files had identical paths and SHA-256 hashes on 1.4.3 and 1.4.4; CSS remained 104.82 kB. |
 | `bun fmt` | Reject as project formatter | `bun fmt --no-script --doctor` found no Prettier/oxfmt config; `--check` reported 697 of 890 files would change. No repository-wide formatting rewrite is justified. |
-| `bun check` | Reject as authoritative typecheck | It passed six applicable non-web projects, but `apps/web` fails on removed TypeScript 7 options `baseUrl` (TS5102) and `target: ES5` (TS5108). TypeScript 5.9.3 remains authoritative and all existing workspace typechecks pass. No TypeScript project references exist, so `bun check -b` adds no coverage. |
+| `bun check` | Reject as authoritative typecheck; adopt as advisory native checker | All six workspaces (`packages/contracts`, `packages/excel`, `packages/db`, `packages/ui`, `apps/api`, `apps/web`) pass `bun check --no-script -p` cleanly in ~2.1 s after TS7-compatible updates in `apps/web/tsconfig.json` (removing deprecated `baseUrl`, setting `target: ESNext`, declaring `types: ["node"]`). TypeScript 5.9.3 is retained as authoritative for compiler-API consumers and release gates; native checking is available via `bun run typecheck:native` and runs as an advisory step in CI. |
 | `bun test --parallel=4` | Reject as default | 368 API tests passed but two restore-safety tests timed out at their existing 15 s and 5 s limits (1:58.71, 384 MB peak RSS). Serial API tests passed 370/370 in 265.88 s. The elapsed reduction does not justify flakiness. |
 | `bun test --changed` | Reject as replacement | On this 15-file toolchain/docs diff it selected zero tests. The custom `scripts/test-scope.ts` marks the mise and root toolchain changes high risk and requires full backend passes plus a frontend build. Keep that workspace-aware coverage. |
 | `bun test --shard` | Evaluate later | Two contract-test shards passed 4/4 and 5/5 tests. This small run shows correct partitioning, but no CI split or end-to-end time saving was demonstrated. |
@@ -51,5 +51,15 @@ and `bun install --frozen-lockfile` resolved 392 installs across 490 packages.
 No app behavior, API contract, schema, dependency, linker, deployment, or data
 path changed. The 1.4.2 Elysia/AsyncLocalStorage fixes and 1.4.4 SQLite fixes
 are taken through the existing regression suite; no new runtime API was needed.
+
+## TypeScript 7 compatibility and native checking
+
+In Loop 168, native typechecking was established across all six repository workspaces using `bun check --no-script -p`.
+To achieve TypeScript 7 compatibility without replacing TypeScript 5.9.3:
+1. `apps/web/tsconfig.json` was updated to remove obsolete `baseUrl: "."` (TS5102) and update obsolete `target: "es5"` (TS5108) to `"target": "ESNext"`.
+2. Declared `"types": ["node"]` in `apps/web/tsconfig.json` so test and foundation files cleanly resolve Node.js built-ins (`node:fs`, `node:path`, `process`) under Bun native checking without relying on implicit ambient discovery.
+3. Added `bun run typecheck:native` running `bun check --no-script -p` across all six workspaces (`packages/contracts`, `packages/excel`, `packages/db`, `packages/ui`, `apps/api`, `apps/web`), completing in ~2.1 s with zero diagnostics.
+4. Added an advisory CI step (`continue-on-error: true`) in `.github/workflows/ci.yml`.
+5. Retained TypeScript 5.9.3 as installed devDependency and authoritative compiler for compiler-API consumers (such as `scripts/check-architecture.ts`), Vite frontend builds, and release gates.
 
 References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
