@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "a9c703787d5450043b9cd52634a005752843170acc0ed00aac3a2cb21eba8ca2",
+      "fingerprint": "f157f9701610dd89031dedda3b3a3b14dc989ba014bc95898d8369e10df84ca6",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
-        ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
+        ".github/workflows/ci.yml": "30d10ed0ab5c5b2797e025e7561f966df94fcdccbacd61b7b522f934b9212791",
         "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
@@ -15,7 +15,7 @@
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
         "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
-        "package.json": "5316b13b726d4699e533f62af5c4e0cc1ff06edf30befa67e4dc14161b7eed72",
+        "package.json": "abb01d267c10f2c85460a492e9be3de169bd093f7e2177069662aba9480674d2",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "9272e4fd6afe9c458518c522bf206ab3d53991a4",
+      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
       "outcome": "no-change",
-      "reason": "Reviewed the affected Elysia skill and planning records for this preservation-documentation clarification. It records the separately observed WIP ref, preserves the historical pin, and states that provenance and authorization remain unknown; it changes no Elysia implementation guidance or skill/planning scope, so no guidance update is warranted.",
+      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
       "evidence": [
-        "Changed: AGENTS.md at 9272e4fd6afe9c458518c522bf206ab3d53991a4"
+        "Changed: .github/workflows/ci.yml, package.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "c9a2eb05ab1dc4aa5a7b7957ef36d85d4e868ef3cf39cf784d36c9f186ba2beb",
+      "fingerprint": "69aa847190f8c2e42241ec6f7f16b35f4e95f85c8cdc04e711c6ce56d71ef190",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
-        ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
+        ".github/workflows/ci.yml": "30d10ed0ab5c5b2797e025e7561f966df94fcdccbacd61b7b522f934b9212791",
         "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -67,7 +67,7 @@
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
         "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
-        "package.json": "5316b13b726d4699e533f62af5c4e0cc1ff06edf30befa67e4dc14161b7eed72",
+        "package.json": "abb01d267c10f2c85460a492e9be3de169bd093f7e2177069662aba9480674d2",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "9272e4fd6afe9c458518c522bf206ab3d53991a4",
+      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
       "outcome": "no-change",
-      "reason": "Reviewed the affected Elysia skill and planning records for this preservation-documentation clarification. It records the separately observed WIP ref, preserves the historical pin, and states that provenance and authorization remain unknown; it changes no Elysia implementation guidance or skill/planning scope, so no guidance update is warranted.",
+      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
       "evidence": [
-        "Changed: AGENTS.md at 9272e4fd6afe9c458518c522bf206ab3d53991a4"
+        "Changed: .github/workflows/ci.yml, package.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1313,15 +1313,15 @@
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
-      "fingerprint": "913bdc85b0bee353c4d49738a720019e2aaf585429b61a4441e2440128bc3bc2",
+      "fingerprint": "778c588230e12d2241aa19a93fb7650a53806f10df5d747eb082020e1df8f60d",
       "snapshot": {
-        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "5fd02e70c5baac4a0d113eae3b5e9eb26ab0d3883f62c462420a2ca7c343aa06"
+        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "dedc3b4139b6bde3cf66366181d134561fbb2bad07e539634e6dc5b960919f31"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
       "evidence": [
-        "Changed: docs/architecture/decisions/BUN_TOOLCHAIN.md at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: docs/architecture/decisions/BUN_TOOLCHAIN.md at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
       ]
     },
     "source:docs/deployment/README.md": {
@@ -1382,6 +1382,18 @@
       "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
       "evidence": [
         "Changed: mise.toml at a97a56448ba0c8a9aee7695a005916d684834381"
+      ]
+    },
+    "source:apps/web/tsconfig.json": {
+      "fingerprint": "37e14688300ef4519a9ae3a490f82f27490c1028332aa844e190db72aae6a1a8",
+      "snapshot": {
+        "apps/web/tsconfig.json": "3c3e9d6f9ecd66b74ccd95ecb41631dd96e64775e72edf8d316e5aa00fe9ae4b"
+      },
+      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
+      "outcome": "no-change",
+      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
+      "evidence": [
+        "Changed: apps/web/tsconfig.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
       ]
     }
   }
