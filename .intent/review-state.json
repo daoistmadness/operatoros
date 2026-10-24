@@ -206,15 +206,15 @@
       ]
     },
     "source:apps/api/src/config.ts": {
-      "fingerprint": "ee29b049e893efa963709e6a95290ad34894c139817d92b7dffb43d2c3f7ec1a",
+      "fingerprint": "7d9befbfff7e1e90e66b400b9d3e5b80eb6647da40f754b8e9f7a41e079b224c",
       "snapshot": {
-        "apps/api/src/config.ts": "4e093e65351f8f44110785fea0668ae47782506d53b8d44b26c4c388c46ebcf0"
+        "apps/api/src/config.ts": "d4dae2ea9a9cb4b354f789e7d4990bdbfb5fa8bbcff18b5c25cb3ccebad9f70f"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "328f6150a1725ff056ce740d5e4a1ca648f8f2d8",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Loop 181: map session and lockout environment overrides in loadConfig; no Elysia skill changes needed",
       "evidence": [
-        "Changed: apps/api/src/config.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/src/config.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
@@ -1394,6 +1394,18 @@
       "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
       "evidence": [
         "Changed: apps/web/tsconfig.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
+      ]
+    },
+    "source:apps/api/tests/app.test.ts": {
+      "fingerprint": "f0f1af921c81dc64e95b431c673631c5f9acf03058c2b9c89a65871ea60aca11",
+      "snapshot": {
+        "apps/api/tests/app.test.ts": "5703247723f63136ab63b3ba800469c2e1ef83fd658e527ed455f90b07e5f39a"
+      },
+      "head": "328f6150a1725ff056ce740d5e4a1ca648f8f2d8",
+      "outcome": "no-change",
+      "reason": "Loop 181: map session and lockout environment overrides in loadConfig; no Elysia skill changes needed",
+      "evidence": [
+        "Changed: apps/api/tests/app.test.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
       ]
     }
   }
