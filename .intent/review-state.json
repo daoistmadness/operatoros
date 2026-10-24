@@ -1241,15 +1241,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceAnalytics.test.tsx": {
-      "fingerprint": "737575fea7022f84d12ed7ffb4cbc7e55fc921d29ff1925cf6b56fe03f9e899d",
+      "fingerprint": "a54b385fd2b45511445331ddf0f61ab93983c0ba4169604a23efe1717b26a64a",
       "snapshot": {
-        "apps/web/src/pages/AttendanceAnalytics.test.tsx": "e419c2d5b3ed66b50d25aa4894db8ab72327d5c212983c20031c08a2320a8c45"
+        "apps/web/src/pages/AttendanceAnalytics.test.tsx": "2d5df0c3aeebf15ab40bb3e93fc34fa6f98bd4f53300a6b36fc88f1b88616d90"
       },
-      "head": "da8fe9614a6e7cd68ec4bd82f280126feac0c79f",
+      "head": "536eb8acf10d3a53cca489aebeb3673a7a939cb9",
       "outcome": "no-change",
-      "reason": "The Attendance Analytics code and focused test change only runtime panel loading and its coverage. The existing Elysia guidance is unrelated; no agent guidance, workflow, boundary, or security instruction needs updating.",
+      "reason": "This follow-up fixes the Attendance Analytics integration test to wait for overview and report content independently, matching the progressive-rendering behavior. The production component, contracts, and operator guidance are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceAnalytics.test.tsx at da8fe9614a6e7cd68ec4bd82f280126feac0c79f"
+        "Changed: apps/web/src/pages/AttendanceAnalytics.test.tsx at 536eb8acf10d3a53cca489aebeb3673a7a939cb9"
       ]
     },
     "source:apps/web/src/pages/AttendanceAnalytics.tsx": {
