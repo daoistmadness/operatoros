@@ -45,7 +45,7 @@ flowchart LR
   end
 
   subgraph Server ["Backend API Authority"]
-    API["Elysia HTTP API<br/>(Bun 1.4.3 + TypeScript 5.9)"]
+    API["Elysia HTTP API<br/>(Bun 1.4.4 + TypeScript 5.9)"]
     Excel["Excel & PDF Engines<br/>(ExcelJS 4.4 + pdf-lib 1.17)"]
     DB[("SQLite Database<br/>(Drizzle ORM 0.45)")]
   end
@@ -133,7 +133,7 @@ flowchart TD
 
 | Layer | Technologies & Dependencies | Version Authority |
 | --- | --- | --- |
-| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.3`, Node `24.19.0`, hk `1.56.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
+| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.4`, Node `24.19.0`, hk `1.56.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `5.9`, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
@@ -163,7 +163,7 @@ flowchart TD
 
 ### Prerequisites
 
-- **Native Linux Bun Toolchain**: Bun `1.4.3` installed natively on Linux.
+- **Native Linux Bun Toolchain**: Bun `1.4.4` installed natively on Linux.
   > [!WARNING]
   > Do not use Windows binaries, `/mnt/c`, or Windows-mounted checkouts.
 - **mise-en-place**: Version `2024.1.0` or higher (CI uses `2026.10.3`).
