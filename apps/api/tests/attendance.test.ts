@@ -289,4 +289,156 @@ describe("attendance parity slices", () => {
       expect(adminOutsideDate.status).toBe(200);
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
+
+  it("enforces teacher class assignment scope on attendance corrections", async () => {
+    const path = `/tmp/operatoros-correction-scope-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,1,'7B','B',1)");
+    database.client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (9002,'Other Class Student','SMP','7B')");
+    database.client.run("INSERT INTO student_enrollments (student_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (9002,1,1,2,'7B',1,'2026-07-01','ACTIVE')");
+    database.client.run("INSERT INTO teacher_class_assignments (user_id,academic_year_id,academic_class_id,class_role,active,assigned_by,effective_from) VALUES (2,1,1,'HOMEROOM_TEACHER',1,'golden-admin','2026-07-01')");
+    database.client.run("INSERT INTO attendance (id,student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (3,9002,'2026-08-02','07:35:00',NULL,0,'none',0,'incomplete')");
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-scope-audit-${process.pid}` } });
+    try {
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
+
+      const adminLogin = await app.handle(new Request("http://local/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }),
+      }));
+      const adminAuth = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
+
+      // 1. Missing attendance record -> 404
+      const missingAtt = await app.handle(new Request("http://local/api/attendance-corrections", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ attendance_id: 99999, proposed_status: "sakit", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "Missing attendance record." }),
+      }));
+      expect(missingAtt.status).toBe(404);
+
+      // 2. Unassigned class attendance record (attendance 3 belongs to student 9002 in class 7B) -> 403 for staff
+      const unassignedCreate = await app.handle(new Request("http://local/api/attendance-corrections", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ attendance_id: 3, proposed_status: "sakit", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "Unassigned class correction attempt." }),
+      }));
+      expect(unassignedCreate.status).toBe(403);
+
+      // 3. Assigned class attendance record (attendance 2 belongs to student 9001 in class 7A) -> 200 for staff
+      const assignedCreate = await app.handle(new Request("http://local/api/attendance-corrections", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ attendance_id: 2, proposed_status: "sakit", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "Class 7A valid correction draft." }),
+      }));
+      expect(assignedCreate.status).toBe(200);
+      const staffReqId = (await assignedCreate.json() as any).id;
+
+      // 4. Admin creates correction request on class 7B (attendance 3) -> 200
+      const adminCreate = await app.handle(new Request("http://local/api/attendance-corrections", {
+        method: "POST",
+        headers: { ...adminAuth, "content-type": "application/json" },
+        body: JSON.stringify({ attendance_id: 3, proposed_status: "izin", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "Admin correction for 7B." }),
+      }));
+      expect(adminCreate.status).toBe(200);
+      const adminReqId = (await adminCreate.json() as any).id;
+
+      // 5. GET /api/attendance-corrections:
+      // Staff should only see requests for assigned class or requested by staff
+      const staffList = await app.handle(new Request("http://local/api/attendance-corrections", { headers: staffAuth }));
+      expect(staffList.status).toBe(200);
+      const staffListJson = await staffList.json() as any[];
+      const staffListIds = staffListJson.map((r) => r.id);
+      expect(staffListIds).toContain(staffReqId);
+      expect(staffListIds).not.toContain(adminReqId);
+
+      // Admin sees both
+      const adminList = await app.handle(new Request("http://local/api/attendance-corrections", { headers: adminAuth }));
+      expect(adminList.status).toBe(200);
+      const adminListJson = await adminList.json() as any[];
+      const adminListIds = adminListJson.map((r) => r.id);
+      expect(adminListIds).toContain(staffReqId);
+      expect(adminListIds).toContain(adminReqId);
+
+      // 6. GET /api/attendance-corrections/:request_id:
+      // Staff accessing unassigned request adminReqId -> 403
+      const staffGetUnassigned = await app.handle(new Request(`http://local/api/attendance-corrections/${adminReqId}`, { headers: staffAuth }));
+      expect(staffGetUnassigned.status).toBe(403);
+
+      // Staff accessing assigned request staffReqId -> 200
+      const staffGetAssigned = await app.handle(new Request(`http://local/api/attendance-corrections/${staffReqId}`, { headers: staffAuth }));
+      expect(staffGetAssigned.status).toBe(200);
+
+      // Non-existent request -> 404
+      const notFoundReq = await app.handle(new Request("http://local/api/attendance-corrections/99999", { headers: staffAuth }));
+      expect(notFoundReq.status).toBe(404);
+
+      // 7. Assignment expiration check on submit:
+      // Expire teacher assignment so date 2026-08-02 is outside assignment window
+      database.client.run("UPDATE teacher_class_assignments SET effective_to = '2026-08-01' WHERE user_id = 2 AND academic_class_id = 1");
+      const expiredSubmit = await app.handle(new Request(`http://local/api/attendance-corrections/${staffReqId}/submit`, {
+        method: "POST",
+        headers: staffAuth,
+      }));
+      expect(expiredSubmit.status).toBe(403);
+
+      // Restore active assignment window
+      database.client.run("UPDATE teacher_class_assignments SET effective_to = NULL WHERE user_id = 2 AND academic_class_id = 1");
+      const validSubmit = await app.handle(new Request(`http://local/api/attendance-corrections/${staffReqId}/submit`, {
+        method: "POST",
+        headers: staffAuth,
+      }));
+      expect(validSubmit.status).toBe(200);
+
+      // 8. Cancellation scoping:
+      // Create another correction on attendance 1 (student 9001 in class 7A, date 2026-08-01)
+      const cancelDraft = await app.handle(new Request("http://local/api/attendance-corrections", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ attendance_id: 1, proposed_status: "sakit", reason_code: "PAPER_BOOK_VERIFICATION", explanation: "Draft to cancel." }),
+      }));
+      expect(cancelDraft.status).toBe(200);
+      const cancelReqId = (await cancelDraft.json() as any).id;
+
+      // Expire assignment before 2026-08-01
+      database.client.run("UPDATE teacher_class_assignments SET effective_to = '2026-07-15' WHERE user_id = 2 AND academic_class_id = 1");
+      const expiredCancel = await app.handle(new Request(`http://local/api/attendance-corrections/${cancelReqId}/cancel`, {
+        method: "POST",
+        headers: staffAuth,
+      }));
+      expect(expiredCancel.status).toBe(403);
+
+      // Restore active assignment window
+      database.client.run("UPDATE teacher_class_assignments SET effective_to = NULL WHERE user_id = 2 AND academic_class_id = 1");
+      const validCancel = await app.handle(new Request(`http://local/api/attendance-corrections/${cancelReqId}/cancel`, {
+        method: "POST",
+        headers: staffAuth,
+      }));
+      expect(validCancel.status).toBe(200);
+      expect((await validCancel.json() as any).state).toBe("CANCELLED");
+
+      // 9. Staff attempting to approve -> 403 (RBAC)
+      const staffApprove = await app.handle(new Request(`http://local/api/attendance-corrections/${staffReqId}/approve`, {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }),
+      }));
+      expect(staffApprove.status).toBe(403);
+
+      // Admin approves -> 200
+      const adminApprove = await app.handle(new Request(`http://local/api/attendance-corrections/${staffReqId}/approve`, {
+        method: "POST",
+        headers: { ...adminAuth, "content-type": "application/json" },
+        body: JSON.stringify({ confirmation: "APPROVE_ATTENDANCE_CORRECTION" }),
+      }));
+      expect(adminApprove.status).toBe(200);
+      expect((await adminApprove.json() as any).state).toBe("APPROVED");
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
 });
