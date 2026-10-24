@@ -1407,6 +1407,30 @@
       "evidence": [
         "Changed: apps/api/tests/app.test.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
       ]
+    },
+    "source:apps/api/src/domains/early-departure.ts": {
+      "fingerprint": "a8f8889b6f4fda0d27d4abe3581349d5309db017e55d50c38591e2ef84033bd8",
+      "snapshot": {
+        "apps/api/src/domains/early-departure.ts": "e592d3f197e5dda25986dbfad44ed5412b2ff9efd0dae56b39a35771ac0fff7d"
+      },
+      "head": "f824b1d6638ecbd131a5d6098038a93c1ead824a",
+      "outcome": "no-change",
+      "reason": "Loop 182: enforce attendance_id match on departure excuse revocation and class scoping on departure history",
+      "evidence": [
+        "Changed: apps/api/src/domains/early-departure.ts at f824b1d6638ecbd131a5d6098038a93c1ead824a"
+      ]
+    },
+    "source:apps/api/tests/attendance.test.ts": {
+      "fingerprint": "e3e872ebd16834fae30dfe1ab3d4007d6b39754b7390494c2bc8723681a7801f",
+      "snapshot": {
+        "apps/api/tests/attendance.test.ts": "efe31ed6c074bfe5e857e0972de18c4404eef2a3268f5cc2551a651d1d2fe3ae"
+      },
+      "head": "f824b1d6638ecbd131a5d6098038a93c1ead824a",
+      "outcome": "no-change",
+      "reason": "Loop 182: enforce attendance_id match on departure excuse revocation and class scoping on departure history",
+      "evidence": [
+        "Changed: apps/api/tests/attendance.test.ts at f824b1d6638ecbd131a5d6098038a93c1ead824a"
+      ]
     }
   }
 }
