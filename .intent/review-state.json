@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "2b1ccb260323fe7cb33980afa9d4f1ff0832fe062b01ceae109b9d96ea767d02",
+      "fingerprint": "a9c703787d5450043b9cd52634a005752843170acc0ed00aac3a2cb21eba8ca2",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
-        "AGENTS.md": "4756cb7c905b69270cfe8d695c3efda79b4b4355ad13f16e17d73655f8778774",
+        "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
         "bun.lock": "19bf0eed1218594293201caf55c4605cd328380943966d60141d7a0af2fac635",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "9272e4fd6afe9c458518c522bf206ab3d53991a4",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "Reviewed the affected Elysia skill and planning records for this preservation-documentation clarification. It records the separately observed WIP ref, preserves the historical pin, and states that provenance and authorization remain unknown; it changes no Elysia implementation guidance or skill/planning scope, so no guidance update is warranted.",
       "evidence": [
-        "Changed: .github/CI.md, AGENTS.md, package.json at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: AGENTS.md at 9272e4fd6afe9c458518c522bf206ab3d53991a4"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "f1697785d661370e4143d07aa693857a03b595b713ce38108588ef3469e72469",
+      "fingerprint": "c9a2eb05ab1dc4aa5a7b7957ef36d85d4e868ef3cf39cf784d36c9f186ba2beb",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "6622ca932b0c187981e40f80bfd9fcaf76e1bdfa4860a0f52aaace91fab20861",
-        "AGENTS.md": "4756cb7c905b69270cfe8d695c3efda79b4b4355ad13f16e17d73655f8778774",
+        "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "9272e4fd6afe9c458518c522bf206ab3d53991a4",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "Reviewed the affected Elysia skill and planning records for this preservation-documentation clarification. It records the separately observed WIP ref, preserves the historical pin, and states that provenance and authorization remain unknown; it changes no Elysia implementation guidance or skill/planning scope, so no guidance update is warranted.",
       "evidence": [
-        "Changed: .github/CI.md, AGENTS.md, package.json at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: AGENTS.md at 9272e4fd6afe9c458518c522bf206ab3d53991a4"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
