@@ -167,6 +167,23 @@ describe("attendance parity slices", () => {
       const history = await app.handle(new Request("http://local/api/attendance/1/departure-history", { headers: auth }));
       expect((await history.json() as any).audit_trail[0]).toMatchObject({ action: "RECORDED", reason_code: "SCHOOL_EVENT" });
       expect((await (await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-01/departures", { headers: auth }))).json() as any).departures[0].classification).toBe("EXCUSED_EARLY_DEPARTURE");
+
+      const mismatchedRevoke = await app.handle(new Request(`http://local/api/attendance/999/departure-excuses/${excuseId}/revoke`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ revocation_reason: "Mismatched target" }) }));
+      expect(mismatchedRevoke.status).toBe(400);
+      expect((await mismatchedRevoke.json() as any).detail.code).toBe("EARLY_DEPARTURE_EXCUSE_NOT_ACTIVE");
+
+      database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,1,'7B','B',1)");
+      database.client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (9002,'Other Student','SMP','7B')");
+      database.client.run("INSERT INTO attendance (id,student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (3,9002,'2026-08-01','07:40:00','16:00:00',25,'calculated',0,'late')");
+      database.client.run("INSERT INTO teacher_class_assignments (user_id,academic_year_id,academic_class_id,class_role,active,assigned_by,effective_from) VALUES (2,1,1,'HOMEROOM_TEACHER',1,'golden-admin','2026-07-01')");
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
+      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
+      const assignedHistory = await app.handle(new Request("http://local/api/attendance/1/departure-history", { headers: staffAuth }));
+      expect(assignedHistory.status).toBe(200);
+      const unassignedHistory = await app.handle(new Request("http://local/api/attendance/3/departure-history", { headers: staffAuth }));
+      expect(unassignedHistory.status).toBe(403);
+      expect((await unassignedHistory.json() as any).detail.code).toBe("EARLY_DEPARTURE_CLASS_SCOPE_FORBIDDEN");
+
       const revoked = await app.handle(new Request(`http://local/api/attendance/1/departure-excuses/${excuseId}/revoke`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ revocation_reason: "Event ended" }) }));
       expect(revoked.status).toBe(200); expect((await revoked.json() as any).state).toBe("REVOKED");
     } finally { database.close(); rmSync(path, { force: true }); }
