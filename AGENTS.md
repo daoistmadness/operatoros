@@ -224,6 +224,15 @@ Preserve all user work, especially `PROJECT_CONTEXT.md`, `f22`, and
 `docs/student-data/dapodik-roster-import-design.md` when present. Never merge,
 copy, modify, or delete `wip/followups-api-preservation-20260728-013523` at
 `07b7211b73a59f0032dc33c0c43741d884b38741`.
+
+WIP reference clarification (2026-10-24): Read-only checks found both the
+local branch and `origin` tracking ref for
+`wip/followups-api-preservation-20260728-013523` at
+`0763b624c5d2f08a6e4c590d4d5e867bf07fe777`. These SHAs identify distinct
+commits and are not interchangeable. The provenance of the discrepancy and
+authorization for any ref movement are unknown. This note preserves the
+historical pin above and does not authorize changing either ref.
+
 Protect `~/code/repos/operatoros`, `~/code/worktrees/operatoros/`, and
 `~/.local/share/operatoros/development/`. Prune only clean integrated worktrees
 after fetching and verifying merged-main: inspect
