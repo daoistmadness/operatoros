@@ -1421,27 +1421,27 @@
       ]
     },
     "source:apps/api/tests/attendance.test.ts": {
-      "fingerprint": "642242a1ecebf1ae6972b39837133f0edf5afd9282b1edd9034e8bc40c87242f",
+      "fingerprint": "269a9503473fcbf686a77840e6af8d2fbded80430ef3cb2b2dffa5a2f1fcd69d",
       "snapshot": {
-        "apps/api/tests/attendance.test.ts": "02ea5282dd125c911049382ed45520e15e963be9c977cdbd2b0cbf36e8579656"
+        "apps/api/tests/attendance.test.ts": "98b2a0a06f30d3c9ed3acebe8901ab4ea542210e8ba87c0a70ed5a55dc8f3fd4"
       },
-      "head": "8dcbbc718b60deb3535a847f38fda8dc9905e99c",
+      "head": "b750650670cadc946f47edecd595917875692ed6",
       "outcome": "no-change",
-      "reason": "Enforce teacher class assignment scoping on attendance correction requests",
+      "reason": "Reviewed both attendance changes against the Elysia skill, attendance consolidation contract, and change-safety golden path. The fix uses existing API transaction and audit patterns; it adds no reusable Elysia guidance or changes to the documented attendance contract.",
       "evidence": [
-        "Changed: apps/api/tests/attendance.test.ts at 8dcbbc718b60deb3535a847f38fda8dc9905e99c"
+        "Changed: apps/api/tests/attendance.test.ts at b750650670cadc946f47edecd595917875692ed6"
       ]
     },
     "source:apps/api/src/domains/attendance.ts": {
-      "fingerprint": "17f9b8329e061bae5b15df68c505a3b95efaef2560e289ea415c7ad926a9426b",
+      "fingerprint": "371bde520e0c659bdc7933667495c5869bc86aa1087f9a06e9a61bec04c7f9ff",
       "snapshot": {
-        "apps/api/src/domains/attendance.ts": "30065089103cad0d2874d07beb45784aa414511fc5b62f658f93e44def308d96"
+        "apps/api/src/domains/attendance.ts": "043b1bf44885257a23e99ca86eec96a4abb12175141cf0cc091023e846e124dd"
       },
-      "head": "8dcbbc718b60deb3535a847f38fda8dc9905e99c",
+      "head": "b750650670cadc946f47edecd595917875692ed6",
       "outcome": "no-change",
-      "reason": "Enforce teacher class assignment scoping on attendance correction requests",
+      "reason": "Reviewed both attendance changes against the Elysia skill, attendance consolidation contract, and change-safety golden path. The fix uses existing API transaction and audit patterns; it adds no reusable Elysia guidance or changes to the documented attendance contract.",
       "evidence": [
-        "Changed: apps/api/src/domains/attendance.ts at 8dcbbc718b60deb3535a847f38fda8dc9905e99c"
+        "Changed: apps/api/src/domains/attendance.ts at b750650670cadc946f47edecd595917875692ed6"
       ]
     },
     "source:apps/api/tests/fixtures/attendance-reads.ts": {
