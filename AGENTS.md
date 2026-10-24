@@ -185,7 +185,7 @@ Implementation prompts start with `/plan`; keep code identifiers exact.
 
 Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
-resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.3
+resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.4
 in its local development image and does not change the supported runtime.
 Before running Bun, inspect `command -v`, `type -P` (in Bash), and `readlink -f`.
 Reject `/mnt/<drive>`, WindowsApps, Program Files, `.exe`, `.cmd`, `.bat`, and

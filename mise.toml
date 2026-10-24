@@ -4,7 +4,7 @@ min_version = "2024.1.0"
 lockfile = true
 
 [tools]
-bun = "1.4.3"
+bun = "1.4.4"
 hk = "1.56.1"
 node = "24.19.0"
 
@@ -23,7 +23,7 @@ fail() {
 git rev-parse --show-toplevel >/dev/null 2>&1 || fail "not inside a Git checkout" "cd to the repository root"
 git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/main is unavailable" "git fetch origin main"
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
-[ "$(bun --version)" = "1.4.3" ] || fail "Bun 1.4.3 is not active" "mise install"
+[ "$(bun --version)" = "1.4.4" ] || fail "Bun 1.4.4 is not active" "put mise's Bun before other Bun installations on PATH, then run mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
 [ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"

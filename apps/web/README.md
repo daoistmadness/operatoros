@@ -50,7 +50,7 @@ apps/web/
 
 ## Requirements
 - mise-en-place controls runtime versions (see root `mise.toml`)
-- Bun 1.4.3 (installed via `mise install` at repo root)
+- Bun 1.4.4 (installed via `mise install` at repo root)
 
 ## Setup
 From the repository root:

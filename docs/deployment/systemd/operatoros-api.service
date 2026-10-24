@@ -13,7 +13,7 @@
 #
 # SUBSTITUTION POINTS (only these two, if your layout differs)
 #   - /opt/operatoros ......... checkout location (read-only at runtime)
-#   - /usr/local/bin/bun ...... pinned native Bun 1.4.3 (symlink to the mise install)
+#   - /usr/local/bin/bun ...... pinned native Bun 1.4.4 (symlink to the mise install)
 
 [Unit]
 Description=OperatorOS API (local SQLite attendance and analytics)

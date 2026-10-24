@@ -10,7 +10,7 @@ This runbook covers a single-host Ubuntu deployment of the supported runtime:
 - `SQLITE_ONLY_SUPPORTED` — local, file-backed SQLite; PostgreSQL is not supported.
 - `LOCAL_BROWSER_RUNTIME` — the React frontend runs in a browser on the same host or
   LAN; the API serves only HTTP on a local socket.
-- Native Linux Bun `1.4.3` (no containers required, no Windows/WSL-interop binaries).
+- Native Linux Bun `1.4.4` (no containers required, no Windows/WSL-interop binaries).
 
 ## 1. What runs under supervision
 
@@ -33,8 +33,8 @@ tools that write SQLite directly or ignore it. The runtime still reports
   `lsof` fails those checks closed), and `flock` from `util-linux` (required for
   API/CLI data-root exclusion). `git` only when the checkout is updated from a
   remote; offline hosts use a staged bundle instead.
-- Native Bun `1.4.3` on Linux:
-  - Install with mise (`mise install`) and verify: `bun --version` prints `1.4.3`.
+- Native Bun `1.4.4` on Linux:
+  - Install with mise (`mise install`) and verify: `bun --version` prints `1.4.4`.
   - Expose it at a stable path for the service:
     `sudo ln -sf "$(readlink -f "$(command -v bun)")" /usr/local/bin/bun`
   - Never point the service at a Windows/WSL-interop binary or `/mnt/*` path.
@@ -57,7 +57,7 @@ tools that write SQLite directly or ignore it. The runtime still reports
 | Checkout | `/opt/operatoros` | read-only at runtime (`ProtectSystem=strict`) |
 | Data root | `/var/lib/operatoros/data` | set by the unit; SQLite DB, `backups/`, `logs/` derive from it |
 | Environment file | `/etc/operatoros/api.env` | `root:operatoros`, mode `0640` |
-| Bun | `/usr/local/bin/bun` | symlink to the pinned 1.4.3 binary |
+| Bun | `/usr/local/bin/bun` | symlink to the pinned 1.4.4 binary |
 | Unit | `/etc/systemd/system/operatoros-api.service` | from `docs/deployment/systemd/` |
 
 The example API port `8090` is not a reservation or a claim that the port is
@@ -254,7 +254,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 
 | Symptom | First check |
 |---|---|
-| `status=203/EXEC` | `/usr/local/bin/bun` missing or wrong version (`bun --version` must print `1.4.3`). |
+| `status=203/EXEC` | `/usr/local/bin/bun` missing or wrong version (`bun --version` must print `1.4.4`). |
 | `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/operations/DATABASE_OPERATIONS.md`. |
