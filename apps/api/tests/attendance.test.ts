@@ -88,6 +88,90 @@ describe("attendance parity slices", () => {
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 
+  it("keeps correction transitions retryable when audit writes fail", async () => {
+    const path = `/tmp/operatoros-correction-audit-atomic-${process.pid}-${Date.now()}.db`;
+    createAttendanceReadFixture(path, "corrections");
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-audit-atomic-${process.pid}` } });
+    try {
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
+      const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
+      const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const admin = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
+      const post = (path: string, auth: Record<string, string>, body?: Record<string, unknown>) => app.handle(new Request(`http://local${path}`, { method: "POST", headers: body ? { ...auth, "content-type": "application/json" } : auth, ...(body ? { body: JSON.stringify(body) } : {}) }));
+      const failAuditWrites = () => database.client.run("CREATE TRIGGER fail_correction_audit BEFORE INSERT ON attendance_correction_audit WHEN NEW.action != 'CREATE' BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const allowAuditWrites = () => database.client.run("DROP TRIGGER fail_correction_audit");
+      const actions = (id: number) => (database.client.query("SELECT action FROM attendance_correction_audit WHERE request_id = ? ORDER BY id").all(id) as any[]).map((item) => item.action);
+
+      const create = await post("/api/attendance-corrections", staff, { attendance_id: 1, proposed_status: "late", reason_code: "VERIFIED_SOURCE", explanation: "Synthetic source verification." });
+      expect(create.status).toBe(200);
+      const id = (await create.json() as any).id;
+      failAuditWrites();
+      expect((await post(`/api/attendance-corrections/${id}/submit`, staff)).status).toBe(500);
+      expect(database.client.query("SELECT state, version FROM attendance_correction_requests WHERE id = ?").get(id)).toEqual({ state: "DRAFT", version: 1 });
+      expect(actions(id)).toEqual(["CREATE"]);
+      allowAuditWrites();
+      expect((await post(`/api/attendance-corrections/${id}/submit`, staff)).status).toBe(200);
+      expect(actions(id)).toEqual(["CREATE", "SUBMIT"]);
+
+      failAuditWrites();
+      expect((await post(`/api/attendance-corrections/${id}/reject`, staff, { rejection_reason: "Not authorized" })).status).toBe(403);
+      expect((await post(`/api/attendance-corrections/${id}/reject`, admin, { rejection_reason: "Source record was not verified." })).status).toBe(500);
+      expect(database.client.query("SELECT state, version FROM attendance_correction_requests WHERE id = ?").get(id)).toEqual({ state: "SUBMITTED", version: 2 });
+      expect(actions(id)).toEqual(["CREATE", "SUBMIT"]);
+      allowAuditWrites();
+      expect((await post(`/api/attendance-corrections/${id}/reject`, admin, { rejection_reason: "Source record was not verified." })).status).toBe(200);
+      expect(database.client.query("SELECT state FROM attendance_correction_requests WHERE id = ?").get(id)).toEqual({ state: "REJECTED" });
+      expect(actions(id)).toEqual(["CREATE", "SUBMIT", "REJECT"]);
+      expect((await post(`/api/attendance-corrections/${id}/reject`, admin, { rejection_reason: "Duplicate retry." })).status).toBe(409);
+      expect(actions(id)).toEqual(["CREATE", "SUBMIT", "REJECT"]);
+
+      const next = await post("/api/attendance-corrections", staff, { attendance_id: 1, proposed_status: "late", reason_code: "VERIFIED_SOURCE", explanation: "Second synthetic verification." });
+      expect(next.status).toBe(200);
+      const nextId = (await next.json() as any).id;
+      failAuditWrites();
+      expect((await post(`/api/attendance-corrections/${nextId}/cancel`, staff)).status).toBe(500);
+      expect(database.client.query("SELECT state, version FROM attendance_correction_requests WHERE id = ?").get(nextId)).toEqual({ state: "DRAFT", version: 1 });
+      expect(actions(nextId)).toEqual(["CREATE"]);
+      allowAuditWrites();
+      expect((await post(`/api/attendance-corrections/${nextId}/cancel`, staff)).status).toBe(200);
+      expect(actions(nextId)).toEqual(["CREATE", "CANCEL"]);
+    } finally { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); }
+  }, 30000);
+
+  it("audits stale approval conflicts and retries after the audit store recovers", async () => {
+    const path = `/tmp/operatoros-correction-stale-audit-${process.pid}-${Date.now()}.db`;
+    createAttendanceReadFixture(path, "corrections");
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-stale-audit-${process.pid}` } });
+    try {
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
+      const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
+      const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const admin = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
+      const post = (path: string, auth: Record<string, string>, body?: Record<string, unknown>) => app.handle(new Request(`http://local${path}`, { method: "POST", headers: body ? { ...auth, "content-type": "application/json" } : auth, ...(body ? { body: JSON.stringify(body) } : {}) }));
+      const create = await post("/api/attendance-corrections", staff, { attendance_id: 1, proposed_status: "late", reason_code: "VERIFIED_SOURCE", explanation: "Synthetic source verification." });
+      const id = (await create.json() as any).id;
+      expect((await post(`/api/attendance-corrections/${id}/submit`, staff)).status).toBe(200);
+      expect((await post("/api/review/attendance/1/override", admin, { override_status: "on-time", note: "Synthetic competing correction." })).status).toBe(200);
+      database.client.run("CREATE TRIGGER fail_stale_correction_audit BEFORE INSERT ON attendance_correction_audit WHEN NEW.action = 'STALE' BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      expect((await post(`/api/attendance-corrections/${id}/approve`, admin, { confirmation: "APPROVE_ATTENDANCE_CORRECTION" })).status).toBe(500);
+      expect(database.client.query("SELECT state, version FROM attendance_correction_requests WHERE id = ?").get(id)).toEqual({ state: "SUBMITTED", version: 2 });
+      expect(database.client.query("SELECT action FROM attendance_correction_audit WHERE request_id = ? ORDER BY id").all(id)).toEqual([{ action: "CREATE" }, { action: "SUBMIT" }]);
+
+      database.client.run("DROP TRIGGER fail_stale_correction_audit");
+      expect((await post(`/api/attendance-corrections/${id}/approve`, admin, { confirmation: "APPROVE_ATTENDANCE_CORRECTION" })).status).toBe(409);
+      expect(database.client.query("SELECT state, version FROM attendance_correction_requests WHERE id = ?").get(id)).toMatchObject({ state: "STALE", version: 3 });
+      expect(database.client.query("SELECT action, prior_state, new_state, actor FROM attendance_correction_audit WHERE request_id = ? ORDER BY id").all(id)).toEqual([
+        { action: "CREATE", prior_state: null, new_state: "DRAFT", actor: "golden-staff" },
+        { action: "SUBMIT", prior_state: "DRAFT", new_state: "SUBMITTED", actor: "golden-staff" },
+        { action: "STALE", prior_state: "SUBMITTED", new_state: "STALE", actor: "golden-admin" },
+      ]);
+      expect((await post(`/api/attendance-corrections/${id}/approve`, admin, { confirmation: "APPROVE_ATTENDANCE_CORRECTION" })).status).toBe(409);
+      expect((database.client.query("SELECT COUNT(*) AS count FROM attendance_correction_audit WHERE request_id = ? AND action = 'STALE'").get(id) as any).count).toBe(1);
+    } finally { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); }
+  }, 30000);
+
   it("requires a structured paper-book source and rejects unknown status before writes", async () => {
     const path = `/tmp/operatoros-paper-book-override-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-override-audit-${process.pid}` } });
     try {
@@ -151,6 +235,7 @@ describe("attendance parity slices", () => {
       expect((await selfConfirm(second.id, 1)).status).toBe(409);
       expect(database.client.query("SELECT override_status FROM attendance_overrides WHERE attendance_id = 1").get()).toMatchObject({ override_status: "on-time" });
       expect(database.client.query("SELECT state FROM attendance_correction_requests WHERE id = ?").get(second.id)).toMatchObject({ state: "STALE" });
+      expect(database.client.query("SELECT action, prior_state, new_state, actor FROM attendance_correction_audit WHERE request_id = ? AND action = 'STALE'").get(second.id)).toEqual({ action: "STALE", prior_state: "DRAFT", new_state: "STALE", actor: "golden-admin" });
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
 
