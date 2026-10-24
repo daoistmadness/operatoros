@@ -211,4 +211,82 @@ describe("attendance parity slices", () => {
       const metricsBody = await metrics.json() as any; expect(metrics.status).toBe(200); expect(metricsBody.by_class).toBeInstanceOf(Object); expect(metricsBody.by_class).not.toBeInstanceOf(Array);
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
+  it("enforces class scope and teacher assignment effective dates across attendance review and entries", async () => {
+    const path = `/tmp/operatoros-review-scoping-${process.pid}-${Date.now()}.db`;
+    createAttendanceReadFixture(path, "corrections");
+    const database = openDatabase(path);
+    database.client.run("UPDATE student_enrollments SET effective_from = '2026-01-01' WHERE student_id = 9601");
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-review-scoping-audit-${process.pid}` } });
+    try {
+      const adminLogin = await app.handle(new Request("http://local/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }),
+      }));
+      const adminAuth = { cookie: `astyx_session=${cookie(adminLogin)}`, origin: "http://localhost:5173" };
+
+      const staffLogin = await app.handle(new Request("http://local/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      const staffAuth = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
+
+      // 1. GET /api/review/classes
+      const staffClassesRes = await app.handle(new Request("http://local/api/review/classes?academic_year_id=1", { headers: staffAuth }));
+      expect(staffClassesRes.status).toBe(200);
+      const staffClasses = await staffClassesRes.json() as any;
+      expect(staffClasses.classes).toEqual([{ id: 1, name: "7A" }]);
+
+      const adminClassesRes = await app.handle(new Request("http://local/api/review/classes?academic_year_id=1", { headers: adminAuth }));
+      expect(adminClassesRes.status).toBe(200);
+      const adminClasses = await adminClassesRes.json() as any;
+      expect(adminClasses.classes.map((c: any) => c.name)).toContain("7A");
+      expect(adminClasses.classes.map((c: any) => c.name)).toContain("7B");
+
+      // 2. GET /api/review/attendance
+      const staffUnassignedAtt = await app.handle(new Request("http://local/api/review/attendance?academic_year_id=1&academic_class_id=2&date=2026-08-05", { headers: staffAuth }));
+      expect(staffUnassignedAtt.status).toBe(403);
+
+      const staffAssignedAtt = await app.handle(new Request("http://local/api/review/attendance?academic_year_id=1&academic_class_id=1&date=2026-08-04", { headers: staffAuth }));
+      expect(staffAssignedAtt.status).toBe(200);
+      expect((await staffAssignedAtt.json() as any).class_name).toBe("7A");
+
+      const adminUnassignedAtt = await app.handle(new Request("http://local/api/review/attendance?academic_year_id=1&academic_class_id=2&date=2026-08-05", { headers: adminAuth }));
+      expect(adminUnassignedAtt.status).toBe(200);
+
+      // 3. GET /api/review/attendance/:attendance_id/history
+      const staffUnassignedHist = await app.handle(new Request("http://local/api/review/attendance/2/history", { headers: staffAuth }));
+      expect(staffUnassignedHist.status).toBe(403);
+
+      const staffAssignedHist = await app.handle(new Request("http://local/api/review/attendance/1/history", { headers: staffAuth }));
+      expect(staffAssignedHist.status).toBe(200);
+
+      const adminHist = await app.handle(new Request("http://local/api/review/attendance/2/history", { headers: adminAuth }));
+      expect(adminHist.status).toBe(200);
+
+      // 4. POST /api/attendance/classes/:class_id/dates/:date_val/entries
+      // Staff assignment on class 1 is effective from 2026-07-01
+      const staffOutsideDate = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-06-01/entries", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ entries: [{ student_id: 9601, status: "on-time" }] }),
+      }));
+      expect(staffOutsideDate.status).toBe(403);
+
+      const staffInsideDate = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-04/entries", {
+        method: "POST",
+        headers: { ...staffAuth, "content-type": "application/json" },
+        body: JSON.stringify({ entries: [{ student_id: 9601, status: "on-time" }] }),
+      }));
+      expect(staffInsideDate.status).toBe(200);
+
+      const adminOutsideDate = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-06-01/entries", {
+        method: "POST",
+        headers: { ...adminAuth, "content-type": "application/json" },
+        body: JSON.stringify({ entries: [{ student_id: 9601, status: "on-time" }] }),
+      }));
+      expect(adminOutsideDate.status).toBe(200);
+    } finally { database.close(); rmSync(path, { force: true }); }
+  }, 30000);
 });

@@ -265,16 +265,51 @@ function correctionReviewRoutes(app: any, context: AuthContext): void {
   }, { query: AttendanceCorrectionReviewQuerySchema, response: AttendanceCorrectionReviewResponseSchema });
 }
 
+function hasAttendanceClassAccess(context: AuthContext, userId: number, classId: number, date?: string | null): boolean {
+  const where = ["user_id = ?", "academic_class_id = ?", "active = 1"];
+  const params: any[] = [userId, classId];
+  if (date) {
+    where.push("(effective_from IS NULL OR effective_from <= ?)", "(effective_to IS NULL OR effective_to >= ?)");
+    params.push(date, date);
+  }
+  return Boolean(row(context, `SELECT id FROM teacher_class_assignments WHERE ${where.join(" AND ")}`, params));
+}
+
+function hasAttendanceRecordAccess(context: AuthContext, user: CurrentUser, attendanceId: number): boolean {
+  if (user.role === "admin") return true;
+  const attendance = row(context, "SELECT a.id, a.date, a.student_id FROM attendance a WHERE a.id = ?", [attendanceId]);
+  if (!attendance) return false;
+  return Boolean(row(context, `
+    SELECT 1
+      FROM student_enrollments e
+      JOIN academic_classes c ON (c.id = e.academic_class_id OR (e.academic_class_id IS NULL AND c.class_name = e.class_name))
+      JOIN teacher_class_assignments ta ON ta.academic_class_id = c.id
+     WHERE e.student_id = ?
+       AND ta.user_id = ?
+       AND ta.active = 1
+       AND (ta.effective_from IS NULL OR ta.effective_from <= ?)
+       AND (ta.effective_to IS NULL OR ta.effective_to >= ?)
+       AND (e.effective_from IS NULL OR e.effective_from <= ?)
+       AND (e.effective_to IS NULL OR e.effective_to >= ?)
+       AND e.lifecycle_state = 'ACTIVE'
+     LIMIT 1
+  `, [attendance.student_id, user.id, attendance.date, attendance.date, attendance.date, attendance.date]));
+}
+
 function reviewRoutes(app: any, context: AuthContext): void {
   app.get("/api/review/classes", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     const year = Number(ctx.query.academic_year_id ?? row(context, "SELECT id FROM academic_years WHERE is_default = 1 LIMIT 1")?.id ?? 0);
-    return { classes: year ? rows(context, "SELECT id, class_name AS name FROM academic_classes WHERE academic_year_id = ? AND active = 1 ORDER BY class_name", [year]) : rows(context, "SELECT -1 AS id, class_name AS name FROM students WHERE class_name IS NOT NULL GROUP BY class_name ORDER BY class_name") };
+    const classes = user.role === "admin"
+      ? (year ? rows(context, "SELECT id, class_name AS name FROM academic_classes WHERE academic_year_id = ? AND active = 1 ORDER BY class_name", [year]) : rows(context, "SELECT -1 AS id, class_name AS name FROM students WHERE class_name IS NOT NULL GROUP BY class_name ORDER BY class_name"))
+      : rows(context, `SELECT c.id, c.class_name AS name FROM academic_classes c JOIN teacher_class_assignments a ON a.academic_class_id = c.id WHERE a.user_id = ? AND a.active = 1 AND c.active = 1 ${year ? "AND c.academic_year_id = ?" : ""} ORDER BY c.class_name`, year ? [user.id, year] : [user.id]);
+    return { classes };
   }, { query: t.Object({ academic_year_id: t.Optional(t.String()) }) });
   app.get("/api/review/attendance", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     const classId = Number(ctx.query.academic_class_id); const date = ctx.query.date; const classRow = row(context, "SELECT class_name FROM academic_classes WHERE id = ?", [classId]);
     if (!classRow) return fail(ctx.set, 404, "Class not found");
+    if (user.role !== "admin" && !hasAttendanceClassAccess(context, user.id, classId, date)) return fail(ctx.set, 403, "Insufficient permissions");
     const values = rows(context, "SELECT a.id AS attendance_id, a.student_id, s.name AS student_name, s.class_name, a.date, a.check_in, a.check_out, a.status, o.original_status AS override_original_status, o.override_status, o.note AS override_note, o.reviewed_by, o.reviewed_at FROM attendance a JOIN students s ON s.id = a.student_id LEFT JOIN attendance_overrides o ON o.attendance_id = a.id JOIN student_enrollments e ON e.student_id = a.student_id WHERE a.date = ? AND e.academic_year_id = ? AND e.academic_class_id = ? ORDER BY s.name", [date, Number(ctx.query.academic_year_id), classId]);
     return { date, class_name: classRow.class_name, total: values.length, items: values.map((value) => ({ attendance_id: value.attendance_id, student_id: value.student_id, student_name: value.student_name, class_name: value.class_name, date: value.date, scan_in: time(value.check_in), scan_out: time(value.check_out), original_status: value.override_original_status ?? value.status, effective_status: value.override_status ?? value.status, is_overridden: value.override_status !== null, current_status: value.override_status ?? value.status, override_status: value.override_status, override_note: value.override_note, reviewed_by: value.reviewed_by, reviewed_at: value.reviewed_at })) };
   }, { query: t.Object({ date: t.String(), academic_year_id: t.String(), academic_class_id: t.String() }) });
@@ -302,6 +337,7 @@ function reviewRoutes(app: any, context: AuthContext): void {
   app.get("/api/review/attendance/:attendance_id/history", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     if (!row(context, "SELECT id FROM attendance WHERE id = ?", [ctx.params.attendance_id])) return fail(ctx.set, 404, "Attendance not found");
+    if (!hasAttendanceRecordAccess(context, user, Number(ctx.params.attendance_id))) return fail(ctx.set, 403, "Insufficient permissions");
     return { attendance_id: Number(ctx.params.attendance_id), items: rows(context, "SELECT id, attendance_id, previous_status, new_status, note, reviewed_by, timestamp FROM attendance_override_history WHERE attendance_id = ? ORDER BY timestamp DESC, id DESC", [ctx.params.attendance_id]) };
   }, { params: t.Object({ attendance_id: t.Number({ minimum: 1 }) }) });
   app.post("/api/review/attendance/mass-override-incomplete", (ctx: Context) => {
@@ -325,7 +361,7 @@ function scopedRoutes(app: any, context: AuthContext): void {
   app.get("/api/attendance/classes/:class_id/attendance/export-excel", async (ctx: Context) => {
     const user = actor(context, ctx, { capability: "export_assigned_class_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     const classRow = row(context, "SELECT id, class_name, active FROM academic_classes WHERE id = ?", [ctx.params.class_id]); if (!classRow || !classRow.active) return fail(ctx.set, 404, "Class is inactive, archived, or unknown.");
-    if (user.role !== "admin" && !row(context, "SELECT id FROM teacher_class_assignments WHERE user_id = ? AND academic_class_id = ? AND active = 1", [user.id, ctx.params.class_id])) return fail(ctx.set, 403, "Insufficient permissions");
+    if (user.role !== "admin" && !hasAttendanceClassAccess(context, user.id, Number(ctx.params.class_id))) return fail(ctx.set, 403, "Insufficient permissions");
     const month = String(ctx.query.month).padStart(2, "0"); const year = String(ctx.query.year);
     if (Number(month) < 1 || Number(month) > 12) return fail(ctx.set, 400, "month must be between 1 and 12");
     if (!/^\d{4}$/.test(year) || Number(year) < 2020) return fail(ctx.set, 400, "year must be greater than or equal to 2020");
@@ -361,7 +397,7 @@ function scopedRoutes(app: any, context: AuthContext): void {
   app.get("/api/attendance/classes/:class_id/dates/:date_val", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };
     const classRow = row(context, "SELECT id, class_name, academic_year_id, active FROM academic_classes WHERE id = ?", [ctx.params.class_id]); if (!classRow || !classRow.active) return fail(ctx.set, 400, "Class is inactive or archived.");
-    if (user.role !== "admin" && !row(context, "SELECT id FROM teacher_class_assignments WHERE user_id = ? AND academic_class_id = ? AND active = 1 AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [user.id, ctx.params.class_id, ctx.params.date_val, ctx.params.date_val])) return fail(ctx.set, 403, "Insufficient permissions");
+    if (user.role !== "admin" && !hasAttendanceClassAccess(context, user.id, Number(ctx.params.class_id), ctx.params.date_val)) return fail(ctx.set, 403, "Insufficient permissions");
     const values = rows(context, "SELECT e.student_id, s.name AS student_name, a.id AS attendance_id, a.status AS raw_status, a.check_in, a.check_out, a.is_absent, o.override_status FROM student_enrollments e JOIN students s ON s.id = e.student_id LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date = ? LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE e.academic_class_id = ? AND e.lifecycle_state = 'ACTIVE' AND (e.effective_from IS NULL OR e.effective_from <= ?) AND (e.effective_to IS NULL OR e.effective_to >= ?) ORDER BY s.name", [ctx.params.date_val, ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]);
     const finalized = Boolean(row(context, "SELECT id FROM attendance_periods WHERE attendance_date = ? AND status = 'FINALIZED'", [ctx.params.date_val]));
     return mapClassAttendanceResponse(Number(ctx.params.class_id), String(classRow.class_name), ctx.params.date_val, finalized, values);
@@ -370,7 +406,7 @@ function scopedRoutes(app: any, context: AuthContext): void {
     const user = actor(context, ctx, {}); if (!user) return { detail: "Insufficient permissions" };
     if (user.role !== "admin" && !capabilitiesForRole(user.role).includes("enter_assigned_class_attendance")) return fail(ctx.set, 403, "Insufficient permissions");
     const classRow = row(context, "SELECT id, academic_year_id, active FROM academic_classes WHERE id = ?", [ctx.params.class_id]); if (!classRow || !classRow.active) return fail(ctx.set, 400, "Class is inactive or archived.");
-    if (user.role !== "admin" && !row(context, "SELECT id FROM teacher_class_assignments WHERE user_id = ? AND academic_class_id = ? AND active = 1", [user.id, ctx.params.class_id])) return fail(ctx.set, 403, "Insufficient permissions");
+    if (user.role !== "admin" && !hasAttendanceClassAccess(context, user.id, Number(ctx.params.class_id), ctx.params.date_val)) return fail(ctx.set, 403, "Insufficient permissions");
     if (!periodOpen(context, ctx.params.date_val)) return fail(ctx.set, 400, "Attendance for target date is finalized and locked.");
     const client = context.database.client; const entries = ctx.body.entries; const seen = new Set<number>(); const enrolled = new Set(rows(context, "SELECT student_id FROM student_enrollments WHERE academic_class_id = ? AND lifecycle_state = 'ACTIVE' AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)", [ctx.params.class_id, ctx.params.date_val, ctx.params.date_val]).map((value) => Number(value.student_id)));
     for (const entry of entries) { if (seen.has(entry.student_id)) return fail(ctx.set, 400, `Duplicate entry for student ID ${entry.student_id}.`); seen.add(entry.student_id); if (!enrolled.has(entry.student_id)) return fail(ctx.set, 400, `Student ID ${entry.student_id} is not effectively enrolled in class on target date.`); if (!(manualStatuses as readonly string[]).includes(entry.status)) return fail(ctx.set, 400, `Status '${entry.status}' is invalid.`); if (["sakit", "izin", "alfa"].includes(entry.status) && entry.source !== "PAPER_BOOK_VERIFICATION") return fail(ctx.set, 400, "Sakit, Izin, and Alfa entries must identify PAPER_BOOK_VERIFICATION as their source."); if (["sakit", "izin", "alfa"].includes(entry.status) && (String(entry.check_in ?? "").trim() || String(entry.check_out ?? "").trim())) return fail(ctx.set, 400, "Sakit, Izin, and Alfa verifications cannot add scan times; machine evidence stays on the original attendance row."); }
