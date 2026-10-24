@@ -1421,15 +1421,27 @@
       ]
     },
     "source:apps/api/tests/attendance.test.ts": {
-      "fingerprint": "e3e872ebd16834fae30dfe1ab3d4007d6b39754b7390494c2bc8723681a7801f",
+      "fingerprint": "03419cd5f101ad117c6b0b9d386a6c5b853142f5adb32bc1836b0cc7bea81b8b",
       "snapshot": {
-        "apps/api/tests/attendance.test.ts": "efe31ed6c074bfe5e857e0972de18c4404eef2a3268f5cc2551a651d1d2fe3ae"
+        "apps/api/tests/attendance.test.ts": "efab9493bd98c180acaab08af401be3ef26ce21ab54b32e0fd080e33799d3053"
       },
-      "head": "f824b1d6638ecbd131a5d6098038a93c1ead824a",
+      "head": "4e900774077bfa418a01ab960708697856a07e32",
       "outcome": "no-change",
-      "reason": "Loop 182: enforce attendance_id match on departure excuse revocation and class scoping on departure history",
+      "reason": "Loop 183: enforce class scope and assignment effective dates on attendance review and class entries; no Elysia skill changes needed",
       "evidence": [
-        "Changed: apps/api/tests/attendance.test.ts at f824b1d6638ecbd131a5d6098038a93c1ead824a"
+        "Changed: apps/api/tests/attendance.test.ts at 4e900774077bfa418a01ab960708697856a07e32"
+      ]
+    },
+    "source:apps/api/src/domains/attendance.ts": {
+      "fingerprint": "3c65d76f67576016271e4d412bdaff4ffbad2e2d893d04e4bc4bdfbfdf6e4a51",
+      "snapshot": {
+        "apps/api/src/domains/attendance.ts": "067237249bfc7c276afe4616f64a2d840ce984e19b187f7b578a2d8bb2d2f8c7"
+      },
+      "head": "4e900774077bfa418a01ab960708697856a07e32",
+      "outcome": "no-change",
+      "reason": "Loop 183: enforce class scope and assignment effective dates on attendance review and class entries; no Elysia skill changes needed",
+      "evidence": [
+        "Changed: apps/api/src/domains/attendance.ts at 4e900774077bfa418a01ab960708697856a07e32"
       ]
     }
   }
