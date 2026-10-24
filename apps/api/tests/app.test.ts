@@ -150,3 +150,44 @@ describe("configuration isolation", () => {
     }
   });
 });
+
+describe("auth configuration mapping", () => {
+  it("maps session and account lockout environment overrides into auth config", () => {
+    const config = loadConfig({
+      NODE_ENV: "test",
+      SESSION_IDLE_TIMEOUT_HOURS: "2",
+      SESSION_ABSOLUTE_TIMEOUT_HOURS: "12",
+      MAX_FAILED_LOGIN_ATTEMPTS: "3",
+      ACCOUNT_LOCK_MINUTES: "15",
+    });
+    expect(config.auth?.sessionIdleTimeoutHours).toBe(2);
+    expect(config.auth?.sessionAbsoluteTimeoutHours).toBe(12);
+    expect(config.auth?.maxFailedLoginAttempts).toBe(3);
+    expect(config.auth?.accountLockMinutes).toBe(15);
+  });
+
+  it("applies secure defaults when session and lockout environment variables are unset", () => {
+    const config = loadConfig({ NODE_ENV: "test" });
+    expect(config.auth?.sessionIdleTimeoutHours).toBe(6);
+    expect(config.auth?.sessionAbsoluteTimeoutHours).toBe(24);
+    expect(config.auth?.maxFailedLoginAttempts).toBe(5);
+    expect(config.auth?.accountLockMinutes).toBe(30);
+  });
+
+  it("fails fast when SESSION_IDLE_TIMEOUT_HOURS exceeds SESSION_ABSOLUTE_TIMEOUT_HOURS", () => {
+    expect(() =>
+      loadConfig({
+        NODE_ENV: "test",
+        SESSION_IDLE_TIMEOUT_HOURS: "10",
+        SESSION_ABSOLUTE_TIMEOUT_HOURS: "8",
+      })
+    ).toThrow("SESSION_IDLE_TIMEOUT_HOURS cannot exceed SESSION_ABSOLUTE_TIMEOUT_HOURS.");
+  });
+
+  it("fails fast when session or lockout configuration is non-positive or non-integer", () => {
+    expect(() => loadConfig({ NODE_ENV: "test", SESSION_IDLE_TIMEOUT_HOURS: "0" })).toThrow("SESSION_IDLE_TIMEOUT_HOURS must be a positive integer.");
+    expect(() => loadConfig({ NODE_ENV: "test", SESSION_ABSOLUTE_TIMEOUT_HOURS: "-1" })).toThrow("SESSION_ABSOLUTE_TIMEOUT_HOURS must be a positive integer.");
+    expect(() => loadConfig({ NODE_ENV: "test", MAX_FAILED_LOGIN_ATTEMPTS: "abc" })).toThrow("MAX_FAILED_LOGIN_ATTEMPTS must be a positive integer.");
+    expect(() => loadConfig({ NODE_ENV: "test", ACCOUNT_LOCK_MINUTES: "12.5" })).toThrow("ACCOUNT_LOCK_MINUTES must be a positive integer.");
+  });
+});
