@@ -1244,6 +1244,30 @@
       "evidence": [
         "Changed: apps/api/tests/attendance-analytics.test.ts at ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107"
       ]
+    },
+    "source:apps/web/src/pages/AttendanceAnalytics.test.tsx": {
+      "fingerprint": "737575fea7022f84d12ed7ffb4cbc7e55fc921d29ff1925cf6b56fe03f9e899d",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceAnalytics.test.tsx": "e419c2d5b3ed66b50d25aa4894db8ab72327d5c212983c20031c08a2320a8c45"
+      },
+      "head": "da8fe9614a6e7cd68ec4bd82f280126feac0c79f",
+      "outcome": "no-change",
+      "reason": "The Attendance Analytics code and focused test change only runtime panel loading and its coverage. The existing Elysia guidance is unrelated; no agent guidance, workflow, boundary, or security instruction needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceAnalytics.test.tsx at da8fe9614a6e7cd68ec4bd82f280126feac0c79f"
+      ]
+    },
+    "source:apps/web/src/pages/AttendanceAnalytics.tsx": {
+      "fingerprint": "ae044c9f0ae7a6a86aa585fe3dacc1313acda8d2575c27d065bfaa3ffef381f7",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceAnalytics.tsx": "f7871989aa0e399f3c537777ab0af836e2b6b987b57d875bf0d406fa051fbcc4"
+      },
+      "head": "da8fe9614a6e7cd68ec4bd82f280126feac0c79f",
+      "outcome": "no-change",
+      "reason": "The Attendance Analytics code and focused test change only runtime panel loading and its coverage. The existing Elysia guidance is unrelated; no agent guidance, workflow, boundary, or security instruction needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceAnalytics.tsx at da8fe9614a6e7cd68ec4bd82f280126feac0c79f"
+      ]
     }
   }
 }
