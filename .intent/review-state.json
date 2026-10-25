@@ -407,15 +407,15 @@
       ]
     },
     "source:apps/api/src/auth/service.ts": {
-      "fingerprint": "4868504b296f74b46c1ff59f0ab4128ed311f71d90ec1c3f857859ec8ca0f0d1",
+      "fingerprint": "91813262cdb7d7238323351eef9be5229009f0c55b221801cddc3f71c6143152",
       "snapshot": {
-        "apps/api/src/auth/service.ts": "5853f2d9a508a437644f0c4ff218232dbc47791a7efc6d486d9fb2cc3cda6447"
+        "apps/api/src/auth/service.ts": "a3e1fb8e383e403360722198cd1ee63247b50be7779a8d6217ad03243d40849f"
       },
-      "head": "26449882dbfcf7b05e165cde7f77eab30659f5d3",
+      "head": "be0c74caf1700e335ce39b31e099c05bcc3521db",
       "outcome": "no-change",
-      "reason": "Administrator restore credential checks reuse existing auth and restore authorities, and docs/security/backup-restore.md documents the verified workflow. No Elysia API usage or agent-skill guidance changed; the existing Elysia skill and planning artifacts remain accurate.",
+      "reason": "Reviewed apps/api/src/auth/service.ts and apps/api/tests/auth.test.ts: these implement and test the documented concurrent-login lockout fix. docs/security/identity-authentication.md records the changed authentication behavior. None of these changes alter agent skills or agent operating guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: apps/api/src/auth/service.ts at 26449882dbfcf7b05e165cde7f77eab30659f5d3"
+        "Changed: apps/api/src/auth/service.ts at be0c74caf1700e335ce39b31e099c05bcc3521db"
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
@@ -649,15 +649,15 @@
       ]
     },
     "source:docs/security/identity-authentication.md": {
-      "fingerprint": "3872f65bec055037f850bda040e1b5dc7f62d09bbeccbc21d5684260886ce3b1",
+      "fingerprint": "dd7e6a2831b5b4fcf2c9ce428ce5dc6cbabb6b974fbe5f9994d44d706ecb4e5e",
       "snapshot": {
-        "docs/security/identity-authentication.md": "251838cd3f76bbcdebc04d7e29d82b86ebc8e35dc582b4f7fbba0a38dad209f9"
+        "docs/security/identity-authentication.md": "8316dccfaeb5b8013831beb755f117924e790e16885b433b696a92c23841955a"
       },
-      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
+      "head": "be0c74caf1700e335ce39b31e099c05bcc3521db",
       "outcome": "no-change",
-      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
+      "reason": "Reviewed apps/api/src/auth/service.ts and apps/api/tests/auth.test.ts: these implement and test the documented concurrent-login lockout fix. docs/security/identity-authentication.md records the changed authentication behavior. None of these changes alter agent skills or agent operating guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: docs/security/identity-authentication.md at e35c7854f089f35125776fc69a16d4625faa0af6"
+        "Changed: docs/security/identity-authentication.md at be0c74caf1700e335ce39b31e099c05bcc3521db"
       ]
     },
     "source:apps/api/src/adapter.ts": {
@@ -1035,15 +1035,15 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "9c75cbb5a2b14b209647eaa3153e1110ac63eb5d495131cf652da69370e7c7ac",
+      "fingerprint": "93fc3334c880b3868554a756b48245b425a75482bce8890341050100c7c4136f",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "58fac5520ef5ed51913cc6304d9f379de3e392a1348bb4b266bf652f162fb0e2"
+        "apps/api/tests/auth.test.ts": "b18915709015764c8855c6c495025f1007d6c20ed51d5ae07a0ea53026de6fda"
       },
-      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
+      "head": "be0c74caf1700e335ce39b31e099c05bcc3521db",
       "outcome": "no-change",
-      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
+      "reason": "Reviewed apps/api/src/auth/service.ts and apps/api/tests/auth.test.ts: these implement and test the documented concurrent-login lockout fix. docs/security/identity-authentication.md records the changed authentication behavior. None of these changes alter agent skills or agent operating guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: apps/api/tests/auth.test.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
+        "Changed: apps/api/tests/auth.test.ts at be0c74caf1700e335ce39b31e099c05bcc3521db"
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
