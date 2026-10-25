@@ -88,6 +88,95 @@ describe("authentication parity", () => {
     }
   }, 30000);
 
+  it("counts simultaneous failures through the lockout threshold", async () => {
+    const value = setup("concurrent-failures");
+    try {
+      const responses = await Promise.all(Array.from({ length: 5 }, (_, attempt) => value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: `parallel-bad-${attempt}` }),
+      }))));
+      expect(responses.map((response) => response.status)).toEqual([401, 401, 401, 401, 401]);
+
+      const user = value.database.client.query<{ failed_login_attempts: number; locked_until: string | null }, []>(
+        "SELECT failed_login_attempts, locked_until FROM users WHERE username = 'golden-staff'",
+      ).get();
+      expect(user?.failed_login_attempts).toBe(5);
+      expect(user?.locked_until).not.toBeNull();
+
+      const lockedLogin = await value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      expect(lockedLogin.status).toBe(401);
+      expect(value.database.client.query<{ count: number }, []>("SELECT count(*) AS count FROM sessions").get()?.count).toBe(0);
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("does not let a valid login clear a lock established while its password is verifying", async () => {
+    const value = setup("concurrent-lock-race");
+    const originalVerify = Bun.password.verify;
+    let releaseVerification!: () => void;
+    let markVerificationStarted!: () => void;
+    const verificationGate = new Promise<void>((resolve) => { releaseVerification = resolve; });
+    const verificationStarted = new Promise<void>((resolve) => { markVerificationStarted = resolve; });
+    let correctAttempt: Promise<Response> | undefined;
+
+    Bun.password.verify = async (password, passwordHash) => {
+      if (password === "golden-staff-pass-1") {
+        markVerificationStarted();
+        await verificationGate;
+      }
+      return originalVerify.call(Bun.password, password, passwordHash);
+    };
+
+    try {
+      correctAttempt = value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      await verificationStarted;
+
+      const failures = await Promise.all(Array.from({ length: 5 }, (_, attempt) => value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: `race-bad-${attempt}` }),
+      }))));
+      expect(failures.map((response) => response.status)).toEqual([401, 401, 401, 401, 401]);
+
+      releaseVerification();
+      expect((await correctAttempt).status).toBe(401);
+      expect(value.database.client.query<{ failed_login_attempts: number; locked_until: string | null }, []>(
+        "SELECT failed_login_attempts, locked_until FROM users WHERE username = 'golden-staff'",
+      ).get()).toMatchObject({ failed_login_attempts: 5 });
+      expect(value.database.client.query<{ count: number }, []>("SELECT count(*) AS count FROM sessions").get()?.count).toBe(0);
+    } finally {
+      releaseVerification();
+      await correctAttempt?.catch(() => undefined);
+      Bun.password.verify = originalVerify;
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("allows login after lock expiry and resets persisted failure state", async () => {
+    const value = setup("expired-lock");
+    try {
+      value.database.client.run(
+        "UPDATE users SET failed_login_attempts = 5, locked_until = datetime('now', '-1 minute') WHERE username = 'golden-staff'",
+      );
+      const response = await value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }),
+      }));
+      expect(response.status).toBe(200);
+      expect(value.database.client.query<{ failed_login_attempts: number; locked_until: string | null }, []>(
+        "SELECT failed_login_attempts, locked_until FROM users WHERE username = 'golden-staff'",
+      ).get()).toEqual({ failed_login_attempts: 0, locked_until: null });
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
   it("keeps limiter windows stable across a backward wall-clock step", () => {
     // Regression: the limiter must run on a monotonic clock. A backward NTP
     // step previously stretched Retry-After from 60 to 61 seconds and could

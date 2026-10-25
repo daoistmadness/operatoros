@@ -25,6 +25,8 @@ The `users` table stores username, Argon2id password hash, role, active state, l
 
 Login deliberately returns the same `Invalid username or password` response for unknown users, incorrect passwords, inactive accounts, and locked accounts. Repeated failures increment the database counter and can temporarily lock the account.
 
+SQLite applies each failure increment and threshold lock atomically. Session creation rechecks the persisted lock state, so simultaneous failures still reach the threshold and a correct password cannot bypass a lock that became active during verification. After the lock expires, a successful login clears the failure state.
+
 ## Sessions
 
 Authentication uses opaque server-generated tokens. The browser receives the token only as a cookie; the database stores an HMAC-SHA256 digest rather than the raw token.
