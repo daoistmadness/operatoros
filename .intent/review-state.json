@@ -1529,6 +1529,18 @@
       "evidence": [
         "Reviewed docs/operations/CI_PERFORMANCE.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
       ]
+    },
+    "source:docs/reporting/APPROVED_REPORT_PRESERVATION_DECISIONS.md": {
+      "fingerprint": "dd88d2a4d020c7346112cabf15da46c68f13c632eb5dd79191605471f08e255b",
+      "snapshot": {
+        "docs/reporting/APPROVED_REPORT_PRESERVATION_DECISIONS.md": "bf0a95443fb6d1d955be00664cb5c73e2b360c391c5722f52d4e3799b2c43ed6"
+      },
+      "head": "1d61b1381812edb8037634f051ec99e638722f4b",
+      "outcome": "updated",
+      "reason": "Updated the benchmark instructions to identify the historical Bun 1.4.3 measurements and direct future runs to the current pinned Bun 1.4.4 runtime.",
+      "evidence": [
+        "The recorded measurements are historical; mise.toml and mise.lock pin current Bun 1.4.4. The reproduction command still invokes the benchmark with the repository Bun runtime."
+      ]
     }
   }
 }
