@@ -61,7 +61,8 @@ either secret. See [the rotation runbook](ROTATION_RUNBOOK.md).
 
 ## Dependency audit
 
-Run `bun run security:audit`. The command uses Bun audit and fails on any
+For a local audit, run `mise exec -- bun run security:audit` so it uses the
+repository-pinned Bun 1.4.4. The command uses Bun audit and fails on any
 advisory outside the two reviewed exceptions in
 [dependency-audit-exceptions.md](dependency-audit-exceptions.md). CI runs the
 same command on pull requests, main pushes, and weekly schedule. The audit job

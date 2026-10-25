@@ -12,7 +12,7 @@ merge groups, and supported branch pushes. GitHub-managed CodeQL and dependency
 workflows remain separate. All runners in the repository-owned workflow use
 `ubuntu-26.04`; there is no separate compatibility canary or docs job.
 
-- `api`: frozen install, dependency audit, tooling tests, hk lint/architecture, Turbo package typechecks/tests/build, launcher typecheck, Turbo invalidation proof, disposable runtime health, TypeBox, architecture fixtures, and contract boundaries.
+- `api`: frozen install, dependency audit, tooling tests, hk lint/architecture, Turbo package typechecks/tests/build with the TypeScript 7.0.2 CLI, launcher typecheck, the separate Bun 1.4.4 `bun check`, Turbo invalidation proof, disposable runtime health, TypeBox, architecture fixtures, and contract boundaries.
 - `frontend`: dependency consistency, package-manager regression checks, UI/web boundaries, OpenAPI drift, and documentation checks.
 - `E2E full regression`: complete unfiltered browser/API smoke suite, synthetic reset/enrollment verification, and diagnostic artifacts. It starts alongside package checks.
 - `Select E2E scope` and `E2E regression result`: preserve stable required-check names; selection always requires the full browser suite, and the aggregate rejects skipped, failed, cancelled, or missing runs.

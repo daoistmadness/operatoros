@@ -5,6 +5,11 @@ supervision to `./start-dev.sh`. Verified commands are maintained in
 [`COMMANDS.md`](../../COMMANDS.md); architecture and operations authorities are indexed in
 [`MEMORY.md`](../../MEMORY.md).
 
+Install the repository-pinned tools with `mise install`; the active Bun runtime
+is 1.4.4. Workspace and launcher CLI typechecks use TypeScript 7.0.2. The
+TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
+consumers. See the [toolchain decision](../architecture/decisions/BUN_TOOLCHAIN.md).
+
 Use `mise run test:fast` for Tier 1, `mise run check:affected` for Tier 2 Turbo
 checks against `origin/main`, and `mise run check:full` for the Tier 3
 release-sensitive gate. Use `mise run doctor` for read-only environment
