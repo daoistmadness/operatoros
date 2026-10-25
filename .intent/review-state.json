@@ -1455,6 +1455,30 @@
       "evidence": [
         "Changed: apps/api/tests/fixtures/attendance-reads.ts at 8dcbbc718b60deb3535a847f38fda8dc9905e99c"
       ]
+    },
+    "source:scripts/tests/dev-runtime.test.ts": {
+      "fingerprint": "e9c53cfbf6cc9d5dc563bfcd0bc45a8c263600923f1eee781c31da1acdb52b8c",
+      "snapshot": {
+        "scripts/tests/dev-runtime.test.ts": "30ee40a4bd0844f43c61988aed55ac5927de45b97f84c6f62702b5e81a47a5d3"
+      },
+      "head": "97daa728a7922bf4e30d3b5061b713417c5e79eb",
+      "outcome": "no-change",
+      "reason": "The changes are limited to Bun path validation and its synthetic runtime regression test; no agent skill content, guidance, exports, or planning records changed, confirmed by the two-file diff.",
+      "evidence": [
+        "Changed: scripts/tests/dev-runtime.test.ts at 97daa728a7922bf4e30d3b5061b713417c5e79eb"
+      ]
+    },
+    "source:scripts/validate-wsl-bun.sh": {
+      "fingerprint": "416e16a6a6fe6728698f6710866f5c5117499ef2b20b7a6551d0d0cc4ee78b13",
+      "snapshot": {
+        "scripts/validate-wsl-bun.sh": "8853cbd6fe0f5e753729d7cf4cd4ba833ef8fcdd34da2451ecf91f198b390045"
+      },
+      "head": "97daa728a7922bf4e30d3b5061b713417c5e79eb",
+      "outcome": "no-change",
+      "reason": "The changes are limited to Bun path validation and its synthetic runtime regression test; no agent skill content, guidance, exports, or planning records changed, confirmed by the two-file diff.",
+      "evidence": [
+        "Changed: scripts/validate-wsl-bun.sh at 97daa728a7922bf4e30d3b5061b713417c5e79eb"
+      ]
     }
   }
 }
