@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { randomBytes } from "node:crypto";
 import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -35,10 +37,10 @@ function authCookie(response: Response): string {
 }
 
 async function setup(label: string) {
-  const path = `/tmp/operatoros-phase6-${label}-${process.pid}-${Date.now()}.db`;
+  const path = join(tmpdir(), `operatoros-phase6-${label}-${process.pid}-${Date.now()}.db`);
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase6-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: join(tmpdir(), `operatoros-phase6-audit-${process.pid}`) } });
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   return { path, database, app, cookie: authCookie(login), origin: "http://localhost:5173" };
 }

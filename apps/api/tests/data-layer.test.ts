@@ -2,6 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
 import { copyFileSync, readFileSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 function sha256FileSync(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -12,7 +14,7 @@ import { createFreshDatabase, inTransaction, openDatabase, REQUIRED_TABLES, vali
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 
 function disposableDatabasePath(label: string): string {
-  return `/tmp/operatoros-${label}-${process.pid}-${Date.now()}.db`;
+  return join(tmpdir(), `operatoros-${label}-${process.pid}-${Date.now()}.db`);
 }
 
 function bootstrapDatabase(path: string): void {

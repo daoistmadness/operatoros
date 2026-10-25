@@ -9,7 +9,7 @@ case "$REPO" in
   /mnt/c/*) echo "BLOCKED: Windows workspace detected" >&2; exit 1 ;;
 esac
 
-temporary_root="$(mktemp -d /tmp/operatoros-fresh-schema.XXXXXX)"
+temporary_root="$(mktemp -d "${TMPDIR:-/tmp}/operatoros-fresh-schema.XXXXXX")"
 cleanup() {
   rm -rf -- "$temporary_root"
 }
