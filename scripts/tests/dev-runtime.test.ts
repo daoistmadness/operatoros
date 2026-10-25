@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -74,6 +74,32 @@ test("configuration, symlink roles, and dotenv decisions use TS authority", () =
   expect(cli(f, "dotenv-database-url", ["--env-file", join(f.root, "missing.env")]).stdout).toBe("false");
   write(join(f.root, "test.env"), "# DATABASE_URL=hidden\n export DATABASE_URL = secret-not-for-output\n");
   expect(cli(f, "dotenv-database-url", ["--env-file", join(f.root, "test.env")]).stdout).toBe("true");
+});
+test("Bun validation and launcher preparation use mise's selected executable", () => {
+  const root = mkdtempSync(join(tmpdir(), "operatoros-bun-resolution-test-")); roots.push(root);
+  const repo = join(root, "repo"), staleBin = join(root, "stale"), selectedBin = join(root, "selected"), tools = join(root, "tools");
+  mkdirSync(repo); mkdirSync(staleBin); mkdirSync(selectedBin); mkdirSync(tools); write(join(repo, "bun.lock"), "synthetic");
+  for (const [path, version] of [[join(staleBin, "bun"), "1.4.3"], [join(selectedBin, "bun"), "1.4.4"]]) {
+    writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' '${version}'\n`); chmodSync(path, 0o755);
+  }
+  const mise = join(tools, "mise");
+  writeFileSync(mise, '#!/bin/sh\nprintf "%s\\n" "$SYNTHETIC_MISE_BUN"\n'); chmodSync(mise, 0o755);
+  const command = [
+    'source "$1"',
+    'operatoros_wsl_prepare_bun "$2"',
+    'printf "reported=%s\\n" "$OPERATOROS_BUN_VERSION"',
+    'printf "selected=%s\\n" "$(command -v bun)"',
+    'printf "version=%s\\n" "$(bun --version)"',
+  ].join("\n");
+  const result = Bun.spawnSync(["bash", "-c", command, "validation-test", join(repository, "scripts/validate-wsl-bun.sh"), repo], {
+    cwd: repo,
+    env: { ...env, PATH: `${staleBin}:${tools}:${env.PATH}`, SYNTHETIC_MISE_BUN: join(selectedBin, "bun") },
+    stdout: "pipe", stderr: "pipe", timeout: 10_000,
+  });
+  expect(result.exitCode).toBe(0);
+  expect(result.stdout.toString()).toContain("reported=1.4.4");
+  expect(result.stdout.toString()).toContain(`selected=${join(selectedBin, "bun")}`);
+  expect(result.stdout.toString()).toContain("version=1.4.4");
 });
 test("only exact backend entrypoint or Vite identity matches a service", () => {
   const f = fixture(), info: ProcessInfo = { pid: 1, ppid: 0, pgid: 1, start_ticks: "1", cwd: join(f.repo, "apps/api"), argv: ["bun", "src/server.ts"], uid: process.getuid!(), state: "S" };

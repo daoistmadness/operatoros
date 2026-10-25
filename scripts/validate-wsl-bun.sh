@@ -88,7 +88,7 @@ operatoros_wsl_validate_bun() {
 
   OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="executed"
   local bun_version
-  bun_version="$("$OPERATOROS_BUN_PATH" --version 2>/dev/null || true)"
+  bun_version="$("$OPERATOROS_BUN_REALPATH" --version 2>/dev/null || true)"
   if [[ ! "$bun_version" =~ ^([0-9]+)\.([0-9]+) ]]; then
     OPERATOROS_WSL_TOOLCHAIN_REASON="Bun did not return a usable semantic version"
     OPERATOROS_WSL_TOOLCHAIN_STATE="SAFE_WRONG_VERSION"
