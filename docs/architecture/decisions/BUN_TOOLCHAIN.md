@@ -52,14 +52,53 @@ No app behavior, API contract, schema, dependency, linker, deployment, or data
 path changed. The 1.4.2 Elysia/AsyncLocalStorage fixes and 1.4.4 SQLite fixes
 are taken through the existing regression suite; no new runtime API was needed.
 
-## TypeScript 7 compatibility and native checking
+## TypeScript 7.0 CLI and Bun native checking
 
-In Loop 168, native typechecking was established across all six repository workspaces using `bun check --no-script -p`.
-To achieve TypeScript 7 compatibility without replacing TypeScript 5.9.3:
-1. `apps/web/tsconfig.json` was updated to remove obsolete `baseUrl: "."` (TS5102) and update obsolete `target: "es5"` (TS5108) to `"target": "ESNext"`.
-2. Declared `"types": ["node"]` in `apps/web/tsconfig.json` so test and foundation files cleanly resolve Node.js built-ins (`node:fs`, `node:path`, `process`) under Bun native checking without relying on implicit ambient discovery.
-3. Added `bun run typecheck:native` running `bun check --no-script -p` across all six workspaces (`packages/contracts`, `packages/excel`, `packages/db`, `packages/ui`, `apps/api`, `apps/web`), initially completing in ~2.1 s with zero diagnostics.
-4. Promoted the check to blocking CI after five consecutive functional PRs (#305–#309) passed with zero diagnostics across all 626 checked files in 1.40–1.75 s. The existing `api` job remains the required check; no other CI checks changed.
-5. Retained TypeScript 5.9.3 as installed devDependency and authoritative compiler for compiler-API consumers (such as `scripts/check-architecture.ts`), Vite frontend builds, and release gates. Roll back native enforcement through the protected revert-PR process in [CONTRIBUTING.md](../../../CONTRIBUTING.md); that restores the previous CI tolerance without changing the authoritative compiler.
+The stable TypeScript 7.0.2 CLI is the primary `typecheck` compiler. The root
+pins it as `@typescript/native` (`npm:typescript@7.0.2`), and the seven workspace
+checks plus the development-launcher check invoke that alias directly. Bun
+native checking remains a separate blocking CI check across its six workspaces.
+
+TypeScript 5.9.3 remains installed at the root and in compiler-API workspaces.
+TypeScript 7.0 does not expose a stable compiler API. `scripts/check-architecture.ts`
+and the supported toolchain still need the JavaScript API: `@typescript-eslint/parser`
+8.68.0 supports TypeScript versions below 6.1, and `openapi-typescript` 7.13.0
+has a TypeScript 5 peer range. Both tools passed with 5.9.3 still resolving as
+the `typescript` package. Do not replace that compatibility dependency until
+those consumers support a stable TypeScript 7 API.
+
+The isolated 2026-10-25 evaluation started from `bb1f91565b622d2aa2ba1e82ff8abd3184224ac7`
+and used the locked Bun 1.4.4 runtime. A frozen install resolved 394 installs
+across 511 packages. TypeScript 7.0.2 passed all eight no-emit workspace and
+launcher checks; a synthetic invalid assignment produced the same TS2322
+diagnostic under TypeScript 5.9.3 and 7.0.2. On the same x86_64 host (4 CPUs,
+14 GiB RAM), the eight-check run took 7.91 seconds with TypeScript 7.0.2 and
+47.40 seconds with TypeScript 5.9.3, about 6.0 times faster. This is a warm
+local compiler comparison, not a CI or full-build speed claim.
+
+Lint, the compiler-API architecture checker (3,003 source edges, 76 manifest
+dependencies, zero exceptions), its 34 fixture tests, TypeBox and boundary
+checks, OpenAPI drift validation, and the six-workspace Bun check all passed.
+TypeScript 7 declaration emission passed for the five workspace configs that
+emit under the test override and for the agent-skills entrypoint. Web declaration
+emission also passed with `--rootDir apps/web/src`; the existing web tsconfig is
+`noEmit` and its production build uses Vite, so declaration emission is not a
+current project output.
+
+The official [TypeScript 7 VS Code extension](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview)
+provides the native language server. The repository does not select an editor
+SDK, and this environment has no VS Code executable, so no editor-host smoke
+test was run. Developers can enable the TypeScript 7 server through that
+extension; command-line typechecking does not force an editor setting.
+
+To roll back the CLI migration, revert the focused change through the protected
+PR workflow, remove the `@typescript/native` alias, and restore the TypeScript
+5.9.3 workspace commands. Keep the independent blocking Bun check in place.
+The prior Bun-native checking work and its five-PR qualification remain
+documented above; neither the required CI job nor its protections changed.
+
+References: [TypeScript 7.0 release](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/),
+[typescript-eslint version support](https://typescript-eslint.io/users/dependency-versions/),
+[VS Code TypeScript 7 extension](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview).
 
 References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
