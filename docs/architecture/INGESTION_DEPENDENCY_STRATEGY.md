@@ -15,7 +15,7 @@ contracts are unchanged by the parser execution path.
 Reproduce the synthetic A/B run with:
 
 ```sh
-IMPORT_PREVIEW_BENCH_REPEATS=3 mise exec -- bun apps/api/benchmarks/attendance-import-preview.ts
+IMPORT_PREVIEW_BENCH_REPEATS=5 mise exec -- bun apps/api/benchmarks/attendance-import-preview.ts
 ```
 
 The runner creates fresh synthetic SQLite databases in `/dev/shm`, uses 100
@@ -24,25 +24,27 @@ It separates direct parsing, the production parse dispatch, SQLite staging,
 direct full preview, and the authenticated preview route. A separate client
 sends authenticated `/api/auth/me` pings during the workload. The server
 samples event-loop delay and process RSS every 10 ms. The values below are
-medians of three interleaved trials on native Bun 1.4.4 on a four-core Linux
-host; baseline authenticated ping p95 was about 1 ms.
+medians of five interleaved trials on native Bun 1.4.4 on a four-core Linux
+host. Each cell gives the median and trial range. Baseline authenticated ping
+p95 was about 1 ms.
 
-| 5,000 rows | Direct request | Worker-dispatched request | Direct ping p95 | Worker ping p95 | Event-loop p99, direct → worker |
+| 5,000 rows | Direct request | Worker-dispatched request | Direct ping p95 | Worker ping p95 | Event-loop p99, direct to Worker |
 |---|---:|---:|---:|---:|---:|
-| XLSX parse only | 352 ms | 539 ms | 129 ms | 3 ms | 133 ms → 6 ms |
-| XLS parse only | 227 ms | 412 ms | 212 ms | 2 ms | 213 ms → 2 ms |
-| XLSX full preview | 550 ms | 744 ms | 315 ms | 179 ms | 316 ms → 208 ms |
-| XLS full preview | 431 ms | 628 ms | 421 ms | 184 ms | 407 ms → 205 ms |
+| XLSX parse only | 351 ms (309 to 364) | 538 ms (524 to 548) | 129 ms (119 to 136) | 2 ms (2 to 4) | 131 ms (127 to 143) to 4 ms (3 to 8) |
+| XLS parse only | 230 ms (196 to 243) | 414 ms (406 to 415) | 215 ms (180 to 227) | 2 ms (1 to 4) | 211 ms (179 to 228) to 3 ms (2 to 3) |
+| XLSX full preview | 552 ms (522 to 554) | 745 ms (736 to 756) | 312 ms (309 to 318) | 187 ms (180 to 192) | 320 ms (318 to 320) to 208 ms (202 to 214) |
+| XLS full preview | 437 ms (398 to 439) | 631 ms (625 to 635) | 420 ms (381 to 431) | 191 ms (188 to 196) | 411 ms (384 to 416) to 213 ms (208 to 218) |
 
 The Worker removes most parser blocking from unrelated requests, while its cold
-startup adds about 185–188 ms to a 5,000-row parse request. Peak RSS growth in
-parse-only trials was about 71 MiB for direct XLSX and 47 MiB for direct XLS,
-versus 88 MiB and 65 MiB with a Worker. Sampling is process-wide and can miss
-brief peaks.
+startup adds 187 ms to XLSX parsing and 184 ms to XLS parsing. Peak RSS growth
+in parse-only trials was 70 MiB (69 to 72) for direct XLSX and 47 MiB (47 to
+47) for direct XLS, versus 87 MiB (85 to 91) and 65 MiB (64 to 65) with a
+Worker. Sampling is process-wide and can miss brief peaks.
 
-SQLite staging remains a separate event-loop stall: its median was 232 ms for
-XLSX and 235 ms for XLS, with event-loop p99 at 229 ms and 231 ms. That work
-still accounts for the residual 179–184 ms authenticated ping p95 on full
+SQLite staging remains a separate event-loop stall: its median was 235 ms
+(205 to 241) for XLSX and 234 ms (232 to 236) for XLS. Event-loop p99 was
+232 ms (202 to 234) and 232 ms (228 to 233). Staging accounts for the residual
+187 ms (180 to 192) XLSX ping p95 and 191 ms (188 to 196) XLS ping p95 on full
 Worker previews. No database, approval, or commit optimization is justified
 by these parsing measurements.
 

@@ -1541,6 +1541,114 @@
       "evidence": [
         "The recorded measurements are historical; mise.toml and mise.lock pin current Bun 1.4.4. The reproduction command still invokes the benchmark with the repository Bun runtime."
       ]
+    },
+    "source:apps/api/benchmarks/attendance-import-preview-client.ts": {
+      "fingerprint": "c25f7442b675b4222ef65181a2cfa005086abe615a2213f3f4ac9463d111ac51",
+      "snapshot": {
+        "apps/api/benchmarks/attendance-import-preview-client.ts": "54638c9f7f3e204e5e4e3fb66eb532fa8a84713cbd985822fa6a7c20c00250bf"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/benchmarks/attendance-import-preview-client.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/benchmarks/attendance-import-preview-server.ts": {
+      "fingerprint": "5600e0ccd86512f9c5a5c097f1ce09575637ed611a641596eb7fb4bda8da4a43",
+      "snapshot": {
+        "apps/api/benchmarks/attendance-import-preview-server.ts": "cb6b66fbca569bbe0005f511cdc848fb860d382a4f80c0fc8037aaf1cce1b21c"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/benchmarks/attendance-import-preview-server.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/benchmarks/attendance-import-preview.ts": {
+      "fingerprint": "0883a64f0017980a85aba9f8efcb2f317234b6e7508b404825f5a9b6e81f0555",
+      "snapshot": {
+        "apps/api/benchmarks/attendance-import-preview.ts": "887c90d9a43f53aa3573bee8f4dcd5cd4179e70e943e1389be2a7f1a895ddcd4"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/benchmarks/attendance-import-preview.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/src/import/excel-reader.ts": {
+      "fingerprint": "587221fed3a286b330a3b89dc356539436250921beab5fc7ee917babbe4eb0de",
+      "snapshot": {
+        "apps/api/src/import/excel-reader.ts": "ea4b9b3b677caafe76dc5c0aad186af2fa4046e404fcaa117d4d0dafbe2511f6"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-reader.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/src/import/excel-reader.worker.ts": {
+      "fingerprint": "f11a89b6946a4a51e92869b9d4e3bdb2ae8650d10cf8e942c76fe97dbc2ef974",
+      "snapshot": {
+        "apps/api/src/import/excel-reader.worker.ts": "d2c413b4820a4065515cfb40d4ca72eefcbffa4fb864796eeff3faff28d2f8b8"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-reader.worker.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/tests/attendance-import.test.ts": {
+      "fingerprint": "2cd615db8907998a2560f6877145794c69e8cb55307dfbe72c972e57fbd7b28b",
+      "snapshot": {
+        "apps/api/tests/attendance-import.test.ts": "0251a433eff72a9e69a6f0f1628279a17489a0d9a2acc510d23276308ef6bb93"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/tests/attendance-import.test.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/tests/data-layer.test.ts": {
+      "fingerprint": "c9828b91bc08b9f549c23b3f4f06ac32ccf2ea6e4b1b4a864fe3209e832dc4c7",
+      "snapshot": {
+        "apps/api/tests/data-layer.test.ts": "24b057934cea71aff1757e0f59078e63ee0a4478dbdaa0e0b2cf59025cac128d"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: apps/api/tests/data-layer.test.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
+      "fingerprint": "a3c1a3f2dbcba6b26b743518d10ab5bbad42e32a4d8c91af379578516ea1c7af",
+      "snapshot": {
+        "docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": "70f2d7a9787d85c2aef522492ed55d15d9ca6f0a8afc16d2cdbf21cec01453b8"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Rechecked the five-trial benchmark update against the Elysia skill. The new values are importer and Bun Worker measurements recorded in the app architecture document, so reusable Elysia guidance remains unchanged.",
+      "evidence": [
+        "Changed: docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:scripts/fresh-db-parity.sh": {
+      "fingerprint": "55012445c21835f762bc220fb02bb081de5bf43c696e1ba3514d633e188e9597",
+      "snapshot": {
+        "scripts/fresh-db-parity.sh": "a676b236c7e3e2a3d15b4d85a0166f4a3ba4829255594a766c7e76e64e24485c"
+      },
+      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "outcome": "no-change",
+      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "evidence": [
+        "Changed: scripts/fresh-db-parity.sh at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
     }
   }
 }
