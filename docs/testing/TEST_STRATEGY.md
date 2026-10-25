@@ -46,6 +46,12 @@ Failure artifacts are retained for diagnosis. Protected-path guards are tested
 with synthetic path strings; no tier reads, hashes, snapshots, or copies the
 protected S4.3 database.
 
+Turbo tasks run with a strict environment. `TMPDIR` is passed through so test
+helpers that use Node's `tmpdir()` follow the caller's value. Before running
+tests, ensure that path exists, is writable, and has enough available space and
+applicable quota. Backup-retention API fixtures create private roots there and
+remove only those roots.
+
 Historical orchestration evidence remains in Git history.
 
 ## Staging SSH VM boundary
