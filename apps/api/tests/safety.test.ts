@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -23,7 +24,7 @@ async function login(app: ReturnType<typeof createApp>, username: string, passwo
 
 describe("backup, restore, and scheduler safety", () => {
   it("backs up, preflights, restores, revokes sessions, and rejects corruption", async () => {
-    const dataRoot = `/tmp/operatoros-phase9-safety-${process.pid}-${Date.now()}`;
+    const dataRoot = join(tmpdir(), `operatoros-phase9-safety-${process.pid}-${Date.now()}`);
     mkdirSync(dataRoot, { recursive: true });
     const path = join(dataRoot, "operatoros.sqlite");
     const backupDir = `/dev/shm/operatoros-phase9-backups-${process.pid}-${Date.now()}`;
@@ -170,8 +171,8 @@ describe("backup, restore, and scheduler safety", () => {
   }, 30000);
 
   it("maps historical recovery-history records and skips malformed lines", async () => {
-    const path = `/tmp/operatoros-phase9-recovery-${process.pid}-${Date.now()}.db`;
-    const backupDir = `/tmp/operatoros-phase9-recovery-backups-${process.pid}-${Date.now()}`;
+    const path = join(tmpdir(), `operatoros-phase9-recovery-${process.pid}-${Date.now()}.db`);
+    const backupDir = join(tmpdir(), `operatoros-phase9-recovery-backups-${process.pid}-${Date.now()}`);
     seed(path); mkdirSync(backupDir, { recursive: true });
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
@@ -190,8 +191,8 @@ describe("backup, restore, and scheduler safety", () => {
   }, 30000);
 
   it("bounds recovery-history reads and leaves the append-only audit untouched", async () => {
-    const path = `/tmp/operatoros-phase9-recovery-page-${process.pid}-${Date.now()}.db`;
-    const backupDir = `/tmp/operatoros-phase9-recovery-page-backups-${process.pid}-${Date.now()}`;
+    const path = join(tmpdir(), `operatoros-phase9-recovery-page-${process.pid}-${Date.now()}.db`);
+    const backupDir = join(tmpdir(), `operatoros-phase9-recovery-page-backups-${process.pid}-${Date.now()}`);
     seed(path); mkdirSync(backupDir, { recursive: true });
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, destructiveOperationsEnabled: true, backupDir, backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret }), auth: { authCookieSecret: secret, auditDir: backupDir } });
@@ -242,8 +243,8 @@ describe("backup, restore, and scheduler safety", () => {
   }, 30000);
 
   it("keeps scheduler lifecycle single-instance and clean", () => {
-    const path = `/tmp/operatoros-phase9-scheduler-${process.pid}-${Date.now()}.db`;
-    const backupDir = `/tmp/operatoros-phase9-scheduler-backups-${process.pid}-${Date.now()}`;
+    const path = join(tmpdir(), `operatoros-phase9-scheduler-${process.pid}-${Date.now()}.db`);
+    const backupDir = join(tmpdir(), `operatoros-phase9-scheduler-backups-${process.pid}-${Date.now()}`);
     seed(path); const database = openDatabase(path); const context = { database, config: { authCookieSecret: secret, cookieSecure: false, sessionIdleTimeoutHours: 6, sessionAbsoluteTimeoutHours: 24, maxFailedLoginAttempts: 5, accountLockMinutes: 30, managedDevSetup: false, allowedOrigins: [], auditDir: backupDir } } as any;
     try { backupScheduler.start(context, { backupDir, destructiveOperationsEnabled: false }); backupScheduler.start(context, { backupDir, destructiveOperationsEnabled: false }); expect(backupScheduler.running).toBe(true); backupScheduler.stop(); expect(backupScheduler.running).toBe(false); } finally { backupScheduler.stop(); database.close(); rmSync(path, { force: true }); rmSync(backupDir, { recursive: true, force: true }); }
   });

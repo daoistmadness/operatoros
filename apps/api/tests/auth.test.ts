@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
@@ -10,7 +11,7 @@ import { createAccountFixture } from "./fixtures/accounts";
 const secret = "astryx-test-only-cookie-secret-32-chars";
 
 function pathFor(label: string): string {
-  return `/tmp/operatoros-auth-${label}-${process.pid}-${Date.now()}.db`;
+  return join(tmpdir(), `operatoros-auth-${label}-${process.pid}-${Date.now()}.db`);
 }
 
 function seedUsers(path: string, includeUsers = true): void {
@@ -19,7 +20,7 @@ function seedUsers(path: string, includeUsers = true): void {
 
 function setup(label: string, includeUsers = true, authOverrides: Record<string, unknown> = {}) {
   const path = pathFor(label);
-  const auditDir = `/tmp/operatoros-auth-audit-${process.pid}-${Date.now()}`;
+  const auditDir = join(tmpdir(), `operatoros-auth-audit-${process.pid}-${Date.now()}`);
   mkdirSync(auditDir, { recursive: true });
   seedUsers(path, includeUsers);
   const database = openDatabase(path);
