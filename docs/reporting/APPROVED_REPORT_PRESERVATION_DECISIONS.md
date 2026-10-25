@@ -30,7 +30,7 @@ There is no durable report-run, artifact, or source-snapshot storage. Later expo
 
 ## Reproducible synthetic measurements
 
-Run from the repository root with the pinned Bun 1.4.3 runtime:
+These historical measurements were collected with Bun 1.4.3. To rerun them with the current pinned Bun 1.4.4 runtime, run from the repository root:
 
 ```sh
 bun apps/api/benchmarks/phase2-reporting.ts
