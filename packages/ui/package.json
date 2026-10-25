@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

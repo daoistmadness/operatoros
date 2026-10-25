@@ -51,7 +51,7 @@
     "boundaries:test": "bun test ../../scripts/frontend-boundaries.test.mjs",
     "dev": "bun run --bun vite",
     "build": "bun run --bun vite build",
-    "typecheck": "bun run --bun tsc --noEmit",
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
     "test:e2e": "bun run --bun playwright test",
     "e2e:release": "bun run --bun playwright test --config playwright.config.ts --grep @release",
     "preview": "bun run --bun vite preview",

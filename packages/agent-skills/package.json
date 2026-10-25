@@ -10,7 +10,7 @@
   "type": "module",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --strict --skipLibCheck src/index.ts"
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --strict --skipLibCheck src/index.ts"
   },
   "files": [
     "README.md",

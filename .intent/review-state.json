@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "9d8fb1d268037c5e90f73fe1e3c922b60b1faf41ddc90f7067b21adc35c3d0d9",
+      "fingerprint": "a1aa797721630179265a0b8ef40b0b6813f00114b98df35d92ed1899ab5a918e",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
         "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
-        "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "19bf0eed1218594293201caf55c4605cd328380943966d60141d7a0af2fac635",
+        "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
+        "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
         "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
-        "package.json": "abb01d267c10f2c85460a492e9be3de169bd093f7e2177069662aba9480674d2",
+        "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -41,18 +41,18 @@
         "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
         "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
         "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
-        "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
+        "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
+      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
       "outcome": "no-change",
-      "reason": "Reviewed the CI enforcement change against the Elysia skill. It changes only whether the existing native typecheck step fails the API job; it does not change Elysia runtime behavior, routes, or authoring guidance.",
+      "reason": "This diff changes the TypeScript CLI invocation and owning toolchain ADR only. Elysia skill guidance, examples, and planning records are unchanged; the Elysia API and skill package typechecks and skill validation passed.",
       "evidence": [
-        "The PR changes only .github/workflows/ci.yml and docs/architecture/decisions/BUN_TOOLCHAIN.md; the native check validates types across six workspaces."
+        "Changed: apps/api/package.json, bun.lock, package.json, packages/agent-skills/package.json at 83309d71a7f98af8482ab5614e735c87204142ac"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a7689ded4f13fee5a2533e24a469c82f991e63597026896316e6c9e75101a43d",
+      "fingerprint": "29aed515b4c393457912eb9b50703287913bf6c5fbcb7de088df8c840c21aba8",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -61,13 +61,13 @@
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
-        "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
-        "bun.lock": "19bf0eed1218594293201caf55c4605cd328380943966d60141d7a0af2fac635",
+        "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
+        "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
         "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
-        "package.json": "abb01d267c10f2c85460a492e9be3de169bd093f7e2177069662aba9480674d2",
+        "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -93,14 +93,14 @@
         "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
         "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
         "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
-        "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
+        "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
+      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
       "outcome": "no-change",
-      "reason": "Reviewed the CI enforcement change against planning artifacts. Toolchain validation policy does not change the domain map, skill specification, or planning tree.",
+      "reason": "This diff changes the TypeScript CLI invocation and owning toolchain ADR only. Elysia skill guidance, examples, and planning records are unchanged; the Elysia API and skill package typechecks and skill validation passed.",
       "evidence": [
-        "No _artifacts files changed; the workflow only removes continue-on-error from the native typecheck step."
+        "Changed: apps/api/package.json, bun.lock, package.json, packages/agent-skills/package.json at 83309d71a7f98af8482ab5614e735c87204142ac"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1313,15 +1313,15 @@
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
-      "fingerprint": "8f3d03ff64d5ab6d103b794e65e8c35267bab7f43beb007ef9f5cc9166c79246",
+      "fingerprint": "e78a60e98c8d000eb7b9441be0473fce09dd176e8fc44f333e672e09ed607033",
       "snapshot": {
-        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "24e3e644e0ec947fe805d27bac6f3ed38d7e153a41bf42be3011b9eb012296ed"
+        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "6d1465277a7c448f358cf1efac6d1bba14fdc464cac8aa0c556ad28381ea4456"
       },
-      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
+      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
       "outcome": "updated",
-      "reason": "Updated the owning Bun toolchain decision to record blocking native typechecking after five consecutive successful functional PR observations, while retaining TypeScript 5.9.3 as compiler authority.",
+      "reason": "Updated the owning toolchain decision to make stable TypeScript 7.0.2 the primary CLI checker while retaining TypeScript 5.9.3 for compiler-API consumers.",
       "evidence": [
-        "The PR documents the five CI runs and changes only the native check tolerance in the existing API job."
+        "The toolchain decision records the compatibility split, passing eight-project checks, diagnostics comparison, declaration test, and local benchmark."
       ]
     },
     "source:docs/deployment/README.md": {
