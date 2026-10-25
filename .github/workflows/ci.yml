@@ -97,9 +97,8 @@ jobs:
       - name: Typecheck development launcher
         working-directory: ${{ github.workspace }}
         run: bun run typecheck:launcher
-      - name: Advisory TypeScript 7 native typecheck
+      - name: TypeScript 7 native typecheck
         working-directory: ${{ github.workspace }}
-        continue-on-error: true
         run: bun run typecheck:native
       - name: Validate Turbo invalidation proofs
         working-directory: ${{ github.workspace }}
