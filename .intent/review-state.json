@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "f157f9701610dd89031dedda3b3a3b14dc989ba014bc95898d8369e10df84ca6",
+      "fingerprint": "9d8fb1d268037c5e90f73fe1e3c922b60b1faf41ddc90f7067b21adc35c3d0d9",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
-        ".github/workflows/ci.yml": "30d10ed0ab5c5b2797e025e7561f966df94fcdccbacd61b7b522f934b9212791",
+        ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
         "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "3e9d1922877b218d8c10c90721826dc5d4e01b0641e696f5fa87f6d4a3dbfc93",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
+      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
       "outcome": "no-change",
-      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
+      "reason": "Reviewed the CI enforcement change against the Elysia skill. It changes only whether the existing native typecheck step fails the API job; it does not change Elysia runtime behavior, routes, or authoring guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, package.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
+        "The PR changes only .github/workflows/ci.yml and docs/architecture/decisions/BUN_TOOLCHAIN.md; the native check validates types across six workspaces."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "69aa847190f8c2e42241ec6f7f16b35f4e95f85c8cdc04e711c6ce56d71ef190",
+      "fingerprint": "a7689ded4f13fee5a2533e24a469c82f991e63597026896316e6c9e75101a43d",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
-        ".github/workflows/ci.yml": "30d10ed0ab5c5b2797e025e7561f966df94fcdccbacd61b7b522f934b9212791",
+        ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
         "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "cd395f4310c043fc6748aad1a05f45c10a13caf39c4fa1a7d014bc644041fe7b",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
+      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
       "outcome": "no-change",
-      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
+      "reason": "Reviewed the CI enforcement change against planning artifacts. Toolchain validation policy does not change the domain map, skill specification, or planning tree.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, package.json at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
+        "No _artifacts files changed; the workflow only removes continue-on-error from the native typecheck step."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1313,15 +1313,15 @@
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
-      "fingerprint": "778c588230e12d2241aa19a93fb7650a53806f10df5d747eb082020e1df8f60d",
+      "fingerprint": "8f3d03ff64d5ab6d103b794e65e8c35267bab7f43beb007ef9f5cc9166c79246",
       "snapshot": {
-        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "dedc3b4139b6bde3cf66366181d134561fbb2bad07e539634e6dc5b960919f31"
+        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "24e3e644e0ec947fe805d27bac6f3ed38d7e153a41bf42be3011b9eb012296ed"
       },
-      "head": "0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9",
-      "outcome": "no-change",
-      "reason": "Loop 168: TypeScript 7 native typecheck tooling corrections across workspaces",
+      "head": "0053eea5ea669e8dd4a3939278d8d5a052ca37b6",
+      "outcome": "updated",
+      "reason": "Updated the owning Bun toolchain decision to record blocking native typechecking after five consecutive successful functional PR observations, while retaining TypeScript 5.9.3 as compiler authority.",
       "evidence": [
-        "Changed: docs/architecture/decisions/BUN_TOOLCHAIN.md at 0fcd2cadf23e933e3e3ee4ece58342fc00f09cc9"
+        "The PR documents the five CI runs and changes only the native check tolerance in the existing API job."
       ]
     },
     "source:docs/deployment/README.md": {
