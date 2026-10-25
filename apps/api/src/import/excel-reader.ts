@@ -51,6 +51,16 @@ export type WorkbookRows = {
   totalRows: number;
 };
 
+type ParserWorkerRequest = { id: number; buffer: ArrayBuffer; filename: string };
+type ParserWorkerResponse =
+  | { id: number; workbook: WorkbookRows }
+  | { id: number; errorName: string; errorMessage: string };
+type PendingParse = {
+  resolve: (workbook: WorkbookRows) => void;
+  reject: (error: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+};
+
 type RawRow = { excelRow: number; values: Map<string, CellValue> };
 
 function key(studentId: number, date: string): string {
@@ -105,7 +115,7 @@ function readLegacyRawRows(buffer: ArrayBuffer): { rows: RawRow[]; headers: stri
   return { rows, headers: legacy.headers, date1904: legacy.date1904 };
 }
 
-export async function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
+export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
   const isLegacyXls = filename.toLowerCase().endsWith(".xls");
   if (!isLegacyXls && !filename.toLowerCase().endsWith(".xlsx")) throw new Error("ATTENDANCE_SOURCE_MUST_BE_EXCEL");
   let rawRows: RawRow[];
@@ -177,4 +187,68 @@ export async function readAttendanceWorkbook(buffer: ArrayBuffer, filename: stri
   }
   rows.push(...seen.values());
   return { rows, invalidRows, exactDuplicates: duplicates.exact, divergentDuplicates: duplicates.divergent, totalRows: rawRows.length };
+}
+
+// shortcut: 64 KiB separates measured 100-row and 5,000-row files; revisit with new import-size benchmarks.
+const WORKER_PARSE_THRESHOLD = 64 * 1024;
+const PARSER_WORKER_TIMEOUT_MS = 30_000;
+const pendingParses = new Map<number, PendingParse>();
+let attendanceParserWorker: Worker | undefined;
+let nextParseId = 0;
+
+function failAttendanceParserWorker(worker: Worker, error: Error): void {
+  if (attendanceParserWorker !== worker) return;
+  attendanceParserWorker = undefined;
+  for (const pending of pendingParses.values()) {
+    clearTimeout(pending.timeout);
+    pending.reject(error);
+  }
+  pendingParses.clear();
+  worker.terminate();
+}
+
+function terminateIdleAttendanceParserWorker(worker: Worker): void {
+  if (attendanceParserWorker !== worker || pendingParses.size > 0) return;
+  attendanceParserWorker = undefined;
+  worker.terminate();
+}
+
+function getAttendanceParserWorker(): Worker {
+  if (attendanceParserWorker) return attendanceParserWorker;
+  const worker = new Worker(new URL("./excel-reader.worker.ts", import.meta.url));
+  worker.addEventListener("message", ({ data }: MessageEvent<ParserWorkerResponse>) => {
+    const pending = pendingParses.get(data.id);
+    if (!pending) return;
+    pendingParses.delete(data.id);
+    clearTimeout(pending.timeout);
+    if ("workbook" in data) pending.resolve(data.workbook);
+    else {
+      const error = new Error(data.errorMessage);
+      error.name = data.errorName;
+      pending.reject(error);
+    }
+    terminateIdleAttendanceParserWorker(worker);
+  });
+  worker.addEventListener("error", (event) => failAttendanceParserWorker(worker, new Error(event.message || "Attendance workbook parser worker failed")));
+  worker.addEventListener("messageerror", () => failAttendanceParserWorker(worker, new Error("Attendance workbook parser worker returned an unreadable result")));
+  attendanceParserWorker = worker;
+  return worker;
+}
+
+export function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
+  if (buffer.byteLength < WORKER_PARSE_THRESHOLD) return parseAttendanceWorkbook(buffer, filename);
+  const worker = getAttendanceParserWorker();
+  const id = nextParseId++;
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => failAttendanceParserWorker(worker, new Error("ATTENDANCE_WORKBOOK_PARSE_TIMEOUT")), PARSER_WORKER_TIMEOUT_MS);
+    pendingParses.set(id, { resolve, reject, timeout });
+    try {
+      worker.postMessage({ id, buffer, filename } satisfies ParserWorkerRequest, [buffer]);
+    } catch (error) {
+      clearTimeout(timeout);
+      pendingParses.delete(id);
+      terminateIdleAttendanceParserWorker(worker);
+      reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  });
 }

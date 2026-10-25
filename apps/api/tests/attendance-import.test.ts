@@ -1,11 +1,12 @@
 import { describe, expect, it } from "bun:test";
+import { randomBytes } from "node:crypto";
 import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateLateMinutes } from "../src/domains/attendance-rules";
 import { parseDuration, parseExcelDate, parseExcelTime } from "@operatoros/excel";
-import { readAttendanceWorkbook } from "../src/import/excel-reader";
+import { parseAttendanceWorkbook, readAttendanceWorkbook } from "../src/import/excel-reader";
 import { createAttendanceImportFixture } from "./fixtures/attendance-imports";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
@@ -234,6 +235,29 @@ describe("Excel attendance import", () => {
     const result = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "typed.xlsx");
     expect(result.rows[0]).toMatchObject({ date: "2026-06-15", checkIn: "07:30", checkOut: "16:00", overtimeSeconds: null });
   });
+
+  it("preserves large XLS and XLSX parsing results through concurrent worker requests", async () => {
+    const evidenceHeaders = [...headers, "Evidence"];
+    const rows = Array.from({ length: 500 }, (_, index) => [10000 + index, `Student ${index}`, "01/07/2026", "07:30", "16:00", "00:00", "", "", "Wednesday", randomBytes(128).toString("hex")]);
+    const xlsx = await workbook(rows, evidenceHeaders);
+    const xls = legacyWorkbook(rows, evidenceHeaders);
+    expect(xlsx.byteLength).toBeGreaterThanOrEqual(64 * 1024);
+    expect(xls.byteLength).toBeGreaterThanOrEqual(64 * 1024);
+    await expect(readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.csv")).rejects.toThrow("ATTENDANCE_SOURCE_MUST_BE_EXCEL");
+    const [directXlsx, directXls, workerXlsx, workerXls] = await Promise.all([
+      parseAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx"),
+      parseAttendanceWorkbook(xls.slice().buffer as ArrayBuffer, "large.xls"),
+      readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx"),
+      readAttendanceWorkbook(xls.slice().buffer as ArrayBuffer, "large.xls"),
+    ]);
+    expect(workerXlsx).toEqual(directXlsx);
+    expect(workerXls).toEqual(directXls);
+    expect(workerXlsx.rows).toHaveLength(500);
+    expect(workerXls.rows).toHaveLength(500);
+    expect(workerXlsx.invalidRows).toHaveLength(0);
+    expect(workerXls.invalidRows).toHaveLength(0);
+    expect(await readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx")).toEqual(directXlsx);
+  }, 30000);
 
   it("reads legacy BIFF .xls through the same preview and commit pipeline", async () => {
     const value = await setup("xls");
