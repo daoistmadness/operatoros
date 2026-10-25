@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "a1aa797721630179265a0b8ef40b0b6813f00114b98df35d92ed1899ab5a918e",
+      "fingerprint": "6fb712c9a88b068ba27538fe3681341882b88d1093aefa8a906f704c9a92e71b",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -14,7 +14,7 @@
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
-        "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
+        "docs/testing/TEST_STRATEGY.md": "7e592e539a86a04633b10fbf95ea27307d727f0dbdc36015e7f4f2e9493874d9",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
@@ -44,15 +44,16 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
+      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
       "outcome": "no-change",
-      "reason": "This diff changes the TypeScript CLI invocation and owning toolchain ADR only. Elysia skill guidance, examples, and planning records are unchanged; the Elysia API and skill package typechecks and skill validation passed.",
+      "reason": "The TEST_STRATEGY.md change adds TMPDIR guidance for filesystem-backed tests; it does not change Elysia APIs, routes, runtime behavior, or the skill's project-runner testing guidance.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json, packages/agent-skills/package.json at 83309d71a7f98af8482ab5614e735c87204142ac"
+        "Reviewed packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs/references/testing.md; neither covers temporary-filesystem selection.",
+        "Reviewed the apps/api/tests/backup-retention.test.ts, turbo.json, and docs/testing/TEST_STRATEGY.md diff; full Turbo passed 14/14 tasks and API 378/378."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "29aed515b4c393457912eb9b50703287913bf6c5fbcb7de088df8c840c21aba8",
+      "fingerprint": "53ab731153401c830d26d45e41349730a8464c8d48f1178a59462c89688aa5c3",
       "snapshot": {
         ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -66,7 +67,7 @@
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
         "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
-        "docs/testing/TEST_STRATEGY.md": "cfa9e0eec80c5ef0246d45f30b9e9efbd438245453ddf9aebfc4ec85f42d162e",
+        "docs/testing/TEST_STRATEGY.md": "7e592e539a86a04633b10fbf95ea27307d727f0dbdc36015e7f4f2e9493874d9",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
@@ -96,11 +97,12 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
+      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
       "outcome": "no-change",
-      "reason": "This diff changes the TypeScript CLI invocation and owning toolchain ADR only. Elysia skill guidance, examples, and planning records are unchanged; the Elysia API and skill package typechecks and skill validation passed.",
+      "reason": "The change adds temporary-root test guidance and Turbo environment passthrough, without changing Elysia task coverage, package ownership, skill metadata, or distribution decisions; all three planning records remain accurate.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json, packages/agent-skills/package.json at 83309d71a7f98af8482ab5614e735c87204142ac"
+        "Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; no entry describes generic Turbo or backup-test temp-root configuration.",
+        "The existing source mapping already includes docs/testing/TEST_STRATEGY.md; the test and Turbo config changes do not alter the skill task taxonomy."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1478,6 +1480,32 @@
       "reason": "The changes are limited to Bun path validation and its synthetic runtime regression test; no agent skill content, guidance, exports, or planning records changed, confirmed by the two-file diff.",
       "evidence": [
         "Changed: scripts/validate-wsl-bun.sh at 97daa728a7922bf4e30d3b5061b713417c5e79eb"
+      ]
+    },
+    "source:apps/api/tests/backup-retention.test.ts": {
+      "fingerprint": "81a5ac19f9f965d90e914778bacf3c34c5915efc8cc892a5db5d4de39425c4f0",
+      "snapshot": {
+        "apps/api/tests/backup-retention.test.ts": "3befb6d30366cefc3e68e204798a7e888f939fb68c63dbe7510229bebcd275d6"
+      },
+      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
+      "outcome": "out-of-scope",
+      "reason": "This is a repository-specific backup-retention test fixture and failure diagnostic, not reusable Elysia skill guidance.",
+      "evidence": [
+        "The fixture uses a private tmpdir() root and removes only that root.",
+        "Focused retention passed 3/3 and full Turbo passed API 378/378."
+      ]
+    },
+    "source:turbo.json": {
+      "fingerprint": "d17645e4a44ffb4af2ebdc594a15830c3e8bf206c1abbb9a79777824e6d6a521",
+      "snapshot": {
+        "turbo.json": "0184ad7e9de5a5b4499ac6317648f8a7f7a172a5ddf15e7774de4574dcbb6f9e"
+      },
+      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
+      "outcome": "out-of-scope",
+      "reason": "This is monorepo task-environment configuration; it does not change a library API or the Elysia skill package.",
+      "evidence": [
+        "The only config change passes TMPDIR through Turbo tasks; a synthetic Turbo task confirmed strict-mode filtering and allowlist propagation.",
+        "Full Turbo passed 14/14 tasks with no EDQUOT or SQLITE_IOERR_WRITE."
       ]
     }
   }

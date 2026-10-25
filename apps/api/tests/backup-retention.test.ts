@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { BACKUP_RETENTION_LIMIT } from "../src/domains/safety";
@@ -11,31 +13,39 @@ const backupKey = Buffer.alloc(32, 7).toString("base64");
 const origin = "http://localhost:5173";
 
 function harness(name: string) {
-  const stamp = `${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
-  const databasePath = `/tmp/operatoros-p416-${name}-${stamp}.db`;
-  const backupDir = `/tmp/operatoros-p416-${name}-backups-${stamp}`;
-  const auditDir = `/tmp/operatoros-p416-${name}-audit-${stamp}`;
-  createAccountFixture(databasePath, "golden-active");
-  const database = openDatabase(databasePath);
-  const app = createApp({
-    databaseHandle: database,
-    destructiveOperationsEnabled: true,
-    backupDir,
-    backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: cookieValue }),
-    auth: { authCookieSecret: cookieValue, auditDir },
-  });
-  return {
-    app,
-    database,
-    databasePath,
-    backupDir,
-    cleanup: () => {
+  const temporaryRoot = mkdtempSync(join(tmpdir(), `operatoros-p416-${name}-`));
+  const databasePath = join(temporaryRoot, "operatoros.sqlite");
+  const backupDir = join(temporaryRoot, "backups");
+  const auditDir = join(temporaryRoot, "audit");
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const database = openDatabase(databasePath);
+    try {
+      const app = createApp({
+        databaseHandle: database,
+        destructiveOperationsEnabled: true,
+        backupDir,
+        backupEncryption: parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: cookieValue }),
+        auth: { authCookieSecret: cookieValue, auditDir },
+      });
+      return {
+        app,
+        database,
+        databasePath,
+        backupDir,
+        cleanup: () => {
+          try { database.close(); }
+          finally { rmSync(temporaryRoot, { recursive: true, force: true }); }
+        },
+      };
+    } catch (error) {
       database.close();
-      rmSync(databasePath, { force: true });
-      rmSync(backupDir, { recursive: true, force: true });
-      rmSync(auditDir, { recursive: true, force: true });
-    },
-  };
+      throw error;
+    }
+  } catch (error) {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 async function login(app: ReturnType<typeof createApp>): Promise<string> {
@@ -47,8 +57,11 @@ async function login(app: ReturnType<typeof createApp>): Promise<string> {
 
 async function createBackup(app: ReturnType<typeof createApp>, cookie: string): Promise<any> {
   const response = await app.handle(new Request("http://local/api/admin/backups", { method: "POST", headers: { cookie, origin } }));
-  expect(response.status).toBe(200);
-  return response.json();
+  const payload = await response.json();
+  const detail = typeof payload === "object" && payload !== null && "detail" in payload && typeof payload.detail === "string" ? payload.detail : "";
+  const errorCode = /^([A-Z0-9_]+):/.exec(detail)?.[1] ?? "UNSPECIFIED";
+  expect(response.status, `backup response HTTP ${response.status}; code=${errorCode}`).toBe(200);
+  return payload;
 }
 
 async function status(app: ReturnType<typeof createApp>, cookie: string): Promise<any> {
