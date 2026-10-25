@@ -3,18 +3,18 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "6fb712c9a88b068ba27538fe3681341882b88d1093aefa8a906f704c9a92e71b",
+      "fingerprint": "91e670e78f03710333747abede5ec2fbe6ec076133ea49c14c380542e236e7dd",
       "snapshot": {
-        ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
+        ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
-        "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
+        "AGENTS.md": "33d28d0cdf520cfbc5ec09237d4b8db8854d98c045b4def272d9871ab7c03c6d",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
-        "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
-        "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
-        "docs/testing/TEST_STRATEGY.md": "7e592e539a86a04633b10fbf95ea27307d727f0dbdc36015e7f4f2e9493874d9",
+        "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
+        "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
+        "docs/testing/TEST_STRATEGY.md": "23c5be73808cd14a545f43bda8313b288e2fe96b9c4e4b29e6b41f91c20e34a8",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
@@ -44,20 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
       "outcome": "no-change",
-      "reason": "The TEST_STRATEGY.md change adds TMPDIR guidance for filesystem-backed tests; it does not change Elysia APIs, routes, runtime behavior, or the skill's project-runner testing guidance.",
+      "reason": "Reviewed the changed toolchain guidance against the Elysia skill; the skill directs readers to inspect the project lockfile and does not prescribe repository Bun or TypeScript versions.",
       "evidence": [
-        "Reviewed packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs/references/testing.md; neither covers temporary-filesystem selection.",
-        "Reviewed the apps/api/tests/backup-retention.test.ts, turbo.json, and docs/testing/TEST_STRATEGY.md diff; full Turbo passed 14/14 tasks and API 378/378."
+        "Reviewed packages/agent-skills/skills/elysiajs/SKILL.md and its linked version and runtime references; they remain accurate for Elysia guidance."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "53ab731153401c830d26d45e41349730a8464c8d48f1178a59462c89688aa5c3",
+      "fingerprint": "c5a96f99db74234617e83143bb4bbf035ad321147572bfd5eecec4b0e29e24be",
       "snapshot": {
-        ".github/CI.md": "5c3cdf9042022b1cd9306dc9cf986aec4cfa011d7b1faed6c0cfc349d77b8c21",
+        ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
-        "AGENTS.md": "eb8297d57feef5ef00577f9fe7c4215880888f65496b83c06634f4236f767aa4",
+        "AGENTS.md": "33d28d0cdf520cfbc5ec09237d4b8db8854d98c045b4def272d9871ab7c03c6d",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -65,9 +64,9 @@
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
-        "docs/development/README.md": "a4af5b20d107a384b6b737297b905c08e32273cac93cc658bc98ee73a1ccd508",
-        "docs/security/SECURITY_HARDENING.md": "f9d9b004f8cd531b87dba98a76d517bc7a01d1afd91c5b63b75fd3ee79d28afc",
-        "docs/testing/TEST_STRATEGY.md": "7e592e539a86a04633b10fbf95ea27307d727f0dbdc36015e7f4f2e9493874d9",
+        "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
+        "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
+        "docs/testing/TEST_STRATEGY.md": "23c5be73808cd14a545f43bda8313b288e2fe96b9c4e4b29e6b41f91c20e34a8",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "661c1b01af9ff06d3fdaf27b6558d255b1984a3b48331588d4bb7a231a7e08f7",
@@ -97,12 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
       "outcome": "no-change",
-      "reason": "The change adds temporary-root test guidance and Turbo environment passthrough, without changing Elysia task coverage, package ownership, skill metadata, or distribution decisions; all three planning records remain accurate.",
+      "reason": "The Bun and TypeScript documentation reconciliation does not change agent-skill scope, ownership, or planning records.",
       "evidence": [
-        "Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; no entry describes generic Turbo or backup-test temp-root configuration.",
-        "The existing source mapping already includes docs/testing/TEST_STRATEGY.md; the test and Turbo config changes do not alter the skill task taxonomy."
+        "Reviewed the changed toolchain documentation and the _artifacts planning maps; no skill taxonomy or ownership changed."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -589,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "fefdb302cc692e579e000eca517e1a9d4df4fce66d7dffc23c63a3b799d004f9",
+      "fingerprint": "67b898df5d6341c55629dbc34f8c3abd86c0016bf2e850f4c1379f64c143341e",
       "snapshot": {
-        "README.md": "b40886a05f37d5bd798941528017fac6e54cb0fbe65808b1c077d438cb866269"
+        "README.md": "dc13d4ffd355645bfe5ef6ac71b223a67e0646116b95368d67c5f48f75dde61c"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
-      "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
+      "outcome": "updated",
+      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
       "evidence": [
-        "Changed: README.md at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Reviewed README.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1315,15 +1313,15 @@
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
-      "fingerprint": "e78a60e98c8d000eb7b9441be0473fce09dd176e8fc44f333e672e09ed607033",
+      "fingerprint": "84f89c4c2ae54252c0f8cdab15b48ccb05e457d95b5c00674c3f3c77e123d2c4",
       "snapshot": {
-        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "6d1465277a7c448f358cf1efac6d1bba14fdc464cac8aa0c556ad28381ea4456"
+        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "3e5f1d572b274132b0abef8e0011523f21c6772af9679b12563608178f0e0587"
       },
-      "head": "83309d71a7f98af8482ab5614e735c87204142ac",
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
       "outcome": "updated",
-      "reason": "Updated the owning toolchain decision to make stable TypeScript 7.0.2 the primary CLI checker while retaining TypeScript 5.9.3 for compiler-API consumers.",
+      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
       "evidence": [
-        "The toolchain decision records the compatibility split, passing eight-project checks, diagnostics comparison, declaration test, and local benchmark."
+        "Reviewed docs/architecture/decisions/BUN_TOOLCHAIN.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
       ]
     },
     "source:docs/deployment/README.md": {
@@ -1506,6 +1504,30 @@
       "evidence": [
         "The only config change passes TMPDIR through Turbo tasks; a synthetic Turbo task confirmed strict-mode filtering and allowlist propagation.",
         "Full Turbo passed 14/14 tasks with no EDQUOT or SQLITE_IOERR_WRITE."
+      ]
+    },
+    "source:PROJECT_CONTEXT.md": {
+      "fingerprint": "7a04c1c9bcac7547a3b4584436b21e6e9c9c488fd0957689c1f791532381676a",
+      "snapshot": {
+        "PROJECT_CONTEXT.md": "28f2e795d527348f49bfa2d6045be22ad0ebbdb5814c1d667396a6ff48a6a9c4"
+      },
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
+      "outcome": "updated",
+      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
+      "evidence": [
+        "Reviewed PROJECT_CONTEXT.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
+      ]
+    },
+    "source:docs/operations/CI_PERFORMANCE.md": {
+      "fingerprint": "62a25994b7d272a752f611472b98d02d6a883119c5d126811c2b6cdd55bbf6ed",
+      "snapshot": {
+        "docs/operations/CI_PERFORMANCE.md": "9ee09ac65bc992288901ba410a49fa60293fec20325410cdd64ca57ca3c66336"
+      },
+      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
+      "outcome": "updated",
+      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
+      "evidence": [
+        "Reviewed docs/operations/CI_PERFORMANCE.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
       ]
     }
   }

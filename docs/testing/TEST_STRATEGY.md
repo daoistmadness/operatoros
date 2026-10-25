@@ -16,6 +16,11 @@ current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
 replace the classifier or the full PR/release gate. Use
 `mise run check:affected -- --dry=json` to inspect selection without running.
 
+Workspace and launcher CLI typechecks use the root-pinned TypeScript 7.0.2
+compiler. CI also runs Bun 1.4.4's `bun check` across its six workspaces. The
+TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
+consumers; it is not the CLI typecheck compiler.
+
 The single repository-owned CI workflow runs API, frontend, and complete
 browser/API smoke checks on every PR, merge group, and supported branch push.
 There are no documentation or tooling path exclusions. The browser job runs

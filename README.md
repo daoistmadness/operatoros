@@ -45,7 +45,7 @@ flowchart LR
   end
 
   subgraph Server ["Backend API Authority"]
-    API["Elysia HTTP API<br/>(Bun 1.4.4 + TypeScript 5.9)"]
+    API["Elysia HTTP API<br/>(Bun 1.4.4 + TypeScript 7.0.2 CLI)"]
     Excel["Excel & PDF Engines<br/>(ExcelJS 4.4 + pdf-lib 1.17)"]
     DB[("SQLite Database<br/>(Drizzle ORM 0.45)")]
   end
@@ -134,7 +134,7 @@ flowchart TD
 | Layer | Technologies & Dependencies | Version Authority |
 | --- | --- | --- |
 | **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.4`, Node `24.19.0`, hk `1.56.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
-| **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `5.9`, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
+| **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
 | **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19`, Vite `8.3.4`, React Router `7`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |

@@ -187,6 +187,10 @@ Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
 resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.4
 in its local development image and does not change the supported runtime.
+The active CLI typechecker is TypeScript 7.0.2 through the root
+`@typescript/native` alias; Bun 1.4.4's `bun check` also runs in CI. TypeScript
+5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
+CLI typechecks.
 Before running Bun, inspect `command -v`, `type -P` (in Bash), and `readlink -f`.
 Reject `/mnt/<drive>`, WindowsApps, Program Files, `.exe`, `.cmd`, `.bat`, and
 UNC-like paths. `operatoros_wsl_prepare_bun` and `validate-wsl-bun.sh` are legacy
