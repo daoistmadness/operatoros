@@ -539,15 +539,15 @@
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
-      "fingerprint": "8e2e2e7d27e5754bb34bbbf3affdfb119ca76ed73fb21ea2a9dad46ce90105bf",
+      "fingerprint": "cb86230fc734a273eb25de20b5379f2f195e379fd4a6624e099317fbab678c11",
       "snapshot": {
-        "apps/api/tests/safety.test.ts": "813684d5ac36839fb6730a8226085080d36789951550f3270a8201239020b28a"
+        "apps/api/tests/safety.test.ts": "efc2dce138fac3f09f7dbdcd8056c95fbd1b2406c3fd06a69f4f01c962d6474f"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "e72cbb04b21c96618772edb494e37ed357645ca5",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the fixture changes in apps/api/tests/auth.test.ts and apps/api/tests/safety.test.ts. They replace hardcoded /tmp paths with Node tmpdir() so the tests follow configured TMPDIR; they do not change agent skills or operating guidance.",
       "evidence": [
-        "Changed: apps/api/tests/safety.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/tests/safety.test.ts at e72cbb04b21c96618772edb494e37ed357645ca5"
       ]
     },
     "source:scripts/restore.sh": {
@@ -1035,15 +1035,15 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "93fc3334c880b3868554a756b48245b425a75482bce8890341050100c7c4136f",
+      "fingerprint": "b8c9cbaff848eed055217e31e13242c8bf4882813fc621b43365e50f4e4d79fa",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "b18915709015764c8855c6c495025f1007d6c20ed51d5ae07a0ea53026de6fda"
+        "apps/api/tests/auth.test.ts": "63fc703e17a4e043bb2721c6bef6da7d72a6e977805d23cb5427b3255cf6170a"
       },
-      "head": "be0c74caf1700e335ce39b31e099c05bcc3521db",
+      "head": "e72cbb04b21c96618772edb494e37ed357645ca5",
       "outcome": "no-change",
-      "reason": "Reviewed apps/api/src/auth/service.ts and apps/api/tests/auth.test.ts: these implement and test the documented concurrent-login lockout fix. docs/security/identity-authentication.md records the changed authentication behavior. None of these changes alter agent skills or agent operating guidance, so no skill guidance update is needed.",
+      "reason": "Reviewed the fixture changes in apps/api/tests/auth.test.ts and apps/api/tests/safety.test.ts. They replace hardcoded /tmp paths with Node tmpdir() so the tests follow configured TMPDIR; they do not change agent skills or operating guidance.",
       "evidence": [
-        "Changed: apps/api/tests/auth.test.ts at be0c74caf1700e335ce39b31e099c05bcc3521db"
+        "Changed: apps/api/tests/auth.test.ts at e72cbb04b21c96618772edb494e37ed357645ca5"
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
