@@ -192,14 +192,29 @@ export async function authenticate(
     throw new Error(GENERIC_LOGIN_ERROR);
   }
   if (!(await verifyPassword(input.password, user.password_hash))) {
-    const attempts = user.failed_login_attempts + 1;
-    const lock = attempts >= context.config.maxFailedLoginAttempts;
-    inTransaction(client, () => {
-      client.run("UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?", [
-        attempts, lock ? futureSqlite(context.config.accountLockMinutes * 60_000) : null, user.id,
-      ]);
-    });
-    audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "invalid_credentials" });
+    const now = nowSqlite();
+    const updated = inTransaction(client, () => client.query<Pick<UserRow, "failed_login_attempts" | "locked_until" | "is_active">, [number, string, number, string]>(
+      `UPDATE users
+       SET failed_login_attempts = failed_login_attempts + 1,
+           locked_until = CASE WHEN failed_login_attempts + 1 >= ? THEN ? ELSE NULL END
+       WHERE id = ? AND is_active = 1
+         AND (locked_until IS NULL OR julianday(locked_until) IS NULL OR julianday(locked_until) <= julianday(?))
+       RETURNING failed_login_attempts, locked_until, is_active`,
+    ).get(
+      context.config.maxFailedLoginAttempts,
+      futureSqlite(context.config.accountLockMinutes * 60_000),
+      user.id,
+      now,
+    ));
+    const persisted = updated ?? currentUser(client, user.id);
+    const reason = !persisted
+      ? "invalid_credentials"
+      : !persisted.is_active
+        ? "inactive_account"
+        : !isAccountUnlocked(persisted.locked_until)
+          ? "account_locked"
+          : "invalid_credentials";
+    audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason });
     throw new Error(GENERIC_LOGIN_ERROR);
   }
 
@@ -208,16 +223,32 @@ export async function authenticate(
   const idleExpires = futureSqlite(context.config.sessionIdleTimeoutHours * 3_600_000);
   const token = randomBytes(32).toString("base64url");
   const tokenHash = digest(token, context.config);
-  inTransaction(client, () => {
-    client.run(
-      "UPDATE users SET failed_login_attempts = 0, locked_until = NULL, last_login_at = ?, updated_at = ? WHERE id = ?",
-      [now, now, user.id],
-    );
+  const authenticated = inTransaction(client, () => {
+    const updated = client.query<{ id: number }, [string, string, number, string]>(
+      `UPDATE users
+       SET failed_login_attempts = 0, locked_until = NULL, last_login_at = ?, updated_at = ?
+       WHERE id = ? AND is_active = 1
+         AND (locked_until IS NULL OR julianday(locked_until) IS NULL OR julianday(locked_until) <= julianday(?))
+       RETURNING id`,
+    ).get(now, now, user.id, now);
+    if (!updated) return false;
     client.run(
       "INSERT INTO sessions (user_id, token_hash, created_at, last_used_at, expires_at, absolute_expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [user.id, tokenHash, now, now, idleExpires < absoluteExpires ? idleExpires : absoluteExpires, absoluteExpires, input.userAgent?.slice(0, 1024) || null, input.ipAddress?.slice(0, 45) || null],
     );
+    return true;
   });
+  if (!authenticated) {
+    const persisted = currentUser(client, user.id);
+    audit(context, "login_failed", {
+      userId: user.id,
+      username: user.username,
+      userAgent: input.userAgent,
+      ipAddress: input.ipAddress,
+      reason: !persisted ? "invalid_credentials" : !persisted.is_active ? "inactive_account" : "account_locked",
+    });
+    throw new Error(GENERIC_LOGIN_ERROR);
+  }
   audit(context, "login_success", { userId: user.id, username: user.username, sessionIdHash: tokenHash, userAgent: input.userAgent, ipAddress: input.ipAddress });
   return { user: userResponse({ id: user.id, username: user.username, role: user.role }), token, tokenHash };
 }
