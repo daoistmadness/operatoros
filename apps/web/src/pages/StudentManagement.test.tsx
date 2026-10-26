@@ -91,6 +91,7 @@ const renderPage = async () => {
 describe("StudentManagement table", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    auth.can = () => false;
     mockHooks();
   });
   afterEach(async () => {
@@ -133,4 +134,40 @@ describe("StudentManagement table", () => {
     expect(container.textContent).toContain("Page 2 of 2");
     expect(Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Next")?.disabled).toBe(true);
   });
+  it("sends NISN filters to the server, resets pagination, and preserves filters for CSV", async () => {
+    auth.can = () => true;
+    const csv = vi.fn().mockResolvedValue(new Blob());
+    vi.mocked(studentHooks.useStudents).mockImplementation((filters) => pageOf([student], filters.page ?? 1, 100, 4) as never);
+    vi.mocked(studentHooks.useStudentsCsvExport).mockReturnValue({ mutateAsync: csv, isPending: false } as never);
+    await renderPage();
+
+    const select = container.querySelector<HTMLSelectElement>("#student-nisn-status-filter")!;
+    expect(Array.from(select.options).map((option) => option.textContent)).toEqual(["All", "Inputted", "Not Inputted"]);
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ nisn_status: undefined }));
+    const status = container.querySelector<HTMLSelectElement>("#student-status-filter")!;
+    await act(async () => { status.value = "active"; status.dispatchEvent(new Event("change", { bubbles: true })); });
+    const search = container.querySelector<HTMLInputElement>("#student-search")!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, "Alya");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const next = () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Next");
+    await act(async () => next()?.click());
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+
+    await act(async () => { select.value = "inputted"; select.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, nisn_status: "inputted", search: "Alya", status: "active" }));
+    await act(async () => { select.value = "not_inputted"; select.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, nisn_status: "not_inputted", search: "Alya", status: "active" }));
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(1);
+    const exportButton = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Export CSV"));
+    await act(async () => exportButton?.click());
+    expect(csv).toHaveBeenCalledWith(expect.objectContaining({ nisn_status: "not_inputted", search: "Alya", status: "active", page: 1 }));
+
+    await act(async () => next()?.click());
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+    await act(async () => { select.value = ""; select.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(studentHooks.useStudents).toHaveBeenLastCalledWith(expect.objectContaining({ nisn_status: undefined, page: 1, search: "Alya", status: "active" }));
+  });
+
 });

@@ -130,27 +130,27 @@
       ]
     },
     "source:apps/web/src/pages/StudentManagement.test.tsx": {
-      "fingerprint": "f6bd6f8b0ea4510f724c838056d2ddaaf65dfd7a3005a7951d1b2a47e0bd9b02",
+      "fingerprint": "1cf018500914354a04f995d91c45c599cde44e4375defa5ffba413fa5c5fbc62",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.test.tsx": "418948c8c87b7a14c2c4a5e1d20bdb134e338dcdfa2eb4fff998f6cff2ef86c6"
+        "apps/web/src/pages/StudentManagement.test.tsx": "a4a847883870b0f64f3a67c066d01d3a59478ea6d65b1531071e08ba4777c4e7"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StudentManagement.test.tsx at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     },
     "source:apps/web/src/pages/StudentManagement.tsx": {
-      "fingerprint": "a3f432f04f415fc71aa1ff9b2d204edaba271848ee68f486177841f886255766",
+      "fingerprint": "9910b0c8fff22008864fdb39e98fa31bda668c179a764102336035f5b652b8e6",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.tsx": "bbb4f78d068751dc2948b36eafe4f04ffb268a5c74d9d685c0dd478a096ba0ab"
+        "apps/web/src/pages/StudentManagement.tsx": "0e9f83837c02262865f5b71eaed1c692491699adb5a2316a9a6ae3a547d2fa04"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StudentManagement.tsx at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     },
     "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "866006710b618973ff7da7e22399cc71c85c98b655e3b0f7fcdce701582f843d",
+      "fingerprint": "4808a019b669b077d9698a1cad07a6364a07e5f9eb0c1d8cb3fa2db01ee74573",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "ceb923e9f0a8f5724a3e8c3036f3f58c989712e200b43180d2a95d2944c2b305"
+        "apps/web/src/generated/openapi/schema.ts": "f51d69740929cddce8df1da8fab6792f7819e9df78868f7cb0358791611b1a0c"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +515,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "2796569c8f2391ee685420a4746a154b9a9a489410e4d6f5cd248f59cf85d48a",
+      "fingerprint": "8b99cab20508ba83c9d9808411e1eb1e8333dc0ac1054560e9245cad1390a60c",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "8823a53324f20efabc7348cdf5a784655967891c1c0ce54e18b5f4a6f6b22875"
+        "openapi/operatoros.openapi.json": "2213bcc615cb6430f70d81baf299a65231a0891a160c75de4ec566c3bb6b0927"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
       "outcome": "no-change",
-      "reason": "Reviewed the API bundle response, UI download URL, generated OpenAPI types, operator guidance, and focused regression coverage. This runtime behavior and its tests do not change agent guidance, skills, or planning artifacts.",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: openapi/operatoros.openapi.json at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -2922,15 +2922,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4aad1b72583db9f9da79cfdb48e35a36ef2c6057c554c510f3ec8753d759d68e",
+      "fingerprint": "987312ccb0d7ca753ae6bf47d9b97889bae854b51945c0f3adb76e1db3409c92",
       "snapshot": {
-        "CHANGELOG.md": "52ac4964c888674d3c1658636710a1fb8587f1afe59fc4470d7bacc0b9af5f3e"
+        "CHANGELOG.md": "a186a34dbdb08aaec71fd0d156efa765706a9cbd6fdfe84cd1112aaff28ce839"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: CHANGELOG.md at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     },
     "source:COMMANDS.md": {
@@ -5111,6 +5111,66 @@
       "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
         "Changed: docs/session/_template.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+      ]
+    },
+    "source:apps/api/src/domains/core.ts": {
+      "fingerprint": "b6608fac1f1822826f732973f1f22229b266b61297d60412a8b8253795d9aae6",
+      "snapshot": {
+        "apps/api/src/domains/core.ts": "a9a2e55c4ed6dd27fb812c7bbcd2c08612e32a2905309b5bc3db34c1d14d3505"
+      },
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "outcome": "no-change",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/core.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+      ]
+    },
+    "source:apps/api/tests/student-nisn-filter.test.ts": {
+      "fingerprint": "c29502208ef8ed750e24b204acd4abf2edc5a2ecc3c6534e4c724c91d5e858f2",
+      "snapshot": {
+        "apps/api/tests/student-nisn-filter.test.ts": "70323c77dd8e1686b90bee816574fa1146e9b19e529737d8c126468da6781e94"
+      },
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "outcome": "no-change",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/student-nisn-filter.test.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+      ]
+    },
+    "source:apps/web/src/api/students.test.ts": {
+      "fingerprint": "79ceef4271f91625cf05ebe623a8da8a0f54b2b0e0d0c3fd8f22f2548d9dfba3",
+      "snapshot": {
+        "apps/web/src/api/students.test.ts": "fc1892dc12fe3b2de5adaecac1130eac41a397a399945440250ddb1bf54c132e"
+      },
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "outcome": "no-change",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/students.test.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+      ]
+    },
+    "source:apps/web/src/api/students.ts": {
+      "fingerprint": "98aa852d4ca3c36258154c6146ce2407b582506c32586966b78b645e996e1385",
+      "snapshot": {
+        "apps/web/src/api/students.ts": "20b7dbeca60f0247b794536abeb867762abebf05d7de35e2c89c0a28b1a937ba"
+      },
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "outcome": "no-change",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/students.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+      ]
+    },
+    "source:packages/contracts/src/students/index.ts": {
+      "fingerprint": "8ca88db04a31c99686528a15e69cb3b76523fe39c4e5c742974309b885832bbd",
+      "snapshot": {
+        "packages/contracts/src/students/index.ts": "9329a9ca3fd8ce8f5ba28c2372228e7ab386a4f940adbbbd2961d75e50510fb2"
+      },
+      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "outcome": "no-change",
+      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "evidence": [
+        "Changed: packages/contracts/src/students/index.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
       ]
     }
   }

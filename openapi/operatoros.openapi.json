@@ -3206,6 +3206,19 @@
               ],
               "title": "Astyx Session"
             }
+          },
+          {
+            "in": "query",
+            "name": "nisn_status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inputted",
+                "not_inputted"
+              ],
+              "title": "Nisn Status"
+            }
           }
         ],
         "responses": {
@@ -3432,6 +3445,19 @@
                 }
               ],
               "title": "Astyx Session"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nisn_status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "inputted",
+                "not_inputted"
+              ],
+              "title": "Nisn Status"
             }
           }
         ],

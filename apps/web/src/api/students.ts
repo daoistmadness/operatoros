@@ -3,14 +3,16 @@ import type {
   LegacyLinkCandidate,
   LegacyLinkStatus,
   ManagedStudent,
+  NisnStatusFilter,
   StudentListResponse,
   StudentOverviewResponse,
 } from "@operatoros/contracts/students";
 
-export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, StudentListResponse } from "@operatoros/contracts/students";
+export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, NisnStatusFilter, StudentListResponse } from "@operatoros/contracts/students";
 export type { StudentOverviewResponse } from "@operatoros/contracts/students";
 
 export type StudentFilters = {
+  nisn_status?: NisnStatusFilter;
   search?: string;
   academic_year_id?: number;
   jenjang_id?: number;

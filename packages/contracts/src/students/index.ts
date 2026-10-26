@@ -1,5 +1,8 @@
 import { Type, type Static } from "@sinclair/typebox";
 
+export const NisnStatusFilterSchema = Type.Union([Type.Literal("inputted"), Type.Literal("not_inputted")]);
+export type NisnStatusFilter = Static<typeof NisnStatusFilterSchema>;
+
 export const CreateEnrollmentRequestSchema = Type.Object({
   academic_year_id: Type.Number({ minimum: 1 }),
   academic_class_id: Type.Number({ minimum: 1 }),

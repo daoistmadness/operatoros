@@ -10927,6 +10927,7 @@ export interface operations {
                 enrollment_status?: string | null;
                 page?: number;
                 page_size?: number;
+                nisn_status?: "inputted" | "not_inputted";
             };
             header?: never;
             path?: never;
@@ -10998,6 +10999,7 @@ export interface operations {
                 class_id?: number | null;
                 status?: string | null;
                 device_linked?: boolean | null;
+                nisn_status?: "inputted" | "not_inputted";
             };
             header?: never;
             path?: never;
