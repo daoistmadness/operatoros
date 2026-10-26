@@ -21,10 +21,6 @@ const backendHost = process.env.BACKEND_HOST || loopback;
 for (const [name, value] of [['FRONTEND_HOST', frontendHost], ['BACKEND_HOST', backendHost], ['HOST', process.env.HOST || loopback]]) {
   if (value !== loopback) throw new Error(`${name} must be ${loopback} for development`);
 }
-if (process.env.PORT && Number(process.env.PORT) !== frontendPort) {
-  throw new Error(`PORT must match FRONTEND_PORT (${frontendPort}) for Vite`);
-}
-
 const hmrHost = process.env.VITE_HMR_HOST?.trim() || loopback;
 const hmrProtocol = process.env.VITE_HMR_PROTOCOL?.trim() || 'ws';
 const rawHmrClientPort = process.env.VITE_HMR_CLIENT_PORT?.trim();

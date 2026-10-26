@@ -41,7 +41,7 @@ it('resolves to loopback, exact proxy and HMR settings under poisoned inherited 
   vi.stubEnv('FRONTEND_PORT', '5198');
   vi.stubEnv('BACKEND_PORT', '8098');
   vi.stubEnv('HOST', '127.0.0.1');
-  vi.stubEnv('PORT', '5198');
+  vi.stubEnv('PORT', '8098');
   vi.stubEnv('FRONTEND_HOST', '127.0.0.1');
   vi.stubEnv('BACKEND_HOST', '127.0.0.1');
   vi.stubEnv('VITE_HMR_HOST', '127.0.0.1');
