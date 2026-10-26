@@ -34,7 +34,7 @@ runs:
         mise --version
         test "$(mise --version | awk '{print $1}')" = "2026.10.3"
         test "$(bun --version)" = "1.4.4"
-        test "$(hk --version)" = "hk 1.56.1"
+        test "$(hk --version)" = "hk 2.8.1"
         test "$(node --version)" = "v24.19.0"
         mise ls --current
         bun install --frozen-lockfile

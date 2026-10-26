@@ -133,7 +133,7 @@ flowchart TD
 
 | Layer | Technologies & Dependencies | Version Authority |
 | --- | --- | --- |
-| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.4`, Node `24.19.0`, hk `1.56.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
+| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.4`, Node `24.19.0`, hk `2.8.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
@@ -167,7 +167,7 @@ flowchart TD
   > [!WARNING]
   > Do not use Windows binaries, `/mnt/c`, or Windows-mounted checkouts.
 - **mise-en-place**: Version `2024.1.0` or higher (CI uses `2026.10.3`).
-- **Installed via mise**: Node.js `24.19.0` and hk `1.56.1` (managed automatically by `mise install`).
+- **Installed via mise**: Node.js `24.19.0` and hk `2.8.1` (managed automatically by `mise install`).
 - **Browser Smoke Test (Optional)**: Agent Browser installed on the system `PATH` if executing UI smoke verification. Guidance is documented in [COMMANDS.md](COMMANDS.md).
 
 ### 1. Install Toolchain and Dependencies

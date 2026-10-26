@@ -3,12 +3,12 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "1f67aa55c550b2b857bc9af9e03a453de183c84e3f6d3ac2ab861e9fd911034f",
+      "fingerprint": "9c761d2c08af957eaacd9d27e66070f7265d29a55af975136a4b151fc3a44681",
       "snapshot": {
-        ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
+        ".github/CI.md": "0a9b2e39cef9f0616a589e6753d5cb0e3bb2a60d1510874a58bc165ba3593d88",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
-        "AGENTS.md": "33d28d0cdf520cfbc5ec09237d4b8db8854d98c045b4def272d9871ab7c03c6d",
-        "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
+        "AGENTS.md": "b7f21d7ad6e67bdfa877ddff0fa417f1b1629b3f99fcc36c884fa266519e3eb6",
+        "CONTRIBUTING.md": "df75619a553ed1363da482acf3cf9e9ae6c158d3ea99f09cfcb188811a9f0b90",
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "a7fcb3ea87ff0770f508d5ca5d6a476e1672db69b936357ec2727304b00cdc02",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
@@ -44,21 +44,20 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
       "outcome": "no-change",
-      "reason": "Reviewed the development launcher and docs changes; they do not change Elysia API guidance or examples.",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Changed files cover managed development startup, Vite security configuration, tests, and operator documentation.",
-        "The Elysia examples remain unchanged and skill validation passes."
+        "Changed: .github/CI.md, AGENTS.md, CONTRIBUTING.md at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "7d5ed0e5fea0d03e6b9341d3b4aa806ea68c534cc632b981b2a1a63db938a010",
+      "fingerprint": "b62b4218303faad22830bd9f1aef648ae5e6a15389d649a02b9d599fa0459c88",
       "snapshot": {
-        ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
+        ".github/CI.md": "0a9b2e39cef9f0616a589e6753d5cb0e3bb2a60d1510874a58bc165ba3593d88",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
-        "AGENTS.md": "33d28d0cdf520cfbc5ec09237d4b8db8854d98c045b4def272d9871ab7c03c6d",
-        "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
+        "AGENTS.md": "b7f21d7ad6e67bdfa877ddff0fa417f1b1629b3f99fcc36c884fa266519e3eb6",
+        "CONTRIBUTING.md": "df75619a553ed1363da482acf3cf9e9ae6c158d3ea99f09cfcb188811a9f0b90",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
@@ -97,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
       "outcome": "no-change",
-      "reason": "The candidate changes code, tests, development documentation, and toolchain validation; planning records and generated skill docs are unchanged.",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "No planning or generated Agent Skills files are part of the candidate diff."
+        "Changed: .github/CI.md, AGENTS.md, CONTRIBUTING.md at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -588,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "67b898df5d6341c55629dbc34f8c3abd86c0016bf2e850f4c1379f64c143341e",
+      "fingerprint": "b3330796b1e776d5b6c257d3b1e273be7c3f875243346b34f5e45c657e2932c1",
       "snapshot": {
-        "README.md": "dc13d4ffd355645bfe5ef6ac71b223a67e0646116b95368d67c5f48f75dde61c"
+        "README.md": "7b33111e0121764efcd33c296121c7677c6e30c4d1047b47b7067fcb215fc320"
       },
-      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
-      "outcome": "updated",
-      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "outcome": "no-change",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Reviewed README.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
+        "Changed: README.md at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1280,15 +1279,15 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "6703528212b392fa99f457f0a67e9ef3dfbcf475c63b2cf5e5cdd12badba2639",
+      "fingerprint": "f78ad1b2f50f6390a187295d1ed6533816d528b13e5c72eec1cc563b49cf3497",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "e6a66a3471560d3ceac0d205b6b6213d008e12bf5e5eede3ab34f7f14bcfbd9b"
+        ".github/actions/setup-bun/action.yml": "f8fb06a211866d8c5befffc9a9290adbd972fe17c573ad23493db2584f63d758"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Changed: .github/actions/setup-bun/action.yml at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: .github/actions/setup-bun/action.yml at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:Containerfile.podman": {
@@ -1316,15 +1315,15 @@
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
-      "fingerprint": "84f89c4c2ae54252c0f8cdab15b48ccb05e457d95b5c00674c3f3c77e123d2c4",
+      "fingerprint": "110abc74b7a33ac3916051b2b188bb6e2e5e0d5c3e9553691c6c464bc94e61e4",
       "snapshot": {
-        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "3e5f1d572b274132b0abef8e0011523f21c6772af9679b12563608178f0e0587"
+        "docs/architecture/decisions/BUN_TOOLCHAIN.md": "62501d34f330f3f6cfc20a1ba46e9f99efec44386a1eb55b15dc37eb0311dee4"
       },
-      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
-      "outcome": "updated",
-      "reason": "Updated this active toolchain document to match the verified Bun 1.4.4 and TypeScript 7.0.2 repository configuration.",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "outcome": "no-change",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Reviewed docs/architecture/decisions/BUN_TOOLCHAIN.md diff and confirmed the documented versions agree with mise.toml, mise.lock, package.json, and bun.lock."
+        "Changed: docs/architecture/decisions/BUN_TOOLCHAIN.md at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:docs/deployment/README.md": {
@@ -1364,28 +1363,27 @@
       ]
     },
     "source:mise.lock": {
-      "fingerprint": "2de6bf10650fa4d220a9ae8f9304aec24c7dc4cb34dd639f6482e621482525e5",
+      "fingerprint": "e26c9c43673cf6760fb623fab4f625f13118e4835ac063be064179a06f20124f",
       "snapshot": {
-        "mise.lock": "165e92dfe9e854f797268e2b44ff630c847c0dabb548084198e686b5777c2b03"
+        "mise.lock": "9d0b9b5e64374ea103b8a25c3d1b5238dbc324c1c240b971d8ae63d1450f3344"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Changed: mise.lock at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: mise.lock at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:mise.toml": {
-      "fingerprint": "429cd950686645ff1a7632d09e8eec44b8bcbf20c12a1abc5299a2439b921cb3",
+      "fingerprint": "f6fdc14f323a1531d3a3f0c322b76a0c737d7fbfc16cb150409aed11a48dad3d",
       "snapshot": {
-        "mise.toml": "fc722b6d5225b98137247263f9e66c9b807cad04b2c9de24edead12b4ad81ed8"
+        "mise.toml": "e1d1820490ee7b2b4f2c1ce289463f8da95836f176cc06466b532fca53eb8471"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
       "outcome": "no-change",
-      "reason": "Reviewed mise.toml; it does not change registered Agent Skills or generated skill documentation.",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
       "evidence": [
-        "Reviewed candidate path mise.toml.",
-        "No Agent Skills guidance or generated skill documentation is changed."
+        "Changed: mise.toml at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     },
     "source:apps/web/tsconfig.json": {
@@ -1730,6 +1728,18 @@
       "evidence": [
         "Reviewed candidate path start-dev.sh.",
         "No Agent Skills guidance or generated skill documentation is changed."
+      ]
+    },
+    "source:hk.pkl": {
+      "fingerprint": "5a8fa31263b7fd577d14de7056a9d5b4c7d047dc4da15e8ee3353ba2b54efe1d",
+      "snapshot": {
+        "hk.pkl": "c84fa16f04882135454e21b268e483816147230d701ab4ec29474e81836424c6"
+      },
+      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "outcome": "no-change",
+      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
+      "evidence": [
+        "Changed: hk.pkl at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
       ]
     }
   }
