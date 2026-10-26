@@ -7,6 +7,7 @@ const ROOT_MARKDOWN = new Set([
 ]);
 const DOC_SECTIONS = new Set(["architecture", "decisions", "guides", "reference", "runbooks", "session"]);
 const PROTECTED_DOC = "docs/student-data/dapodik-roster-import-design.md";
+const SESSION_LOG = /^docs\/session\/\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
 
 export function markdownOrganizationProblems(root: string): string[] {
   const markdownFiles = [...new Bun.Glob("**/*.md").scanSync({
@@ -28,15 +29,24 @@ export function markdownOrganizationProblems(root: string): string[] {
 
   for (const file of docsFiles) {
     if (file === "docs/README.md" || file === PROTECTED_DOC) continue;
-    const section = file.split("/")[1];
+    const parts = file.split("/");
+    const section = parts[1];
     if (!section || !DOC_SECTIONS.has(section)) {
       problems.push(`${file} must live in an approved docs section`);
       continue;
+    }
+    const inStudentData = section === "reference" && parts.length === 4 && parts[2] === "student-data";
+    if (parts.length !== 3 && !inStudentData) {
+      const allowed = section === "reference" ? `docs/${section} or docs/reference/student-data` : `docs/${section}`;
+      problems.push(`${file} must be directly under ${allowed}`);
     }
     const name = file.slice(file.lastIndexOf("/") + 1);
     const kebabCase = /^[a-z0-9]+(?:-[a-z0-9]+)*\.md$/.test(name);
     if (!kebabCase && !(name === "README.md" && section === "session")) {
       problems.push(`${file} must use a kebab-case Markdown filename`);
+    }
+    if (section === "session" && name !== "README.md" && !SESSION_LOG.test(file)) {
+      problems.push(`${file} must use a YYYY-MM-DD-kebab-case session log filename`);
     }
     const content = readFileSync(join(root, file), "utf8");
     if (!/^---\r?\nstatus: (?:current|draft|deprecated)\r?\nlast_reviewed: \d{4}-\d{2}-\d{2}\r?\n---\r?\n/.test(content)) {
@@ -53,7 +63,7 @@ export function markdownOrganizationProblems(root: string): string[] {
     indexed.set(resolved, (indexed.get(resolved) ?? 0) + 1);
   }
 
-  for (const file of docsFiles.filter((path) => path !== "docs/README.md")) {
+  for (const file of docsFiles.filter((path) => path !== "docs/README.md" && !SESSION_LOG.test(path))) {
     const count = indexed.get(file) ?? 0;
     if (count !== 1) problems.push(`${file} must appear exactly once in docs/README.md (found ${count})`);
   }

@@ -146,10 +146,10 @@ generated, release, and contributor docs with their existing owners.
 
 Session logs belong only in docs/session/; they are non-authoritative.
 Promote durable facts into their canonical page. Add one user-facing
-CHANGELOG.md entry under [Unreleased] for every PR, including the PR number.
-Use the skip-changelog label only when the change has no release-history
-impact. The repository CI checks the docs layout, front matter, index, links,
-and changelog entry.
+CHANGELOG.md bullet under [Unreleased] for every PR. Add the PR number after
+GitHub assigns it. Use the skip-changelog label only when the change has no
+release-history impact. The repository CI checks the docs layout, front
+matter, index, links, and changelog bullet.
 
 ## Runtime and ownership
 

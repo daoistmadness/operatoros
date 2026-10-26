@@ -101,12 +101,13 @@ tests whose in-file concurrency has been separately audited. Use
 `--rerun-each=<n>` for focused flake investigation; retries must not hide a
 failure.
 
-The API suite remains serial in the normal gate. Its attendance-import and
-Excel-heavy tests use disposable per-process databases and spawn the retained
-Python tooling, but the suite timed out under Bun worker contention during the
-audit. It is not safe to enable API `--parallel` until that resource and timing
-boundary is repaired and remeasured. The small contracts, database, Excel, UI,
-architecture, and boundary suites passed the parallel audit.
+The API suite remains serial in the normal gate. Attendance-import and
+Excel-heavy tests create disposable SQLite databases with process-unique
+filenames. The API suite timed out under Bun worker contention during a
+parallel audit, so keep it serial until a new audit confirms that parallel
+workers stay within the CI timeout and use isolated resources. The small
+contracts, database, Excel, UI, architecture, and boundary suites passed the
+parallel audit.
 
 Tests that allocate worker-sensitive resources should use `BUN_TEST_WORKER_ID`
 when process identity alone is insufficient. Current API tests use unique

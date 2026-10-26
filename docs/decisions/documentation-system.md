@@ -32,9 +32,11 @@ canonical architecture, guide, reference, decision, or runbook page.
 
 ## Changelog
 
-Every pull request adds one user-facing entry under Unreleased in the root
-CHANGELOG.md, with its pull request number. The skip-changelog label is reserved
-for changes that do not belong in the release history.
+Every pull request adds one user-facing bullet under Unreleased in the root
+CHANGELOG.md. Add the pull request number after GitHub assigns it. CI requires
+the changelog file to change and checks for a new bullet under Unreleased. The
+skip-changelog label is reserved for changes that do not belong in the release
+history.
 
 The repository-owned CI checks the docs layout, review metadata, complete docs
 index, relative links, and changelog entry. It does not add a separate

@@ -3,17 +3,17 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "e9bec1dc99c43d89febcb0f8a8a32fe12c810bb13184ff075c90221137ff3f70",
+      "fingerprint": "f08a7fcc85e599f0aa665362bec1b2431f587b26b57752a969d61f4374409248",
       "snapshot": {
-        ".github/CI.md": "04444d6b2932963c5a6458dca35ead6fc28f53b240dc7fa0340b7a1d138a2e94",
+        ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "134dfa10af997d2efa36884926bfe3f345d00ea7c0630d21fd8549e5e9b8cfb9",
+        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "54c432085b2ccbc2a97905c2db8b7751642d7eb2c566828688a5584f9784809c",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "825d2f1268c4c82a05600880277e748d9547054358c6bb13b9c8f8836328c70d",
+        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,22 +44,24 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "no-change",
-      "reason": "Reviewed the Elysia skill against this documentation-only change. Source paths were updated to moved docs, while its Elysia v1-specific behavior, safety requirements, and task guidance remain accurate.",
+      "reason": "The edited CI and agent docs change changelog policy, while the testing guide removes a false Python claim and preserves the serial API test rule. Elysia guidance still matches the installed v1.4.29 source note and project runner recommendations.",
       "evidence": [
-        "apps/api/package.json pins Elysia 1.4.29",
-        "packages/agent-skills/skills/elysiajs/SKILL.md behavior text is unchanged",
-        "bun run skills:validate passed",
-        "intent validate packages/agent-skills/skills passed"
+        "packages/agent-skills/skills/elysiajs/SKILL.md",
+        "packages/agent-skills/docs/elysiajs/references/testing.md",
+        "docs/guides/testing.md",
+        "apps/api/tests/attendance-import.test.ts",
+        "apps/api/package.json",
+        "mise run test:fast passed; intent validate passed"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "224565cc11ad395f4be2bcbc588f8f6ca60940659f535eb186fa4f4e8d6feb84",
+      "fingerprint": "50a07236a6d3d2482678d03a889eba04babd14628d71b61b139427f8713ca9c3",
       "snapshot": {
-        ".github/CI.md": "04444d6b2932963c5a6458dca35ead6fc28f53b240dc7fa0340b7a1d138a2e94",
+        ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "134dfa10af997d2efa36884926bfe3f345d00ea7c0630d21fd8549e5e9b8cfb9",
+        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -68,7 +70,7 @@
         "bun.lock": "54c432085b2ccbc2a97905c2db8b7751642d7eb2c566828688a5584f9784809c",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "825d2f1268c4c82a05600880277e748d9547054358c6bb13b9c8f8836328c70d",
+        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -99,14 +101,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "updated",
-      "reason": "Synchronized skill_tree source paths to the canonical documentation paths. domain_map.yaml and skill_spec.md remain accurate because no Elysia task coverage or recommendation changed.",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "outcome": "no-change",
+      "reason": "The corrections do not change the Elysia domain, task coverage, skill sources, package ownership, or future work recorded by the planning files.",
       "evidence": [
-        "_artifacts/domain_map.yaml reviewed",
-        "_artifacts/skill_spec.md reviewed",
-        "_artifacts/skill_tree.yaml updated by intent maintainer sync",
-        "Intent skill validation passed"
+        "_artifacts/domain_map.yaml",
+        "_artifacts/skill_spec.md",
+        "_artifacts/skill_tree.yaml",
+        "packages/agent-skills/skills/elysiajs/SKILL.md",
+        "docs/guides/testing.md"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -593,17 +596,16 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "5dea627adc315729ff0317ae2aff40442953f21f6cbff93b0cd92053d43f7251",
+      "fingerprint": "7ca3c7c10d72fdc1fc8088b25d9d5b2adf392212051869efe59dd7aabd2b0dde",
       "snapshot": {
-        "README.md": "30b441f3c0ba71ab661eb7cef455677d7a17ace520bbe414c392993c81ff773e"
+        "README.md": "d675b3e880e4014d3717bb6a4fd046dab6b01735f4f808240a88aa0a0ef4cf10"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "The root README version correction is unrelated to the Elysia backend skill.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "README.md",
+        "apps/web/package.json"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -2850,31 +2852,29 @@
       ]
     },
     "source:.github/pull_request_template.md": {
-      "fingerprint": "92ac441483d7c7d9729f6183305e14b22ba1171f5eac51483eb8565473e72233",
+      "fingerprint": "5d9df5366dac33614a76c8b4201356320a7d4620039a6607fb1d3505fb4cd687",
       "snapshot": {
-        ".github/pull_request_template.md": "5f253287eff2af88469664a38fb65c99409956c646ec34ec50a072a426fd1dd6"
+        ".github/pull_request_template.md": "aac14aec53407d5cf9aba2cb85ba63666a8aba9bd45fea3bd614ca0eced0f808"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "The visible PR summary instruction and changelog checklist do not affect Elysia implementation behavior or skill recommendations.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        ".github/pull_request_template.md",
+        "The template records repository-wide PR steps"
       ]
     },
     "source:.github/scripts/check-changelog.ts": {
-      "fingerprint": "697a31a5d631dddca219c65add99c8913022fa58738dff9f14899ecfb92c19e4",
+      "fingerprint": "b9b4cb74d9a52b1d8a7736581e4eefbe3abf7e9e07a9231c775843c138f1651b",
       "snapshot": {
-        ".github/scripts/check-changelog.ts": "27c7f8e1c501b9f0027bff9a62d990a2c5914db79e3e717def2f873505177206"
+        ".github/scripts/check-changelog.ts": "7f5f92b7e358f9b598a333340de50c466383cc1be284043d9a39e6cad7a5e32d"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "The changelog gate is repository documentation automation and does not affect Elysia implementation guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        ".github/scripts/check-changelog.ts",
+        "scripts/tests/docs-checkers.test.ts"
       ]
     },
     "source:.github/scripts/check-current-developer-docs.ts": {
@@ -2906,17 +2906,16 @@
       ]
     },
     "source:.github/scripts/check-markdown-organization.ts": {
-      "fingerprint": "e0e18ec5d6f0fafef4e36e2521bb198fbd29f5424497be604141e297a302cdcb",
+      "fingerprint": "c8c68fc13fc8158a3b334199148c14175be7625ded567b70b3525a2605371b1a",
       "snapshot": {
-        ".github/scripts/check-markdown-organization.ts": "8511353f4da28aef08902216ddfd52041a41c352630ea043f8e38137a1b49df2"
+        ".github/scripts/check-markdown-organization.ts": "5f80440f67905a7eecf77e2949332e3b4225962898e59095c22606fdae680eab"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "The Markdown layout and index gate is repository documentation automation and does not affect Elysia implementation guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        ".github/scripts/check-markdown-organization.ts",
+        "scripts/tests/docs-checkers.test.ts"
       ]
     },
     "source:ATTENDANCE_IMPORT_PREVIEW_DESIGN.md": {
@@ -3452,17 +3451,16 @@
       ]
     },
     "source:docs/decisions/documentation-system.md": {
-      "fingerprint": "61a406377e3e7e21f48613e45db44c73bcf87496c3efc1819ee347acff019840",
+      "fingerprint": "f2aecc1b89ee60d35ca4a6d7792bf70eb67814963fbe4b5b73925e23b00e34d5",
       "snapshot": {
-        "docs/decisions/documentation-system.md": "1046db5fe7fb599cf1b474d798722e8d27c02aa106e8a005211295c419ec7239"
+        "docs/decisions/documentation-system.md": "9b31ba7bcde612f5d6886a3b6eb89049aac13147a72208f173cbe05e999d5b42"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "This decision documents repository documentation and changelog policy, outside the registered Elysia backend task.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "docs/decisions/documentation-system.md",
+        "AGENTS.md"
       ]
     },
     "source:docs/decisions/git-history-data-remediation.md": {
@@ -5076,17 +5074,29 @@
       ]
     },
     "source:scripts/tests/docs-checkers.test.ts": {
-      "fingerprint": "6bb92ad4c39098215bc0c2c5290ae1b58d1a8809925ef53db0c624c931a23a25",
+      "fingerprint": "d067d7654b1042f4edc2e2053bff3999794e0efcb2c39fd556a7bb4ef37ae409",
       "snapshot": {
-        "scripts/tests/docs-checkers.test.ts": "f0f11f9b24215df6efcef138c0f31d82545b83ef0f3de312449605c7251a1a00"
+        "scripts/tests/docs-checkers.test.ts": "0d340277ed45e1e3b41ec9e2e49f69241221780a741680628d09cffa3a648f85"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "These tests verify documentation governance scripts, not Elysia application behavior.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "scripts/tests/docs-checkers.test.ts",
+        "bun test scripts/tests/docs-checkers.test.ts passed"
+      ]
+    },
+    "source:.audit/docs-restructure-decisions.tsv": {
+      "fingerprint": "e0f7fd83a959cdd0720693d3eb8d64ff4a93193c0086a134db66fedc22881a01",
+      "snapshot": {
+        ".audit/docs-restructure-decisions.tsv": "735ef96e9dc1a45cb7106550a0a613e8f9065537c51042d43d961d8e7687400a"
+      },
+      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "outcome": "out-of-scope",
+      "reason": "This is a committed audit trail for the repository documentation PR, not Elysia source or guidance.",
+      "evidence": [
+        ".audit/docs-restructure-decisions.tsv",
+        "The entries cover documentation checks and review decisions only"
       ]
     }
   }
