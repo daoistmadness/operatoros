@@ -8,7 +8,7 @@ Notable user-facing changes are recorded here.
 - Reorganized and indexed the project documentation (#324)
 
 ### Added
-- Filter Student Management and CSV exports by whether NISN has been entered.
+- Filter Student Management and CSV exports by whether NISN has been entered (#326).
 
 ### Fixed
 
