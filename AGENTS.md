@@ -191,6 +191,10 @@ The active CLI typechecker is TypeScript 7.0.2 through the root
 `@typescript/native` alias; Bun 1.4.4's `bun check` also runs in CI. TypeScript
 5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
 CLI typechecks.
+HK 2.8.1 is pinned in `mise.toml` and uses the matching versioned Pkl schema in
+`hk.pkl`. Keep its hook-local configuration when preserving current behavior:
+top-level `steps` materializes implicit `check`, `fix`, and `pre-commit` hooks.
+This repository does not define a `fix` hook.
 Before running Bun, inspect `command -v`, `type -P` (in Bash), and `readlink -f`.
 Reject `/mnt/<drive>`, WindowsApps, Program Files, `.exe`, `.cmd`, `.bat`, and
 UNC-like paths. `operatoros_wsl_prepare_bun` and `validate-wsl-bun.sh` are legacy

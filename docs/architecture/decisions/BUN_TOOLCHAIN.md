@@ -102,3 +102,43 @@ References: [TypeScript 7.0 release](https://devblogs.microsoft.com/typescript/a
 [VS Code TypeScript 7 extension](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview).
 
 References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
+
+## HK 2.8.1 compatibility upgrade
+
+On 2026-10-26, OperatorOS upgraded its mise-managed HK CLI from 1.56.1 to
+2.8.1. Bun 1.4.4, TypeScript 7.0.2, Node.js 24.19.0, and the other tool pins
+remain unchanged. The config keeps its existing hook-local `steps` mappings;
+HK v2 supports them without conversion. Top-level `steps` stays unused because
+it would add implicit hooks, including a `fix` hook that this repository does
+not currently define. `hk fix --all` therefore retains its expected
+`Hook 'fix' not found` error.
+
+The lock remains in its existing format and records HK 2.8.1 from mise's current
+`packslip:github.com/jdx/hk` backend, including published release checksums and
+the release workflow signer. A locked `mise install` verified the selected
+Linux binary. The matching HK 2.8.1 Pkl schema is pinned in `hk.pkl`.
+
+Disposable Git fixtures compared HK 1.56.1 with 2.8.1. Both versions validated
+the config; passed `check`, `pre-commit`, and `pre-push`; kept all three
+pre-push commands; returned exit 1 for the absent `fix` hook; and propagated a
+synthetic check failure with exit 19. With a partially staged TypeScript file,
+both selected the staged path while reading its worktree contents, including
+the unstaged edit. Both left the index and worktree diffs unchanged, preserved
+an untracked fixture, and left `git stash list` unchanged. The configured hooks
+are check-only, so the fixture created no HK stash entries.
+
+`hk check --all` passed on both versions. One warm run took 13.2 seconds on
+1.56.1 and 13.7 seconds on 2.8.1 over the same 950-file worktree. This is not a
+meaningful performance result and does not justify a separate optimization PR.
+HK 2.8.1 also isolates stash refs and locks per linked worktree; this upstream
+path was not exercised because the repository's configured hooks do not fix or
+stash files.
+
+The CI version assertion and active toolchain guidance now name HK 2.8.1. CI
+workflow gates, required status names, hook installation settings, Bun, and
+TypeScript pins are unchanged. Rollback is a protected revert PR restoring the
+HK 1.56.1 mise pin, lock entry, Pkl schema URL, CI assertion, and toolchain
+guidance; application data and Git hooks do not need migration.
+
+References: [HK v2 migration guide](https://hk.jdx.dev/migration-v2.html),
+[HK 2.8.1 release](https://github.com/jdx/hk/releases/tag/v2.8.1).
