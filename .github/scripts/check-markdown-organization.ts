@@ -8,6 +8,7 @@ const ROOT_MARKDOWN = new Set([
 const DOC_SECTIONS = new Set(["architecture", "decisions", "guides", "reference", "runbooks", "session"]);
 const PROTECTED_DOC = "docs/student-data/dapodik-roster-import-design.md";
 const SESSION_LOG = /^docs\/session\/\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
+const SESSION_TEMPLATE = "docs/session/_template.md";
 
 export function markdownOrganizationProblems(root: string): string[] {
   const markdownFiles = [...new Bun.Glob("**/*.md").scanSync({
@@ -42,10 +43,10 @@ export function markdownOrganizationProblems(root: string): string[] {
     }
     const name = file.slice(file.lastIndexOf("/") + 1);
     const kebabCase = /^[a-z0-9]+(?:-[a-z0-9]+)*\.md$/.test(name);
-    if (!kebabCase && !(name === "README.md" && section === "session")) {
+    if (!kebabCase && !(name === "README.md" && section === "session") && file !== SESSION_TEMPLATE) {
       problems.push(`${file} must use a kebab-case Markdown filename`);
     }
-    if (section === "session" && name !== "README.md" && !SESSION_LOG.test(file)) {
+    if (section === "session" && name !== "README.md" && file !== SESSION_TEMPLATE && !SESSION_LOG.test(file)) {
       problems.push(`${file} must use a YYYY-MM-DD-kebab-case session log filename`);
     }
     const content = readFileSync(join(root, file), "utf8");
@@ -63,7 +64,7 @@ export function markdownOrganizationProblems(root: string): string[] {
     indexed.set(resolved, (indexed.get(resolved) ?? 0) + 1);
   }
 
-  for (const file of docsFiles.filter((path) => path !== "docs/README.md" && !SESSION_LOG.test(path))) {
+  for (const file of docsFiles.filter((path) => path !== "docs/README.md" && path !== SESSION_TEMPLATE && !SESSION_LOG.test(path))) {
     const count = indexed.get(file) ?? 0;
     if (count !== 1) problems.push(`${file} must appear exactly once in docs/README.md (found ${count})`);
   }

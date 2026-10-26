@@ -1380,15 +1380,15 @@
       ]
     },
     "source:docs/deployment/systemd/operatoros-api.service": {
-      "fingerprint": "6a6b7837e13891aa122b35c1c601aa9f0015314556d78ed1b4fc89e74f2df86d",
+      "fingerprint": "b93d13637cc2aa2bfd39a0fa4984dba490d52cdfb313ce95f7e618709431f3d2",
       "snapshot": {
-        "docs/deployment/systemd/operatoros-api.service": "057f66688ab7e8b081adec5dcdd8072920a8410ec5548bf056625775ae0caab2"
+        "docs/deployment/systemd/operatoros-api.service": "49640e95f77c8baf756d8802949b6856f0aaae511ed166d5df16dcb19ab594d1"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/deployment/systemd/operatoros-api.service at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Changed: docs/deployment/systemd/operatoros-api.service at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:mise.lock": {
@@ -1714,17 +1714,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "babfd1dabf76005e72a42cdd3e45a352d8c646578fda649b52b9f821907a4c45",
+      "fingerprint": "3bbf362f6e8d0741c6e6bf8e590dd7db15c2fe4bc6f8cfbb96368ed7ed620df7",
       "snapshot": {
-        "docs/README.md": "f2cda808856f54146101a4e4fd02277df8df06e9d1d794e0d33f4831eb519e37"
+        "docs/README.md": "d45f7bf70c96c176ee04e310b5483336ee6dda58fba0d3cfa5d3299f9da7f08e"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/README.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2907,16 +2905,15 @@
       ]
     },
     "source:.github/scripts/check-markdown-organization.ts": {
-      "fingerprint": "c8c68fc13fc8158a3b334199148c14175be7625ded567b70b3525a2605371b1a",
+      "fingerprint": "0752bfde32e88946709bdd92765f1392f5abb89cee63b1fd3459aad321e4706c",
       "snapshot": {
-        ".github/scripts/check-markdown-organization.ts": "5f80440f67905a7eecf77e2949332e3b4225962898e59095c22606fdae680eab"
+        ".github/scripts/check-markdown-organization.ts": "ebd16f7aca325885cd813fb31308c303d9d14926a2e99b7e5e5178a269106552"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
-      "outcome": "out-of-scope",
-      "reason": "The Markdown layout and index gate is repository documentation automation and does not affect Elysia implementation guidance.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        ".github/scripts/check-markdown-organization.ts",
-        "scripts/tests/docs-checkers.test.ts"
+        "Changed: .github/scripts/check-markdown-organization.ts at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:ATTENDANCE_IMPORT_PREVIEW_DESIGN.md": {
@@ -2934,17 +2931,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9a390a4c24b61cc4a23e7af8a654f979bf38f57a9d96ecb9857523d043979a85",
+      "fingerprint": "4aad1b72583db9f9da79cfdb48e35a36ef2c6057c554c510f3ec8753d759d68e",
       "snapshot": {
-        "CHANGELOG.md": "29fa0399c972f49ac268b579ce2736592af1ac1c65bb1cd83b9ef9a60094b415"
+        "CHANGELOG.md": "52ac4964c888674d3c1658636710a1fb8587f1afe59fc4470d7bacc0b9af5f3e"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: CHANGELOG.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:COMMANDS.md": {
@@ -4025,17 +4020,15 @@
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "26fda006fc1cd856b9ae27d4d09a13ad9c78840d7463fd58ebbd163f5d41d709",
+      "fingerprint": "e00a8088ed43e0fd6a503d9831bb2a7cf365f1aa306cb0e55abda63dd1cf80a7",
       "snapshot": {
-        "docs/guides/offline-install.md": "1d59bac6edcb5b56091966aed973e203b33aefc69a9d27a87614ef6690e9debb"
+        "docs/guides/offline-install.md": "d6ffd2a92d15dcdab51c20204292505e2b04a26c04e9d9964da96d2d7748718b"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/guides/offline-install.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4767,17 +4760,15 @@
       ]
     },
     "source:docs/runbooks/backup-restore.md": {
-      "fingerprint": "ce6c75bab6e786cadcf2136c58ce93abcb82d5b8dc7127d9994af1f3b93fc9f8",
+      "fingerprint": "84c001c082f0bae2cae17794709d8c7bf3a51beb0c7fec9f3a51791833009af8",
       "snapshot": {
-        "docs/runbooks/backup-restore.md": "40f6405314288f1ca221b514f2f015ca3cc46e8ac686c3d993ec812a31df8716"
+        "docs/runbooks/backup-restore.md": "e16a95bcb603844bd53623c642735da45dceb14442aa2fec80af4f7ef8350914"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/backup-restore.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:docs/runbooks/data-reset.md": {
@@ -4851,17 +4842,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "af643ced7495449ef235a27d42161d5bae4b793d795b69a661a8635d52f49b78",
+      "fingerprint": "2b9c82ac38d06c8c92381e91b3eeeae2511cef23e1309fb4d069cade0b09199a",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "3f9d0c9ab0029cac072d84934bded73504ea52729d3555f33f283e3da1765862"
+        "docs/runbooks/ubuntu-server-deployment.md": "5fdf9b195fdc30c9b5543a6ec3c824fd9309274ed2ba36c72c7841086d41ced8"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -4935,17 +4924,15 @@
       ]
     },
     "source:docs/session/README.md": {
-      "fingerprint": "0efe4927e3329550755d22a3538d0b408be587369b98c56318323d0f5702461e",
+      "fingerprint": "4d375323b258d51292cdac56cf4b6cf040144c7cfef9fb073439ab7f65e10f84",
       "snapshot": {
-        "docs/session/README.md": "b2a0dceafef1e1b1377d716d8ad5e477509b5bb8582fc074da3bc2b416116bad"
+        "docs/session/README.md": "7cd0b08cfa3acdecf65dc48a1e00dd954a6408fe1572ac151c10b38203cdd291"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/session/README.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:docs/student-data/academic-mapping-contract.md": {
@@ -5075,16 +5062,15 @@
       ]
     },
     "source:scripts/tests/docs-checkers.test.ts": {
-      "fingerprint": "d067d7654b1042f4edc2e2053bff3999794e0efcb2c39fd556a7bb4ef37ae409",
+      "fingerprint": "d692e59710bd1b6f853b019df43113b2bc401384446ab016f620b0c489a21f96",
       "snapshot": {
-        "scripts/tests/docs-checkers.test.ts": "0d340277ed45e1e3b41ec9e2e49f69241221780a741680628d09cffa3a648f85"
+        "scripts/tests/docs-checkers.test.ts": "0122726f0062ab3773cca6124d584170eb64b179ce0ff887d7bbb9004def4dda"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
-      "outcome": "out-of-scope",
-      "reason": "These tests verify documentation governance scripts, not Elysia application behavior.",
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
       "evidence": [
-        "scripts/tests/docs-checkers.test.ts",
-        "bun test scripts/tests/docs-checkers.test.ts passed"
+        "Changed: scripts/tests/docs-checkers.test.ts at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     },
     "source:.audit/docs-restructure-decisions.tsv": {
@@ -5098,6 +5084,42 @@
       "evidence": [
         ".audit/docs-restructure-decisions.tsv",
         "The new entry records the shallow-checkout changelog fix"
+      ]
+    },
+    "source:.env.example": {
+      "fingerprint": "6c730a46817fbb1df5449baad9b0701d681c67ebdf85cfaa22f9690d3f7b4280",
+      "snapshot": {
+        ".env.example": "d2061c9c45e2546403080228cdadd09d0763bcdc8c659a9042a7c47471403caa"
+      },
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "evidence": [
+        "Changed: .env.example at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+      ]
+    },
+    "source:docs/session/2026-10-26-docs-restructure.md": {
+      "fingerprint": "15c5bd3ed82523160da9561b86cf898e8cf13fa7d9870f584385206af1a11d94",
+      "snapshot": {
+        "docs/session/2026-10-26-docs-restructure.md": "459d271560d6e5df4073f1215acdeed6774b6e4eee2943d8e16cd0cc6c126afb"
+      },
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "evidence": [
+        "Changed: docs/session/2026-10-26-docs-restructure.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+      ]
+    },
+    "source:docs/session/_template.md": {
+      "fingerprint": "ffa9b502a75cdeca660c3e8f46fe8335df8d39838657dda21a822940c2df4dc4",
+      "snapshot": {
+        "docs/session/_template.md": "493030e4d7fd906203cdb40e81f1b8dfe838e202fed3199d25d276f798ca69d0"
+      },
+      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "outcome": "no-change",
+      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "evidence": [
+        "Changed: docs/session/_template.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
       ]
     }
   }

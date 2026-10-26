@@ -6,7 +6,7 @@
 #   This is a template: review, then integrate into the repository and copy
 #   to /etc/systemd/system/operatoros-api.service on the target host.
 #
-# INSTALL (details in docs/deployment/ubuntu-server.md)
+# INSTALL (details in docs/runbooks/ubuntu-server-deployment.md)
 #   1. Create the service account and the environment file (root:operatoros, 0640).
 #   2. Copy this file to /etc/systemd/system/operatoros-api.service
 #   3. systemctl daemon-reload && systemctl enable --now operatoros-api
@@ -17,7 +17,7 @@
 
 [Unit]
 Description=OperatorOS API (local SQLite attendance and analytics)
-Documentation=file:/opt/operatoros/docs/deployment/ubuntu-server.md
+Documentation=file:/opt/operatoros/docs/runbooks/ubuntu-server-deployment.md
 After=network.target
 StartLimitIntervalSec=60
 StartLimitBurst=5

@@ -1,6 +1,8 @@
 # Documentation index
 
-Source code and configuration define current behavior. This index links to every maintained Markdown page; drafts and historical references are labeled.
+Source code and configuration define current behavior. This index links to every
+maintained documentation page; drafts and historical references are labeled.
+Dated session logs and the reusable session template are exempt from the index.
 
 ## Structure
 

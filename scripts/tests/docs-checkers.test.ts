@@ -77,9 +77,10 @@ test("organization checker rejects loose docs, missing metadata, and an incomple
   expect(problems).toContain("docs/README.md links to docs/guides/development.md more than once");
 });
 
-test("organization checker does not require session logs in the root index", () => {
+test("organization checker does not require session logs or their template in the root index", () => {
   const f = fixture();
   f.write("docs/session/2026-10-26-checker-review.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Checker review\n");
+  f.write("docs/session/_template.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Session log template\n");
   expect(check(f.root, "organization")).toEqual({ code: 0, stdout: "Markdown organization looks valid.\n", stderr: "" });
 });
 

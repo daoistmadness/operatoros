@@ -9,7 +9,11 @@ This document describes the supported backup and restore paths for local, file-b
 
 ## Backup creation
 
-Administrators use the canonical `/api/admin/backups` API, Backup Management page, or `backup-cli.ts backup`. Backup creation:
+Administrators create backups through the `/api/admin/backups` API, the Backup
+Management page, or the CLI. Set `OPERATOROS_DATA_DIR` to the intended data root
+before running `scripts/backup.sh backup`.
+
+Backup creation:
 
 1. resolves the configured SQLite database to a canonical absolute path;
 2. runs `PRAGMA wal_checkpoint(TRUNCATE)` and serializes the open database into a temporary snapshot;
@@ -286,7 +290,8 @@ The supported runtime is a single local API process. Docker/Compose and PostgreS
 ## Legacy scripts
 
 `scripts/backup.sh` and `scripts/restore.sh`, where present, use the same
-versioned encrypted backup envelope but remain separate operator tools. The CLI
+versioned encrypted backup envelope but remain separate operator tools. Both
+require `OPERATOROS_DATA_DIR` to name the intended data root. The CLI
 restore path described above validates encrypted artifact identity, checksum,
 authenticated decryption, SQLite state, and administrator/setup eligibility
 before and after replacement. It creates a safety snapshot when an active

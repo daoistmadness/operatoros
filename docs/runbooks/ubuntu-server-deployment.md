@@ -10,11 +10,14 @@ production deployment procedure. It describes the API service template at
 `docs/deployment/systemd/operatoros-api.service`. No production deployment has
 been performed from this document.
 
+> Unverified: no disposable Ubuntu host drill has exercised these installation,
+> service, upgrade, backup, and restore steps.
+
 This runbook covers a single-host Ubuntu deployment of the supported runtime:
 
 - `SQLITE_ONLY_SUPPORTED` — local, file-backed SQLite; PostgreSQL is not supported.
-- `LOCAL_BROWSER_RUNTIME` — the React frontend runs in a browser on the same host or
-  LAN; the API serves only HTTP on a local socket.
+- `LOCAL_BROWSER_RUNTIME` — the React frontend runs in a browser on the same
+  host. This proposal binds the API and Vite preview to loopback.
 - Native Linux Bun `1.4.4` (no containers required, no Windows/WSL-interop binaries).
 
 ## 1. What runs under supervision
@@ -94,9 +97,9 @@ AUTH_COOKIE_SECRET=<paste generated value>
 # Optional, when backups must be created on first start:
 # BACKUP_ENCRYPTION_KEY=<generated Base64 32-byte key>
 # BACKUP_ENCRYPTION_KEY_ID=<short label>
-# Optional, when the browser is not on loopback (comma-separated exact origins):
-# ALLOWED_ORIGINS=http://127.0.0.1:5173
-# Optional, ONLY when a reverse proxy owns the socket (exact peer IPs):
+# Optional, set the exact browser origin when a reverse proxy serves the UI:
+# ALLOWED_ORIGINS=https://operatoros.example
+# Optional, when a reverse proxy connects from this host (exact peer IPs):
 # TRUSTED_PROXY_ADDRESSES=127.0.0.1
 ```
 
@@ -112,7 +115,8 @@ retention rules are in `docs/runbooks/secret-rotation.md`.
 
 ## 5. First start (fresh data root)
 
-All database commands expect an absolute data directory and are safe to re-run.
+Both database commands require an absolute data directory. Bootstrap refuses a
+non-empty directory. Validation opens the database read-only.
 
 ```bash
 # 1) Create the state directory (section 2), then bootstrap an empty data root
@@ -127,25 +131,10 @@ sudo cp docs/deployment/systemd/operatoros-api.service /etc/systemd/system/opera
 sudo systemctl daemon-reload
 sudo systemctl enable --now operatoros-api
 
-# 3) Create the first administrator (first run only; token from section 4).
-#    The setup screen asks for the token once the frontend runs (section 6).
-#    Headless API equivalent (the values are read from the request body; replace
-#    the placeholders and never pass the password as a command argument):
-curl -fsS -X POST http://127.0.0.1:8090/api/setup/admin \
-  -H 'content-type: application/json' --data @- <<'JSON'
-{"username":"admin","password":"REPLACE-12-CHARS-MINIMUM","password_confirmation":"REPLACE-12-CHARS-MINIMUM","setup_token":"REPLACE-WITH-SECTION-4-TOKEN"}
-JSON
-#    A missing or wrong token is refused with 403
-#    (SETUP_TOKEN_REQUIRED / SETUP_TOKEN_INVALID); without a configured token on
-#    a fresh root, first-run provisioning stays closed. After the administrator
-#    exists, remove the ASTRYX_SETUP_TOKEN line from /etc/operatoros/api.env and
-#    restart: sudo systemctl restart operatoros-api
-#    (once a user exists, the setup endpoints stay closed permanently.)
-
-# 4) Health check (documented, public endpoint):
+# 3) Health check (documented, public endpoint):
 curl -fsS http://127.0.0.1:8090/health     # -> {"status":"ok"}
 
-# 5) Validate the database (read-only):
+# 4) Validate the database (read-only):
 sudo -u operatoros bun run db:validate --data-dir /var/lib/operatoros/data
 # -> VALID 20261002_s48
 ```
@@ -160,33 +149,44 @@ operational database stays `20260725_s43` until a separately authorized migratio
 ```bash
 cd /opt/operatoros
 bun --filter @operatoros/web build                 # -> apps/web/build
-FRONTEND_PORT=5173 DEV_API_PROXY_TARGET=http://127.0.0.1:8090 \
+FRONTEND_PORT=5173 BACKEND_PORT=8090 DEV_API_PROXY_TARGET=http://127.0.0.1:8090 \
   bun --filter @operatoros/web preview             # serves build/ with /api proxy
 ```
 
-Open `http://127.0.0.1:5173` in the browser on the host (or the host's address on a
-trusted LAN; then also set `ALLOWED_ORIGINS` accordingly). A supervised web unit
-mirroring the API template is the tracked follow-up **P3-01b**.
+Open `http://127.0.0.1:5173` in a browser on the host. Create the first
+administrator through the setup screen using the configured
+`ASTRYX_SETUP_TOKEN`. After setup, remove that variable from
+`/etc/operatoros/api.env` and restart the API. The setup endpoints then stay
+closed. Vite preview binds to loopback, so this proposal does not serve the
+frontend over a LAN. A supervised web unit mirroring the API template is the
+tracked follow-up **P3-01b**.
 
 ## 7. Offline prerequisites
 
-The dependency set is fully cacheable; nothing at runtime requires the network
-(the API only calls its own loopback health endpoint during startup checks).
+The dependency set is fully cacheable; the application has no required outbound
+network dependency at runtime. The managed development launcher polls loopback
+health endpoints while it starts the API and frontend.
 
-- Prime the Bun cache once on a connected machine, then copy it to the server, e.g.
-  `BUN_INSTALL_CACHE_DIR=/var/cache/operatoros-bun` (the Offline installs validated
-  in Phase 2 used a primed cache of the exact lockfile; keep `bun.lock` and
-  `mise.lock` with the checkout).
-  - Offline install: `cd /opt/operatoros && BUN_INSTALL_CACHE_DIR=... bun install --frozen-lockfile`
-  (no registry traffic once the cache is primed; the service unit sets the cache
-  directory under the state directory so runtime writes never touch the checkout).
+- Prime the Bun cache once on a connected machine, then copy it to the server.
+  Use `BUN_INSTALL_CACHE_DIR=/var/lib/operatoros/bun-cache`, the path set by the
+  service unit. Keep `bun.lock` and `mise.lock` with the checkout.
+  Run the offline install as the deployer from `/opt/operatoros`, replacing the
+  cache path with the copied cache directory:
+
+  ```bash
+  bun install --frozen-lockfile --offline --cache-dir "/absolute/path/to/primed-cache"
+  ```
+
+  The service unit sets `BUN_INSTALL_CACHE_DIR` to
+  `/var/lib/operatoros/bun-cache` for runtime writes under the state directory.
+  This runtime cache path is separate from the install-time `--cache-dir`.
 - The web build is produced offline after the same install.
 
 ## 8. Upgrade procedure
 
 1. Create a fresh backup (section 9) and keep the previous checkout revision.
 2. Update the checkout (git or staged bundle). Keep `bun.lock`/`mise.lock` aligned.
-3. `bun install --frozen-lockfile` (cache-primed offline installs are supported).
+3. On an offline host, run `bun install --frozen-lockfile --offline --cache-dir "/absolute/path/to/primed-cache"` from `/opt/operatoros`.
 4. If the new revision requires a schema change: **stop** and follow
    `docs/runbooks/database-operations.md`. Operational migrations need a separate
    exact-target authorization plus the sanctioned wrapper (backup, lock, preflight).
@@ -198,8 +198,9 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 ## 9. Backup, restore, and rollback
 
 - Create backups through the admin path (`POST /api/admin/backups` or the Backup
-  Management page) or the operator tool: `OPERATOROS_DATA_DIR=/var/lib/operatoros/data
-  /opt/operatoros/scripts/backup.sh backup` (encrypted AES-256-GCM envelope,
+  Management page) or the operator tool:
+  `OPERATOROS_DATA_DIR=/var/lib/operatoros/data /opt/operatoros/scripts/backup.sh backup`
+  (encrypted AES-256-GCM envelope,
   manifest checksum, append-only audit).
 - The API applies count-based retention after each successful backup: it keeps the
   newest 10 complete generations, never evicts the newest backup or a restore
@@ -215,7 +216,8 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 - Restore: prefer the guarded admin restore for online operations (typed
   confirmation, authenticated admin session, schema/identity validation, a
   pre-restore safety snapshot, and session revocation). For offline recovery,
-  `scripts/restore.sh` invokes the hardened CLI, which verifies encrypted
+  run `OPERATOROS_DATA_DIR=/var/lib/operatoros/data /opt/operatoros/scripts/restore.sh`.
+  The wrapper invokes the hardened CLI, which verifies encrypted
   artifact identity/authentication, SQLite integrity, foreign keys, schema, and
   administrator credentials; it revokes restored sessions and rolls back to a
   safety snapshot on verified failure. Stop the API and all other writers first.
@@ -243,8 +245,9 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 - Dedicated service identity `operatoros`; no login shell; no capabilities
   (`CapabilityBoundingSet=`); `NoNewPrivileges=yes`; `UMask=0077`.
 - Filesystem: `ProtectSystem=strict` (checkout read-only), `ProtectHome=yes`,
-  `PrivateTmp`, `PrivateDevices`; the only writable tree is the state directory
-  (`StateDirectory=operatoros`, mode `0700`) containing the data root.
+  `PrivateTmp`, `PrivateDevices`; persistent host writes are limited to the
+  state directory (`StateDirectory=operatoros`, mode `0700`) containing the data
+  root. `PrivateTmp` provides a private temporary directory.
 - Signals: `KillSignal=SIGTERM` with `TimeoutStopSec=30`; the API handles SIGTERM
   with a graceful shutdown (closes HTTP listener and database).
 - Deliberate omission: `MemoryDenyWriteExecute=` is **not** set — Bun's
@@ -256,7 +259,7 @@ The dependency set is fully cacheable; nothing at runtime requires the network
 
 | Symptom | First check |
 |---|---|
-| `status=203/EXEC` | `/usr/local/bin/bun` missing or wrong version (`bun --version` must print `1.4.4`). |
+| `status=203/EXEC` | Systemd could not execute `/usr/local/bin/bun`. Check the path and executable permissions. Run `bun --version` separately. |
 | `EACCES ... mkdir '/var/lib/operatoros'` | The state directory does not exist before bootstrap; create it first (section 2). |
 | Address already in use | `ss -ltnp \| grep 8090` — identify the owner; never kill unknown listeners. |
 | Startup exits with `DATA_DIR_*` code | Conflicting legacy/new database files in the data root; see `docs/runbooks/database-operations.md`. |

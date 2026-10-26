@@ -9,6 +9,9 @@ Draft procedure for a network-isolated or cache-primed host. No offline drill
 is claimed. Reproduce each step with a disposable data root and verify the
 current network behavior before relying on this guide.
 
+> Unverified: no isolated-network install and runtime drill has run against the
+> current lockfile.
+
 The supported runtime is loopback-only and makes no outbound calls while
 serving. The first install, the development launcher, and the doctor task are
 the network-sensitive parts; the sections below isolate each.
@@ -17,11 +20,13 @@ the network-sensitive parts; the sections below isolate each.
 
 - Runtime: the API and frontend read only local files and the SQLite database.
   No registry, CDN, or remote API is used while serving.
-- `./start-dev.sh` in the PRIMARY checkout performs `git fetch --prune origin`
-  in its freshness preflight and fails closed without network
+- `./start-dev.sh` in the PRIMARY checkout fetches only `origin/main` with
+  `git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main` in its
+  freshness preflight and fails closed without network
   (`PRIMARY_CHECKOUT_REFRESH_FAILED`, `start-dev.sh`). On a SECONDARY worktree
-  the freshness check is skipped, but dependency installs and the launcher's
-  `curl` readiness checks still run.
+  the freshness check is skipped. The launcher checks that dependencies are
+  installed and still runs its loopback `curl` readiness checks; it does not
+  install dependencies.
 - `mise run doctor` requires a resolvable `origin/main` ref (`git fetch origin
   main` on a fresh clone) and the pinned toolchain.
 - `mise install` needs network unless the exact tools are preinstalled or the
@@ -36,28 +41,28 @@ the network-sensitive parts; the sections below isolate each.
   binary.
 - The checkout with `bun.lock` and `mise.lock` (the lockfile authorities).
 - A primed Bun install cache for the same OS, architecture, and package set.
-  Prime it on a connected machine with the exact lockfile:
+  Prime it on a connected machine with the exact lockfile. Run from the
+  repository root and replace the cache path with its absolute location:
 
   ```bash
-  cd <checkout>
-  bun install --frozen-lockfile --cache-dir <PRIMED_CACHE_DIR>
+  bun install --frozen-lockfile --cache-dir "/absolute/path/to/primed-cache"
   ```
 
   `bun install --help` prints `--cache-dir=<val> Store & load cached data from
-  a specific directory path`. Copy `<PRIMED_CACHE_DIR>` to the offline host.
+  a specific directory path`. Copy the primed cache to the offline host.
   The deployment unit candidate sets `BUN_INSTALL_CACHE_DIR` to the same purpose for
   the service; the verified install flag is `--cache-dir`.
 - Optional: mise with the tool versions pinned in `mise.toml`.
 
 ## Worked sequence (disposable root)
 
-Run from the checkout root. `<DATA_DIR>` must be an absolute path outside the
+Run from the checkout root. The temporary data directory must stay outside the
 repository. This sequence uses only local state.
 
 1. Install dependencies from the primed cache without touching the network:
 
    ```bash
-   bun install --frozen-lockfile --offline --cache-dir <PRIMED_CACHE_DIR>
+   bun install --frozen-lockfile --offline --cache-dir "/absolute/path/to/primed-cache"
    ```
 
    `bun install --help` prints `--offline Never touch the network: resolve and
@@ -69,7 +74,7 @@ repository. This sequence uses only local state.
 2. Bootstrap and validate a disposable data root:
 
    ```bash
-   export OPERATOROS_DATA_DIR=<DATA_DIR>
+   export OPERATOROS_DATA_DIR="$(mktemp -d /tmp/operatoros-offline.XXXXXX)"
    bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261002_s48
    bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261002_s48
    ```
@@ -86,22 +91,27 @@ repository. This sequence uses only local state.
    export HOST=127.0.0.1
    export PORT=8090
    bun --filter @operatoros/api start
+   ```
+
+   `apps/api` start is `bun run src/server.ts`, which reads `process.env`. Keep
+   the server running and check it from a second terminal:
+
+   ```bash
    curl -fsS http://127.0.0.1:8090/health     # -> {"status":"ok"}
    ```
 
-   `apps/api` start is `bun run src/server.ts`; the API reads the process
-   environment directly (no `.env` file is loaded). Sign-in requires an
-   administrator in the data root: for a disposable drill, reuse a data root
-   that already has one, or run the local first-run setup flow
-   (`POST /api/setup/bootstrap`, then `POST /api/setup/admin`) as used by the
-   managed development environment. First-run setup is local and needs no
+   Sign-in requires an administrator in the data root. For a disposable drill,
+   reuse a data root that already has one, or configure `ASTRYX_SETUP_TOKEN`
+   before startup and use the first-run screen. The standalone token flow posts
+   directly to `/api/setup/admin`; `/api/setup/bootstrap` is available to the
+   managed development setup flow. First-run setup is local and needs no
    network.
 
 4. Build and preview the prebuilt web assets:
 
    ```bash
    bun --filter @operatoros/web build
-   FRONTEND_PORT=5173 DEV_API_PROXY_TARGET=http://127.0.0.1:8090 \
+   FRONTEND_PORT=5173 BACKEND_PORT=8090 DEV_API_PROXY_TARGET=http://127.0.0.1:8090 \
      bun --filter @operatoros/web preview
    ```
 

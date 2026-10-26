@@ -8,7 +8,8 @@ last_reviewed: 2026-10-26
 Session logs record agent work; they are not an authority for current behavior.
 Use one log only when a multi-step session needs a handoff or audit trail.
 
-Name files YYYY-MM-DD-short-topic.md and include:
+Copy the [session log template](_template.md) to
+`YYYY-MM-DD-short-topic.md` and include:
 
 - Date, agent, branch, and pull request.
 - Goal and changes made.
