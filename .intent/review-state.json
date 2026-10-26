@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "f08a7fcc85e599f0aa665362bec1b2431f587b26b57752a969d61f4374409248",
+      "fingerprint": "ae8fb79ed90a20280c8689c03a2fd2745b81448ecb663821e3cff1c64a7f4c52",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
         "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
-        "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
-        "bun.lock": "54c432085b2ccbc2a97905c2db8b7751642d7eb2c566828688a5584f9784809c",
+        "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
+        "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
-        "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
+        "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,20 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
       "outcome": "no-change",
-      "reason": "The edited CI and agent docs change changelog policy, while the testing guide removes a false Python claim and preserves the serial API test rule. Elysia guidance still matches the installed v1.4.29 source note and project runner recommendations.",
+      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
       "evidence": [
-        "packages/agent-skills/skills/elysiajs/SKILL.md",
-        "packages/agent-skills/docs/elysiajs/references/testing.md",
-        "docs/guides/testing.md",
-        "apps/api/tests/attendance-import.test.ts",
-        "apps/api/package.json",
-        "mise run test:fast passed; intent validate passed"
+        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "50a07236a6d3d2482678d03a889eba04babd14628d71b61b139427f8713ca9c3",
+      "fingerprint": "44132a8a54044fafbb419d8762860f6d870ef7a8737d11f4eac2f4394b3cc9e6",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -66,13 +61,13 @@
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
-        "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
-        "bun.lock": "54c432085b2ccbc2a97905c2db8b7751642d7eb2c566828688a5584f9784809c",
+        "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
+        "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
-        "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
+        "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -101,15 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
       "outcome": "no-change",
-      "reason": "The corrections do not change the Elysia domain, task coverage, skill sources, package ownership, or future work recorded by the planning files.",
+      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
       "evidence": [
-        "_artifacts/domain_map.yaml",
-        "_artifacts/skill_spec.md",
-        "_artifacts/skill_tree.yaml",
-        "packages/agent-skills/skills/elysiajs/SKILL.md",
-        "docs/guides/testing.md"
+        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
