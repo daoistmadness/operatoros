@@ -27,7 +27,7 @@ The default development root is resolved under `XDG_DATA_HOME` (or
 `operatoros-development.db`, older schema, dual layout, invalid state, or busy
 database fails closed; startup does not migrate or rename existing data.
 Use the separately authorized procedure in
-[database operations](docs/operations/DATABASE_OPERATIONS.md).
+[database operations](docs/runbooks/database-operations.md).
 Set `OPERATOROS_DATA_DIR` only when an approved absolute override is intentional.
 
 ## Validation

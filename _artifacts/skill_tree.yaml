@@ -46,15 +46,15 @@ skills:
             docs/elysiajs/references/websocket.md,
             daoistmadness/operatoros:AGENTS.md,
             daoistmadness/operatoros:CONTRIBUTING.md,
-            daoistmadness/operatoros:docs/development/README.md,
+            daoistmadness/operatoros:docs/guides/development.md,
             daoistmadness/operatoros:apps/api/package.json,
             daoistmadness/operatoros:bun.lock,
             daoistmadness/operatoros:package.json,
             daoistmadness/operatoros:.github/CI.md,
             daoistmadness/operatoros:.github/workflows/ci.yml,
             daoistmadness/operatoros:docs/architecture/change-safety-golden-path.md,
-            daoistmadness/operatoros:docs/security/SECURITY_HARDENING.md,
-            daoistmadness/operatoros:docs/testing/TEST_STRATEGY.md
+            daoistmadness/operatoros:docs/reference/security-model.md,
+            daoistmadness/operatoros:docs/guides/testing.md
           ],
         requires: [],
         purpose: "Build, debug, or migrate Elysia v2 TypeScript backends with

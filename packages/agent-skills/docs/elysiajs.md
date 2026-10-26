@@ -15,10 +15,10 @@ Keep the skill's generic Elysia guidance aligned with these repository facts.
   Path](../../../docs/architecture/change-safety-golden-path.md).
 - Preserve the repository's auth and data safeguards in
   [AGENTS.md](../../../AGENTS.md) and
-  [Security Hardening](../../../docs/security/SECURITY_HARDENING.md).
+  [Security Hardening](../../../docs/reference/security-model.md).
 - Validate backend changes with the existing Bun tests and typecheck. Use
   disposable synthetic SQLite roots for integration tests; never access the
-  protected operational database. See the [test strategy](../../../docs/testing/TEST_STRATEGY.md).
+  protected operational database. See the [test strategy](../../../docs/guides/testing.md).
 
 Changes to this source note, the linked architecture/security/test documents,
 or the Elysia package baseline trigger a conservative skill review. A changed

@@ -1,5 +1,5 @@
 // Only reusable presentation primitives belong in this package.
-// See docs/architecture/phase-14-monorepo.md.
+// See docs/architecture/module-boundaries.md.
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/card";
 export { Button, buttonVariants } from "./components/button";
 export {

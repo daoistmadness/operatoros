@@ -134,6 +134,23 @@ again for routine work already authorized. Source, lockfiles, and live GitHub
 settings establish current facts. Historical audits are evidence, not procedure.
 Start with [docs/README.md](docs/README.md).
 
+## Documentation rules
+
+Follow [the documentation system](docs/decisions/documentation-system.md).
+Keep maintained project docs in the architecture, guides, reference, decisions,
+runbooks, or session areas. docs/README.md is the only loose Markdown file in
+docs/. Use one topic per kebab-case page, add status and last_reviewed front
+matter, and link every maintained page from the index. The protected Dapodik
+design is the explicit content and front-matter exception. Keep package-owned,
+generated, release, and contributor docs with their existing owners.
+
+Session logs belong only in docs/session/; they are non-authoritative.
+Promote durable facts into their canonical page. Add one user-facing
+CHANGELOG.md entry under [Unreleased] for every PR, including the PR number.
+Use the skip-changelog label only when the change has no release-history
+impact. The repository CI checks the docs layout, front matter, index, links,
+and changelog entry.
+
 ## Runtime and ownership
 
 OperatorOS is an offline-first school attendance and academic analytics system.
@@ -175,7 +192,7 @@ including rejection paths, and run API typechecking. Preserve stable ownership.
 - Use canonical `/api/<domain>/...` paths through `apps/web/src/lib/api/client.ts`. Pages consume feature APIs. Keep OpenAPI contracts versioned and drift-checked. Follow [web design](apps/web/DESIGN.md), reuse primitives, and lazy-load routes.
 - Keep one in-memory TanStack Query client. Never persist authenticated queries or analytics in `localStorage`. Include every filter in query keys, invalidate targeted data after mutations, and clear protected data on logout.
 - Use sanitized API errors. Preserve loading, empty, error, conflict, and authorization states.
-- Compute metrics on the server using canonical SQL and [metric definitions](docs/analytics/METRICS.md). Browser code formats/adapts for Chart.js. No client recomputation or persisted rollups without benchmark evidence and review. Use TanStack Table only for a bounded justified table. Do not add TanStack Router/Form, Zod, or another chart library.
+- Compute metrics on the server using canonical SQL and [metric definitions](docs/reference/metrics.md). Browser code formats/adapts for Chart.js. No client recomputation or persisted rollups without benchmark evidence and review. Use TanStack Table only for a bounded justified table. Do not add TanStack Router/Form, Zod, or another chart library.
 
 ## Verification workflow
 
@@ -202,8 +219,8 @@ compatibility identifiers, not WSL onboarding requirements.
 
 1. Install locked tools with `mise install` and dependencies with `bun install --frozen-lockfile`. `mise run doctor` checks the checkout, prerequisites, and configured development DB; use an approved disposable data root for agent validation.
 2. Use `mise run dev` through `./start-dev.sh`; `./start-dev.sh --check` validates startup. Inspect managed sessions before starting services.
-3. Use `mise run test:fast` for iteration. Fetch `origin/main` before `mise run check:affected`. `bun run turbo:check` runs the complete package graph. See [test strategy](docs/testing/TEST_STRATEGY.md).
-4. For Markdown-only changes, run `mise run test:fast`, `bun .github/scripts/check-markdown-links.ts`, and `bun .github/scripts/check-current-developer-docs.ts`. Do not run the local full release gate for documentation-only edits.
+3. Use `mise run test:fast` for iteration. Fetch `origin/main` before `mise run check:affected`. `bun run turbo:check` runs the complete package graph. See [test strategy](docs/guides/testing.md).
+4. For Markdown-only changes, run `mise run test:fast`, `bun .github/scripts/check-markdown-links.ts`, `bun .github/scripts/check-markdown-organization.ts`, and `bun .github/scripts/check-current-developer-docs.ts`. Do not run the local full release gate for documentation-only edits.
 5. Run `mise run check:full` for release-sensitive changes and `mise run db:fresh` for schema/bootstrap work. Use relevant security and Excel parity checks. `hk check --all` runs lint and architecture checks.
 6. Validate E2E tooling with `make e2e-validate`. Local smoke: `timeout 300 make e2e-smoke`. `make e2e-full` is CI-only without explicit owner approval. Verify user-visible UI in a real browser; `./scripts/verify-browser.sh` is the repository's live-stack smoke workflow.
 
@@ -251,8 +268,8 @@ use `wt merge`, or clean before verification.
 
 - `OPERATOROS_DATA_DIR` owns the data root and derives `operatoros.sqlite`, backups, and logs. `OPERATOROS_DEV_DATA_DIR` is deprecated. Never select a development database from ambient `DATABASE_URL`. Alternate ports do not isolate shared development data.
 - Startup validates existing DBs; it never migrates them. Schema authority is `packages/db/src/manifest.ts`; fresh bootstrap uses S4.7 base plus S4.8 employee extension. The protected operational DB stays S4.3 until separately authorized migration. Never read/use/modify it or rollback backups for agent validation.
-- New migrations need synthetic current-schema, fresh-parity, failure, and recovery tests. Operational migration needs exact authorization, wrapper preflight, exclusive lock, fresh verified backup, and process-local context. Follow [database operations](docs/operations/DATABASE_OPERATIONS.md) and [data reset](docs/operations/DATA_RESET.md). A Git revert is not database recovery. PostgreSQL reconsideration needs a new ADR.
-- Keep `astyx_session` an HttpOnly server-side cookie; no JWT/localStorage auth. Unsafe cookie-authenticated requests require the configured exact Origin. Trust forwarded IPs only from exact direct peers in `TRUSTED_PROXY_ADDRESSES`. Backups require AES-256-GCM and a `BACKUP_ENCRYPTION_KEY` different from `AUTH_COOKIE_SECRET`. Follow [security hardening](docs/security/SECURITY_HARDENING.md) and [rotation](docs/security/ROTATION_RUNBOOK.md).
+- New migrations need synthetic current-schema, fresh-parity, failure, and recovery tests. Operational migration needs exact authorization, wrapper preflight, exclusive lock, fresh verified backup, and process-local context. Follow [database operations](docs/runbooks/database-operations.md) and [data reset](docs/runbooks/data-reset.md). A Git revert is not database recovery. PostgreSQL reconsideration needs a new ADR.
+- Keep `astyx_session` an HttpOnly server-side cookie; no JWT/localStorage auth. Unsafe cookie-authenticated requests require the configured exact Origin. Trust forwarded IPs only from exact direct peers in `TRUSTED_PROXY_ADDRESSES`. Backups require AES-256-GCM and a `BACKUP_ENCRYPTION_KEY` different from `AUTH_COOKIE_SECRET`. Follow [security hardening](docs/reference/security-model.md) and [rotation](docs/runbooks/secret-rotation.md).
 - Never commit personal data, credentials, backup paths, live checksums, or records. Do not hand-edit generated builds, dependencies, runtime state, local SQLite files, backups, logs, or generated Excel/PDF outputs. See [CONVENTIONS.md](CONVENTIONS.md).
 - Never kill unknown port owners or remove unverifiable processes. E2E owns temporary roots/ports and removes only its artifacts.
 

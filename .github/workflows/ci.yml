@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches:
       - main
@@ -181,6 +182,9 @@ jobs:
       - name: Validate relative Markdown links
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-markdown-links.ts
+      - name: Validate Markdown organization and index
+        working-directory: ${{ github.workspace }}
+        run: bun .github/scripts/check-markdown-organization.ts
       - name: Test documentation checker fixtures
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/docs-checkers.test.ts
@@ -198,6 +202,11 @@ jobs:
             exit 1
           fi
           git fetch --no-tags origin "$INTENT_BASE_SHA"
+      - name: Require pull request changelog entry
+        working-directory: ${{ github.workspace }}
+        env:
+          CHANGELOG_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bun .github/scripts/check-changelog.ts
       - name: Validate agent skills and package tarball
         working-directory: ${{ github.workspace }}
         run: |

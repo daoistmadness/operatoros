@@ -41,7 +41,7 @@ OperatorOS follows a strict local-first architecture where the backend API remai
 flowchart LR
   subgraph Client ["Client Interface"]
     Browser["Browser / Staff User"]
-    FE["React Frontend<br/>(Vite 8 + React Router 7)"]
+    FE["React Frontend<br/>(Vite 8 + React Router 8.5)"]
   end
 
   subgraph Server ["Backend API Authority"]
@@ -89,7 +89,7 @@ The table below delineates verified system capabilities, bounded partial feature
 | **User Administration** | **Partial** | Account provisioning is strictly limited to first-run setup plus a local operator CLI (`apps/api/src/user-recovery-cli.ts`). No web-based user management interface exists. |
 | **Restore Concurrency** | **Partial** | The runtime does not enforce a worker count, so run one API process per data root. On Linux, the canonical API and CLI share a nonblocking data-root `flock`; CLI restore refuses while the API is running. Other platforms and tools that ignore the lock still require manual writer exclusion. |
 | **CLI Restore Utility** | **Partial** | Encrypted CLI restore verifies artifact identity and authentication, SQLite integrity and schema, foreign keys, and an eligible administrator credential; it revokes restored sessions and uses a safety snapshot for rollback when an active database exists. Run it with all API writers stopped; CLI audit writes are best-effort. |
-| **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)). |
+| **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/reference/risk-threshold-validation.md)). |
 | **Enterprise / Cloud Auth** | **Not Implemented** | No MFA, SSO, OAuth, LDAP, password-reset emails, or cloud identity integrations. |
 | **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is unencrypted; encryption applies solely to backup envelopes via `BACKUP_ENCRYPTION_KEY`. |
 | **Distributed / Cloud Hosting** | **Not Implemented** | PostgreSQL and containerized hosted deployments (Docker/Podman/Quadlet) are unsupported; optional local Podman development does not change this runtime contract. |
@@ -137,7 +137,7 @@ flowchart TD
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
-| **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19`, Vite `8.3.4`, React Router `7`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |
+| **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19.2.7`, Vite `8.3.4`, React Router `8.5.0`, TanStack Query `5`, TanStack Table `8`, Tailwind CSS `4`, Chart.js `4` |
 | **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
 
 ---
@@ -398,11 +398,9 @@ bun --filter @operatoros/web api:check
 
 ## Historical Context
 
-- **Phase 9 Platform Baseline**: The `v0.9.0-platform-foundation` release inventory, security review, and release notes remain the authoritative Phase 9 architectural baseline.
 - **Desktop Shell Retirement**: The experimental Tauri desktop wrapper and its Phase 9.6/11 acceptance gates were deprecated and completely removed on 2026-08-20. The application runs exclusively as a local web service in standard modern browsers.
-- **Python / FastAPI Backend Retirement**: The legacy Python backend was replaced by the Bun/Elysia TypeScript implementation. Legacy migrations and scripts in `backend/` are preserved strictly as migration history and audit evidence.
+- **Python / FastAPI Backend Retirement**: The legacy Python runtime was replaced by the Bun/Elysia TypeScript implementation. The retained `backend/` directory holds migration, fixture, and operations tooling; it is not the production backend.
 - **Operational Database Compatibility**: The live operational database remains pinned at schema **S4.3** (`20260725_s43`) until an authorized migration window. Restoring an S4.2 database pairs with the documented rollback commit `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`).
-- **Legacy WSL2 Documentation**: The [historical WSL2 / DevOps guide](docs/WSL2_DEVOPS.md) is retained for migration reference and does not represent current onboarding instructions.
 
 ---
 
@@ -414,18 +412,17 @@ bun --filter @operatoros/web api:check
 - [Conventions Guide](CONVENTIONS.md)
 - [Agent Execution Contract](AGENTS.md)
 - [Frontend Guide](apps/web/README.md)
-- [Frontend Architecture](docs/architecture/FRONTEND_ARCHITECTURE.md)
-- [Database Schema Architecture](docs/architecture/DATABASE_SCHEMA_ARCHITECTURE.md)
-- [Platform Portability](docs/architecture/PLATFORM_PORTABILITY.md)
-- [Identity & Authentication](docs/security/identity-authentication.md)
-- [Security Hardening](docs/security/SECURITY_HARDENING.md)
-- [Backup & Restore Security](docs/security/backup-restore.md)
-- [User Administration Status](docs/security/user-administration.md)
-- [Database Operations](docs/operations/DATABASE_OPERATIONS.md)
-- [Data Reset Procedures](docs/operations/DATA_RESET.md)
-- [Utility Scripts Manual](docs/UTILITY_SCRIPTS.md)
-- [Test Strategy](docs/testing/TEST_STRATEGY.md)
+- [Frontend Architecture](docs/architecture/frontend.md)
+- [Database Schema Architecture](docs/architecture/database-schema.md)
+- [Platform Portability](docs/reference/runtime-support.md)
+- [Identity & Authentication](docs/reference/identity-authentication.md)
+- [Security Hardening](docs/reference/security-model.md)
+- [Backup & Restore Security](docs/runbooks/backup-restore.md)
+- [User Administration Status](docs/reference/user-administration.md)
+- [Database Operations](docs/runbooks/database-operations.md)
+- [Data Reset Procedures](docs/runbooks/data-reset.md)
+- [Test Strategy](docs/guides/testing.md)
 - [E2E Testing Guide](e2e/README.md)
 - [GitHub Actions Infrastructure](.github/CI.md)
-- [Metrics & Analytics Definitions](docs/analytics/METRICS.md)
-- [Risk Threshold Validation](docs/analytics/RISK_THRESHOLD_VALIDATION.md)
+- [Metrics & Analytics Definitions](docs/reference/metrics.md)
+- [Risk Threshold Validation](docs/reference/risk-threshold-validation.md)
