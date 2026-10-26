@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Download, Printer, RotateCcw } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import type { ManagementReviewProfileResponse } from "@operatoros/contracts/analytics";
 import { exportManagementReviewAttendance, exportManagementReviewProfile, type ManagementReviewProfileFilters } from "../api/managementReviewProfile";
 import { PageHeader } from "../components/common/page-header";

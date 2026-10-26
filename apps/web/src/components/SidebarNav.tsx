@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { AuthUser } from '../api/auth';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import {
   Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Edit3, FileClock, FileText, GraduationCap, LayoutDashboard,

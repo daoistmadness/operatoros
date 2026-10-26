@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { bootstrapSetupAuthorization } from "../api/setup";
 import { Alert } from "../components/ui/alert";

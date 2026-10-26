@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ReadinessItem } from "@operatoros/contracts/readiness";
 import { FeatureReadinessCard, ReadinessChecklist } from "./ReadinessChecklist";

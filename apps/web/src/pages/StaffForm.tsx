@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { createStaff, fetchSensitiveStaff, fetchStaffDetail, updateStaff, type StaffPayload } from "../api/staff";
 import { useAuth } from "../context/AuthContext";

@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StudentInsights, { StudentTrendsCompatibilityRedirect } from "./StudentInsights";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";

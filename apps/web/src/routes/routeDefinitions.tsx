@@ -1,5 +1,5 @@
 import { lazy, type ReactElement } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { RequireCapability, RequireRole } from '../components/auth/RouteGuards';
 import { lazyNamedRoute } from './lazyRoute';
 import { ROUTE_GROUPS, type RouteGroup } from './routeGroups';

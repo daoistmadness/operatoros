@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Outlet, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Outlet, Routes, Route, useLocation } from 'react-router';
 import { Menu, X } from 'lucide-react';
 import SidebarNav from './components/SidebarNav';
 import { AuthProvider } from './context/AuthContext';

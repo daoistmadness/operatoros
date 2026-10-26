@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BarChart3, ClipboardList, Clock3, FileText } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
 import { RouteLoadingFallback } from "../routes/RouteLoadingFallback";

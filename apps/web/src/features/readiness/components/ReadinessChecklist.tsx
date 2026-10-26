@@ -1,5 +1,5 @@
 import { CheckCircle2, CircleAlert, CircleDashed, LockKeyhole, OctagonAlert, Settings2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { FeatureReadiness, ReadinessItem, ReadinessState } from "@operatoros/contracts/readiness";
 import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";

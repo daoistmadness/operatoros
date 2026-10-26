@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { CategoryScale, Chart as ChartJS, Legend, LinearScale, LineElement, PointElement, Tooltip } from "chart.js";
 import { Download, Printer, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { ExecutiveReport, ReportFiltersResponse, ReportQuery, ReportScope } from "../api/reports";
 import { downloadReportBlob, exportAnnualReport } from "../api/reports";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";

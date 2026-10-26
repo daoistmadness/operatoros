@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AlertCircle, ArrowLeft, CheckCircle2, Clock3, Download, FileClock, Filter, History, Loader2, RotateCcw, Search, ShieldAlert } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import { downloadUploadEvidence, type UploadRecord } from "../../api/uploadHistory";
 import {
