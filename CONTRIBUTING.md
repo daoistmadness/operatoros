@@ -30,7 +30,7 @@ For Elysia backend work, load the allowlisted
 `@operatoros/agent-skills#elysiajs` guidance with
 `bun run skills:load @operatoros/agent-skills#elysiajs`. Apply the installed
 Elysia major version as described in
-[backend development](docs/development/README.md#backend-skill-workflow).
+[backend development](docs/guides/development.md#backend-skill-workflow).
 For API changes, update the source contract and run the documented OpenAPI
 generation/drift check. Pages must use feature APIs and the shared client, not
 generated contracts directly. Preserve feature ownership boundaries and
@@ -38,7 +38,7 @@ canonical `/api/<domain>/...` paths.
 
 Never use `backend/attendance.db` for development, tests, fixtures, or E2E.
 Operational migrations and rollback are controlled procedures described in
-[docs/operations/DATABASE_OPERATIONS.md](docs/operations/DATABASE_OPERATIONS.md).
+[docs/runbooks/database-operations.md](docs/runbooks/database-operations.md).
 Include verification, risks, and scope in every PR. Documentation-only work
 uses local Markdown/link validation and `mise run test:fast`.
 
