@@ -41,7 +41,7 @@ async function generateFiles(): Promise<Map<string, string>> {
 
 async function runCase(size: number, format: "xlsx" | "xls", mode: typeof modes[number], repeat: number, filePath: string): Promise<unknown> {
   const dbPath = `${root}/case-${size}-${format}-${mode}-${repeat}.sqlite`;
-  const env = { ...process.env, MODE: mode, FORMAT: format, REPEAT: String(repeat), DB_PATH: dbPath, FILE_PATH: filePath, FILE_NAME: filePath.split("/").at(-1)!, EXPECTED_ROWS: String(size) } as Record<string, string>;
+  const env = { ...process.env, MODE: mode, FORMAT: format, REPEAT: String(repeat), DB_PATH: dbPath, FILE_PATH: filePath, FILE_NAME: filePath.split("/").at(-1)!, EXPECTED_ROWS: String(size), ...(process.env.IMPORT_PREVIEW_STAGE_PROFILE === "1" && size === 5000 && mode === "stage" ? { PROFILE_STAGE: "1" } : {}) } as Record<string, string>;
   const server = Bun.spawn([process.execPath, `${directory}/attendance-import-preview-server.ts`], { env, stdout: "pipe", stderr: "pipe" });
   const reader = server.stdout.getReader();
   let output = "";
