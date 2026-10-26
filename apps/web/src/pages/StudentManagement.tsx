@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, flexRender, rowPaginationFeature, columnVisibilityFeature, tableFeatures, useTable } from "@tanstack/react-table";
 import { Link } from "react-router";
 import { Download, Plus, Search, Upload } from "lucide-react";
-import type { ManagedStudent, StudentFilters } from "../api/students";
+import type { ManagedStudent, NisnStatusFilter, StudentFilters } from "../api/students";
 import { fetchAcademicClasses, fetchAcademicGrades, fetchAcademicPrograms, fetchJenjangs } from "../api/enrollment";
 import { fetchAcademicYears } from "../api/grades";
 import { useCreateStudent, useStudentQuality, useStudents, useStudentTemplateExport, useStudentsCsvExport } from "../hooks/useStudentQueries";
@@ -115,6 +115,7 @@ export default function StudentManagement() {
   const { can } = useAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [nisnStatus, setNisnStatus] = useState<NisnStatusFilter | "">("");
   const [device, setDevice] = useState("");
   const [jenjangId, setJenjangId] = useState("");
   const [programId, setProgramId] = useState("");
@@ -123,7 +124,7 @@ export default function StudentManagement() {
   const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
-  const filters: StudentFilters = { search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
+  const filters: StudentFilters = { nisn_status: nisnStatus || undefined, search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
   const students = useStudents(filters);
   const quality = useStudentQuality();
   const exporter = useStudentTemplateExport();
@@ -159,9 +160,10 @@ export default function StudentManagement() {
     <Tabs defaultValue="all">
       <TabsList className="max-w-full overflow-x-auto"><TabsTrigger value="all">All Students</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="history">Import / Update History</TabsTrigger></TabsList>
       <TabsContent value="all" className="space-y-4">
-        <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
+        <Card><CardContent className="grid items-end gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
           <div className="relative"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Label className="sr-only" htmlFor="student-search">Search students</Label><Input id="student-search" className="pl-9" placeholder="Search name, NIPD, NISN, or Device ID" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div>
           <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
+          <div><Label htmlFor="student-nisn-status-filter">NISN input status</Label><NativeSelect id="student-nisn-status-filter" aria-label="NISN input status" value={nisnStatus} onChange={(event) => { setNisnStatus(event.target.value === "inputted" || event.target.value === "not_inputted" ? event.target.value : ""); setPage(1); }}><option value="">All</option><option value="inputted">Inputted</option><option value="not_inputted">Not Inputted</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setDevice(event.target.value); setPage(1); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-year-filter">Academic year</Label><NativeSelect id="student-year-filter" value={academicYearId} onChange={(event) => { setAcademicYearId(event.target.value); setClassId(""); setPage(1); }}><option value="">All academic years</option>{(years.data || []).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-jenjang-filter">Jenjang</Label><NativeSelect id="student-jenjang-filter" value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setProgramId(""); setGradeId(""); setPage(1); }}><option value="">All Jenjang</option>{(jenjangs.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
