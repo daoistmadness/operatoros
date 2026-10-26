@@ -60,9 +60,6 @@
     "check:node-regressions": "bun ../../scripts/check-node-regressions.mjs",
     "check:audit": "bun audit"
   },
-  "trustedDependencies": [
-    "esbuild"
-  ],
   "browserslist": {
     "production": [
       ">0.2%",
