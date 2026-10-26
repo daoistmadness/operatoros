@@ -53,15 +53,27 @@ Use an explicit disposable `OPERATOROS_DATA_DIR` for tests. The data-root
 hashing scheme is unchanged. Never point development tooling at protected
 operational databases.
 
+The managed Bun API currently runs without a watcher. A live Bun watch reload
+restarted the API before its previous instance released the SQLite operation
+lock, so the new process failed with `BACKUP_OPERATION_LOCKED`. Backend reload
+remains manual until that lifecycle is safe. Normal launcher shutdown closes
+the API's SQLite handle, and the database remains persistent across restarts.
+Managed startup disables Bun and Vite environment-file loading for child
+processes and supplies the selected loopback bind, origin, cookie, HMR, and
+proxy settings explicitly. `backend/.env` is inspected only for a stale
+`DATABASE_URL` warning; it does not configure the managed API process.
+
 The canonical primary checkout is `$HOME/code/repos/operatoros`.
 Set `OPERATOROS_PRIMARY_CHECKOUT_PATH` only when an installation uses another
 absolute path. The launcher compares resolved Git top-level paths with this
 value. It never infers the primary role from a folder name.
 
-On primary `main`, startup fetches `origin` and refuses to run while the
-checkout is dirty and behind, diverged, detached, or on another branch. A
-clean fast-forward uses `git merge --ff-only` and appears in the success
-banner. Secondary worktrees report freshness as `N/A (secondary)`.
+On primary `main`, startup fetches only `origin/main` without pruning other
+remote refs and refuses to run while the checkout is behind, dirty and behind,
+diverged, detached, or on another branch.
+If it is behind, review and update it manually before rerunning the launcher;
+the launcher does not move the branch. Secondary worktrees report freshness
+as `N/A (secondary)`.
 
 Session records are mirrored under `operatoros-dev-sessions` inside the shared
 Git common directory. Each checkout retains its `.runtime/operatoros-dev/`
@@ -98,12 +110,8 @@ convenience signals, not a security boundary.
 
 ## HTTPS development proxy
 
-Keep Vite and the API on loopback behind an existing trusted HTTPS proxy.
-Set `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS` to the exact hostname you control;
-do not set `allowedHosts: true`. For browser hot reload through that proxy,
-set `VITE_HMR_HOST` to its hostname, `VITE_HMR_PROTOCOL=wss`, and
-`VITE_HMR_CLIENT_PORT` to its external HTTPS port. These settings change the
-browser's websocket address, not the local frontend/backend listening ports.
-Without overrides, local hot reload remains on `127.0.0.1` and the frontend port.
-The API still needs its exact HTTPS origin in `ALLOWED_ORIGINS` and secure
-cookies; proxy configuration does not grant authentication or data access.
+Choose a verified-unused HTTPS port, then use
+`./start-dev.sh --tailnet-origin https://<node>.<tailnet>.ts.net:$DEV_HTTPS_PORT`
+for the managed Tailscale HTTPS path. Setup, route ownership, diagnostics, and
+its WebSocket limitation are documented in [Tailscale development](tailscale.md).
+Local mode stays on loopback without requiring Tailscale.

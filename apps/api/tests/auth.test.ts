@@ -58,6 +58,26 @@ describe("authentication parity", () => {
     }
   }, 30000);
 
+  it("issues a Secure Lax session cookie only for the configured Tailnet origin", async () => {
+    const origin = "https://node.tailnet.ts.net:8444";
+    const value = setup("tailnet-login", true, { cookieSecure: true, allowedOrigins: [origin] });
+    try {
+      const response = await value.app.handle(new Request(`${origin}/api/auth/login`, {
+        method: "POST", headers: { origin, "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1", role: "staff" }),
+      }));
+      expect(response.status).toBe(200);
+      expect(response.headers.get("set-cookie")).toMatch(/astyx_session=.*HttpOnly.*SameSite=Lax.*Secure/);
+      const rejected = await value.app.handle(new Request(`${origin}/api/auth/login`, {
+        method: "POST", headers: { origin: "https://other.tailnet.ts.net:8444", "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1", role: "staff" }),
+      }));
+      expect(rejected.status).toBe(403);
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
   it("returns the same generic failure for unknown, wrong, inactive, and locked accounts", async () => {
     const value = setup("failures");
     try {

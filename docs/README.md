@@ -4,6 +4,7 @@
 
 - [Repository README](../README.md) — current setup and project overview.
 - [Development notes](development/README.md) — current local workflow.
+- [Tailscale HTTPS development](development/tailscale.md) — optional loopback-only remote development endpoint.
 
 ## Development workflow
 
