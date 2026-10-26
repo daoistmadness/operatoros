@@ -5,6 +5,7 @@ import { defaultAuthConfig, type AuthContext } from "../src/auth/service";
 import { actor } from "../src/domains/core";
 import { createPreview } from "../src/domains/attendance-import";
 import { parseAttendanceWorkbook, readAttendanceWorkbook } from "../src/import/excel-reader";
+import { profileAttendancePreview } from "./attendance-import-stage-profile";
 import { openDatabase } from "@operatoros/db";
 import { createAttendanceImportFixture } from "../tests/fixtures/attendance-imports";
 
@@ -13,6 +14,7 @@ const dbPath = process.env.DB_PATH!;
 const filePath = process.env.FILE_PATH!;
 const filename = process.env.FILE_NAME!;
 const expectedRows = Number(process.env.EXPECTED_ROWS);
+const profileStage = process.env.PROFILE_STAGE === "1";
 const secret = "operatoros-import-preview-benchmark-secret-32";
 const auditDir = `${dbPath}.audit`;
 mkdirSync(auditDir, { recursive: true });
@@ -85,6 +87,10 @@ app.post("/__bench/parse", async ({ body }) => {
 app.post("/__bench/stage", () => {
   if (!staged) throw new Error("stage parser output is missing");
   const started = performance.now();
+  if (profileStage) {
+    const { preview, profile } = profileAttendancePreview(context, staged, filename, checksum, "golden-admin");
+    return { stageMs: performance.now() - started, summary: preview.summary, outputRows: preview.rows.length, profile };
+  }
   const preview = createPreview(context, staged, filename, checksum, "golden-admin");
   return { stageMs: performance.now() - started, summary: preview.summary, outputRows: preview.rows.length };
 });

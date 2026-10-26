@@ -106,6 +106,32 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("stages rows in order and rolls back the preview when a later batch fails", async () => {
+    const value = await setup("staging-batches");
+    try {
+      const identities = [[9001, "Andi"], [9002, "Beta"], [9003, "Citra"], [9101, "Diana"]] as const;
+      const sourceRows = (year: number, month: number) => Array.from({ length: 100 }, (_, index) => {
+        const [id, name] = identities[index % identities.length]!;
+        return [id, name, new Date(Date.UTC(year, month, index + 1)), "07:30", "16:00", "", "", "", "27"];
+      });
+      const invalidRows = (year: number, month: number) => Array.from({ length: 100 }, (_, index) => [null, `No ID ${index}`, new Date(Date.UTC(year, month, index + 1)), "07:30", "16:00", "", "", "", "27"]);
+      const successful = await preview(value.app, value.cookie, await workbook([...sourceRows(2026, 6), ...invalidRows(2026, 6)]), "staging-batches.xlsx");
+      expect(successful.status).toBe(200);
+      const body = await successful.json() as any;
+      expect(body.summary).toMatchObject({ total_rows: 200, logical_rows: 100, new_rows: 100, update_rows: 0, conflicts: 0, invalid_rows: 100 });
+      expect(body.rows.map((item: any) => item.source_row)).toEqual(Array.from({ length: 200 }, (_, index) => index + 2));
+      expect(body.rows.slice(0, 100).map((item: any) => item.student_identifier)).toEqual(Array.from({ length: 100 }, (_, index) => String(identities[index % identities.length]![0])));
+      expect(body.rows.slice(0, 100).every((item: any) => item.classification === "NEW")).toBe(true);
+      expect(body.rows.slice(100).every((item: any) => item.classification === "INVALID")).toBe(true);
+
+      value.database.client.exec("CREATE TRIGGER fail_import_staging_chunk BEFORE INSERT ON attendance_import_rows WHEN NEW.source_row = 192 BEGIN SELECT RAISE(ABORT, 'synthetic staging failure'); END");
+      const failed = await preview(value.app, value.cookie, await workbook([...sourceRows(2027, 0), ...invalidRows(2027, 0)]), "staging-failure.xlsx");
+      expect(failed.status).toBe(400);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_batches").get() as any)?.count)).toBe(1);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_rows").get() as any)?.count)).toBe(200);
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("matches missing-header behavior and applies atomically and idempotently", async () => {
     const value = await setup("commit");
     try {

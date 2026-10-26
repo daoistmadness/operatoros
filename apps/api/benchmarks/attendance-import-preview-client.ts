@@ -71,7 +71,14 @@ if (mode === "stage") {
   response = await fetch(`${base}${route}`, { method: "POST", headers: authenticated ? { cookie, origin } : {}, body: form });
 }
 const workloadMs = performance.now() - workloadStarted;
-const payload = await response.json() as Record<string, unknown>;
+const bodyStarted = performance.now();
+const responseBody = await response.arrayBuffer();
+const responseBodyReadMs = performance.now() - bodyStarted;
+const jsonStarted = performance.now();
+const payload = JSON.parse(new TextDecoder().decode(responseBody)) as Record<string, unknown>;
+const responseJsonParseMs = performance.now() - jsonStarted;
+const previewCompleteMs = performance.now() - workloadStarted;
+if (!response.ok) throw new Error(`workload failed with ${response.status}: ${new TextDecoder().decode(responseBody).slice(0, 1000)}`);
 phase = "settle";
 await sleep(250);
 const metrics = await (await fetch(`${base}/__bench/finish`, { method: "POST" })).json();
@@ -104,8 +111,10 @@ if (response.status !== 200 || rows !== expectedRows || invalidRows !== 0 || (cl
 }
 console.log(JSON.stringify({
   repeat, rows: expectedRows, format, mode, status: response.status, workloadMs,
+  previewCompleteMs, responseBodyReadMs, responseJsonParseMs, responseBodyBytes: responseBody.byteLength,
   parserMs: typeof payload.parserMs === "number" ? payload.parserMs : null,
   stageMs: typeof payload.stageMs === "number" ? payload.stageMs : null,
+  stageProfile: payload.profile ?? null,
   uploadBytes,
   baselinePings: latencySummary(baselinePings.map((sample) => sample.latencyMs)),
   workloadPings: latencySummary(workloadPings.map((sample) => sample.latencyMs)),

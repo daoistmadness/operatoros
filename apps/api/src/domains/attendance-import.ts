@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import type { SQLQueryBindings } from "bun:sqlite";
 import { t } from "elysia";
 import { AttendanceImportCommitRequestSchema } from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
@@ -15,6 +16,11 @@ type Context = any;
 export const ATTENDANCE_IMPORT_CONFIRMATION = "COMMIT_ATTENDANCE_IMPORT";
 const COMMITTABLE = new Set(["NEW", "DIFFERENCE", "UNCHANGED"]);
 const DEVICE_IDENTITY_UNMATCHED = "DEVICE_IDENTITY_UNMATCHED";
+// shortcut: cap statements at 80 rows; raise the cap only after measuring larger statements.
+const IMPORT_STAGING_INSERT_BATCH_SIZE = 80;
+const SQLITE_BIND_PARAMETER_LIMIT = 999;
+const IMPORT_ROW_COLUMNS = "batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id, classification, existing_record, proposed_change, validation_error, warning";
+const INVALID_IMPORT_ROW_COLUMNS = "batch_id, source_row, student_identifier, student_name, attendance_date, classification, validation_error";
 
 class ImportError extends Error {
   constructor(readonly status: number, readonly detail: string | Record<string, unknown>) { super(typeof detail === "string" ? detail : String(detail.message ?? "Import failed")); }
@@ -24,6 +30,18 @@ function rows(client: AuthContext["database"]["client"], query: string, params: 
 function row(client: AuthContext["database"]["client"], query: string, params: any[] = []): Row | null { return (client.query(query).get(...params) as Row | null) ?? null; }
 function json(value: unknown): string | null { return value == null ? null : JSON.stringify(value); }
 function parseJson(value: unknown): any { return value == null || value === "" ? null : typeof value === "string" ? JSON.parse(value) : value; }
+function insertStagedRows(client: AuthContext["database"]["client"], columns: string, values: SQLQueryBindings[][]): void {
+  const width = values[0]?.length;
+  if (width === undefined) return;
+  const batchSize = Math.min(IMPORT_STAGING_INSERT_BATCH_SIZE, Math.floor(SQLITE_BIND_PARAMETER_LIMIT / width));
+  if (batchSize < 1) throw new Error("attendance import row exceeds SQLite's bind parameter limit");
+  for (let offset = 0; offset < values.length; offset += batchSize) {
+    const batch = values.slice(offset, offset + batchSize);
+    const placeholders = batch.map(() => `(${Array.from({ length: width }, () => "?").join(", ")})`).join(", ");
+    client.run(`INSERT INTO attendance_import_rows (${columns}) VALUES ${placeholders}`, batch.flat());
+  }
+  values.length = 0;
+}
 function shortTime(value: unknown): string | null { const text = value == null ? null : String(value); return text ? text.slice(0, 5) : null; }
 function fullTime(value: string | null): string | null { return value ? `${value.slice(0, 5)}:00` : null; }
 function storageTime(value: string | null): string | null { return value ? `${value.slice(0, 5)}:00.000000` : null; }
@@ -148,6 +166,7 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
   const counts = { NEW: 0, UNCHANGED: 0, DIFFERENCE: 0, CONFLICT: 0, INVALID: 0 };
   inTransaction(client, () => {
     client.run("INSERT INTO attendance_import_batches (id, filename, checksum, uploaded_by, total_rows, logical_rows, new_records, update_records, unchanged_records, conflict_records, invalid_records, new_students, status) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 'preview')", [batchId, filename, checksum, username, workbook.totalRows, workbook.rows.length]);
+    const stagedRows: SQLQueryBindings[][] = [];
     for (const entry of workbook.rows) {
       const student = resolveStudent(context, entry.studentIdentifier);
       const existing = student ? row(client, "SELECT * FROM attendance WHERE student_id = ? AND date = ?", [student.id, entry.date]) : null;
@@ -171,16 +190,22 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
         if (classification === "CONFLICT") validationError = "An authorized attendance override exists; changed import evidence requires review.";
         const finalWarning = hasOverride ? [warning, "Administrative override remains authoritative"].filter(Boolean).join("; ") : warning;
         counts[classification as keyof typeof counts]++;
-        client.run("INSERT INTO attendance_import_rows (batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id, classification, existing_record, proposed_change, validation_error, warning) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(before), json(proposed), validationError, finalWarning]);
+        stagedRows.push([batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(before), json(proposed), validationError, finalWarning]);
+        if (stagedRows.length === IMPORT_STAGING_INSERT_BATCH_SIZE) insertStagedRows(client, IMPORT_ROW_COLUMNS, stagedRows);
         continue;
       }
       counts[classification as keyof typeof counts]++;
-      client.run("INSERT INTO attendance_import_rows (batch_id, source_row, student_identifier, student_name, attendance_date, existing_attendance_id, classification, existing_record, proposed_change, validation_error, warning) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(attendancePayload(existing)), json(retryPayload(entry)), validationError, warning]);
+      stagedRows.push([batchId, entry.excelRow, entry.studentIdentifier, entry.studentName, entry.date, existing?.id ?? null, classification, json(attendancePayload(existing)), json(retryPayload(entry)), validationError, warning]);
+      if (stagedRows.length === IMPORT_STAGING_INSERT_BATCH_SIZE) insertStagedRows(client, IMPORT_ROW_COLUMNS, stagedRows);
     }
+    if (stagedRows.length) insertStagedRows(client, IMPORT_ROW_COLUMNS, stagedRows);
+    const invalidRows: SQLQueryBindings[][] = [];
     for (const invalid of workbook.invalidRows) {
       counts.INVALID++;
-      client.run("INSERT INTO attendance_import_rows (batch_id, source_row, student_identifier, student_name, attendance_date, classification, validation_error) VALUES (?, ?, ?, ?, ?, 'INVALID', ?)", [batchId, invalid.excelRow, invalid.noId, invalid.name, invalid.date, invalid.reason]);
+      invalidRows.push([batchId, invalid.excelRow, invalid.noId, invalid.name, invalid.date, "INVALID", invalid.reason]);
+      if (invalidRows.length === IMPORT_STAGING_INSERT_BATCH_SIZE) insertStagedRows(client, INVALID_IMPORT_ROW_COLUMNS, invalidRows);
     }
+    if (invalidRows.length) insertStagedRows(client, INVALID_IMPORT_ROW_COLUMNS, invalidRows);
     client.run("UPDATE attendance_import_batches SET new_records = ?, update_records = ?, unchanged_records = ?, conflict_records = ?, invalid_records = ? WHERE id = ?", [counts.NEW, counts.DIFFERENCE, counts.UNCHANGED, counts.CONFLICT, counts.INVALID, batchId]);
   });
   const batch = row(client, "SELECT * FROM attendance_import_batches WHERE id = ?", [batchId]) as Row;
