@@ -1543,39 +1543,39 @@
       ]
     },
     "source:apps/api/benchmarks/attendance-import-preview-client.ts": {
-      "fingerprint": "c25f7442b675b4222ef65181a2cfa005086abe615a2213f3f4ac9463d111ac51",
+      "fingerprint": "2d7db08c2843c368d92cd9bc551cf8c8bda48990bbbc8c67f531291341420748",
       "snapshot": {
-        "apps/api/benchmarks/attendance-import-preview-client.ts": "54638c9f7f3e204e5e4e3fb66eb532fa8a84713cbd985822fa6a7c20c00250bf"
+        "apps/api/benchmarks/attendance-import-preview-client.ts": "a3a16f1156dd94397a115978dbfbd57f5c64119e5b2caecd142e7dce2bb06f9f"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "899b7d2d090402790877064e159e7037b880f099",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/benchmarks/attendance-import-preview-client.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/benchmarks/attendance-import-preview-client.ts at 899b7d2d090402790877064e159e7037b880f099"
       ]
     },
     "source:apps/api/benchmarks/attendance-import-preview-server.ts": {
-      "fingerprint": "5600e0ccd86512f9c5a5c097f1ce09575637ed611a641596eb7fb4bda8da4a43",
+      "fingerprint": "f6e052905e57abdded1576bf66c7452d05bea7e4e9926959421453197389aaa0",
       "snapshot": {
-        "apps/api/benchmarks/attendance-import-preview-server.ts": "cb6b66fbca569bbe0005f511cdc848fb860d382a4f80c0fc8037aaf1cce1b21c"
+        "apps/api/benchmarks/attendance-import-preview-server.ts": "94781b50cd1d6cac2506448745793fe473c9d801f0db2f60a16082a4d7e00a03"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "899b7d2d090402790877064e159e7037b880f099",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/benchmarks/attendance-import-preview-server.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/benchmarks/attendance-import-preview-server.ts at 899b7d2d090402790877064e159e7037b880f099"
       ]
     },
     "source:apps/api/benchmarks/attendance-import-preview.ts": {
-      "fingerprint": "0883a64f0017980a85aba9f8efcb2f317234b6e7508b404825f5a9b6e81f0555",
+      "fingerprint": "b607217d2f4892efe9b8d721add249bb1a28cd31a33093737666f906bda2f4bc",
       "snapshot": {
-        "apps/api/benchmarks/attendance-import-preview.ts": "887c90d9a43f53aa3573bee8f4dcd5cd4179e70e943e1389be2a7f1a895ddcd4"
+        "apps/api/benchmarks/attendance-import-preview.ts": "d8b5f325b97deaf1517bba5915158ca1b9a46d0a6a7a86c9fc224d63d227de9c"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "899b7d2d090402790877064e159e7037b880f099",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/benchmarks/attendance-import-preview.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/benchmarks/attendance-import-preview.ts at 899b7d2d090402790877064e159e7037b880f099"
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
@@ -1603,15 +1603,15 @@
       ]
     },
     "source:apps/api/tests/attendance-import.test.ts": {
-      "fingerprint": "2cd615db8907998a2560f6877145794c69e8cb55307dfbe72c972e57fbd7b28b",
+      "fingerprint": "e28d60e4180a1108337b9508882dd0cdd4bd582d899c8a4e3fde99d51ccd81a3",
       "snapshot": {
-        "apps/api/tests/attendance-import.test.ts": "0251a433eff72a9e69a6f0f1628279a17489a0d9a2acc510d23276308ef6bb93"
+        "apps/api/tests/attendance-import.test.ts": "db88001172ab32636c4dd99d039c8e813f4f185b4e65774c944a93a6d9ba8ca1"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "899b7d2d090402790877064e159e7037b880f099",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/tests/attendance-import.test.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/tests/attendance-import.test.ts at 899b7d2d090402790877064e159e7037b880f099"
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
@@ -1627,15 +1627,15 @@
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
-      "fingerprint": "a3c1a3f2dbcba6b26b743518d10ab5bbad42e32a4d8c91af379578516ea1c7af",
+      "fingerprint": "ad2825518d161d566108044d8abc2cf8393ace9d42ed9802d4351b7d825cfc49",
       "snapshot": {
-        "docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": "70f2d7a9787d85c2aef522492ed55d15d9ca6f0a8afc16d2cdbf21cec01453b8"
+        "docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": "7530e7fd15d3341b91b1d8861e59156f5b6b6cb7a99880d9c6f19860bb4abe7a"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "899b7d2d090402790877064e159e7037b880f099",
       "outcome": "no-change",
-      "reason": "Rechecked the five-trial benchmark update against the Elysia skill. The new values are importer and Bun Worker measurements recorded in the app architecture document, so reusable Elysia guidance remains unchanged.",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
-        "Changed: docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md at 899b7d2d090402790877064e159e7037b880f099"
       ]
     },
     "source:scripts/fresh-db-parity.sh": {
@@ -1648,6 +1648,30 @@
       "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
       "evidence": [
         "Changed: scripts/fresh-db-parity.sh at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+      ]
+    },
+    "source:apps/api/benchmarks/attendance-import-stage-profile.ts": {
+      "fingerprint": "f350cd1703678d0474dd351752df0dcd80190ab7f4acc868ee6c7fec396bd3ee",
+      "snapshot": {
+        "apps/api/benchmarks/attendance-import-stage-profile.ts": "0fa0b0f2af553f409db1ba216e8ac0386b7134dbb3e050fd867f347a16491068"
+      },
+      "head": "899b7d2d090402790877064e159e7037b880f099",
+      "outcome": "no-change",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
+      "evidence": [
+        "Changed: apps/api/benchmarks/attendance-import-stage-profile.ts at 899b7d2d090402790877064e159e7037b880f099"
+      ]
+    },
+    "source:apps/api/src/domains/attendance-import.ts": {
+      "fingerprint": "2083819f1b3b29fdbe85d417ae7d6b29ba6c3511ab8fc42c3d14124b3447f12b",
+      "snapshot": {
+        "apps/api/src/domains/attendance-import.ts": "07c6c3c064d98b674e57760bae7ddecf32d6e900de1b8ba04bbffbef97d92cb9"
+      },
+      "head": "899b7d2d090402790877064e159e7037b880f099",
+      "outcome": "no-change",
+      "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
+      "evidence": [
+        "Changed: apps/api/src/domains/attendance-import.ts at 899b7d2d090402790877064e159e7037b880f099"
       ]
     }
   }
