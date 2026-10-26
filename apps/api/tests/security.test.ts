@@ -2,8 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { createApp } from "../src/app";
+import { loadConfig } from "../src/config";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { clientIp } from "../src/auth/service";
 import { normalizeOrigin, parseAllowedOrigins, parseTrustedProxyAddresses } from "../src/security/http";
@@ -11,6 +12,31 @@ import { backupSha256, decryptBackup, decryptBackupFileSync, encryptBackup, encr
 
 const keyText = Buffer.alloc(32, 7).toString("base64");
 const otherKeyText = Buffer.alloc(32, 8).toString("base64");
+
+describe("managed development process configuration", () => {
+  it("produces loopback local and exact Tailnet API settings for the actual server config", () => {
+    const dataRoot = mkdtempSync(join(tmpdir(), "operatoros-managed-config-"));
+    const base = { OPERATOROS_DATA_DIR: dataRoot, OPERATOROS_REPOSITORY_ROOT: resolve(process.cwd(), "../.."), HOST: "127.0.0.1", TRUSTED_PROXY_ADDRESSES: "" };
+    try {
+      const local = loadConfig({ ...base, PORT: "8098", COOKIE_SECURE: "false", ALLOWED_ORIGINS: "http://127.0.0.1:5198,http://localhost:5198" });
+      expect(local.hostname).toBe("127.0.0.1");
+      expect(local.port).toBe(8098);
+      expect(local.auth?.cookieSecure).toBe(false);
+      expect(local.auth?.allowedOrigins).toEqual(["http://127.0.0.1:5198", "http://localhost:5198"]);
+      expect(local.auth?.trustedProxyAddresses).toEqual([]);
+
+      const tailnetOrigin = "https://node.tailnet.ts.net:8444";
+      const tailnet = loadConfig({ ...base, PORT: "8099", COOKIE_SECURE: "true", ALLOWED_ORIGINS: tailnetOrigin });
+      expect(tailnet.hostname).toBe("127.0.0.1");
+      expect(tailnet.port).toBe(8099);
+      expect(tailnet.auth?.cookieSecure).toBe(true);
+      expect(tailnet.auth?.allowedOrigins).toEqual([tailnetOrigin]);
+      expect(tailnet.auth?.trustedProxyAddresses).toEqual([]);
+    } finally {
+      rmSync(dataRoot, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("login rate limiting", () => {
   it("limits IP, account, and global dimensions with an injectable clock", () => {
@@ -69,6 +95,21 @@ describe("proxy trust and Origin protection", () => {
     expect(unauthenticatedPost.status).toBe(200);
     const options = await app.handle(new Request("http://local/test-mutate", { method: "OPTIONS", headers: { origin: "http://localhost:5173" } }));
     expect(options.status).toBe(204);
+  });
+
+  it("requires the exact Tailnet Origin for cookie-authenticated POST, PUT, PATCH, and DELETE", async () => {
+    const origin = "https://node.tailnet.ts.net:8444";
+    const app = createApp({ auth: { allowedOrigins: [origin] } }) as any;
+    const handler = () => ({ ok: true });
+    app.post("/tailnet-mutate", handler);
+    app.put("/tailnet-mutate", handler);
+    app.patch("/tailnet-mutate", handler);
+    app.delete("/tailnet-mutate", handler);
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      const headers = { cookie: "astyx_session=synthetic", origin };
+      expect((await app.handle(new Request("https://local/tailnet-mutate", { method, headers }))).status).toBe(200);
+      expect((await app.handle(new Request("https://local/tailnet-mutate", { method, headers: { ...headers, origin: "https://other.tailnet.ts.net:8444" } }))).status).toBe(403);
+    }
   });
 
   it("normalizes exact origins without substring matching", () => {

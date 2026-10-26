@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "1630a5c496314e572e2d245306fb2009da82f353ded38169bed1a42433e1e423",
+      "fingerprint": "1f67aa55c550b2b857bc9af9e03a453de183c84e3f6d3ac2ab861e9fd911034f",
       "snapshot": {
         ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -12,7 +12,7 @@
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "a7fcb3ea87ff0770f508d5ca5d6a476e1672db69b936357ec2727304b00cdc02",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
-        "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
+        "docs/development/README.md": "b97a9026d77312c0607c9bf71adb9f3ae630b18a1bb20793ad7392d6f8fd9edd",
         "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
         "docs/testing/TEST_STRATEGY.md": "23c5be73808cd14a545f43bda8313b288e2fe96b9c4e4b29e6b41f91c20e34a8",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
@@ -44,15 +44,16 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "e8665b21cdd70c26e1c35eebbf970ae00c2c4d72",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "The PR changes only @tanstack/react-query and its matching @tanstack/query-core lockfile resolution; the Elysia skill and planning records are unchanged, and skill validation passes.",
+      "reason": "Reviewed the development launcher and docs changes; they do not change Elysia API guidance or examples.",
       "evidence": [
-        "Changed: bun.lock at e8665b21cdd70c26e1c35eebbf970ae00c2c4d72"
+        "Changed files cover managed development startup, Vite security configuration, tests, and operator documentation.",
+        "The Elysia examples remain unchanged and skill validation passes."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "845aadf2fae17cf159b916e2f05c310ff4c3028d85404089fed583ba9489f777",
+      "fingerprint": "7d5ed0e5fea0d03e6b9341d3b4aa806ea68c534cc632b981b2a1a63db938a010",
       "snapshot": {
         ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -64,7 +65,7 @@
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
         "bun.lock": "a7fcb3ea87ff0770f508d5ca5d6a476e1672db69b936357ec2727304b00cdc02",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
-        "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
+        "docs/development/README.md": "b97a9026d77312c0607c9bf71adb9f3ae630b18a1bb20793ad7392d6f8fd9edd",
         "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
         "docs/testing/TEST_STRATEGY.md": "23c5be73808cd14a545f43bda8313b288e2fe96b9c4e4b29e6b41f91c20e34a8",
         "package.json": "cc957a92e2b1802cc17e8e4a8c2077a3737a57f22f216005a785d21b73e4ac08",
@@ -96,11 +97,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "e8665b21cdd70c26e1c35eebbf970ae00c2c4d72",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "The PR changes only @tanstack/react-query and its matching @tanstack/query-core lockfile resolution; the Elysia skill and planning records are unchanged, and skill validation passes.",
+      "reason": "The candidate changes code, tests, development documentation, and toolchain validation; planning records and generated skill docs are unchanged.",
       "evidence": [
-        "Changed: bun.lock at e8665b21cdd70c26e1c35eebbf970ae00c2c4d72"
+        "No planning or generated Agent Skills files are part of the candidate diff."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -865,15 +866,16 @@
       ]
     },
     "source:apps/api/tests/security.test.ts": {
-      "fingerprint": "b5749e1827827bfae6865f35c67238a130824031c5d5e87b7379683ac193d0b4",
+      "fingerprint": "e1bef4bc720eb966a035feeb8cf7a87c605c48b15d6a7774de35ffe56d411282",
       "snapshot": {
-        "apps/api/tests/security.test.ts": "f56ba354f47a34d71b96574516e98cec374a5e856c01cdf93441cb0b2a1d0d54"
+        "apps/api/tests/security.test.ts": "dfa9506798197727e88a52977bd6c20e811c10cbb7d12818a009a958a2f2e8f9"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed apps/api/tests/security.test.ts; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/tests/security.test.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Reviewed candidate path apps/api/tests/security.test.ts.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:apps/web/src/components/CorrectionSelfConfirmModal.tsx": {
@@ -901,29 +903,29 @@
       ]
     },
     "source:apps/web/src/vite-config.test.js": {
-      "fingerprint": "bf2f7cfb57876b4c0e9a64326c470cf5c07e5acf8fbf1a3197610b19296ed313",
+      "fingerprint": "9600f563f9b11beead641b4508065c987719dbd5b1a3b910501aef74f476f830",
       "snapshot": {
-        "apps/web/src/vite-config.test.js": "38e71219c4804a92738b38ae0cba742b89427182c4daa9e43503416c2130a442"
+        "apps/web/src/vite-config.test.js": "875079029aee504d73f01cfcd00b1c707de3663440e546cfee1471df042cf884"
       },
-      "head": "e7d732e6c140632d765f13803c36cb035ab0f079",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "Removed development-only JSX-in-JS Vite tooling with no remaining consumers; no agent guidance, routing, authentication, API, or metrics behavior changed. Verified identical production build manifest and identical dependency prebundle manifest, plus typecheck, lint, architecture, boundaries, 463 tests, and smoke 8 backend + 50 web scenarios.",
+      "reason": "Reviewed apps/web/src/vite-config.test.js; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: apps/web/src/vite-config.test.js at e7d732e6c140632d765f13803c36cb035ab0f079"
+        "Reviewed candidate path apps/web/src/vite-config.test.js.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:apps/web/vite.config.js": {
-      "fingerprint": "c4ca6d121d955ec498c70d52ce695ffce4671c775f2f239ea1624e3703068387",
+      "fingerprint": "7ac83fab982bbc65f12e040c3f4c2795a8c13b19b15271821fe356e3dce329e8",
       "snapshot": {
-        "apps/web/vite.config.js": "f12933fa30eaf270e29a0692431565bf8b72d850bc9e8ef0355b50c5332b0f17"
+        "apps/web/vite.config.js": "b7077a68a40f6f7c9382c91dbab6c4d9a3723b18b6440b7d01c49a44253eb5fe"
       },
-      "head": "032f22abb0f5debb81fee1d04d50adb4e7529cae",
-      "outcome": "out-of-scope",
-      "reason": "This frontend build configuration is outside the installed Elysia skill's backend coverage. The plugin wiring does not require new project guidance or a reusable skill.",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "outcome": "no-change",
+      "reason": "Reviewed apps/web/vite.config.js; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "intent list reports no frontend or Vite guidance; the only available skill is Elysia backend guidance.",
-        "The Vite diff adds tailwindcss() while preserving existing React, API proxy, host, HMR, build, and Vitest settings.",
-        "Production CSS and all 121 asset hashes match the PostCSS baseline; CSS HMR A/B median was 152.5 ms with PostCSS versus 110.9 ms with Vite across six paired runs."
+        "Reviewed candidate path apps/web/vite.config.js.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:docs/architecture/FRONTEND_ARCHITECTURE.md": {
@@ -1035,15 +1037,16 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "b8c9cbaff848eed055217e31e13242c8bf4882813fc621b43365e50f4e4d79fa",
+      "fingerprint": "4432061392971a8369237ceadffca48e476d1311e8609fca4439999098eccc94",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "63fc703e17a4e043bb2721c6bef6da7d72a6e977805d23cb5427b3255cf6170a"
+        "apps/api/tests/auth.test.ts": "f8650556d0b688b1b7e2d0d56d41341a69fa044e321b06eae4229153cdadf931"
       },
-      "head": "e72cbb04b21c96618772edb494e37ed357645ca5",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "Reviewed the fixture changes in apps/api/tests/auth.test.ts and apps/api/tests/safety.test.ts. They replace hardcoded /tmp paths with Node tmpdir() so the tests follow configured TMPDIR; they do not change agent skills or operating guidance.",
+      "reason": "Reviewed apps/api/tests/auth.test.ts; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: apps/api/tests/auth.test.ts at e72cbb04b21c96618772edb494e37ed357645ca5"
+        "Reviewed candidate path apps/api/tests/auth.test.ts.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
@@ -1373,15 +1376,16 @@
       ]
     },
     "source:mise.toml": {
-      "fingerprint": "35e6ba6a934fdd943a17df33afab44694389978311f54ea4b0b099bc9f2d73b9",
+      "fingerprint": "429cd950686645ff1a7632d09e8eec44b8bcbf20c12a1abc5299a2439b921cb3",
       "snapshot": {
-        "mise.toml": "836a865ffd392df23222fdc0b4718ada33c788b401779a83a3075d11a5f7ba5b"
+        "mise.toml": "fc722b6d5225b98137247263f9e66c9b807cad04b2c9de24edead12b4ad81ed8"
       },
-      "head": "a97a56448ba0c8a9aee7695a005916d684834381",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "Reviewed all affected guidance and planning items for this toolchain-only upgrade. No Elysia skill or planning guidance changes are needed because runtime handlers, Elysia package version, API contracts, and deployment semantics are unchanged; repository and deployment edits only record the verified Bun 1.4.4 pin and commands.",
+      "reason": "Reviewed mise.toml; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: mise.toml at a97a56448ba0c8a9aee7695a005916d684834381"
+        "Reviewed candidate path mise.toml.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:apps/web/tsconfig.json": {
@@ -1457,27 +1461,29 @@
       ]
     },
     "source:scripts/tests/dev-runtime.test.ts": {
-      "fingerprint": "e9c53cfbf6cc9d5dc563bfcd0bc45a8c263600923f1eee781c31da1acdb52b8c",
+      "fingerprint": "46b4a1782ae2fc45e88601c08e167c2c30cb916f5f2a5ba4a9ed8f1ee6cc6e9f",
       "snapshot": {
-        "scripts/tests/dev-runtime.test.ts": "30ee40a4bd0844f43c61988aed55ac5927de45b97f84c6f62702b5e81a47a5d3"
+        "scripts/tests/dev-runtime.test.ts": "b88ca9e96de65e9f27436a04e6f105723d24f5b0b9a1827bfc8b6cf25b8720f2"
       },
-      "head": "97daa728a7922bf4e30d3b5061b713417c5e79eb",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "The changes are limited to Bun path validation and its synthetic runtime regression test; no agent skill content, guidance, exports, or planning records changed, confirmed by the two-file diff.",
+      "reason": "Reviewed scripts/tests/dev-runtime.test.ts; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: scripts/tests/dev-runtime.test.ts at 97daa728a7922bf4e30d3b5061b713417c5e79eb"
+        "Reviewed candidate path scripts/tests/dev-runtime.test.ts.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:scripts/validate-wsl-bun.sh": {
-      "fingerprint": "416e16a6a6fe6728698f6710866f5c5117499ef2b20b7a6551d0d0cc4ee78b13",
+      "fingerprint": "7e52dae00e4cd01a6555805133c19626e71c31f3b551b87f586000d8d1fb4fd4",
       "snapshot": {
-        "scripts/validate-wsl-bun.sh": "8853cbd6fe0f5e753729d7cf4cd4ba833ef8fcdd34da2451ecf91f198b390045"
+        "scripts/validate-wsl-bun.sh": "b9dc719891afa9b8f1b03400ec591b16d24cd0418d3d6776be87202a1ddf0bf2"
       },
-      "head": "97daa728a7922bf4e30d3b5061b713417c5e79eb",
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
       "outcome": "no-change",
-      "reason": "The changes are limited to Bun path validation and its synthetic runtime regression test; no agent skill content, guidance, exports, or planning records changed, confirmed by the two-file diff.",
+      "reason": "Reviewed scripts/validate-wsl-bun.sh; it does not change registered Agent Skills or generated skill documentation.",
       "evidence": [
-        "Changed: scripts/validate-wsl-bun.sh at 97daa728a7922bf4e30d3b5061b713417c5e79eb"
+        "Reviewed candidate path scripts/validate-wsl-bun.sh.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     },
     "source:apps/api/tests/backup-retention.test.ts": {
@@ -1672,6 +1678,58 @@
       "reason": "Reviewed all seven PR files; none changes packages/agent-skills guidance or generated skill documentation.",
       "evidence": [
         "Changed: apps/api/src/domains/attendance-import.ts at 899b7d2d090402790877064e159e7037b880f099"
+      ]
+    },
+    "source:docs/README.md": {
+      "fingerprint": "47b2295e8efba0b3b0a31b1388f70fce2a95d1a565a9c2a0e35ae56e20e40fc1",
+      "snapshot": {
+        "docs/README.md": "24cc145a8aabccc397306468a5663ed8244c947b8a7a5573a4c01caf9b2f4e86"
+      },
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "outcome": "no-change",
+      "reason": "Reviewed docs/README.md; it does not change registered Agent Skills or generated skill documentation.",
+      "evidence": [
+        "Reviewed candidate path docs/README.md.",
+        "No Agent Skills guidance or generated skill documentation is changed."
+      ]
+    },
+    "source:docs/development/tailscale.md": {
+      "fingerprint": "596b273056516773669512c9cf7f82516493bd93353aa85d8659ebeb3742d121",
+      "snapshot": {
+        "docs/development/tailscale.md": "646513973b69274de5cf3da71ff5a5330236c768d2a0c3ccd55829b5976253a9"
+      },
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "outcome": "no-change",
+      "reason": "Reviewed docs/development/tailscale.md; it does not change registered Agent Skills or generated skill documentation.",
+      "evidence": [
+        "Reviewed candidate path docs/development/tailscale.md.",
+        "No Agent Skills guidance or generated skill documentation is changed."
+      ]
+    },
+    "source:scripts/operatoros-dev-runtime.ts": {
+      "fingerprint": "06023320a34c5f51a3fd4366178e28547efca22a3e3ddc6cec3b0a9cf82532c0",
+      "snapshot": {
+        "scripts/operatoros-dev-runtime.ts": "313a4b02c7388b3d5a31247239b6bcc3b9cc7007c156b1634878f8983a092d8a"
+      },
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "outcome": "no-change",
+      "reason": "Reviewed scripts/operatoros-dev-runtime.ts; it does not change registered Agent Skills or generated skill documentation.",
+      "evidence": [
+        "Reviewed candidate path scripts/operatoros-dev-runtime.ts.",
+        "No Agent Skills guidance or generated skill documentation is changed."
+      ]
+    },
+    "source:start-dev.sh": {
+      "fingerprint": "9a0969b40bd67614072853c94af4410e8a1553bd085423e28d61a64089166cac",
+      "snapshot": {
+        "start-dev.sh": "8fcc5a25c4245b567cd570bc58d4c49916a7d20f9776f486d20aebdf673dd849"
+      },
+      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "outcome": "no-change",
+      "reason": "Reviewed start-dev.sh; it does not change registered Agent Skills or generated skill documentation.",
+      "evidence": [
+        "Reviewed candidate path start-dev.sh.",
+        "No Agent Skills guidance or generated skill documentation is changed."
       ]
     }
   }

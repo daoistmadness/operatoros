@@ -15,26 +15,50 @@ if (!Number.isInteger(backendPort) || backendPort < 1 || backendPort > 65535) {
   throw new Error(`Invalid BACKEND_PORT: ${rawBackendPort}`);
 }
 
-const hmrHost = process.env.VITE_HMR_HOST?.trim() || '127.0.0.1';
-const hmrProtocol = process.env.VITE_HMR_PROTOCOL?.trim() || undefined;
+const loopback = '127.0.0.1';
+const frontendHost = process.env.FRONTEND_HOST || loopback;
+const backendHost = process.env.BACKEND_HOST || loopback;
+for (const [name, value] of [['FRONTEND_HOST', frontendHost], ['BACKEND_HOST', backendHost], ['HOST', process.env.HOST || loopback]]) {
+  if (value !== loopback) throw new Error(`${name} must be ${loopback} for development`);
+}
+const hmrHost = process.env.VITE_HMR_HOST?.trim() || loopback;
+const hmrProtocol = process.env.VITE_HMR_PROTOCOL?.trim() || 'ws';
 const rawHmrClientPort = process.env.VITE_HMR_CLIENT_PORT?.trim();
-const hmrClientPort = rawHmrClientPort ? Number(rawHmrClientPort) : undefined;
-const frontendHost = process.env.FRONTEND_HOST || '127.0.0.1';
-if (hmrProtocol && !['ws', 'wss'].includes(hmrProtocol)) {
+const hmrClientPort = rawHmrClientPort ? Number(rawHmrClientPort) : frontendPort;
+const tailnetHost = process.env.VITE_TAILNET_HOST?.trim().toLowerCase();
+if (!['ws', 'wss'].includes(hmrProtocol)) {
   throw new Error('VITE_HMR_PROTOCOL must be ws or wss');
 }
-if (hmrClientPort !== undefined && (!Number.isInteger(hmrClientPort) || hmrClientPort < 1 || hmrClientPort > 65535)) {
+if (!Number.isInteger(hmrClientPort) || hmrClientPort < 1 || hmrClientPort > 65535) {
   throw new Error('VITE_HMR_CLIENT_PORT must be an integer from 1 to 65535');
 }
+if (tailnetHost && !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+ts\.net$/.test(tailnetHost)) {
+  throw new Error('VITE_TAILNET_HOST must be one exact *.ts.net hostname');
+}
+if (process.env.__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS?.trim()) {
+  throw new Error('__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS is not allowed for managed development');
+}
+if (process.env.VITE_API_BASE_URL?.trim()) {
+  throw new Error('VITE_API_BASE_URL must be empty for same-origin development API requests');
+}
+if (tailnetHost) {
+  if (hmrHost !== tailnetHost || hmrProtocol !== 'wss' || !rawHmrClientPort) {
+    throw new Error('Tailnet HMR must use the exact Tailnet host, wss, and an explicit HTTPS client port');
+  }
+} else if (hmrHost !== loopback || hmrProtocol !== 'ws' || hmrClientPort !== frontendPort) {
+  throw new Error('Local HMR must use loopback ws on FRONTEND_PORT');
+}
 
-const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || `http://127.0.0.1:${backendPort}`;
-const apiProxy = {
-  '/api': {
+const expectedProxyTarget = `http://${loopback}:${backendPort}`;
+const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || expectedProxyTarget;
+if (devApiProxyTarget !== expectedProxyTarget) {
+  throw new Error(`DEV_API_PROXY_TARGET must match BACKEND_PORT: ${expectedProxyTarget}`);
+}
+const apiProxy = Object.fromEntries(['/api', '/health', '/ready', '/openapi'].map((path) => [path, {
     target: devApiProxyTarget,
     changeOrigin: true,
     secure: false,
-  },
-};
+  }]));
 
 // vite.config.js
 // Vite development server with API proxy and Vitest configuration.
@@ -48,8 +72,9 @@ export default defineConfig({
     host: frontendHost,
     port: frontendPort,
     strictPort: true,
+    allowedHosts: tailnetHost ? [tailnetHost] : undefined,
     clearScreen: false,
-    hmr: {
+    ws: {
       host: hmrHost,
       port: frontendPort,
       protocol: hmrProtocol,
