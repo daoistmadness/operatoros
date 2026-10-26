@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { createStaffEducation, deleteStaffEducation, fetchJenjangOptions, fetchSensitiveStaff, fetchStaffDetail, fetchStaffHistory, replaceStaffJenjangs, updateStaffEducation, updateStaffEmployment, type EducationRecord } from "../api/staff";
 import { useAuth } from "../context/AuthContext";

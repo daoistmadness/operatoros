@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { ClassEarlyDeparture } from "../ClassEarlyDeparture";
 import { DismissalPolicies } from "../DismissalPolicies";

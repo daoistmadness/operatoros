@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { ArrowLeft, Edit, Link2, MoveRight } from "lucide-react";
 import { useAddStudentGuardian, useCreateEnrollment, useDeleteStudentGuardian, useEndEnrollment, useLegacyLinkStatus, useLinkLegacyStudent, useReassignDevice, useReplaceDevice, useRetireDevice, useStudent, useStudentEnrollments, useStudentHistory, useStudentOverview, useTransferEnrollment, useUpdateStudent, useUpdateStudentDocuments, useUpdateStudentGuardian, useUpdateStudentHealth } from "../hooks/useStudentQueries";
 import { PageHeader } from "../components/common/page-header";

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import { useTable, flexRender, createColumnHelper, rowPaginationFeature, columnVisibilityFeature, tableFeatures } from "@tanstack/react-table";
 import type { StudentTrendInsightsResponse, StudentTrendMetric } from "@operatoros/contracts/analytics";
 import { Button } from "../components/ui/button";

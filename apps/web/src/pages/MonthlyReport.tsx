@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { MonthlyReportResponse, ReportFiltersResponse, ReportQuery, ReportScope } from "../api/reports";
 import { downloadReportBlob, exportMonthlyReport } from "../api/reports";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";

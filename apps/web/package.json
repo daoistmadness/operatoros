@@ -23,10 +23,10 @@
     "clsx": "2.1.1",
     "framer-motion": "11.18.2",
     "lucide-react": "0.471.2",
-    "react": "19.2.4",
+    "react": "19.2.7",
     "react-chartjs-2": "5.3.1",
-    "react-dom": "19.2.4",
-    "react-router-dom": "7.18.2",
+    "react-dom": "19.2.7",
+    "react-router": "8.5.0",
     "tailwind-merge": "2.6.1"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 
 export function ReportCompatibilityRedirect({ view }: { view: "monthly" | "annual" | "term-review" }) {
   const location = useLocation();

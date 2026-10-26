@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 import { Download, Search, UserRound } from "lucide-react";
 import { downloadStaffExcel, fetchJenjangOptions, fetchStaff, fetchStaffAnalytics, fetchStaffPositions } from "../api/staff";
 import { useAuth } from "../context/AuthContext";

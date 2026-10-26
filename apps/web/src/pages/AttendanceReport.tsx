@@ -16,7 +16,7 @@ import { NativeSelect } from "../components/ui/native-select";
 import { useAttendanceAnalyticsOptionsQuery } from "../hooks/useAttendanceAnalyticsQueries";
 import { useAttendanceEffectiveTermsQuery } from "../hooks/useAnalyticsQueries";
 import { useReportFilters } from "../hooks/useReportQueries";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 const PERIOD_TYPES = [
   { value: "month", label: "Bulanan" },
