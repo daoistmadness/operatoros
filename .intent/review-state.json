@@ -2865,16 +2865,17 @@
       ]
     },
     "source:.github/scripts/check-changelog.ts": {
-      "fingerprint": "b9b4cb74d9a52b1d8a7736581e4eefbe3abf7e9e07a9231c775843c138f1651b",
+      "fingerprint": "99cd670409d592cc96af437879f3e642803c81705d9c054dff8c39c8e6365c6f",
       "snapshot": {
-        ".github/scripts/check-changelog.ts": "7f5f92b7e358f9b598a333340de50c466383cc1be284043d9a39e6cad7a5e32d"
+        ".github/scripts/check-changelog.ts": "55647b4cb12022ea5b13c7f51e2de51cfca8bbeb1acf793023592fdc5ca86621"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "head": "69e00da3460f9fe3b9adf7839d2c377900ffa894",
       "outcome": "out-of-scope",
       "reason": "The changelog gate is repository documentation automation and does not affect Elysia implementation guidance.",
       "evidence": [
         ".github/scripts/check-changelog.ts",
-        "scripts/tests/docs-checkers.test.ts"
+        "Local PR event check passes with the exact base SHA",
+        "bun test scripts/tests/docs-checkers.test.ts passed"
       ]
     },
     "source:.github/scripts/check-current-developer-docs.ts": {
@@ -5087,16 +5088,16 @@
       ]
     },
     "source:.audit/docs-restructure-decisions.tsv": {
-      "fingerprint": "e0f7fd83a959cdd0720693d3eb8d64ff4a93193c0086a134db66fedc22881a01",
+      "fingerprint": "7b64eb365add8822fbcf65d1dfd5ea25b65921464c516955266db470663fbf4d",
       "snapshot": {
-        ".audit/docs-restructure-decisions.tsv": "735ef96e9dc1a45cb7106550a0a613e8f9065537c51042d43d961d8e7687400a"
+        ".audit/docs-restructure-decisions.tsv": "57015208cf72fbe58920ba82fa1103e14b702ecf0ce60e8f34c7a0c50c37486b"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
+      "head": "69e00da3460f9fe3b9adf7839d2c377900ffa894",
       "outcome": "out-of-scope",
-      "reason": "This is a committed audit trail for the repository documentation PR, not Elysia source or guidance.",
+      "reason": "This is the audit trail for repository documentation checks, not Elysia source or guidance.",
       "evidence": [
         ".audit/docs-restructure-decisions.tsv",
-        "The entries cover documentation checks and review decisions only"
+        "The new entry records the shallow-checkout changelog fix"
       ]
     }
   }

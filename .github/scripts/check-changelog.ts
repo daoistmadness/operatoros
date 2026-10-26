@@ -37,7 +37,7 @@ if (import.meta.main) {
     pull_request: { labels?: { name: string }[]; base: { sha: string } };
   };
   const base = Bun.env.CHANGELOG_BASE_SHA || event.pull_request.base.sha;
-  const diff = Bun.spawnSync(["git", "diff", "--name-only", `${base}...HEAD`], { cwd: root, stdout: "pipe", stderr: "pipe" });
+  const diff = Bun.spawnSync(["git", "diff", "--name-only", base, "HEAD"], { cwd: root, stdout: "pipe", stderr: "pipe" });
   if (diff.exitCode !== 0) {
     console.error(diff.stderr.toString() || "Could not inspect pull request changes");
     process.exit(1);
