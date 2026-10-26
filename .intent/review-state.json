@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "91e670e78f03710333747abede5ec2fbe6ec076133ea49c14c380542e236e7dd",
+      "fingerprint": "1630a5c496314e572e2d245306fb2009da82f353ded38169bed1a42433e1e423",
       "snapshot": {
         ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
         "AGENTS.md": "33d28d0cdf520cfbc5ec09237d4b8db8854d98c045b4def272d9871ab7c03c6d",
         "CONTRIBUTING.md": "c67ffba22e997c121c5f05e520f760d47edaea24f2001d362e9f534bbd38fcda",
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
-        "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
+        "bun.lock": "a7fcb3ea87ff0770f508d5ca5d6a476e1672db69b936357ec2727304b00cdc02",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
         "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
@@ -44,15 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
+      "head": "e8665b21cdd70c26e1c35eebbf970ae00c2c4d72",
       "outcome": "no-change",
-      "reason": "Reviewed the changed toolchain guidance against the Elysia skill; the skill directs readers to inspect the project lockfile and does not prescribe repository Bun or TypeScript versions.",
+      "reason": "The PR changes only @tanstack/react-query and its matching @tanstack/query-core lockfile resolution; the Elysia skill and planning records are unchanged, and skill validation passes.",
       "evidence": [
-        "Reviewed packages/agent-skills/skills/elysiajs/SKILL.md and its linked version and runtime references; they remain accurate for Elysia guidance."
+        "Changed: bun.lock at e8665b21cdd70c26e1c35eebbf970ae00c2c4d72"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "c5a96f99db74234617e83143bb4bbf035ad321147572bfd5eecec4b0e29e24be",
+      "fingerprint": "845aadf2fae17cf159b916e2f05c310ff4c3028d85404089fed583ba9489f777",
       "snapshot": {
         ".github/CI.md": "f3d28d1198a4bad1345dde6a90804cfe08f869ef4ab693078ae222bc0943798c",
         ".github/workflows/ci.yml": "4403b879532a7fcb0a6cb16c0fefa82211cf645892ed34cb1130e21e46660bdf",
@@ -62,7 +62,7 @@
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
         "_artifacts/skill_tree.yaml": "dd5a59bd8792ac70f9e203a056cf81f55bbe3f2880bb7f168bab263c2d4065ac",
         "apps/api/package.json": "ef6da25fb2f376f0ce3673adc8994e463758502fd0ca838799a413c8dff6fe38",
-        "bun.lock": "06d8e56a994148c657fe7d456b972cfa7c6381edaa37e632462433ac09dad63e",
+        "bun.lock": "a7fcb3ea87ff0770f508d5ca5d6a476e1672db69b936357ec2727304b00cdc02",
         "docs/architecture/change-safety-golden-path.md": "0764d6f4d4b813ac993e00caef01675779cbc73608dcb0f38e4f0d3a597e1972",
         "docs/development/README.md": "72062b642bae530efd0fa98451155234807a12c3e79c4fb783dd48965c09b5a1",
         "docs/security/SECURITY_HARDENING.md": "b7641612210431fdd4237d7890c8295aeeb1e90600016d97ee4ff9c48f0f3bca",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "5d45f516bbf4b1eaa78a897806e64950df57f7bab3036ccdb2c9e76c6cf8f404"
       },
-      "head": "df4f15d59eb4e97fd74abb5571dc8a9c614d88fa",
+      "head": "e8665b21cdd70c26e1c35eebbf970ae00c2c4d72",
       "outcome": "no-change",
-      "reason": "The Bun and TypeScript documentation reconciliation does not change agent-skill scope, ownership, or planning records.",
+      "reason": "The PR changes only @tanstack/react-query and its matching @tanstack/query-core lockfile resolution; the Elysia skill and planning records are unchanged, and skill validation passes.",
       "evidence": [
-        "Reviewed the changed toolchain documentation and the _artifacts planning maps; no skill taxonomy or ownership changed."
+        "Changed: bun.lock at e8665b21cdd70c26e1c35eebbf970ae00c2c4d72"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
