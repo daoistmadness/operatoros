@@ -75,6 +75,16 @@ test("configuration, symlink roles, and dotenv decisions use TS authority", () =
   write(join(f.root, "test.env"), "# DATABASE_URL=hidden\n export DATABASE_URL = secret-not-for-output\n");
   expect(cli(f, "dotenv-database-url", ["--env-file", join(f.root, "test.env")]).stdout).toBe("true");
 });
+test("non-Git runtime actions do not invoke Git", () => {
+  const f = fixture(), bin = join(f.root, "bin"), marker = join(f.root, "git-called");
+  mkdirSync(bin);
+  const fakeGit = join(bin, "git");
+  write(fakeGit, '#!/bin/sh\nprintf called >> "$GIT_CALL_LOG"\n');
+  chmodSync(fakeGit, 0o755);
+  const result = cli(f, "random-secret", [], { PATH: `${bin}:${env.PATH}`, GIT_CALL_LOG: marker });
+  expect(result.code).toBe(0);
+  expect(existsSync(marker)).toBe(false);
+});
 test("Bun validation and launcher preparation use mise's selected executable", () => {
   const root = mkdtempSync(join(tmpdir(), "operatoros-bun-resolution-test-")); roots.push(root);
   const repo = join(root, "repo"), staleBin = join(root, "stale"), selectedBin = join(root, "selected"), tools = join(root, "tools");

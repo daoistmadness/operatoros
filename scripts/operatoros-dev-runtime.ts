@@ -17,8 +17,13 @@ const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 const contained = (path: string, root: string) => { const value = relative(root, path); return value === "" || (value !== ".." && !value.startsWith("../") && !isAbsolute(value)); };
 const now = () => new Date().toISOString();
 const canonical = (path: string) => existsSync(path) ? realpathSync(path) : resolve(path);
-const gitEnv = { ...process.env };
-for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete gitEnv[key];
+let gitEnv: typeof process.env | undefined;
+function sanitizedGitEnv() {
+  if (gitEnv) return gitEnv;
+  const environment = { ...process.env };
+  for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete environment[key];
+  return gitEnv = environment;
+}
 
 function command(parts: string[], env = process.env): string | undefined {
   try {
@@ -26,7 +31,7 @@ function command(parts: string[], env = process.env): string | undefined {
     return result.exitCode === 0 ? result.stdout.toString().trim() : undefined;
   } catch { return undefined; }
 }
-function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args], gitEnv); }
+function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args], sanitizedGitEnv()); }
 function commonDir(repo: string): string {
   const value = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir");
   if (!value) throw new Error("SESSION_REGISTRY_UNAVAILABLE");
