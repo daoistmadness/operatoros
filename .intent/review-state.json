@@ -1170,15 +1170,15 @@
       ]
     },
     "source:apps/web/src/lib/api/client.ts": {
-      "fingerprint": "9e6687daee1a2fad49b4b2563c43d7056d66a09d78778c95b64d264f6b47f03a",
+      "fingerprint": "e0c06f0ef01828d55b61ce21f17167c3c8ad61ebaeac99f3c2b6f4269a00b4f0",
       "snapshot": {
-        "apps/web/src/lib/api/client.ts": "a29f1acde6c116689e9fe3e1e4e3c3014799e1e2b497137f8ba0bd97baea62fb"
+        "apps/web/src/lib/api/client.ts": "c83e24de4fa63fc9e8fb69fe459a1b08c8cfd49ff4881ebf6416f3f484766d99"
       },
-      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
       "outcome": "no-change",
-      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
+      "reason": "These API and browser tests do not change agent skill guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/client.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
+        "Changed: apps/web/src/lib/api/client.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     },
     "source:apps/web/postcss.config.mjs": {
@@ -5557,15 +5557,15 @@
       ]
     },
     "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
-      "fingerprint": "16271535b95b738f25ecb68272af325970efc6d09e3c5e0af62d64cde656980b",
+      "fingerprint": "d01e9f4b4e0d862351e5230995d3d1d4c5af83d404fa13db206aa65c1da6f105",
       "snapshot": {
-        "apps/web/src/features/operator-work-queue/api/operator.ts": "0b462e5e42bf5f476069a4b098bf6cdfb670dc20c5b372d400bbd581a7439bbe"
+        "apps/web/src/features/operator-work-queue/api/operator.ts": "22aced1601a1e4f808c3f6c7a3f0360de9d96a57d2c94e9b84436c904009d1e0"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "These API and browser tests do not change agent skill guidance.",
       "evidence": [
-        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     },
     "source:apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": {
@@ -5825,15 +5825,15 @@
       ]
     },
     "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
-      "fingerprint": "4ec3d2b81d82aa99037d4fa221bf0c5e7dc2372f008d602a2f11ab248d1b770d",
+      "fingerprint": "9ce69ca5e96a4b740635d8a7f171c9be7cb52ac40c1c329e19dc9e9706dea506",
       "snapshot": {
-        "e2e/smoke/web/student-administration-phase56.spec.ts": "e51f7b8e3c6e6b5b0617b2ef634059c2188c8473e724288a52b3cffd501a459f"
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "4a06c9230ac3636b8d0bee332c69f7c85662de1a1e7d62ca8bf7d42345e5becf"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "These API and browser tests do not change agent skill guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     },
     "source:packages/db/src/s54-migration.sql": {
@@ -5846,6 +5846,42 @@
       "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
         "Changed: packages/db/src/s54-migration.sql at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/api/operator.contract.test.ts": {
+      "fingerprint": "27ab9ddd70f10292d26e1fd3f7e3e4217e568a777eba811a91dd20d2074b88b8",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/api/operator.contract.test.ts": "064a21cd44a56d2dfe828f8a1dff0a364849019a61b25b771e612e6f98529de1"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.contract.test.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/web/src/lib/api/followups.contract.test.ts": {
+      "fingerprint": "d7272857a156691d4f01609099d24085133c0cd3b3bce8c3faed7b980c2ce776",
+      "snapshot": {
+        "apps/web/src/lib/api/followups.contract.test.ts": "944760b24a2e550b60e059f8c04431958872f042213342aa2cca6e21dd5bc470"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/followups.contract.test.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/web/src/lib/api/followups.ts": {
+      "fingerprint": "53300282a90d985b948444e22a1c892c7bf945dcdc7b06e992c306e4bebefb4c",
+      "snapshot": {
+        "apps/web/src/lib/api/followups.ts": "077b672e2f10f6d6f078ffd7ef98d9a4e75f9b1945b925432dd432805284c8e7"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/followups.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     }
   }
