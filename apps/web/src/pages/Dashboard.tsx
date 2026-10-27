@@ -145,7 +145,7 @@ export default function Dashboard() {
       <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
 
       {/* Annual BOSP Reminder Banner */}
-      {bospQuery.data && (
+      {bospQuery.data?.is_in_notice_window && (
         <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/30">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -198,6 +198,8 @@ export default function Dashboard() {
       )}
 
       {/* Operational Dashboard Overview (Module E) */}
+      {overviewQuery.isPending && <LoadingState title="Memuat ringkasan operasional" description="Menghitung status siswa, PTK, dan laporan bulan ini." />}
+      {overviewQuery.isError && <ErrorState title="Ringkasan operasional tidak dapat dimuat" description="Data kehadiran tetap tersedia. Coba muat ulang ringkasan operasional."><Button onClick={() => void overviewQuery.refetch()}>Coba lagi</Button></ErrorState>}
       {overviewQuery.data && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -227,14 +229,14 @@ export default function Dashboard() {
               title="Staf / PTK Aktif"
               value={overviewQuery.data.staff.active_count}
               icon={<UsersIcon size={24} className="text-sky-600" />}
-              trend={`Aktivitas Bulanan: ${overviewQuery.data.staff.monthly_ptk_completed_count} Selesai, ${overviewQuery.data.staff.monthly_ptk_pending_count} Pending`}
+              trend={`PTK ${overviewQuery.data.staff.monthly_ptk_completed_count}/${overviewQuery.data.staff.monthly_ptk_applicable_count} selesai; ${overviewQuery.data.staff.monthly_ptk_pending_count} pending, ${overviewQuery.data.staff.monthly_ptk_needs_correction_count} koreksi`}
               iconBgColor="bg-sky-50"
             />
             <StatCard
               title="Laporan UPP Bulanan"
-              value={overviewQuery.data.upp.has_workbook ? (overviewQuery.data.upp.status ?? "UPLOADED") : "Belum Ada File"}
+              value={`${overviewQuery.data.upp.uploaded_count}/${overviewQuery.data.upp.expected_count} diunggah`}
               icon={<FileSpreadsheet size={24} className="text-amber-600" />}
-              trend={`Periode ${overviewQuery.data.upp.current_period}`}
+              trend={`${overviewQuery.data.upp.awaiting_submission_count} menunggu pengiriman · ${overviewQuery.data.upp.submitted_count} terkirim · ${overviewQuery.data.upp.current_period}`}
               iconBgColor="bg-amber-50"
             />
           </div>

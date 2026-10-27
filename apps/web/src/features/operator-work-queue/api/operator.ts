@@ -1,4 +1,5 @@
 import { apiRequest } from '../../../lib/api/client';
+import type { BospReminderStatusResponse, DashboardOperationalOverviewResponse } from '@operatoros/contracts';
 
 export type DeploymentMode = 'single_user_offline' | 'multi_user';
 
@@ -50,39 +51,6 @@ export type SelfConfirmCorrectionPayload = {
   expected_version: number;
   confirmation: string;
   confirmation_note: string;
-};
-
-export type DashboardOperationalOverviewResponse = {
-  students: {
-    active_count: number;
-    nisn_inputted_count: number;
-    nisn_not_inputted_count: number;
-    pending_verification_count: number;
-  };
-  staff: {
-    active_count: number;
-    monthly_ptk_completed_count: number;
-    monthly_ptk_pending_count: number;
-  };
-  upp: {
-    current_period: string;
-    status: string | null;
-    has_workbook: boolean;
-    submitted_at: string | null;
-  };
-};
-
-export type BospReminderStatusResponse = {
-  calendar_year: number;
-  cutoff_date: string;
-  advance_notice_days: number;
-  is_in_notice_window: boolean;
-  days_remaining: number;
-  is_acknowledged: boolean;
-  acknowledged_at: string | null;
-  acknowledged_by: string | null;
-  notes: string | null;
-  is_blocking: boolean;
 };
 
 export async function fetchDeploymentMode(): Promise<DeploymentModeResponse> {

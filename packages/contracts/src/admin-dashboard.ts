@@ -9,14 +9,17 @@ export const DashboardOperationalOverviewSchema = Type.Object({
   }),
   staff: Type.Object({
     active_count: Type.Integer(),
+    monthly_ptk_applicable_count: Type.Integer(),
     monthly_ptk_completed_count: Type.Integer(),
     monthly_ptk_pending_count: Type.Integer(),
+    monthly_ptk_needs_correction_count: Type.Integer(),
   }),
   upp: Type.Object({
     current_period: Type.String(),
-    status: Type.Union([Type.String(), Type.Null()]),
-    has_workbook: Type.Boolean(),
-    submitted_at: Type.Union([Type.String(), Type.Null()]),
+    expected_count: Type.Integer(),
+    uploaded_count: Type.Integer(),
+    awaiting_submission_count: Type.Integer(),
+    submitted_count: Type.Integer(),
   }),
 });
 
