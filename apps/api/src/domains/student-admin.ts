@@ -113,7 +113,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
       if (!user) return { detail: "Insufficient permissions" };
 
       const client = context.database.client;
-      const student = row(client, "SELECT id, nik FROM student_masters WHERE id = ?", [params.student_master_id]);
+      const student = row(client, "SELECT id, nik, kk FROM student_masters WHERE id = ?", [params.student_master_id]);
       if (!student) return error(set, 404, "Student master not found");
 
       const { identifier_type, verification_status, notes, correction_reason } = body;
@@ -130,7 +130,8 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
           );
           const fromStatus = (existing?.verification_status ?? "UNVERIFIED") as IdentityVerificationStatus;
           if (!canTransitionIdentity(fromStatus, verification_status)) return { error: "transition" as const };
-          if (identifier_type === "NIK" && ["IDENTIFIER_ENTERED", "VERIFIED"].includes(verification_status) && !String(student.nik ?? "").trim()) {
+          const identifierValue = identifier_type === "NIK" ? student.nik : student.kk;
+          if (["IDENTIFIER_ENTERED", "VERIFIED"].includes(verification_status) && !String(identifierValue ?? "").trim()) {
             return { error: "identifier" as const };
           }
           if (verification_status === "VERIFIED" && fromStatus !== "IDENTIFIER_ENTERED") return { error: "transition" as const };

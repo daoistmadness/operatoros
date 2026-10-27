@@ -303,6 +303,9 @@ describe("Bun S4.6 through S5.3 migrations", () => {
       expect(migrated.client.query("SELECT student_master_id,to_status,changed_by FROM student_identity_verification_history").all()).toEqual([
         { student_master_id: "synthetic-student-s52", to_status: "UNVERIFIED", changed_by: "synthetic-admin" },
       ]);
+      expect(migrated.client.query("SELECT kk FROM student_masters WHERE id='synthetic-student-s52'").get()).toEqual({ kk: null });
+      migrated.client.run("UPDATE student_masters SET kk='SYNTHETIC-KK-0001' WHERE id='synthetic-student-s52'");
+      expect(migrated.client.query("SELECT kk FROM student_masters WHERE id='synthetic-student-s52'").get()).toEqual({ kk: "SYNTHETIC-KK-0001" });
       expect(() => migrated.client.run("UPDATE student_identity_verifications SET verification_status='VERIFIED' WHERE student_master_id='synthetic-student-s52'")).toThrow("STUDENT_IDENTITY_VERIFICATION_INVALID_TRANSITION");
       expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({
         version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s52",

@@ -113,6 +113,18 @@ it("tracks distinct NIK and KK entry, verification, correction, and audit states
     env.database.client.run("INSERT INTO student_document_statuses (student_master_id, family_card_received) VALUES (?, 1)", [env.studentId]);
     expect((await (await env.app.handle(request("GET", `/api/student-masters/${env.studentId}/identity-verifications`, env.session))).json() as any).verifications).toHaveLength(0);
 
+    const missingKkEntry = await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/identity-verifications`, env.session, JSON.stringify({
+      identifier_type: "KK",
+      verification_status: "IDENTIFIER_ENTERED",
+    })));
+    expect(missingKkEntry.status).toBe(409);
+    const setKk = await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/profile`, env.session, JSON.stringify({
+      identity: { full_name: "Synthetic Student", kk: "SYNTHETIC-KK-0001" },
+    })));
+    expect(setKk.status).toBe(200);
+    const adminProfile = await env.app.handle(request("GET", `/api/student-masters/${env.studentId}/profile`, env.session));
+    expect((await adminProfile.json() as any).identity.kk).toBe("SYNTHETIC-KK-0001");
+
     const prematureNik = await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/identity-verifications`, env.session, JSON.stringify({
       identifier_type: "NIK",
       verification_status: "VERIFIED",
@@ -186,6 +198,7 @@ it("tracks distinct NIK and KK entry, verification, correction, and audit states
     for (const a of audits) {
       const metadataStr = String(a.metadata || "");
       expect(metadataStr.includes("SYNTHETIC-NIK-0001")).toBe(false);
+      expect(metadataStr.includes("SYNTHETIC-KK-0001")).toBe(false);
     }
 
     const changedNik = await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/profile`, env.session, JSON.stringify({ identity: { full_name: "Synthetic Student", nik: "SYNTHETIC-NIK-0002" } })));
@@ -194,6 +207,14 @@ it("tracks distinct NIK and KK entry, verification, correction, and audit states
       verification_status: "NEEDS_CORRECTION", correction_reason: "NIK value changed; re-verification is required.",
     });
     expect(env.database.client.query("SELECT old_value,new_value FROM student_master_change_history WHERE student_master_id = ? AND field_name = 'nik' ORDER BY id DESC LIMIT 1").get(env.studentId)).toEqual({
+      old_value: "[REDACTED]", new_value: "[REDACTED]",
+    });
+    const changedKk = await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/profile`, env.session, JSON.stringify({ identity: { full_name: "Synthetic Student", kk: "SYNTHETIC-KK-0002" } })));
+    expect(changedKk.status).toBe(200);
+    expect(env.database.client.query("SELECT verification_status,correction_reason FROM student_identity_verifications WHERE student_master_id = ? AND identifier_type = 'KK'").get(env.studentId)).toEqual({
+      verification_status: "NEEDS_CORRECTION", correction_reason: "KK value changed; re-verification is required.",
+    });
+    expect(env.database.client.query("SELECT old_value,new_value FROM student_master_change_history WHERE student_master_id = ? AND field_name = 'kk' ORDER BY id DESC LIMIT 1").get(env.studentId)).toEqual({
       old_value: "[REDACTED]", new_value: "[REDACTED]",
     });
 
@@ -458,6 +479,7 @@ it("enriches student detail profile and supports status filtering in student man
     const staffSession = await login(env.app, "staff");
     const staffProfile = await (await env.app.handle(request("GET", `/api/student-masters/${env.studentId}/profile`, staffSession))).json() as any;
     expect(staffProfile.identity.nik).toBeNull();
+    expect(staffProfile.identity.kk).toBeNull();
     expect(staffProfile.iom_documents).toEqual([]);
     expect((await env.app.handle(request("PATCH", `/api/student-masters/${env.studentId}/dapodik-status`, staffSession, JSON.stringify({ status: "NEEDS_CORRECTION", correction_reason: "Synthetic reason" })))).status).toBe(403);
 

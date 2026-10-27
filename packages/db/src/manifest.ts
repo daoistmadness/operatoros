@@ -51,7 +51,7 @@ export const S52_SCHEMA_FINGERPRINT =
   "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
 
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "3752b860dea633536943a8988bb515a38a21476edd77b19fb4e14256feece090";
+  "c7a4cceddff5cdb89e0eb6cbb16d867effe6c68021c3b2b9faf071b1bc1bbc55";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",

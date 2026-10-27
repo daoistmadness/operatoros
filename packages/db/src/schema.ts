@@ -1107,6 +1107,7 @@ export const student_masters = sqliteTable("student_masters", {
     "nipd": text(),
     "nisn": text(),
     "nik": text(),
+    "kk": text(),
     "gender": text(),
     "birth_place": text(),
     "birth_date": text(),

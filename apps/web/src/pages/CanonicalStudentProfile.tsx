@@ -20,7 +20,7 @@ import { downloadIomDocumentBlob } from "../api/students";
 import { Student360Overview } from "../components/students/Student360Overview";
 
 const today = new Date().toISOString().slice(0, 10);
-const identityFields = ["full_name", "preferred_name", "nipd", "nisn", "nik", "birth_place", "birth_date", "gender", "religion", "citizenship", "blood_type", "student_status", "admission_date", "admission_type", "previous_school"];
+const identityFields = ["full_name", "preferred_name", "nipd", "nisn", "nik", "kk", "birth_place", "birth_date", "gender", "religion", "citizenship", "blood_type", "student_status", "admission_date", "admission_type", "previous_school"];
 
 function DefinitionList({ values }: { values: Record<string, unknown> }) {
   return <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">{Object.entries(values).map(([key, value]) => <div key={key}><dt className="text-xs font-black uppercase tracking-wide text-muted-foreground">{key.replaceAll("_", " ")}</dt><dd className="mt-1 break-words text-sm text-foreground">{String(value || "Not provided")}</dd></div>)}</dl>;
@@ -489,6 +489,7 @@ export default function CanonicalStudentProfile() {
   if (student.isPending) return <LoadingState title="Loading Student Profile" />;
   if (student.isError || !student.data) return <ErrorState title="Student Profile could not be loaded" description={student.error?.message} />;
   const profile = student.data; const activeEnrollment = profile.enrollments.find((item) => item.active); const activeDevice = profile.device_identities.find((item) => item.is_active); const attendanceIdentity = legacyLink.data || profile.attendance_identity || { status: "NOT_LINKED", candidates: [] };
+  const visibleIdentity = can("view_sensitive_student_fields") ? profile.identity : Object.fromEntries(Object.entries(profile.identity).filter(([field]) => field !== "nik" && field !== "kk"));
   const handleDownloadIom = async (docId: string, filename: string) => {
     try {
       const blob = await downloadIomDocumentBlob(id, docId);
@@ -522,7 +523,7 @@ export default function CanonicalStudentProfile() {
     <Tabs defaultValue="overview"><TabsList className="flex max-w-full justify-start overflow-x-auto"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="personal">Personal Data</TabsTrigger><TabsTrigger value="contact">Contact & Guardians</TabsTrigger><TabsTrigger value="enrollment">Academic Enrollment</TabsTrigger><TabsTrigger value="device">Attendance Device</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger>{can("view_sensitive_student_fields") && <TabsTrigger value="iom">IOM Documents</TabsTrigger>}<TabsTrigger value="history">Change History</TabsTrigger></TabsList>
       <TabsContent value="overview">{overview.isPending ? <LoadingState title="Loading student overview" /> : overview.isError || !overview.data ? <ErrorState title="Student overview could not be loaded" description={overview.error?.message} /> : <><Student360Overview overview={overview.data} exporting={attendanceExporting} exportError={attendanceExportError} onExport={handleExportAttendance} showExport={false} /><Card><CardHeader><div className="flex items-center justify-between gap-2"><CardTitle>Attendance identity</CardTitle>{can("resolve_student_duplicates") && attendanceIdentity.status !== "LINKED" && <Button size="sm" variant="outline" onClick={() => setLegacyLinkOpen(true)}>Review / link</Button>}</div></CardHeader><CardContent className="space-y-3"><Badge variant={attendanceIdentity.status === "LINKED" ? "success" : attendanceIdentity.status === "REVIEW_REQUIRED" ? "warning" : "secondary"}>{attendanceIdentity.status === "LINKED" ? "Linked" : attendanceIdentity.status === "REVIEW_REQUIRED" ? "Review Required" : "Not Linked"}</Badge><p className="text-sm text-muted-foreground">{attendanceIdentity.status === "LINKED" ? "Historical attendance remains associated with the linked legacy identity." : attendanceIdentity.status === "REVIEW_REQUIRED" ? `${attendanceIdentity.candidates?.length || 0} candidate(s) require administrator review.` : "No legacy attendance identity is linked."}</p>{can("export_student_data") && attendanceIdentity.status === "LINKED" && overview.data.links.attendanceExport && <div><Button size="sm" variant="outline" onClick={handleExportAttendance} disabled={attendanceExporting} aria-busy={attendanceExporting}>{attendanceExporting ? "Preparing workbook…" : "Export attendance history"}</Button>{attendanceExportError && <Alert variant="danger" className="mt-3"><AlertTitle>Export failed</AlertTitle><AlertDescription>{attendanceExportError}</AlertDescription></Alert>}</div>}{attendanceIdentity.status !== "LINKED" && <p className="text-sm text-muted-foreground">Link an attendance identity to enable the history export.</p>}</CardContent></Card></>}</TabsContent>
       <TabsContent value="personal" className="space-y-4">
-        <Card><CardHeader><CardTitle>Personal data</CardTitle></CardHeader><CardContent><DefinitionList values={profile.identity} /></CardContent></Card>
+        <Card><CardHeader><CardTitle>Personal data</CardTitle></CardHeader><CardContent><DefinitionList values={visibleIdentity} /></CardContent></Card>
         <div className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardHeader>
@@ -572,6 +573,7 @@ export default function CanonicalStudentProfile() {
                       <Badge variant={docReceived ? "success" : "secondary"}>
                         {docReceived ? "Document Received" : "Document Missing"}
                       </Badge>
+                      {can("view_sensitive_student_fields") && <span className="text-xs text-muted-foreground">Identifier: {profile.identity.kk ? "Entered" : "Not Entered"}</span>}
                     </div>
                     {kkVerif?.verified_by && <p className="text-xs text-muted-foreground">Verified by: {kkVerif.verified_by} · {kkVerif?.verified_at ? new Date(kkVerif.verified_at).toLocaleDateString() : ""}</p>}
                     {kkVerif?.correction_reason && <p className="text-xs font-semibold text-danger">Correction required: {kkVerif.correction_reason}</p>}

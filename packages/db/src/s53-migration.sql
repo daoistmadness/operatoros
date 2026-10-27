@@ -1,3 +1,5 @@
+ALTER TABLE student_masters ADD COLUMN kk TEXT;
+
 CREATE TABLE student_identity_verifications_v53 (
   id INTEGER PRIMARY KEY,
   student_master_id TEXT NOT NULL REFERENCES student_masters(id) ON DELETE RESTRICT,

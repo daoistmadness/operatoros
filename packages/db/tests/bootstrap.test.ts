@@ -20,6 +20,7 @@ describe("Bun S5.1 fresh bootstrap", () => {
           { name: "school_units" }, { name: "staff_school_unit_assignment_versions" },
         ]);
         expect((db.query("PRAGMA table_info(school_units)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("version");
+        expect((db.query("PRAGMA table_info(student_masters)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("kk");
         expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('staff_monthly_activity_periods','staff_monthly_activities','staff_monthly_activity_history') ORDER BY name").all()).toEqual([
           { name: "staff_monthly_activities" }, { name: "staff_monthly_activity_history" }, { name: "staff_monthly_activity_periods" },
         ]);
