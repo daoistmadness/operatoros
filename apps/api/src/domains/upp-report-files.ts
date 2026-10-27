@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
-import { constants, chmodSync, closeSync, copyFileSync, existsSync, fstatSync, linkSync, lstatSync, mkdirSync, openSync, readSync, rmSync, statSync, writeSync } from "node:fs";
-import { join } from "node:path";
+import { constants, chmodSync, closeSync, copyFileSync, existsSync, fstatSync, linkSync, lstatSync, mkdirSync, openSync, readSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { Database } from "bun:sqlite";
 import { syncDirectory, syncFile } from "./durable-files";
 import type { BackupAttachment, BackupAttachmentSource } from "../security/backup-payload";
@@ -119,6 +119,24 @@ export function backupAttachmentSources(database: Database, dataDir: string): Ba
 export function backupAttachmentsMatch(database: Database, files: BackupAttachment[]): boolean {
   const expected = referencedReportFiles(database);
   return expected.length === files.length && expected.every((entry, index) => entry.sha256 === files[index]?.sha256 && entry.sizeBytes === files[index]?.sizeBytes);
+}
+
+export function removeUnreferencedReportFiles(database: Database, dataDir: string, candidates: FileMetadata[]): void {
+  const referenced = new Set(referencedReportFiles(database).map((entry) => entry.sha256));
+  for (const candidate of candidates) {
+    if (referenced.has(candidate.sha256)) continue;
+    const path = reportFilePath(dataDir, candidate.sha256);
+    try {
+      const stat = lstatSync(path);
+      if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("UPP_REPORT_FILE_INVALID");
+      assertFile(path, candidate);
+      unlinkSync(path);
+      syncDirectory(dirname(path));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+  }
 }
 
 export function installBackupAttachments(dataDir: string, attachments: BackupAttachment[]): void {
