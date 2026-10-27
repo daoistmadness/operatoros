@@ -102,7 +102,7 @@ describe("StudentManagement table", () => {
   it("renders canonical headers, formatted cells, and server pagination bounds", async () => {
     await renderPage();
 
-    expect(container.querySelectorAll("thead th")).toHaveLength(12);
+    expect(container.querySelectorAll("thead th")).toHaveLength(15);
     expect(container.textContent).toContain("Alya Putri");
     expect(container.textContent).toContain("****1234");
     expect(container.textContent).toContain("82%");

@@ -1335,3 +1335,90 @@ export const upp_report_history = sqliteTable("upp_report_history", {
     check("ck_upp_report_history_from_status", sql`${table.from_status} IS NULL OR ${table.from_status} IN ('UPLOADED','READY_FOR_SUBMISSION','SUBMITTED')`),
     check("ck_upp_report_history_to_status", sql`${table.to_status} IN ('UPLOADED','READY_FOR_SUBMISSION','SUBMITTED')`),
 ]);
+
+export const student_identity_verifications = sqliteTable("student_identity_verifications", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "identifier_type": text().notNull(),
+    "verification_status": text().notNull().default("UNVERIFIED"),
+    "verified_at": text(),
+    "verified_by": text(),
+    "notes": text(),
+    "correction_reason": text(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("student_identity_verifications_student_type_uc").on(table.student_master_id, table.identifier_type),
+    index("student_identity_verifications_status_idx").on(table.identifier_type, table.verification_status),
+    check("ck_student_id_verif_type", sql`${table.identifier_type} IN ('NIK','KK')`),
+    check("ck_student_id_verif_status", sql`${table.verification_status} IN ('UNVERIFIED','VERIFIED','NEEDS_CORRECTION')`),
+]);
+
+export const student_identity_verification_history = sqliteTable("student_identity_verification_history", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "identifier_type": text().notNull(),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "changed_by": text().notNull(),
+    "correction_reason": text(),
+    "notes": text(),
+    "occurred_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    index("student_identity_verif_history_student_idx").on(table.student_master_id, table.id),
+    check("ck_student_id_verif_hist_type", sql`${table.identifier_type} IN ('NIK','KK')`),
+    check("ck_student_id_verif_hist_to", sql`${table.to_status} IN ('UNVERIFIED','VERIFIED','NEEDS_CORRECTION')`),
+]);
+
+export const student_dapodik_registrations = sqliteTable("student_dapodik_registrations", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "status": text().notNull().default("NOT_STARTED"),
+    "external_reference": text(),
+    "updated_by": text().notNull(),
+    "notes": text(),
+    "correction_reason": text(),
+    "synchronized_at": text(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("student_dapodik_registrations_student_uc").on(table.student_master_id),
+    index("student_dapodik_registrations_status_idx").on(table.status),
+    check("ck_student_dapodik_status", sql`${table.status} IN ('NOT_STARTED','PENDING_EXTERNAL_PROCESSING','ENTERED','SYNCHRONIZED','NEEDS_CORRECTION')`),
+]);
+
+export const student_dapodik_history = sqliteTable("student_dapodik_history", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "changed_by": text().notNull(),
+    "notes": text(),
+    "correction_reason": text(),
+    "occurred_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    index("student_dapodik_history_student_idx").on(table.student_master_id, table.id),
+    check("ck_student_dapodik_hist_to", sql`${table.to_status} IN ('NOT_STARTED','PENDING_EXTERNAL_PROCESSING','ENTERED','SYNCHRONIZED','NEEDS_CORRECTION')`),
+]);
+
+export const student_iom_documents = sqliteTable("student_iom_documents", {
+    "id": text().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "iom_type": text().notNull(),
+    "description": text().notNull(),
+    "file_sha256": text().notNull(),
+    "file_size_bytes": integer().notNull(),
+    "original_filename": text().notNull(),
+    "uploaded_by": text().notNull(),
+    "uploaded_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_by": text(),
+}, (table) => [
+    index("student_iom_documents_student_idx").on(table.student_master_id, table.uploaded_at),
+    index("student_iom_documents_sha256_idx").on(table.file_sha256),
+    check("ck_student_iom_type", sql`${table.iom_type} IN ('TRANSFER_IN','TRANSFER_OUT')`),
+    check("ck_student_iom_desc", sql`length(trim(${table.description})) > 0`),
+    check("ck_student_iom_hash", sql`length(${table.file_sha256}) = 64 AND ${table.file_sha256} NOT GLOB '*[^0-9a-f]*'`),
+    check("ck_student_iom_size", sql`${table.file_size_bytes} > 0`),
+    check("ck_student_iom_filename", sql`length(trim(${table.original_filename})) BETWEEN 1 AND 255`),
+]);

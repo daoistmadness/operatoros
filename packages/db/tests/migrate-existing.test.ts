@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
@@ -13,6 +13,7 @@ const s47Sql = readFileSync(new URL("../src/s47-schema.sql", import.meta.url), "
 const s48Sql = readFileSync(new URL("../src/s48-migration.sql", import.meta.url), "utf8");
 const s49Sql = readFileSync(new URL("../src/s49-migration.sql", import.meta.url), "utf8");
 const s50Sql = readFileSync(new URL("../src/s50-migration.sql", import.meta.url), "utf8");
+const s51Sql = readFileSync(new URL("../src/s51-migration.sql", import.meta.url), "utf8");
 const variantB = await Bun.file(new URL("./fixtures/s46-variant-b.json", import.meta.url)).json() as { targetObjects: string[]; fingerprint: string };
 
 function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
@@ -241,6 +242,35 @@ describe("Bun S4.6 through S5.1 migrations", () => {
       });
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
       validateMigrationSource(migrated.client);
+    } finally { migrated.close(); fresh.close(); }
+  }));
+
+
+  it("upgrades an S5.1 database to S5.2 and preserves its UPP records", () => withDatabases((_, path, freshPath) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    db.exec(s49Sql);
+    db.exec(s50Sql);
+    db.exec(s51Sql);
+    expect(schemaFingerprint(db)).toBe(S51_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261027_s51','20261027_s50',?,'{}','SYNTHETIC_FIXTURE','2026-10-27T00:00:00Z')", [S51_SCHEMA_FINGERPRINT]);
+    db.run("INSERT INTO school_units (id,name) VALUES (1,'Synthetic Unit')");
+    db.run("INSERT INTO upp_monthly_reports (id,school_unit_id,reporting_year,reporting_month) VALUES (1,1,2026,10)");
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    expect(migrateExistingDatabase(path)).toBe("NOOP");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT id,reporting_year FROM upp_monthly_reports WHERE id=1").get()).toEqual({ id: 1, reporting_year: 2026 });
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s51" });
+      expect(migrated.client.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND (name LIKE 'student_identity_%' OR name LIKE 'student_dapodik_%' OR name = 'student_iom_documents')").get()).toEqual({ count: 5 });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
     } finally { migrated.close(); fresh.close(); }
   }));
 

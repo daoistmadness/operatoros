@@ -92,9 +92,12 @@ function tableExists(database: Database, name: string): boolean {
 }
 
 export function referencedReportFiles(database: Database): FileMetadata[] {
-  if (!tableExists(database, "upp_report_versions") || !tableExists(database, "upp_report_submission_evidence")) return [];
-  const rows = database.query(`SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_versions
-    UNION SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_submission_evidence`).all() as FileMetadata[];
+  const parts: string[] = [];
+  if (tableExists(database, "upp_report_versions")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_versions");
+  if (tableExists(database, "upp_report_submission_evidence")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_submission_evidence");
+  if (tableExists(database, "student_iom_documents")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM student_iom_documents");
+  if (!parts.length) return [];
+  const rows = database.query(parts.join(" UNION ")).all() as FileMetadata[];
   const entries = new Map<string, number>();
   for (const row of rows) {
     if (!HASH.test(row.sha256) || !Number.isSafeInteger(row.sizeBytes) || row.sizeBytes <= 0 || entries.has(row.sha256) && entries.get(row.sha256) !== row.sizeBytes) {

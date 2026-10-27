@@ -15,6 +15,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s49",
   "20261027_s50",
   "20261027_s51",
+  "20261027_s52",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -42,8 +43,11 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
 export const S50_SCHEMA_FINGERPRINT =
   "53c13b4625f61ecf61f6866671e36b327e44739253cf16589b7dc3bc598dc265";
 
-export const CURRENT_SCHEMA_FINGERPRINT =
+export const S51_SCHEMA_FINGERPRINT =
   "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
+
+export const CURRENT_SCHEMA_FINGERPRINT =
+  "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -111,6 +115,12 @@ export const REQUIRED_TRIGGERS = [
   "trg_upp_report_evidence_no_delete",
   "trg_teacher_class_assignment_audit_no_delete",
   "trg_teacher_class_assignment_audit_no_update",
+  "trg_student_identity_verification_history_no_update",
+  "trg_student_identity_verification_history_no_delete",
+  "trg_student_dapodik_history_no_update",
+  "trg_student_dapodik_history_no_delete",
+  "trg_student_iom_documents_no_delete",
+  "trg_student_iom_documents_immutable_fields",
 ] as const;
 
 export const PROTECTED_DATABASE_BASENAME = "attendance.db";

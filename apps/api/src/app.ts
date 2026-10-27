@@ -52,6 +52,7 @@ import { attendanceCalendarRoutes } from "./domains/attendance-calendar";
 import { machineAttendancePreviewRoutes } from "./domains/machine-attendance-preview";
 import { staffMonthlyActivityRoutes } from "./domains/staff-monthly-activities";
 import { uppReportRoutes } from "./domains/upp-reports";
+import { registerStudentAdmin } from "./domains/student-admin";
 import { openApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
@@ -92,6 +93,10 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       storageDir: reportDataDir,
       maxFileSizeBytes: _config.uppReportMaxFileSizeBytes ?? DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES,
     });
+    registerStudentAdmin(app, context, {
+      ..._config,
+      dataPaths: _config.dataPaths ?? (reportDataDir ? { dataDir: reportDataDir } as any : undefined),
+    } as any);
     configRoutes(app, context);
     readinessRoutes(app, context);
     attendanceRoutes(app, context);
