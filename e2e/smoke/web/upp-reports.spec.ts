@@ -91,7 +91,7 @@ test("@upp @critical archives, replaces, downloads, and submits one synthetic wo
   await row.getByRole("button", { name: "Ready for submission", exact: true }).click();
   await expect(row).toContainText("Ready for submission");
   await row.getByLabel("Submission notes").fill("Synthetic external submission confirmation");
-  await row.locator(`#upp-evidence-${reportId}`).setInputFiles({
+  await row.locator(`#upp-evidence-${unitId}`).setInputFiles({
     name: "synthetic-receipt.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.from("synthetic submission evidence"),
