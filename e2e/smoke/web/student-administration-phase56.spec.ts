@@ -116,3 +116,41 @@ test("@student-admin @critical verifies identity, DAPODIK, IOM archive, dashboar
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Ringkasan Operasional Sekolah & DAPODIK" })).toBeVisible();
 });
+
+test("@dashboard @critical shows and acknowledges the annual BOSP reminder", async ({ page }) => {
+  let acknowledged = false;
+  const reminder = () => ({
+    calendar_year: 2027,
+    cutoff_date: "2027-08-31T23:59:59+07:00",
+    advance_notice_days: 365,
+    is_in_notice_window: true,
+    days_remaining: 308,
+    is_acknowledged: acknowledged,
+    acknowledged_at: acknowledged ? "2026-10-27T00:00:00.000Z" : null,
+    acknowledged_by: acknowledged ? "operatoros_e2e_admin" : null,
+    notes: acknowledged ? "Acknowledged from the dashboard." : null,
+    is_blocking: false,
+  });
+
+  await page.route("**/api/operator/bosp-reminder", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(reminder()) })
+  );
+  await page.route("**/api/operator/bosp-reminder/acknowledge", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject({ calendar_year: 2027 });
+    acknowledged = true;
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(reminder()) });
+  });
+
+  await page.goto("/login");
+  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
+  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  const reminderHeading = page.getByRole("heading", { name: "Pengingat Tahunan Cut-off BOSP 2027" });
+  await expect(reminderHeading).toBeVisible();
+  await page.getByRole("button", { name: "Tandai Sudah Dipahami" }).click();
+  await expect(page.getByText("Sudah Dipahami", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tandai Sudah Dipahami" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Ringkasan Operasional Sekolah & DAPODIK" })).toBeVisible();
+});

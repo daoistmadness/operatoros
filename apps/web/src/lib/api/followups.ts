@@ -143,7 +143,7 @@ export async function createFollowUpCase(payload: CreateFollowUpPayload): Promis
   const response = await apiRequest<FollowUpCase>({
     path: '/api/attendance/followups',
     method: 'POST',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }
@@ -155,7 +155,7 @@ export async function updateFollowUpState(
   const response = await apiRequest<FollowUpCase>({
     path: `/api/attendance/followups/${caseId}/status`,
     method: 'PATCH',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }
@@ -167,7 +167,7 @@ export async function addFollowUpNote(
   const response = await apiRequest<Record<string, unknown>>({
     path: `/api/attendance/followups/${caseId}/notes`,
     method: 'POST',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }

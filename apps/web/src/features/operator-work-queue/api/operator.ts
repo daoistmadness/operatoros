@@ -95,7 +95,7 @@ export async function acknowledgeBospReminder(payload: {
   const response = await apiRequest<BospReminderStatusResponse>({
     path: '/api/operator/bosp-reminder/acknowledge',
     method: 'POST',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }
@@ -106,7 +106,7 @@ export async function updateBospReminderSettings(payload: {
   const response = await apiRequest<BospReminderStatusResponse>({
     path: '/api/operator/bosp-reminder/settings',
     method: 'PUT',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }
@@ -118,7 +118,7 @@ export async function selfConfirmCorrection(
   const response = await apiRequest<Record<string, unknown>>({
     path: `/api/attendance-corrections/${requestId}/self-confirm`,
     method: 'POST',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }
