@@ -3,17 +3,17 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "ae8fb79ed90a20280c8689c03a2fd2745b81448ecb663821e3cff1c64a7f4c52",
+      "fingerprint": "544d0cad331b4b05e6b85a344fea9da8a1bee30a4d79be6fabfd7d48930f53ec",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
+        "AGENTS.md": "6d13f91ee1229986dc8be2ceab5be242c7a66c268a336335b3eb0a1e59b94ea3",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
+        "docs/guides/testing.md": "193649e8dc4572c2c3f7df571d22361405b107a22b950b073a0139b0373f5fdb",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
+        "Changed: AGENTS.md, docs/guides/testing.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "44132a8a54044fafbb419d8762860f6d870ef7a8737d11f4eac2f4394b3cc9e6",
+      "fingerprint": "8eb7382fab8d739fe222b066493aa457eeec992e7da4a0e72730e015558adcbe",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
+        "AGENTS.md": "6d13f91ee1229986dc8be2ceab5be242c7a66c268a336335b3eb0a1e59b94ea3",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -65,7 +65,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
+        "docs/guides/testing.md": "193649e8dc4572c2c3f7df571d22361405b107a22b950b073a0139b0373f5fdb",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
+        "Changed: AGENTS.md, docs/guides/testing.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -371,15 +371,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "a4c2093a3e7a6e3cef562a072944f8d5391a1af7e3173924a17fcac4a8e0a4cf",
+      "fingerprint": "c42723bebb7856da4de51a07a16dee7dc6e992877dda31dc19b66cbc19a490da",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "e327431b97b9c061620672b65df5014c264c5751e798bf6fb274481bd895abe0"
+        "apps/api/src/backup-cli.ts": "09686145ea5c1362e9cea7619eafc898e40545ebac5d085403fbd18cb4ae23a7"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Changed: apps/api/src/backup-cli.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "4808a019b669b077d9698a1cad07a6364a07e5f9eb0c1d8cb3fa2db01ee74573",
+      "fingerprint": "1ae59d8e36b2d03a6e13421a6df35e44e49123b60d08c33e39fa30d0175c9f73",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "f51d69740929cddce8df1da8fab6792f7819e9df78868f7cb0358791611b1a0c"
+        "apps/web/src/generated/openapi/schema.ts": "cd7fdb9c4ec4b4f3fe05f9302fcc94e7bebd981a13418edbea2a5aee0f8efd8d"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/web/src/generated/openapi/schema.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,27 +515,27 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "8b99cab20508ba83c9d9808411e1eb1e8333dc0ac1054560e9245cad1390a60c",
+      "fingerprint": "e61b3127195dc71cf9dff4a84509f19837ab795a21665a3113eae728ac63929a",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "2213bcc615cb6430f70d81baf299a65231a0891a160c75de4ec566c3bb6b0927"
+        "openapi/operatoros.openapi.json": "d04ab47f11b03899b7e391db56bbe8553157c16807b6fe8915abee21eb414758"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: openapi/operatoros.openapi.json at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
-      "fingerprint": "3da705bee49c67ad704a055a804fc1b3dd90f0f713dd9312dd410934c09ae882",
+      "fingerprint": "45b339a543e88bf96a647348d29c42862a3a52347be8192d6e9122e6656d4bf7",
       "snapshot": {
-        "apps/api/tests/backup-cli-migration.test.ts": "541ba798316990280682f4c1580c09d96e2ec67940f498a6e3acbf2c0be3c970"
+        "apps/api/tests/backup-cli-migration.test.ts": "8b2787f286956c42a42f2eb3d2c23eadfdbeb099633ffa8979f70c3ba5450623"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-migration.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/backup-cli-migration.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
@@ -587,16 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "7ca3c7c10d72fdc1fc8088b25d9d5b2adf392212051869efe59dd7aabd2b0dde",
+      "fingerprint": "6444659eefeb0436f6443f6abc47cefb71fadb6f1c43617a66a80e1a09d323e4",
       "snapshot": {
-        "README.md": "d675b3e880e4014d3717bb6a4fd046dab6b01735f4f808240a88aa0a0ef4cf10"
+        "README.md": "3a9cd086b7657cea19d1f54763d00f195eaf71b84c9aa624a81a535a979f2e4b"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
-      "outcome": "out-of-scope",
-      "reason": "The root README version correction is unrelated to the Elysia backend skill.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "README.md",
-        "apps/web/package.json"
+        "Changed: README.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1643,15 +1642,15 @@
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
-      "fingerprint": "c9828b91bc08b9f549c23b3f4f06ac32ccf2ea6e4b1b4a864fe3209e832dc4c7",
+      "fingerprint": "fa507c76bb998e12bc43ddea605a7dab8b83ce7b9d36943dea33697c43d31e7f",
       "snapshot": {
-        "apps/api/tests/data-layer.test.ts": "24b057934cea71aff1757e0f59078e63ee0a4478dbdaa0e0b2cf59025cac128d"
+        "apps/api/tests/data-layer.test.ts": "131a950e460be7b3f364012593277933aa1a74f11bd8dfcfdd4c39a7760a3d4c"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/data-layer.test.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/tests/data-layer.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
@@ -2489,39 +2488,39 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.test.tsx": {
-      "fingerprint": "6553b1b120db9bae4c8136f21eab3637924fc556cd2cb20c5733d3d9d6413731",
+      "fingerprint": "e78dc00df4aa559466feafafd0ab914723cdc8f837232bae17bad5ac7e51acee",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.test.tsx": "1155234a2888a898a8775413c4af3d390dc64bd350883f6fef011d6ac9d1b8ad"
+        "apps/web/src/pages/StaffDetail.test.tsx": "c0693e32b562e79f21524de1950a77dd652b1add79cfec9585014893e04632ce"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffDetail.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "92f5098ceae3cfa98ebe6d5d65ccb298f1e506ddc966ecb592b573235b5dde0e",
+      "fingerprint": "876ff6acc3ba9980379c326be8bed3a7f2e4b2b1ea4cd7d5673b4b7a28f78b3a",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "81a7d59d13901dfafca012c10ff66a09ca0ef714aa06dd2b801b9a734ea3f8b1"
+        "apps/web/src/pages/StaffDetail.tsx": "273f435cc95a58fb5dd14ff0da4f0e3c39d6aa815f51fcdd7dabd52868e997c8"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffDetail.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
-      "fingerprint": "43e7f6c207124bf4606e84b73b3c4e84d3377fec328db3257abb04f4dc4898a4",
+      "fingerprint": "c173a37ea60d6893be7b575325a44fabc917d874d397327c718da88381d51baa",
       "snapshot": {
-        "apps/web/src/pages/StaffForm.tsx": "f85b49431c9a8770e8b7bbcf300c3bcf2270ad0e2104a741d28a74b607094066"
+        "apps/web/src/pages/StaffForm.tsx": "3cef2411fea9c755e2c05f3483528640fbc9c3e516ee924cbd690af407c5fa0d"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffForm.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffForm.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffImport.tsx": {
@@ -2537,39 +2536,39 @@
       ]
     },
     "source:apps/web/src/pages/StaffManagement.test.tsx": {
-      "fingerprint": "2097cafb0add45f0ddf234a977144a7ed1a62425d96b63e1022b16dc4d89453d",
+      "fingerprint": "00ccb2d949c08c02dd80017c3b7736a37382238e9575d4cef65053f218297238",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.test.tsx": "b65bcffeb1a76d38e631aae2a2ec7d6fcf05c00e49782726b754d35e217ee5d0"
+        "apps/web/src/pages/StaffManagement.test.tsx": "788118a0cdccedb905f2faf58efa85d57ad019ff6b61ec79f3894c77535f7ff7"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffManagement.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffManagement.tsx": {
-      "fingerprint": "49c3ca6952a389e8a1f78b8c03fc64f0a53c63995cad411d30ed8d971d32a3d2",
+      "fingerprint": "bac0cf88ae658eaa3e46f166b530d4761f43186f79efbefd80e503d194bc9b9b",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.tsx": "586ca13d5495e6e78102268f8d7641a93266a8880431707a88d8136d4b4bac86"
+        "apps/web/src/pages/StaffManagement.tsx": "468a1b7ba5779c393eee4fa7418743ad58661d6f4467268a173f6523cfe729cf"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffManagement.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffWorkflows.test.tsx": {
-      "fingerprint": "3398627072655f6721d60f8ce6b5cd327383f0ad3cb775436af70c73f9759875",
+      "fingerprint": "18a5c0a02b9ad7a763742607292418a2838326db40cf7e012dc8134ecf59efbe",
       "snapshot": {
-        "apps/web/src/pages/StaffWorkflows.test.tsx": "a925308b8b7530c569da2f53c3bc5def0cf106bb892e05e13615352ff83f1c9a"
+        "apps/web/src/pages/StaffWorkflows.test.tsx": "798beb2dda501078c6182502aac49d7b830d9ba2d67734cec01241ebdf824a79"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffWorkflows.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffWorkflows.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StudentIndicatorInsights.test.tsx": {
@@ -2922,15 +2921,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "987312ccb0d7ca753ae6bf47d9b97889bae854b51945c0f3adb76e1db3409c92",
+      "fingerprint": "752b2d84326639800dd1be384d9bd2f9ea7e1969408c8fe8b36f7ee09f07db1e",
       "snapshot": {
-        "CHANGELOG.md": "a186a34dbdb08aaec71fd0d156efa765706a9cbd6fdfe84cd1112aaff28ce839"
+        "CHANGELOG.md": "a2081b5316888f09fad1ecffa5130eb22e5b885baee537606092d14077c2258f"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: CHANGELOG.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:COMMANDS.md": {
@@ -3200,17 +3199,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "d981a577abaf32d6eed11566dfb20c565e7bb2aaafa90c68b33cd259387f782c",
+      "fingerprint": "4773760dc1be428ca7d31f9ddfae67304d388890538ac8371e16d9ed5bc51b57",
       "snapshot": {
-        "docs/architecture/database-schema.md": "afd1a4df4c0bce8275644099e2098cbced4264f413d392ddacb4c64f10ad41c7"
+        "docs/architecture/database-schema.md": "5d2b8452068de8427968fb67957b82e0b55d4f58d35f6ab8d2aae064e060a251"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/architecture/database-schema.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -3997,29 +3994,27 @@
       ]
     },
     "source:docs/guides/development-database.md": {
-      "fingerprint": "2ac667347f98ad3cc5a5d8498ec272494754c4faa3a7be34070a4a3401fb6003",
+      "fingerprint": "9e83ea7f30cb7c4765beca8ae2c97f19f5cc1a79f8ad0cc0351fbb2c41aba840",
       "snapshot": {
-        "docs/guides/development-database.md": "85eb60d84d5b9f187070845f77e8d18d4787e41a1f3beaf3eeb3d5052efa7b7e"
+        "docs/guides/development-database.md": "f5b45975d510d36b95535d19486b0768c161b55546f86a47fcc44a410e3e29b5"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/guides/development-database.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "e00a8088ed43e0fd6a503d9831bb2a7cf365f1aa306cb0e55abda63dd1cf80a7",
+      "fingerprint": "d6ffe2b8624fff63145a10188928f693cf553a1990b805dd4b7078219eea6ff3",
       "snapshot": {
-        "docs/guides/offline-install.md": "d6ffd2a92d15dcdab51c20204292505e2b04a26c04e9d9964da96d2d7748718b"
+        "docs/guides/offline-install.md": "0cc72f7cf50a7e365335286a48da8487a48b459b9287a387ce98c17413a08601"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/guides/offline-install.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4471,17 +4466,15 @@
       ]
     },
     "source:docs/reference/employee-management.md": {
-      "fingerprint": "d3c82e22932b3a9d886d0d807a2d77e22ab603ed1c23570a70871b1f385a00bd",
+      "fingerprint": "688de72a8b0ec1e90044d58f011d2b1038d0cdd5a6491888e3b1c8e219c3cf12",
       "snapshot": {
-        "docs/reference/employee-management.md": "ae91c1548e733357480066ba3443413b614c7c92019d46f96c46804c7d64f691"
+        "docs/reference/employee-management.md": "2da5dca626402cda85a8fbb6c1532c38529da7d8975498a958a1614939e14a17"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/reference/employee-management.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/reference/first-run-admin-threat-model.md": {
@@ -4611,17 +4604,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "349ee4f66bca4c5aa18901affaad6d0fd92fc5f3dfebf17c214c09f355f21257",
+      "fingerprint": "69c6818962be02decd6493796df8f7ef748019fa7a2cfea5a87b7a16ae8e5444",
       "snapshot": {
-        "docs/reference/runtime-support.md": "8d2a0328a59db27698e89bff2d203739688c78d4d2aac888790b6f2b0424e187"
+        "docs/reference/runtime-support.md": "ad54c09ecefb2302618c92a9f3f9b0c2af557571298330fc9c30d3f355de7025"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/reference/runtime-support.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4763,31 +4754,27 @@
       ]
     },
     "source:docs/runbooks/data-reset.md": {
-      "fingerprint": "b24195b0aeafd5721cccc22a5f64314694186c941cfa5661110b61cec31f639e",
+      "fingerprint": "417b80f6415fec756f2e735fb7ef2288f0f800fcbb264537214ba308e4388645",
       "snapshot": {
-        "docs/runbooks/data-reset.md": "4e4cf1bcfea2be611e9ee708fc5fc02fb0038e6bfb634d84989989c81d64719c"
+        "docs/runbooks/data-reset.md": "a72e69a51540b05ea2c53717951b78e7b329e480318482aa0449747435a85dcd"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/data-reset.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "07dee283fa999586925ed4aa017bc24a68f690117d069f5db2fe0c3bb0197aeb",
+      "fingerprint": "002dc0bf868427f9eec1237591cfbcc41cdf0ed1424cb0f377673d39aa56f170",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "073245c9f0d099c78588bbc45e2ea80bea1f43d5cb4c0172d5b9ab89eb6a013d"
+        "docs/runbooks/database-operations.md": "1aaa2a523b8a1311f61252012bbf4386ecb25cbc8904183926cadff777364796"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/database-operations.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4833,15 +4820,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "2b9c82ac38d06c8c92381e91b3eeeae2511cef23e1309fb4d069cade0b09199a",
+      "fingerprint": "e56ac471eb92ba8fa589b4dd12df6d48680fd4b22e3bdecd35b5b83a03c2f525",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "5fdf9b195fdc30c9b5543a6ec3c824fd9309274ed2ba36c72c7841086d41ced8"
+        "docs/runbooks/ubuntu-server-deployment.md": "55e31795a2ef178223b22a3627984b1ee5b8317599f986a81af73d3463a5c7db"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5114,15 +5101,15 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "b6608fac1f1822826f732973f1f22229b266b61297d60412a8b8253795d9aae6",
+      "fingerprint": "0ffa5295d36c09210e83ba08d8fb427cb69e99e85b4cfe9dab695204e7c9d7d0",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "a9a2e55c4ed6dd27fb812c7bbcd2c08612e32a2905309b5bc3db34c1d14d3505"
+        "apps/api/src/domains/core.ts": "4129a8eb2c01a8eacdac864b9eeb89d388924d2094e57ca0ae1496097cc298de"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/api/src/domains/core.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -5171,6 +5158,246 @@
       "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
       "evidence": [
         "Changed: packages/contracts/src/students/index.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+      ]
+    },
+    "source:apps/api/src/domains/data-reset.ts": {
+      "fingerprint": "a7d55801338ed46b69505b1301074edcf5769494b6f1210a7a5c419720ee7f42",
+      "snapshot": {
+        "apps/api/src/domains/data-reset.ts": "027e79f37dd675342303f0f7403e5234499d03d2cc3fa42735b2c2a2a43c9fd1"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/data-reset.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/src/domains/employee-management.ts": {
+      "fingerprint": "74510425079a7799d283409ef7878d36d0896bace5c7acf8495b12d7b7feb34c",
+      "snapshot": {
+        "apps/api/src/domains/employee-management.ts": "e4857e1c0ba6137332e86e01d60810bedb1b5aa062792b853aee9acd00db933f"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/employee-management.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/src/domains/staff-metrics.ts": {
+      "fingerprint": "60cd6fe41a376785faa81270877a78666d2e23cc52d5a7d5923eabbe775c1e53",
+      "snapshot": {
+        "apps/api/src/domains/staff-metrics.ts": "a4dcb60923954a1bd1013cf0fe4bc1ef1f475af6ca7d53e8cc5274f2eecbd06a"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-metrics.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/src/domains/staff-school-units.ts": {
+      "fingerprint": "6704155743563491e84f4b47e899f66a2db5408268fcbdfc986b13fb3aaebdf7",
+      "snapshot": {
+        "apps/api/src/domains/staff-school-units.ts": "4e4548c1d1a543bcffc126b3cc0237a6ecac98ecd54acb1293c6eaca1d37ddae"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-school-units.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/tests/openapi-contract.test.ts": {
+      "fingerprint": "8173fe2a167c83936ebf249f29b8a58e1546609e4c3b10013a462736728d3115",
+      "snapshot": {
+        "apps/api/tests/openapi-contract.test.ts": "2e15805318d512d7adbab29d62ad9515780478b500f07706400c7ccd8f7b1c4f"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/openapi-contract.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/tests/staff-management.test.ts": {
+      "fingerprint": "743167ac0db3f561cd13b3ea74d7deb8018347adb58d6bbf70f369351c8259ce",
+      "snapshot": {
+        "apps/api/tests/staff-management.test.ts": "dd646cb29ef6efd1aa8442779ea063bf38456185bd05d08f23f01646a0ab2e2b"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/staff-management.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/tests/system.test.ts": {
+      "fingerprint": "cecbe13ccc804327ef99a10e5269da2bdc2d614b784f62b5bb2064fee4853cf1",
+      "snapshot": {
+        "apps/api/tests/system.test.ts": "7833e9affea3dbe99394eab84d684bfa651c9135e6cdd2a093ae4332b3e59dc5"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/system.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/web/src/api/staff.ts": {
+      "fingerprint": "c6e52a1630150b6c9630fe18910994dcd3d320d402b34903d8f57ae62154ae62",
+      "snapshot": {
+        "apps/web/src/api/staff.ts": "3d49405c34268b1354eeef59ea3b7cffcf6d700c627ab5bd15340f5d52c2cb63"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staff.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/web/src/lib/query/queryKeys.ts": {
+      "fingerprint": "8e88a1246f37eab5e4cd0a6b4dd35e0981579efdc6936dfc356204750340c04e",
+      "snapshot": {
+        "apps/web/src/lib/query/queryKeys.ts": "b8dbb1c0d8318e449f4952f8b6375d706709401dbb3c5ba0aa097d169c8690b8"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/lib/query/queryKeys.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/contracts/src/staff.ts": {
+      "fingerprint": "4fbffc98285d685036111ccdf95666cd4258282f89a55c4e5ffca84a137558ac",
+      "snapshot": {
+        "packages/contracts/src/staff.ts": "06887fb5b1bd8471f280837a9718ea87223233ab6c9c0b42eb2e923c87a31a6f"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/contracts/src/staff.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/README.md": {
+      "fingerprint": "618c1fe45b674caf2cfff69a6fb00d339cb6d98d5fcd79c9d11a3021321c4163",
+      "snapshot": {
+        "packages/db/README.md": "a761550c0fc777248a482ea1a561dd053630ec9446a4915c99bfeee823bab15e"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/README.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/bootstrap.ts": {
+      "fingerprint": "5073c8ebd1adddbc52e9c5474a60d461e255d73b2e26ccf61220c33c725850e1",
+      "snapshot": {
+        "packages/db/src/bootstrap.ts": "4bc88c20f07c8adbafcdf35f1fcf4c8dcf654b9541a86f4b56860b7b4f056b2d"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/bootstrap.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/index.ts": {
+      "fingerprint": "3a3569562e7a64c1e2f5a601d662c457be75b0832da7d164c5b45c08d10fdfcb",
+      "snapshot": {
+        "packages/db/src/index.ts": "7ce551a42431b4759be4369d7ebcf271415cc4951c287c6a03d8c59fd7c7d34b"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/index.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/manifest.ts": {
+      "fingerprint": "f63b9aac531a763c24baaa7959978c38443edd48c95665501755af70d00e383d",
+      "snapshot": {
+        "packages/db/src/manifest.ts": "bb9dea75b4f7d350bba8b076632f6469b724179baa2807f901da2911a6038f9e"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/manifest.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/migrate-existing.ts": {
+      "fingerprint": "996c3d46cf4466666eee78d7867e7b2845796f470c72cb8f181fdfbcf96ce324",
+      "snapshot": {
+        "packages/db/src/migrate-existing.ts": "5d5355dac55db91b1f28deee4af9b8104f16860edf1937c51f2d0723fae7f682"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/migrate-existing.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/s49-migration.sql": {
+      "fingerprint": "44ffda862a3397dc426d0b729393bb35198dd3036914ff2caa469f3a4051ca59",
+      "snapshot": {
+        "packages/db/src/s49-migration.sql": "9d04ec6cdc309c87f4cd6b434707579d32e76364c81741f46eb8cef8dc7b3308"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/s49-migration.sql at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/schema.ts": {
+      "fingerprint": "acbf2ac8f3532add4992b6ccd729e5d166684cc64c1fd4218c8281b17010e3f0",
+      "snapshot": {
+        "packages/db/src/schema.ts": "76ce00cad7cf62b4647f4f9155e484fc75f6431fe2c80868c41768fa82fc22ab"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/schema.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/tests/bootstrap.test.ts": {
+      "fingerprint": "95a279d9f9d563da44dfe4c7c5ee36cc876dae69afe9368b9daadc47b592f2ee",
+      "snapshot": {
+        "packages/db/tests/bootstrap.test.ts": "fff8a51bc9897a98d0fcfa2390a56c44cbb1cdf4c16707456dbfb3057d76ce08"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/tests/bootstrap.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/tests/db.test.ts": {
+      "fingerprint": "17004b3ddfca08b9eae7da8723567a0a3ca18682587b95f7b46f62b90c108e07",
+      "snapshot": {
+        "packages/db/tests/db.test.ts": "9be717e52bbd63f3177cc2a4d04c00024c6b5f3c191720a22523853a69a37f3f"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/tests/db.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/tests/migrate-existing.test.ts": {
+      "fingerprint": "a468c55c298988f0d5291472e8c196056194b020c3ef86546bdfd3e0c861d4ca",
+      "snapshot": {
+        "packages/db/tests/migrate-existing.test.ts": "0e967ca9db0508f4a38f1ffe86adb0558e4b455d3254d0b2015ed7464e161213"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/tests/migrate-existing.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     }
   }
