@@ -25,7 +25,7 @@ test("@analytics @critical attendance views share one destination and reuse repo
 
   await login(page);
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
-  await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(7);
+  await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(8);
   await expect(navigation.getByRole("link", { name: "Attendance", exact: true })).toHaveAttribute("href", "/analytics/attendance");
   await expect(navigation.getByRole("link", { name: "Population Overview", exact: true })).toHaveAttribute("href", "/analytics/recapitulation");
   await expect(navigation.getByRole("link", { name: "Reports & Reviews", exact: true })).toHaveAttribute("href", "/reports");
