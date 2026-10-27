@@ -16,6 +16,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s50",
   "20261027_s51",
   "20261027_s52",
+  "20261027_s53",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -46,8 +47,11 @@ export const S50_SCHEMA_FINGERPRINT =
 export const S51_SCHEMA_FINGERPRINT =
   "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
 
-export const CURRENT_SCHEMA_FINGERPRINT =
+export const S52_SCHEMA_FINGERPRINT =
   "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
+
+export const CURRENT_SCHEMA_FINGERPRINT =
+  "3752b860dea633536943a8988bb515a38a21476edd77b19fb4e14256feece090";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -117,6 +121,8 @@ export const REQUIRED_TRIGGERS = [
   "trg_teacher_class_assignment_audit_no_update",
   "trg_student_identity_verification_history_no_update",
   "trg_student_identity_verification_history_no_delete",
+  "trg_student_identity_verification_status_transition",
+  "trg_student_dapodik_status_transition",
   "trg_student_dapodik_history_no_update",
   "trg_student_dapodik_history_no_delete",
   "trg_student_iom_documents_no_delete",

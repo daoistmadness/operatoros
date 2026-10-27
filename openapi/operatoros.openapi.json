@@ -4494,6 +4494,7 @@
                     "type": "string",
                     "enum": [
                       "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
                       "VERIFIED",
                       "NEEDS_CORRECTION"
                     ]
@@ -4542,6 +4543,7 @@
                     "type": "string",
                     "enum": [
                       "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
                       "VERIFIED",
                       "NEEDS_CORRECTION"
                     ]
@@ -4590,6 +4592,7 @@
                     "type": "string",
                     "enum": [
                       "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
                       "VERIFIED",
                       "NEEDS_CORRECTION"
                     ]

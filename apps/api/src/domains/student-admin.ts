@@ -23,12 +23,34 @@ import {
   IdentityVerificationStatusSchema,
   DapodikRegistrationStatusSchema,
   IomTypeSchema,
+  type IdentityVerificationStatus,
+  type DapodikRegistrationStatus,
 } from "@operatoros/contracts/students";
 
 type Row = Record<string, unknown>;
 type Context = any;
 
-const MAX_IOM_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+function canTransitionIdentity(from: IdentityVerificationStatus, to: IdentityVerificationStatus): boolean {
+  if (from === to) return true;
+  switch (from) {
+    case "UNVERIFIED": return to === "IDENTIFIER_ENTERED" || to === "NEEDS_CORRECTION";
+    case "IDENTIFIER_ENTERED": return to === "UNVERIFIED" || to === "VERIFIED" || to === "NEEDS_CORRECTION";
+    case "VERIFIED": return to === "IDENTIFIER_ENTERED" || to === "NEEDS_CORRECTION";
+    case "NEEDS_CORRECTION": return to === "UNVERIFIED" || to === "IDENTIFIER_ENTERED";
+  }
+}
+
+function canTransitionDapodik(from: DapodikRegistrationStatus, to: DapodikRegistrationStatus): boolean {
+  if (from === to) return true;
+  switch (from) {
+    case "NOT_STARTED": return to === "PENDING_EXTERNAL_PROCESSING";
+    case "PENDING_EXTERNAL_PROCESSING": return to === "ENTERED" || to === "NEEDS_CORRECTION";
+    case "ENTERED": return to === "SYNCHRONIZED" || to === "NEEDS_CORRECTION";
+    case "SYNCHRONIZED": return to === "NEEDS_CORRECTION";
+    case "NEEDS_CORRECTION": return to === "PENDING_EXTERNAL_PROCESSING";
+  }
+}
+
 
 function audit(
   context: AuthContext,
@@ -56,11 +78,12 @@ function audit(
 }
 
 export function registerStudentAdmin(app: any, context: AuthContext, config: BackendConfig): void {
+  const maxIomFileSizeBytes = config.studentIomMaxFileSizeBytes ?? 25 * 1024 * 1024;
   // Identity verification routes
   app.get(
     "/api/student-masters/:student_master_id/identity-verifications",
     ({ params, set, ...ctx }: Context) => {
-      const user = actor(context, { set, ...ctx }, { capability: "view_student" });
+      const user = actor(context, { set, ...ctx }, { capability: "view_sensitive_student_fields" });
       if (!user) return { detail: "Insufficient permissions" };
 
       const client = context.database.client;
@@ -90,7 +113,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
       if (!user) return { detail: "Insufficient permissions" };
 
       const client = context.database.client;
-      const student = row(client, "SELECT id FROM student_masters WHERE id = ?", [params.student_master_id]);
+      const student = row(client, "SELECT id, nik FROM student_masters WHERE id = ?", [params.student_master_id]);
       if (!student) return error(set, 404, "Student master not found");
 
       const { identifier_type, verification_status, notes, correction_reason } = body;
@@ -98,20 +121,24 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
         return error(set, 422, "Correction reason is required when status is NEEDS_CORRECTION");
       }
 
-      const existing = row(
-        client,
-        "SELECT * FROM student_identity_verifications WHERE student_master_id = ? AND identifier_type = ?",
-        [params.student_master_id, identifier_type]
-      );
-
-      const fromStatus = existing ? String(existing.verification_status) : "UNVERIFIED";
-      const now = new Date().toISOString();
-      const verifiedAt = verification_status === "VERIFIED" ? now : null;
-      const verifiedBy = verification_status === "VERIFIED" ? user.username : null;
-
       try {
-        let result: Row | null = null;
-        inTransaction(client, () => {
+        const outcome = inTransaction(client, () => {
+          const existing = row(
+            client,
+            "SELECT * FROM student_identity_verifications WHERE student_master_id = ? AND identifier_type = ?",
+            [params.student_master_id, identifier_type]
+          );
+          const fromStatus = (existing?.verification_status ?? "UNVERIFIED") as IdentityVerificationStatus;
+          if (!canTransitionIdentity(fromStatus, verification_status)) return { error: "transition" as const };
+          if (identifier_type === "NIK" && ["IDENTIFIER_ENTERED", "VERIFIED"].includes(verification_status) && !String(student.nik ?? "").trim()) {
+            return { error: "identifier" as const };
+          }
+          if (verification_status === "VERIFIED" && fromStatus !== "IDENTIFIER_ENTERED") return { error: "transition" as const };
+          const now = (context.now?.() ?? new Date()).toISOString();
+          const verifiedAt = verification_status === "VERIFIED" ? String(existing?.verified_at ?? now) : null;
+          const verifiedBy = verification_status === "VERIFIED" ? String(existing?.verified_by ?? user.username) : null;
+          const correctionReason = verification_status === "NEEDS_CORRECTION" ? correction_reason?.trim() || null : null;
+          let result: Row | null = null;
           client.run(
             `INSERT INTO student_identity_verification_history
               (student_master_id, identifier_type, from_status, to_status, changed_by, correction_reason, notes, occurred_at)
@@ -122,7 +149,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
               fromStatus,
               verification_status,
               user.username,
-              correction_reason?.trim() || null,
+              correctionReason,
               notes?.trim() || null,
               now,
             ]
@@ -138,7 +165,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
                 verifiedAt,
                 verifiedBy,
                 notes?.trim() || null,
-                correction_reason?.trim() || null,
+                correctionReason,
                 now,
                 existing.id,
               ]
@@ -156,7 +183,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
                 verifiedAt,
                 verifiedBy,
                 notes?.trim() || null,
-                correction_reason?.trim() || null,
+                correctionReason,
                 now,
                 now,
               ]
@@ -179,9 +206,14 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
               has_correction_reason: Boolean(correction_reason?.trim()),
             }
           );
+          return { result };
         });
-
-        return result;
+        if ("error" in outcome) {
+          return error(set, 409, outcome.error === "transition"
+            ? "Invalid identity verification status transition"
+            : "Enter the identifier before marking it verified");
+        }
+        return outcome.result;
       } catch (err) {  
         return error(set, 409, "Failed to update identity verification");
       }
@@ -239,19 +271,19 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
         return error(set, 422, "Correction reason is required when status is NEEDS_CORRECTION");
       }
 
-      const existing = row(
-        client,
-        "SELECT * FROM student_dapodik_registrations WHERE student_master_id = ?",
-        [params.student_master_id]
-      );
-
-      const fromStatus = existing ? String(existing.status) : "NOT_STARTED";
-      const now = new Date().toISOString();
-      const synchronizedAt = status === "SYNCHRONIZED" ? now : (existing?.synchronized_at ?? null);
-
       try {
-        let result: Row | null = null;
-        inTransaction(client, () => {
+        const outcome = inTransaction(client, () => {
+          const existing = row(
+            client,
+            "SELECT * FROM student_dapodik_registrations WHERE student_master_id = ?",
+            [params.student_master_id]
+          );
+          const fromStatus = (existing?.status ?? "NOT_STARTED") as DapodikRegistrationStatus;
+          if (!canTransitionDapodik(fromStatus, status)) return { error: "transition" as const };
+          const now = (context.now?.() ?? new Date()).toISOString();
+          const synchronizedAt = status === "SYNCHRONIZED" ? String(existing?.synchronized_at ?? now) : null;
+          const correctionReason = status === "NEEDS_CORRECTION" ? correction_reason?.trim() || null : null;
+          let result: Row | null = null;
           client.run(
             `INSERT INTO student_dapodik_history
               (student_master_id, from_status, to_status, changed_by, notes, correction_reason, occurred_at)
@@ -262,7 +294,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
               status,
               user.username,
               notes?.trim() || null,
-              correction_reason?.trim() || null,
+              correctionReason,
               now,
             ]
           );
@@ -277,7 +309,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
                 external_reference?.trim() || null,
                 user.username,
                 notes?.trim() || null,
-                correction_reason?.trim() || null,
+                correctionReason,
                 synchronizedAt,
                 now,
                 existing.id,
@@ -295,7 +327,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
                 external_reference?.trim() || null,
                 user.username,
                 notes?.trim() || null,
-                correction_reason?.trim() || null,
+                correctionReason,
                 synchronizedAt,
                 now,
                 now,
@@ -313,12 +345,13 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
             {
               from_status: fromStatus,
               to_status: status,
-              external_reference: external_reference?.trim() || null,
+              has_external_reference: Boolean(external_reference?.trim()),
             }
           );
+          return { result };
         });
-
-        return result;
+        if ("error" in outcome) return error(set, 409, "Invalid DAPODIK status transition");
+        return outcome.result;
       } catch (err) {  
         return error(set, 409, "Failed to update DAPODIK registration status");
       }
@@ -338,7 +371,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
   app.get(
     "/api/student-masters/:student_master_id/iom-documents",
     ({ params, set, ...ctx }: Context) => {
-      const user = actor(context, { set, ...ctx }, { capability: "view_student" });
+      const user = actor(context, { set, ...ctx }, { capability: "view_sensitive_student_fields" });
       if (!user) return { detail: "Insufficient permissions" };
 
       const client = context.database.client;
@@ -381,54 +414,33 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
       if (bytes.length === 0) {
         return error(set, 400, "File is empty");
       }
-      if (bytes.length > MAX_IOM_FILE_SIZE_BYTES) {
-        return error(set, 413, "File exceeds maximum size of 25MB");
+      if (bytes.length > maxIomFileSizeBytes) {
+        return error(set, 413, "File exceeds the configured maximum size");
       }
-      if (!isPdfDocument(bytes)) {
-        return error(set, 400, "Uploaded file must be a valid PDF document (%PDF- header required)");
+      if (!(await isPdfDocument(bytes))) {
+        return error(set, 400, "Uploaded file must be a valid PDF document");
       }
 
       const originalFilename = sanitizeIomFilename(file.name || "iom_document.pdf");
-      const stored = storeIomPdfFile(config.dataPaths.dataDir, bytes);
       const docId = randomUUID();
       const now = new Date().toISOString();
 
       try {
-        client.run(
-          `INSERT INTO student_iom_documents
-            (id, student_master_id, iom_type, description, file_sha256, file_size_bytes, original_filename, uploaded_by, uploaded_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            docId,
-            params.student_master_id,
-            iom_type,
-            description.trim(),
-            stored.sha256,
-            stored.sizeBytes,
-            originalFilename,
-            user.username,
-            now,
-            now,
-          ]
-        );
-
-        audit(
-          context,
-          user,
-          "UPLOAD_IOM_DOCUMENT",
-          params.student_master_id,
-          ["iom_type", "original_filename", "file_sha256"],
-          {
-            doc_id: docId,
-            iom_type,
-            original_filename: originalFilename,
-            file_sha256: stored.sha256,
-            file_size_bytes: stored.sizeBytes,
-          }
-        );
-
+        const stored = storeIomPdfFile(config.dataPaths.dataDir, bytes);
+        const document = inTransaction(client, () => {
+          client.run(
+            `INSERT INTO student_iom_documents
+              (id, student_master_id, iom_type, description, file_sha256, file_size_bytes, original_filename, uploaded_by, uploaded_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [docId, params.student_master_id, iom_type, description.trim(), stored.sha256, stored.sizeBytes, originalFilename, user.username, now, now]
+          );
+          audit(context, user, "UPLOAD_IOM_DOCUMENT", params.student_master_id, ["iom_type", "original_filename", "file_sha256"], {
+            doc_id: docId, iom_type, original_filename: originalFilename, file_sha256: stored.sha256, file_size_bytes: stored.sizeBytes,
+          });
+          return row(client, "SELECT * FROM student_iom_documents WHERE id = ?", [docId]);
+        });
         set.status = 201;
-        return row(client, "SELECT * FROM student_iom_documents WHERE id = ?", [docId]);
+        return document;
       } catch (err) {  
         return error(set, 409, "Failed to save IOM document record");
       }
@@ -438,7 +450,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
       body: t.Object({
         iom_type: IomTypeSchema,
         description: t.String({ minLength: 1 }),
-        file: t.File({ maxSize: MAX_IOM_FILE_SIZE_BYTES }),
+        file: t.File({ maxSize: maxIomFileSizeBytes }),
       }),
     }
   );
@@ -446,7 +458,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
   app.get(
     "/api/student-masters/:student_master_id/iom-documents/:doc_id/download",
     ({ params, set, ...ctx }: Context) => {
-      const user = actor(context, { set, ...ctx }, { capability: "view_student" });
+      const user = actor(context, { set, ...ctx }, { capability: "view_sensitive_student_fields" });
       if (!user) return { detail: "Insufficient permissions" };
 
       const client = context.database.client;
@@ -502,21 +514,16 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
 
       const now = new Date().toISOString();
       try {
-        client.run(
-          "UPDATE student_iom_documents SET description = ?, updated_by = ?, updated_at = ? WHERE id = ?",
-          [description, user.username, now, params.doc_id]
-        );
-
-        audit(
-          context,
-          user,
-          "UPDATE_IOM_DOCUMENT_DESCRIPTION",
-          params.student_master_id,
-          ["description"],
-          { doc_id: params.doc_id }
-        );
-
-        return row(client, "SELECT * FROM student_iom_documents WHERE id = ?", [params.doc_id]);
+        return inTransaction(client, () => {
+          client.run(
+            "UPDATE student_iom_documents SET description = ?, updated_by = ?, updated_at = ? WHERE id = ?",
+            [description, user.username, now, params.doc_id]
+          );
+          audit(context, user, "UPDATE_IOM_DOCUMENT_DESCRIPTION", params.student_master_id, ["description"], {
+            doc_id: params.doc_id, previous_description: doc.description, description,
+          });
+          return row(client, "SELECT * FROM student_iom_documents WHERE id = ?", [params.doc_id]);
+        });
       } catch (err) {  
         return error(set, 409, "Failed to update IOM document description");
       }

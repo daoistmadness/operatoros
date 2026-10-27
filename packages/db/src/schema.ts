@@ -1351,7 +1351,7 @@ export const student_identity_verifications = sqliteTable("student_identity_veri
     uniqueIndex("student_identity_verifications_student_type_uc").on(table.student_master_id, table.identifier_type),
     index("student_identity_verifications_status_idx").on(table.identifier_type, table.verification_status),
     check("ck_student_id_verif_type", sql`${table.identifier_type} IN ('NIK','KK')`),
-    check("ck_student_id_verif_status", sql`${table.verification_status} IN ('UNVERIFIED','VERIFIED','NEEDS_CORRECTION')`),
+    check("ck_student_id_verif_status", sql`${table.verification_status} IN ('UNVERIFIED','IDENTIFIER_ENTERED','VERIFIED','NEEDS_CORRECTION')`),
 ]);
 
 export const student_identity_verification_history = sqliteTable("student_identity_verification_history", {
@@ -1367,7 +1367,7 @@ export const student_identity_verification_history = sqliteTable("student_identi
 }, (table) => [
     index("student_identity_verif_history_student_idx").on(table.student_master_id, table.id),
     check("ck_student_id_verif_hist_type", sql`${table.identifier_type} IN ('NIK','KK')`),
-    check("ck_student_id_verif_hist_to", sql`${table.to_status} IN ('UNVERIFIED','VERIFIED','NEEDS_CORRECTION')`),
+    check("ck_student_id_verif_hist_to", sql`${table.to_status} IN ('UNVERIFIED','IDENTIFIER_ENTERED','VERIFIED','NEEDS_CORRECTION')`),
 ]);
 
 export const student_dapodik_registrations = sqliteTable("student_dapodik_registrations", {

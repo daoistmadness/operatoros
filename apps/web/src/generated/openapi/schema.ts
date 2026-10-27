@@ -12108,7 +12108,7 @@ export interface operations {
                     /** @enum {string} */
                     identifier_type: "NIK" | "KK";
                     /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
                     notes?: (string | null) | null;
                     correction_reason?: (string | null) | null;
                 };
@@ -12116,7 +12116,7 @@ export interface operations {
                     /** @enum {string} */
                     identifier_type: "NIK" | "KK";
                     /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
                     notes?: (string | null) | null;
                     correction_reason?: (string | null) | null;
                 };
@@ -12124,7 +12124,7 @@ export interface operations {
                     /** @enum {string} */
                     identifier_type: "NIK" | "KK";
                     /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
                     notes?: (string | null) | null;
                     correction_reason?: (string | null) | null;
                 };

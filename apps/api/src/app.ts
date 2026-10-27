@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { dirname } from "node:path";
 import { openapi } from "@elysiajs/openapi";
-import { DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES, type BackendConfig } from "./config";
+import { DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES, DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES, type BackendConfig } from "./config";
 import { openDatabase } from "@operatoros/db";
 import { authRoutes } from "./auth/routes";
 import { defaultAuthConfig } from "./auth/service";
@@ -96,6 +96,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     });
     registerStudentAdmin(app, context, {
       ..._config,
+      studentIomMaxFileSizeBytes: _config.studentIomMaxFileSizeBytes ?? DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES,
       dataPaths: _config.dataPaths ?? (reportDataDir ? { dataDir: reportDataDir } as any : undefined),
     } as any);
     configRoutes(app, context);

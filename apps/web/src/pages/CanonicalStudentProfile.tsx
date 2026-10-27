@@ -114,6 +114,13 @@ function IdentityVerificationDialog({ id, type, current, open, onOpenChange }: {
   const [status, setStatus] = useState<string>("UNVERIFIED");
   const [notes, setNotes] = useState("");
   const [reason, setReason] = useState("");
+  const transitions: Record<string, string[]> = {
+    UNVERIFIED: ["UNVERIFIED", "IDENTIFIER_ENTERED", "NEEDS_CORRECTION"],
+    IDENTIFIER_ENTERED: ["IDENTIFIER_ENTERED", "UNVERIFIED", "VERIFIED", "NEEDS_CORRECTION"],
+    VERIFIED: ["VERIFIED", "IDENTIFIER_ENTERED", "NEEDS_CORRECTION"],
+    NEEDS_CORRECTION: ["NEEDS_CORRECTION", "UNVERIFIED", "IDENTIFIER_ENTERED"],
+  };
+  const allowedStatuses = transitions[current?.verification_status || "UNVERIFIED"] ?? ["UNVERIFIED"];
 
   useEffect(() => {
     if (open) {
@@ -140,7 +147,7 @@ function IdentityVerificationDialog({ id, type, current, open, onOpenChange }: {
         <DialogHeader>
           <DialogTitle>Update {type} Verification</DialogTitle>
           <DialogDescription>
-            Record operator verification for {type}. Raw identifier values are not logged.
+            Record whether the {type} identifier is entered, verified, or needs correction. Document receipt is tracked separately.
           </DialogDescription>
         </DialogHeader>
         {update.error && (
@@ -157,9 +164,7 @@ function IdentityVerificationDialog({ id, type, current, open, onOpenChange }: {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="UNVERIFIED">Unverified</option>
-              <option value="VERIFIED">Verified</option>
-              <option value="NEEDS_CORRECTION">Needs Correction</option>
+              {allowedStatuses.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
             </NativeSelect>
           </div>
           {status === "NEEDS_CORRECTION" && (
@@ -205,6 +210,14 @@ function DapodikStatusDialog({ id, current, open, onOpenChange }: { id: string; 
   const [ref, setRef] = useState("");
   const [notes, setNotes] = useState("");
   const [reason, setReason] = useState("");
+  const transitions: Record<string, string[]> = {
+    NOT_STARTED: ["NOT_STARTED", "PENDING_EXTERNAL_PROCESSING"],
+    PENDING_EXTERNAL_PROCESSING: ["PENDING_EXTERNAL_PROCESSING", "ENTERED", "NEEDS_CORRECTION"],
+    ENTERED: ["ENTERED", "SYNCHRONIZED", "NEEDS_CORRECTION"],
+    SYNCHRONIZED: ["SYNCHRONIZED", "NEEDS_CORRECTION"],
+    NEEDS_CORRECTION: ["NEEDS_CORRECTION", "PENDING_EXTERNAL_PROCESSING"],
+  };
+  const allowedStatuses = transitions[current?.status || "NOT_STARTED"] ?? ["NOT_STARTED"];
 
   useEffect(() => {
     if (open) {
@@ -232,7 +245,7 @@ function DapodikStatusDialog({ id, current, open, onOpenChange }: { id: string; 
         <DialogHeader>
           <DialogTitle>Update DAPODIK Registration Status</DialogTitle>
           <DialogDescription>
-            Record manual DAPODIK progress and audit history for this student.
+            Record manual DAPODIK progress. “Synchronized” means an operator confirmed the external action; OperatorOS does not synchronize with DAPODIK.
           </DialogDescription>
         </DialogHeader>
         {update.error && (
@@ -249,11 +262,7 @@ function DapodikStatusDialog({ id, current, open, onOpenChange }: { id: string; 
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="NOT_STARTED">Not Started</option>
-              <option value="PENDING_EXTERNAL_PROCESSING">Pending External Processing</option>
-              <option value="ENTERED">Entered</option>
-              <option value="SYNCHRONIZED">Synchronized</option>
-              <option value="NEEDS_CORRECTION">Needs Correction</option>
+              {allowedStatuses.map((value) => <option key={value} value={value}>{value === "SYNCHRONIZED" ? "Synchronized (confirmed externally)" : value.replaceAll("_", " ")}</option>)}
             </NativeSelect>
           </div>
           <div>
@@ -510,7 +519,7 @@ export default function CanonicalStudentProfile() {
     }
   };
   return <div className="space-y-6"><Link to="/students" className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline"><ArrowLeft className="size-4" />Back to Student Management</Link><PageHeader eyebrow="Student Profile" title={profile.identity.full_name || "Student"} description="Current enrollment, attendance, academic measurements, trends, and profile information." actions={<>{can("edit_student") && <Button variant="outline" onClick={() => setEditOpen(true)}><Edit className="size-4" />Edit profile</Button>}{can("manage_device_identity") && <Button variant="outline" onClick={() => setDeviceOpen(true)}><Link2 className="size-4" />Manage Device ID</Button>}{can("manage_enrollment") && <Button onClick={() => setEnrollmentOpen(true)}><MoveRight className="size-4" />{activeEnrollment ? "Transfer class" : "Create enrollment"}</Button>}</>} />
-    <Tabs defaultValue="overview"><TabsList className="flex max-w-full justify-start overflow-x-auto"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="personal">Personal Data</TabsTrigger><TabsTrigger value="contact">Contact & Guardians</TabsTrigger><TabsTrigger value="enrollment">Academic Enrollment</TabsTrigger><TabsTrigger value="device">Attendance Device</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="iom">IOM Documents</TabsTrigger><TabsTrigger value="history">Change History</TabsTrigger></TabsList>
+    <Tabs defaultValue="overview"><TabsList className="flex max-w-full justify-start overflow-x-auto"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="personal">Personal Data</TabsTrigger><TabsTrigger value="contact">Contact & Guardians</TabsTrigger><TabsTrigger value="enrollment">Academic Enrollment</TabsTrigger><TabsTrigger value="device">Attendance Device</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger>{can("view_sensitive_student_fields") && <TabsTrigger value="iom">IOM Documents</TabsTrigger>}<TabsTrigger value="history">Change History</TabsTrigger></TabsList>
       <TabsContent value="overview">{overview.isPending ? <LoadingState title="Loading student overview" /> : overview.isError || !overview.data ? <ErrorState title="Student overview could not be loaded" description={overview.error?.message} /> : <><Student360Overview overview={overview.data} exporting={attendanceExporting} exportError={attendanceExportError} onExport={handleExportAttendance} showExport={false} /><Card><CardHeader><div className="flex items-center justify-between gap-2"><CardTitle>Attendance identity</CardTitle>{can("resolve_student_duplicates") && attendanceIdentity.status !== "LINKED" && <Button size="sm" variant="outline" onClick={() => setLegacyLinkOpen(true)}>Review / link</Button>}</div></CardHeader><CardContent className="space-y-3"><Badge variant={attendanceIdentity.status === "LINKED" ? "success" : attendanceIdentity.status === "REVIEW_REQUIRED" ? "warning" : "secondary"}>{attendanceIdentity.status === "LINKED" ? "Linked" : attendanceIdentity.status === "REVIEW_REQUIRED" ? "Review Required" : "Not Linked"}</Badge><p className="text-sm text-muted-foreground">{attendanceIdentity.status === "LINKED" ? "Historical attendance remains associated with the linked legacy identity." : attendanceIdentity.status === "REVIEW_REQUIRED" ? `${attendanceIdentity.candidates?.length || 0} candidate(s) require administrator review.` : "No legacy attendance identity is linked."}</p>{can("export_student_data") && attendanceIdentity.status === "LINKED" && overview.data.links.attendanceExport && <div><Button size="sm" variant="outline" onClick={handleExportAttendance} disabled={attendanceExporting} aria-busy={attendanceExporting}>{attendanceExporting ? "Preparing workbook…" : "Export attendance history"}</Button>{attendanceExportError && <Alert variant="danger" className="mt-3"><AlertTitle>Export failed</AlertTitle><AlertDescription>{attendanceExportError}</AlertDescription></Alert>}</div>}{attendanceIdentity.status !== "LINKED" && <p className="text-sm text-muted-foreground">Link an attendance identity to enable the history export.</p>}</CardContent></Card></>}</TabsContent>
       <TabsContent value="personal" className="space-y-4">
         <Card><CardHeader><CardTitle>Personal data</CardTitle></CardHeader><CardContent><DefinitionList values={profile.identity} /></CardContent></Card>
@@ -532,7 +541,7 @@ export default function CanonicalStudentProfile() {
                       <Badge variant={status === "VERIFIED" ? "success" : status === "NEEDS_CORRECTION" ? "danger" : "secondary"}>
                         {status.replaceAll("_", " ")}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">Identifier: {profile.identity.nik ? "Entered" : "Not Entered"}</span>
+                      {can("view_sensitive_student_fields") && <span className="text-xs text-muted-foreground">Identifier: {profile.identity.nik ? "Entered" : "Not Entered"}</span>}
                     </div>
                     {nikVerif?.verified_by && <p className="text-xs text-muted-foreground">Verified by: {nikVerif.verified_by} · {nikVerif?.verified_at ? new Date(nikVerif.verified_at).toLocaleDateString() : ""}</p>}
                     {nikVerif?.correction_reason && <p className="text-xs font-semibold text-danger">Correction required: {nikVerif.correction_reason}</p>}
@@ -589,7 +598,7 @@ export default function CanonicalStudentProfile() {
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
                     <Badge variant={status === "SYNCHRONIZED" ? "success" : status === "NEEDS_CORRECTION" ? "danger" : status === "ENTERED" ? "information" : "secondary"}>
-                      {status.replaceAll("_", " ")}
+                      {status === "SYNCHRONIZED" ? "Synchronized (confirmed externally)" : status.replaceAll("_", " ")}
                     </Badge>
                   </div>
                   <div className="space-y-1">
@@ -630,7 +639,7 @@ export default function CanonicalStudentProfile() {
       <TabsContent value="enrollment"><Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Academic enrollment history</CardTitle>{activeEnrollment && <Button variant="danger" size="sm" onClick={() => setEndOpen(true)}>End current enrollment</Button>}</div></CardHeader><CardContent className="space-y-4">{enrollmentHistory.isPending ? <LoadingState title="Loading enrollment history" /> : (enrollmentHistory.data || []).map((item: any) => <article key={item.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-black">{item.class_name || "Unassigned class"}</h3><Badge variant={item.active ? "success" : "secondary"}>{item.active ? "Current" : "Historical"}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{item.effective_from || "Unknown start"} – {item.effective_to || "Current"}</p>{item.class_history?.length > 0 && <ol className="mt-3 space-y-1 text-sm">{item.class_history.map((entry: any) => <li key={entry.id}>{entry.class_name}: {entry.effective_from} – {entry.effective_to || "Current"}</li>)}</ol>}</article>)}</CardContent></Card></TabsContent>
       <TabsContent value="device"><Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Attendance Device ID history</CardTitle>{activeDevice && <Button variant="danger" size="sm" onClick={() => setRetireOpen(true)}>Retire active Device ID</Button>}</div></CardHeader><CardContent className="space-y-3">{profile.device_identities.length ? profile.device_identities.map((device) => <div key={device.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"><div><p className="font-mono font-black">{device.device_identifier}</p><p className="text-xs text-muted-foreground">{device.device_source} · {device.effective_from} – {device.effective_to || "Current"}</p></div><Badge variant={device.is_active ? "success" : "secondary"}>{device.is_active ? "Active" : "Retired"}</Badge></div>) : <p className="text-sm text-muted-foreground">No attendance device identity linked.</p>}</CardContent></Card></TabsContent>
       <TabsContent value="quality"><Card><CardHeader><CardTitle>Data quality</CardTitle></CardHeader><CardContent>{overview.data?.dataCompleteness.issues.length ? <ul className="list-disc space-y-2 pl-5">{overview.data.dataCompleteness.issues.map((issue) => <li key={`${issue.field}-${issue.type}`}>{issue.label}</li>)}</ul> : <Alert variant="success"><AlertTitle>Profile checks passed</AlertTitle><AlertDescription>No supported profile information is missing.</AlertDescription></Alert>}</CardContent></Card></TabsContent>
-      <TabsContent value="iom" className="space-y-4">
+      {can("view_sensitive_student_fields") && <TabsContent value="iom" className="space-y-4">
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -680,7 +689,7 @@ export default function CanonicalStudentProfile() {
             )}
           </CardContent>
         </Card>
-      </TabsContent>
+      </TabsContent>}
       <TabsContent value="history"><Card><CardHeader><CardTitle>Change history</CardTitle></CardHeader><CardContent>{history.isPending ? <LoadingState title="Loading change history" /> : <ol className="space-y-3">{(history.data || []).map((entry: any) => <li key={entry.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black">{String(entry.action).replaceAll("_", " ")}</p><time className="text-xs text-muted-foreground">{new Date(entry.changed_at).toLocaleString()}</time></div><p className="mt-1 text-sm">{entry.field_name ? `${entry.field_name}: ${entry.old_value || "empty"} → ${entry.new_value || "empty"}` : "Student record event"}</p><p className="mt-1 text-xs text-muted-foreground">By {entry.changed_by} · {entry.source}</p></li>)}</ol>}</CardContent></Card></TabsContent>
     </Tabs><ProfileEditDialog id={id} profile={profile} open={editOpen} onOpenChange={setEditOpen} /><DeviceDialog id={id} open={deviceOpen} onOpenChange={setDeviceOpen} /><EnrollmentDialog studentId={id} current={activeEnrollment} open={enrollmentOpen} onOpenChange={setEnrollmentOpen} /><RetireDeviceDialog studentId={id} device={activeDevice} open={retireOpen} onOpenChange={setRetireOpen} /><EndEnrollmentDialog studentId={id} enrollment={activeEnrollment} open={endOpen} onOpenChange={setEndOpen} /><LegacyLinkDialog id={id} status={attendanceIdentity} open={legacyLinkOpen} onOpenChange={setLegacyLinkOpen} />
     <IdentityVerificationDialog id={id} type="NIK" current={(profile.identity_verifications || []).find((v: any) => v.identifier_type === "NIK")} open={verifyNikOpen} onOpenChange={setVerifyNikOpen} />
